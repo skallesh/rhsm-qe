@@ -11,12 +11,12 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SCPTools;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.jon.base.CommandLineTestScript;
 import com.redhat.qe.sm.tasks.Subscription;
 import com.redhat.qe.tools.SSHCommandRunner;
 
-public class Setup extends CommandLineTestScript{
+public class Setup extends TestScript{
 	String clientHostname				= System.getProperty("rhsm.client.hostname");
 	String serverHostname				= System.getProperty("rhsm.server.hostname");
 	String username						= System.getProperty("rhsm.client.username");
@@ -38,7 +38,7 @@ public class Setup extends CommandLineTestScript{
 	ArrayList<Subscription> availSubscriptions = new ArrayList<Subscription>();
 	ArrayList<Subscription> consumedSubscriptions = new ArrayList<Subscription>();
 	
-	public static SSHCommandRunner sshCommandRunner = null; //TODO added this for ssalevan - you need to initialize it somewhere - jweiss
+	public static SSHCommandRunner sshCommandRunner = null;
 
 	public void refreshSubscriptions() throws ParseException{
 		availSubscriptions.clear();

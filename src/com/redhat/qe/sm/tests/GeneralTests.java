@@ -25,7 +25,7 @@ public class GeneralTests extends Setup{
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test(){
 		this.changeCertFrequency("1");
-		this.sleep(60*1000);
+		//this.sleep(60*1000);
 		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
 				rhsmcertdLogFile,
 				"^certificates updated"),
