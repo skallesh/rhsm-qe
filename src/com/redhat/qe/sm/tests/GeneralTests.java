@@ -7,15 +7,30 @@ import java.util.List;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 
+@Test(groups={"sm"})
 public class GeneralTests extends Setup{
 	
 	@Test(description="Verify subscription-manager-cli command line options for help.",dataProvider="commandLineOptionsData")
 	public void CommandLineOptions_Test(String command, String stdoutGrepExpression, String stderrGrepExpression, int expectedExitCode) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command,stdoutGrepExpression,stderrGrepExpression,expectedExitCode);
+	}
+	
+	@Test(description="Tests that certificate frequency is updated at appropriate intervals")
+	@ImplementsTCMS(id="41692")
+	public void certFrequency_Test(){
+		this.changeCertFrequency("1");
+		this.sleep(60*1000);
+		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+				rhsmcertdLogFile,
+				"^certificates updated"),
+				0,
+				"rhsmcertd reports that certificates have been updated at new interval");
 	}
 	
 	@DataProvider(name="commandLineOptionsData")

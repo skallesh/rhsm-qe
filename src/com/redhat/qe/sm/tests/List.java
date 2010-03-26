@@ -1,5 +1,5 @@
 package com.redhat.qe.sm.tests;
 
-public class List {
+public class List extends Subscribe{
 
 }

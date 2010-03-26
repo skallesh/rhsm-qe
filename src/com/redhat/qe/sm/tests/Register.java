@@ -1,5 +1,38 @@
 package com.redhat.qe.sm.tests;
 
-public class Register {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.testng.TestNGUtils;
+
+public class Register extends Setup {
+	
+	@Test(description="Verify invalid subscription-manager-cli fail",
+			dataProvider="invalidRegistrationTest",
+			expectedExceptions={AssertionError.class})
+	@ImplementsTCMS(id="41691")
+	public void InvalidRegistration_Test(String username, String password){
+		this.registerToCandlepin(username, password);
+	}
+	
+	@Test(description="Verify valid subscription-manager-cli success")
+	@ImplementsTCMS(id="41677")
+	public void ValidRegistration_Test(){
+		this.registerToCandlepin(username, password);
+	}
+	
+	@DataProvider(name="invalidRegistrationTest")
+	public Object[][] getInvalidRegistrationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
+	}
+	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		ll.add(Arrays.asList(new Object[]{"",""}));
+		return ll;
+	}
 }
