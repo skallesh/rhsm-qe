@@ -21,18 +21,6 @@ public class GeneralTests extends Setup{
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command,stdoutGrepExpression,stderrGrepExpression,expectedExitCode);
 	}
 	
-	@Test(description="Tests that certificate frequency is updated at appropriate intervals")
-	@ImplementsTCMS(id="41692")
-	public void certFrequency_Test(){
-		this.changeCertFrequency("1");
-		//this.sleep(60*1000);
-		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-				rhsmcertdLogFile,
-				"^certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated at new interval");
-	}
-	
 	@DataProvider(name="commandLineOptionsData")
 	public Object[][] getCommandLineOptionsDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getCommandLineOptionsDataAsListOfLists());

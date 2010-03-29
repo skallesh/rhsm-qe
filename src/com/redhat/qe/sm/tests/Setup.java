@@ -167,9 +167,30 @@ public class Setup extends TestScript{
 		Assert.assertTrue(consumedSubscriptions.contains(sub), "Successfully subscribed to entitlement with productID:"+ sub.productId);
 	}
 	
-	public void cleanOutAllCerts(){
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
+	public void unsubscribeFromSubscription(Subscription sub){
+		log.info("Subscribing to entitlement with productID:"+ sub.productId);
+		sshCommandRunner.runCommandAndWait(RHSM_LOC +
+				"unsubscribe --product="+sub.productId);
+		this.refreshSubscriptions();
+		Assert.assertFalse(consumedSubscriptions.contains(sub), "Successfully unsubscribed from entitlement with productID:"+ sub.productId);
 	}
+	
+	public void cleanOutAllCerts(){
+		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, and /etc/pki/product/");
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
+	}
+	
+	public void sleep(long i) {
+		log.info("Sleeping for "+i+" milliseconds...");
+		try {
+			Thread.sleep(i);
+		} catch (InterruptedException e) {
+			log.info("Sleep interrupted!");
+		}
+	}
+
 	
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)
 	public void setupSM() throws ParseException, IOException{
@@ -179,6 +200,5 @@ public class Setup extends TestScript{
 		this.cleanOutAllCerts();
 		this.updateSMConfigFile(serverHostname, serverPort);
 		this.changeCertFrequency(certFrequency);
-		//this.refreshSubscriptions();
 	}
 }

@@ -25,6 +25,6 @@ public class Subscribe extends Register{
 				0,
 				"Asserting that all subscriptions are now subscribed");
 		for(Subscription sub:this.consumedSubscriptions)
-			this.subscribeToSubscription(sub);
+			this.unsubscribeFromSubscription(sub);
 	}
 }
