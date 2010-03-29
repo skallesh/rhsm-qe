@@ -2,6 +2,7 @@ package com.redhat.qe.sm.tasks;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Subscription {
@@ -14,7 +15,7 @@ public class Subscription {
 	public String productId;
 	
 	private Date parseDateString(String dateString) throws ParseException{
-		DateFormat df = DateFormat.getDateTimeInstance();
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		return df.parse(dateString);
 	}
 	
@@ -26,15 +27,27 @@ public class Subscription {
 		return endDate.after(new Date());
 	}
 	
+	@Override
+	public boolean equals(Object obj){
+		return ((Subscription)obj).productId == this.productId;
+	}
+	
 	public Subscription(String subscriptionLine) throws ParseException{
 		String[] components = subscriptionLine.split("\\t");
+		
+		productId = components[0].trim();
+		endDate = this.parseDateString(components[1].trim());
+		id = components[2].trim();
+		quantity = Integer.parseInt(components[3].trim());
+		
+		/*
 		startDate = this.parseDateString(components[0].trim());
 		endDate = this.parseDateString(components[1].trim());
 		activeSubscription = components[2].trim().contains("true");
 		consumed = Integer.parseInt(components[3].trim());
 		quantity = Integer.parseInt(components[4].trim());
 		id = components[5].trim();
-		productId = components[6].trim();
+		productId = components[6].trim();*/
 	}
 	
 	public Subscription(Date startDate,
