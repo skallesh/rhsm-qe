@@ -17,65 +17,19 @@ public class Register extends GeneralTests {
 	
 	@Test(description="Verify invalid subscription-manager-cli fail",
 			dataProvider="invalidRegistrationTest",
-			expectedExceptions={AssertionError.class})
+			expectedExceptions={AssertionError.class},
+			groups={"sm"})
 	@ImplementsTCMS(id="41691")
 	public void InvalidRegistration_Test(String username, String password){
 		this.registerToCandlepin(username, password);
 	}
 	
 	@Test(description="Verify valid subscription-manager-cli success",
-			dependsOnMethods={"InvalidRegistration_Test", "NegativeFunctionality_Test"})
+			dependsOnMethods={"InvalidRegistration_Test", "NegativeFunctionality_Test"},
+			groups={"sm"})
 	@ImplementsTCMS(id="41677")
 	public void ValidRegistration_Test(){
 		this.registerToCandlepin(username, password);
-	}
-	
-	@Test(description="Tests that certificate frequency is updated at appropriate intervals",
-			dependsOnMethods="ValidRegistration_Test")
-	@ImplementsTCMS(id="41692")
-	public void certFrequency_Test(){
-		this.changeCertFrequency("1");
-		this.sleep(70*1000);
-		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-				rhsmcertdLogFile,
-				"certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated at new interval");
-	}
-	
-	@Test(description="Tests that certificates are refreshed appropriately",
-			dependsOnMethods="certFrequency_Test")
-	@ImplementsTCMS(id="41694")
-	public void refreshCerts_Test(){
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
-		sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
-		
-		this.sleep(70*1000);
-		
-		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-				rhsmcertdLogFile,
-				"certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated");
-		
-		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement", 
-				"pem", 
-				null, 
-				0);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement/product", 
-				"pem", 
-				null, 
-				0);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/product", 
-				"pem", 
-				null, 
-				0);
 	}
 	
 	@DataProvider(name="invalidRegistrationTest")
@@ -87,7 +41,7 @@ public class Register extends GeneralTests {
 		ll.add(Arrays.asList(new Object[]{"",""}));
 		ll.add(Arrays.asList(new Object[]{username,""}));
 		ll.add(Arrays.asList(new Object[]{"",password}));
-		ll.add(Arrays.asList(new Object[]{username+getRandInt(),password+getRandInt()}));
+		//ll.add(Arrays.asList(new Object[]{username+getRandInt(),password+getRandInt()}));
 		return ll;
 	}
 }

@@ -3,9 +3,9 @@
 <suite name="SMTestSuite">
 
 	<test name="subscription-manager Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.tests" />		
-		</packages>
+		<classes>
+			<class name="com.redhat.qe.sm.tests.Unsubscribe" />		
+		</classes>
 		<groups>
 			<run>
 				<include name="sm" />

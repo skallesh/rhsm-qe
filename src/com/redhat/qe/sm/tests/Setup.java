@@ -15,7 +15,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.tasks.Subscription;
+import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 public class Setup extends TestScript{
@@ -38,8 +38,8 @@ public class Setup extends TestScript{
 	
 	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
-	ArrayList<Subscription> availSubscriptions = new ArrayList<Subscription>();
-	ArrayList<Subscription> consumedSubscriptions = new ArrayList<Subscription>();
+	ArrayList<Pool> availSubscriptions = new ArrayList<Pool>();
+	ArrayList<Pool> consumedSubscriptions = new ArrayList<Pool>();
 	
 	public static SSHCommandRunner sshCommandRunner = null;
 
@@ -61,7 +61,7 @@ public class Setup extends TestScript{
 		
 		for(int i=outputBegin;i<availSubs.length;i++)
 			try {
-				availSubscriptions.add(new Subscription(availSubs[i].trim()));
+				availSubscriptions.add(new Pool(availSubs[i].trim()));
 			} catch (ParseException e) {
 				e.printStackTrace();
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
@@ -80,15 +80,15 @@ public class Setup extends TestScript{
 		
 		for(int i=outputBegin;i<consumedSubs.length;i++)
 			try {
-				consumedSubscriptions.add(new Subscription(consumedSubs[i].trim()));
+				consumedSubscriptions.add(new Pool(consumedSubs[i].trim()));
 			} catch (ParseException e) {
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
 			}
 	}
 	
-	public ArrayList<Subscription> getNonSubscribedSubscriptions(){
-		ArrayList<Subscription> nsSubs = new ArrayList<Subscription>();
-		for(Subscription s:availSubscriptions)
+	public ArrayList<Pool> getNonSubscribedSubscriptions(){
+		ArrayList<Pool> nsSubs = new ArrayList<Pool>();
+		for(Pool s:availSubscriptions)
 			if (!consumedSubscriptions.contains(s))
 				nsSubs.add(s);
 		return nsSubs;
@@ -161,20 +161,34 @@ public class Setup extends TestScript{
 						"/etc/pki/consumer/cert.uuid is present after register");*/
 	}
 	
-	public void subscribeToSubscription(Subscription sub){
-		log.info("Subscribing to entitlement with productID:"+ sub.productId);
-		sshCommandRunner.runCommandAndWait(RHSM_LOC +
-				"subscribe --product="+sub.productId);
+	public void subscribeToPool(Pool pool, boolean withPoolID){
+		if(withPoolID){
+			log.info("Subscribing to pool with pool ID:"+ pool.productId);
+			sshCommandRunner.runCommandAndWait(RHSM_LOC +
+					"subscribe --pool="+pool.poolId);
+		}
+		else{
+			log.info("Subscribing to pool with productID:"+ pool.productId);
+			sshCommandRunner.runCommandAndWait(RHSM_LOC +
+					"subscribe --product="+pool.productId);
+		}
 		this.refreshSubscriptions();
-		Assert.assertTrue(consumedSubscriptions.contains(sub), "Successfully subscribed to entitlement with productID:"+ sub.productId);
+		Assert.assertTrue(consumedSubscriptions.contains(pool), "Successfully subscribed to pool with pool ID: "+
+				pool.poolId + " and productID: "+ pool.productId);
 	}
 	
-	public void unsubscribeFromSubscription(Subscription sub){
-		log.info("Subscribing to entitlement with productID:"+ sub.productId);
+	public void subscribeToRegToken(String regtoken){
+		log.info("Subscribing to registration token: "+ regtoken);
 		sshCommandRunner.runCommandAndWait(RHSM_LOC +
-				"unsubscribe --product="+sub.productId);
+				"subscribe --regtoken="+regtoken);
+	}
+	
+	public void unsubscribeFromPool(Pool pool){
+		log.info("Unsubscribing from pool with productID:"+ pool.productId);
+		sshCommandRunner.runCommandAndWait(RHSM_LOC +
+				"unsubscribe --product="+pool.productId);
 		this.refreshSubscriptions();
-		Assert.assertFalse(consumedSubscriptions.contains(sub), "Successfully unsubscribed from entitlement with productID:"+ sub.productId);
+		Assert.assertFalse(consumedSubscriptions.contains(pool), "Successfully unsubscribed from pool with productID:"+ pool.productId);
 	}
 	
 	public void cleanOutAllCerts(){
@@ -228,9 +242,6 @@ public class Setup extends TestScript{
 						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
 				);
 	}
-	
-	
-
 	
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)
 	public void setupSM() throws ParseException, IOException{

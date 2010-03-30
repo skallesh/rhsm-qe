@@ -6,29 +6,31 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.tasks.Subscription;
+import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Subscribe extends Register{
 	
 	@Test(description="Verify all subscriptions can be subscribed to",
-			dependsOnMethods="ValidRegistration_Test")
+			dependsOnMethods="ValidRegistration_Test",
+			groups={"sm"})
 	@ImplementsTCMS(id="41680")
 	public void SubscribeToValidSubscriptionsByProductID_Test(){
 		this.refreshSubscriptions();
-		for (Subscription sub:this.availSubscriptions)
-			this.subscribeToSubscription(sub);
+		for (Pool sub:this.availSubscriptions)
+			this.subscribeToPool(sub, false);
 		Assert.assertEquals(this.getNonSubscribedSubscriptions().size(),
 				0,
-				"Asserting that all subscriptions are now subscribed");
+				"Asserting that all available subscriptions are now subscribed");
 	}
 	
 	@Test(description="Enable yum repo and verify that content is available for testing",
-			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test")
+			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test",
+			groups={"sm"})
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test(){
 		this.adjustRHSMYumRepo(true);
-		for(Subscription sub:this.consumedSubscriptions){
+		for(Pool sub:this.consumedSubscriptions){
 			ArrayList<String> repos = this.getYumRepolist();
 			Assert.assertTrue(repos.contains(sub.productId),
 					"Yum reports product subscribed to repo: " + sub.productId);
@@ -36,18 +38,20 @@ public class Subscribe extends Register{
 	}
 	
 	@Test(description="Enable yum repo and verify that content is available for testing",
-			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test")
+			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
+			groups={"sm"})
 	@ImplementsTCMS(id="41696")
 	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
 		this.adjustRHSMYumRepo(false);
-		for(Subscription sub:this.availSubscriptions)
+		for(Pool sub:this.availSubscriptions)
 			for(String repo:this.getYumRepolist())
 				if(repo.contains(sub.productId))
 					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
 	}
 	
 	@Test(description="Tests that certificate frequency is updated at appropriate intervals",
-			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test")
+			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test",
+			groups={"sm"})
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test(){
 		this.changeCertFrequency("1");
@@ -60,7 +64,8 @@ public class Subscribe extends Register{
 	}
 	
 	@Test(description="Tests that certificates are refreshed appropriately",
-			dependsOnMethods="certFrequency_Test")
+			dependsOnMethods="certFrequency_Test",
+			groups={"sm"})
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
