@@ -50,8 +50,11 @@ public class Setup extends TestScript{
 		consumedSubscriptions.clear();
 		
 		log.info("Refreshing subscription information...");
-		String[] availSubs = SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
-				RHSM_LOC + "list --available")[0].split("\\n");
+		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --available");
+		String[] availSubs = sshCommandRunner.getStdout().split("\\n");
+			
+			//SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
+				//RHSM_LOC + "list --available")
 		
 		//if extraneous output comes out over stdout, figure out where the useful output begins
 		int outputBegin = 2;
