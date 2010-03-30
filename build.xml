@@ -3,7 +3,6 @@
 	<property environment="env" />
 	<property name="test.build.dir" location="bin" />
 	<property name="test.src.dir" location="src" />
-	<property name="lib.dir" location="lib" />
 	<condition property="webui-framework.dir" value="../../webui-framework">
 		<not>
 			<isset property="webui-framework.dir"/>
@@ -12,14 +11,8 @@
 
 
 	<path id="utils.cp">
-		<fileset dir="${lib.dir}">
-			<include name="*.blarg" />
-			<include name="*.jar" />
-
-		</fileset>
 		<fileset dir="${webui-framework.dir}/lib">
 					<include name="*.jar" />
-
 		</fileset>
 	</path>
 
