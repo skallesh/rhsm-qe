@@ -59,7 +59,7 @@ public class Subscribe extends Register{
 			groups={"sm"})
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test(){
-		this.changeCertFrequency("1");
+		this.changeCertFrequency("60");
 		this.sleep(70*1000);
 		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
 				rhsmcertdLogFile,
@@ -85,6 +85,7 @@ public class Subscribe extends Register{
 				"certificates updated"),
 				0,
 				"rhsmcertd reports that certificates have been updated");
+		
 		//verify that PEM files are present in all certificate directories
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
 				"ls /etc/pki/entitlement",

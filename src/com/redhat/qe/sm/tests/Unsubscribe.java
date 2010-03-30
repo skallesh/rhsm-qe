@@ -8,7 +8,7 @@ import com.redhat.qe.sm.tasks.Pool;
 
 public class Unsubscribe extends Subscribe{
 	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using product ID",
-			dependsOnMethods="UnsubscribeFromValidSubscriptionsByPoolID_Test",
+			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41688")
 	public void UnsubscribeFromValidSubscriptionsByProductID_Test(){
@@ -16,6 +16,7 @@ public class Unsubscribe extends Subscribe{
 		this.unsubscribeFromAllSubscriptions(false);
 	}
 	
+	/*
 	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using pool ID",
 			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
 			groups={"sm"})
@@ -23,7 +24,7 @@ public class Unsubscribe extends Subscribe{
 	public void UnsubscribeFromValidSubscriptionsByPoolID_Test(){
 		this.subscribeToAllSubscriptions(true);
 		this.unsubscribeFromAllSubscriptions(true);
-	}
+	}*/
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
 			dependsOnMethods="UnsubscribeFromValidSubscriptionsByProductID_Test",
