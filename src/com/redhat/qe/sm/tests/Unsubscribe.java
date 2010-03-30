@@ -26,7 +26,7 @@ public class Unsubscribe extends Subscribe{
 	}
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
-			dependsOnMethods="UnsubscribeFromValidSubscriptions_Test",
+			dependsOnMethods="UnsubscribeFromValidSubscriptionsByProductID_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41898")
 	public void ResubscribeAfterUnsubscribe_Test(){
