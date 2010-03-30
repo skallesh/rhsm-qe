@@ -255,15 +255,22 @@ public class Setup extends TestScript{
 	}
 	
 	public void unsubscribeFromAllSubscriptions(boolean withPoolID){
+		log.info("Unsubscribing from all subscriptions"+
+				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();
 		for(Pool sub:this.consumedSubscriptions)
 			this.unsubscribeFromPool(sub, withPoolID);
 		Assert.assertEquals(this.consumedSubscriptions.size(),
 				0,
 				"Asserting that all subscriptions are now unsubscribed");
+		log.info("Verifying that product certificates are no longer present...");
+		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
+				"ls /etc/pki/entitlement/product/ | grep pem");
 	}
 	
 	public void subscribeToAllSubscriptions(boolean withPoolID){
+		log.info("Subscribing to all subscriptions"+
+				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();
 		for (Pool sub:this.availSubscriptions)
 			this.subscribeToPool(sub, withPoolID);
