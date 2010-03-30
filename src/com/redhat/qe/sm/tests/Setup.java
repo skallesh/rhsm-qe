@@ -51,7 +51,12 @@ public class Setup extends TestScript{
 		
 		log.info("Refreshing subscription information...");
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --available");
-		String[] availSubs = sshCommandRunner.getStdout().split("\\n");
+		String availOut = sshCommandRunner.getStdout();
+		String availErr = sshCommandRunner.getStderr();
+		Assert.assertFalse(availOut.toLowerCase().contains("traceback") |
+				availErr.toLowerCase().contains("traceback"),
+				"list --available call does not produce a traceback");
+		String[] availSubs = availOut.split("\\n");
 			
 			//SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
 				//RHSM_LOC + "list --available")
@@ -74,7 +79,12 @@ public class Setup extends TestScript{
 		
 			
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --consumed");
-		String[] consumedSubs = sshCommandRunner.getStdout().split("\\n");
+		String consumedOut = sshCommandRunner.getStdout();
+		String consumedErr = sshCommandRunner.getStderr();
+		Assert.assertFalse(consumedOut.toLowerCase().contains("traceback") |
+				consumedErr.toLowerCase().contains("traceback"),
+				"list --consumed call does not produce a traceback");
+		String[] consumedSubs = consumedOut.split("\\n");
 		
 		//if extraneous output comes out over stdout, figure out where the useful output begins
 		outputBegin = 2;
