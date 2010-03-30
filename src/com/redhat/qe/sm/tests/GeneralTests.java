@@ -20,7 +20,11 @@ public class GeneralTests extends Setup{
 	@ImplementsTCMS(id="41697")
 	public void HelpTextPresent_Test(String command, String stdoutGrepExpression, String stderrGrepExpression, int expectedExitCode) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command,stdoutGrepExpression,stderrGrepExpression,expectedExitCode);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				command,
+				expectedExitCode,
+				stdoutGrepExpression,
+				stderrGrepExpression);
 	}
 	
 	@DataProvider(name="HelpTextData")

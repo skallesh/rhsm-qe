@@ -85,22 +85,21 @@ public class Subscribe extends Register{
 				"certificates updated"),
 				0,
 				"rhsmcertd reports that certificates have been updated");
-		
 		//verify that PEM files are present in all certificate directories
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement", 
+				"ls /etc/pki/entitlement",
+				0,
 				"pem", 
-				null, 
-				0);
+				null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
 				"ls /etc/pki/entitlement/product", 
+				0,
 				"pem", 
-				null, 
-				0);
+				null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
 				"ls /etc/pki/product", 
+				0,
 				"pem", 
-				null, 
-				0);
+				null);
 	}
 }
