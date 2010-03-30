@@ -39,15 +39,6 @@ public class Subscription {
 		endDate = this.parseDateString(components[1].trim());
 		id = components[2].trim();
 		quantity = Integer.parseInt(components[3].trim());
-		
-		/*
-		startDate = this.parseDateString(components[0].trim());
-		endDate = this.parseDateString(components[1].trim());
-		activeSubscription = components[2].trim().contains("true");
-		consumed = Integer.parseInt(components[3].trim());
-		quantity = Integer.parseInt(components[4].trim());
-		id = components[5].trim();
-		productId = components[6].trim();*/
 	}
 	
 	public Subscription(Date startDate,

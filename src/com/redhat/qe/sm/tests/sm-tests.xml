@@ -1,0 +1,17 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="SMTestSuite">
+
+	<test name="subscription-manager Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />		
+		</packages>
+		<groups>
+			<run>
+				<include name="sm" />
+				<exclude name="knownBug"/>
+			</run>
+		</groups>
+	</test>
+	
+</suite>

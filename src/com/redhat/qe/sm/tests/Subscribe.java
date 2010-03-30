@@ -1,30 +1,96 @@
 package com.redhat.qe.sm.tests;
 
+import java.util.ArrayList;
+
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.Subscription;
+import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Subscribe extends Register{
 	
 	@Test(description="Verify all subscriptions can be subscribed to",
 			dependsOnMethods="ValidRegistration_Test")
 	@ImplementsTCMS(id="41680")
-	public void SubscribeToValidSubscriptions_Test(){
+	public void SubscribeToValidSubscriptionsByProductID_Test(){
 		this.refreshSubscriptions();
 		for (Subscription sub:this.availSubscriptions)
 			this.subscribeToSubscription(sub);
-	}
-	
-	@Test(description="Verify all subscriptions can be subscribed to",
-			dependsOnMethods="SubscribeToValidSubscriptions_Test")
-	@ImplementsTCMS(id="41688")
-	public void UnsubscribeFromValidSubscription_Test(){
 		Assert.assertEquals(this.getNonSubscribedSubscriptions().size(),
 				0,
 				"Asserting that all subscriptions are now subscribed");
-		for(Subscription sub:this.consumedSubscriptions)
-			this.unsubscribeFromSubscription(sub);
+	}
+	
+	@Test(description="Enable yum repo and verify that content is available for testing",
+			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test")
+	@ImplementsTCMS(id="41696")
+	public void EnableYumRepoAndVerifyContentAvailable_Test(){
+		this.adjustRHSMYumRepo(true);
+		for(Subscription sub:this.consumedSubscriptions){
+			ArrayList<String> repos = this.getYumRepolist();
+			Assert.assertTrue(repos.contains(sub.productId),
+					"Yum reports product subscribed to repo: " + sub.productId);
+		}	
+	}
+	
+	@Test(description="Enable yum repo and verify that content is available for testing",
+			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test")
+	@ImplementsTCMS(id="41696")
+	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
+		this.adjustRHSMYumRepo(false);
+		for(Subscription sub:this.availSubscriptions)
+			for(String repo:this.getYumRepolist())
+				if(repo.contains(sub.productId))
+					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
+	}
+	
+	@Test(description="Tests that certificate frequency is updated at appropriate intervals",
+			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test")
+	@ImplementsTCMS(id="41692")
+	public void certFrequency_Test(){
+		this.changeCertFrequency("1");
+		this.sleep(70*1000);
+		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+				rhsmcertdLogFile,
+				"certificates updated"),
+				0,
+				"rhsmcertd reports that certificates have been updated at new interval");
+	}
+	
+	@Test(description="Tests that certificates are refreshed appropriately",
+			dependsOnMethods="certFrequency_Test")
+	@ImplementsTCMS(id="41694")
+	public void refreshCerts_Test(){
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
+		sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
+		
+		this.sleep(70*1000);
+		
+		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+				rhsmcertdLogFile,
+				"certificates updated"),
+				0,
+				"rhsmcertd reports that certificates have been updated");
+		
+		//verify that PEM files are present in all certificate directories
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				"ls /etc/pki/entitlement", 
+				"pem", 
+				null, 
+				0);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				"ls /etc/pki/entitlement/product", 
+				"pem", 
+				null, 
+				0);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				"ls /etc/pki/product", 
+				"pem", 
+				null, 
+				0);
 	}
 }

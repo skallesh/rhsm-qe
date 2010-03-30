@@ -3,6 +3,7 @@ package com.redhat.qe.sm.tests;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.logging.Level;
 
 import org.testng.annotations.BeforeSuite;
@@ -33,6 +34,7 @@ public class Setup extends TestScript{
 	
 	String defaultConfigFile			= "/etc/rhsm/rhsm.conf";
 	String rhsmcertdLogFile				= "/var/log/rhsm/rhsmcertd.log";
+	String rhsmYumRepoFile				= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	
 	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
@@ -190,6 +192,44 @@ public class Setup extends TestScript{
 			log.info("Sleep interrupted!");
 		}
 	}
+	
+	public int getRandInt(){
+		Random gen = new Random();
+		return gen.nextInt();
+	}
+	
+	public ArrayList<String> getYumRepolist(){
+		ArrayList<String> repos = new ArrayList<String>();
+		String[] availRepos = SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
+				"yum repolist")[0].split("\\n");
+		
+		int repolistStartLn = 0;
+		int repolistEndLn = 0;
+		
+		for(int i=0;i<availRepos.length;i++)
+			if (availRepos[i].contains("repo id"))
+				repolistStartLn = i + 1;
+			else if (availRepos[i].contains("repolist:"))
+				repolistEndLn = i;
+		
+		for(int i=repolistStartLn;i<repolistEndLn;i++)
+			repos.add(availRepos[i].split(" ")[0]);
+		
+		return repos;
+	}
+	
+	public void adjustRHSMYumRepo(boolean enabled){
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
+						rhsmYumRepoFile, 
+						"^enabled=.*$", 
+						"enabled="+(enabled?'1':'0')),
+						0,
+						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
+				);
+	}
+	
+	
 
 	
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)
