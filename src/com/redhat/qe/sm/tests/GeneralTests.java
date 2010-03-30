@@ -34,11 +34,11 @@ public class GeneralTests extends Setup{
 	protected List<List<Object>> getHelpTextDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (String grinderHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^Usage: subscription-manager-cli \\[options\\] MODULENAME --help", null, 1 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tlist +list available or consumer subscriptions for registered user", null, 1 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tregister +register the client to a Unified Entitlement Platform.", null, 1 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tsubscribe +subscribe the registered user to a specified product or regtoken.", null, 1 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tunsubscribe +unsubscribe the registered user from all or specific subscriptions.", null, 1 }));
+			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^Usage: subscription-manager-cli \\[options\\] MODULENAME --help", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tlist +list available or consumer subscriptions for registered user", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tregister +register the client to a Unified Entitlement Platform.", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tsubscribe +subscribe the registered user to a specified product or regtoken.", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tunsubscribe +unsubscribe the registered user from all or specific subscriptions.", null, 0 }));
 		}
 		
 		return ll;
