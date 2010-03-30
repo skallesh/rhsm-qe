@@ -72,8 +72,9 @@ public class Setup extends TestScript{
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
 			}
 		
-		String[] consumedSubs = SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
-				RHSM_LOC + "list --consumed")[0].split("\\n");
+			
+		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --consumed");
+		String[] consumedSubs = sshCommandRunner.getStdout().split("\\n");
 		
 		//if extraneous output comes out over stdout, figure out where the useful output begins
 		outputBegin = 2;
