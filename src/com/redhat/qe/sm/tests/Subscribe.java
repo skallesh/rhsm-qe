@@ -11,20 +11,25 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Subscribe extends Register{
 	
-	@Test(description="Verify all subscriptions can be subscribed to",
-			dependsOnMethods="ValidRegistration_Test",
+	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
+			dependsOnMethods="SubscribeToValidSubscriptionsByPoolID_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41680")
 	public void SubscribeToValidSubscriptionsByProductID_Test(){
-		this.refreshSubscriptions();
-		for (Pool sub:this.availSubscriptions)
-			this.subscribeToPool(sub, false);
-		Assert.assertEquals(this.getNonSubscribedSubscriptions().size(),
-				0,
-				"Asserting that all available subscriptions are now subscribed");
+		this.unsubscribeFromAllSubscriptions(false);
+		this.subscribeToAllSubscriptions(false);
 	}
 	
-	@Test(description="Enable yum repo and verify that content is available for testing",
+	@Test(description="subscription-manager-cli: subscribe client to an entitlement using pool ID",
+			dependsOnMethods="ValidRegistration_Test",
+			groups={"sm"})
+	@ImplementsTCMS(id="41686")
+	public void SubscribeToValidSubscriptionsByPoolID_Test(){
+		this.unsubscribeFromAllSubscriptions(true);
+		this.subscribeToAllSubscriptions(true);
+	}
+	
+	@Test(description="subscription-manager Yum plugin: enable/disable",
 			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41696")
@@ -37,7 +42,7 @@ public class Subscribe extends Register{
 		}	
 	}
 	
-	@Test(description="Enable yum repo and verify that content is available for testing",
+	@Test(description="subscription-manager Yum plugin: enable/disable",
 			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41696")
@@ -49,7 +54,7 @@ public class Subscribe extends Register{
 					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
 	}
 	
-	@Test(description="Tests that certificate frequency is updated at appropriate intervals",
+	@Test(description="rhsmcertd: change certFrequency",
 			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41692")
@@ -63,7 +68,7 @@ public class Subscribe extends Register{
 				"rhsmcertd reports that certificates have been updated at new interval");
 	}
 	
-	@Test(description="Tests that certificates are refreshed appropriately",
+	@Test(description="rhsmcertd: ensure certificates synchronize",
 			dependsOnMethods="certFrequency_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41694")

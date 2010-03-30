@@ -19,10 +19,13 @@ import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 public class Setup extends TestScript{
+	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
+	
 	String clientHostname				= System.getProperty("rhsm.client.hostname");
 	String serverHostname				= System.getProperty("rhsm.server.hostname");
 	String username						= System.getProperty("rhsm.client.username");
 	String password						= System.getProperty("rhsm.client.password");
+	String regtoken						= System.getProperty("rhsm.client.regtoken");
 	String certFrequency				= System.getProperty("rhsm.client.certfrequency");
 	String rpmLocation					= System.getProperty("rhsm.rpm");
 	String serverPort 					= System.getProperty("rhsm.server.port");
@@ -183,12 +186,21 @@ public class Setup extends TestScript{
 				"subscribe --regtoken="+regtoken);
 	}
 	
-	public void unsubscribeFromPool(Pool pool){
-		log.info("Unsubscribing from pool with productID:"+ pool.productId);
-		sshCommandRunner.runCommandAndWait(RHSM_LOC +
-				"unsubscribe --product="+pool.productId);
+	public void unsubscribeFromPool(Pool pool, boolean withPoolID){
+		if(withPoolID){
+			log.info("Unsubscribing from pool with pool ID:"+ pool.poolId);
+			sshCommandRunner.runCommandAndWait(RHSM_LOC +
+					"unsubscribe --pool="+pool.poolId);
+		}
+		else{
+			log.info("Unsubscribing from pool with productID:"+ pool.productId);
+			sshCommandRunner.runCommandAndWait(RHSM_LOC +
+					"unsubscribe --product="+pool.productId);
+		}
 		this.refreshSubscriptions();
-		Assert.assertFalse(consumedSubscriptions.contains(pool), "Successfully unsubscribed from pool with productID:"+ pool.productId);
+		Assert.assertFalse(consumedSubscriptions.contains(pool),
+				"Successfully unsubscribed from pool with poolID: "+pool.poolId+
+				"and productID: "+ pool.productId);
 	}
 	
 	public void cleanOutAllCerts(){
@@ -241,6 +253,24 @@ public class Setup extends TestScript{
 						0,
 						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
 				);
+	}
+	
+	public void unsubscribeFromAllSubscriptions(boolean withPoolID){
+		this.refreshSubscriptions();
+		for(Pool sub:this.consumedSubscriptions)
+			this.unsubscribeFromPool(sub, withPoolID);
+		Assert.assertEquals(this.consumedSubscriptions.size(),
+				0,
+				"Asserting that all subscriptions are now unsubscribed");
+	}
+	
+	public void subscribeToAllSubscriptions(boolean withPoolID){
+		this.refreshSubscriptions();
+		for (Pool sub:this.availSubscriptions)
+			this.subscribeToPool(sub, withPoolID);
+		Assert.assertEquals(this.getNonSubscribedSubscriptions().size(),
+				0,
+				"Asserting that all available subscriptions are now subscribed");
 	}
 	
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)

@@ -6,7 +6,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 public class List extends Register{
-	@Test(description="Verify that list --available works",
+	@Test(description="subscription-manager-cli: list available entitlements",
 			dependsOnMethods="ValidRegistration_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41678")
@@ -15,7 +15,7 @@ public class List extends Register{
 				RHSM_LOC + "list --available");
 	}
 	
-	@Test(description="Verify that list --available works",
+	@Test(description="subscription-manager-cli: list consumed entitlements",
 			dependsOnMethods="ValidRegistration_Test",
 			groups={"sm"})
 	@ImplementsTCMS(id="41679")

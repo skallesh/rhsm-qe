@@ -14,7 +14,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class GeneralTests extends Setup{
 	
-	@Test(description="Verify subscription-manager-cli command line options for help.",
+	@Test(description="subscription-manager-cli: ensure manpages and usage information are accurate",
 			dataProvider="HelpTextData",
 			groups={"sm"})
 	@ImplementsTCMS(id="41697")
@@ -40,7 +40,7 @@ public class GeneralTests extends Setup{
 		return ll;
 	}
 	
-	@Test(description="Verify functionality not present if client not registered",
+	@Test(description="subscription-manager-cli: attempt to access functionality without registering",
 			dataProvider="NegativeFunctionalityData",
 			groups={"sm"})
 	@ImplementsTCMS(id="41697")
@@ -55,6 +55,7 @@ public class GeneralTests extends Setup{
 	}
 	public List<List<Object>> getNegativeFunctionalityDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
 		ll.add(Arrays.asList(new Object[]{RHSM_LOC + "list --available"}));
 		ll.add(Arrays.asList(new Object[]{RHSM_LOC + "list --consumed"}));
 		ll.add(Arrays.asList(new Object[]{RHSM_LOC + "subscribe --product=FOO"}));
@@ -63,18 +64,6 @@ public class GeneralTests extends Setup{
 		ll.add(Arrays.asList(new Object[]{RHSM_LOC + "unsubscribe --product=FOO"}));
 		ll.add(Arrays.asList(new Object[]{RHSM_LOC + "unsubscribe --regtoken=FOO"}));
 		ll.add(Arrays.asList(new Object[]{RHSM_LOC + "unsubscribe --pool=FOO"}));
-
-		/*
-		negCmds.add(RHSM_LOC + "list --consumed");
-		negCmds.add(RHSM_LOC + "subscribe --product=FOO");
-		negCmds.add(RHSM_LOC + "subscribe --regtoken=FOO");
-		negCmds.add(RHSM_LOC + "subscribe --pool=FOO");
-		negCmds.add(RHSM_LOC + "unsubscribe --product=FOO");
-		negCmds.add(RHSM_LOC + "unsubscribe --regtoken=FOO");
-		negCmds.add(RHSM_LOC + "unsubscribe --pool=FOO");*/
-		
-		//Object[][] retArray = new Object[1][];
-		//retArray[0] = negCmds.toArray();
 		
 		return ll;
 	}

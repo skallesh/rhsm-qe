@@ -15,7 +15,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Register extends GeneralTests {
 	
-	@Test(description="Verify invalid subscription-manager-cli fail",
+	@Test(description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			dataProvider="invalidRegistrationTest",
 			expectedExceptions={AssertionError.class},
 			groups={"sm"})
@@ -24,7 +24,7 @@ public class Register extends GeneralTests {
 		this.registerToCandlepin(username, password);
 	}
 	
-	@Test(description="Verify valid subscription-manager-cli success",
+	@Test(description="subscription-manager-cli: register to a Candlepin server",
 			dependsOnMethods={"InvalidRegistration_Test", "NegativeFunctionality_Test"},
 			groups={"sm"})
 	@ImplementsTCMS(id="41677")
