@@ -1,0 +1,51 @@
+<project name="sm" default="compile" basedir=".">
+	
+	<property environment="env" />
+	<property name="test.build.dir" location="bin" />
+	<property name="test.src.dir" location="src" />
+	<property name="lib.dir" location="lib" />
+	<condition property="webui-framework.dir" value="../../webui-framework">
+		<not>
+			<isset property="webui-framework.dir"/>
+		</not>
+	</condition>
+
+
+	<path id="utils.cp">
+		<fileset dir="${lib.dir}">
+			<include name="*.blarg" />
+			<include name="*.jar" />
+
+		</fileset>
+		<fileset dir="${webui-framework.dir}/lib">
+					<include name="*.jar" />
+
+		</fileset>
+	</path>
+
+	<path id="tests.cp">
+		<pathelement location="${test.build.dir}" />
+		<pathelement location="${webui-framework.dir}/bin" />
+		<path refid="utils.cp" />
+	</path>
+
+	<target name="deps">
+		<echo message="Compiling dependencies in ${webui-framework.dir}" />
+
+		<ant antfile="${webui-framework.dir}/build.xml">
+			<property name="basedir" value="${webui-framework.dir}" />
+		</ant>
+		<echo message="Done." />
+	</target>
+
+
+	<target name="compile" depends="">
+		<echo message="Compiling testsuite in ${basedir}" />
+		<antcall target="deps" />
+		<mkdir dir="${test.build.dir}" />
+
+		<javac srcdir="${test.src.dir}" destdir="${test.build.dir}" classpathref="tests.cp" debug="on" />
+		<echo message="Done." />
+	</target>
+		
+</project>

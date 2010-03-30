@@ -20,6 +20,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class Setup extends TestScript{
 	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
+	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
 	String clientHostname				= System.getProperty("rhsm.client.hostname");
 	String serverHostname				= System.getProperty("rhsm.server.hostname");
@@ -38,8 +39,6 @@ public class Setup extends TestScript{
 	String defaultConfigFile			= "/etc/rhsm/rhsm.conf";
 	String rhsmcertdLogFile				= "/var/log/rhsm/rhsmcertd.log";
 	String rhsmYumRepoFile				= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	
-	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
 	ArrayList<Pool> availSubscriptions = new ArrayList<Pool>();
 	ArrayList<Pool> consumedSubscriptions = new ArrayList<Pool>();
