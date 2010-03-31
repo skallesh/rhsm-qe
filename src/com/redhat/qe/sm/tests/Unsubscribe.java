@@ -5,6 +5,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.Pool;
+import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Unsubscribe extends Subscribe{
 	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using product ID",
@@ -14,6 +15,26 @@ public class Unsubscribe extends Subscribe{
 	public void UnsubscribeFromValidSubscriptionsByProductID_Test(){
 		this.subscribeToAllSubscriptions(false);
 		this.unsubscribeFromAllSubscriptions(false);
+	}
+	
+	@Test(description="Copy entitlement certificate in /etc/pki/entitlement/product after unsubscribe",
+			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
+			groups={"sm"})
+	@ImplementsTCMS(id="41903")
+	public void UnsubscribeAndReplaceCert_Test(){
+		String randDir = "/tmp/sm-certs-"+Integer.toString(this.getRandInt());
+		this.subscribeToAllSubscriptions(false);
+		
+		//copy certs to temp dir
+		sshCommandRunner.runCommandAndWait("rm -rf "+randDir);
+		sshCommandRunner.runCommandAndWait("mkdir -p "+randDir);
+		sshCommandRunner.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
+		
+		this.unsubscribeFromAllSubscriptions(false);
+		
+		sshCommandRunner.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
+		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
+				"yum repolist");
 	}
 	
 	/*

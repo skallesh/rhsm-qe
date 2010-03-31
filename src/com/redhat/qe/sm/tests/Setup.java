@@ -3,6 +3,7 @@ package com.redhat.qe.sm.tests;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -195,8 +196,40 @@ public class Setup extends TestScript{
 	
 	public void subscribeToRegToken(String regtoken){
 		log.info("Subscribing to registration token: "+ regtoken);
-		sshCommandRunner.runCommandAndWait(RHSM_LOC +
-				"subscribe --regtoken="+regtoken);
+		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
+				RHSM_LOC+"subscribe --regtoken="+regtoken);
+		this.refreshSubscriptions();
+		Assert.assertTrue((this.consumedSubscriptions.size() > 0),
+				"At least one entitlement consumed by regtoken subscription");
+	}
+	
+	public HashMap<String, String[]> getPackagesCorrespondingToSubscribedRepos(){
+		sshCommandRunner.runCommand("yum list available");
+		HashMap<String, String[]> pkgMap = new HashMap<String, String[]>();
+		
+		String[] packageLines = sshCommandRunner.getStdout().split("\\n");
+		
+		int pkglistBegin = 0;
+		
+		for(int i=0;i<packageLines.length;i++){
+			pkglistBegin++;
+			if(packageLines[i].contains("Available Packages"))
+				break;
+		}
+		
+		for(Pool sub:this.consumedSubscriptions){
+			ArrayList<String> pkgList = new ArrayList<String>();
+			for(int i=pkglistBegin;i<packageLines.length;i++){
+				String[] splitLine = packageLines[i].split(" ");
+				String pkgName = splitLine[0];
+				String repoName = splitLine[splitLine.length - 1];
+				if(repoName.toLowerCase().contains(sub.productId.toLowerCase()))
+					pkgList.add(pkgName);
+			}
+			pkgMap.put(sub.productId, (String[])pkgList.toArray());
+		}
+		
+		return pkgMap;
 	}
 	
 	public void unsubscribeFromPool(Pool pool, boolean withPoolID){
