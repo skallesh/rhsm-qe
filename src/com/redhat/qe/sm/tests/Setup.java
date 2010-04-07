@@ -160,7 +160,7 @@ public class Setup extends TestScript{
 	
 	public void registerToCandlepin(String username, String password){
 		sshCommandRunner.runCommandAndWait(RHSM_LOC +
-				"register --username="+username+" --password="+password);
+				"register --username="+username+" --password="+password + " --force");
 		Assert.assertEquals(
 				sshCommandRunner.runCommandAndWait(
 						"stat /etc/pki/consumer/key.pem").intValue(),
