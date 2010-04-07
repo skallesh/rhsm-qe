@@ -33,7 +33,7 @@ public class Setup extends TestScript{
 	String serverPort 					= System.getProperty("rhsm.server.port");
 	String serverBaseUrl				= System.getProperty("rhsm.server.baseurl");
 	String clientsshKeyPrivate			= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
-	String clientsshKeyPath				= System.getProperty("automation.dir")+"/"+clientsshKeyPrivate;
+	//String clientsshKeyPath				= System.getProperty("automation.dir")+"/"+clientsshKeyPrivate;
 	String clientsshUser				= System.getProperty("rhsm.ssh.user","root");
 	String clientsshkeyPassphrase		= System.getProperty("rhsm.sshkey.passphrase","");
 	
@@ -329,7 +329,7 @@ public class Setup extends TestScript{
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)
 	public void setupSM() throws ParseException, IOException{
 		sshCommandRunner = new SSHCommandRunner(clientHostname, 
-				clientsshUser, clientsshKeyPath, clientsshkeyPassphrase, null);
+				clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
 		this.installLatestSMRPM();
 		this.cleanOutAllCerts();
 		this.updateSMConfigFile(serverHostname, serverPort);

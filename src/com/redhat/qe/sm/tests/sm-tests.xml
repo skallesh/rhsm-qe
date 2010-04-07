@@ -14,4 +14,9 @@
 		</groups>
 	</test>
 	
+	<!--
+	<listeners>
+  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />
+	</listeners> -->
+	
 </suite>
