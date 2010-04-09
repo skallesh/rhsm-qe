@@ -74,10 +74,13 @@ public class Subscribe extends Register{
 		HashMap<String, String[]> pkgList = this.getPackagesCorrespondingToSubscribedRepos();
 		for(Pool sub:this.consumedSubscriptions){
 			String pkg = pkgList.get(sub.productId)[0];
+			log.info("timeout of two minutes for next three commands");
 			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
-					"yum install -y "+pkg);
+					"yum repolist",Long.valueOf(2*60000));
 			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
-					"rpm -q "+pkg);
+					"yum install -y "+pkg,Long.valueOf(2*60000));
+			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
+					"rpm -q "+pkg, Long.valueOf(2*60000));
 		}
 	}
 	
