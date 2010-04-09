@@ -204,7 +204,9 @@ public class Setup extends TestScript{
 	}
 	
 	public HashMap<String, String[]> getPackagesCorrespondingToSubscribedRepos(){
-		sshCommandRunner.runCommand("yum list available");
+		int min = 3;
+		log.info("timeout of "+min+" minutes for next command");
+		sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
 		HashMap<String, String[]> pkgMap = new HashMap<String, String[]>();
 		
 		String[] packageLines = sshCommandRunner.getStdout().split("\\n");
