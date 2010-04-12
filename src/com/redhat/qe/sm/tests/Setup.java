@@ -205,6 +205,7 @@ public class Setup extends TestScript{
 	
 	public HashMap<String, String[]> getPackagesCorrespondingToSubscribedRepos(){
 		int min = 3;
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		log.info("timeout of "+min+" minutes for next command");
 		sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
 		HashMap<String, String[]> pkgMap = new HashMap<String, String[]>();
@@ -274,6 +275,7 @@ public class Setup extends TestScript{
 	
 	public ArrayList<String> getYumRepolist(){
 		ArrayList<String> repos = new ArrayList<String>();
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String[] availRepos = SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
 				"yum repolist")[0].split("\\n");
 		
@@ -336,5 +338,6 @@ public class Setup extends TestScript{
 		this.cleanOutAllCerts();
 		this.updateSMConfigFile(serverHostname, serverPort);
 		this.changeCertFrequency(certFrequency);
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
 	}
 }
