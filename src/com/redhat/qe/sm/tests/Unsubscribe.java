@@ -22,6 +22,7 @@ public class Unsubscribe extends Subscribe{
 			groups={"sm"})
 	@ImplementsTCMS(id="41903")
 	public void UnsubscribeAndReplaceCert_Test(){
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String randDir = "/tmp/sm-certs-"+Integer.toString(this.getRandInt());
 		this.subscribeToAllSubscriptions(false);
 		
@@ -34,7 +35,7 @@ public class Unsubscribe extends Subscribe{
 		
 		sshCommandRunner.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
-				"yum repolist");
+				"yum repolist",Long.valueOf(2*60000));
 	}
 	
 	/*
