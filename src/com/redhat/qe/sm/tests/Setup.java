@@ -17,6 +17,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.Pool;
+import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 public class Setup extends TestScript{
@@ -41,14 +42,14 @@ public class Setup extends TestScript{
 	String rhsmcertdLogFile				= "/var/log/rhsm/rhsmcertd.log";
 	String rhsmYumRepoFile				= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	
-	ArrayList<Pool> availSubscriptions = new ArrayList<Pool>();
-	ArrayList<Pool> consumedSubscriptions = new ArrayList<Pool>();
+	ArrayList<Pool> availPools = new ArrayList<Pool>();
+	ArrayList<ProductID> consumedProductIDs = new ArrayList<ProductID>();
 	
 	public static SSHCommandRunner sshCommandRunner = null;
 
 	public void refreshSubscriptions(){
-		availSubscriptions.clear();
-		consumedSubscriptions.clear();
+		availPools.clear();
+		consumedProductIDs.clear();
 		
 		log.info("Refreshing subscription information...");
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --available");
@@ -72,7 +73,7 @@ public class Setup extends TestScript{
 		
 		for(int i=outputBegin;i<availSubs.length;i++)
 			try {
-				availSubscriptions.add(new Pool(availSubs[i].trim()));
+				availPools.add(new Pool(availSubs[i].trim()));
 			} catch (ParseException e) {
 				e.printStackTrace();
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
@@ -90,14 +91,14 @@ public class Setup extends TestScript{
 		//if extraneous output comes out over stdout, figure out where the useful output begins
 		outputBegin = 2;
 		for(int i=0;i<consumedSubs.length;i++){
-			if(consumedSubs[i].contains("productId"))
+			if(consumedSubs[i].contains("Product Consumed"))
 				break;
 			outputBegin++;
 		}
 		
 		for(int i=outputBegin;i<consumedSubs.length;i++)
 			try {
-				consumedSubscriptions.add(new Pool(consumedSubs[i].trim()));
+				consumedProductIDs.add(new ProductID(consumedSubs[i].trim()));
 			} catch (ParseException e) {
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
 			}
@@ -105,20 +106,20 @@ public class Setup extends TestScript{
 	
 	public ArrayList<Pool> getNonSubscribedSubscriptions(){
 		ArrayList<Pool> nsSubs = new ArrayList<Pool>();
-		for(Pool s:availSubscriptions)
-			if (!consumedSubscriptions.contains(s))
+		for(Pool s:availPools)
+			if (!consumedProductIDs.contains(s))
 				nsSubs.add(s);
 		return nsSubs;
 	}
 	
 	public void installLatestSMRPM(){
 		log.info("Retrieving latest subscription-manager RPM...");
-		sshCommandRunner.runCommandAndWait("rm -f ~/subscription-manager.rpm");
-		sshCommandRunner.runCommandAndWait("wget -O ~/subscription-manager.rpm --no-check-certificate "+rpmLocation);
+		sshCommandRunner.runCommandAndWait("rm -f /tmp/subscription-manager.rpm");
+		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate "+rpmLocation);
 		
 		log.info("Installing newest subscription-manager RPM...");
-		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
-		sshCommandRunner.runCommandAndWait("rpm --force --nodeps -Uvh ~/subscription-manager.rpm");
+		sshCommandRunner.runCommandAndWait("rpm --force -e subscription-manager");
+		sshCommandRunner.runCommandAndWait("rpm --force --nodeps -Uvh /tmp/subscription-manager.rpm");
 	}
 	
 	public void updateSMConfigFile(String hostname, String port){
@@ -190,7 +191,7 @@ public class Setup extends TestScript{
 					"subscribe --product="+pool.productId);
 		}
 		this.refreshSubscriptions();
-		Assert.assertTrue(consumedSubscriptions.contains(pool), "Successfully subscribed to pool with pool ID: "+
+		Assert.assertTrue(consumedProductIDs.size() > 0, "Successfully subscribed to pool with pool ID: "+
 				pool.poolId + " and productID: "+ pool.productId);
 	}
 	
@@ -199,7 +200,7 @@ public class Setup extends TestScript{
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
 				RHSM_LOC+"subscribe --regtoken="+regtoken);
 		this.refreshSubscriptions();
-		Assert.assertTrue((this.consumedSubscriptions.size() > 0),
+		Assert.assertTrue((this.consumedProductIDs.size() > 0),
 				"At least one entitlement consumed by regtoken subscription");
 	}
 	
@@ -220,7 +221,7 @@ public class Setup extends TestScript{
 				break;
 		}
 		
-		for(Pool sub:this.consumedSubscriptions){
+		for(ProductID sub:this.consumedProductIDs){
 			ArrayList<String> pkgList = new ArrayList<String>();
 			for(int i=pkglistBegin;i<packageLines.length;i++){
 				String[] splitLine = packageLines[i].split(" ");
@@ -235,27 +236,20 @@ public class Setup extends TestScript{
 		return pkgMap;
 	}
 	
-	public void unsubscribeFromPool(Pool pool, boolean withPoolID){
-		if(withPoolID){
-			log.info("Unsubscribing from pool with pool ID:"+ pool.poolId);
+	public void unsubscribeFromProductID(ProductID pid){
+			log.info("Unsubscribing from productID:"+ pid.productId);
 			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"unsubscribe --pool="+pool.poolId);
-		}
-		else{
-			log.info("Unsubscribing from pool with productID:"+ pool.productId);
-			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"unsubscribe --product="+pool.productId);
-		}
+					"unsubscribe --product="+pid.productId);
 		this.refreshSubscriptions();
-		Assert.assertFalse(consumedSubscriptions.contains(pool),
-				"Successfully unsubscribed from pool with poolID: "+pool.poolId+
-				"and productID: "+ pool.productId);
+		Assert.assertFalse(consumedProductIDs.contains(pid),
+				"Successfully unsubscribed from productID: "+ pid.productId);
 	}
 	
 	public void cleanOutAllCerts(){
-		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, and /etc/pki/product/");
+		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
 		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
 		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
 	}
 	
@@ -305,29 +299,28 @@ public class Setup extends TestScript{
 				);
 	}
 	
-	public void unsubscribeFromAllSubscriptions(boolean withPoolID){
-		log.info("Unsubscribing from all subscriptions"+
-				(withPoolID?" (using pool ID)...":"..."));
+	public void unsubscribeFromAllProductIDs(){
+		log.info("Unsubscribing from all productIDs...");
 		this.refreshSubscriptions();
-		for(Pool sub:this.consumedSubscriptions)
-			this.unsubscribeFromPool(sub, withPoolID);
-		Assert.assertEquals(this.consumedSubscriptions.size(),
+		for(ProductID sub:this.consumedProductIDs)
+			this.unsubscribeFromProductID(sub);
+		Assert.assertEquals(this.consumedProductIDs.size(),
 				0,
-				"Asserting that all subscriptions are now unsubscribed");
-		log.info("Verifying that product certificates are no longer present...");
+				"Asserting that all productIDs are now unsubscribed");
+		log.info("Verifying that entitlement certificates are no longer present...");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
 				"ls /etc/pki/entitlement/product/ | grep pem");
 	}
 	
-	public void subscribeToAllSubscriptions(boolean withPoolID){
-		log.info("Subscribing to all subscriptions"+
+	public void subscribeToAllPools(boolean withPoolID){
+		log.info("Subscribing to all pools"+
 				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();
-		for (Pool sub:this.availSubscriptions)
+		for (Pool sub:this.availPools)
 			this.subscribeToPool(sub, withPoolID);
 		Assert.assertEquals(this.getNonSubscribedSubscriptions().size(),
 				0,
-				"Asserting that all available subscriptions are now subscribed");
+				"Asserting that all available pools are now subscribed");
 	}
 	
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)

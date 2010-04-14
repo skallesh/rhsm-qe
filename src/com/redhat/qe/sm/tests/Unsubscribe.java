@@ -7,35 +7,35 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
-public class Unsubscribe extends Subscribe{
+public class Unsubscribe extends Setup{
 	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using product ID",
-			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage4"},
+			groups={"sm_stage5"})
 	@ImplementsTCMS(id="41688")
-	public void UnsubscribeFromValidSubscriptionsByProductID_Test(){
-		this.subscribeToAllSubscriptions(false);
-		this.unsubscribeFromAllSubscriptions(false);
+	public void UnsubscribeFromValidProductIDs_Test(){
+		this.subscribeToAllPools(false);
+		this.unsubscribeFromAllProductIDs();
 	}
 	
 	@Test(description="Copy entitlement certificate in /etc/pki/entitlement/product after unsubscribe",
-			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage4"},
+			groups={"sm_stage5"})
 	@ImplementsTCMS(id="41903")
 	public void UnsubscribeAndReplaceCert_Test(){
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String randDir = "/tmp/sm-certs-"+Integer.toString(this.getRandInt());
-		this.subscribeToAllSubscriptions(false);
+		this.subscribeToAllPools(false);
 		
 		//copy certs to temp dir
 		sshCommandRunner.runCommandAndWait("rm -rf "+randDir);
 		sshCommandRunner.runCommandAndWait("mkdir -p "+randDir);
 		sshCommandRunner.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
 		
-		this.unsubscribeFromAllSubscriptions(false);
+		this.unsubscribeFromAllProductIDs();
 		
 		sshCommandRunner.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
-				"yum repolist",Long.valueOf(2*60000));
+				"yum repolist");
 	}
 	
 	/*
@@ -49,10 +49,12 @@ public class Unsubscribe extends Subscribe{
 	}*/
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
-			dependsOnMethods="UnsubscribeFromValidSubscriptionsByProductID_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage4"},
+			groups={"sm_stage5"})
 	@ImplementsTCMS(id="41898")
 	public void ResubscribeAfterUnsubscribe_Test(){
-		this.subscribeToAllSubscriptions(false);
+		this.subscribeToAllPools(false);
+		this.unsubscribeFromAllProductIDs();
+		this.subscribeToAllPools(false);
 	}
 }

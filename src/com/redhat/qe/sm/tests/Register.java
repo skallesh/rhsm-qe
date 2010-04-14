@@ -13,20 +13,20 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 
-public class Register extends GeneralTests {
+public class Register extends Setup {
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			dataProvider="invalidRegistrationTest",
 			expectedExceptions={AssertionError.class},
-			groups={"sm"})
+			groups={"sm_stage1"})
 	@ImplementsTCMS(id="41691")
 	public void InvalidRegistration_Test(String username, String password){
 		this.registerToCandlepin(username, password);
 	}
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server",
-			dependsOnMethods={"InvalidRegistration_Test", "NegativeFunctionality_Test"},
-			groups={"sm"})
+			dependsOnGroups={"sm_stage1"},
+			groups={"sm_stage2"})
 	@ImplementsTCMS(id="41677")
 	public void ValidRegistration_Test(){
 		this.registerToCandlepin(username, password);
@@ -41,7 +41,7 @@ public class Register extends GeneralTests {
 		ll.add(Arrays.asList(new Object[]{"",""}));
 		ll.add(Arrays.asList(new Object[]{username,""}));
 		ll.add(Arrays.asList(new Object[]{"",password}));
-		ll.add(Arrays.asList(new Object[]{username+getRandInt(),password+getRandInt()}));
+		//ll.add(Arrays.asList(new Object[]{username+getRandInt(),password+getRandInt()}));
 		return ll;
 	}
 }

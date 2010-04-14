@@ -16,7 +16,7 @@ public class GeneralTests extends Setup{
 	
 	@Test(description="subscription-manager-cli: ensure manpages and usage information are accurate",
 			dataProvider="HelpTextData",
-			groups={"sm"})
+			groups={"sm_stage1"})
 	@ImplementsTCMS(id="41697")
 	public void HelpTextPresent_Test(String command, String stdoutGrepExpression, String stderrGrepExpression, int expectedExitCode) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
@@ -33,12 +33,12 @@ public class GeneralTests extends Setup{
 	}
 	protected List<List<Object>> getHelpTextDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (String grinderHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^Usage: subscription-manager-cli \\[options\\] MODULENAME --help", null, 0 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tlist +list available or consumer subscriptions for registered user", null, 0 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tregister +register the client to a Unified Entitlement Platform.", null, 0 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tsubscribe +subscribe the registered user to a specified product or regtoken.", null, 0 }));
-			ll.add(Arrays.asList(new Object[]{ grinderHelpCommand, "^\tunsubscribe +unsubscribe the registered user from all or specific subscriptions.", null, 0 }));
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, "^Usage: subscription-manager-cli \\[options\\] MODULENAME --help", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, "^\tlist +list available or consumer subscriptions for registered user", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, "^\tregister +register the client to a Unified Entitlement Platform.", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, "^\tsubscribe +subscribe the registered user to a specified product or regtoken.", null, 0 }));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, "^\tunsubscribe +unsubscribe the registered user from all or specific subscriptions.", null, 0 }));
 		}
 		
 		return ll;
@@ -46,7 +46,7 @@ public class GeneralTests extends Setup{
 	
 	@Test(description="subscription-manager-cli: attempt to access functionality without registering",
 			dataProvider="NegativeFunctionalityData",
-			groups={"sm"})
+			groups={"sm_stage1"})
 	@ImplementsTCMS(id="41697")
 	public void NegativeFunctionality_Test(String command) {
 		log.info("Testing subscription-manager-cli command without registering, expecting it to fail: "+ command);

@@ -5,10 +5,10 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.tools.RemoteFileTasks;
 
-public class List extends Register{
+public class List extends Setup{
 	@Test(description="subscription-manager-cli: list available entitlements",
-			dependsOnMethods="ValidRegistration_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage2"},
+			groups={"sm_stage3"})
 	@ImplementsTCMS(id="41678")
 	public void EnsureAvailableEntitlementsListed_Test(){
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
@@ -16,10 +16,11 @@ public class List extends Register{
 	}
 	
 	@Test(description="subscription-manager-cli: list consumed entitlements",
-			dependsOnMethods="ValidRegistration_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test(){
+		this.subscribeToAllPools(false);
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
 				RHSM_LOC + "list --consumed");
 	}

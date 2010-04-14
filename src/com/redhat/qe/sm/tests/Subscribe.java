@@ -8,45 +8,46 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.Pool;
+import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.RemoteFileTasks;
 
-public class Subscribe extends Register{
+public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
-			dependsOnMethods="SubscribeToValidSubscriptionsByPoolID_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41680,41899")
 	public void SubscribeToValidSubscriptionsByProductID_Test(){
-		this.unsubscribeFromAllSubscriptions(false);
-		this.subscribeToAllSubscriptions(false);
+		this.unsubscribeFromAllProductIDs();
+		this.subscribeToAllPools(false);
 	}
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using pool ID",
-			dependsOnMethods="ValidRegistration_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41686,41899")
 	public void SubscribeToValidSubscriptionsByPoolID_Test(){
-		this.unsubscribeFromAllSubscriptions(true);
-		this.subscribeToAllSubscriptions(true);
+		this.unsubscribeFromAllProductIDs();
+		this.subscribeToAllPools(true);
 	}
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using registration token",
-			dependsOnMethods="ValidRegistration_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage8"},
+			groups={"sm_stage9"})
 	@ImplementsTCMS(id="41681")
 	public void SubscribeToRegToken_Test(){
-		this.unsubscribeFromAllSubscriptions(true);
+		this.unsubscribeFromAllProductIDs();
 		this.subscribeToRegToken(regtoken);
 	}
 	
 	@Test(description="Subscribed for Already subscribed Entitlement.",
-			dependsOnMethods="ValidRegistration_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
-		this.unsubscribeFromAllSubscriptions(true);
+		this.unsubscribeFromAllProductIDs();
 		this.refreshSubscriptions();
-		for(Pool sub:this.availSubscriptions){
+		for(Pool sub:this.availPools){
 			this.subscribeToPool(sub, false);
 			RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
 					RHSM_LOC+"subscribe --product="+sub.productId);
@@ -54,12 +55,12 @@ public class Subscribe extends Register{
 	}
 	
 	@Test(description="subscription-manager Yum plugin: enable/disable",
-			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage5"},
+			groups={"sm_stage6"})
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test(){
 		this.adjustRHSMYumRepo(true);
-		for(Pool sub:this.consumedSubscriptions){
+		for(ProductID sub:this.consumedProductIDs){
 			ArrayList<String> repos = this.getYumRepolist();
 			Assert.assertTrue(repos.contains(sub.productId),
 					"Yum reports product subscribed to repo: " + sub.productId);
@@ -67,38 +68,38 @@ public class Subscribe extends Register{
 	}
 	
 	@Test(description="subscription-manager Yum plugin: ensure content can be downloaded/installed",
-			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage6"},
+			groups={"sm_stage7"})
 	@ImplementsTCMS(id="41695")
 	public void InstallPackageFromRHSMYumRepo_Test(){
 		HashMap<String, String[]> pkgList = this.getPackagesCorrespondingToSubscribedRepos();
-		for(Pool sub:this.consumedSubscriptions){
+		for(ProductID sub:this.consumedProductIDs){
 			String pkg = pkgList.get(sub.productId)[0];
 			log.info("timeout of two minutes for next three commands");
 			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
-					"yum repolist",Long.valueOf(2*60000));
+					"yum repolist");
 			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
-					"yum install -y "+pkg,Long.valueOf(2*60000));
+					"yum install -y "+pkg);
 			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
-					"rpm -q "+pkg, Long.valueOf(2*60000));
+					"rpm -q "+pkg);
 		}
 	}
 	
 	@Test(description="subscription-manager Yum plugin: enable/disable",
-			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage7"},
+			groups={"sm_stage8"})
 	@ImplementsTCMS(id="41696")
 	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
 		this.adjustRHSMYumRepo(false);
-		for(Pool sub:this.availSubscriptions)
+		for(Pool sub:this.availPools)
 			for(String repo:this.getYumRepolist())
 				if(repo.contains(sub.productId))
 					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
 	}
 	
 	@Test(description="rhsmcertd: change certFrequency",
-			dependsOnMethods="SubscribeToValidSubscriptionsByProductID_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test(){
 		this.changeCertFrequency("60");
@@ -111,8 +112,8 @@ public class Subscribe extends Register{
 	}
 	
 	@Test(description="rhsmcertd: ensure certificates synchronize",
-			dependsOnMethods="certFrequency_Test",
-			groups={"sm"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");

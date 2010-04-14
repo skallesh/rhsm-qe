@@ -4,11 +4,24 @@
 
 	<test name="subscription-manager Tests">
 		<classes>
+			<class name="com.redhat.qe.sm.tests.GeneralTests" />	
+			<class name="com.redhat.qe.sm.tests.Register" />
+			<class name="com.redhat.qe.sm.tests.List" />			
+			<class name="com.redhat.qe.sm.tests.Subscribe" />	
 			<class name="com.redhat.qe.sm.tests.Unsubscribe" />		
 		</classes>
 		<groups>
 			<run>
-				<include name="sm" />
+				<include name="sm_setup" />
+				<include name="sm_stage1" />
+				<include name="sm_stage2" />
+				<include name="sm_stage3" />
+				<include name="sm_stage4" />
+				<include name="sm_stage5" />
+				<include name="sm_stage6" />
+				<include name="sm_stage7" />
+				<include name="sm_stage8" />
+				<include name="sm_stage9" />
 				<exclude name="knownBug"/>
 			</run>
 		</groups>
