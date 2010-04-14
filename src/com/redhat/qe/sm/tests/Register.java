@@ -41,7 +41,7 @@ public class Register extends Setup {
 		ll.add(Arrays.asList(new Object[]{"",""}));
 		ll.add(Arrays.asList(new Object[]{username,""}));
 		ll.add(Arrays.asList(new Object[]{"",password}));
-		//ll.add(Arrays.asList(new Object[]{username+getRandInt(),password+getRandInt()}));
+		ll.add(Arrays.asList(new Object[]{username+getRandInt(),password+getRandInt()}));
 		return ll;
 	}
 }
