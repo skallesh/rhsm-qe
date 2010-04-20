@@ -100,16 +100,17 @@ public class Setup extends TestScript{
 			try {
 				consumedProductIDs.add(new ProductID(consumedSubs[i].trim()));
 			} catch (ParseException e) {
-				log.warning("Unparseable subscription line: "+ availSubs[i]);
+				log.warning("Unparseable subscription line: "+ consumedSubs[i]);
 			}
 	}
 	
-	public ArrayList<Pool> getNonSubscribedSubscriptions(){
-		ArrayList<Pool> nsSubs = new ArrayList<Pool>();
-		for(Pool s:availPools)
-			if (!consumedProductIDs.contains(s))
-				nsSubs.add(s);
-		return nsSubs;
+	public boolean allPoolsDecremented(ArrayList<Pool> beforeSubscription, ArrayList<Pool> afterSubscription){
+		for(Pool beforePool:beforeSubscription){
+			Pool correspondingPool = afterSubscription.get(afterSubscription.indexOf(beforePool));
+			if (correspondingPool.quantity >= beforePool.quantity)
+				return false;
+		}
+		return true;
 	}
 	
 	public void installLatestSMRPM(){
@@ -302,7 +303,8 @@ public class Setup extends TestScript{
 	public void unsubscribeFromAllProductIDs(){
 		log.info("Unsubscribing from all productIDs...");
 		this.refreshSubscriptions();
-		for(ProductID sub:this.consumedProductIDs)
+		ArrayList<ProductID> consumedProductIDbefore = (ArrayList<ProductID>)this.consumedProductIDs.clone();
+		for(ProductID sub:consumedProductIDbefore)
 			this.unsubscribeFromProductID(sub);
 		Assert.assertEquals(this.consumedProductIDs.size(),
 				0,
@@ -316,11 +318,11 @@ public class Setup extends TestScript{
 		log.info("Subscribing to all pools"+
 				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();
-		for (Pool sub:this.availPools)
+		ArrayList<Pool>availablePools = (ArrayList<Pool>)this.availPools.clone();
+		for (Pool sub:availablePools)
 			this.subscribeToPool(sub, withPoolID);
-		Assert.assertEquals(this.getNonSubscribedSubscriptions().size(),
-				0,
-				"Asserting that all available pools are now subscribed");
+		Assert.assertTrue(this.allPoolsDecremented(availablePools, this.availPools),
+				"Pool quantities successfully decremented");
 	}
 	
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)

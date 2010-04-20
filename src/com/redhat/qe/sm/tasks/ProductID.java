@@ -15,7 +15,7 @@ public class ProductID {
 	}
 	
 	private Date parseDateString(String dateString) throws ParseException{
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		return df.parse(dateString);
 	}
 	

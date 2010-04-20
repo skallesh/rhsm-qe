@@ -29,7 +29,7 @@ public class Pool {
 	
 	@Override
 	public boolean equals(Object obj){
-		return ((Pool)obj).productId == this.productId;
+		return ((Pool)obj).productId.contains(this.productId);
 	}
 	
 	public Pool(String subscriptionLine) throws ParseException{
