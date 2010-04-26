@@ -22,14 +22,13 @@
 				<include name="sm_stage7" />
 				<include name="sm_stage8" />
 				<include name="sm_stage9" />
-				<exclude name="knownBug"/>
 			</run>
 		</groups>
 	</test>
 	
-	<!--
 	<listeners>
   		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />
-	</listeners> -->
+  		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+	</listeners>
 	
 </suite>

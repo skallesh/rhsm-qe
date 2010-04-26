@@ -15,7 +15,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4"})
+			groups={"sm_stage4", "blockedByBug-584137"})
 	@ImplementsTCMS(id="41680,41899")
 	public void SubscribeToValidSubscriptionsByProductID_Test(){
 		this.unsubscribeFromAllProductIDs();
@@ -24,7 +24,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using pool ID",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4"})
+			groups={"sm_stage4", "blockedByBug-584137"})
 	@ImplementsTCMS(id="41686,41899")
 	public void SubscribeToValidSubscriptionsByPoolID_Test(){
 		this.unsubscribeFromAllProductIDs();
@@ -33,7 +33,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using registration token",
 			dependsOnGroups={"sm_stage8"},
-			groups={"sm_stage9"})
+			groups={"sm_stage9", "blockedByBug-584137"})
 	@ImplementsTCMS(id="41681")
 	public void SubscribeToRegToken_Test(){
 		this.unsubscribeFromAllProductIDs();
@@ -41,8 +41,8 @@ public class Subscribe extends Setup{
 	}
 	
 	@Test(description="Subscribed for Already subscribed Entitlement.",
-			dependsOnGroups={"sm_stage3", "blockedByBug-584137"},
-			groups={"sm_stage4"})
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4", "blockedByBug-584137"})
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
 		this.unsubscribeFromAllProductIDs();
