@@ -135,8 +135,9 @@ public class Subscribe extends Setup{
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
-		sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
-		
+		sshCommandRunner.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
+		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
+		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
 		this.sleep(70*1000);
 		
 		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
