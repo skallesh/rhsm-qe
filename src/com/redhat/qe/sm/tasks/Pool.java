@@ -15,7 +15,8 @@ public class Pool {
 	public String productId;
 	
 	private Date parseDateString(String dateString) throws ParseException{
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		//DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy");
 		return df.parse(dateString);
 	}
 	
