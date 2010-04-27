@@ -157,10 +157,11 @@ public class Subscribe extends Setup{
 				0,
 				"pem", 
 				null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
+		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
 				"ls /etc/pki/product", 
 				0,
 				"pem", 
-				null);
+				null);*/
 	}
 }
