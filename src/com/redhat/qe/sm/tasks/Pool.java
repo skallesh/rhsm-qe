@@ -3,6 +3,7 @@ package com.redhat.qe.sm.tasks;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Pool {
@@ -12,7 +13,9 @@ public class Pool {
 	public Integer consumed;
 	public Integer quantity;
 	public String poolId;
-	public String productId;
+	public String poolName;
+	
+	public ArrayList<ProductID> associatedProductIDs;
 	
 	private Date parseDateString(String dateString) throws ParseException{
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -27,18 +30,23 @@ public class Pool {
 		return endDate.after(new Date());
 	}
 	
+	public void addProductID(String productID){
+		associatedProductIDs.add(new ProductID(productID, this));
+	}
+	
 	@Override
 	public boolean equals(Object obj){
-		return ((Pool)obj).productId.contains(this.productId);
+		return ((Pool)obj).poolName.contains(this.poolName);
 	}
 	
 	public Pool(String subscriptionLine) throws ParseException{
 		String[] components = subscriptionLine.split("\\t");
 		
-		productId = components[0].trim();
+		poolName = components[0].trim();
 		endDate = this.parseDateString(components[1].trim());
 		poolId = components[2].trim();
 		quantity = Integer.parseInt(components[3].trim());
+		associatedProductIDs = new ArrayList<ProductID>();
 	}
 	
 	public Pool(Date startDate,
@@ -54,6 +62,11 @@ public class Pool {
 		this.consumed = consumed;
 		this.quantity = quantity;
 		this.poolId = id;
-		this.productId = productId;
+		this.poolName = productId;
+	}
+	
+	public Pool(String poolName, String poolId){
+		this.poolName = poolName;
+		this.poolId = poolId;
 	}
 }

@@ -22,6 +22,21 @@ public class Subscribe extends Setup{
 		this.subscribeToAllPools(false);
 	}
 	
+	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4", "blockedByBug-584137"})
+	public void SubscribeToASingleEntitlementByProductID_Test(){
+		this.unsubscribeFromAllProductIDs();
+		Pool MCT0696 = new Pool("MCT0696", "biteme");
+		MCT0696.addProductID("RH Infrastructure Solutions");
+		this.subscribeToPool(MCT0696, false);
+		this.refreshSubscriptions();
+		for (ProductID pid:MCT0696.associatedProductIDs){
+			Assert.assertTrue(this.consumedProductIDs.contains(pid),
+					"ProductID '"+pid.productId+"' consumed from Pool '"+MCT0696.poolName+"'");
+		}
+	}
+	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using pool ID",
 			dependsOnGroups={"sm_stage3"},
 			groups={"sm_stage4", "blockedByBug-584137"})
@@ -50,7 +65,7 @@ public class Subscribe extends Setup{
 		for(Pool sub:this.availPools){
 			this.subscribeToPool(sub, false);
 			RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
-					RHSM_LOC+"subscribe --product="+sub.productId);
+					RHSM_LOC+"subscribe --product="+sub.poolName);
 		}
 	}
 	
@@ -93,7 +108,7 @@ public class Subscribe extends Setup{
 		this.adjustRHSMYumRepo(false);
 		for(Pool sub:this.availPools)
 			for(String repo:this.getYumRepolist())
-				if(repo.contains(sub.productId))
+				if(repo.contains(sub.poolName))
 					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
 	}
 	

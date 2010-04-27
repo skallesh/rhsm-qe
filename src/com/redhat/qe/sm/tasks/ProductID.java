@@ -7,6 +7,7 @@ import java.util.Date;
 
 public class ProductID {
 	public String productId;
+	public Pool fromPool;
 	public boolean isActive;
 	public Date endDate;
 	
@@ -25,5 +26,10 @@ public class ProductID {
 		productId = components[0].trim();
 		isActive = components[1].toLowerCase().contains("true");
 		endDate = this.parseDateString(components[2].trim());
+	}
+	
+	public ProductID(String productID, Pool fromPool){
+		this.productId = productID;
+		this.fromPool = fromPool;
 	}
 }

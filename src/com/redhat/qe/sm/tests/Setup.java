@@ -182,18 +182,18 @@ public class Setup extends TestScript{
 	
 	public void subscribeToPool(Pool pool, boolean withPoolID){
 		if(withPoolID){
-			log.info("Subscribing to pool with pool ID:"+ pool.productId);
+			log.info("Subscribing to pool with pool ID:"+ pool.poolName);
 			sshCommandRunner.runCommandAndWait(RHSM_LOC +
 					"subscribe --pool="+pool.poolId);
 		}
 		else{
-			log.info("Subscribing to pool with productID:"+ pool.productId);
+			log.info("Subscribing to pool with productID:"+ pool.poolName);
 			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"subscribe --product="+pool.productId);
+					"subscribe --product="+pool.poolName);
 		}
 		this.refreshSubscriptions();
 		Assert.assertTrue(consumedProductIDs.size() > 0, "Successfully subscribed to pool with pool ID: "+
-				pool.poolId + " and productID: "+ pool.productId);
+				pool.poolId + " and productID: "+ pool.poolName);
 	}
 	
 	public void subscribeToRegToken(String regtoken){
