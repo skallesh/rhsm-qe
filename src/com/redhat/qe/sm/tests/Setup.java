@@ -190,13 +190,13 @@ public class Setup extends TestScript{
 					"subscribe --pool="+pool.poolId);
 		}
 		else{
-			log.info("Subscribing to pool with productID:"+ pool.poolName);
+			log.info("Subscribing to pool with pool name:"+ pool.poolName);
 			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"subscribe --product="+pool.poolName);
+					"subscribe --product=\""+pool.poolName+"\"");
 		}
 		this.refreshSubscriptions();
 		Assert.assertTrue(consumedProductIDs.size() > 0, "Successfully subscribed to pool with pool ID: "+
-				pool.poolId + " and productID: "+ pool.poolName);
+				pool.poolId + " and pool name: "+ pool.poolName);
 	}
 	
 	public void subscribeToRegToken(String regtoken){
@@ -243,7 +243,7 @@ public class Setup extends TestScript{
 	public void unsubscribeFromProductID(ProductID pid){
 			log.info("Unsubscribing from productID:"+ pid.productId);
 			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"unsubscribe --product="+pid.productId);
+					"unsubscribe --product=\""+pid.productId+"\"");
 		this.refreshSubscriptions();
 		Assert.assertFalse(consumedProductIDs.contains(pid),
 				"Successfully unsubscribed from productID: "+ pid.productId);

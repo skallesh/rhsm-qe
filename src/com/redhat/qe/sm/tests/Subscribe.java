@@ -62,7 +62,8 @@ public class Subscribe extends Setup{
 	public void SubscribeAndSubscribeAgain_Test(){
 		this.unsubscribeFromAllProductIDs();
 		this.refreshSubscriptions();
-		for(Pool sub:this.availPools){
+		ArrayList<Pool> availablePools = (ArrayList<Pool>)this.availPools.clone();
+		for(Pool sub:availablePools){
 			this.subscribeToPool(sub, false);
 			RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
 					RHSM_LOC+"subscribe --product="+sub.poolName);
@@ -117,7 +118,7 @@ public class Subscribe extends Setup{
 			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test(){
-		this.changeCertFrequency("60");
+		this.changeCertFrequency("1");
 		this.sleep(70*1000);
 		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
 				rhsmcertdLogFile,
