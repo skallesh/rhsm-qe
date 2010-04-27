@@ -118,9 +118,12 @@ public class Setup extends TestScript{
 		sshCommandRunner.runCommandAndWait("rm -f /tmp/subscription-manager.rpm");
 		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate "+rpmLocation);
 		
+		
 		log.info("Installing newest subscription-manager RPM...");
 		sshCommandRunner.runCommandAndWait("rpm --force -e subscription-manager");
-		sshCommandRunner.runCommandAndWait("rpm --force --nodeps -Uvh /tmp/subscription-manager.rpm");
+		//sshCommandRunner.runCommandAndWait("rpm --force --nodeps -Uvh /tmp/subscription-manager.rpm");
+		//using yumlocalinstall should enable testing on RHTS boxes right off the bat.
+		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck");
 	}
 	
 	public void updateSMConfigFile(String hostname, String port){
