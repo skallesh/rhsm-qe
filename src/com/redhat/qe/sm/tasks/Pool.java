@@ -64,10 +64,12 @@ public class Pool {
 		this.quantity = quantity;
 		this.poolId = id;
 		this.poolName = productId;
+		associatedProductIDs = new ArrayList<ProductID>();
 	}
 	
 	public Pool(String poolName, String poolId){
 		this.poolName = poolName;
 		this.poolId = poolId;
+		associatedProductIDs = new ArrayList<ProductID>();
 	}
 }
