@@ -132,6 +132,7 @@ public class Subscribe extends Setup{
 			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
+		SubscribeToASingleEntitlementByProductID_Test();
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
@@ -148,12 +149,12 @@ public class Subscribe extends Setup{
 		
 		//verify that PEM files are present in all certificate directories
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement",
+				"ls /etc/pki/entitlement | grep pem",
 				0,
 				"pem", 
 				null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement/product", 
+				"ls /etc/pki/entitlement/product | grep pem", 
 				0,
 				"pem", 
 				null);
