@@ -120,7 +120,7 @@ public class Setup extends TestScript{
 		
 		
 		log.info("Installing newest subscription-manager RPM...");
-		sshCommandRunner.runCommandAndWait("rpm --force -e subscription-manager");
+		sshCommandRunner.runCommandAndWait("rpm --force -e subscription-manager subscription-manager-gnome");
 		//sshCommandRunner.runCommandAndWait("rpm --force --nodeps -Uvh /tmp/subscription-manager.rpm");
 		//using yumlocalinstall should enable testing on RHTS boxes right off the bat.
 		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck");
