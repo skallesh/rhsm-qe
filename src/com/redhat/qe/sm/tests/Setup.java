@@ -116,7 +116,7 @@ public class Setup extends TestScript{
 	public void installLatestSMRPM(){
 		log.info("Retrieving latest subscription-manager RPM...");
 		sshCommandRunner.runCommandAndWait("rm -f /tmp/subscription-manager.rpm");
-		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate "+rpmLocation);
+		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate \""+rpmLocation+"\"");
 		
 		
 		log.info("Installing newest subscription-manager RPM...");
