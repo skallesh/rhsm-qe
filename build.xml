@@ -1,8 +1,9 @@
 <project name="sm" default="compile" basedir=".">
-	
+  
 	<property environment="env" />
 	<property name="test.build.dir" location="bin" />
 	<property name="test.src.dir" location="src" />
+	<property name="test.report.dir" location="report" />
 	<condition property="webui-framework.dir" value="../../webui-framework">
 		<not>
 			<isset property="webui-framework.dir"/>
@@ -22,6 +23,11 @@
 		<path refid="utils.cp" />
 	</path>
 
+  <taskdef resource="testngtasks">
+    <classpath refid="utils.cp"/>
+  </taskdef>
+
+
 	<target name="deps">
 		<echo message="Compiling dependencies in ${webui-framework.dir}" />
 
@@ -39,6 +45,15 @@
 
 		<javac srcdir="${test.src.dir}" destdir="${test.build.dir}" classpathref="tests.cp" debug="on" />
 		<echo message="Done." />
+	</target>
+	
+	<target name="test" depends="compile">
+    <testng classpathref="tests.cp"
+            outputDir="${testng.report.dir}"
+            sourcedir="${test.src.dir}"
+            haltOnfailure="true">
+       <xmlfileset dir="." includes="sm-tests.xml"/>
+    </testng>
 	</target>
 		
 </project>

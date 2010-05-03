@@ -15,6 +15,11 @@ public class ProductID {
 		return endDate.after(new Date());
 	}
 	
+	@Override
+	public boolean equals(Object obj){
+		return ((ProductID)obj).productId.contains(this.productId);
+	}
+	
 	private Date parseDateString(String dateString) throws ParseException{
 		DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy");
 		return df.parse(dateString);

@@ -2,11 +2,14 @@ package com.redhat.qe.sm.tests;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -30,7 +33,7 @@ public class Subscribe extends Setup{
 		Pool MCT0696 = new Pool("MCT0696", "biteme");
 		MCT0696.addProductID("RH Infrastructure Solutions");
 		this.subscribeToPool(MCT0696, false);
-		this.refreshSubscriptions();
+		//this.refreshSubscriptions();
 		for (ProductID pid:MCT0696.associatedProductIDs){
 			Assert.assertTrue(this.consumedProductIDs.contains(pid),
 					"ProductID '"+pid.productId+"' consumed from Pool '"+MCT0696.poolName+"'");
@@ -75,12 +78,39 @@ public class Subscribe extends Setup{
 			groups={"sm_stage6"})
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test(){
+		this.subscribeToAllPools(false);
 		this.adjustRHSMYumRepo(true);
-		for(ProductID sub:this.consumedProductIDs){
+		/*for(ProductID sub:this.consumedProductIDs){
 			ArrayList<String> repos = this.getYumRepolist();
 			Assert.assertTrue(repos.contains(sub.productId),
 					"Yum reports product subscribed to repo: " + sub.productId);
-		}	
+		}*/
+	}
+	
+	@Test(description="subscription-manager Yum plugin: ensure ...",
+	        dependsOnGroups={"sm_stage6"},
+	        groups={"sm_stage7"})
+	@ImplementsTCMS(id="xxxx")
+	public void VerifyReposAvailableForEnabledContent(){
+	    
+	    sshCommandRunner.runCommandAndWait(
+            "find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
+	    );
+	    String butt = "butt";
+	    
+	    java.util.List<String[]> contentSets = parseProductCertificates(sshCommandRunner.getStdout());
+	    
+	    ArrayList<String> repos = this.getYumRepolist();
+	    
+	    for (String[] content : contentSets) {
+	        if ("1".equals(content[1])) { 
+                Assert.assertTrue(repos.contains(content[2]), 
+                        "Yum reports enabled content subscribed to repo: " + content[2]);
+	        } else {
+                Assert.assertFalse(repos.contains(content[2]), 
+                        "Yum reports disabled content not subscribed to repo: " + content[2]);
+	        }
+	    }
 	}
 	
 	@Test(description="subscription-manager Yum plugin: ensure content can be downloaded/installed",
@@ -132,7 +162,7 @@ public class Subscribe extends Setup{
 			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
-		SubscribeToASingleEntitlementByProductID_Test();
+		//SubscribeToASingleEntitlementByProductID_Test();
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");

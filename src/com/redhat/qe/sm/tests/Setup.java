@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -66,7 +69,7 @@ public class Setup extends TestScript{
 		//if extraneous output comes out over stdout, figure out where the useful output begins
 		int outputBegin = 2;
 		for(int i=0;i<availSubs.length;i++){
-			if(availSubs[i].contains("productId"))
+			if(availSubs[i].contains("productName"))
 				break;
 			outputBegin++;
 		}
@@ -106,9 +109,11 @@ public class Setup extends TestScript{
 	
 	public boolean allPoolsDecremented(ArrayList<Pool> beforeSubscription, ArrayList<Pool> afterSubscription){
 		for(Pool beforePool:beforeSubscription){
-			Pool correspondingPool = afterSubscription.get(afterSubscription.indexOf(beforePool));
-			if (correspondingPool.quantity >= beforePool.quantity)
+			if (afterSubscription.contains(beforePool))
 				return false;
+			//Pool correspondingPool = afterSubscription.get(afterSubscription.indexOf(beforePool));
+			//if (correspondingPool.quantity >= beforePool.quantity)
+			//	return false;
 		}
 		return true;
 	}
@@ -318,7 +323,7 @@ public class Setup extends TestScript{
 	}
 	
 	public void subscribeToAllPools(boolean withPoolID){
-		log.info("Subscribing to all pools"+
+		log.info("Subscribing to all pofols"+
 				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();
 		ArrayList<Pool>availablePools = (ArrayList<Pool>)this.availPools.clone();
@@ -338,4 +343,34 @@ public class Setup extends TestScript{
 		this.changeCertFrequency(certFrequency);
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 	}
+	
+    // each String[] is: content hash, enabled/disabled flag, content name
+    public java.util.List<String[]> parseProductCertificates(String certificates) {
+        Pattern enabled = Pattern.compile(
+                "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\.]*(\\d)$", 
+                Pattern.MULTILINE);
+        Pattern name = Pattern.compile(
+                "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)", 
+                Pattern.MULTILINE);
+        
+        Map<String, String> enabledFlag = new HashMap<String, String>();
+        Matcher matcher = enabled.matcher(certificates);
+        while (matcher.find()) {
+            enabledFlag.put(matcher.group(1), matcher.group(2));
+        }
+        
+        Map<String, String> contentName = new HashMap<String, String>();
+        Matcher matcher1 = name.matcher(certificates);
+        while (matcher1.find()) {
+            contentName.put(matcher1.group(1), matcher1.group(2));
+        }
+        
+        java.util.List<String[]> toReturn 
+            = new ArrayList<String[]>(enabledFlag.keySet().size());
+        for (String key : enabledFlag.keySet()) {
+            toReturn.add(new String[] {key, enabledFlag.get(key), contentName.get(key)});
+        }
+        
+        return toReturn;
+    }
 }
