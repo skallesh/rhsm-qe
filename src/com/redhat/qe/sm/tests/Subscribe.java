@@ -162,6 +162,7 @@ public class Subscribe extends Setup{
 			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
+		this.subscribeToAllPools(false);
 		//SubscribeToASingleEntitlementByProductID_Test();
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
