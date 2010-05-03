@@ -279,8 +279,9 @@ public class Setup extends TestScript{
 	public ArrayList<String> getYumRepolist(){
 		ArrayList<String> repos = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
-		String[] availRepos = SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
-				"yum repolist")[0].split("\\n");
+		
+		sshCommandRunner.runCommandAndWait("yum repolist");
+		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
