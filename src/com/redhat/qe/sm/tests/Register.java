@@ -26,7 +26,8 @@ public class Register extends Setup {
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server",
 			dependsOnGroups={"sm_stage1"},
-			groups={"sm_stage2"})
+			groups={"sm_stage2"},
+			alwaysRun=true)
 	@ImplementsTCMS(id="41677")
 	public void ValidRegistration_Test(){
 		this.registerToCandlepin(username, password);
