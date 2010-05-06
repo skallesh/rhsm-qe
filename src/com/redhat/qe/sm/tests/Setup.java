@@ -188,6 +188,17 @@ public class Setup extends TestScript{
 						"/etc/pki/consumer/cert.uuid is present after register");*/
 	}
 	
+	public void unregisterFromCandlepin(){
+		sshCommandRunner.runCommandAndWait(RHSM_LOC + 
+				"unregister");
+		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
+				"ls /etc/pki/entitlement/product | grep pem");
+		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
+				"stat /etc/pki/consumer/key.pem");
+		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
+				"stat /etc/pki/consumer/cert.pem");
+	}
+	
 	public void subscribeToPool(Pool pool, boolean withPoolID){
 		if(withPoolID){
 			log.info("Subscribing to pool with pool ID:"+ pool.poolName);

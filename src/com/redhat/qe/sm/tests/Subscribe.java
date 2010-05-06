@@ -90,7 +90,7 @@ public class Subscribe extends Setup{
 	@Test(description="subscription-manager Yum plugin: ensure ...",
 	        dependsOnGroups={"sm_stage6"},
 	        groups={"sm_stage7"})
-	@ImplementsTCMS(id="xxxx")
+	@ImplementsTCMS(id="47578")
 	public void VerifyReposAvailableForEnabledContent(){
 	    
 	    sshCommandRunner.runCommandAndWait(
