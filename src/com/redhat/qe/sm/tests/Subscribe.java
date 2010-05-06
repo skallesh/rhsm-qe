@@ -10,6 +10,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.sm.tasks.EntitlementCert;
 import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -92,16 +93,17 @@ public class Subscribe extends Setup{
 	        groups={"sm_stage7"})
 	@ImplementsTCMS(id="47578")
 	public void VerifyReposAvailableForEnabledContent(){
-	    
-	    sshCommandRunner.runCommandAndWait(
-            "find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
-	    );
-	    String butt = "butt";
-	    
-	    java.util.List<String[]> contentSets = parseProductCertificates(sshCommandRunner.getStdout());
-	    
 	    ArrayList<String> repos = this.getYumRepolist();
 	    
+	    for (EntitlementCert cert:this.currentCerts){
+	    	if(cert.enabled.contains("1"))
+	    		Assert.assertTrue(repos.contains(cert.label),
+	    				"Yum reports enabled content subscribed to repo: " + cert.label);
+	    	else
+	    		Assert.assertFalse(repos.contains(cert.label),
+	    				"Yum reports enabled content subscribed to repo: " + cert.label);
+	    }
+	    /*
 	    for (String[] content : contentSets) {
 	        if ("1".equals(content[1])) { 
                 Assert.assertTrue(repos.contains(content[2]), 
@@ -110,7 +112,7 @@ public class Subscribe extends Setup{
                 Assert.assertFalse(repos.contains(content[2]), 
                         "Yum reports disabled content not subscribed to repo: " + content[2]);
 	        }
-	    }
+	    }*/
 	}
 	
 	@Test(description="subscription-manager Yum plugin: ensure content can be downloaded/installed",

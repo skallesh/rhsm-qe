@@ -19,6 +19,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.tasks.EntitlementCert;
 import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -37,7 +38,6 @@ public class Setup extends TestScript{
 	String serverPort 					= System.getProperty("rhsm.server.port");
 	String serverBaseUrl				= System.getProperty("rhsm.server.baseurl");
 	String clientsshKeyPrivate			= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
-	//String clientsshKeyPath				= System.getProperty("automation.dir")+"/"+clientsshKeyPrivate;
 	String clientsshUser				= System.getProperty("rhsm.ssh.user","root");
 	String clientsshkeyPassphrase		= System.getProperty("rhsm.sshkey.passphrase","");
 	
@@ -47,14 +47,18 @@ public class Setup extends TestScript{
 	
 	ArrayList<Pool> availPools = new ArrayList<Pool>();
 	ArrayList<ProductID> consumedProductIDs = new ArrayList<ProductID>();
+	ArrayList<EntitlementCert> currentCerts = new ArrayList<EntitlementCert>();
 	
 	public static SSHCommandRunner sshCommandRunner = null;
 
 	public void refreshSubscriptions(){
 		availPools.clear();
 		consumedProductIDs.clear();
+		currentCerts.clear();
 		
 		log.info("Refreshing subscription information...");
+		
+		//refresh available subscriptions
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --available");
 		String availOut = sshCommandRunner.getStdout();
 		String availErr = sshCommandRunner.getStderr();
@@ -82,7 +86,7 @@ public class Setup extends TestScript{
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
 			}
 		
-			
+		//refresh consumed subscriptions
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --consumed");
 		String consumedOut = sshCommandRunner.getStdout();
 		String consumedErr = sshCommandRunner.getStderr();
@@ -105,16 +109,21 @@ public class Setup extends TestScript{
 			} catch (ParseException e) {
 				log.warning("Unparseable subscription line: "+ consumedSubs[i]);
 			}
+		
+		//refresh entitlement certificates
+		sshCommandRunner.runCommandAndWait(
+			"find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
+		);
+		String certificates = sshCommandRunner.getStdout();
+		HashMap<String,HashMap<String,String>> certMap = parseCerts(certificates);
+		for(String certKey:certMap.keySet())
+			currentCerts.add(new EntitlementCert(certKey, certMap.get(certKey)));
 	}
 	
-	public boolean allPoolsDecremented(ArrayList<Pool> beforeSubscription, ArrayList<Pool> afterSubscription){
-		for(Pool beforePool:beforeSubscription){
+	public boolean poolsNoLongerAvailable(ArrayList<Pool> beforeSubscription, ArrayList<Pool> afterSubscription){
+		for(Pool beforePool:beforeSubscription)
 			if (afterSubscription.contains(beforePool))
 				return false;
-			//Pool correspondingPool = afterSubscription.get(afterSubscription.indexOf(beforePool));
-			//if (correspondingPool.quantity >= beforePool.quantity)
-			//	return false;
-		}
 		return true;
 	}
 	
@@ -123,10 +132,8 @@ public class Setup extends TestScript{
 		sshCommandRunner.runCommandAndWait("rm -f /tmp/subscription-manager.rpm");
 		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate \""+rpmLocation+"\"");
 		
-		
 		log.info("Installing newest subscription-manager RPM...");
 		sshCommandRunner.runCommandAndWait("rpm --force -e subscription-manager subscription-manager-gnome");
-		//sshCommandRunner.runCommandAndWait("rpm --force --nodeps -Uvh /tmp/subscription-manager.rpm");
 		//using yumlocalinstall should enable testing on RHTS boxes right off the bat.
 		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck");
 	}
@@ -181,11 +188,6 @@ public class Setup extends TestScript{
 						"stat /etc/pki/consumer/cert.pem").intValue(),
 						0,
 						"/etc/pki/consumer/cert.pem is present after register");
-		/*Assert.assertEquals(
-				sshCommandRunner.runCommandAndWait(
-						"stat /etc/pki/consumer/cert.uuid").intValue(),
-						0,
-						"/etc/pki/consumer/cert.uuid is present after register");*/
 	}
 	
 	public void unregisterFromCandlepin(){
@@ -335,13 +337,13 @@ public class Setup extends TestScript{
 	}
 	
 	public void subscribeToAllPools(boolean withPoolID){
-		log.info("Subscribing to all pofols"+
+		log.info("Subscribing to all pools"+
 				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();
 		ArrayList<Pool>availablePools = (ArrayList<Pool>)this.availPools.clone();
 		for (Pool sub:availablePools)
 			this.subscribeToPool(sub, withPoolID);
-		Assert.assertTrue(this.allPoolsDecremented(availablePools, this.availPools),
+		Assert.assertTrue(this.poolsNoLongerAvailable(availablePools, this.availPools),
 				"Pool quantities successfully decremented");
 	}
 	
@@ -356,33 +358,38 @@ public class Setup extends TestScript{
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 	}
 	
-    // each String[] is: content hash, enabled/disabled flag, content name
-    public java.util.List<String[]> parseProductCertificates(String certificates) {
-        Pattern enabled = Pattern.compile(
-                "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\.]*(\\d)$", 
-                Pattern.MULTILINE);
-        Pattern name = Pattern.compile(
-                "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)", 
-                Pattern.MULTILINE);
-        
-        Map<String, String> enabledFlag = new HashMap<String, String>();
-        Matcher matcher = enabled.matcher(certificates);
+	public HashMap<String, HashMap<String, String>> parseCerts(String certificates){
+		HashMap<String, HashMap<String, String>> productMap = new HashMap<String, HashMap<String, String>>();
+		HashMap<String, String> regexes = new HashMap<String, String>();
+		
+		regexes.put("name", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.1:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		regexes.put("label", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		regexes.put("phys_ent", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.3:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		regexes.put("flex_ent", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.4:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		regexes.put("vendor_id", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.5:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		regexes.put("download_url", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		regexes.put("enabled", "1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+		
+		for(String component:regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(component), Pattern.MULTILINE);
+			this.addToCertMap(pat, certificates, productMap, component);
+		}
+		
+		return productMap;
+	}
+	
+	private boolean addToCertMap(Pattern regex, 
+			String certificates, HashMap<String, HashMap<String, String>> productMap, String sub_key){
+        Matcher matcher = regex.matcher(certificates);
         while (matcher.find()) {
-            enabledFlag.put(matcher.group(1), matcher.group(2));
+            HashMap<String, String> singleCertMap = productMap.get(matcher.group(1));
+            if(singleCertMap == null){
+            	HashMap<String, String> newBranch = new HashMap<String, String>();
+            	singleCertMap = newBranch;
+            }
+            singleCertMap.put(sub_key, matcher.group(2));
+            productMap.put(matcher.group(1), singleCertMap);
         }
-        
-        Map<String, String> contentName = new HashMap<String, String>();
-        Matcher matcher1 = name.matcher(certificates);
-        while (matcher1.find()) {
-            contentName.put(matcher1.group(1), matcher1.group(2));
-        }
-        
-        java.util.List<String[]> toReturn 
-            = new ArrayList<String[]>(enabledFlag.keySet().size());
-        for (String key : enabledFlag.keySet()) {
-            toReturn.add(new String[] {key, enabledFlag.get(key), contentName.get(key)});
-        }
-        
-        return toReturn;
-    }
+        return true;
+	}
 }
