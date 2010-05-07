@@ -103,16 +103,6 @@ public class Subscribe extends Setup{
 	    		Assert.assertFalse(repos.contains(cert.label),
 	    				"Yum reports enabled content subscribed to repo: " + cert.label);
 	    }
-	    /*
-	    for (String[] content : contentSets) {
-	        if ("1".equals(content[1])) { 
-                Assert.assertTrue(repos.contains(content[2]), 
-                        "Yum reports enabled content subscribed to repo: " + content[2]);
-	        } else {
-                Assert.assertFalse(repos.contains(content[2]), 
-                        "Yum reports disabled content not subscribed to repo: " + content[2]);
-	        }
-	    }*/
 	}
 	
 	@Test(description="subscription-manager Yum plugin: ensure content can be downloaded/installed",

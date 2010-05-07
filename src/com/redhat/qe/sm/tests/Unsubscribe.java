@@ -38,16 +38,6 @@ public class Unsubscribe extends Setup{
 				"yum repolist");
 	}
 	
-	/*
-	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using pool ID",
-			dependsOnMethods="EnableYumRepoAndVerifyContentAvailable_Test",
-			groups={"sm"})
-	@ImplementsTCMS(id="41689")
-	public void UnsubscribeFromValidSubscriptionsByPoolID_Test(){
-		this.subscribeToAllSubscriptions(true);
-		this.unsubscribeFromAllSubscriptions(true);
-	}*/
-	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
 			dependsOnGroups={"sm_stage4"},
 			groups={"sm_stage5", "blockedByBug-584137"})
