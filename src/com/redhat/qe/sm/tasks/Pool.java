@@ -1,10 +1,13 @@
 package com.redhat.qe.sm.tasks;
 
+import java.lang.reflect.Field;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 public class Pool {
 	public Date startDate;
@@ -14,6 +17,7 @@ public class Pool {
 	public Integer quantity;
 	public String poolId;
 	public String poolName;
+	public String productSku;
 	
 	public ArrayList<ProductID> associatedProductIDs;
 	
@@ -38,6 +42,22 @@ public class Pool {
 	@Override
 	public boolean equals(Object obj){
 		return ((Pool)obj).poolName.contains(this.poolName);
+	}
+	
+	public Pool(HashMap<String, String> poolData){
+		for (String poolElem: poolData.keySet()){
+			try {
+				Field correspondingField = this.getClass().getField(poolElem);
+				if (correspondingField.getType().equals(Date.class))
+					correspondingField.set(this, this.parseDateString(poolData.get(poolElem)));
+				else if (correspondingField.getType().equals(Integer.class))
+					correspondingField.set(this, Integer.parseInt(poolData.get(poolElem)));
+				else
+					correspondingField.set(this, poolData.get(poolElem));
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public Pool(String subscriptionLine) throws ParseException{

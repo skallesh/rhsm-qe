@@ -32,7 +32,7 @@ public class Subscribe extends Setup{
 	public void SubscribeToASingleEntitlementByProductID_Test(){
 		this.unsubscribeFromAllProductIDs();
 		Pool MCT0696 = new Pool("MCT0696", "biteme");
-		MCT0696.addProductID("RH Infrastructure Solutions");
+		MCT0696.addProductID("Red Hat Directory Server");
 		this.subscribeToPool(MCT0696, false);
 		//this.refreshSubscriptions();
 		for (ProductID pid:MCT0696.associatedProductIDs){

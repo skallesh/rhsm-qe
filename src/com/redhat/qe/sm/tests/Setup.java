@@ -65,6 +65,13 @@ public class Setup extends TestScript{
 		Assert.assertFalse(availOut.toLowerCase().contains("traceback") |
 				availErr.toLowerCase().contains("traceback"),
 				"list --available call does not produce a traceback");
+		
+		ArrayList<HashMap<String, String>> poolList = this.parseAvailableEntitlements(availOut);
+		for(HashMap<String, String> poolMap:poolList)
+			availPools.add(new Pool(poolMap));
+		
+		
+		/*
 		String[] availSubs = availOut.split("\\n");
 			
 			//SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
@@ -85,6 +92,7 @@ public class Setup extends TestScript{
 				e.printStackTrace();
 				log.warning("Unparseable subscription line: "+ availSubs[i]);
 			}
+		*/
 		
 		//refresh consumed subscriptions
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --consumed");
@@ -93,8 +101,14 @@ public class Setup extends TestScript{
 		Assert.assertFalse(consumedOut.toLowerCase().contains("traceback") |
 				consumedErr.toLowerCase().contains("traceback"),
 				"list --consumed call does not produce a traceback");
-		String[] consumedSubs = consumedOut.split("\\n");
 		
+		ArrayList<HashMap<String, String>> productList = this.parseConsumedProducts(consumedOut);
+		for(HashMap<String, String> productMap:productList)
+			consumedProductIDs.add(new ProductID(productMap));
+		
+		/*
+ 		
+ 		String[] consumedSubs = consumedOut.split("\\n");
 		//if extraneous output comes out over stdout, figure out where the useful output begins
 		outputBegin = 2;
 		for(int i=0;i<consumedSubs.length;i++){
@@ -109,7 +123,7 @@ public class Setup extends TestScript{
 			} catch (ParseException e) {
 				log.warning("Unparseable subscription line: "+ consumedSubs[i]);
 			}
-		
+		*/
 		//refresh entitlement certificates
 		sshCommandRunner.runCommandAndWait(
 			"find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
@@ -210,7 +224,7 @@ public class Setup extends TestScript{
 		else{
 			log.info("Subscribing to pool with pool name:"+ pool.poolName);
 			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"subscribe --product=\""+pool.poolName+"\"");
+					"subscribe --product=\""+pool.productSku+"\"");
 		}
 		this.refreshSubscriptions();
 		Assert.assertTrue(consumedProductIDs.size() > 0, "Successfully subscribed to pool with pool ID: "+
@@ -259,9 +273,9 @@ public class Setup extends TestScript{
 	}
 	
 	public void unsubscribeFromProductID(ProductID pid){
-			log.info("Unsubscribing from productID:"+ pid.productId);
-			sshCommandRunner.runCommandAndWait(RHSM_LOC +
-					"unsubscribe --product=\""+pid.productId+"\"");
+		log.info("Unsubscribing from productID:"+ pid.productId);
+		sshCommandRunner.runCommandAndWait(RHSM_LOC +
+				"unsubscribe --serial=\""+pid.serialNumber+"\"");
 		this.refreshSubscriptions();
 		Assert.assertFalse(consumedProductIDs.contains(pid),
 				"Successfully unsubscribed from productID: "+ pid.productId);
@@ -372,23 +386,75 @@ public class Setup extends TestScript{
 		
 		for(String component:regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(component), Pattern.MULTILINE);
-			this.addToCertMap(pat, certificates, productMap, component);
+			this.addRegexMatchesToMap(pat, certificates, productMap, component);
 		}
 		
 		return productMap;
 	}
 	
-	private boolean addToCertMap(Pattern regex, 
-			String certificates, HashMap<String, HashMap<String, String>> productMap, String sub_key){
-        Matcher matcher = regex.matcher(certificates);
+	public ArrayList<HashMap<String, String>> parseAvailableEntitlements(String entitlements){
+		ArrayList<HashMap<String, String>> entitlementList = new ArrayList<HashMap<String, String>>();
+		HashMap<String, String> regexes = new HashMap<String, String>();
+		
+		regexes.put("poolName", "Name:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("productSku", "Product SKU:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("poolId", "PoolId:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("quantity", "quantity:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("endDate", "Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+		
+		for(String component:regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(component), Pattern.MULTILINE);
+			this.addRegexMatchesToList(pat, entitlements, entitlementList, component);
+		}
+		
+		return entitlementList;
+	}
+	
+	public ArrayList<HashMap<String, String>> parseConsumedProducts(String products){
+		ArrayList<HashMap<String, String>> productList = new ArrayList<HashMap<String, String>>();
+		HashMap<String, String> regexes = new HashMap<String, String>();
+		
+		regexes.put("productId", "Name:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("serialNumber", "SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("isActive", "Active:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("startDate", "Begins:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("endDate", "Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+		
+		for(String component:regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(component), Pattern.MULTILINE);
+			this.addRegexMatchesToList(pat, products, productList, component);
+		}
+		
+		return productList;
+	}
+	
+	private boolean addRegexMatchesToList(Pattern regex,
+			String to_parse, ArrayList<HashMap<String, String>> matchList, String sub_key){
+		Matcher matcher = regex.matcher(to_parse);
+		int currListElem=0;
+		while (matcher.find()){
+			if (matchList.size() < currListElem + 1)
+				matchList.add(new HashMap<String, String>());
+			HashMap<String, String> matchMap = matchList.get(currListElem);
+			matchMap.put(sub_key, matcher.group(1).trim());
+			matchList.set(currListElem, matchMap);
+			currListElem++;
+		}
+		return true;
+	}
+			
+	
+	private boolean addRegexMatchesToMap(Pattern regex, 
+			String to_parse, HashMap<String, HashMap<String, String>> matchMap, String sub_key){
+        Matcher matcher = regex.matcher(to_parse);
         while (matcher.find()) {
-            HashMap<String, String> singleCertMap = productMap.get(matcher.group(1));
+            HashMap<String, String> singleCertMap = matchMap.get(matcher.group(1));
             if(singleCertMap == null){
             	HashMap<String, String> newBranch = new HashMap<String, String>();
             	singleCertMap = newBranch;
             }
             singleCertMap.put(sub_key, matcher.group(2));
-            productMap.put(matcher.group(1), singleCertMap);
+            matchMap.put(matcher.group(1), singleCertMap);
         }
         return true;
 	}
