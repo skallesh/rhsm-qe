@@ -52,7 +52,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using registration token",
 			dependsOnGroups={"sm_stage8"},
-			groups={"sm_stage9", "blockedByBug-584137"})
+			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41681")
 	public void SubscribeToRegToken_Test(){
 		this.unsubscribeFromAllProductIDs();
@@ -107,7 +107,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager Yum plugin: ensure content can be downloaded/installed",
 			dependsOnGroups={"sm_stage6"},
-			groups={"sm_stage7"})
+			groups={"sm_stage7", "not_implemented"})
 	@ImplementsTCMS(id="41695")
 	public void InstallPackageFromRHSMYumRepo_Test(){
 		HashMap<String, String[]> pkgList = this.getPackagesCorrespondingToSubscribedRepos();
@@ -125,7 +125,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager Yum plugin: enable/disable",
 			dependsOnGroups={"sm_stage7"},
-			groups={"sm_stage8"})
+			groups={"sm_stage8", "not_implemented"})
 	@ImplementsTCMS(id="41696")
 	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
 		this.adjustRHSMYumRepo(false);
