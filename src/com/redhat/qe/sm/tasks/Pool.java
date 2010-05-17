@@ -87,8 +87,8 @@ public class Pool {
 		associatedProductIDs = new ArrayList<ProductID>();
 	}
 	
-	public Pool(String poolName, String poolId){
-		this.poolName = poolName;
+	public Pool(String productSku, String poolId){
+		this.productSku = productSku;
 		this.poolId = poolId;
 		associatedProductIDs = new ArrayList<ProductID>();
 	}
