@@ -21,6 +21,7 @@ public class Register extends Setup {
 			groups={"sm_stage1"})
 	@ImplementsTCMS(id="41691")
 	public void InvalidRegistration_Test(String username, String password){
+		this.unregisterFromCandlepin();
 		this.registerToCandlepin(username, password);
 	}
 	

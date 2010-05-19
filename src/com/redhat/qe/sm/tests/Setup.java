@@ -204,6 +204,14 @@ public class Setup extends TestScript{
 						"/etc/pki/consumer/cert.pem is present after register");
 	}
 	
+	public void checkInvalidRegistrationStrings(String username, String password){
+		sshCommandRunner.runCommandAndWait(RHSM_LOC +
+				"register --username="+username+this.getRandInt()+
+				" --password="+password+this.getRandInt()+" --force");
+		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
+				"Invalid username or password. To create a login, please visit https:\\/\\/www.redhat.com\\/wapps\\/ugc\\/register.html");
+	}
+	
 	public void unregisterFromCandlepin(){
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + 
 				"unregister");
@@ -283,6 +291,7 @@ public class Setup extends TestScript{
 	
 	public void cleanOutAllCerts(){
 		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
+		
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
 		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
 		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
@@ -366,6 +375,7 @@ public class Setup extends TestScript{
 		sshCommandRunner = new SSHCommandRunner(clientHostname, 
 				clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
 		this.installLatestSMRPM();
+		this.unregisterFromCandlepin();
 		this.cleanOutAllCerts();
 		this.updateSMConfigFile(serverHostname, serverPort);
 		this.changeCertFrequency(certFrequency);
