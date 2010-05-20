@@ -22,7 +22,7 @@ public class Unregister extends Setup {
 		this.refreshSubscriptions();
 		for (Pool afterPool: this.availPools){
 			Pool correspondingPool = beforeSubscribePools.get(beforeSubscribePools.indexOf(afterPool));
-			Assert.assertEquals(correspondingPool.quantity == afterPool.quantity,
+			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,
 					"Pool before unregister \""+correspondingPool.poolName+
 					"\" subscription count matches corresponding pool before subscription");
 		}

@@ -32,6 +32,8 @@ public class Setup extends TestScript{
 	String serverHostname				= System.getProperty("rhsm.server.hostname");
 	String username						= System.getProperty("rhsm.client.username");
 	String password						= System.getProperty("rhsm.client.password");
+	String tcUnacceptedUsername			= System.getProperty("rhsm.client.username.tcunaccepted", "ssalevan");
+	String tcUnacceptedPassword			= System.getProperty("rhsm.client.password.tcunaccepted", "redhat");
 	String regtoken						= System.getProperty("rhsm.client.regtoken");
 	String certFrequency				= System.getProperty("rhsm.client.certfrequency");
 	String rpmLocation					= System.getProperty("rhsm.rpm");
@@ -400,6 +402,14 @@ public class Setup extends TestScript{
 		}
 		
 		return productMap;
+	}
+	
+	public void runRHSMCallAsLang(String lang,String rhsmCall){
+		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; "+RHSM_LOC + rhsmCall);
+	}
+	
+	public void setLanguage(String lang){
+		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
 	
 	public ArrayList<HashMap<String, String>> parseAvailableEntitlements(String entitlements){
