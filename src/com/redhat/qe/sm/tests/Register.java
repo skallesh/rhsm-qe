@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Register extends Setup {
@@ -57,11 +58,18 @@ public class Register extends Setup {
 	}
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			dependsOnGroups={"sm_stage1"},
-			groups={"sm_stage2"},
+			groups={"sm_stage1"},
 			alwaysRun=true)
 	public void ValidRegistrationAutosubscribe_Test(){
 		this.unregisterFromCandlepin();
+		String autoProdCert = "autoProdCert-"+this.getRandInt()+".pem";
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
+		sshCommandRunner.runCommandAndWait("wget -O /etc/pki/product/"+autoProdCert+" "+this.prodCertLocation);
+		this.registerToCandlepinAutosubscribe(username, password);
+		this.refreshSubscriptions();
+		Assert.assertTrue(this.consumedProductIDs.contains(new ProductID(this.prodCertProduct, null)),
+				"Expected product "+this.prodCertProduct+" appears in list --consumed call after autosubscribe");
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 	}
 	
 	@DataProvider(name="invalidRegistrationTermsAndConditionsLocalizedTest")

@@ -37,6 +37,8 @@ public class Setup extends TestScript{
 	String regtoken						= System.getProperty("rhsm.client.regtoken");
 	String certFrequency				= System.getProperty("rhsm.client.certfrequency");
 	String rpmLocation					= System.getProperty("rhsm.rpm");
+	String prodCertLocation				= System.getProperty("rhsm.prodcert", "http://gibson.usersys.redhat.com/automatjon/subscription-manager-gui/testcerts/product/rhds.pem");
+	String prodCertProduct				= System.getProperty("rhsm.prodcert.product", "Red Hat Directory Server");
 	String serverPort 					= System.getProperty("rhsm.server.port");
 	String serverBaseUrl				= System.getProperty("rhsm.server.baseurl");
 	String clientsshKeyPrivate			= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
@@ -194,6 +196,21 @@ public class Setup extends TestScript{
 	public void registerToCandlepin(String username, String password){
 		sshCommandRunner.runCommandAndWait(RHSM_LOC +
 				"register --username="+username+" --password="+password + " --force");
+		Assert.assertEquals(
+				sshCommandRunner.runCommandAndWait(
+						"stat /etc/pki/consumer/key.pem").intValue(),
+						0,
+						"/etc/pki/consumer/key.pem is present after register");
+		Assert.assertEquals(
+				sshCommandRunner.runCommandAndWait(
+						"stat /etc/pki/consumer/cert.pem").intValue(),
+						0,
+						"/etc/pki/consumer/cert.pem is present after register");
+	}
+	
+	public void registerToCandlepinAutosubscribe(String username, String password){
+		sshCommandRunner.runCommandAndWait(RHSM_LOC +
+				"register --username="+username+" --password="+password + " --force --autosubscribe");
 		Assert.assertEquals(
 				sshCommandRunner.runCommandAndWait(
 						"stat /etc/pki/consumer/key.pem").intValue(),
