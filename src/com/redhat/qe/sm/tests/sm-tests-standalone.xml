@@ -1,0 +1,37 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name="SMTestSuite">
+
+	<test name="subscription-manager Tests (designed for standalone Candlepin)">
+		<classes>
+			<class name="com.redhat.qe.sm.tests.GeneralTests" />	
+			<class name="com.redhat.qe.sm.tests.Register" />
+			<class name="com.redhat.qe.sm.tests.List" />			
+			<class name="com.redhat.qe.sm.tests.Subscribe" />	
+			<class name="com.redhat.qe.sm.tests.Unsubscribe" />
+			<class name="com.redhat.qe.sm.tests.Unregister" />
+		</classes>
+		<groups>
+			<run>
+				<include name="sm_setup" />
+				<include name="sm_stage1" />
+				<include name="sm_stage2" />
+				<include name="sm_stage3" />
+				<include name="sm_stage4" />
+				<include name="sm_stage5" />
+				<include name="sm_stage6" />
+				<include name="sm_stage7" />
+				<include name="sm_stage8" />
+				<include name="sm_stage9" />
+				<exclude name="not_implemented" />
+				<exclude name="only-IT" />
+			</run>
+		</groups>
+	</test>
+	
+	<listeners>
+  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />
+  		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+	</listeners>
+	
+</suite>

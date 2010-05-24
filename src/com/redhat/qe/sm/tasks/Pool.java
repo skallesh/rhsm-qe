@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-public class Pool {
+public class Pool extends CandlepinAbstraction {
 	public Date startDate;
 	public Date endDate;
 	public Boolean activeSubscription;
@@ -20,12 +20,6 @@ public class Pool {
 	public String productSku;
 	
 	public ArrayList<ProductID> associatedProductIDs;
-	
-	private Date parseDateString(String dateString) throws ParseException{
-		//DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy");
-		return df.parse(dateString);
-	}
 	
 	public Boolean isConsumed(){
 		return (consumed > 0);
@@ -44,23 +38,9 @@ public class Pool {
 		return ((Pool)obj).poolName.contains(this.poolName);
 	}
 	
-	public Pool(HashMap<String, String> poolData){
-		for (String poolElem: poolData.keySet()){
-			try {
-				Field correspondingField = this.getClass().getField(poolElem);
-				if (correspondingField.getType().equals(Date.class))
-					correspondingField.set(this, this.parseDateString(poolData.get(poolElem)));
-				else if (correspondingField.getType().equals(Integer.class))
-					correspondingField.set(this, Integer.parseInt(poolData.get(poolElem)));
-				else
-					correspondingField.set(this, poolData.get(poolElem));
-			} catch (Exception e){
-				e.printStackTrace();
-			}
-		}
-	}
-	
 	public Pool(String subscriptionLine) throws ParseException{
+		super(null);
+		
 		String[] components = subscriptionLine.split("\\t");
 		
 		poolName = components[0].trim();
@@ -77,6 +57,8 @@ public class Pool {
 			Integer quantity,
 			String id,
 			String productId){
+		super(null);
+		
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.activeSubscription = activeSubscription;
@@ -88,8 +70,14 @@ public class Pool {
 	}
 	
 	public Pool(String productSku, String poolId){
+		super(null);
+		
 		this.productSku = productSku;
 		this.poolId = poolId;
 		associatedProductIDs = new ArrayList<ProductID>();
+	}
+
+	public Pool(HashMap<String, String> poolMap) {
+		super(poolMap);
 	}
 }

@@ -21,6 +21,7 @@ import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.tasks.EntitlementCert;
 import com.redhat.qe.sm.tasks.Pool;
+import com.redhat.qe.sm.tasks.ProductCert;
 import com.redhat.qe.sm.tasks.ProductID;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -52,6 +53,7 @@ public class Setup extends TestScript{
 	ArrayList<Pool> availPools = new ArrayList<Pool>();
 	ArrayList<ProductID> consumedProductIDs = new ArrayList<ProductID>();
 	ArrayList<EntitlementCert> currentCerts = new ArrayList<EntitlementCert>();
+	ArrayList<ProductCert> productCerts = new ArrayList<ProductCert>();
 	
 	public static SSHCommandRunner sshCommandRunner = null;
 
@@ -74,30 +76,6 @@ public class Setup extends TestScript{
 		for(HashMap<String, String> poolMap:poolList)
 			availPools.add(new Pool(poolMap));
 		
-		
-		/*
-		String[] availSubs = availOut.split("\\n");
-			
-			//SSHCommandRunner.executeViaSSHWithReturn(clientHostname, "root",
-				//RHSM_LOC + "list --available")
-		
-		//if extraneous output comes out over stdout, figure out where the useful output begins
-		int outputBegin = 2;
-		for(int i=0;i<availSubs.length;i++){
-			if(availSubs[i].contains("productName"))
-				break;
-			outputBegin++;
-		}
-		
-		for(int i=outputBegin;i<availSubs.length;i++)
-			try {
-				availPools.add(new Pool(availSubs[i].trim()));
-			} catch (ParseException e) {
-				e.printStackTrace();
-				log.warning("Unparseable subscription line: "+ availSubs[i]);
-			}
-		*/
-		
 		//refresh consumed subscriptions
 		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list --consumed");
 		String consumedOut = sshCommandRunner.getStdout();
@@ -110,24 +88,18 @@ public class Setup extends TestScript{
 		for(HashMap<String, String> productMap:productList)
 			consumedProductIDs.add(new ProductID(productMap));
 		
-		/*
- 		
- 		String[] consumedSubs = consumedOut.split("\\n");
-		//if extraneous output comes out over stdout, figure out where the useful output begins
-		outputBegin = 2;
-		for(int i=0;i<consumedSubs.length;i++){
-			if(consumedSubs[i].contains("Product Consumed"))
-				break;
-			outputBegin++;
-		}
+		//refresh product certs
+		sshCommandRunner.runCommandAndWait(RHSM_LOC + "list");
+		String prodCertOut = sshCommandRunner.getStdout();
+		String prodCertErr = sshCommandRunner.getStderr();
+		Assert.assertFalse(prodCertOut.toLowerCase().contains("traceback") |
+				prodCertErr.toLowerCase().contains("traceback"),
+				"list call does not produce a trarceback");
 		
-		for(int i=outputBegin;i<consumedSubs.length;i++)
-			try {
-				consumedProductIDs.add(new ProductID(consumedSubs[i].trim()));
-			} catch (ParseException e) {
-				log.warning("Unparseable subscription line: "+ consumedSubs[i]);
-			}
-		*/
+		ArrayList<HashMap<String, String>> prodCertList = this.parseAvailableProductCerts(prodCertOut);
+		for(HashMap<String, String> prodCertMap:prodCertList)
+			consumedProductIDs.add(new ProductID(prodCertMap));
+		
 		//refresh entitlement certificates
 		sshCommandRunner.runCommandAndWait(
 			"find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
@@ -427,6 +399,23 @@ public class Setup extends TestScript{
 	
 	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
+	}
+	
+	public ArrayList<HashMap<String, String>> parseAvailableProductCerts(String productCerts){
+		ArrayList<HashMap<String, String>> productCertList = new ArrayList<HashMap<String, String>>();
+		HashMap<String, String> regexes = new HashMap<String, String>();
+		
+		regexes.put("productName", "ProductName:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("status", "Status:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("expires", "Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("subscription", "Subscription:\\s*([a-zA-Z0-9 ,:()]*)");
+		
+		for(String component:regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(component), Pattern.MULTILINE);
+			this.addRegexMatchesToList(pat, productCerts, productCertList, component);
+		}
+		
+		return productCertList;
 	}
 	
 	public ArrayList<HashMap<String, String>> parseAvailableEntitlements(String entitlements){

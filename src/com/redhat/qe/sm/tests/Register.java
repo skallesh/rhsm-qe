@@ -28,7 +28,7 @@ public class Register extends Setup {
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server using bogus credentials, check for localized strings",
 			dataProvider="invalidRegistrationLocalizedTest",
-			groups={"sm_stage1", "sprint9-script"})
+			groups={"sm_stage1", "sprint9-script", "only-IT"})
 	public void InvalidRegistrationLocalized_Test(String lang, String expectedMessage){
 		this.unregisterFromCandlepin();
 		this.runRHSMCallAsLang(lang,"register --force --username="+username+getRandInt()+" --password="+password+getRandInt());
@@ -39,7 +39,7 @@ public class Register extends Setup {
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server using a user who hasn't accepted terms and conditions, check for localized strings",
 			dataProvider="invalidRegistrationTermsAndConditionsLocalizedTest",
-			groups={"sm_stage1", "sprint9-script"})
+			groups={"sm_stage1", "sprint9-script", "only-IT"})
 	public void InvalidRegistrationTermsAndConditionsLocalized_Test(String lang, String expectedMessage){
 		this.unregisterFromCandlepin();
 		this.runRHSMCallAsLang(lang, "register --force --username="+tcUnacceptedUsername+" --password="+tcUnacceptedPassword);
@@ -58,7 +58,7 @@ public class Register extends Setup {
 	}
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"sm_stage1", "sprint9-script"},
+			groups={"sm_stage1", "sprint9-script", "only-IT"},
 			alwaysRun=true)
 	public void ValidRegistrationAutosubscribe_Test(){
 		this.unregisterFromCandlepin();

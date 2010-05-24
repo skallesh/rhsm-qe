@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 
-public class ProductID {
+public class ProductID extends CandlepinAbstraction {
 	public String productId;
 	public Integer serialNumber;
 	public Pool fromPool;
@@ -24,31 +24,16 @@ public class ProductID {
 		return ((ProductID)obj).productId.contains(this.productId);
 	}
 	
-	private Date parseDateString(String dateString) throws ParseException{
-		DateFormat df = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy");
-		return df.parse(dateString);
-	}
-	
 	public ProductID(HashMap<String, String> productData){
-		this.productId = "";
-		for (String productElem: productData.keySet()){
-			try {
-				Field correspondingField = this.getClass().getField(productElem);
-				if (correspondingField.getType().equals(Date.class))
-					correspondingField.set(this, this.parseDateString(productData.get(productElem)));
-				else if (correspondingField.getType().equals(Integer.class))
-					correspondingField.set(this, Integer.parseInt(productData.get(productElem)));
-				else if (correspondingField.getType().equals(Boolean.class))
-					correspondingField.set(this, productData.get(productElem).toLowerCase().contains("true"));
-				else
-					correspondingField.set(this, productData.get(productElem));
-			} catch (Exception e){
-				e.printStackTrace();
-			}
-		}
+		super(productData);
+		
+		if (this.productId == null)
+			this.productId = "";
 	}
 	
 	public ProductID(String subscriptionLine) throws ParseException{
+		super(null);
+		
 		String[] components = subscriptionLine.split("\\t");
 		
 		productId = components[0].trim();
@@ -57,6 +42,8 @@ public class ProductID {
 	}
 	
 	public ProductID(String productID, Pool fromPool){
+		super(null);
+		
 		this.productId = productID;
 		this.fromPool = fromPool;
 	}
