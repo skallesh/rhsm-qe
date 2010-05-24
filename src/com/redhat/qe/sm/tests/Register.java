@@ -19,7 +19,7 @@ public class Register extends Setup {
 	@Test(description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			dataProvider="invalidRegistrationTest",
 			expectedExceptions={AssertionError.class},
-			groups={"sm_stage1"})
+			groups={"sm_stage1", "only-IT"})
 	@ImplementsTCMS(id="41691")
 	public void InvalidRegistration_Test(String username, String password){
 		this.unregisterFromCandlepin();
