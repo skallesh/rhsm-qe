@@ -2,7 +2,7 @@
 
 <suite name="SMTestSuite">
 
-	<test name="subscription-manager Tests">
+	<test name="Sprint 9 Demo Script">
 		<classes>
 			<class name="com.redhat.qe.sm.tests.GeneralTests" />	
 			<class name="com.redhat.qe.sm.tests.Register" />
