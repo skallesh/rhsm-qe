@@ -9,5 +9,6 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/webui-framework/lib-src/trilead-ssh2-build213.zip!/trilead-ssh2-build213/javadoc"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/ojdbc14.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

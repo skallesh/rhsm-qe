@@ -1,20 +1,21 @@
 package com.redhat.qe.sm.tests;
 
 import java.io.IOException;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.Test;
 
 import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SCPTools;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 import com.redhat.qe.auto.testng.TestScript;
@@ -23,7 +24,6 @@ import com.redhat.qe.sm.tasks.EntitlementCert;
 import com.redhat.qe.sm.tasks.Pool;
 import com.redhat.qe.sm.tasks.ProductCert;
 import com.redhat.qe.sm.tasks.ProductID;
-import com.redhat.qe.tools.SSHCommandRunner;
 
 public class Setup extends TestScript{
 	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
@@ -46,6 +46,13 @@ public class Setup extends TestScript{
 	String clientsshUser				= System.getProperty("rhsm.ssh.user","root");
 	String clientsshkeyPassphrase		= System.getProperty("rhsm.sshkey.passphrase","");
 	
+	String itDBSQLDriver				= System.getProperty("rhsm.it.db.sqldriver", "oracle.jdbc.driver.OracleDriver");
+	String itDBHostname					= System.getProperty("rhsm.it.db.hostname");
+	String itDBDatabase					= System.getProperty("rhsm.it.db.database");
+	String itDBPort						= System.getProperty("rhsm.it.db.port", "1521");
+	String itDBUsername					= System.getProperty("rhsm.it.db.username");
+	String itDBPassword					= System.getProperty("rhsm.it.db.password");
+	
 	String defaultConfigFile			= "/etc/rhsm/rhsm.conf";
 	String rhsmcertdLogFile				= "/var/log/rhsm/rhsmcertd.log";
 	String rhsmYumRepoFile				= "/etc/yum/pluginconf.d/rhsmplugin.conf";
@@ -56,11 +63,36 @@ public class Setup extends TestScript{
 	ArrayList<ProductCert> productCerts = new ArrayList<ProductCert>();
 	
 	public static SSHCommandRunner sshCommandRunner = null;
+	public Connection itDBConnection = null;
+	
+	public void connectToDatabase(){
+		itDBConnection = null; 
+		try { 
+			// Load the JDBC driver 
+			String driverName = this.itDBSQLDriver;
+			Class.forName(driverName); 
+			// Create a connection to the database
+			String serverName = this.itDBHostname;
+			String portNumber = this.itDBPort;
+			String sid = this.itDBDatabase;
+			String url = "jdbc:oracle:thin:@" + serverName + ":" + portNumber + ":" + sid;
+			String username = this.itDBUsername;
+			String password = this.itDBPassword;
+			itDBConnection = DriverManager.getConnection(url, username, password); 
+			} 
+		catch (ClassNotFoundException e) { 
+			log.warning("Oracle JDBC driver not found!");
+		} 
+		catch (SQLException e) {
+			log.warning("Could not connect to backend IT database!  Traceback:\n" + e.getMessage());
+		}
+	}
 
 	public void refreshSubscriptions(){
 		availPools.clear();
 		consumedProductIDs.clear();
 		currentCerts.clear();
+		productCerts.clear();
 		
 		log.info("Refreshing subscription information...");
 		
