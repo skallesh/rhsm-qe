@@ -11,7 +11,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.tasks.ProductID;
+import com.redhat.qe.sm.abstractions.ProductID;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Register extends Setup {

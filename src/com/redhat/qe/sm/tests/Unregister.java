@@ -6,7 +6,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.tasks.Pool;
+import com.redhat.qe.sm.abstractions.Pool;
 
 public class Unregister extends Setup {
 	@Test(description="unregister the client",

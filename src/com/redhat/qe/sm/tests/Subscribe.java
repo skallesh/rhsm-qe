@@ -10,9 +10,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.sm.tasks.EntitlementCert;
-import com.redhat.qe.sm.tasks.Pool;
-import com.redhat.qe.sm.tasks.ProductID;
+import com.redhat.qe.sm.abstractions.EntitlementCert;
+import com.redhat.qe.sm.abstractions.Pool;
+import com.redhat.qe.sm.abstractions.ProductID;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Subscribe extends Setup{

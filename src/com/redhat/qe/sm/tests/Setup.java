@@ -20,10 +20,10 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.tasks.EntitlementCert;
-import com.redhat.qe.sm.tasks.Pool;
-import com.redhat.qe.sm.tasks.ProductCert;
-import com.redhat.qe.sm.tasks.ProductID;
+import com.redhat.qe.sm.abstractions.EntitlementCert;
+import com.redhat.qe.sm.abstractions.Pool;
+import com.redhat.qe.sm.abstractions.ProductCert;
+import com.redhat.qe.sm.abstractions.ProductID;
 
 public class Setup extends TestScript{
 	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
@@ -85,6 +85,15 @@ public class Setup extends TestScript{
 		} 
 		catch (SQLException e) {
 			log.warning("Could not connect to backend IT database!  Traceback:\n" + e.getMessage());
+		}
+	}
+	
+	public void getSalesToEngineeringProductBindings(){
+		try {
+			String products = itDBConnection.nativeSQL("select * from butt;");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			log.info("Database query for Sales-to-Engineering product bindings failed!  Traceback:\n"+e.getMessage());
 		}
 	}
 

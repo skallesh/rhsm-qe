@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tasks;
+package com.redhat.qe.sm.abstractions;
 
 import java.util.HashMap;
 

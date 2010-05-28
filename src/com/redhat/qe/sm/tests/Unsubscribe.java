@@ -4,7 +4,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.tasks.Pool;
+import com.redhat.qe.sm.abstractions.Pool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 public class Unsubscribe extends Setup{
