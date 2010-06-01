@@ -392,6 +392,7 @@ public class Setup extends TestScript{
 	}
 	
 	public void subscribeToAllPools(boolean withPoolID){
+		withPoolID = true;
 		log.info("Subscribing to all pools"+
 				(withPoolID?" (using pool ID)...":"..."));
 		this.refreshSubscriptions();

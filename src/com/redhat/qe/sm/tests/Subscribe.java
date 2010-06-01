@@ -19,7 +19,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4", "blockedByBug-584137"})
+			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41680,41899")
 	public void SubscribeToValidSubscriptionsByProductID_Test(){
 		this.unsubscribeFromAllProductIDs();
@@ -28,7 +28,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4", "blockedByBug-584137"})
+			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	public void SubscribeToASingleEntitlementByProductID_Test(){
 		this.unsubscribeFromAllProductIDs();
 		Pool MCT0696 = new Pool("MCT0696", "biteme");
@@ -61,7 +61,7 @@ public class Subscribe extends Setup{
 	
 	@Test(description="Subscribed for Already subscribed Entitlement.",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4", "blockedByBug-584137"})
+			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
 		this.unsubscribeFromAllProductIDs();

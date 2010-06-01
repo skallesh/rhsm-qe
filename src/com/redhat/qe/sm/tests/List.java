@@ -17,7 +17,7 @@ public class List extends Setup{
 	
 	@Test(description="subscription-manager-cli: list consumed entitlements",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4"})
+			groups={"sm_stage4", "not_implemented"})
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test(){
 		this.subscribeToAllPools(false);
