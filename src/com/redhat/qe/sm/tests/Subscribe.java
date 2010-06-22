@@ -95,7 +95,7 @@ public class Subscribe extends Setup{
 	public void VerifyReposAvailableForEnabledContent(){
 	    ArrayList<String> repos = this.getYumRepolist();
 	    
-	    for (EntitlementCert cert:this.currentCerts){
+	    for (EntitlementCert cert:this.currentEntitlementCerts){
 	    	if(cert.enabled.contains("1"))
 	    		Assert.assertTrue(repos.contains(cert.label),
 	    				"Yum reports enabled content subscribed to repo: " + cert.label);

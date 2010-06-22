@@ -59,7 +59,7 @@ public class Setup extends TestScript{
 	
 	ArrayList<Pool> availPools = new ArrayList<Pool>();
 	ArrayList<ProductID> consumedProductIDs = new ArrayList<ProductID>();
-	ArrayList<EntitlementCert> currentCerts = new ArrayList<EntitlementCert>();
+	ArrayList<EntitlementCert> currentEntitlementCerts = new ArrayList<EntitlementCert>();
 	ArrayList<ProductCert> productCerts = new ArrayList<ProductCert>();
 	
 	public static SSHCommandRunner sshCommandRunner = null;
@@ -100,7 +100,7 @@ public class Setup extends TestScript{
 	public void refreshSubscriptions(){
 		availPools.clear();
 		consumedProductIDs.clear();
-		currentCerts.clear();
+		currentEntitlementCerts.clear();
 		productCerts.clear();
 		
 		log.info("Refreshing subscription information...");
@@ -148,7 +148,7 @@ public class Setup extends TestScript{
 		String certificates = sshCommandRunner.getStdout();
 		HashMap<String,HashMap<String,String>> certMap = parseCerts(certificates);
 		for(String certKey:certMap.keySet())
-			currentCerts.add(new EntitlementCert(certKey, certMap.get(certKey)));
+			currentEntitlementCerts.add(new EntitlementCert(certKey, certMap.get(certKey)));
 	}
 	
 	public boolean poolsNoLongerAvailable(ArrayList<Pool> beforeSubscription, ArrayList<Pool> afterSubscription){
@@ -163,9 +163,11 @@ public class Setup extends TestScript{
 		sshCommandRunner.runCommandAndWait("rm -f /tmp/subscription-manager.rpm");
 		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate \""+rpmLocation+"\"");
 		
+		log.info("Uninstalling existing subscription-manager RPM...");
+		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager subscription-manager-gnome");
+		
 		log.info("Installing newest subscription-manager RPM...");
-		sshCommandRunner.runCommandAndWait("rpm --force -e subscription-manager subscription-manager-gnome");
-		//using yumlocalinstall should enable testing on RHTS boxes right off the bat.
+		//using yum localinstall should enable testing on RHTS boxes right off the bat.
 		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck");
 	}
 	
