@@ -20,7 +20,7 @@ public class Register extends Setup {
 			dataProvider="invalidRegistrationTest",
 			expectedExceptions={AssertionError.class},
 			groups={"sm_stage1", "only-IT"})
-	@ImplementsTCMS(id="41691")
+	@ImplementsTCMS(id="41691, 47918")
 	public void InvalidRegistration_Test(String username, String password){
 		this.unregisterFromCandlepin();
 		this.registerToCandlepin(username, password);
@@ -58,7 +58,7 @@ public class Register extends Setup {
 	}
 	
 	@Test(description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"sm_stage1", "sprint9-script", "only-IT"},
+			groups={"sm_stage1", "sprint9-script", "only-IT", "blockedByBug-602378"},
 			alwaysRun=true)
 	public void ValidRegistrationAutosubscribe_Test(){
 		this.unregisterFromCandlepin();
