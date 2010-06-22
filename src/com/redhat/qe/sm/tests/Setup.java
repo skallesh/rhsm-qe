@@ -33,13 +33,13 @@ public class Setup extends TestScript{
 	String serverHostname				= System.getProperty("rhsm.server.hostname");
 	String username						= System.getProperty("rhsm.client.username");
 	String password						= System.getProperty("rhsm.client.password");
-	String tcUnacceptedUsername			= System.getProperty("rhsm.client.username.tcunaccepted", "ssalevan");
-	String tcUnacceptedPassword			= System.getProperty("rhsm.client.password.tcunaccepted", "redhat");
+	String tcUnacceptedUsername			= System.getProperty("rhsm.client.username.tcunaccepted");
+	String tcUnacceptedPassword			= System.getProperty("rhsm.client.password.tcunaccepted");
 	String regtoken						= System.getProperty("rhsm.client.regtoken");
 	String certFrequency				= System.getProperty("rhsm.client.certfrequency");
 	String rpmLocation					= System.getProperty("rhsm.rpm");
-	String prodCertLocation				= System.getProperty("rhsm.prodcert", "http://gibson.usersys.redhat.com/automatjon/subscription-manager-gui/testcerts/product/rhds.pem");
-	String prodCertProduct				= System.getProperty("rhsm.prodcert.product", "Red Hat Directory Server");
+	String prodCertLocation				= System.getProperty("rhsm.prodcert");
+	String prodCertProduct				= System.getProperty("rhsm.prodcert.product");
 	String serverPort 					= System.getProperty("rhsm.server.port");
 	String serverBaseUrl				= System.getProperty("rhsm.server.baseurl");
 	String clientsshKeyPrivate			= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
