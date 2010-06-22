@@ -139,7 +139,7 @@ public class Setup extends TestScript{
 		
 		ArrayList<HashMap<String, String>> prodCertList = this.parseAvailableProductCerts(prodCertOut);
 		for(HashMap<String, String> prodCertMap:prodCertList)
-			consumedProductIDs.add(new ProductID(prodCertMap));
+			productCerts.add(new ProductCert(prodCertMap));
 		
 		//refresh entitlement certificates
 		sshCommandRunner.runCommandAndWait(
@@ -269,6 +269,7 @@ public class Setup extends TestScript{
 		this.refreshSubscriptions();
 		Assert.assertTrue(consumedProductIDs.size() > 0, "Successfully subscribed to pool with pool ID: "+
 				pool.poolId + " and pool name: "+ pool.poolName);
+		//TODO: add in more thorough product subscription verification
 	}
 	
 	public void subscribeToRegToken(String regtoken){
@@ -484,6 +485,7 @@ public class Setup extends TestScript{
 		
 		regexes.put("productId", "Name:\\s*([a-zA-Z0-9 ,:()]*)");
 		regexes.put("serialNumber", "SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
+		regexes.put("orderNumber", "OrderNumber:\\s*([a-zA-Z0-9 ,:()]*)");
 		regexes.put("isActive", "Active:\\s*([a-zA-Z0-9 ,:()]*)");
 		regexes.put("startDate", "Begins:\\s*([a-zA-Z0-9 ,:()]*)");
 		regexes.put("endDate", "Expires:\\s*([a-zA-Z0-9 ,:()]*)");

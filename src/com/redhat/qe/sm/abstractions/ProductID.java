@@ -7,6 +7,7 @@ import java.util.HashMap;
 public class ProductID extends CandlepinAbstraction {
 	public String productId;
 	public Integer serialNumber;
+	public Integer orderNumber;
 	public Pool fromPool;
 	public Boolean isActive;
 	public Date startDate;

@@ -45,8 +45,9 @@ public abstract class CandlepinAbstraction {
 			return;
 		
 		for (String productElem: productData.keySet()){
+			Field correspondingField = null;
 			try {
-				Field correspondingField = this.getClass().getField(productElem);
+				correspondingField = this.getClass().getField(productElem);
 				if (correspondingField.getType().equals(Date.class))
 					correspondingField.set(this, this.parseDateString(productData.get(productElem)));
 				else if (correspondingField.getType().equals(Integer.class))
@@ -56,7 +57,16 @@ public abstract class CandlepinAbstraction {
 				else
 					correspondingField.set(this, productData.get(productElem));
 			} catch (Exception e){
-				log.warning("Exception caught while creating Candlepin abstraction: "+e.getMessage());
+				log.warning("Exception caught while creating Candlepin abstraction: " + e.getMessage());
+				if (correspondingField != null)
+					try {
+						correspondingField.set(this, null);
+					} catch (Exception x){
+						log.warning("and we can't even set it to null.  Whaaaaaa?");
+					}
+				for (StackTraceElement ste:e.getStackTrace()){
+					log.warning(ste.toString());
+				}
 			}
 		}
 	}
