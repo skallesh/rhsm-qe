@@ -272,6 +272,7 @@ public class Setup extends TestScript{
 		Assert.assertTrue(consumedProductIDs.size() > 0, "Successfully subscribed to pool with pool ID: "+
 				pool.poolId + " and pool name: "+ pool.poolName);
 		//TODO: add in more thorough product subscription verification
+		// first improvement is to assert that the count of consumedProductIDs is at least one greater than the count of consumedProductIDs before the new pool was subscribed to.
 	}
 	
 	public void subscribeToRegToken(String regtoken){
