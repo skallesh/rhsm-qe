@@ -164,11 +164,17 @@ public class Setup extends TestScript{
 		sshCommandRunner.runCommandAndWait("wget -O /tmp/subscription-manager.rpm --no-check-certificate \""+rpmLocation+"\"");
 		
 		log.info("Uninstalling existing subscription-manager RPM...");
-		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager subscription-manager-gnome");
+		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed","");
+		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed","");
 		
 		log.info("Installing newest subscription-manager RPM...");
 		//using yum localinstall should enable testing on RHTS boxes right off the bat.
 		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck");
+
+		log.info("Installed version of subscription-manager RPM...");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*","");	// subscription-manager-0.63-1.el6.i686
 	}
 	
 	public void updateSMConfigFile(String hostname, String port){
