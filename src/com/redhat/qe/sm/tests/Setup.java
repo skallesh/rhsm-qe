@@ -171,7 +171,7 @@ public class Setup extends TestScript{
 		
 		log.info("Installing newest subscription-manager RPM...");
 		//using yum localinstall should enable testing on RHTS boxes right off the bat.
-		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck");
+		sshCommandRunner.runCommandAndWait("yum -y localinstall /tmp/subscription-manager.rpm --nogpgcheck --disablerepo=*");
 
 		log.info("Installed version of subscription-manager RPM...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*","");	// subscription-manager-0.63-1.el6.i686
