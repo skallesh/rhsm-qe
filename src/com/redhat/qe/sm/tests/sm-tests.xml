@@ -2,15 +2,10 @@
 
 <suite name="SMTestSuite">
 
-	<test name="subscription-manager Tests">
-		<classes>
-			<class name="com.redhat.qe.sm.tests.GeneralTests" />	
-			<class name="com.redhat.qe.sm.tests.Register" />
-			<class name="com.redhat.qe.sm.tests.List" />			
-			<class name="com.redhat.qe.sm.tests.Subscribe" />	
-			<class name="com.redhat.qe.sm.tests.Unsubscribe" />
-			<class name="com.redhat.qe.sm.tests.Unregister" />
-		</classes>
+	<test name="subscription-manager-cli Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />		
+		</packages>
 		<groups>
 			<run>
 				<include name="sm_setup" />
@@ -30,7 +25,7 @@
 	
 <!-- the hudson.groovy script already includes these listeners
 	<listeners>
-  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />
+  		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
   		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
 	</listeners>
 -->

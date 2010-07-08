@@ -11,8 +11,9 @@ import com.redhat.qe.auto.testng.TestScript;
 
 
 public abstract class CandlepinAbstraction {
-	public final String dateFormat = "EEE MMM d HH:mm:ss yyyy";
-	protected static Logger log = Logger.getLogger(TestScript.class.getName());
+	//public final String dateFormat = "EEE MMM d HH:mm:ss yyyy";
+	public final String dateFormat = "yyyy-MM-dd";
+	protected static Logger log = Logger.getLogger(CandlepinAbstraction.class.getName());
 	
 	@Override
 	public boolean equals(Object obj){

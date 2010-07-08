@@ -3,14 +3,9 @@
 <suite name="SMTestSuite">
 
 	<test name="Sprint 9 Demo Script">
-		<classes>
-			<class name="com.redhat.qe.sm.tests.GeneralTests" />	
-			<class name="com.redhat.qe.sm.tests.Register" />
-			<class name="com.redhat.qe.sm.tests.List" />			
-			<class name="com.redhat.qe.sm.tests.Subscribe" />	
-			<class name="com.redhat.qe.sm.tests.Unsubscribe" />
-			<class name="com.redhat.qe.sm.tests.Unregister" />
-		</classes>
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />		
+		</packages>
 		<groups>
 			<run>
 				<include name="sm_setup" />
@@ -22,7 +17,7 @@
 	
 <!-- the hudson.groovy script already includes these listeners
 	<listeners>
-  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />
+  		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
   		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
 	</listeners>
 -->
