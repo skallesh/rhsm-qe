@@ -56,49 +56,23 @@ public class ModuleTasks {
 		
 		log.info("Refreshing subscription information...");
 		
-		//refresh available subscriptions
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli list --available");
-		String availOut = sshCommandRunner.getStdout();
-		String availErr = sshCommandRunner.getStderr();
-		Assert.assertFalse(availOut.toLowerCase().contains("traceback") |
-				availErr.toLowerCase().contains("traceback"),
-				"list --available call does not produce a traceback");
-		
-		ArrayList<HashMap<String,String>> poolList = this.parseAvailableEntitlements(availOut);
-		for(HashMap<String,String> poolMap:poolList)
+		// refresh available subscriptions
+		for(HashMap<String,String> poolMap : parseAvailableSubscriptions(listAvailable()))
 			availPools.add(new Pool(poolMap));
 		
-		//refresh consumed subscriptions
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli list --consumed");
-		String consumedOut = sshCommandRunner.getStdout();
-		String consumedErr = sshCommandRunner.getStderr();
-		Assert.assertFalse(consumedOut.toLowerCase().contains("traceback") |
-				consumedErr.toLowerCase().contains("traceback"),
-				"list --consumed call does not produce a traceback");
-		
-		ArrayList<HashMap<String,String>> productList = this.parseConsumedProducts(consumedOut);
-		for(HashMap<String,String> productMap:productList)
+		// refresh consumed subscriptions
+		for(HashMap<String,String> productMap : parseConsumedProducts(listConsumed()))
 			consumedProductIDs.add(new ProductID(productMap));
 		
-		//refresh product certs
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli list");
-		String prodCertOut = sshCommandRunner.getStdout();
-		String prodCertErr = sshCommandRunner.getStderr();
-		Assert.assertFalse(prodCertOut.toLowerCase().contains("traceback") |
-				prodCertErr.toLowerCase().contains("traceback"),
-				"list call does not produce a trarceback");
-		
-		ArrayList<HashMap<String,String>> prodCertList = this.parseAvailableProductCerts(prodCertOut);
-		for(HashMap<String,String> prodCertMap:prodCertList)
+		// refresh product certs
+		for(HashMap<String,String> prodCertMap : parseInstalledProductCerts(list()))
 			productCerts.add(new ProductCert(prodCertMap));
 		
 		//refresh entitlement certificates
-		sshCommandRunner.runCommandAndWait(
-			"find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
-		);
+		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		HashMap<String,HashMap<String,String>> certMap = parseCerts(certificates);
-		for(String certKey:certMap.keySet())
+		for(String certKey : certMap.keySet())
 			currentEntitlementCerts.add(new EntitlementCert(certKey, certMap.get(certKey)));
 	}
 	
@@ -175,12 +149,19 @@ public class ModuleTasks {
 	
 	// list module tasks ************************************************************
 	
-	public void listConsumed() {
+	public String listConsumed() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
+		return sshCommandRunner.getStdout();
 	}
 	
-	public void listAvailable() {
+	public String listAvailable() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
+		return sshCommandRunner.getStdout();
+	}
+	
+	public String list() {
+		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
+		return sshCommandRunner.getStdout();
 	}
 	
 	// subscribe module tasks ************************************************************
@@ -262,7 +243,7 @@ public class ModuleTasks {
 	 * @param productCerts - stdout from "subscription-manager-cli list"
 	 * @return
 	 */
-	protected ArrayList<HashMap<String,String>> parseAvailableProductCerts(String productCerts){
+	protected ArrayList<HashMap<String,String>> parseInstalledProductCerts(String productCerts){
 		/*
 		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list
 		+-------------------------------------------+
@@ -301,7 +282,7 @@ public class ModuleTasks {
 	 * @param entitlements - stdout from "subscription-manager-cli list --available"
 	 * @return
 	 */
-	protected ArrayList<HashMap<String,String>> parseAvailableEntitlements(String entitlements){
+	protected ArrayList<HashMap<String,String>> parseAvailableSubscriptions(String entitlements){
 		/*
 		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --available
 		+-------------------------------------------+

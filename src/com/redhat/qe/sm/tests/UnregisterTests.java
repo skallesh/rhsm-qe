@@ -25,8 +25,7 @@ public class UnregisterTests extends SubscriptionManagerTestScript {
 		for (Pool afterPool : sm.getAvailPools()){
 			Pool correspondingPool = beforeSubscribePools.get(beforeSubscribePools.indexOf(afterPool));
 			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,
-					"Pool before unregister \""+correspondingPool.poolName+
-					"\" subscription count matches corresponding pool before subscription");
+				"The subscription count for Pool '"+correspondingPool.poolName+"' returned to its original count after subscribing to it and then unregistering from the candlepin server.");
 		}
 	}
 }
