@@ -11,8 +11,8 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.sm.abstractions.EntitlementCert;
-import com.redhat.qe.sm.abstractions.Pool;
-import com.redhat.qe.sm.abstractions.ProductID;
+import com.redhat.qe.sm.abstractions.SubscriptionPool;
+import com.redhat.qe.sm.abstractions.ProductSubscription;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 
@@ -23,8 +23,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41680,41899")
 	public void SubscribeToValidSubscriptionsByProductID_Test(){
-		sm.unsubscribeFromAllProductIDs();
-		sm.subscribeToAllPools(false);
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 	}
 	
 	
@@ -32,14 +32,14 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			dependsOnGroups={"sm_stage3"},
 			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	public void SubscribeToASingleEntitlementByProductID_Test(){
-		sm.unsubscribeFromAllProductIDs();
-		Pool MCT0696 = new Pool("MCT0696", "biteme");
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "biteme");
 		MCT0696.addProductID("Red Hat Directory Server");
-		sm.subscribeToPool(MCT0696, false);
+		sm.subscribeToSubscriptionPoolUsingProductId(MCT0696);
 		//this.refreshSubscriptions();
-		for (ProductID pid:MCT0696.associatedProductIDs){
-			Assert.assertTrue(sm.getConsumedProductIDs().contains(pid),
-					"ProductID '"+pid.productId+"' consumed from Pool '"+MCT0696.poolName+"'");
+		for (ProductSubscription pid:MCT0696.associatedProductIDs){
+			Assert.assertTrue(sm.getCurrentlyConsumedProductSubscriptions().contains(pid),
+					"ProductID '"+pid.productName+"' consumed from Pool '"+MCT0696.subscriptionName+"'");
 		}
 	}
 	
@@ -49,8 +49,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage4", "blockedByBug-584137"})
 	@ImplementsTCMS(id="41686,41899")
 	public void SubscribeToValidSubscriptionsByPoolID_Test(){
-		sm.unsubscribeFromAllProductIDs();
-		sm.subscribeToAllPools(true);
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 	}
 	
 	
@@ -59,7 +59,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41681")
 	public void SubscribeToRegToken_Test(){
-		sm.unsubscribeFromAllProductIDs();
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		sm.subscribeToRegToken(regtoken);
 	}
 	
@@ -69,12 +69,12 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
-		sm.unsubscribeFromAllProductIDs();
-		sm.refreshSubscriptions();
-		ArrayList<Pool> availablePools = (ArrayList<Pool>)sm.getAvailPools().clone();
-		for(Pool sub : availablePools){
-			sm.subscribeToPool(sub, false);
-			sm.subscribeToProduct(sub.poolName);
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.refreshCurrentSubscriptions();
+		ArrayList<SubscriptionPool> availablePools = (ArrayList<SubscriptionPool>)sm.getCurrentlyAvailableSubscriptionPools().clone();
+		for(SubscriptionPool pool : availablePools) {
+			sm.subscribeToSubscriptionPoolUsingProductId(pool);
+			sm.subscribeToProduct(pool.subscriptionName);
 		}
 	}
 	
@@ -84,7 +84,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage6"})
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test(){
-		sm.subscribeToAllPools(false);
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		this.adjustRHSMYumRepo(true);
 		/*for(ProductID sub:this.consumedProductIDs){
 			ArrayList<String> repos = this.getYumRepolist();
@@ -118,8 +118,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41695")
 	public void InstallPackageFromRHSMYumRepo_Test(){
 		HashMap<String, String[]> pkgList = sm.getPackagesCorrespondingToSubscribedRepos();
-		for(ProductID sub:sm.getConsumedProductIDs()){
-			String pkg = pkgList.get(sub.productId)[0];
+		for(ProductSubscription sub:sm.getCurrentlyConsumedProductSubscriptions()){
+			String pkg = pkgList.get(sub.productName)[0];
 			log.info("timeout of two minutes for next three commands");
 			RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,
 					"yum repolist");
@@ -137,9 +137,9 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41696")
 	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
 		this.adjustRHSMYumRepo(false);
-		for(Pool sub:sm.getAvailPools())
+		for(SubscriptionPool sub:sm.getCurrentlyAvailableSubscriptionPools())
 			for(String repo:this.getYumRepolist())
-				if(repo.contains(sub.poolName))
+				if(repo.contains(sub.subscriptionName))
 					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
 	}
 	
@@ -164,7 +164,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage4"})
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
-		sm.subscribeToAllPools(false);
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		//SubscribeToASingleEntitlementByProductID_Test();
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");

@@ -7,8 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
-import com.redhat.qe.auto.testng.TestScript;
-
 
 public abstract class CandlepinAbstraction {
 	//public final String dateFormat = "EEE MMM d HH:mm:ss yyyy";
@@ -45,23 +43,23 @@ public abstract class CandlepinAbstraction {
 		if (productData == null)
 			return;
 		
-		for (String productElem: productData.keySet()){
-			Field correspondingField = null;
+		for (String keyField : productData.keySet()){
+			Field abstractionField = null;
 			try {
-				correspondingField = this.getClass().getField(productElem);
-				if (correspondingField.getType().equals(Date.class))
-					correspondingField.set(this, this.parseDateString(productData.get(productElem)));
-				else if (correspondingField.getType().equals(Integer.class))
-					correspondingField.set(this, Integer.parseInt(productData.get(productElem)));
-				else if (correspondingField.getType().equals(Boolean.class))
-					correspondingField.set(this, productData.get(productElem).toLowerCase().contains("true"));
+				abstractionField = this.getClass().getField(keyField);
+				if (abstractionField.getType().equals(Date.class))
+					abstractionField.set(this, this.parseDateString(productData.get(keyField)));
+				else if (abstractionField.getType().equals(Integer.class))
+					abstractionField.set(this, Integer.parseInt(productData.get(keyField)));
+				else if (abstractionField.getType().equals(Boolean.class))
+					abstractionField.set(this, productData.get(keyField).toLowerCase().contains("true"));
 				else
-					correspondingField.set(this, productData.get(productElem));
+					abstractionField.set(this, productData.get(keyField));
 			} catch (Exception e){
 				log.warning("Exception caught while creating Candlepin abstraction: " + e.getMessage());
-				if (correspondingField != null)
+				if (abstractionField != null)
 					try {
-						correspondingField.set(this, null);
+						abstractionField.set(this, null);
 					} catch (Exception x){
 						log.warning("and we can't even set it to null.  Whaaaaaa?");
 					}

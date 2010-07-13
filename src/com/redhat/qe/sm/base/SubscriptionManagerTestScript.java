@@ -180,7 +180,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	}
 	
 	public void runRHSMCallAsLang(String lang,String rhsmCall){
-		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; subscription-manager-cli " + rhsmCall);
+		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
 	}
 	
 	public void setLanguage(String lang){

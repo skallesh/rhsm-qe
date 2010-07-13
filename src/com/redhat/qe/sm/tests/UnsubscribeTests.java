@@ -4,7 +4,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.Pool;
+import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 
@@ -15,8 +15,8 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage5", "blockedByBug-584137", "blockedByBugDISABLED-602852"})
 	@ImplementsTCMS(id="41688")
 	public void UnsubscribeFromValidProductIDs_Test(){
-		sm.subscribeToAllPools(false);
-		sm.unsubscribeFromAllProductIDs();
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 	}
 	
 	
@@ -27,14 +27,14 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	public void UnsubscribeAndReplaceCert_Test(){
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String randDir = "/tmp/sm-certs-"+Integer.toString(this.getRandInt());
-		sm.subscribeToAllPools(false);
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		//copy certs to temp dir
 		sshCommandRunner.runCommandAndWait("rm -rf "+randDir);
 		sshCommandRunner.runCommandAndWait("mkdir -p "+randDir);
 		sshCommandRunner.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
 		
-		sm.unsubscribeFromAllProductIDs();
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		
 		sshCommandRunner.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
@@ -47,8 +47,8 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage5", "blockedByBug-584137", "blockedByBugDISABLED-602852"})
 	@ImplementsTCMS(id="41898")
 	public void ResubscribeAfterUnsubscribe_Test(){
-		sm.subscribeToAllPools(false);
-		sm.unsubscribeFromAllProductIDs();
-		sm.subscribeToAllPools(false);
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 	}
 }
