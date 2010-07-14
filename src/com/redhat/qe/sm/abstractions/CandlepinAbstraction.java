@@ -3,9 +3,12 @@ package com.redhat.qe.sm.abstractions;
 import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public abstract class CandlepinAbstraction {
@@ -13,31 +16,8 @@ public abstract class CandlepinAbstraction {
 	public final String dateFormat = "yyyy-MM-dd";
 	protected static Logger log = Logger.getLogger(CandlepinAbstraction.class.getName());
 	
-	@Override
-	public boolean equals(Object obj){
-		CandlepinAbstraction certObj = (CandlepinAbstraction)obj;
-		boolean matched = true;
-		for(Field certField:certObj.getClass().getDeclaredFields()){
-			try {
-				Field correspondingField = this.getClass().getField(certField.getName());
-				matched = correspondingField.get(this).equals(certField.get(certObj));
-			} catch (Exception e) {
-				return false;
-			}
-		}
-		return matched;
-	}
+
 	
-	protected Date parseDateString(String dateString){
-		try{
-			DateFormat df = new SimpleDateFormat(this.dateFormat);
-			return df.parse(dateString);
-		}
-		catch (Exception e){
-			log.warning("Unparseable date string: "+dateString+"\nException: "+e.getMessage());
-			return null;
-		}
-	}
 	
 	public CandlepinAbstraction(HashMap<String, String> productData){
 		if (productData == null)
@@ -68,5 +48,63 @@ public abstract class CandlepinAbstraction {
 				}
 			}
 		}
+	}
+	
+	
+	@Override
+	public boolean equals(Object obj){
+		CandlepinAbstraction certObj = (CandlepinAbstraction)obj;
+		boolean matched = true;
+		for(Field certField:certObj.getClass().getDeclaredFields()){
+			try {
+				Field correspondingField = this.getClass().getField(certField.getName());
+				matched = correspondingField.get(this).equals(certField.get(certObj));
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		return matched;
+	}
+	
+	
+	// protected methods ************************************************************
+
+	protected Date parseDateString(String dateString){
+		try{
+			DateFormat df = new SimpleDateFormat(this.dateFormat);
+			return df.parse(dateString);
+		}
+		catch (Exception e){
+			log.warning("Unparseable date string: "+dateString+"\nException: "+e.getMessage());
+			return null;
+		}
+	}
+	
+	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, ArrayList<HashMap<String,String>> matchList, String sub_key) {
+		Matcher matcher = regex.matcher(to_parse);
+		int currListElem=0;
+		while (matcher.find()){
+			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+			HashMap<String,String> matchMap = matchList.get(currListElem);
+			matchMap.put(sub_key, matcher.group(1).trim());
+			matchList.set(currListElem, matchMap);
+			currListElem++;
+		}
+		return true;
+	}
+			
+	
+	static protected boolean addRegexMatchesToMap(Pattern regex, String to_parse, HashMap<String, HashMap<String,String>> matchMap, String sub_key) {
+        Matcher matcher = regex.matcher(to_parse);
+        while (matcher.find()) {
+            HashMap<String,String> singleCertMap = matchMap.get(matcher.group(1));
+            if(singleCertMap == null){
+            	HashMap<String,String> newBranch = new HashMap<String,String>();
+            	singleCertMap = newBranch;
+            }
+            singleCertMap.put(sub_key, matcher.group(2));
+            matchMap.put(matcher.group(1), singleCertMap);
+        }
+        return true;
 	}
 }

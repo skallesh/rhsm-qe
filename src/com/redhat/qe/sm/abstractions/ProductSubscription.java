@@ -1,12 +1,13 @@
 package com.redhat.qe.sm.abstractions;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 public class ProductSubscription extends CandlepinAbstraction {
 	
-	// Note: these public fields must match the fields in ModuleTasks.parseConsumedProducts(...)
 	public String productName;
 	public Integer serialNumber;
 	public Integer contractNumber;
@@ -22,7 +23,7 @@ public class ProductSubscription extends CandlepinAbstraction {
 	
 	@Override
 	public boolean equals(Object obj){
-		//return ((ProductSubscription)obj).productName.contains(this.productName);	// I think we need to compare more attributes than using contains on the productName jsefler 7/13/2010
+		//return ((ProductSubscription)obj).productName.contains(this.productName);	// I think we need to compare more attributes than using .contains(...) on the productName jsefler 7/13/2010
 
 		// assume the combination of productName and serialNumber is unique across all ProductSubscriptions
 		return ((ProductSubscription)obj).productName.equals(this.productName) && ((ProductSubscription)obj).serialNumber.equals(this.serialNumber);
@@ -73,5 +74,51 @@ public class ProductSubscription extends CandlepinAbstraction {
 		if (fromPool != null)		string += String.format(" %s='%s'", "fromPool",fromPool);
 
 		return string.trim();
+	}
+	
+	
+	/**
+	 * @param products - stdout from "subscription-manager-cli list --consumed"
+	 * @return
+	 */
+	static public ArrayList<HashMap<String,String>> parseConsumedProducts(String products) {
+		/*
+		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --consumed
+		+-------------------------------------------+
+    		Consumed Product Subscriptions
+		+-------------------------------------------+
+		
+		Name:               	High availability (cluster suite)
+		ContractNumber:       	0                        
+		SerialNumber:       	17                       
+		Active:             	True                     
+		Begins:             	2010-07-01               
+		Expires:            	2011-07-01   
+		*/
+
+		ArrayList<HashMap<String,String>> productList = new ArrayList<HashMap<String,String>>();
+		HashMap<String,String> regexes = new HashMap<String,String>();
+		
+//		regexes.put("productId",	"Name:\\s*([a-zA-Z0-9 ,:()]*)");
+//		regexes.put("serialNumber",	"SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
+//		regexes.put("orderNumber",	"OrderNumber:\\s*([a-zA-Z0-9 ,:()]*)");
+//		regexes.put("isActive",		"Active:\\s*([a-zA-Z0-9 ,:()]*)");
+//		regexes.put("startDate",	"Begins:\\s*([a-zA-Z0-9 ,:()]*)");
+//		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+
+		// ProductSubscription abstractionField	pattern		(Note: the abstractionField must be defined in the ProductSubscription class)
+		regexes.put("productName",				"Name:\\s*(.*)");
+		regexes.put("serialNumber",				"SerialNumber:\\s*(.*)");
+		regexes.put("contractNumber",			"ContractNumber:\\s*(.*)");
+		regexes.put("isActive",					"Active:\\s*(.*)");
+		regexes.put("startDate",				"Begins:\\s*(.*)");
+		regexes.put("endDate",					"Expires:\\s*(.*)");
+		
+		for(String field : regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+			addRegexMatchesToList(pat, products, productList, field);
+		}
+		
+		return productList;
 	}
 }

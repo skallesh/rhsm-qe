@@ -57,21 +57,21 @@ public class ModuleTasks {
 		log.info("Refreshing current subscription information...");
 		
 		// refresh available subscriptions
-		for(HashMap<String,String> poolMap : parseAvailableSubscriptions(listAvailable()))
+		for(HashMap<String,String> poolMap : SubscriptionPool.parseAvailableSubscriptions(listAvailable()))
 			currentlyAvailableSubscriptionPools.add(new SubscriptionPool(poolMap));
 		
 		// refresh consumed subscriptions
-		for(HashMap<String,String> productMap : parseConsumedProducts(listConsumed()))
+		for(HashMap<String,String> productMap : ProductSubscription.parseConsumedProducts(listConsumed()))
 			currentlyConsumedProductSubscriptions.add(new ProductSubscription(productMap));
 		
 		// refresh product certs
-		for(HashMap<String,String> prodCertMap : parseInstalledProductCerts(list()))
+		for(HashMap<String,String> prodCertMap : ProductCert.parseInstalledProductCerts(list()))
 			currentlyInstalledProductCerts.add(new ProductCert(prodCertMap));
 		
 		//refresh entitlement certificates
 		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
-		HashMap<String,HashMap<String,String>> certMap = parseCerts(certificates);
+		HashMap<String,HashMap<String,String>> certMap = EntitlementCert.parseCerts(certificates);
 		for(String certKey : certMap.keySet())
 			currentEntitlementCerts.add(new EntitlementCert(certKey, certMap.get(certKey)));
 	}
@@ -347,180 +347,180 @@ public class ModuleTasks {
 		return true;
 	}
 	
-	/**
-	 * @param productCerts - stdout from "subscription-manager-cli list"
-	 * @return
-	 */
-	protected ArrayList<HashMap<String,String>> parseInstalledProductCerts(String productCerts) {
-		/*
-		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list
-		+-------------------------------------------+
-		    Installed Product Status
-		+-------------------------------------------+
-
-		ProductName:        	Shared Storage (GFS)     
-		Status:             	Not Installed            
-		Expires:            	2011-07-01               
-		Subscription:       	17                       
-		ContractNumber:        	0   
-		*/
-		
-		ArrayList<HashMap<String,String>> productCertList = new ArrayList<HashMap<String,String>>();
-		HashMap<String,String> regexes = new HashMap<String,String>();
-		
-//		regexes.put("productName",	"ProductName:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("status",		"Status:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("expires",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("subscription",	"Subscription:\\s*([a-zA-Z0-9 ,:()]*)");
-		
-		// ProductCert abstractionField			pattern		(Note: the abstractionField must be defined in the ProductCert class)
-		regexes.put("productName",				"ProductName:\\s*(.*)");
-		regexes.put("status",					"Status:\\s*(.*)");
-		regexes.put("expires",					"Expires:\\s*(.*)");
-		regexes.put("subscription",				"Subscription:\\s*(.*)");
-		
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			this.addRegexMatchesToList(pat, productCerts, productCertList, field);
-		}
-		
-		return productCertList;
-	}
+//	/**
+//	 * @param productCerts - stdout from "subscription-manager-cli list"
+//	 * @return
+//	 */
+//	protected ArrayList<HashMap<String,String>> parseInstalledProductCerts(String productCerts) {
+//		/*
+//		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list
+//		+-------------------------------------------+
+//		    Installed Product Status
+//		+-------------------------------------------+
+//
+//		ProductName:        	Shared Storage (GFS)     
+//		Status:             	Not Installed            
+//		Expires:            	2011-07-01               
+//		Subscription:       	17                       
+//		ContractNumber:        	0   
+//		*/
+//		
+//		ArrayList<HashMap<String,String>> productCertList = new ArrayList<HashMap<String,String>>();
+//		HashMap<String,String> regexes = new HashMap<String,String>();
+//		
+////		regexes.put("productName",	"ProductName:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("status",		"Status:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("expires",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("subscription",	"Subscription:\\s*([a-zA-Z0-9 ,:()]*)");
+//		
+//		// ProductCert abstractionField			pattern		(Note: the abstractionField must be defined in the ProductCert class)
+//		regexes.put("productName",				"ProductName:\\s*(.*)");
+//		regexes.put("status",					"Status:\\s*(.*)");
+//		regexes.put("expires",					"Expires:\\s*(.*)");
+//		regexes.put("subscription",				"Subscription:\\s*(.*)");
+//		
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			this.addRegexMatchesToList(pat, productCerts, productCertList, field);
+//		}
+//		
+//		return productCertList;
+//	}
 	
-	/**
-	 * @param entitlements - stdout from "subscription-manager-cli list --available"
-	 * @return
-	 */
-	protected ArrayList<HashMap<String,String>> parseAvailableSubscriptions(String entitlements) {
-		/*
-		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --available
-		+-------------------------------------------+
-    		Available Subscriptions
-		+-------------------------------------------+
-		
-		Name:              	Basic RHEL Server        
-		ProductId:         	MKT-simple-rhel-server-mkt
-		PoolId:            	2                        
-		quantity:          	10                       
-		Expires:           	2011-07-01     * 		/*
-		*/
-
-		
-		ArrayList<HashMap<String,String>> entitlementList = new ArrayList<HashMap<String,String>>();
-		HashMap<String,String> regexes = new HashMap<String,String>();
-		
-//		regexes.put("poolName",		"Name:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("productSku",	"Product SKU:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("poolId",		"PoolId:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("quantity",		"quantity:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
-		
-		// ProductCert abstractionField		pattern		(Note: the abstractionField must be defined in the ProductCert class)
-		regexes.put("subscriptionName",		"Name:\\s*(.*)");
-		regexes.put("productId",			"ProductId:\\s*(.*)");
-		regexes.put("poolId",				"PoolId:\\s*(.*)");
-		regexes.put("quantity",				"[Qq]uantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
-		regexes.put("endDate",				"Expires:\\s*(.*)");
-		
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			this.addRegexMatchesToList(pat, entitlements, entitlementList, field);
-		}
-		
-		return entitlementList;
-	}
+//	/**
+//	 * @param entitlements - stdout from "subscription-manager-cli list --available"
+//	 * @return
+//	 */
+//	protected ArrayList<HashMap<String,String>> parseAvailableSubscriptions(String entitlements) {
+//		/*
+//		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --available
+//		+-------------------------------------------+
+//    		Available Subscriptions
+//		+-------------------------------------------+
+//		
+//		Name:              	Basic RHEL Server        
+//		ProductId:         	MKT-simple-rhel-server-mkt
+//		PoolId:            	2                        
+//		quantity:          	10                       
+//		Expires:           	2011-07-01     * 		/*
+//		*/
+//
+//		
+//		ArrayList<HashMap<String,String>> entitlementList = new ArrayList<HashMap<String,String>>();
+//		HashMap<String,String> regexes = new HashMap<String,String>();
+//		
+////		regexes.put("poolName",		"Name:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("productSku",	"Product SKU:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("poolId",		"PoolId:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("quantity",		"quantity:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+//		
+//		// SubscriptionPool abstractionField		pattern		(Note: the abstractionField must be defined in the SubscriptionPool class)
+//		regexes.put("subscriptionName",		"Name:\\s*(.*)");
+//		regexes.put("productId",			"ProductId:\\s*(.*)");
+//		regexes.put("poolId",				"PoolId:\\s*(.*)");
+//		regexes.put("quantity",				"[Qq]uantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
+//		regexes.put("endDate",				"Expires:\\s*(.*)");
+//		
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			this.addRegexMatchesToList(pat, entitlements, entitlementList, field);
+//		}
+//		
+//		return entitlementList;
+//	}
 	
-	/**
-	 * @param products - stdout from "subscription-manager-cli list --consumed"
-	 * @return
-	 */
-	protected ArrayList<HashMap<String,String>> parseConsumedProducts(String products) {
-		/*
-		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --consumed
-		+-------------------------------------------+
-    		Consumed Product Subscriptions
-		+-------------------------------------------+
-		
-		Name:               	High availability (cluster suite)
-		ContractNumber:       	0                        
-		SerialNumber:       	17                       
-		Active:             	True                     
-		Begins:             	2010-07-01               
-		Expires:            	2011-07-01   
-		*/
-
-		ArrayList<HashMap<String,String>> productList = new ArrayList<HashMap<String,String>>();
-		HashMap<String,String> regexes = new HashMap<String,String>();
-		
-//		regexes.put("productId",	"Name:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("serialNumber",	"SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("orderNumber",	"OrderNumber:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("isActive",		"Active:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("startDate",	"Begins:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
-
-		// ProductSubscription abstractionField	pattern		(Note: the abstractionField must be defined in the ProductSubscription class)
-		regexes.put("productName",				"Name:\\s*(.*)");
-		regexes.put("serialNumber",				"SerialNumber:\\s*(.*)");
-		regexes.put("contractNumber",			"ContractNumber:\\s*(.*)");
-		regexes.put("isActive",					"Active:\\s*(.*)");
-		regexes.put("startDate",				"Begins:\\s*(.*)");
-		regexes.put("endDate",					"Expires:\\s*(.*)");
-		
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			this.addRegexMatchesToList(pat, products, productList, field);
-		}
-		
-		return productList;
-	}
+//	/**
+//	 * @param products - stdout from "subscription-manager-cli list --consumed"
+//	 * @return
+//	 */
+//	protected ArrayList<HashMap<String,String>> parseConsumedProducts(String products) {
+//		/*
+//		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --consumed
+//		+-------------------------------------------+
+//    		Consumed Product Subscriptions
+//		+-------------------------------------------+
+//		
+//		Name:               	High availability (cluster suite)
+//		ContractNumber:       	0                        
+//		SerialNumber:       	17                       
+//		Active:             	True                     
+//		Begins:             	2010-07-01               
+//		Expires:            	2011-07-01   
+//		*/
+//
+//		ArrayList<HashMap<String,String>> productList = new ArrayList<HashMap<String,String>>();
+//		HashMap<String,String> regexes = new HashMap<String,String>();
+//		
+////		regexes.put("productId",	"Name:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("serialNumber",	"SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("orderNumber",	"OrderNumber:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("isActive",		"Active:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("startDate",	"Begins:\\s*([a-zA-Z0-9 ,:()]*)");
+////		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
+//
+//		// ProductSubscription abstractionField	pattern		(Note: the abstractionField must be defined in the ProductSubscription class)
+//		regexes.put("productName",				"Name:\\s*(.*)");
+//		regexes.put("serialNumber",				"SerialNumber:\\s*(.*)");
+//		regexes.put("contractNumber",			"ContractNumber:\\s*(.*)");
+//		regexes.put("isActive",					"Active:\\s*(.*)");
+//		regexes.put("startDate",				"Begins:\\s*(.*)");
+//		regexes.put("endDate",					"Expires:\\s*(.*)");
+//		
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			this.addRegexMatchesToList(pat, products, productList, field);
+//		}
+//		
+//		return productList;
+//	}
 	
-	protected HashMap<String, HashMap<String,String>> parseCerts(String certificates) {
-		HashMap<String, HashMap<String,String>> productMap = new HashMap<String, HashMap<String,String>>();
-		HashMap<String,String> regexes = new HashMap<String,String>();
-		
-		// EntitlementCert abstractionField	pattern		(Note: the abstractionField must be defined in the EntitlementCert class)
-		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.1:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		regexes.put("label",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		regexes.put("phys_ent",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.3:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		regexes.put("flex_ent",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.4:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		regexes.put("vendor_id",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.5:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		regexes.put("download_url",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
-		
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			this.addRegexMatchesToMap(pat, certificates, productMap, field);
-		}
-		
-		return productMap;
-	}
-	
-	protected boolean addRegexMatchesToList(Pattern regex, String to_parse, ArrayList<HashMap<String,String>> matchList, String sub_key) {
-		Matcher matcher = regex.matcher(to_parse);
-		int currListElem=0;
-		while (matcher.find()){
-			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
-			HashMap<String,String> matchMap = matchList.get(currListElem);
-			matchMap.put(sub_key, matcher.group(1).trim());
-			matchList.set(currListElem, matchMap);
-			currListElem++;
-		}
-		return true;
-	}
-			
-	
-	protected boolean addRegexMatchesToMap(Pattern regex, String to_parse, HashMap<String, HashMap<String,String>> matchMap, String sub_key) {
-        Matcher matcher = regex.matcher(to_parse);
-        while (matcher.find()) {
-            HashMap<String,String> singleCertMap = matchMap.get(matcher.group(1));
-            if(singleCertMap == null){
-            	HashMap<String,String> newBranch = new HashMap<String,String>();
-            	singleCertMap = newBranch;
-            }
-            singleCertMap.put(sub_key, matcher.group(2));
-            matchMap.put(matcher.group(1), singleCertMap);
-        }
-        return true;
-	}
+//	protected HashMap<String, HashMap<String,String>> parseCerts(String certificates) {
+//		HashMap<String, HashMap<String,String>> productMap = new HashMap<String, HashMap<String,String>>();
+//		HashMap<String,String> regexes = new HashMap<String,String>();
+//		
+//		// EntitlementCert abstractionField	pattern		(Note: the abstractionField must be defined in the EntitlementCert class)
+//		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.1:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		regexes.put("label",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		regexes.put("phys_ent",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.3:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		regexes.put("flex_ent",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.4:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		regexes.put("vendor_id",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.5:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		regexes.put("download_url",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
+//		
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			this.addRegexMatchesToMap(pat, certificates, productMap, field);
+//		}
+//		
+//		return productMap;
+//	}
+//	
+//	protected boolean addRegexMatchesToList(Pattern regex, String to_parse, ArrayList<HashMap<String,String>> matchList, String sub_key) {
+//		Matcher matcher = regex.matcher(to_parse);
+//		int currListElem=0;
+//		while (matcher.find()){
+//			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
+//			HashMap<String,String> matchMap = matchList.get(currListElem);
+//			matchMap.put(sub_key, matcher.group(1).trim());
+//			matchList.set(currListElem, matchMap);
+//			currListElem++;
+//		}
+//		return true;
+//	}
+//			
+//	
+//	protected boolean addRegexMatchesToMap(Pattern regex, String to_parse, HashMap<String, HashMap<String,String>> matchMap, String sub_key) {
+//        Matcher matcher = regex.matcher(to_parse);
+//        while (matcher.find()) {
+//            HashMap<String,String> singleCertMap = matchMap.get(matcher.group(1));
+//            if(singleCertMap == null){
+//            	HashMap<String,String> newBranch = new HashMap<String,String>();
+//            	singleCertMap = newBranch;
+//            }
+//            singleCertMap.put(sub_key, matcher.group(2));
+//            matchMap.put(matcher.group(1), singleCertMap);
+//        }
+//        return true;
+//	}
 }
