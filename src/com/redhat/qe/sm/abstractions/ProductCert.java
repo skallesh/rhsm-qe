@@ -3,6 +3,7 @@ package com.redhat.qe.sm.abstractions;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class ProductCert extends CandlepinAbstraction {
@@ -35,12 +36,12 @@ public class ProductCert extends CandlepinAbstraction {
 	
 	
 	/**
-	 * @param productCerts - stdout from "subscription-manager-cli list"
+	 * @param stdoutListingOfProductCerts - stdout from "subscription-manager-cli list"
 	 * @return
 	 */
-	static public ArrayList<HashMap<String,String>> parseInstalledProductCerts(String productCerts) {
+	static public List<ProductCert> parse(String stdoutListingOfProductCerts) {
 		/*
-		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list
+		# subscription-manager-cli list
 		+-------------------------------------------+
 		    Installed Product Status
 		+-------------------------------------------+
@@ -52,7 +53,6 @@ public class ProductCert extends CandlepinAbstraction {
 		ContractNumber:        	0   
 		*/
 		
-		ArrayList<HashMap<String,String>> productCertList = new ArrayList<HashMap<String,String>>();
 		HashMap<String,String> regexes = new HashMap<String,String>();
 		
 //		regexes.put("productName",	"ProductName:\\s*([a-zA-Z0-9 ,:()]*)");
@@ -66,11 +66,15 @@ public class ProductCert extends CandlepinAbstraction {
 		regexes.put("expires",					"Expires:\\s*(.*)");
 		regexes.put("subscription",				"Subscription:\\s*(.*)");
 		
+		List<HashMap<String,String>> productCertList = new ArrayList<HashMap<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, productCerts, productCertList, field);
+			addRegexMatchesToList(pat, stdoutListingOfProductCerts, productCertList, field);
 		}
 		
-		return productCertList;
+		List<ProductCert> productCerts = new ArrayList<ProductCert>();
+		for(HashMap<String,String> prodCertMap : productCertList)
+			productCerts.add(new ProductCert(prodCertMap));
+		return productCerts;
 	}
 }

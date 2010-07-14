@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -80,7 +81,7 @@ public abstract class CandlepinAbstraction {
 		}
 	}
 	
-	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, ArrayList<HashMap<String,String>> matchList, String sub_key) {
+	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<HashMap<String,String>> matchList, String sub_key) {
 		Matcher matcher = regex.matcher(to_parse);
 		int currListElem=0;
 		while (matcher.find()){

@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class SubscriptionPool extends CandlepinAbstraction {
@@ -111,10 +112,10 @@ public class SubscriptionPool extends CandlepinAbstraction {
 	
 	
 	/**
-	 * @param entitlements - stdout from "subscription-manager-cli list --available"
+	 * @param stdoutListingOfAvailableSubscriptions - stdout from "subscription-manager-cli list --available"
 	 * @return
 	 */
-	static public ArrayList<HashMap<String,String>> parseAvailableSubscriptions(String entitlements) {
+	static public List<SubscriptionPool> parse(String stdoutListingOfAvailableSubscriptions) {
 		/*
 		# subscription-manager-cli list --available
 		+-------------------------------------------+
@@ -128,8 +129,6 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		Expires:           	2011-07-01     * 		/*
 		*/
 
-		
-		ArrayList<HashMap<String,String>> entitlementList = new ArrayList<HashMap<String,String>>();
 		HashMap<String,String> regexes = new HashMap<String,String>();
 		
 //		regexes.put("poolName",		"Name:\\s*([a-zA-Z0-9 ,:()]*)");
@@ -138,18 +137,22 @@ public class SubscriptionPool extends CandlepinAbstraction {
 //		regexes.put("quantity",		"quantity:\\s*([a-zA-Z0-9 ,:()]*)");
 //		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
 		
-		// SubscriptionPool abstractionField		pattern		(Note: the abstractionField must be defined in the SubscriptionPool class)
-		regexes.put("subscriptionName",		"Name:\\s*(.*)");
-		regexes.put("productId",			"ProductId:\\s*(.*)");
-		regexes.put("poolId",				"PoolId:\\s*(.*)");
-		regexes.put("quantity",				"[Qq]uantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
-		regexes.put("endDate",				"Expires:\\s*(.*)");
+		// SubscriptionPool abstractionField	pattern		(Note: the abstractionField must be defined in the SubscriptionPool class)
+		regexes.put("subscriptionName",			"Name:\\s*(.*)");
+		regexes.put("productId",				"ProductId:\\s*(.*)");
+		regexes.put("poolId",					"PoolId:\\s*(.*)");
+		regexes.put("quantity",					"[Qq]uantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
+		regexes.put("endDate",					"Expires:\\s*(.*)");
 		
+		List<HashMap<String,String>> entitlementList = new ArrayList<HashMap<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, entitlements, entitlementList, field);
+			addRegexMatchesToList(pat, stdoutListingOfAvailableSubscriptions, entitlementList, field);
 		}
 		
-		return entitlementList;
+		List<SubscriptionPool> subscriptionPools = new ArrayList<SubscriptionPool>();
+		for(HashMap<String,String> poolMap : entitlementList)
+			subscriptionPools.add(new SubscriptionPool(poolMap));
+		return subscriptionPools;
 	}
 }

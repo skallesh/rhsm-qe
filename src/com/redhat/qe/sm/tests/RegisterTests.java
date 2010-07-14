@@ -80,7 +80,6 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 		sshCommandRunner.runCommandAndWait("wget -O /etc/pki/product/"+autoProdCert+" "+this.prodCertLocation);
 		sm.registerToCandlepin(username, password, null, null, Boolean.TRUE, null);
-		sm.refreshCurrentSubscriptions();
 		Assert.assertTrue(sm.getCurrentlyConsumedProductSubscriptions().contains(new ProductSubscription(this.prodCertProduct, null)),
 				"Expected product "+this.prodCertProduct+" appears in list --consumed call after autosubscribe");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);

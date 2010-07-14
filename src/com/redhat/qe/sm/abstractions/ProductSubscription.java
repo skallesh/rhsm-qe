@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class ProductSubscription extends CandlepinAbstraction {
@@ -78,12 +79,12 @@ public class ProductSubscription extends CandlepinAbstraction {
 	
 	
 	/**
-	 * @param products - stdout from "subscription-manager-cli list --consumed"
+	 * @param stdoutListOfConsumedProducts - stdout from "subscription-manager-cli list --consumed"
 	 * @return
 	 */
-	static public ArrayList<HashMap<String,String>> parseConsumedProducts(String products) {
+	static public List<ProductSubscription> parse(String stdoutListOfConsumedProducts) {
 		/*
-		[root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli list --consumed
+		# subscription-manager-cli list --consumed
 		+-------------------------------------------+
     		Consumed Product Subscriptions
 		+-------------------------------------------+
@@ -96,7 +97,6 @@ public class ProductSubscription extends CandlepinAbstraction {
 		Expires:            	2011-07-01   
 		*/
 
-		ArrayList<HashMap<String,String>> productList = new ArrayList<HashMap<String,String>>();
 		HashMap<String,String> regexes = new HashMap<String,String>();
 		
 //		regexes.put("productId",	"Name:\\s*([a-zA-Z0-9 ,:()]*)");
@@ -114,11 +114,15 @@ public class ProductSubscription extends CandlepinAbstraction {
 		regexes.put("startDate",				"Begins:\\s*(.*)");
 		regexes.put("endDate",					"Expires:\\s*(.*)");
 		
+		List<HashMap<String,String>> productList = new ArrayList<HashMap<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, products, productList, field);
+			addRegexMatchesToList(pat, stdoutListOfConsumedProducts, productList, field);
 		}
 		
-		return productList;
+		List<ProductSubscription> productSubscriptions = new ArrayList<ProductSubscription>();
+		for(HashMap<String,String> productMap : productList)
+			productSubscriptions.add(new ProductSubscription(productMap));
+		return productSubscriptions;
 	}
 }

@@ -2,9 +2,6 @@ package com.redhat.qe.sm.tests;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -70,9 +67,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
 		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		sm.refreshCurrentSubscriptions();
-		ArrayList<SubscriptionPool> availablePools = (ArrayList<SubscriptionPool>)sm.getCurrentlyAvailableSubscriptionPools().clone();
-		for(SubscriptionPool pool : availablePools) {
+		for(SubscriptionPool pool : sm.getCurrentlyAvailableSubscriptionPools()) {
 			sm.subscribeToSubscriptionPoolUsingProductId(pool);
 			sm.subscribeToProduct(pool.subscriptionName);
 		}

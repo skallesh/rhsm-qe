@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.tests;
 
-import java.util.ArrayList;
+
+import java.util.List;
 
 import org.testng.annotations.Test;
 
@@ -16,16 +17,14 @@ public class UnregisterTests extends SubscriptionManagerTestScript {
 	@ImplementsTCMS(id="46714")
 	public void RegisterSubscribeAndUnregisterTest(){
 		sm.registerToCandlepin(username, password, null, null, null, Boolean.TRUE);
-		sm.refreshCurrentSubscriptions();
-		ArrayList<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = (ArrayList<SubscriptionPool>)sm.getCurrentlyAvailableSubscriptionPools().clone();
+		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = sm.getCurrentlyAvailableSubscriptionPools();
 		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		sm.unregisterFromCandlepin();
 		sm.registerToCandlepin(username, password, null, null, null, null);
-		sm.refreshCurrentSubscriptions();
-		for (SubscriptionPool afterPool : sm.getCurrentlyAvailableSubscriptionPools()){
+		for (SubscriptionPool afterPool : sm.getCurrentlyAvailableSubscriptionPools()) {
 			SubscriptionPool correspondingPool = availPoolsBeforeSubscribingToAllPools.get(availPoolsBeforeSubscribingToAllPools.indexOf(afterPool));
 			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,
-				"The subscription count for Pool '"+correspondingPool.subscriptionName+"' returned to its original count after subscribing to it and then unregistering from the candlepin server.");
+				"The subscription quantity count for Pool "+correspondingPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");
 		}
 	}
 }

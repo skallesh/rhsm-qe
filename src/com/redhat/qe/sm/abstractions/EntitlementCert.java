@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.abstractions;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
@@ -48,8 +49,8 @@ public class EntitlementCert extends CandlepinAbstraction {
 	
 	
 	
-	static public HashMap<String, HashMap<String,String>> parseCerts(String certificates) {
-		HashMap<String, HashMap<String,String>> productMap = new HashMap<String, HashMap<String,String>>();
+	//static public HashMap<String, HashMap<String,String>> parseCerts(String certificates) {
+	static public ArrayList<EntitlementCert> parse(String certificates) {
 		HashMap<String,String> regexes = new HashMap<String,String>();
 		
 		// EntitlementCert abstractionField	pattern		(Note: the abstractionField must be defined in the EntitlementCert class)
@@ -61,11 +62,16 @@ public class EntitlementCert extends CandlepinAbstraction {
 		regexes.put("download_url",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
 		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\.\\cM]*([a-zA-Z_0-9-]+)");
 		
+		HashMap<String, HashMap<String,String>> productMap = new HashMap<String, HashMap<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
 			addRegexMatchesToMap(pat, certificates, productMap, field);
 		}
 		
-		return productMap;
+		ArrayList<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+		for(String certKey : productMap.keySet())
+			entitlementCerts.add(new EntitlementCert(certKey, productMap.get(certKey)));
+		return entitlementCerts;
+
 	}
 }
