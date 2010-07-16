@@ -1,8 +1,10 @@
 package com.redhat.qe.sm.tasks;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -14,7 +16,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.sm.abstractions.EntitlementCert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
-import com.redhat.qe.sm.abstractions.ProductCert;
+import com.redhat.qe.sm.abstractions.InstalledProduct;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
 
 public class ModuleTasks {
@@ -40,15 +42,39 @@ public class ModuleTasks {
 		return ProductSubscription.parse(listConsumed());
 	}
 	
-	public List<ProductCert> getCurrentlyInstalledProductCerts() {
-		return ProductCert.parse(list());
+	public List<InstalledProduct> getCurrentlyInstalledProducts() {
+		return InstalledProduct.parse(list());
 	}
 	
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
 		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
-
 		return EntitlementCert.parse(certificates);
+	}
+	
+//	public EntitlementCert getEntitlementCertFromCertFile(String certFile) {
+//		sshCommandRunner.runCommandAndWait("openssl x509 -in "+certFile+" -noout -text");
+//		String certificate = sshCommandRunner.getStdout();
+//		return EntitlementCert.parse(certificate).get(0);
+//	}
+//	public SubscriptionPool getSubscriptionPoolFromCertFile(String certFile) {
+//		sshCommandRunner.runCommandAndWait("openssl x509 -in "+certFile+" -noout -text");
+//		String certificate = sshCommandRunner.getStdout();
+//		return SubscriptionPool.parseCerts(certificate);
+//	}
+//	SubscriptionPool pool = new SubscriptionPool(cert.from_productId, cert.from_poolId);
+	public Map<Integer,SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
+		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		String certificates = sshCommandRunner.getStdout();
+		return SubscriptionPool.parseCerts(certificates);
+	}
+	
+	public List<String> getCurrentEntitlementCertFiles() {
+		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
+		String files = sshCommandRunner.getStdout().trim();
+		List<String> certFiles = new ArrayList<String>();
+		if (!files.equals("")) certFiles=Arrays.asList(files.split("\n"));
+		return certFiles;
 	}
 	
 	public HashMap<String,String[]> getPackagesCorrespondingToSubscribedRepos(){
@@ -83,6 +109,16 @@ public class ModuleTasks {
 		return pkgMap;
 	}
 
+	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription) {
+		
+		// if already known, return the SubscriptionPool from which ProductSubscription came
+		if (productSubscription.fromPool != null) return productSubscription.fromPool;
+		
+		productSubscription.fromPool = getCurrentSerialMapOfSubscriptionPools().get(productSubscription.serialNumber);
+
+		return productSubscription.fromPool;
+	}
+	
 	// register module tasks ************************************************************
 	
 	public void registerToCandlepin(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
@@ -154,7 +190,7 @@ public class ModuleTasks {
 	 */
 	public String listConsumed() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
-		return sshCommandRunner.getStdout();
+		return sshCommandRunner.getStdout().trim();
 	}
 	
 	/**
@@ -162,7 +198,7 @@ public class ModuleTasks {
 	 */
 	public String listAvailable() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
-		return sshCommandRunner.getStdout();
+		return sshCommandRunner.getStdout().trim();
 	}
 	
 	/**
@@ -170,7 +206,7 @@ public class ModuleTasks {
 	 */
 	public String list() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
-		return sshCommandRunner.getStdout();
+		return sshCommandRunner.getStdout().trim();
 	}
 	
 	// subscribe module tasks ************************************************************
@@ -199,7 +235,9 @@ public class ModuleTasks {
 		subscribe(pool.poolId, null, null, null, null);
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-			"The list of currently consumed product subscriptions has increased (or remained the same when the products from this subscription pool overlap those from a previously subscribed pool) after subscribing to pool: "+pool);
+				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
+				"The available subscription pools no longer contains pool: "+pool);
 	}
 	
 	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
@@ -207,8 +245,10 @@ public class ModuleTasks {
 		log.info("Subscribing to subscription pool: "+pool);
 		subscribe(null, pool.productId, null, null, null);
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(after.size() > before.size() && after.size() > 0,
-			"The list of currently consumed product subscriptions has increased (or remained the same when the products from this subscription pool overlap those from a previously subscribed pool) after subscribing to pool: "+pool);
+		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
+				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
+				"The available subscription pools no longer contains pool: "+pool);
 	}
 	
 	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool, boolean withPoolID){
@@ -239,8 +279,7 @@ public class ModuleTasks {
 	public void subscribeToEachOfTheCurrentlyAvailableSubscriptionPools() {
 
 		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
-			this.subscribeToSubscriptionPoolUsingPoolId(pool);
-			Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),"The available subscription pools no longer contains pool: "+pool);
+			subscribeToSubscriptionPoolUsingPoolId(pool);
 		}
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
@@ -271,24 +310,42 @@ public class ModuleTasks {
 	public void unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions() {
 		log.info("Unsubscribing from each of the currently consumed product subscriptions...");
 		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions())
-			this.unsubscribeFromProductSubscription(sub);
-		Assert.assertEquals(getCurrentlyConsumedProductSubscriptions().size(),0,"Currently no product subscriptions are consumed.");
-		log.info("Verifying that entitlement certificates are no longer present...");
-		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
-				"ls /etc/pki/entitlement/product/ | grep pem");
+			unsubscribeFromProductSubscription(sub);
+		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size()==0,
+				"Currently no product subscriptions are consumed.");
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0,
+				"This machine has no entitlement certificate files.");			
 	}
 	
 	/**
 	 * Unsubscribe from the given product subscription using its serial number.
 	 * @param productSubscription
+	 * @return - false when the productSubscription has already been unsubscribed at a previous time
 	 */
-	public void unsubscribeFromProductSubscription(ProductSubscription productSubscription) {
-		log.info("Unsubscribing from product subscription: "+ productSubscription);
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli unsubscribe --serial=\""+productSubscription.serialNumber+"\"");
-		Assert.assertTrue(!getCurrentlyConsumedProductSubscriptions().contains(productSubscription),"The currently consumed product subscriptions does not contain product: "+productSubscription);
+	public boolean unsubscribeFromProductSubscription(ProductSubscription productSubscription) {
+		String certFile = "/etc/pki/entitlement/product/"+productSubscription.serialNumber+".pem";
+		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
-		// TODO: Somewhere we may want to assert this type of output is negative test, or maybe assert it here.  However the All/Each tests will want to catch the assertions.
-		//201007141716:05.796 - FINE: Stderr: Entitlement Certificate with serial number 301 could not be found.
+		log.info("Unsubscribing from product subscription: "+ productSubscription);
+		sshCommandRunner.runCommandAndWait("subscription-manager-cli unsubscribe --serial="+productSubscription.serialNumber);
+		
+		if (certFileExists) {
+			// assert that the cert file was removed
+//			Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==0,
+//					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
+			Assert.assertTrue(!getCurrentEntitlementCertFiles().contains(certFile),
+					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
+		} else {
+			// assert an error message when the product subscription was not found
+			// Example Stderr: Entitlement Certificate with serial number 301 could not be found.
+			Assert.assertEquals(sshCommandRunner.getStderr().trim(), "Entitlement Certificate with serial number "+productSubscription.serialNumber+" could not be found.",
+					"When the entitlement cert file corresponding to a product subscription does not exist, then you cannot unsubscribe from it.");
+		}
+		
+		Assert.assertTrue(!getCurrentlyConsumedProductSubscriptions().contains(productSubscription),
+				"The currently consumed product subscriptions does not contain product: "+productSubscription);
+
+		return certFileExists;
 	}
 	
 	

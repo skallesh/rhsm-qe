@@ -17,16 +17,16 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class RegisterTests extends SubscriptionManagerTestScript {
 	
-	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
-			dataProvider="invalidRegistrationTest",
-			groups={"sm_stage1"})
-	@ImplementsTCMS(id="41691, 47918")
-	public void InvalidRegistration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex) {
-		log.info("Testing registration to a Candlepin server using bogus credentials.");
-		sm.registerToCandlepin(username, password, type, consumerId, autosubscribe, force);
-		if (stdoutRegex!=null) Assert.assertContainsMatch(sshCommandRunner.getStdout(), stdoutRegex);
-		if (stderrRegex!=null) Assert.assertContainsMatch(sshCommandRunner.getStderr(), stderrRegex);
-	}
+//	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
+//			dataProvider="invalidRegistrationTest",
+//			groups={"sm_stage1"})
+//	@ImplementsTCMS(id="41691, 47918")
+//	public void InvalidRegistration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex) {
+//		log.info("Testing registration to a Candlepin server using bogus credentials.");
+//		sm.registerToCandlepin(username, password, type, consumerId, autosubscribe, force);
+//		if (stdoutRegex!=null) Assert.assertContainsMatch(sshCommandRunner.getStdout(), stdoutRegex);
+//		if (stderrRegex!=null) Assert.assertContainsMatch(sshCommandRunner.getStderr(), stderrRegex);
+//	}
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials, check for localized strings",

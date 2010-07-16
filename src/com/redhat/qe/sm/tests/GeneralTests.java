@@ -15,37 +15,37 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class GeneralTests extends SubscriptionManagerTestScript{
 	
-	@Test(	description="subscription-manager-cli: ensure manpages and usage information are accurate",
-			dataProvider="CommandLineOptionsSData",
-			groups={"sm_stage1"})
-	@ImplementsTCMS(id="41697")
-	public void CommandLineOptions_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
-		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
-	}
-	
-	
-	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
-			dataProvider="UnregisteredCommandData",
-			groups={"sm_stage1"})
-	@ImplementsTCMS(id="41697")
-	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
-		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
-		sm.unregisterFromCandlepin();
-		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
-
-	}
-	
-	
-	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
-			dataProvider="NegativeFunctionalityData",
-			groups={"sm_stage1"})
-	public void AttemptingCommandsThatDoNotExist_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
-		log.info("Testing subscription-manager-cli command that does not exist, expecting it to fail: "+ command);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
-
-	}
+//	@Test(	description="subscription-manager-cli: ensure manpages and usage information are accurate",
+//			dataProvider="CommandLineOptionsSData",
+//			groups={"sm_stage1"})
+//	@ImplementsTCMS(id="41697")
+//	public void CommandLineOptions_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
+//		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
+//	}
+//	
+//	
+//	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
+//			dataProvider="UnregisteredCommandData",
+//			groups={"sm_stage1"})
+//	@ImplementsTCMS(id="41697")
+//	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
+//		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
+//		sm.unregisterFromCandlepin();
+//		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
+//
+//	}
+//	
+//	
+//	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
+//			dataProvider="NegativeFunctionalityData",
+//			groups={"sm_stage1"})
+//	public void AttemptingCommandsThatDoNotExist_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
+//		log.info("Testing subscription-manager-cli command that does not exist, expecting it to fail: "+ command);
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
+//
+//	}
 	
 	
 	// Data Providers ***********************************************************************

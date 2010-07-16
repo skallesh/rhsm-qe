@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
-public class ProductCert extends CandlepinAbstraction {
+public class InstalledProduct extends CandlepinAbstraction {
 	
 	public String productName;
 	public String status;
 	public Date expires;
 	public Integer subscription;
 	
-	public ProductCert(HashMap<String, String> productData) {
+	public InstalledProduct(Map<String, String> productData) {
 		super(productData);
 	}
 
@@ -39,7 +40,7 @@ public class ProductCert extends CandlepinAbstraction {
 	 * @param stdoutListingOfProductCerts - stdout from "subscription-manager-cli list"
 	 * @return
 	 */
-	static public List<ProductCert> parse(String stdoutListingOfProductCerts) {
+	static public List<InstalledProduct> parse(String stdoutListingOfProductCerts) {
 		/*
 		# subscription-manager-cli list
 		+-------------------------------------------+
@@ -53,7 +54,7 @@ public class ProductCert extends CandlepinAbstraction {
 		ContractNumber:        	0   
 		*/
 		
-		HashMap<String,String> regexes = new HashMap<String,String>();
+		Map<String,String> regexes = new HashMap<String,String>();
 		
 //		regexes.put("productName",	"ProductName:\\s*([a-zA-Z0-9 ,:()]*)");
 //		regexes.put("status",		"Status:\\s*([a-zA-Z0-9 ,:()]*)");
@@ -66,15 +67,15 @@ public class ProductCert extends CandlepinAbstraction {
 		regexes.put("expires",					"Expires:\\s*(.*)");
 		regexes.put("subscription",				"Subscription:\\s*(.*)");
 		
-		List<HashMap<String,String>> productCertList = new ArrayList<HashMap<String,String>>();
+		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
 			addRegexMatchesToList(pat, stdoutListingOfProductCerts, productCertList, field);
 		}
 		
-		List<ProductCert> productCerts = new ArrayList<ProductCert>();
-		for(HashMap<String,String> prodCertMap : productCertList)
-			productCerts.add(new ProductCert(prodCertMap));
+		List<InstalledProduct> productCerts = new ArrayList<InstalledProduct>();
+		for(Map<String,String> prodCertMap : productCertList)
+			productCerts.add(new InstalledProduct(prodCertMap));
 		return productCerts;
 	}
 }

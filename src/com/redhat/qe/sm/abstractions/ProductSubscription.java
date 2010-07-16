@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public class ProductSubscription extends CandlepinAbstraction {
@@ -30,7 +31,7 @@ public class ProductSubscription extends CandlepinAbstraction {
 		return ((ProductSubscription)obj).productName.equals(this.productName) && ((ProductSubscription)obj).serialNumber.equals(this.serialNumber);
 	}
 	
-	public ProductSubscription(HashMap<String, String> productData){
+	public ProductSubscription(Map<String, String> productData){
 		super(productData);
 		
 		if (this.productName == null)
@@ -97,7 +98,7 @@ public class ProductSubscription extends CandlepinAbstraction {
 		Expires:            	2011-07-01   
 		*/
 
-		HashMap<String,String> regexes = new HashMap<String,String>();
+		Map<String,String> regexes = new HashMap<String,String>();
 		
 //		regexes.put("productId",	"Name:\\s*([a-zA-Z0-9 ,:()]*)");
 //		regexes.put("serialNumber",	"SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
@@ -114,14 +115,14 @@ public class ProductSubscription extends CandlepinAbstraction {
 		regexes.put("startDate",				"Begins:\\s*(.*)");
 		regexes.put("endDate",					"Expires:\\s*(.*)");
 		
-		List<HashMap<String,String>> productList = new ArrayList<HashMap<String,String>>();
+		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
 			addRegexMatchesToList(pat, stdoutListOfConsumedProducts, productList, field);
 		}
 		
 		List<ProductSubscription> productSubscriptions = new ArrayList<ProductSubscription>();
-		for(HashMap<String,String> productMap : productList)
+		for(Map<String,String> productMap : productList)
 			productSubscriptions.add(new ProductSubscription(productMap));
 		return productSubscriptions;
 	}

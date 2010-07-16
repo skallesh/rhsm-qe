@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,7 +21,7 @@ public abstract class CandlepinAbstraction {
 
 	
 	
-	public CandlepinAbstraction(HashMap<String, String> productData){
+	public CandlepinAbstraction(Map<String, String> productData){
 		if (productData == null)
 			return;
 		
@@ -81,12 +82,12 @@ public abstract class CandlepinAbstraction {
 		}
 	}
 	
-	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<HashMap<String,String>> matchList, String sub_key) {
+	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {
 		Matcher matcher = regex.matcher(to_parse);
 		int currListElem=0;
 		while (matcher.find()){
 			if (matchList.size() < currListElem + 1) matchList.add(new HashMap<String,String>());
-			HashMap<String,String> matchMap = matchList.get(currListElem);
+			Map<String,String> matchMap = matchList.get(currListElem);
 			matchMap.put(sub_key, matcher.group(1).trim());
 			matchList.set(currListElem, matchMap);
 			currListElem++;
@@ -95,12 +96,12 @@ public abstract class CandlepinAbstraction {
 	}
 			
 	
-	static protected boolean addRegexMatchesToMap(Pattern regex, String to_parse, HashMap<String, HashMap<String,String>> matchMap, String sub_key) {
+	static protected boolean addRegexMatchesToMap(Pattern regex, String to_parse, Map<String, Map<String,String>> matchMap, String sub_key) {
         Matcher matcher = regex.matcher(to_parse);
         while (matcher.find()) {
-            HashMap<String,String> singleCertMap = matchMap.get(matcher.group(1));
+            Map<String,String> singleCertMap = matchMap.get(matcher.group(1));
             if(singleCertMap == null){
-            	HashMap<String,String> newBranch = new HashMap<String,String>();
+            	Map<String,String> newBranch = new HashMap<String,String>();
             	singleCertMap = newBranch;
             }
             singleCertMap.put(sub_key, matcher.group(2));

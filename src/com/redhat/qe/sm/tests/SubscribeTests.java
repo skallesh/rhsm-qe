@@ -1,12 +1,16 @@
 package com.redhat.qe.sm.tests;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.abstractions.EntitlementCert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
@@ -15,14 +19,16 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class SubscribeTests extends SubscriptionManagerTestScript{
 	
-	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
-			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
-	@ImplementsTCMS(id="41680,41899")
-	public void SubscribeToValidSubscriptionsByProductID_Test(){
-		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-	}
+//	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
+//			dependsOnGroups={"sm_stage3"},
+//			groups={"sm_stage4", "blockedByBug-584137"},
+//			dataProvider="getAllAvailableSubscriptionPoolData")
+//	@ImplementsTCMS(id="41680")
+//	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
+////		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+////		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+//		sm.subscribeToSubscriptionPoolUsingProductId(pool);
+//	}
 	
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
@@ -43,11 +49,14 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using pool ID",
 			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4", "blockedByBug-584137"})
-	@ImplementsTCMS(id="41686,41899")
-	public void SubscribeToValidSubscriptionsByPoolID_Test(){
-		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+			groups={"sm_stage4", "blockedByBug-584137"},
+			dataProvider="getAllAvailableSubscriptionPoolData")
+	@ImplementsTCMS(id="41686")
+	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
+		// non-dataProvided test procedure
+		//sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		//sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		sm.subscribeToSubscriptionPoolUsingPoolId(pool);
 	}
 	
 	
@@ -66,7 +75,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"})
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
-		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for(SubscriptionPool pool : sm.getCurrentlyAvailableSubscriptionPools()) {
 			sm.subscribeToSubscriptionPoolUsingProductId(pool);
 			sm.subscribeToProduct(pool.subscriptionName);
@@ -139,60 +149,60 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	@Test(description="rhsmcertd: change certFrequency",
-			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4"})
-	@ImplementsTCMS(id="41692")
-	public void certFrequency_Test(){
-		this.changeCertFrequency("1");
-		this.sleep(70*1000);
-		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-				rhsmcertdLogFile,
-				"certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated at new interval");
-	}
-	
-	
-	@Test(description="rhsmcertd: ensure certificates synchronize",
-			dependsOnGroups={"sm_stage3"},
-			groups={"sm_stage4"})
-	@ImplementsTCMS(id="41694")
-	public void refreshCerts_Test(){
-		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		//SubscribeToASingleEntitlementByProductID_Test();
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
-		sshCommandRunner.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
-		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
-		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
-		this.sleep(70*1000);
-		
-		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-				rhsmcertdLogFile,
-				"certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated");
-		
-		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement | grep pem",
-				0,
-				"pem", 
-				null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/entitlement/product | grep pem", 
-				0,
-				"pem", 
-				null);
-		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
-		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/product", 
-				0,
-				"pem", 
-				null);*/
-	}
+//	@Test(description="rhsmcertd: change certFrequency",
+//			dependsOnGroups={"sm_stage3"},
+//			groups={"sm_stage4"})
+//	@ImplementsTCMS(id="41692")
+//	public void certFrequency_Test(){
+//		this.changeCertFrequency("1");
+//		this.sleep(70*1000);
+//		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+//				rhsmcertdLogFile,
+//				"certificates updated"),
+//				0,
+//				"rhsmcertd reports that certificates have been updated at new interval");
+//	}
+//	
+//	
+//	@Test(description="rhsmcertd: ensure certificates synchronize",
+//			dependsOnGroups={"sm_stage3"},
+//			groups={"sm_stage4"})
+//	@ImplementsTCMS(id="41694")
+//	public void refreshCerts_Test(){
+//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+//		//SubscribeToASingleEntitlementByProductID_Test();
+//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
+//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
+//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
+//		sshCommandRunner.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
+//		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
+//		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
+//		this.sleep(70*1000);
+//		
+//		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+//				rhsmcertdLogFile,
+//				"certificates updated"),
+//				0,
+//				"rhsmcertd reports that certificates have been updated");
+//		
+//		//verify that PEM files are present in all certificate directories
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+//				"ls /etc/pki/entitlement | grep pem",
+//				0,
+//				"pem", 
+//				null);
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+//				"ls /etc/pki/entitlement/product | grep pem", 
+//				0,
+//				"pem", 
+//				null);
+//		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
+//		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+//				"ls /etc/pki/product", 
+//				0,
+//				"pem", 
+//				null);*/
+//	}
 	
 	
 	
@@ -229,5 +239,25 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 						0,
 						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
 				);
+	}
+	
+	
+	// Data Providers ***********************************************************************
+
+	
+	@DataProvider(name="getAllAvailableSubscriptionPoolData")
+	public Object[][] getAllAvailableSubscriptionPoolDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableSubscriptionPoolDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllAvailableSubscriptionPoolDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
+		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		for (SubscriptionPool pool : sm.getCurrentlyAvailableSubscriptionPools()) {
+			ll.add(Arrays.asList(new Object[]{pool}));		
+		}
+		
+		return ll;
 	}
 }

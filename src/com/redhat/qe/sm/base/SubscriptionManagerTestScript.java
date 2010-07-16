@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Random;
 
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
 import com.redhat.qe.auto.testopia.Assert;
@@ -59,7 +60,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		// TODO Auto-generated constructor stub
 	}
 
-	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up",alwaysRun=true)
+	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up")
 	public void setupBeforeSuite() throws ParseException, IOException{
 		sshCommandRunner = new SSHCommandRunner(clientHostname, clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
 		sm.setSSHCommandRunner(sshCommandRunner);
@@ -76,6 +77,15 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		sm.unregisterFromCandlepin();	// unregister after updating the config file
 		this.cleanOutAllCerts();	// is this really needed?  shouldn't unregister do this and assert it - jsefler 7/8/2010
 	}
+	
+	@AfterSuite(groups={"sm_setup"},description="subscription manager tear down")
+	public void teardownAfterSuite() {
+		if (sshCommandRunner==null) return;
+		if (sm==null) return;
+		
+		sm.unregisterFromCandlepin();	// release the entitlements consumed by the current registration
+	}
+	
 	private void cleanOutAllCerts(){
 		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
 		
