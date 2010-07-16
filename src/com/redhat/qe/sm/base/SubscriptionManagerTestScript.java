@@ -74,8 +74,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		this.changeCertFrequency(certFrequency);
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
-		sm.unregisterFromCandlepin();	// unregister after updating the config file
-		this.cleanOutAllCerts();	// is this really needed?  shouldn't unregister do this and assert it - jsefler 7/8/2010
+//setup should not be running sm commands		sm.unregister();	// unregister after updating the config file
+		this.cleanOutAllCerts();	// is this really needed?  shouldn't unregister do this and assert it - jsefler 7/8/2010  - yes it is needed since we should not use sm to unregister here
 	}
 	
 	@AfterSuite(groups={"sm_setup"},description="subscription manager tear down")
@@ -83,7 +83,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		if (sshCommandRunner==null) return;
 		if (sm==null) return;
 		
-		sm.unregisterFromCandlepin();	// release the entitlements consumed by the current registration
+		sm.unregister();	// release the entitlements consumed by the current registration
 	}
 	
 	private void cleanOutAllCerts(){
@@ -186,7 +186,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	public int getRandInt(){
 		Random gen = new Random();
-		return gen.nextInt();
+		return Math.abs(gen.nextInt());
 	}
 	
 	public void runRHSMCallAsLang(String lang,String rhsmCall){

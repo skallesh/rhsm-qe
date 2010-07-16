@@ -19,16 +19,16 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class SubscribeTests extends SubscriptionManagerTestScript{
 	
-//	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137"},
-//			dataProvider="getAllAvailableSubscriptionPoolData")
-//	@ImplementsTCMS(id="41680")
-//	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
-////		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-////		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//		sm.subscribeToSubscriptionPoolUsingProductId(pool);
-//	}
+	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4", "blockedByBug-584137"},
+			dataProvider="getAllAvailableSubscriptionPoolData")
+	@ImplementsTCMS(id="41680")
+	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
+//		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		sm.subscribeToSubscriptionPoolUsingProductId(pool);
+	}
 	
 	
 	@Test(description="subscription-manager-cli: subscribe client to an entitlement using product ID",
@@ -149,60 +149,60 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-//	@Test(description="rhsmcertd: change certFrequency",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4"})
-//	@ImplementsTCMS(id="41692")
-//	public void certFrequency_Test(){
-//		this.changeCertFrequency("1");
-//		this.sleep(70*1000);
-//		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-//				rhsmcertdLogFile,
-//				"certificates updated"),
-//				0,
-//				"rhsmcertd reports that certificates have been updated at new interval");
-//	}
-//	
-//	
-//	@Test(description="rhsmcertd: ensure certificates synchronize",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4"})
-//	@ImplementsTCMS(id="41694")
-//	public void refreshCerts_Test(){
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//		//SubscribeToASingleEntitlementByProductID_Test();
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
-//		sshCommandRunner.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
-//		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
-//		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
-//		this.sleep(70*1000);
-//		
-//		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
-//				rhsmcertdLogFile,
-//				"certificates updated"),
-//				0,
-//				"rhsmcertd reports that certificates have been updated");
-//		
-//		//verify that PEM files are present in all certificate directories
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-//				"ls /etc/pki/entitlement | grep pem",
-//				0,
-//				"pem", 
-//				null);
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-//				"ls /etc/pki/entitlement/product | grep pem", 
-//				0,
-//				"pem", 
-//				null);
-//		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
-//		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-//				"ls /etc/pki/product", 
-//				0,
-//				"pem", 
-//				null);*/
-//	}
+	@Test(description="rhsmcertd: change certFrequency",
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
+	@ImplementsTCMS(id="41692")
+	public void certFrequency_Test(){
+		this.changeCertFrequency("1");
+		this.sleep(70*1000);
+		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+				rhsmcertdLogFile,
+				"certificates updated"),
+				0,
+				"rhsmcertd reports that certificates have been updated at new interval");
+	}
+	
+	
+	@Test(description="rhsmcertd: ensure certificates synchronize",
+			dependsOnGroups={"sm_stage3"},
+			groups={"sm_stage4"})
+	@ImplementsTCMS(id="41694")
+	public void refreshCerts_Test(){
+		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		//SubscribeToASingleEntitlementByProductID_Test();
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/*");
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/*");
+		sshCommandRunner.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
+		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
+		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
+		this.sleep(70*1000);
+		
+		Assert.assertEquals(RemoteFileTasks.grepFile(sshCommandRunner,
+				rhsmcertdLogFile,
+				"certificates updated"),
+				0,
+				"rhsmcertd reports that certificates have been updated");
+		
+		//verify that PEM files are present in all certificate directories
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				"ls /etc/pki/entitlement | grep pem",
+				0,
+				"pem", 
+				null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				"ls /etc/pki/entitlement/product | grep pem", 
+				0,
+				"pem", 
+				null);
+		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
+		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
+				"ls /etc/pki/product", 
+				0,
+				"pem", 
+				null);*/
+	}
 	
 	
 	

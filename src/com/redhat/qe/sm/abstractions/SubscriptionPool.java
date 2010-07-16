@@ -37,8 +37,11 @@ public class SubscriptionPool extends CandlepinAbstraction {
 	public boolean equals(Object obj){
 		// return ((SubscriptionPool)obj).subscriptionName.contains(this.subscriptionName);		// this is not correct jsefler 7/13/2010 
 
-		// assumes productId is unique across all SubscriptionPools
-		return ((SubscriptionPool)obj).productId.equals(this.productId);
+//		// assumes productId is unique across all SubscriptionPools
+//		return ((SubscriptionPool)obj).productId.equals(this.productId);
+		
+		// assumes poolId is unique across all SubscriptionPools
+		return ((SubscriptionPool)obj).poolId.equals(this.poolId);
 	}
 	
 	public SubscriptionPool(String subscriptionLine) throws ParseException{

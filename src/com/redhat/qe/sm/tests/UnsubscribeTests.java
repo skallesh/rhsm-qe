@@ -17,16 +17,16 @@ import com.redhat.qe.tools.RemoteFileTasks;
 
 public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	
-//	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using product ID",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
-//			dataProvider="getAllConsumedProductSubscriptionsData")
-//	@ImplementsTCMS(id="41688")
-//	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
-////		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-////		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-//		sm.unsubscribeFromProductSubscription(productSubscription);
-//	}
+	@Test(description="subscription-manager-cli: unsubscribe client to an entitlement using product ID",
+			dependsOnGroups={"sm_stage4"},
+			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
+			dataProvider="getAllConsumedProductSubscriptionsData")
+	@ImplementsTCMS(id="41688")
+	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
+//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+//		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.unsubscribeFromProductSubscription(productSubscription);
+	}
 	
 	
 	@Test(description="Copy entitlement certificate in /etc/pki/entitlement/product after unsubscribe",

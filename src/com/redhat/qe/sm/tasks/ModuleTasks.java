@@ -121,7 +121,19 @@ public class ModuleTasks {
 	
 	// register module tasks ************************************************************
 	
-	public void registerToCandlepin(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
+	/**
+	 * @param username
+	 * @param password
+	 * @param type <br>
+	 * <i>system</i>		Used for example registering a plain RHEL machine (Default)<br>
+	 * <i>person</i>		Used for registering as a RH Personal<br>
+	 * <i>domain</i>		Used for IPA tests<br>
+	 * <i>candlepin</i>		Used for a connected Candlepin, export tests<br>
+	 * @param consumerId
+	 * @param autosubscribe
+	 * @param force
+	 */
+	public void register(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
 		
 		// assemble the register command
 		String										command  = "subscription-manager-cli register";	
@@ -172,7 +184,10 @@ public class ModuleTasks {
 	
 	// unregister module tasks ************************************************************
 
-	public void unregisterFromCandlepin() {
+	/**
+	 * "subscription-manager-cli unregister"
+	 */
+	public void unregister() {
 		sshCommandRunner.runCommandAndWait("subscription-manager-cli unregister");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls /etc/pki/entitlement/product | grep pem");
 //		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"stat /etc/pki/consumer/key.pem");
