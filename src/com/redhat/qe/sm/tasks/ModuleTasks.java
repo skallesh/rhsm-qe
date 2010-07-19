@@ -149,6 +149,9 @@ public class ModuleTasks {
 
 		// FIXME: may want to assert this output and save or return it.  - jsefler 7/8/2010
 		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin admin
+		// FIXME: should assert stdout: SYSTEM_UUID  USER_SET_SYSTEM_NAME  USERNAME_OF_REGISTERER
+		// https://bugzilla.redhat.com/show_bug.cgi?id=616065
+		
 		
 // Moved to ValidRegistration_Test()
 //		Assert.assertEquals(

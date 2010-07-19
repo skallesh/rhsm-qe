@@ -18,8 +18,12 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 //	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
 //	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
-	protected String clientHostname			= System.getProperty("rhsm.client.hostname");
 	protected String serverHostname			= System.getProperty("rhsm.server.hostname");
+	protected String serverPort 			= System.getProperty("rhsm.server.port");
+	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
+	protected Boolean serverStandalone		= Boolean.valueOf(System.getProperty("rhsm.server.standalone","false"));
+
+	protected String clientHostname			= System.getProperty("rhsm.client.hostname");
 	protected String username				= System.getProperty("rhsm.client.username");
 	protected String password				= System.getProperty("rhsm.client.password");
 	protected String tcUnacceptedUsername	= System.getProperty("rhsm.client.username.tcunaccepted");
@@ -27,11 +31,10 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String regtoken				= System.getProperty("rhsm.client.regtoken");
 	protected String certFrequency			= System.getProperty("rhsm.client.certfrequency");
 	protected String repoForDependencies	= System.getProperty("rhsm.client.repofordependencies");
-	protected String rpmLocation			= System.getProperty("rhsm.rpm");
+
 	protected String prodCertLocation		= System.getProperty("rhsm.prodcert");
 	protected String prodCertProduct		= System.getProperty("rhsm.prodcert.product");
-	protected String serverPort 			= System.getProperty("rhsm.server.port");
-	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
+	
 	protected String clientsshUser			= System.getProperty("rhsm.ssh.user","root");
 	protected String clientsshKeyPrivate	= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
 	protected String clientsshkeyPassphrase	= System.getProperty("rhsm.sshkey.passphrase","");
@@ -44,6 +47,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String itDBUsername			= System.getProperty("rhsm.it.db.username");
 	protected String itDBPassword			= System.getProperty("rhsm.it.db.password");
 	
+	protected String rpmLocation			= System.getProperty("rhsm.rpm");
+
 	protected String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
 	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	protected String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";

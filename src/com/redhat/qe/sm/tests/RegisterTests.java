@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -33,8 +34,9 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData",
-			groups={"sm_stage1", "sprint9-script", "only-IT"})
+			groups={"sm_stage1", "sprint9-script"})
 	public void InvalidRegistrationWithLocalizedStrings_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		if (serverStandalone) throw new SkipException("This testcase was designed for an IT candlepin server, not a standalone candlepin server.");
 //		sm.unregister();
 //		this.runRHSMCallAsLang(lang,"subscription-manager-cli register --force --username="+username+" --password="+password);
 //		String stdErr = sshCommandRunner.getStderr();
@@ -47,7 +49,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //				"Testing the registration to a candlepin server using invalid credentials and expecting results in language "+lang+". ");
 	}
 	
-	
+// FIXME DELETEME
 //	@Test(	description="subscription-manager-cli: register to a Candlepin server using a user who hasn't accepted terms and conditions, check for localized strings",
 //			dataProvider="invalidRegistrationTermsAndConditionsLocalizedTest",
 //			groups={"sm_stage1", "sprint9-script", "only-IT"})
@@ -83,9 +85,10 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	String autosubscribeProdCertFile =  "/etc/pki/product/"+"autosubscribeProdCert-"+getRandInt()+".pem";
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"sm_stage1", "sprint9-script", "only-IT", "blockedByBug-602378"},
+			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378"},
 			alwaysRun=true)
 	public void ValidRegistrationAutosubscribe_Test() {
+		if (serverStandalone) throw new SkipException("This testcase was designed for an IT candlepin server, not a standalone candlepin server.");
 		sm.unregister();
 //		String autoProdCert = "/etc/pki/product/autoProdCert-"+getRandInt()+".pem";
 		String autoProdCert = autosubscribeProdCertFile;
@@ -106,6 +109,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	// Data Providers ***********************************************************************
 
+// FIXME DELETEME	
 //	@DataProvider(name="invalidRegistrationTermsAndConditionsLocalizedTest")
 //	public Object[][] getInvalidRegistrationTermsAndConditionsLocalizedDataAs2dArray() {
 //		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationTermsAndConditionsLocalizedDataAsListOfLists());
@@ -136,6 +140,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		ll.add(Arrays.asList(new Object[]{username,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
 
 		// force a successful registration, and then...
+		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
 		ll.add(Arrays.asList(new Object[]{username,		password,						null,	null,	null,	Boolean.TRUE,	null,	"([a-z,0-9,\\-]*) "+username+" "+username,								null}));
 
 		// ... try to register again even though the system is already registered
