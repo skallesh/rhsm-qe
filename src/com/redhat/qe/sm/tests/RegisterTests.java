@@ -3,7 +3,6 @@ package com.redhat.qe.sm.tests;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
@@ -83,9 +82,9 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 							"/etc/pki/consumer/cert.pem is present after register");
 	}
 	
-	String autosubscribeProdCertFile =  "/etc/pki/product/"+"autosubscribeProdCert-"+getRandInt()+".pem";
+	String autosubscribeProdCertFile =  "/etc/pki/product/"+"autosubscribeProdCert-"+/*getRandInt()+*/".pem";
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378"},
+			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378", "blockedByBug-616137"},
 			alwaysRun=true)
 	public void ValidRegistrationAutosubscribe_Test() {
 		if (serverStandalone) throw new SkipException("This testcase was designed for an IT candlepin server, not a standalone candlepin server.");
@@ -93,10 +92,14 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //		String autoProdCert = "/etc/pki/product/autoProdCert-"+getRandInt()+".pem";
 		String autoProdCert = autosubscribeProdCertFile;
 //		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
-		teardownAfterGroups_sm_stage1(); 
-		sshCommandRunner.runCommandAndWait("wget -O "+autoProdCert+" "+this.prodCertLocation);
+		teardownAfterGroups_sm_stage1(); 	// will remove the autosubscribeProdCertFile
+		sshCommandRunner.runCommandAndWait("wget -O "+autoProdCert+" "+prodCertLocation);
 		sm.register(username, password, null, null, Boolean.TRUE, null);
-		Assert.assertTrue(sm.getCurrentlyConsumedProductSubscriptions().contains(new ProductSubscription(this.prodCertProduct, null)),
+		// assert that the stdout from the registration includes: Bind Product  Red Hat Directory Server 75822
+		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
+				"Bind Product  "+prodCertProduct, "Stdout from the register command contains binding to the expected product.");
+		// assert the bound product is reported in the consumed product listing
+		Assert.assertTrue(sm.getCurrentlyConsumedProductSubscriptions().contains(new ProductSubscription(prodCertProduct, null)),
 				"Expected product "+this.prodCertProduct+" appears in list --consumed call after autosubscribe");
 //		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 	}

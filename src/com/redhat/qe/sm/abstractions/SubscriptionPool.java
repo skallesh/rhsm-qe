@@ -341,6 +341,10 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		        06:c4:a2:65:05:81:8c:d7:5b:e3:9f:4f:1f:6c:9b:3c:85:e5:
 		        30:28
 		*/
+		/* have also seen:
+            1.3.6.1.4.1.2312.9.4.1: 
+                .#MKT-rhel-physical-2-sockets-premium
+		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
@@ -361,8 +365,8 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		  1.3.6.1.4.1.2312.9.4.12 (Contract Number): 152341643
 		  1.3.6.1.4.1.2312.9.4.13 (Quantity Used): 4
 		  */
-		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\.\\cM]*(.+)");
-		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\.\\cM]*(.+)");
+		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[\\.#](.+)");
+		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[\\.#](.+)");
 		
 		Map<String, Map<String,String>> serialMapOfProductAndPoolIds = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

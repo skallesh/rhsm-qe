@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.xmlrpc.XmlRpcException;
-import org.testng.SkipException;
 
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testopia.Assert;
@@ -150,6 +149,7 @@ public class ModuleTasks {
 		// FIXME: may want to assert this output and save or return it.  - jsefler 7/8/2010
 		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin admin
 		// FIXME: should assert stdout: SYSTEM_UUID  USER_SET_SYSTEM_NAME  USERNAME_OF_REGISTERER
+		// ([a-z,0-9,\-]+) (admin) (XEOPS|xeops)
 		// https://bugzilla.redhat.com/show_bug.cgi?id=616065
 		
 		
@@ -253,7 +253,7 @@ public class ModuleTasks {
 		subscribe(pool.poolId, null, null, null, null);
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.poolId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
 				"The available subscription pools no longer contains pool: "+pool);
 	}
@@ -262,11 +262,18 @@ public class ModuleTasks {
 		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
 		log.info("Subscribing to subscription pool: "+pool);
 		subscribe(null, pool.productId, null, null, null);
+		String stderr = sshCommandRunner.getStderr().trim();
+		
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
-		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
-				"The available subscription pools no longer contains pool: "+pool);
+		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'")) {
+			Assert.assertTrue(after.size() == before.size() && after.size() > 0,
+					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   The list of consumed product subscriptions can remain the same when all this product is already a subset from a previously subscribed pool.");
+		} else {
+			Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
+					"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.productId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all this product is already a subset from a previously subscribed pool.");
+			Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
+					"The available subscription pools no longer contains pool: "+pool);
+		}
 	}
 	
 	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool, boolean withPoolID){
@@ -320,6 +327,9 @@ public class ModuleTasks {
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
 		Assert.assertEquals(listConsumed(),"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
+		
+		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
+		Assert.assertTrue(sshCommandRunner.getStdout().equals(""),"No entitlement product cert files exist after unsubscribing from all subscription pools.");
 	}
 	
 	/**

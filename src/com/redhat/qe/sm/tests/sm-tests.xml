@@ -8,7 +8,9 @@
 		</packages>
 		<groups>
 			<run>
+<include name="myDevGroup" />
 				<include name="sm_setup" />
+<!--
 				<include name="sm_stage1" />
 				<include name="sm_stage2" />
 				<include name="sm_stage3" />
@@ -18,6 +20,7 @@
 				<include name="sm_stage7" />
 				<include name="sm_stage8" />
 				<include name="sm_stage9" />
+-->
 				<exclude name="not_implemented" />
 			</run>
 		</groups>

@@ -31,19 +31,24 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	
 	@Test(description="Copy entitlement certificate in /etc/pki/entitlement/product after unsubscribe",
 			dependsOnGroups={"sm_stage4"},
-			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"})
+alwaysRun=true,
+			groups={"myDevGroup","sm_stage5", "blockedByBug-584137", "blockedByBug-602852"})
 	@ImplementsTCMS(id="41903")
 	public void UnsubscribeAndReplaceCert_Test(){
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String randDir = "/tmp/sm-certs-"+Integer.toString(this.getRandInt());
+		
+		// make sure we are registered and then subscribe to each available subscription pool
+		sm.register(username,password,null,null,null,null);
 		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
-		//copy certs to temp dir
+		// copy certs to temp dir
 		sshCommandRunner.runCommandAndWait("rm -rf "+randDir);
 		sshCommandRunner.runCommandAndWait("mkdir -p "+randDir);
 		sshCommandRunner.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
 		
-		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+//		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		sshCommandRunner.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
@@ -73,22 +78,22 @@ java.lang.AssertionError: Command 'yum repolist' returns nonzero error code: 0 e
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
 			dependsOnGroups={"sm_stage4"},
-			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"})
+			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
+			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsTCMS(id="41898")
-	public void ResubscribeAfterUnsubscribe_Test(){
+	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
-		// first make sure we are subscribed to all pools
-		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+//		// first make sure we are subscribed to all pools
+//		sm.register(username,password,null,null,null,null);
+//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
-		for (ProductSubscription productSubscription : sm.getCurrentlyConsumedProductSubscriptions()) {
-			SubscriptionPool pool = sm.getSubscriptionPoolFromProductSubscription(productSubscription);
-			if (sm.unsubscribeFromProductSubscription(productSubscription))
-				sm.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
-		}
+		SubscriptionPool pool = sm.getSubscriptionPoolFromProductSubscription(productSubscription);
+		if (sm.unsubscribeFromProductSubscription(productSubscription))
+			sm.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}
 	
 	
@@ -102,8 +107,11 @@ java.lang.AssertionError: Command 'yum repolist' returns nonzero error code: 0 e
 	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		// subscribe to all subscription pools and then assemble a list of all ProductSubscriptions
+		// first make sure we are subscribed to all pools
+		sm.register(username,password,null,null,null,null);
 		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		
+		// then assemble a list of all consumed ProductSubscriptions
 		for (ProductSubscription productSubscription : sm.getCurrentlyConsumedProductSubscriptions()) {
 			ll.add(Arrays.asList(new Object[]{productSubscription}));		
 		}
