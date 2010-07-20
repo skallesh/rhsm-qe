@@ -14,7 +14,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage3"})
 	@ImplementsTCMS(id="41678")
 	public void EnsureAvailableEntitlementsListed_Test() {
-		String availableSubscriptionPools = sm.listAvailable();
+		String availableSubscriptionPools = sm1.listAvailable();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
 	}
 	
@@ -24,8 +24,8 @@ public class ListTests extends SubscriptionManagerTestScript{
 			groups={"sm_stage4", "not_implemented"})
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test() {
-		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		String consumedProductSubscriptions = sm.listConsumed();
+		sm1.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		String consumedProductSubscriptions = sm1.listConsumed();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
 	}
 }

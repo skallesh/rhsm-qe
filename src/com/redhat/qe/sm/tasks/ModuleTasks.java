@@ -22,11 +22,17 @@ public class ModuleTasks {
 
 	protected static Logger log = Logger.getLogger(ModuleTasks.class.getName());
 	protected static SSHCommandRunner sshCommandRunner = null;
+	protected static String redhatRepoFile = "/etc/yum.repos.d/redhat.repo";
 	
 
 	public ModuleTasks() {
 		super();
 		// TODO Auto-generated constructor stub
+	}
+	
+	public ModuleTasks(SSHCommandRunner runner) {
+		super();
+		setSSHCommandRunner(runner);
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -116,6 +122,14 @@ public class ModuleTasks {
 		productSubscription.fromPool = getCurrentSerialMapOfSubscriptionPools().get(productSubscription.serialNumber);
 
 		return productSubscription.fromPool;
+	}
+	
+	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {
+		String certFile = "/etc/pki/entitlement/product/"+productSubscription.serialNumber+".pem";
+		sshCommandRunner.runCommandAndWait("openssl x509 -in '"+certFile+"' -noout -text");
+		String certificates = sshCommandRunner.getStdout();
+		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
+		return entitlementCerts;
 	}
 	
 	// register module tasks ************************************************************
@@ -326,10 +340,16 @@ public class ModuleTasks {
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
+
+		// assert that there are no product subscriptions consumed
 		Assert.assertEquals(listConsumed(),"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
+		// assert that there are no entitlement product cert files
 		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
 		Assert.assertTrue(sshCommandRunner.getStdout().equals(""),"No entitlement product cert files exist after unsubscribing from all subscription pools.");
+		
+		// assert that the yum redhat repo file is gone
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner, redhatRepoFile)==1,"The redhat repo file '"+redhatRepoFile+"' has been removed after unsubscribing from all subscription pools.");
 	}
 	
 	/**
@@ -378,6 +398,42 @@ public class ModuleTasks {
 	
 	
 	
+	
+	/**
+	 * Assert that the given entitlement certs are displayed in the stdout from "yum repolist all".
+	 * @param entitlementCerts
+	 */
+	public void assertEntitlementCertsAreReportedInYumRepolist(List<EntitlementCert> entitlementCerts) {
+		/* # yum repolist all
+Loaded plugins: refresh-packagekit, rhnplugin, rhsmplugin
+Updating Red Hat repositories.
+This system is not registered with RHN.
+RHN support will be disabled.
+http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
+Trying other mirror.
+repo id                      repo name                                                      status
+always-enabled-content       always-enabled-content                                         disabled
+content-label                content                                                        disabled
+never-enabled-content        never-enabled-content                                          enabled: 0
+rhel-beta                    Red Hat Enterprise Linux 5.90Workstation Beta - x86_64         disabled
+rhel-beta-debuginfo          Red Hat Enterprise Linux 5.90Workstation Beta - x86_64 - Debug disabled
+rhel-beta-optional           Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
+rhel-beta-optional-debuginfo Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
+rhel-beta-optional-source    Red Hat Enterprise Linux 5.90Workstation Beta (Optional) - x86 disabled
+rhel-beta-source             Red Hat Enterprise Linux 5.90Workstation Beta - x86_64 - Sourc disabled
+rhel-latest                  Latest RHEL 6                                                  enabled: 0
+repolist: 0
+		*/
+		
+		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
+		List<String> stdoutRegexs = new ArrayList();
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label, entitlementCert.name, entitlementCert.enabled.equals("1")? "enabled":"disabled"));
+		}
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum repolist all", 0, stdoutRegexs, null);
+		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
+		 
+	}
 	
 	// protected methods ************************************************************
 

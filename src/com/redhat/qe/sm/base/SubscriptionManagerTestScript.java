@@ -23,9 +23,14 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
 	protected Boolean serverStandalone		= Boolean.valueOf(System.getProperty("rhsm.server.standalone","false"));
 
-	protected String clientHostname			= System.getProperty("rhsm.client.hostname");
-	protected String username				= System.getProperty("rhsm.client.username");
-	protected String password				= System.getProperty("rhsm.client.password");
+	protected String client1hostname		= System.getProperty("rhsm.client1.hostname");
+	protected String client1username		= System.getProperty("rhsm.client1.username");
+	protected String client1password		= System.getProperty("rhsm.client1.password");
+	
+	protected String client2hostname		= System.getProperty("rhsm.client2.hostname");
+	protected String client2username		= System.getProperty("rhsm.client2.username");
+	protected String client2password		= System.getProperty("rhsm.client2.password");
+	
 	protected String tcUnacceptedUsername	= System.getProperty("rhsm.client.username.tcunaccepted");
 	protected String tcUnacceptedPassword	= System.getProperty("rhsm.client.password.tcunaccepted");
 	protected String regtoken				= System.getProperty("rhsm.client.regtoken");
@@ -53,11 +58,14 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	protected String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	
+
 	
-	public static SSHCommandRunner sshCommandRunner = null;
+	public static SSHCommandRunner cl1 = null;
+	public static SSHCommandRunner cl2 = null;
 	public static Connection itDBConnection = null;
 	
-	protected static com.redhat.qe.sm.tasks.ModuleTasks sm	= new com.redhat.qe.sm.tasks.ModuleTasks();
+	protected static com.redhat.qe.sm.tasks.ModuleTasks sm1	= null;
+	protected static com.redhat.qe.sm.tasks.ModuleTasks sm2	= null;
 	
 	
 	public SubscriptionManagerTestScript() {
@@ -67,31 +75,44 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 
 	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up")
 	public void setupBeforeSuite() throws ParseException, IOException{
-		sshCommandRunner = new SSHCommandRunner(clientHostname, clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
-		sm.setSSHCommandRunner(sshCommandRunner);
+		SSHCommandRunner[] sshCommandRunners;
 		
-		// verify the subscription-manager client is a rhel 6 machine
-		log.info("Verifying prerequisite...  client hostname '"+clientHostname+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\""),Integer.valueOf(0),"Grinder hostname must be RHEL 6.*");
+		cl1 = new SSHCommandRunner(client1hostname, clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
+		sm1 = new com.redhat.qe.sm.tasks.ModuleTasks(cl1);
+		sshCommandRunners= new SSHCommandRunner[]{cl1};
 		
-		this.installLatestRPM();
-		this.updateSMConfigFile(serverHostname, serverPort);
-		this.changeCertFrequency(certFrequency);
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		// will we be testing multiple clients?
+		if (!client2hostname.equals("")) {
+			cl2 = new SSHCommandRunner(client2hostname, clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
+			sm2 = new com.redhat.qe.sm.tasks.ModuleTasks(cl2);
+			sshCommandRunners= new SSHCommandRunner[]{cl1,cl2};
+		}
 		
-//setup should not be running sm commands		sm.unregister();	// unregister after updating the config file
-		this.cleanOutAllCerts();	// is this really needed?  shouldn't unregister do this and assert it - jsefler 7/8/2010  - yes it is needed since we should not use sm to unregister here
+		// setup each client
+		for (SSHCommandRunner commandRunner : sshCommandRunners) {
+			
+			// verify the subscription-manager client is a rhel 6 machine
+			log.info("Verifying prerequisite...  client hostname '"+commandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
+			Assert.assertEquals(commandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\""),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
+			
+			this.installLatestRPM(commandRunner);
+			this.updateSMConfigFile(commandRunner, serverHostname, serverPort);
+			this.changeCertFrequency(commandRunner, certFrequency);
+			commandRunner.runCommandAndWait("killall -9 yum");
+			
+	//setup should not be running sm commands		sm.unregister();	// unregister after updating the config file
+			this.cleanOutAllCerts(commandRunner);	// is this really needed?  shouldn't unregister do this and assert it - jsefler 7/8/2010  - yes it is needed since we should not use sm to unregister here
+
+		}
 	}
 	
 	@AfterSuite(groups={"sm_setup"},description="subscription manager tear down")
 	public void teardownAfterSuite() {
-		if (sshCommandRunner==null) return;
-		if (sm==null) return;
-		
-		sm.unregister();	// release the entitlements consumed by the current registration
+		if (sm1!=null) sm1.unregister();	// release the entitlements consumed by the current registration
+		if (sm2!=null) sm2.unregister();	// release the entitlements consumed by the current registration
 	}
 	
-	private void cleanOutAllCerts(){
+	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){
 		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
 		
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
@@ -132,7 +153,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		}
 	}
 	
-	private void installLatestRPM(){
+	private void installLatestRPM(SSHCommandRunner sshCommandRunner) {
 
 		log.info("Retrieving latest subscription-manager RPM...");
 		String sm_rpm = "/tmp/subscription-manager.rpm";
@@ -153,7 +174,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
 	}
 	
-	private void updateSMConfigFile(String hostname, String port){
+	private void updateSMConfigFile(SSHCommandRunner sshCommandRunner, String hostname, String port){
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname=.*$", "hostname="+hostname),
 				0,"Updated rhsm config hostname to point to:" + hostname);
@@ -162,7 +183,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 				0,"Updated rhsm config port to point to:" + port);
 	}
 	
-	public void changeCertFrequency(String frequency){
+	public void changeCertFrequency(SSHCommandRunner sshCommandRunner, String frequency){
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency=.*$", "certFrequency="+frequency),
 				0,"Updated rhsmd cert refresh frequency to "+frequency+" minutes");
@@ -174,7 +195,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
 	}
 	
-	public void checkInvalidRegistrationStrings(String username, String password){
+	public void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
 		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+this.getRandInt()+" --password="+password+this.getRandInt()+" --force");
 		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
 				"Invalid username or password. To create a login, please visit https:\\/\\/www.redhat.com\\/wapps\\/ugc\\/register.html");
@@ -194,11 +215,11 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		return Math.abs(gen.nextInt());
 	}
 	
-	public void runRHSMCallAsLang(String lang,String rhsmCall){
+	public void runRHSMCallAsLang(SSHCommandRunner sshCommandRunner, String lang,String rhsmCall){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
 	}
 	
-	public void setLanguage(String lang){
+	public void setLanguage(SSHCommandRunner sshCommandRunner, String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
 	

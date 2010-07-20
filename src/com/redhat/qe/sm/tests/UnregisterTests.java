@@ -16,12 +16,12 @@ public class UnregisterTests extends SubscriptionManagerTestScript {
 			groups={"sm_stage1", "blockedByBug-589626"})
 	@ImplementsTCMS(id="46714")
 	public void RegisterSubscribeAndUnregisterTest(){
-		sm.register(username, password, null, null, null, Boolean.TRUE);
-		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = sm.getCurrentlyAvailableSubscriptionPools();
-		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		sm.unregister();
-		sm.register(username, password, null, null, null, null);
-		for (SubscriptionPool afterPool : sm.getCurrentlyAvailableSubscriptionPools()) {
+		sm1.register(client1username, client1password, null, null, null, Boolean.TRUE);
+		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = sm1.getCurrentlyAvailableSubscriptionPools();
+		sm1.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		sm1.unregister();
+		sm1.register(client1username, client1password, null, null, null, null);
+		for (SubscriptionPool afterPool : sm1.getCurrentlyAvailableSubscriptionPools()) {
 			SubscriptionPool correspondingPool = availPoolsBeforeSubscribingToAllPools.get(availPoolsBeforeSubscribingToAllPools.indexOf(afterPool));
 			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,
 				"The subscription quantity count for Pool "+correspondingPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");
