@@ -21,8 +21,8 @@ import com.redhat.qe.sm.abstractions.ProductSubscription;
 public class ModuleTasks {
 
 	protected static Logger log = Logger.getLogger(ModuleTasks.class.getName());
-	protected static SSHCommandRunner sshCommandRunner = null;
-	protected static String redhatRepoFile = "/etc/yum.repos.d/redhat.repo";
+	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
+	protected String redhatRepoFile = "/etc/yum.repos.d/redhat.repo";
 	
 
 	public ModuleTasks() {
@@ -257,6 +257,21 @@ public class ModuleTasks {
 		sshCommandRunner.runCommandAndWait(command);
 	}
 	
+	public void subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+
+		// assemble the subscribe command
+		String														command  = "subscription-manager-cli subscribe";	
+		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
+		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
+		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
+		if (email!=null)											command += " --email="+email;
+		if (locale!=null)											command += " --locale="+locale;
+
+		
+		// subscribe
+		sshCommandRunner.runCommandAndWait(command);
+	}
+	
 	public void subscribeToProduct(String product) {
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
 	}
@@ -267,7 +282,7 @@ public class ModuleTasks {
 		subscribe(pool.poolId, null, null, null, null);
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.poolId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
 				"The available subscription pools no longer contains pool: "+pool);
 	}
@@ -281,10 +296,10 @@ public class ModuleTasks {
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
 		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'")) {
 			Assert.assertTrue(after.size() == before.size() && after.size() > 0,
-					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   The list of consumed product subscriptions can remain the same when all this product is already a subset from a previously subscribed pool.");
+					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
 		} else {
 			Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-					"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.productId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all this product is already a subset from a previously subscribed pool.");
+					"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.productId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
 			Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
 					"The available subscription pools no longer contains pool: "+pool);
 		}
@@ -317,6 +332,7 @@ public class ModuleTasks {
 	 */
 	public void subscribeToEachOfTheCurrentlyAvailableSubscriptionPools() {
 
+		// individually subscribe to each available subscription pool
 		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
 			subscribeToSubscriptionPoolUsingPoolId(pool);
 		}
@@ -330,6 +346,30 @@ public class ModuleTasks {
 		} // END OF WORKAROUND
 		
 		Assert.assertEquals(listAvailable(),"No Available subscription pools to list","Asserting that no available subscription pools remain after individually subscribing to them all.");
+	}
+	
+	
+	/**
+	 * Within one subscription-manager-cli command, subscribe to all of the currently available subscription pools
+	 */
+	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
+
+		// assemble a list of all the available SubscriptionPool ids
+		List <String> poolIds = new ArrayList<String>();
+		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
+			poolIds.add(pool.poolId);
+		}
+		subscribe(poolIds, null, null, null, null);
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="613635"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			Assert.assertContainsMatch(listAvailable(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+			return;
+		} // END OF WORKAROUND
+		
+		Assert.assertEquals(listAvailable(),"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 	}
 	
 	// unsubscribe module tasks ************************************************************

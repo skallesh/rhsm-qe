@@ -10,18 +10,21 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 
+@Test(groups={"unregister"})
 public class UnregisterTests extends SubscriptionManagerTestScript {
 	
-	@Test(description="unregister the client",
-			groups={"sm_stage1", "blockedByBug-589626"})
+	@Test(description="unregister the consumer",
+//			groups={"sm_stage1", "blockedByBug-589626"},
+			groups={"blockedByBug-589626"},
+			enabled=true)
 	@ImplementsTCMS(id="46714")
 	public void RegisterSubscribeAndUnregisterTest(){
-		sm1.register(client1username, client1password, null, null, null, Boolean.TRUE);
-		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = sm1.getCurrentlyAvailableSubscriptionPools();
-		sm1.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		sm1.unregister();
-		sm1.register(client1username, client1password, null, null, null, null);
-		for (SubscriptionPool afterPool : sm1.getCurrentlyAvailableSubscriptionPools()) {
+		c1sm.register(consumer1username, consumer1password, null, null, null, Boolean.TRUE);
+		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = c1sm.getCurrentlyAvailableSubscriptionPools();
+		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		c1sm.unregister();
+		c1sm.register(consumer1username, consumer1password, null, null, null, null);
+		for (SubscriptionPool afterPool : c1sm.getCurrentlyAvailableSubscriptionPools()) {
 			SubscriptionPool correspondingPool = availPoolsBeforeSubscribingToAllPools.get(availPoolsBeforeSubscribingToAllPools.indexOf(afterPool));
 			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,
 				"The subscription quantity count for Pool "+correspondingPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");

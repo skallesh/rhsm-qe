@@ -1,16 +1,14 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="SMTestSuite">
-
+<!--
 	<test name="subscription-manager-cli Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.tests" />		
 		</packages>
 		<groups>
 			<run>
-<include name="myDevGroup" />
 				<include name="sm_setup" />
-<!--
 				<include name="sm_stage1" />
 				<include name="sm_stage2" />
 				<include name="sm_stage3" />
@@ -20,17 +18,93 @@
 				<include name="sm_stage7" />
 				<include name="sm_stage8" />
 				<include name="sm_stage9" />
--->
 				<exclude name="not_implemented" />
 			</run>
 		</groups>
 	</test>
-	
-<!-- the hudson.groovy script already includes these listeners
+-->
+	<!-- the hudson.groovy script already includes these listeners
 	<listeners>
   		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
   		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
 	</listeners>
--->
+	-->
+	
+	<test name="General Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="general" />
+			</run>
+		</groups>
+	</test>
+	
+	
+	<test name="Register Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="register" />
+			</run>
+		</groups>
+	</test>
+	
+	
+	<test name="List Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="list" />
+			</run>
+		</groups>
+	</test>
+	
+	
+	<test name="Subscribe Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="subscribe" />
+			</run>
+		</groups>
+	</test>
+	
+	
+	<test name="Unsubscribe Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="unsubscribe" />
+			</run>
+		</groups>
+	</test>
+	
+	
+	<test name="Unregister Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="unregister" />
+			</run>
+		</groups>
+	</test>
 	
 </suite>

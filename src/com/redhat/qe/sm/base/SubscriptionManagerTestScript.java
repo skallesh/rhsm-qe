@@ -11,6 +11,7 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.tasks.ModuleTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -21,28 +22,28 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String serverHostname			= System.getProperty("rhsm.server.hostname");
 	protected String serverPort 			= System.getProperty("rhsm.server.port");
 	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
-	protected Boolean serverStandalone		= Boolean.valueOf(System.getProperty("rhsm.server.standalone","false"));
+	protected Boolean isServerStandAlone		= Boolean.valueOf(System.getProperty("rhsm.server.isstandalone","false"));
 
-	protected String client1hostname		= System.getProperty("rhsm.client1.hostname");
-	protected String client1username		= System.getProperty("rhsm.client1.username");
-	protected String client1password		= System.getProperty("rhsm.client1.password");
+	protected String consumer1hostname		= System.getProperty("rhsm.consumer1.hostname");
+	protected String consumer1username		= System.getProperty("rhsm.consumer1.username");
+	protected String consumer1password		= System.getProperty("rhsm.consumer1.password");
 	
-	protected String client2hostname		= System.getProperty("rhsm.client2.hostname");
-	protected String client2username		= System.getProperty("rhsm.client2.username");
-	protected String client2password		= System.getProperty("rhsm.client2.password");
+	protected String consumer2hostname		= System.getProperty("rhsm.consumer2.hostname");
+	protected String consumer2username		= System.getProperty("rhsm.consumer2.username");
+	protected String consumer2password		= System.getProperty("rhsm.consumer2.password");
 	
-	protected String tcUnacceptedUsername	= System.getProperty("rhsm.client.username.tcunaccepted");
-	protected String tcUnacceptedPassword	= System.getProperty("rhsm.client.password.tcunaccepted");
-	protected String regtoken				= System.getProperty("rhsm.client.regtoken");
-	protected String certFrequency			= System.getProperty("rhsm.client.certfrequency");
-	protected String repoForDependencies	= System.getProperty("rhsm.client.repofordependencies");
+	protected String tcUnacceptedUsername	= System.getProperty("rhsm.consumer.username.tcunaccepted");
+	protected String tcUnacceptedPassword	= System.getProperty("rhsm.consumer.password.tcunaccepted");
+	protected String regtoken				= System.getProperty("rhsm.consumer.regtoken");
+	protected String certFrequency			= System.getProperty("rhsm.consumer.certfrequency");
+	protected String enablerepofordeps		= System.getProperty("rhsm.consumer.enablerepofordeps");
 
 	protected String prodCertLocation		= System.getProperty("rhsm.prodcert");
 	protected String prodCertProduct		= System.getProperty("rhsm.prodcert.product");
 	
-	protected String clientsshUser			= System.getProperty("rhsm.ssh.user","root");
-	protected String clientsshKeyPrivate	= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
-	protected String clientsshkeyPassphrase	= System.getProperty("rhsm.sshkey.passphrase","");
+	protected String sshUser			= System.getProperty("rhsm.ssh.user","root");
+	protected String sshKeyPrivate		= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
+	protected String sshkeyPassphrase	= System.getProperty("rhsm.sshkey.passphrase","");
 
 	
 	protected String itDBSQLDriver			= System.getProperty("rhsm.it.db.sqldriver", "oracle.jdbc.driver.OracleDriver");
@@ -58,14 +59,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	protected String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	
-
-	
-	public static SSHCommandRunner cl1 = null;
-	public static SSHCommandRunner cl2 = null;
 	public static Connection itDBConnection = null;
 	
-	protected static com.redhat.qe.sm.tasks.ModuleTasks sm1	= null;
-	protected static com.redhat.qe.sm.tasks.ModuleTasks sm2	= null;
+	public static SSHCommandRunner c1	= null;	// consumer1
+	public static SSHCommandRunner c2	= null;	// consumer2
+	
+	protected static ModuleTasks c1sm	= null;	// consumer1 subscription manager tasks
+	protected static ModuleTasks c2sm	= null;	// consumer2 subscription manager tasks
 	
 	
 	public SubscriptionManagerTestScript() {
@@ -73,27 +73,23 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		// TODO Auto-generated constructor stub
 	}
 
-	@BeforeSuite(groups={"sm_setup"},description="subscription manager set up")
+	@BeforeSuite(groups={"setup"},description="subscription manager set up")
 	public void setupBeforeSuite() throws ParseException, IOException{
 		SSHCommandRunner[] sshCommandRunners;
 		
-		cl1 = new SSHCommandRunner(client1hostname, clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
-		sm1 = new com.redhat.qe.sm.tasks.ModuleTasks(cl1);
-		sshCommandRunners= new SSHCommandRunner[]{cl1};
+		c1 = new SSHCommandRunner(consumer1hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+		c1sm = new com.redhat.qe.sm.tasks.ModuleTasks(c1);
+		sshCommandRunners= new SSHCommandRunner[]{c1};
 		
-		// will we be testing multiple clients?
-		if (!client2hostname.equals("")) {
-			cl2 = new SSHCommandRunner(client2hostname, clientsshUser, clientsshKeyPrivate, clientsshkeyPassphrase, null);
-			sm2 = new com.redhat.qe.sm.tasks.ModuleTasks(cl2);
-			sshCommandRunners= new SSHCommandRunner[]{cl1,cl2};
+		// will we be testing multiple consumers?
+		if (!consumer2hostname.equals("")) {
+			c2 = new SSHCommandRunner(consumer2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+			c2sm = new com.redhat.qe.sm.tasks.ModuleTasks(c2);
+			sshCommandRunners= new SSHCommandRunner[]{c1,c2};
 		}
 		
-		// setup each client
+		// setup each consumer
 		for (SSHCommandRunner commandRunner : sshCommandRunners) {
-			
-			// verify the subscription-manager client is a rhel 6 machine
-			log.info("Verifying prerequisite...  client hostname '"+commandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-			Assert.assertEquals(commandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\""),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 			
 			this.installLatestRPM(commandRunner);
 			this.updateSMConfigFile(commandRunner, serverHostname, serverPort);
@@ -106,10 +102,10 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		}
 	}
 	
-	@AfterSuite(groups={"sm_setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup"},description="subscription manager tear down")
 	public void teardownAfterSuite() {
-		if (sm1!=null) sm1.unregister();	// release the entitlements consumed by the current registration
-		if (sm2!=null) sm2.unregister();	// release the entitlements consumed by the current registration
+		if (c1sm!=null) c1sm.unregister();	// release the entitlements consumed by the current registration
+		if (c2sm!=null) c2sm.unregister();	// release the entitlements consumed by the current registration
 	}
 	
 	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){
@@ -155,20 +151,24 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	private void installLatestRPM(SSHCommandRunner sshCommandRunner) {
 
+		// verify the subscription-manager consumer is a rhel 6 machine
+		log.info("Verifying prerequisite...  consumer hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\""),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
+
 		log.info("Retrieving latest subscription-manager RPM...");
 		String sm_rpm = "/tmp/subscription-manager.rpm";
 		sshCommandRunner.runCommandAndWait("rm -f "+sm_rpm);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmLocation+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 
 		log.info("Uninstalling existing subscription-manager RPM...");
-		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
 		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
+		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
 		
 		log.info("Installing newest subscription-manager RPM...");
 		// using yum localinstall should enable testing on RHTS boxes right off the bat.
-		sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+repoForDependencies);
+		sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
 
 		log.info("Installed version of subscription-manager RPM...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
@@ -181,6 +181,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port=.*$", "port="+port),
 				0,"Updated rhsm config port to point to:" + port);
+		
+		// jsefler - 7/21/2010
+		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
+		if (isServerStandAlone) {
+		log.warning("TEMPORARY WORKAROUND...");
+		sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepincacerts/candlepin-ca.crt\"  >> "+defaultConfigFile);
+		}
 	}
 	
 	public void changeCertFrequency(SSHCommandRunner sshCommandRunner, String frequency){
@@ -194,12 +201,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
 				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
 	}
-	
-	public void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+this.getRandInt()+" --password="+password+this.getRandInt()+" --force");
-		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
-				"Invalid username or password. To create a login, please visit https:\\/\\/www.redhat.com\\/wapps\\/ugc\\/register.html");
-	}
+
 	
 	public void sleep(long i) {
 		log.info("Sleeping for "+i+" milliseconds...");
