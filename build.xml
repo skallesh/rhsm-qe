@@ -3,7 +3,10 @@
 	<property environment="env" />
 	<property name="test.build.dir" location="bin" />
 	<property name="test.src.dir" location="src" />
+<!--
 	<property name="test.report.dir" location="report" />
+-->
+<property name="lib.dir" location="lib" />
 	<condition property="webui-framework.dir" value="../../webui-framework">
 		<not>
 			<isset property="webui-framework.dir"/>
@@ -12,6 +15,10 @@
 
 
 	<path id="utils.cp">
+<fileset dir="${lib.dir}">
+<include name="*.blarg" />
+<include name="*.jar" />
+</fileset>
 		<fileset dir="${webui-framework.dir}/lib">
 					<include name="*.jar" />
 		</fileset>
@@ -22,11 +29,11 @@
 		<pathelement location="${webui-framework.dir}/bin" />
 		<path refid="utils.cp" />
 	</path>
-
+<!--
   <taskdef resource="testngtasks">
     <classpath refid="utils.cp"/>
   </taskdef>
-
+-->
 
 	<target name="deps">
 		<echo message="Compiling dependencies in ${webui-framework.dir}" />
@@ -46,7 +53,7 @@
 		<javac srcdir="${test.src.dir}" destdir="${test.build.dir}" classpathref="tests.cp" debug="on" />
 		<echo message="Done." />
 	</target>
-	
+<!--	
 	<target name="test" depends="compile">
     <testng classpathref="tests.cp"
             outputDir="${testng.report.dir}"
@@ -55,5 +62,5 @@
        <xmlfileset dir="." includes="sm-tests.xml"/>
     </testng>
 	</target>
-		
+-->		
 </project>
