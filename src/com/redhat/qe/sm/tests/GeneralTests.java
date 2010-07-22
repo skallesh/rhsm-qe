@@ -22,7 +22,7 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41697")
 	public void CommandLineOptions_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
-		RemoteFileTasks.runCommandAndAssert(c1,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
+		RemoteFileTasks.runCommandAndAssert(client,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
 	}
 	
 	
@@ -32,9 +32,9 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41697")
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
-		c1sm.unregister();
+		clienttasks.unregister();
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
-		RemoteFileTasks.runCommandAndAssert(c1,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
+		RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
 
 	}
 	
@@ -44,7 +44,7 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 			dataProvider="NegativeFunctionalityData")
 	public void AttemptingCommandsThatDoNotExist_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
 		log.info("Testing subscription-manager-cli command that does not exist, expecting it to fail: "+ command);
-		RemoteFileTasks.runCommandAndAssert(c1,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
+		RemoteFileTasks.runCommandAndAssert(client,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
 
 	}
 	

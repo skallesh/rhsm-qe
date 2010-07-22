@@ -29,7 +29,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		c1sm.unsubscribeFromProductSubscription(productSubscription);
+		clienttasks.unsubscribeFromProductSubscription(productSubscription);
 	}
 	
 	
@@ -49,9 +49,9 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
-		SubscriptionPool pool = c1sm.getSubscriptionPoolFromProductSubscription(productSubscription);
-		if (c1sm.unsubscribeFromProductSubscription(productSubscription))
-			c1sm.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription);
+		if (clienttasks.unsubscribeFromProductSubscription(productSubscription))
+			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}
 	
 	
@@ -108,30 +108,30 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 			dataProvider="getAllAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41903")
 	public void AttemptToReuseRevokedEntitlementCerts_Test(SubscriptionPool subscriptionPool){
-		c1.runCommandAndWait("killall -9 yum");
+		client.runCommandAndWait("killall -9 yum");
 		String randDir = "/tmp/sm-certForSubscriptionPool-"+subscriptionPool.poolId;
 		
 		// subscribe to the subscription pool (one at a time)
-		c1sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();	// assure we are completely unsubscribed
-		c1sm.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();	// assure we are completely unsubscribed
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
 		
 		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
-		c1sm.assertEntitlementCertsAreReportedInYumRepolist(c1sm.getCurrentEntitlementCerts());
+		clienttasks.assertEntitlementCertsAreReportedInYumRepolist(clienttasks.getCurrentEntitlementCerts());
 		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
  
 		// copy certs to temp dir
-		c1.runCommandAndWait("rm -rf "+randDir);
-		c1.runCommandAndWait("mkdir -p "+randDir);
-		c1.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
+		client.runCommandAndWait("rm -rf "+randDir);
+		client.runCommandAndWait("mkdir -p "+randDir);
+		client.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
 		
 		// unsubscribe from the subscription pool (Note: should be the only one subscribed too
-		c1sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// copy revoked certs back to /etc/pki/entitlement/product/
-		c1.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
+		client.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
 		
 		// run another yum repolist all and assert that the "current entitlement has been revoked."
-		c1sm.assertEntitlementCertsAreReportedInYumRepolist(c1sm.getCurrentEntitlementCerts());
+		clienttasks.assertEntitlementCertsAreReportedInYumRepolist(clienttasks.getCurrentEntitlementCerts());
 		throw new SkipException("FIXME: THIS AUTOMATED TEST IS INCOMPLETE. Need to assert that the yum repolist displayed a stderr message that entitlements from this subscription pool have been revoked: "+subscriptionPool);
 	}
 
@@ -147,13 +147,13 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// first make sure we are subscribed to all pools
-		c1sm.register(consumer1username,consumer1password,null,null,null,null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null);
 //		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		c1sm.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 
 		
 		// then assemble a list of all consumed ProductSubscriptions
-		for (ProductSubscription productSubscription : c1sm.getCurrentlyConsumedProductSubscriptions()) {
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
 			ll.add(Arrays.asList(new Object[]{productSubscription}));		
 		}
 		
@@ -168,11 +168,11 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// first make sure we are unsubscribed from all products
-		c1sm.register(consumer1username,consumer1password,null,null,null,null);
-		c1sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// then assemble a list of all available Subscription Pools
-		for (SubscriptionPool subscriptionPool : c1sm.getCurrentlyAvailableSubscriptionPools()) {
+		for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			ll.add(Arrays.asList(new Object[]{subscriptionPool}));		
 		}
 		

@@ -30,7 +30,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		c1sm.subscribeToSubscriptionPoolUsingProductId(pool);
+		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
 	}
 	
 	
@@ -40,13 +40,13 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"blockedByBug-584137"},
 			enabled=false)
 	public void SubscribeToASingleEntitlementByProductID_Test(){
-		c1sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "biteme");
 		MCT0696.addProductID("Red Hat Directory Server");
-		c1sm.subscribeToSubscriptionPoolUsingProductId(MCT0696);
+		clienttasks.subscribeToSubscriptionPoolUsingProductId(MCT0696);
 		//this.refreshSubscriptions();
 		for (ProductSubscription pid:MCT0696.associatedProductIDs){
-			Assert.assertTrue(c1sm.getCurrentlyConsumedProductSubscriptions().contains(pid),
+			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().contains(pid),
 					"ProductID '"+pid.productName+"' consumed from Pool '"+MCT0696.subscriptionName+"'");
 		}
 	}
@@ -62,7 +62,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 		// non-dataProvided test procedure
 		//sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		//sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		c1sm.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 	}
 	
 	
@@ -73,8 +73,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			enabled=false)
 	@ImplementsTCMS(id="41681")
 	public void SubscribeToRegToken_Test(){
-		c1sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		c1sm.subscribeToRegToken(regtoken);
+		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.subscribeToRegToken(regtoken);
 	}
 	
 	
@@ -86,10 +86,10 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41897")
 	public void SubscribeAndSubscribeAgain_Test(){
 		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		c1sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		for(SubscriptionPool pool : c1sm.getCurrentlyAvailableSubscriptionPools()) {
-			c1sm.subscribeToSubscriptionPoolUsingProductId(pool);
-			c1sm.subscribeToProduct(pool.subscriptionName);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		for(SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+			clienttasks.subscribeToProduct(pool.subscriptionName);
 		}
 	}
 	
@@ -115,8 +115,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test() {
 
-		c1sm.register(consumer1username, consumer1password, null, null, null, null);	// assure we are registered
-		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);	// assure we are registered
+		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
 		this.adjustRHSMYumRepo(true);
@@ -147,7 +147,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	public void VerifyReposAvailableForEnabledContent(){
 	    ArrayList<String> repos = this.getYumRepolist();
 	    
-	    for (EntitlementCert cert:c1sm.getCurrentEntitlementCerts()){
+	    for (EntitlementCert cert:clienttasks.getCurrentEntitlementCerts()){
 	    	if(cert.enabled.contains("1"))
 	    		Assert.assertTrue(repos.contains(cert.label),
 	    				"Yum reports enabled content subscribed to repo: " + cert.label);
@@ -168,16 +168,16 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			enabled=false)
 	@ImplementsTCMS(id="41695")
 	public void InstallPackageFromRHSMYumRepo_Test(){
-		HashMap<String, String[]> pkgList = c1sm.getPackagesCorrespondingToSubscribedRepos();
-		for(ProductSubscription productSubscription : c1sm.getCurrentlyConsumedProductSubscriptions()){
+		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
+		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()){
 			String pkg = pkgList.get(productSubscription.productName)[0];
 			log.info("Attempting to install first pkg '"+pkg+"' from product subscription: "+productSubscription);
 			log.info("timeout of two minutes for next three commands");
-			RemoteFileTasks.runCommandExpectingNoTracebacks(c1,
+			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
 					"yum repolist");
-			RemoteFileTasks.runCommandExpectingNoTracebacks(c1,
+			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
 					"yum install -y "+pkg);
-			RemoteFileTasks.runCommandExpectingNoTracebacks(c1,
+			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
 					"rpm -q "+pkg);
 		}
 	}
@@ -190,7 +190,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@ImplementsTCMS(id="41696")
 	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
 		this.adjustRHSMYumRepo(false);
-		for(SubscriptionPool sub:c1sm.getCurrentlyAvailableSubscriptionPools())
+		for(SubscriptionPool sub:clienttasks.getCurrentlyAvailableSubscriptionPools())
 			for(String repo:this.getYumRepolist())
 				if(repo.contains(sub.subscriptionName))
 					Assert.fail("After unsubscribe, Yum still has access to repo: "+repo);
@@ -203,9 +203,9 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			enabled=true)
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test(){
-		this.changeCertFrequency(c1,"1");
+		this.changeCertFrequency(client,"1");
 		this.sleep(70*1000);
-		Assert.assertEquals(RemoteFileTasks.grepFile(c1,
+		Assert.assertEquals(RemoteFileTasks.grepFile(client,
 				rhsmcertdLogFile,
 				"certificates updated"),
 				0,
@@ -219,29 +219,29 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			enabled=true)
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
-		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		//SubscribeToASingleEntitlementByProductID_Test();
-		c1.runCommandAndWait("rm -f /etc/pki/entitlement/*");
-		c1.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
-		c1.runCommandAndWait("rm -f /etc/pki/product/*");
-		c1.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
+		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
+		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
+		client.runCommandAndWait("rm -f /etc/pki/product/*");
+		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
 		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
 		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
 		this.sleep(70*1000);
 		
-		Assert.assertEquals(RemoteFileTasks.grepFile(c1,
+		Assert.assertEquals(RemoteFileTasks.grepFile(client,
 				rhsmcertdLogFile,
 				"certificates updated"),
 				0,
 				"rhsmcertd reports that certificates have been updated");
 		
 		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(c1, 
+		RemoteFileTasks.runCommandAndAssert(client, 
 				"ls /etc/pki/entitlement | grep pem",
 				0,
 				"pem", 
 				null);
-		RemoteFileTasks.runCommandAndAssert(c1, 
+		RemoteFileTasks.runCommandAndAssert(client, 
 				"ls /etc/pki/entitlement/product | grep pem", 
 				0,
 				"pem", 
@@ -261,26 +261,26 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			dataProvider="getAllAvailableSubscriptionPoolData")
 	@ImplementsTCMS(id="53217")
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) {
-		if (c2==null) throw new SkipException("This test requires a second consumer.");
+		if (client2==null) throw new SkipException("This test requires a second consumer.");
 		
 		// assert that the subscriptionPool is available to both consumers with the same quantity
-		List<SubscriptionPool> cl1SubscriptionPools = c1sm.getCurrentlyAvailableSubscriptionPools();
-		Assert.assertTrue(cl1SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer1 ("+consumer1username+").");
+		List<SubscriptionPool> cl1SubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		Assert.assertTrue(cl1SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer1 ("+clientusername+").");
 		SubscriptionPool cl1SubscriptionPool = cl1SubscriptionPools.get(cl1SubscriptionPools.indexOf(pool));
 		
-		List<SubscriptionPool> cl2SubscriptionPools = c2sm.getCurrentlyAvailableSubscriptionPools();
-		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer2 ("+consumer2username+").");
+		List<SubscriptionPool> cl2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer2 ("+client2username+").");
 		SubscriptionPool cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
 
 		Assert.assertEquals(cl1SubscriptionPool.quantity, cl2SubscriptionPool.quantity, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to both consumers is the same.");
 
 		// subscribe consumer1 to the pool and assert that the available quantity has decremented by one
-		c1sm.subscribeToSubscriptionPoolUsingPoolId(pool);
-		cl2SubscriptionPools = c2sm.getCurrentlyAvailableSubscriptionPools();
-		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+consumer2username+").");
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		cl2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+client2username+").");
 		cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
 
-		Assert.assertEquals(cl2SubscriptionPool.quantity.intValue(), cl1SubscriptionPool.quantity.intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+consumer2username+") has decremented by one.");
+		Assert.assertEquals(cl2SubscriptionPool.quantity.intValue(), cl1SubscriptionPool.quantity.intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+client2username+") has decremented by one.");
 	}
 	
 	
@@ -288,10 +288,10 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 
 	protected ArrayList<String> getYumRepolist(){
 		ArrayList<String> repos = new ArrayList<String>();
-		c1.runCommandAndWait("killall -9 yum");
+		client.runCommandAndWait("killall -9 yum");
 		
-		c1.runCommandAndWait("yum repolist");
-		String[] availRepos = c1.getStdout().split("\\n");
+		client.runCommandAndWait("yum repolist");
+		String[] availRepos = client.getStdout().split("\\n");
 		
 		int repolistStartLn = 0;
 		int repolistEndLn = 0;
@@ -310,7 +310,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	
 	protected void adjustRHSMYumRepo(boolean enabled){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(c1, 
+				RemoteFileTasks.searchReplaceFile(client, 
 						rhsmYumRepoFile, 
 						"^enabled=.*$", 
 						"enabled="+(enabled?'1':'0')),
@@ -331,15 +331,15 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// assure we are registered
-						c1sm.register(consumer1username, consumer1password, null, null, null, null);
-		if (c2sm!=null)	c2sm.register(consumer2username, consumer2password, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		if (client2tasks!=null)	client2tasks.register(client2username, client2password, null, null, null, null);
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
-						c1sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		if (c2sm!=null)	c2sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		if (client2tasks!=null)	client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 
 		// populate a list of all available SubscriptionPools
-		for (SubscriptionPool pool : c1sm.getCurrentlyAvailableSubscriptionPools()) {
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			ll.add(Arrays.asList(new Object[]{pool}));		
 		}
 		

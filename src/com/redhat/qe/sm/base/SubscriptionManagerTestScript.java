@@ -22,28 +22,32 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String serverHostname			= System.getProperty("rhsm.server.hostname");
 	protected String serverPort 			= System.getProperty("rhsm.server.port");
 	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
-	protected Boolean isServerStandAlone		= Boolean.valueOf(System.getProperty("rhsm.server.isstandalone","false"));
+	protected Boolean isServerOnPremises	= Boolean.valueOf(System.getProperty("rhsm.server.onpremises","false"));
 
-	protected String consumer1hostname		= System.getProperty("rhsm.consumer1.hostname");
-	protected String consumer1username		= System.getProperty("rhsm.consumer1.username");
-	protected String consumer1password		= System.getProperty("rhsm.consumer1.password");
+	protected String client1hostname		= System.getProperty("rhsm.client1.hostname");
+	protected String client1username		= System.getProperty("rhsm.client1.username");
+	protected String client1password		= System.getProperty("rhsm.client1.password");
 	
-	protected String consumer2hostname		= System.getProperty("rhsm.consumer2.hostname");
-	protected String consumer2username		= System.getProperty("rhsm.consumer2.username");
-	protected String consumer2password		= System.getProperty("rhsm.consumer2.password");
-	
-	protected String tcUnacceptedUsername	= System.getProperty("rhsm.consumer.username.tcunaccepted");
-	protected String tcUnacceptedPassword	= System.getProperty("rhsm.consumer.password.tcunaccepted");
-	protected String regtoken				= System.getProperty("rhsm.consumer.regtoken");
-	protected String certFrequency			= System.getProperty("rhsm.consumer.certfrequency");
-	protected String enablerepofordeps		= System.getProperty("rhsm.consumer.enablerepofordeps");
+	protected String client2hostname		= System.getProperty("rhsm.client2.hostname");
+	protected String client2username		= System.getProperty("rhsm.client2.username");
+	protected String client2password		= System.getProperty("rhsm.client2.password");
 
-	protected String prodCertLocation		= System.getProperty("rhsm.prodcert");
+	protected String clienthostname			= client1hostname;
+	protected String clientusername			= client1username;
+	protected String clientpassword			= client1password;
+
+	protected String tcUnacceptedUsername	= System.getProperty("rhsm.client.username.tcunaccepted");
+	protected String tcUnacceptedPassword	= System.getProperty("rhsm.client.password.tcunaccepted");
+	protected String regtoken				= System.getProperty("rhsm.client.regtoken");
+	protected String certFrequency			= System.getProperty("rhsm.client.certfrequency");
+	protected String enablerepofordeps		= System.getProperty("rhsm.client.enablerepofordeps");
+
+	protected String prodCertLocation		= System.getProperty("rhsm.prodcert.url");
 	protected String prodCertProduct		= System.getProperty("rhsm.prodcert.product");
 	
-	protected String sshUser			= System.getProperty("rhsm.ssh.user","root");
-	protected String sshKeyPrivate		= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
-	protected String sshkeyPassphrase	= System.getProperty("rhsm.sshkey.passphrase","");
+	protected String sshUser				= System.getProperty("rhsm.ssh.user","root");
+	protected String sshKeyPrivate			= System.getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
+	protected String sshkeyPassphrase		= System.getProperty("rhsm.sshkey.passphrase","");
 
 	
 	protected String itDBSQLDriver			= System.getProperty("rhsm.it.db.sqldriver", "oracle.jdbc.driver.OracleDriver");
@@ -53,7 +57,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String itDBUsername			= System.getProperty("rhsm.it.db.username");
 	protected String itDBPassword			= System.getProperty("rhsm.it.db.password");
 	
-	protected String rpmLocation			= System.getProperty("rhsm.rpm");
+	protected String rpmLocation			= System.getProperty("rhsm.rpm.url");
 
 	protected String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
 	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
@@ -61,11 +65,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	public static Connection itDBConnection = null;
 	
-	public static SSHCommandRunner c1	= null;	// consumer1
-	public static SSHCommandRunner c2	= null;	// consumer2
+	public static SSHCommandRunner client	= null;
+	public static SSHCommandRunner client1	= null;	// client1
+	public static SSHCommandRunner client2	= null;	// client2
 	
-	protected static ModuleTasks c1sm	= null;	// consumer1 subscription manager tasks
-	protected static ModuleTasks c2sm	= null;	// consumer2 subscription manager tasks
+	protected static ModuleTasks clienttasks	= null;
+	protected static ModuleTasks client1tasks	= null;	// client1 subscription manager tasks
+	protected static ModuleTasks client2tasks	= null;	// client2 subscription manager tasks
 	
 	
 	public SubscriptionManagerTestScript() {
@@ -77,18 +83,20 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	public void setupBeforeSuite() throws ParseException, IOException{
 		SSHCommandRunner[] sshCommandRunners;
 		
-		c1 = new SSHCommandRunner(consumer1hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-		c1sm = new com.redhat.qe.sm.tasks.ModuleTasks(c1);
-		sshCommandRunners= new SSHCommandRunner[]{c1};
+		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+		clienttasks = new com.redhat.qe.sm.tasks.ModuleTasks(client);
+		sshCommandRunners= new SSHCommandRunner[]{client};
 		
-		// will we be testing multiple consumers?
-		if (!consumer2hostname.equals("")) {
-			c2 = new SSHCommandRunner(consumer2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			c2sm = new com.redhat.qe.sm.tasks.ModuleTasks(c2);
-			sshCommandRunners= new SSHCommandRunner[]{c1,c2};
+		// will we be testing multiple clients?
+		if (!client2hostname.equals("")) {
+			client1 = client;
+			client1tasks = clienttasks;
+			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+			client2tasks = new com.redhat.qe.sm.tasks.ModuleTasks(client2);
+			sshCommandRunners= new SSHCommandRunner[]{client1,client2};
 		}
 		
-		// setup each consumer
+		// setup each client
 		for (SSHCommandRunner commandRunner : sshCommandRunners) {
 			
 			this.installLatestRPM(commandRunner);
@@ -104,8 +112,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	@AfterSuite(groups={"setup"},description="subscription manager tear down")
 	public void teardownAfterSuite() {
-		if (c1sm!=null) c1sm.unregister();	// release the entitlements consumed by the current registration
-		if (c2sm!=null) c2sm.unregister();	// release the entitlements consumed by the current registration
+		if (clienttasks!=null) clienttasks.unregister();	// release the entitlements consumed by the current registration
+		if (client2tasks!=null) client2tasks.unregister();	// release the entitlements consumed by the current registration
 	}
 	
 	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){
@@ -151,8 +159,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	private void installLatestRPM(SSHCommandRunner sshCommandRunner) {
 
-		// verify the subscription-manager consumer is a rhel 6 machine
-		log.info("Verifying prerequisite...  consumer hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
+		// verify the subscription-manager client is a rhel 6 machine
+		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\""),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 
 		log.info("Retrieving latest subscription-manager RPM...");
@@ -184,7 +192,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		
 		// jsefler - 7/21/2010
 		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
-		if (isServerStandAlone) {
+		if (isServerOnPremises) {
 		log.warning("TEMPORARY WORKAROUND...");
 		sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepincacerts/candlepin-ca.crt\"  >> "+defaultConfigFile);
 		}

@@ -165,6 +165,8 @@ public class ModuleTasks {
 		// FIXME: should assert stdout: SYSTEM_UUID  USER_SET_SYSTEM_NAME  USERNAME_OF_REGISTERER
 		// ([a-z,0-9,\-]+) (admin) (XEOPS|xeops)
 		// https://bugzilla.redhat.com/show_bug.cgi?id=616065
+		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin
+		// ([a-f,0-9,\-]{36}) (admin)
 		
 		
 // Moved to ValidRegistration_Test()
@@ -288,6 +290,10 @@ public class ModuleTasks {
 	}
 	
 	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
+		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
+		subscribeToSubscriptionPoolUsingPoolId(pool); return;
+		
+		/* jsefler 7/22/2010
 		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
 		log.info("Subscribing to subscription pool: "+pool);
 		subscribe(null, pool.productId, null, null, null);
@@ -303,6 +309,7 @@ public class ModuleTasks {
 			Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
 					"The available subscription pools no longer contains pool: "+pool);
 		}
+		*/
 	}
 	
 	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool, boolean withPoolID){

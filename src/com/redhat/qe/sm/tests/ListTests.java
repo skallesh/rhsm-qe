@@ -16,8 +16,8 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	@ImplementsTCMS(id="41678")
 	public void EnsureAvailableEntitlementsListed_Test() {
-		c1sm.register(consumer1username, consumer1password, null, null, null, null);
-		String availableSubscriptionPools = c1sm.listAvailable();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		String availableSubscriptionPools = clienttasks.listAvailable();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
 	}
 	
@@ -28,9 +28,9 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=false) //not_implemented
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test() {
-		c1sm.register(consumer1username, consumer1password, null, null, null, null);
-		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		String consumedProductSubscriptions = c1sm.listConsumed();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		String consumedProductSubscriptions = clienttasks.listConsumed();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
 	}
 }
