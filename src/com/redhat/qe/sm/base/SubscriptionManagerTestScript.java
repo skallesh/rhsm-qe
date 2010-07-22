@@ -88,7 +88,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		sshCommandRunners= new SSHCommandRunner[]{client};
 		
 		// will we be testing multiple clients?
-		if (!client2hostname.equals("") || client2hostname.startsWith("$")) {
+		if (!(client2hostname.equals("") || client2hostname.startsWith("$"))) {
 			client1 = client;
 			client1tasks = clienttasks;
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
