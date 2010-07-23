@@ -200,58 +200,58 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@Test(description="rhsmcertd: change certFrequency",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
+//			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsTCMS(id="41692")
-	public void certFrequency_Test(){
-		this.changeCertFrequency(client,"1");
-		this.sleep(70*1000);
-		Assert.assertEquals(RemoteFileTasks.grepFile(client,
-				rhsmcertdLogFile,
-				"certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated at new interval");
+	public void certFrequency_Test() {
+		int minutes = 1;
+		this.changeCertFrequency(client,minutes);
+		
+		log.info("Appending a marker in the '"+rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
+		String marker = "testing rhsm.conf certFrequency="+minutes; // https://tcms.engineering.redhat.com/case/41692/
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+rhsmcertdLogFile,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0),marker,null);
+
+		this.sleep(minutes*60*1000);	// sleep for the cert frequency
+		this.sleep(1000);	// sleep a second longer
+//		Assert.assertEquals(RemoteFileTasks.grepFile(client,
+//				rhsmcertdLogFile,
+//				"certificates updated"),
+//				0,
+//				"rhsmcertd reports that certificates have been updated at new interval");
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
 	}
 	
 	
 	@Test(description="rhsmcertd: ensure certificates synchronize",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
+//			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
-		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		//SubscribeToASingleEntitlementByProductID_Test();
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
 		client.runCommandAndWait("rm -f /etc/pki/product/*");
-		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
-		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
-		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
-		this.sleep(70*1000);
-		
-		Assert.assertEquals(RemoteFileTasks.grepFile(client,
-				rhsmcertdLogFile,
-				"certificates updated"),
-				0,
-				"rhsmcertd reports that certificates have been updated");
+		certFrequency_Test();
+//		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
+//		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
+//		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
+//		this.sleep(70*1000);
+//		
+//		Assert.assertEquals(RemoteFileTasks.grepFile(client,
+//				rhsmcertdLogFile,
+//				"certificates updated"),
+//				0,
+//				"rhsmcertd reports that certificates have been updated");
 		
 		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(client, 
-				"ls /etc/pki/entitlement | grep pem",
-				0,
-				"pem", 
-				null);
-		RemoteFileTasks.runCommandAndAssert(client, 
-				"ls /etc/pki/entitlement/product | grep pem", 
-				0,
-				"pem", 
-				null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls /etc/pki/entitlement | grep pem", 0, "pem", null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls /etc/pki/entitlement/product | grep pem", 0, "pem", null);
 		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
-		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, 
-				"ls /etc/pki/product", 
-				0,
-				"pem", 
-				null);*/
+		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "ls /etc/pki/product", 0, "pem", null);*/
 	}
 	
 	

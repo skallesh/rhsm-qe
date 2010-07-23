@@ -39,7 +39,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String tcUnacceptedUsername	= System.getProperty("rhsm.client.username.tcunaccepted");
 	protected String tcUnacceptedPassword	= System.getProperty("rhsm.client.password.tcunaccepted");
 	protected String regtoken				= System.getProperty("rhsm.client.regtoken");
-	protected String certFrequency			= System.getProperty("rhsm.client.certfrequency");
+	protected int certFrequency				= Integer.valueOf(System.getProperty("rhsm.client.certfrequency"));
 	protected String enablerepofordeps		= System.getProperty("rhsm.client.enablerepofordeps");
 
 	protected String prodCertLocation		= System.getProperty("rhsm.prodcert.url");
@@ -88,12 +88,16 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		sshCommandRunners= new SSHCommandRunner[]{client};
 		
 		// will we be testing multiple clients?
-		if (!(client2hostname.equals("") || client2hostname.startsWith("$"))) {
+		if (!(	client2hostname.equals("") || client2hostname.startsWith("$") ||
+				client2username.equals("") || client2username.startsWith("$") ||
+				client2password.equals("") || client2password.startsWith("$") )) {
 			client1 = client;
 			client1tasks = clienttasks;
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			client2tasks = new com.redhat.qe.sm.tasks.ModuleTasks(client2);
 			sshCommandRunners= new SSHCommandRunner[]{client1,client2};
+		} else {
+			log.info("Multi-client testing will be skipped.");
 		}
 		
 		// setup each client
@@ -103,9 +107,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			this.updateSMConfigFile(commandRunner, serverHostname, serverPort);
 			this.changeCertFrequency(commandRunner, certFrequency);
 			commandRunner.runCommandAndWait("killall -9 yum");
-			
-	//setup should not be running sm commands		sm.unregister();	// unregister after updating the config file
-			this.cleanOutAllCerts(commandRunner);	// is this really needed?  shouldn't unregister do this and assert it - jsefler 7/8/2010  - yes it is needed since we should not use sm to unregister here
+			this.cleanOutAllCerts(commandRunner);
 
 		}
 	}
@@ -198,16 +200,23 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		}
 	}
 	
-	public void changeCertFrequency(SSHCommandRunner sshCommandRunner, String frequency){
+	/**
+	 * Update the minutes value for the certFrequency setting in the default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
+	 * @param sshCommandRunner
+	 * @param minutes
+	 */
+	public void changeCertFrequency(SSHCommandRunner sshCommandRunner, int minutes){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency=.*$", "certFrequency="+frequency),
-				0,"Updated rhsmd cert refresh frequency to "+frequency+" minutes");
-		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
-		//sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+frequency+"\\[  OK  \\]$",null);
-		Assert.assertEquals(
-				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
-				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency=.*$", "certFrequency="+minutes),
+				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
+//		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
+//		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+minutes+"\\[  OK  \\]$",null);
+//		Assert.assertEquals(
+//				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
+//				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
+
 	}
 
 	

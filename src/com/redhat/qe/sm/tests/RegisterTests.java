@@ -37,7 +37,6 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //			groups={"sm_stage1", "sprint9-script"},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	public void InvalidRegistrationWithLocalizedStrings_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
-		if (isServerOnPremises) throw new SkipException("This testcase was designed for an IT Candlepin server, not a stand-alone candlepin server.");
 //		sm.unregister();
 //		this.runRHSMCallAsLang(lang,"subscription-manager-cli register --force --username="+username+" --password="+password);
 //		String stdErr = sshCommandRunner.getStderr();
@@ -144,9 +143,9 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[]{"",			"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register,try --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{clientusername,		"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register,try --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{"",			clientpassword,						null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register,try --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{"",					"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{clientusername,		"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{"",					clientpassword,					null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
 		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
 		ll.add(Arrays.asList(new Object[]{clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
 		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
@@ -156,7 +155,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.TRUE,	null,	"[a-f,0-9,\\-]{36} "+clientusername,								null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
 
 		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.FALSE,	null,	"This system is already registered. Use --force to override",			null}));
+		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.FALSE,	null,	"This system is already registered. Use --force to override",		null}));
 
 		return ll;
 	}
@@ -169,16 +168,17 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
+		if (isServerOnPremises)  ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid username or password"}));	// FIXME: I don't know why this message is dependent if server is On Premises - jsefler
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
 		
 		// registration test for a user who has no accepted Red Hat's Terms and conditions
-		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc"}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc"}));
 
 		// registration test for a user who has been disabled
-		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "xeops-js", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "ssalevan", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "xeops-js", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "ssalevan", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
 
 		return ll;
 	}
