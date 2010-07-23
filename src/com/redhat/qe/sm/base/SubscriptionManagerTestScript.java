@@ -22,6 +22,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String serverHostname			= System.getProperty("rhsm.server.hostname");
 	protected String serverPort 			= System.getProperty("rhsm.server.port");
 	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
+	protected String serverInstallDir		= System.getProperty("rhsm.server.installdir");
 	protected Boolean isServerOnPremises	= Boolean.valueOf(System.getProperty("rhsm.server.onpremises","false"));
 
 	protected String client1hostname		= System.getProperty("rhsm.client1.hostname");
@@ -65,6 +66,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	public static Connection itDBConnection = null;
 	
+	public static SSHCommandRunner server	= null;
 	public static SSHCommandRunner client	= null;
 	public static SSHCommandRunner client1	= null;	// client1
 	public static SSHCommandRunner client2	= null;	// client2
@@ -87,6 +89,15 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		clienttasks = new com.redhat.qe.sm.tasks.ModuleTasks(client);
 		sshCommandRunners= new SSHCommandRunner[]{client};
 		
+		// will we be connecting to the server?
+		if (!(	serverHostname.equals("") || serverHostname.startsWith("$") ||
+				serverInstallDir.equals("") || serverInstallDir.startsWith("$") )) {
+			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+
+		} else {
+			log.info("Assuming the server is already setup and running.");
+		}
+		
 		// will we be testing multiple clients?
 		if (!(	client2hostname.equals("") || client2hostname.startsWith("$") ||
 				client2username.equals("") || client2username.startsWith("$") ||
@@ -100,15 +111,18 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			log.info("Multi-client testing will be skipped.");
 		}
 		
+		// setup the server
+		if (server!=null && isServerOnPremises) {
+			this.deployLatestGitTag(server);
+		} 
+		
 		// setup each client
 		for (SSHCommandRunner commandRunner : sshCommandRunners) {
-			
 			this.installLatestRPM(commandRunner);
 			this.updateSMConfigFile(commandRunner, serverHostname, serverPort);
 			this.changeCertFrequency(commandRunner, certFrequency);
 			commandRunner.runCommandAndWait("killall -9 yum");
 			this.cleanOutAllCerts(commandRunner);
-
 		}
 	}
 	
@@ -159,6 +173,19 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		}
 	}
 	
+	private void deployLatestGitTag(SSHCommandRunner sshCommandRunner) {
+
+		log.info("Upgrading the server to the latest git tag...");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serverInstallDir),1,"Found the server install directory "+serverInstallDir);
+
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "'master'");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep -E candlepin-0.0.[[:digit:]]{2}-1 | sort | tail -1", Integer.valueOf(0), "^candlepin", null);	// FIXME: WILL HAVE TO CHANGE THE GREP EXPRESSION TO {3} WHEN THE TAGS HIT 100+  ACTUALLY WE NEED A BETTER WAY TO GET THE LATEST GIT TAG
+		String latestGitTag = sshCommandRunner.getStdout().trim();
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+latestGitTag, Integer.valueOf(0), null, "HEAD is now at .* package \\[candlepin\\] release \\["+latestGitTag.substring(latestGitTag.indexOf("-")+1)+"\\]."); //HEAD is now at 560b098... Automatic commit of package [candlepin] release [0.0.26-1].
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", Integer.valueOf(0), "Starting postgresql service:\\s+\\[  OK  \\]", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
+	}
+	
 	private void installLatestRPM(SSHCommandRunner sshCommandRunner) {
 
 		// verify the subscription-manager client is a rhel 6 machine
@@ -186,10 +213,10 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	private void updateSMConfigFile(SSHCommandRunner sshCommandRunner, String hostname, String port){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname=.*$", "hostname="+hostname),
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname\\s*=.*$", "hostname="+hostname),
 				0,"Updated rhsm config hostname to point to:" + hostname);
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port=.*$", "port="+port),
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port\\s*=.*$", "port="+port),
 				0,"Updated rhsm config port to point to:" + port);
 		
 		// jsefler - 7/21/2010
@@ -207,7 +234,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	 */
 	public void changeCertFrequency(SSHCommandRunner sshCommandRunner, int minutes){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency=.*$", "certFrequency="+minutes),
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
 				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
 //		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
 //		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
