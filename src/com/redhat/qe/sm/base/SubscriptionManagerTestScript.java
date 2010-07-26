@@ -123,6 +123,16 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			this.changeCertFrequency(commandRunner, certFrequency);
 			commandRunner.runCommandAndWait("killall -9 yum");
 			this.cleanOutAllCerts(commandRunner);
+			
+			// transfer a copy of the CA Cert from the candlepin server to the client
+			// TEMPORARY WORK AROUND TO AVOID ISSUES:
+			// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
+			// https://bugzilla.redhat.com/show_bug.cgi?id=617303
+			if (server!=null && isServerOnPremises) {
+				log.warning("TEMPORARY WORKAROUND...");
+				RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
+				RemoteFileTasks.putFile(commandRunner.getConnection(), "/tmp/candlepin-ca.crt", "/tmp/", "0644");
+			}
 		}
 	}
 	
@@ -178,6 +188,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		log.info("Upgrading the server to the latest git tag...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serverInstallDir),1,"Found the server install directory "+serverInstallDir);
 
+		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "'master'");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep -E candlepin-0.0.[[:digit:]]{2}-1 | sort | tail -1", Integer.valueOf(0), "^candlepin", null);	// FIXME: WILL HAVE TO CHANGE THE GREP EXPRESSION TO {3} WHEN THE TAGS HIT 100+  ACTUALLY WE NEED A BETTER WAY TO GET THE LATEST GIT TAG
 		String latestGitTag = sshCommandRunner.getStdout().trim();
@@ -221,9 +232,12 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		
 		// jsefler - 7/21/2010
 		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
+		// TEMPORARY WORK AROUND TO AVOID ISSUES:
+		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
+		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
 		if (isServerOnPremises) {
-		log.warning("TEMPORARY WORKAROUND...");
-		sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepincacerts/candlepin-ca.crt\"  >> "+defaultConfigFile);
+			log.warning("TEMPORARY WORKAROUND...");
+			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
 		}
 	}
 	
