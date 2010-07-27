@@ -256,7 +256,11 @@ public class ModuleTasks {
 		if (locale!=null)		command += " --locale="+locale;
 		
 		// subscribe
-		sshCommandRunner.runCommandAndWait(command);
+		Integer exitCode = sshCommandRunner.runCommandAndWait(command);
+		
+		// assert results
+		if (sshCommandRunner.getStderr().startsWith("This consumer is already subscribed")) return;
+		Assert.assertEquals(exitCode, Integer.valueOf(0), "The subscribe command was a success.");
 	}
 	
 	public void subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
@@ -269,9 +273,12 @@ public class ModuleTasks {
 		if (email!=null)											command += " --email="+email;
 		if (locale!=null)											command += " --locale="+locale;
 
-		
 		// subscribe
-		sshCommandRunner.runCommandAndWait(command);
+		Integer exitCode = sshCommandRunner.runCommandAndWait(command);
+		
+		// assert results
+		if (sshCommandRunner.getStderr().startsWith("This consumer is already subscribed")) return;
+		Assert.assertEquals(exitCode, Integer.valueOf(0), "The subscribe command was a success.");
 	}
 	
 	public void subscribeToProduct(String product) {
@@ -284,7 +291,7 @@ public class ModuleTasks {
 		subscribe(pool.poolId, null, null, null, null);
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
 				"The available subscription pools no longer contains pool: "+pool);
 	}
@@ -302,10 +309,10 @@ public class ModuleTasks {
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
 		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'")) {
 			Assert.assertTrue(after.size() == before.size() && after.size() > 0,
-					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
+					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   Note: The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
 		} else {
 			Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-					"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.productId+") to pool: "+pool+"  The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
+					"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using productID="+pool.productId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
 			Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
 					"The available subscription pools no longer contains pool: "+pool);
 		}
@@ -366,7 +373,7 @@ public class ModuleTasks {
 		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
 			poolIds.add(pool.poolId);
 		}
-		subscribe(poolIds, null, null, null, null);
+		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -475,7 +482,7 @@ repolist: 0
 		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
 		List<String> stdoutRegexs = new ArrayList();
 		for (EntitlementCert entitlementCert : entitlementCerts) {
-			stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label, entitlementCert.name, entitlementCert.enabled.equals("1")? "enabled":"disabled"));
+			stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,35), entitlementCert.enabled.equals("1")? "enabled":"disabled"));
 		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum repolist all", 0, stdoutRegexs, null);
 		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 

@@ -23,6 +23,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 public class SubscribeTests extends SubscriptionManagerTestScript{
 	
 	@Test(description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
+			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
@@ -60,9 +61,9 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			dataProvider="getAllAvailableSubscriptionPoolData")
 	@ImplementsTCMS(id="41686")
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
-		// non-dataProvided test procedure
-		//sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		//sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+// non-dataProvided test procedure
+//		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 	}
 	
@@ -146,20 +147,22 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	        enabled=true)
 	@ImplementsTCMS(id="47578")
 	public void VerifyReposAvailableForEnabledContent(){
-	    ArrayList<String> repos = this.getYumRepolist();
-	    
-	    for (EntitlementCert cert:clienttasks.getCurrentEntitlementCerts()){
-	    	if(cert.enabled.contains("1"))
-	    		Assert.assertTrue(repos.contains(cert.label),
-	    				"Yum reports enabled content subscribed to repo: " + cert.label);
-	    	else
-	    		Assert.assertFalse(repos.contains(cert.label),
-	    				"Yum reports enabled content subscribed to repo: " + cert.label);
-	    }
-	    // FIXME: Untested Alternative to above procedure is:
-//	    sm.register(username, password, null, null, null, null);
-//	    sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//	    sm.assertEntitlementCertsAreReportedInYumRepolist(sm.getCurrentEntitlementCerts());
+//	    ArrayList<String> repos = this.getYumRepolist();
+//	    
+//	    for (EntitlementCert cert:clienttasks.getCurrentEntitlementCerts()){
+//	    	if(cert.enabled.contains("1"))
+//	    		Assert.assertTrue(repos.contains(cert.label),
+//	    				"Yum reports enabled content subscribed to repo: " + cert.label);
+//	    	else
+//	    		Assert.assertFalse(repos.contains(cert.label),
+//	    				"Yum reports enabled content subscribed to repo: " + cert.label);
+//	    }
+// FIXME: Untested Alternative to above procedure is:
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
+	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
+	    clienttasks.assertEntitlementCertsAreReportedInYumRepolist(entitlementCerts);
 	}
 	
 	
@@ -221,6 +224,18 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 //				0,
 //				"rhsmcertd reports that certificates have been updated at new interval");
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
+		
+		/* FIXME: Notice from this output that the update may fail a few times before it starts working.  Hence this test often fails as written above.
+		Tue Jul 27 15:33:23 2010: started: interval = 1 minutes
+		testing rhsm.conf certFrequency=1
+		Tue Jul 27 15:33:24 2010: update failed (1), retry in 1 minutes
+		Tue Jul 27 15:34:24 2010: update failed (1), retry in 1 minutes
+		Tue Jul 27 15:35:24 2010: update failed (1), retry in 1 minutes
+		Tue Jul 27 15:36:24 2010: certificates updated
+		Tue Jul 27 15:37:25 2010: certificates updated
+		Tue Jul 27 15:38:25 2010: certificates updated
+		*/
+
 	}
 	
 	
@@ -275,7 +290,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 
 		Assert.assertEquals(cl1SubscriptionPool.quantity, cl2SubscriptionPool.quantity, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to both consumers is the same.");
 
-		// subscribe consumer1 to the pool and assert that the available quantity has decremented by one
+		// subscribe consumer1 to the pool and assert that the available quantity to consumer2 has decremented by one
 		client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		cl2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+client2username+").");
