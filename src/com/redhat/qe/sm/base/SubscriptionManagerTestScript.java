@@ -128,11 +128,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			// TEMPORARY WORK AROUND TO AVOID ISSUES:
 			// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
 			// https://bugzilla.redhat.com/show_bug.cgi?id=617303
+			/*
 			if (server!=null && isServerOnPremises) {
 				log.warning("TEMPORARY WORKAROUND...");
 				RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
 				RemoteFileTasks.putFile(commandRunner.getConnection(), "/tmp/candlepin-ca.crt", "/tmp/", "0644");
 			}
+			*/
 		}
 	}
 	
@@ -190,7 +192,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "'master'");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep -E candlepin-0.0.[[:digit:]]{2}-1 | sort | tail -1", Integer.valueOf(0), "^candlepin", null);	// FIXME: WILL HAVE TO CHANGE THE GREP EXPRESSION TO {3} WHEN THE TAGS HIT 100+  ACTUALLY WE NEED A BETTER WAY TO GET THE LATEST GIT TAG
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep -E candlepin-0.0.[[:digit:]]{2}-1 | sort | tail -1", Integer.valueOf(0), "^candlepin", null);	// FIXME: WILL HAVE TO CHANGE THE GREP EXPRESSION TO {3} WHEN THE TAGS HIT 100+  ACTUALLY WE NEED A BETTER WAY TO GET THE LATEST GIT TAG
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | sort -t\".\" -k3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 		String latestGitTag = sshCommandRunner.getStdout().trim();
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+latestGitTag, Integer.valueOf(0), null, "HEAD is now at .* package \\[candlepin\\] release \\["+latestGitTag.substring(latestGitTag.indexOf("-")+1)+"\\]."); //HEAD is now at 560b098... Automatic commit of package [candlepin] release [0.0.26-1].
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", Integer.valueOf(0), "Starting postgresql service:\\s+\\[  OK  \\]", null);
@@ -235,10 +238,28 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		// TEMPORARY WORK AROUND TO AVOID ISSUES:
 		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
 		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
+		/*
 		if (isServerOnPremises) {
+
 			log.warning("TEMPORARY WORKAROUND...");
 			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
 		}
+		*/
+		/* Hi,
+		Insecure mode option moved to /etc/rhsm/rhsm.conf file after commandline option(-k, --insecure) failed to gather the popularity votes.
+
+		To enable insecure mode, add the following as a new line to rhsm.conf file
+		insecure_mode=t
+    
+
+		To disable insecure mode, either remove 'insecure_mode' or set it to any value
+		other than 't', 'True', 'true', 1.
+
+		thanks,
+		Ajay
+		*/
+		log.warning("WORKAROUND FOR INSECURITY...");
+		sshCommandRunner.runCommandAndWait("echo \"insecure_mode = true\"  >> "+defaultConfigFile);
 	}
 	
 	/**

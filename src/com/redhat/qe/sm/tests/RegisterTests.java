@@ -21,6 +21,32 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups={"register"})
 public class RegisterTests extends SubscriptionManagerTestScript {
 	
+	@Test(	description="subscription-manager-cli: register to a Candlepin server using various options and data",
+			dataProvider="getRegistrationData")
+	@ImplementsTCMS(id="41677, 41691, 47918")
+	public void Registration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
+		
+		// assure we are unregistered
+//		clienttasks.unregister();
+		
+		// attempt the registration
+		Integer actualExitCode = null;
+		if (expectedExitCode!=null || expectedStdoutRegex!=null || expectedStderrRegex!=null) {
+			try {
+				actualExitCode = clienttasks.register(username, password, type, consumerId, autosubscribe, force);
+			} catch (AssertionError ae) {
+				// TODO: handle exception
+			}
+		} else {
+			actualExitCode = clienttasks.register(username, password, type, consumerId, autosubscribe, force);
+		}
+		
+		if (expectedExitCode!=null)		Assert.assertEquals(actualExitCode, expectedExitCode);
+		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(client.getStdout().trim(), expectedStdoutRegex);
+		if (expectedStderrRegex!=null)	Assert.assertContainsMatch(client.getStderr().trim(), expectedStderrRegex);
+	}
+	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 //			groups={"sm_stage1"},
 			dataProvider="getInvalidRegistrationData")
@@ -65,22 +91,23 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 ////				"Testing the registration to a candlepin server using bogus credentials and expecting results in language "+lang+". ");
 //	}
 	
-	
-	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-//			dependsOnGroups={"sm_stage1"},
-//			groups={"sm_stage2"},
-//			alwaysRun=true,
-			enabled=true)
-	@ImplementsTCMS(id="41677")
-	public void ValidRegistration_Test() {
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
-		
-		// assert certificate files are dropped into /etc/pki/consumer
-		Assert.assertEquals(client.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(), 0,
-				"/etc/pki/consumer/key.pem is present after register");
-		Assert.assertEquals(client.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
-				"/etc/pki/consumer/cert.pem is present after register");
-	}
+
+// FIXME DELETEME	Replaced by Registration_Test
+//	@Test(	description="subscription-manager-cli: register to a Candlepin server",
+////			dependsOnGroups={"sm_stage1"},
+////			groups={"sm_stage2"},
+////			alwaysRun=true,
+//			enabled=true)
+//	@ImplementsTCMS(id="41677")
+//	public void ValidRegistration_Test() {
+//		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
+//		
+//		// assert certificate files are dropped into /etc/pki/consumer
+//		Assert.assertEquals(client.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(), 0,
+//				"/etc/pki/consumer/key.pem is present after register");
+//		Assert.assertEquals(client.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
+//				"/etc/pki/consumer/cert.pem is present after register");
+//	}
 	
 	String autosubscribeProdCertFile =  "/etc/pki/product/"+"autosubscribeProdCert-"+/*getRandInt()+*/".pem";
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
@@ -94,7 +121,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //		String autoProdCert = "/etc/pki/product/autoProdCert-"+getRandInt()+".pem";
 		String autoProdCert = autosubscribeProdCertFile;
 //		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
-		teardownAfterGroups_sm_stage1(); 	// will remove the autosubscribeProdCertFile
+		teardownAfterValidRegistrationAutosubscribe_Test(); 	// will remove the autosubscribeProdCertFile
 		client.runCommandAndWait("wget -O "+autoProdCert+" "+prodCertLocation);
 		clienttasks.register(clientusername, clientpassword, null, null, Boolean.TRUE, null);
 		// assert that the stdout from the registration includes: Bind Product  Red Hat Directory Server 75822
@@ -106,7 +133,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 	}
 	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
-	public void teardownAfterGroups_sm_stage1() {
+	public void teardownAfterValidRegistrationAutosubscribe_Test() {
 		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
 	}
 	
@@ -120,6 +147,71 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	// Data Providers ***********************************************************************
 
+	@DataProvider(name="getRegistrationData")
+	public Object[][] getRegistrationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegistrationDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegistrationDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
+		// 									username,			password,						type,	consumerId,	autosubscribe,	force,			debug,	exitCode,	stdoutRegex,																	stderrRegex
+		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
+
+		// force a successful registration, and then...
+		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	null,		"[a-f,0-9,\\-]{36} "+clientusername,											null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
+
+		// ... try to register again even though the system is already registered
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.FALSE,	null,	null,		"This system is already registered. Use --force to override",					null}));
+
+		if (isServerOnPremises) {
+			ll.add(Arrays.asList(new Object[]{	"admin",					"admin",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+		}
+		else {	// user data comes from https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/imanage_qe_IT_data_spec
+			ll.add(Arrays.asList(new Object[]{	"ewayte",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"sehuffman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"epgyadmin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"onthebus",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"epgy_bsears",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"Dadaless",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"emmapease",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"aaronwen",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"davidmcmath",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"cfairman2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"macfariman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isu-ardwin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isu-paras",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isuchaos",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isucnc",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isu-thewags",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isu-sukhoy",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isu-debrm",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isu-acoster",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isunpappas",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"isujdwarn",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"pascal.catric@a-sis.com",	"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"xeops",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"xeops-js",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"xeop-stenjoa",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"tmgedp",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"jmarra",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"nisadmin",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"darkrider1",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"test5",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"amy_redhat2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"test_1",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"test2",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+			ll.add(Arrays.asList(new Object[]{	"test3",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
+
+		}
+		return ll;
+	}
+	
 // FIXME DELETEME	
 //	@DataProvider(name="invalidRegistrationTermsAndConditionsLocalizedTest")
 //	public Object[][] getInvalidRegistrationTermsAndConditionsLocalizedDataAs2dArray() {

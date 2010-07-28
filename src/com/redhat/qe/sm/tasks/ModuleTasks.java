@@ -146,7 +146,7 @@ public class ModuleTasks {
 	 * @param autosubscribe
 	 * @param force
 	 */
-	public void register(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
+	public Integer register(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
 		
 		// assemble the register command
 		String										command  = "subscription-manager-cli register";	
@@ -158,8 +158,12 @@ public class ModuleTasks {
 		if (force!=null && force)					command += " --force";
 		
 		// register
-		sshCommandRunner.runCommandAndWait(command);
+		Integer exitCode = sshCommandRunner.runCommandAndWait(command);
 
+		if (sshCommandRunner.getStderr().startsWith("This consumer is already registered")) return exitCode;
+		Assert.assertEquals(exitCode, Integer.valueOf(0), "The register command was a success.");
+		Assert.assertContainsMatch(sshCommandRunner.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
+		
 		// FIXME: may want to assert this output and save or return it.  - jsefler 7/8/2010
 		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin admin
 		// FIXME: should assert stdout: SYSTEM_UUID  USER_SET_SYSTEM_NAME  USERNAME_OF_REGISTERER
@@ -168,14 +172,21 @@ public class ModuleTasks {
 		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin
 		// ([a-f,0-9,\-]{36}) (admin)
 		
+		// assert certificate files are dropped into /etc/pki/consumer
+		String consumerKeyFile = "/etc/pki/consumer/key.pem";
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).intValue(), 0, consumerKeyFile+" is present after register");
+		String consumerCertFile = "/etc/pki/consumer/cert.pem";
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).intValue(), 0, consumerCertFile+" is present after register");
 		
-// Moved to ValidRegistration_Test()
+// Moved to ValidRegistration_Test()   UPDATE moved back ^
 //		Assert.assertEquals(
 //				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(), 0,
 //						"/etc/pki/consumer/key.pem is present after register");
 //		Assert.assertEquals(
 //				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
 //						"/etc/pki/consumer/cert.pem is present after register");
+		
+		return exitCode;
 	}
 	
 //	public void registerToCandlepin(String username, String password){
@@ -480,9 +491,9 @@ repolist: 0
 		*/
 		
 		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
-		List<String> stdoutRegexs = new ArrayList();
+		List<String> stdoutRegexs = new ArrayList<String>();
 		for (EntitlementCert entitlementCert : entitlementCerts) {
-			stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,35), entitlementCert.enabled.equals("1")? "enabled":"disabled"));
+			stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 35)), entitlementCert.enabled.equals("1")? "enabled":"disabled"));
 		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum repolist all", 0, stdoutRegexs, null);
 		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 

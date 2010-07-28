@@ -367,8 +367,8 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		  */
 //		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[\\.#](.+)");
 //		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[\\.#](.+)");
-		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\..(.+)");
-		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\..(.+)");
+		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[.\\n](.+)");
+		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[.\\n](.+)");
 		
 		Map<String, Map<String,String>> serialMapOfProductAndPoolIds = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
