@@ -16,6 +16,7 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 @Test(groups={"register"})
@@ -31,32 +32,25 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //		clienttasks.unregister();
 		
 		// attempt the registration
-		Integer actualExitCode = null;
-		if (expectedExitCode!=null || expectedStdoutRegex!=null || expectedStderrRegex!=null) {
-			try {
-				actualExitCode = clienttasks.register(username, password, type, consumerId, autosubscribe, force);
-			} catch (AssertionError ae) {
-				// TODO: handle exception
-			}
-		} else {
-			actualExitCode = clienttasks.register(username, password, type, consumerId, autosubscribe, force);
-		}
+		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, type, consumerId, autosubscribe, force);
 		
-		if (expectedExitCode!=null)		Assert.assertEquals(actualExitCode, expectedExitCode);
-		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(client.getStdout().trim(), expectedStdoutRegex);
-		if (expectedStderrRegex!=null)	Assert.assertContainsMatch(client.getStderr().trim(), expectedStderrRegex);
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex);
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex);
 	}
 	
-	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
-//			groups={"sm_stage1"},
-			dataProvider="getInvalidRegistrationData")
-	@ImplementsTCMS(id="41691, 47918")
-	public void InvalidRegistration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex) {
-		log.info("Testing registration to a Candlepin server using bogus credentials.");
-		clienttasks.register(username, password, type, consumerId, autosubscribe, force);
-		if (stdoutRegex!=null) Assert.assertContainsMatch(client.getStdout().trim(), stdoutRegex);
-		if (stderrRegex!=null) Assert.assertContainsMatch(client.getStderr().trim(), stderrRegex);
-	}
+// FIXME DELETEME: Moved to Registration_Test
+//	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
+////			groups={"sm_stage1"},
+//			dataProvider="getInvalidRegistrationData")
+//	@ImplementsTCMS(id="41691, 47918")
+//	public void InvalidRegistration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex) {
+//		log.info("Testing registration to a Candlepin server using bogus credentials.");
+//		SSHCommandResult sshCommandResult = clienttasks.register(username, password, type, consumerId, autosubscribe, force);
+//		if (stdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), stdoutRegex);
+//		if (stderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), stderrRegex);
+//	}
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
@@ -151,66 +145,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	public Object[][] getRegistrationDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegistrationDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegistrationDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		// 									username,			password,						type,	consumerId,	autosubscribe,	force,			debug,	exitCode,	stdoutRegex,																	stderrRegex
-		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
 
-		// force a successful registration, and then...
-		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
-		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	null,		"[a-f,0-9,\\-]{36} "+clientusername,											null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
-
-		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.FALSE,	null,	null,		"This system is already registered. Use --force to override",					null}));
-
-		if (isServerOnPremises) {
-			ll.add(Arrays.asList(new Object[]{	"admin",					"admin",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-		}
-		else {	// user data comes from https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/imanage_qe_IT_data_spec
-			ll.add(Arrays.asList(new Object[]{	"ewayte",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"sehuffman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"epgyadmin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"onthebus",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"epgy_bsears",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"Dadaless",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"emmapease",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"aaronwen",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"davidmcmath",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"cfairman2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"macfariman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-ardwin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-paras",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isuchaos",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isucnc",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-thewags",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-sukhoy",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-debrm",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-acoster",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isunpappas",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"isujdwarn",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"pascal.catric@a-sis.com",	"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"xeops",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"xeops-js",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"xeop-stenjoa",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"tmgedp",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"jmarra",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"nisadmin",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"darkrider1",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"test5",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"amy_redhat2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"test_1",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"test2",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-			ll.add(Arrays.asList(new Object[]{	"test3",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	null,		null,					null}));
-
-		}
-		return ll;
-	}
 	
 // FIXME DELETEME	
 //	@DataProvider(name="invalidRegistrationTermsAndConditionsLocalizedTest")
@@ -228,29 +163,30 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //	}
 	
 
-	@DataProvider(name="getInvalidRegistrationData")
-	public Object[][] getInvalidRegistrationDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
-	}
-	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[]{"",					"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{clientusername,		"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{"",					clientpassword,					null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
-
-		// force a successful registration, and then...
-		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
-		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.TRUE,	null,	"[a-f,0-9,\\-]{36} "+clientusername,								null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
-
-		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.FALSE,	null,	"This system is already registered. Use --force to override",		null}));
-
-		return ll;
-	}
+// FIXME DELETEME Moved to getRegistrationData
+//	@DataProvider(name="getInvalidRegistrationData")
+//	public Object[][] getInvalidRegistrationDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
+//	}
+//	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
+//		List<List<Object>> ll = new ArrayList<List<Object>>();
+//		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex
+//		ll.add(Arrays.asList(new Object[]{"",					"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
+//		ll.add(Arrays.asList(new Object[]{clientusername,		"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
+//		ll.add(Arrays.asList(new Object[]{"",					clientpassword,					null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
+//		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
+//		ll.add(Arrays.asList(new Object[]{clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
+//		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
+//
+//		// force a successful registration, and then...
+//		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
+//		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.TRUE,	null,	"[a-f,0-9,\\-]{36} "+clientusername,								null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
+//
+//		// ... try to register again even though the system is already registered
+//		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.FALSE,	null,	"This system is already registered. Use --force to override",		null}));
+//
+//		return ll;
+//	}
 	
 	@DataProvider(name="getInvalidRegistrationWithLocalizedStringsData")
 	public Object[][] getInvalidRegistrationWithLocalizedStringsDataAs2dArray() {

@@ -12,6 +12,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.sm.abstractions.EntitlementCert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
@@ -135,6 +136,24 @@ public class ModuleTasks {
 	// register module tasks ************************************************************
 	
 	/**
+	 * register without asserting results
+	 */
+	public SSHCommandResult register_(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
+
+		// assemble the register command
+		String										command  = "subscription-manager-cli register";	
+		if (username!=null)							command += " --username="+username;
+		if (password!=null)							command += " --password="+password;
+		if (type!=null)								command += " --type="+type;
+		if (consumerId!=null)						command += " --consumerid="+consumerId;
+		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
+		if (force!=null && force)					command += " --force";
+		
+		// register without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
 	 * @param username
 	 * @param password
 	 * @param type <br>
@@ -146,23 +165,14 @@ public class ModuleTasks {
 	 * @param autosubscribe
 	 * @param force
 	 */
-	public Integer register(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
 		
-		// assemble the register command
-		String										command  = "subscription-manager-cli register";	
-		if (username!=null)							command += " --username="+username;
-		if (password!=null)							command += " --password="+password;
-		if (type!=null)								command += " --type="+type;
-		if (consumerId!=null)						command += " --consumerid="+consumerId;
-		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
-		if (force!=null && force)					command += " --force";
-		
-		// register
-		Integer exitCode = sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = register_(username, password, type, consumerId, autosubscribe, force);
 
-		if (sshCommandRunner.getStderr().startsWith("This consumer is already registered")) return exitCode;
-		Assert.assertEquals(exitCode, Integer.valueOf(0), "The register command was a success.");
-		Assert.assertContainsMatch(sshCommandRunner.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
+		// assert results for a successful registration
+		if (sshCommandResult.getStderr().startsWith("This system is already registered.")) return sshCommandResult;
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 		
 		// FIXME: may want to assert this output and save or return it.  - jsefler 7/8/2010
 		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin admin
@@ -174,9 +184,9 @@ public class ModuleTasks {
 		
 		// assert certificate files are dropped into /etc/pki/consumer
 		String consumerKeyFile = "/etc/pki/consumer/key.pem";
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).intValue(), 0, consumerKeyFile+" is present after register");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(), 0, consumerKeyFile+" is present after register");
 		String consumerCertFile = "/etc/pki/consumer/cert.pem";
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).intValue(), 0, consumerCertFile+" is present after register");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(), 0, consumerCertFile+" is present after register");
 		
 // Moved to ValidRegistration_Test()   UPDATE moved back ^
 //		Assert.assertEquals(
@@ -185,9 +195,10 @@ public class ModuleTasks {
 //		Assert.assertEquals(
 //				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
 //						"/etc/pki/consumer/cert.pem is present after register");
-		
-		return exitCode;
+		return sshCommandResult; // from the register command
 	}
+	
+
 	
 //	public void registerToCandlepin(String username, String password){
 //		// FIXME may want to make force an optional arg
@@ -215,17 +226,37 @@ public class ModuleTasks {
 	// unregister module tasks ************************************************************
 
 	/**
+	 * unregister without asserting results
+	 */
+	public SSHCommandResult unregister_() {
+
+		// assemble the unregister command
+		String command  = "subscription-manager-cli unregister";	
+		
+		// register without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
 	 * "subscription-manager-cli unregister"
 	 */
-	public void unregister() {
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli unregister");
+	public SSHCommandResult unregister() {
+		SSHCommandResult sshCommandResult = unregister_();
+		
+		// assert results for a successful registration
+		if (sshCommandResult.getStdout().startsWith("This system is currently not registered.")) return sshCommandResult;
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unregister command was a success.");
+		
+		// assert that the consumer cert and key have been removed
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls /etc/pki/entitlement/product | grep pem");
 //		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"stat /etc/pki/consumer/key.pem");
 //		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"stat /etc/pki/consumer/cert.pem");
 //		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, "/etc/pki/consumer/key.pem"),0,"The identify key has been removed after unregistering.");
 //		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, "/etc/pki/consumer/cert.pem"),0,"The identify certificate has been removed after unregistering.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem"),Integer.valueOf(1),"The identify certificate has been removed after unregistering.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem"),Integer.valueOf(1),"The identify key has been removed after unregistering.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").getExitCode().intValue(),1,"The identify certificate has been removed after unregistering.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem").getExitCode().intValue(),1,"The identify key has been removed after unregistering.");
+		
+		return sshCommandResult; // from the unregister command
 	}
 	
 	// list module tasks ************************************************************
@@ -256,7 +287,10 @@ public class ModuleTasks {
 	
 	// subscribe module tasks ************************************************************
 
-	public void subscribe(String poolId, String productId, String regtoken, String email, String locale) {
+	/**
+	 * subscribe without asserting results
+	 */
+	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale) {
 		
 		// assemble the subscribe command
 		String					command  = "subscription-manager-cli subscribe";	
@@ -266,15 +300,24 @@ public class ModuleTasks {
 		if (email!=null)		command += " --email="+email;
 		if (locale!=null)		command += " --locale="+locale;
 		
-		// subscribe
-		Integer exitCode = sshCommandRunner.runCommandAndWait(command);
+		// subscribe without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+
+	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale) {
+
+		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
 		
 		// assert results
-		if (sshCommandRunner.getStderr().startsWith("This consumer is already subscribed")) return;
-		Assert.assertEquals(exitCode, Integer.valueOf(0), "The subscribe command was a success.");
+		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
+		return sshCommandResult;
 	}
 	
-	public void subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	/**
+	 * subscribe without asserting results
+	 */
+	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		// assemble the subscribe command
 		String														command  = "subscription-manager-cli subscribe";	
@@ -284,12 +327,18 @@ public class ModuleTasks {
 		if (email!=null)											command += " --email="+email;
 		if (locale!=null)											command += " --locale="+locale;
 
-		// subscribe
-		Integer exitCode = sshCommandRunner.runCommandAndWait(command);
+		// subscribe without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+
+		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale);
 		
 		// assert results
-		if (sshCommandRunner.getStderr().startsWith("This consumer is already subscribed")) return;
-		Assert.assertEquals(exitCode, Integer.valueOf(0), "The subscribe command was a success.");
+		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
+		return sshCommandResult;
 	}
 	
 	public void subscribeToProduct(String product) {
@@ -297,14 +346,25 @@ public class ModuleTasks {
 	}
 	
 	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
-		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
+		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		log.info("Subscribing to subscription pool: "+pool);
 		subscribe(pool.poolId, null, null, null, null);
-		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(after.size() >= before.size() && after.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+before.size()+" to "+after.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
-		Assert.assertTrue(!getCurrentlyAvailableSubscriptionPools().contains(pool),
+
+		// assert that consumed ProductSubscriptions has NOT decreased
+		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
+				"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+
+		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
+		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
+		Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 				"The available subscription pools no longer contains pool: "+pool);
+		
+		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
+		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
+			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
+					"After subscribing to pool "+pool+", this remaining available pool "+afterSubscriptionPool+" does NOT contain the already subscribed to product "+pool.productId+".");
+		}
 	}
 	
 	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {

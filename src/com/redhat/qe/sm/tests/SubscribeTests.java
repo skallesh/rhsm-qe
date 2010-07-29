@@ -68,6 +68,17 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
+			groups={"myDevGroup","blockedByBug-584137"},
+			dataProvider="getValidConsumerData")
+	@ImplementsTCMS(id="41686")
+	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String type, String consumerId){
+		clienttasks.unregister();
+		clienttasks.register(username, password, type, consumerId, Boolean.FALSE, Boolean.FALSE);
+		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+	}
+	
+	
 	@Test(description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
 //			dependsOnGroups={"sm_stage8"},
 //			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"},
@@ -300,6 +311,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
+
+	
 	// Protected Methods ***********************************************************************
 
 	protected ArrayList<String> getYumRepolist(){
@@ -357,6 +370,26 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		// populate a list of all available SubscriptionPools
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			ll.add(Arrays.asList(new Object[]{pool}));		
+		}
+		
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getValidConsumerData")
+	public Object[][] getValidConsumerDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidConsumerDataAsListOfLists());
+	}
+	protected List<List<Object>> getValidConsumerDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		for (List<Object> registrationDataList : getRegistrationDataAsListOfLists()) {
+			// pull out all of the valid registration data (indicated by an Integer exitCode of 0)
+			if (registrationDataList.contains(Integer.valueOf(0))) {
+				// String username, String password, String type, String consumerId
+				ll.add(registrationDataList.subList(0, 4));
+			}
+			
 		}
 		
 		return ll;
