@@ -145,6 +145,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	}
 	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.register(clientusername,clientpassword,null,null,null,null);
@@ -166,6 +167,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	}
 	protected List<List<Object>>getAllAvailableSubscriptionPoolsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		// first make sure we are unsubscribed from all products
 		clienttasks.register(clientusername,clientpassword,null,null,null,null);
