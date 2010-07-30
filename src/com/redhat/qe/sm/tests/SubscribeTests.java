@@ -358,6 +358,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	protected List<List<Object>> getAllAvailableSubscriptionPoolDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		// assure we are registered
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
