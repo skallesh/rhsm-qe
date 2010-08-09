@@ -103,7 +103,7 @@ Options:
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Options:$"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -h, --help"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --debug=DEBUG"}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"}));
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"})); // option was removed
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --list"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --update"}));
 			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^$"}));
@@ -128,7 +128,7 @@ Options:
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Options:$"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -h, --help"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --debug=DEBUG"}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"}));
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"})); // option was removed
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --available"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --consumed"}));
 			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^$"}));
@@ -159,7 +159,7 @@ Options:
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Options:$"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -h, --help"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --debug=DEBUG"}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"}));
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"})); // option was removed
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --username=USERNAME"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --type=CONSUMERTYPE"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --password=PASSWORD"}));
@@ -193,8 +193,8 @@ Options:
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Options:$"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -h, --help"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --debug=DEBUG"}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"}));
-			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --product=PRODUCT"}));
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"})); // option was removed
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --product=PRODUCT"})); // option was removed
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --regtoken=REGTOKEN"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --pool=POOL"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --email=EMAIL"}));
@@ -219,7 +219,7 @@ Options:
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Options:$"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -h, --help"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --debug=DEBUG"}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"}));
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"})); // option was removed
 			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^$"}));
 		}
 		
@@ -241,7 +241,7 @@ Options:
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Options:$"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -h, --help"}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --debug=DEBUG"}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"}));
+			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  -k, --insecure"})); // option was removed
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^  --serial=SERIAL"}));
 			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^$"}));
 		}
