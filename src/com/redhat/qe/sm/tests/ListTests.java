@@ -16,7 +16,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	@ImplementsTCMS(id="41678")
 	public void EnsureAvailableEntitlementsListed_Test() {
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String availableSubscriptionPools = clienttasks.listAvailable();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
