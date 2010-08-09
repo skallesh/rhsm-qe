@@ -35,7 +35,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=false)
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test() {
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		String consumedProductSubscriptions = clienttasks.listConsumed();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
