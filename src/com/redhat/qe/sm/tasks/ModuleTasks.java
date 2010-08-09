@@ -553,7 +553,8 @@ repolist: 0
 		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
 		List<String> stdoutRegexs = new ArrayList<String>();
 		for (EntitlementCert entitlementCert : entitlementCerts) {
-			stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 35)), entitlementCert.enabled.equals("1")? "enabled":"disabled"));
+			//stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label.trim(), entitlementCert.name.trim(), entitlementCert.enabled.equals("1")? "enabled":"disabled"));
+			stdoutRegexs.add(String.format("^%s\\s+(?:%s|.*)\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 25)), entitlementCert.enabled.equals("1")? "enabled":"disabled"));	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
 		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum repolist all", 0, stdoutRegexs, null);
 		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 

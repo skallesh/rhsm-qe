@@ -23,6 +23,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using various options and data",
+			groups={},
 			dataProvider="getRegistrationData")
 	@ImplementsTCMS(id="41677, 41691, 47918")
 	public void Registration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {

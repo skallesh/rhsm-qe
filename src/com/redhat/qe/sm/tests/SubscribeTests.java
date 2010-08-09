@@ -27,7 +27,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
-			dataProvider="getAllAvailableSubscriptionPoolData")
+			dataProvider="getAllAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41680")
 	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -58,7 +58,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
-			dataProvider="getAllAvailableSubscriptionPoolData")
+			dataProvider="getAllAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41686")
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
@@ -69,7 +69,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
-			groups={"myDevGroup","blockedByBug-584137"},
+			groups={"blockedByBug-584137"},
 			dataProvider="getValidConsumerData")
 	@ImplementsTCMS(id="41686")
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String type, String consumerId){
@@ -169,7 +169,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 //	    				"Yum reports enabled content subscribed to repo: " + cert.label);
 //	    }
 // FIXME: Untested Alternative to above procedure is:
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
+	    clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
@@ -285,7 +285,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@Test(description="bind/unbind with two users/consumers",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
-			dataProvider="getAllAvailableSubscriptionPoolData")
+			dataProvider="getAllAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="53217")
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) {
 		if (client2==null) throw new SkipException("This test requires a second consumer.");
@@ -351,31 +351,6 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	
 	// Data Providers ***********************************************************************
 
-	
-	@DataProvider(name="getAllAvailableSubscriptionPoolData")
-	public Object[][] getAllAvailableSubscriptionPoolDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableSubscriptionPoolDataAsListOfLists());
-	}
-	protected List<List<Object>> getAllAvailableSubscriptionPoolDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (clienttasks==null) return ll;
-		
-		// assure we are registered
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
-		if (client2tasks!=null)	client2tasks.register(client2username, client2password, null, null, null, null);
-		
-		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		if (client2tasks!=null)	client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-
-		// populate a list of all available SubscriptionPools
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			ll.add(Arrays.asList(new Object[]{pool}));		
-		}
-		
-		return ll;
-	}
-	
 	
 	@DataProvider(name="getValidConsumerData")
 	public Object[][] getValidConsumerDataAs2dArray() {

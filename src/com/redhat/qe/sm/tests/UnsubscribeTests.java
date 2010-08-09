@@ -161,23 +161,5 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		return ll;
 	}
 	
-	@DataProvider(name="getAllAvailableSubscriptionPoolsData")
-	public Object[][] getAllAvailableSubscriptionPoolsAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableSubscriptionPoolsDataAsListOfLists());
-	}
-	protected List<List<Object>>getAllAvailableSubscriptionPoolsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (clienttasks==null) return ll;
-		
-		// first make sure we are unsubscribed from all products
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		
-		// then assemble a list of all available Subscription Pools
-		for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			ll.add(Arrays.asList(new Object[]{subscriptionPool}));		
-		}
-		
-		return ll;
-	}
+
 }
