@@ -142,10 +142,10 @@ public class SubscriptionPool extends CandlepinAbstraction {
 //		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
 		
 		// SubscriptionPool abstractionField	pattern		(Note: the abstractionField must be defined in the SubscriptionPool class)
-		regexes.put("subscriptionName",			"Name:\\s*(.*)");
+		regexes.put("subscriptionName",			"ProductName:\\s*(.*)");
 		regexes.put("productId",				"ProductId:\\s*(.*)");
 		regexes.put("poolId",					"PoolId:\\s*(.*)");
-		regexes.put("quantity",					"[Qq]uantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
+		regexes.put("quantity",					"Quantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
 		regexes.put("endDate",					"Expires:\\s*(.*)");
 		
 		List<Map<String,String>> entitlementList = new ArrayList<Map<String,String>>();

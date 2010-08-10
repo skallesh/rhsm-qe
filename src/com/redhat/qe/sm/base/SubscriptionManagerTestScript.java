@@ -147,8 +147,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	@AfterSuite(groups={"setup"},description="subscription manager tear down")
 	public void teardownAfterSuite() {
-		if (clienttasks!=null) clienttasks.unregister();	// release the entitlements consumed by the current registration
-		if (client2tasks!=null) client2tasks.unregister();	// release the entitlements consumed by the current registration
+		if (clienttasks!=null) clienttasks.unregister_();	// release the entitlements consumed by the current registration
+		if (client2tasks!=null) client2tasks.unregister_();	// release the entitlements consumed by the current registration
 	}
 	
 	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){

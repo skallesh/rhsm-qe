@@ -44,6 +44,10 @@ public class ModuleTasks {
 		return SubscriptionPool.parse(listAvailable().getStdout());
 	}
 	
+	public List<SubscriptionPool> getCurrentlyAllAvailableSubscriptionPools() {
+		return SubscriptionPool.parse(listAllAvailable().getStdout());
+	}
+	
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumed().getStdout());
 	}
@@ -262,24 +266,50 @@ public class ModuleTasks {
 	// list module tasks ************************************************************
 	
 	/**
-	 * @return SSHCommandResult from "subscription-manager-cli list --consumed"
+	 * list without asserting results
 	 */
-	public SSHCommandResult listConsumed() {
-		return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
-	}
-	
-	/**
-	 * @return SSHCommandResult from "subscription-manager-cli list --available"
-	 */
-	public SSHCommandResult listAvailable() {
-		return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed) {
+
+		// assemble the register command
+		String								command  = "subscription-manager-cli list";	
+		if (available!=null && available)	command += " --available";
+		if (consumed!=null && consumed)		command += " --consumed";
+		if (all!=null && all)				command += " --all";
+		
+		// list without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
 	/**
 	 * @return SSHCommandResult from "subscription-manager-cli list"
 	 */
 	public SSHCommandResult list() {
-		return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
+		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
+		return list_(null,null,null);
+	}
+	
+	/**
+	 * @return SSHCommandResult from "subscription-manager-cli list --available"
+	 */
+	public SSHCommandResult listAvailable() {
+		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
+		return list_(null,Boolean.TRUE,null);
+	}
+	
+	/**
+	 * @return SSHCommandResult from "subscription-manager-cli list --all --available"
+	 */
+	public SSHCommandResult listAllAvailable() {
+		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --all --available");
+		return list_(Boolean.TRUE,Boolean.TRUE,null);
+	}
+	
+	/**
+	 * @return SSHCommandResult from "subscription-manager-cli list --consumed"
+	 */
+	public SSHCommandResult listConsumed() {
+		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
+		return list_(null,null,Boolean.TRUE);
 	}
 	
 	// subscribe module tasks ************************************************************
