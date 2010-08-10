@@ -200,7 +200,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "'master'");
 //		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep -E candlepin-0.0.[[:digit:]]{2}-1 | sort | tail -1", Integer.valueOf(0), "^candlepin", null);	// FIXME: WILL HAVE TO CHANGE THE GREP EXPRESSION TO {3} WHEN THE TAGS HIT 100+  ACTUALLY WE NEED A BETTER WAY TO GET THE LATEST GIT TAG
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | sort -t\".\" -k3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 		String latestGitTag = sshCommandRunner.getStdout().trim();
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+latestGitTag, Integer.valueOf(0), null, "HEAD is now at .* package \\[candlepin\\] release \\["+latestGitTag.substring(latestGitTag.indexOf("-")+1)+"\\]."); //HEAD is now at 560b098... Automatic commit of package [candlepin] release [0.0.26-1].
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", Integer.valueOf(0), "Starting postgresql service:\\s+\\[  OK  \\]", null);

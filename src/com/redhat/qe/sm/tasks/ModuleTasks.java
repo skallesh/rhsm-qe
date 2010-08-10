@@ -436,7 +436,8 @@ public class ModuleTasks {
 			return;
 		} // END OF WORKAROUND
 		
-		Assert.assertEquals(listAvailable().getStdout(),"No Available subscription pools to list","Asserting that no available subscription pools remain after individually subscribing to them all.");
+		Assert.assertEquals(listAvailable().getStdout().trim(),
+				"No Available subscription pools to list","Asserting that no available subscription pools remain after individually subscribing to them all.");
 	}
 	
 	
@@ -468,7 +469,8 @@ public class ModuleTasks {
 			return;
 		} // END OF WORKAROUND
 		
-		Assert.assertEquals(listAvailable().getStdout(),"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+		Assert.assertEquals(listAvailable().getStdout().trim(),
+				"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 	}
 	
 	// unsubscribe module tasks ************************************************************
@@ -481,14 +483,16 @@ public class ModuleTasks {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
 
 		// assert that there are no product subscriptions consumed
-		Assert.assertEquals(listConsumed().getStdout(),"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
+		Assert.assertEquals(listConsumed().getStdout().trim(),
+				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement product cert files
-		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
-		Assert.assertTrue(sshCommandRunner.getStdout().equals(""),"No entitlement product cert files exist after unsubscribing from all subscription pools.");
+		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'").getStdout().equals(""),
+				"No entitlement product cert files exist after unsubscribing from all subscription pools.");
 		
 		// assert that the yum redhat repo file is gone
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner, redhatRepoFile)==1,"The redhat repo file '"+redhatRepoFile+"' has been removed after unsubscribing from all subscription pools.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner, redhatRepoFile)==1,
+				"The redhat repo file '"+redhatRepoFile+"' has been removed after unsubscribing from all subscription pools.");
 	}
 	
 	/**

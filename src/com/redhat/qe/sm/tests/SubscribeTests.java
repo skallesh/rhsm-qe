@@ -22,7 +22,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"subscribe"})
 public class SubscribeTests extends SubscriptionManagerTestScript{
 	
-	@Test(description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
+	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
@@ -36,7 +36,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	@Test(description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
+	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
@@ -54,7 +54,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	@Test(description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
+	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
@@ -79,7 +79,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	@Test(description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
+	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
 //			dependsOnGroups={"sm_stage8"},
 //			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
@@ -91,7 +91,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	@Test(description="Subscribed for Already subscribed Entitlement.",
+	@Test(	description="Subscribed for Already subscribed Entitlement.",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
@@ -121,7 +121,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 //					"Yum reports product subscribed to repo: " + sub.productId);
 //		}*/
 //	}
-	@Test(description="subscription-manager Yum plugin: enable/disable",
+	@Test(	description="subscription-manager Yum plugin: enable/disable",
 //			dependsOnGroups={"sm_stage5"},
 //			groups={"sm_stage6", "not_implemented"},
 			enabled=false)
@@ -152,7 +152,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
-	@Test(description="subscription-manager Yum plugin: ensure ...",
+	@Test(	description="subscription-manager Yum plugin: ensure ...",
 //	        dependsOnGroups={"sm_stage6"},
 //	        groups={"sm_stage7"},
 	        enabled=true)
@@ -177,7 +177,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
-	@Test(description="subscription-manager Yum plugin: ensure content can be downloaded/installed",
+	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed",
 //			dependsOnGroups={"sm_stage6"},
 //			groups={"sm_stage7", "not_implemented"},
 			enabled=false)
@@ -198,7 +198,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
-	@Test(description="subscription-manager Yum plugin: enable/disable",
+	@Test(	description="subscription-manager Yum plugin: enable/disable",
 //			dependsOnGroups={"sm_stage7"},
 //			groups={"sm_stage8", "not_implemented"},
 			enabled=false)
@@ -212,7 +212,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
-	@Test(description="rhsmcertd: change certFrequency",
+	@Test(	description="rhsmcertd: change certFrequency",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
 //			groups={"blockedByBug-617703"},
@@ -250,7 +250,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
-	@Test(description="rhsmcertd: ensure certificates synchronize",
+	@Test(	description="rhsmcertd: ensure certificates synchronize",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
 //			groups={"blockedByBug-617703"},
@@ -282,9 +282,10 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	}
 	
 	
-	@Test(description="bind/unbind with two users/consumers",
+	@Test(	description="bind/unbind with two users/consumers",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
+			groups={},
 			dataProvider="getAllAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="53217")
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) {
