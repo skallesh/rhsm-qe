@@ -41,15 +41,15 @@ public class ModuleTasks {
 	}
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
-		return SubscriptionPool.parse(listAvailable());
+		return SubscriptionPool.parse(listAvailable().getStdout());
 	}
 	
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
-		return ProductSubscription.parse(listConsumed());
+		return ProductSubscription.parse(listConsumed().getStdout());
 	}
 	
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
-		return InstalledProduct.parse(list());
+		return InstalledProduct.parse(list().getStdout());
 	}
 	
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
@@ -262,27 +262,24 @@ public class ModuleTasks {
 	// list module tasks ************************************************************
 	
 	/**
-	 * @return stdout from "subscription-manager-cli list --consumed"
+	 * @return SSHCommandResult from "subscription-manager-cli list --consumed"
 	 */
-	public String listConsumed() {
-		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
-		return sshCommandRunner.getStdout().trim();
+	public SSHCommandResult listConsumed() {
+		return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
 	}
 	
 	/**
-	 * @return stdout from "subscription-manager-cli list --available"
+	 * @return SSHCommandResult from "subscription-manager-cli list --available"
 	 */
-	public String listAvailable() {
-		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
-		return sshCommandRunner.getStdout().trim();
+	public SSHCommandResult listAvailable() {
+		return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
 	}
 	
 	/**
-	 * @return stdout from "subscription-manager-cli list"
+	 * @return SSHCommandResult from "subscription-manager-cli list"
 	 */
-	public String list() {
-		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
-		return sshCommandRunner.getStdout().trim();
+	public SSHCommandResult list() {
+		return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
 	}
 	
 	// subscribe module tasks ************************************************************
@@ -413,7 +410,7 @@ public class ModuleTasks {
 	}
 	
 	/**
-	 * Individually subscribe to each of the currently available subscription pools
+	 * Individually subscribe to each of the currently available subscription pools one at a time
 	 */
 	public void subscribeToEachOfTheCurrentlyAvailableSubscriptionPools() {
 
@@ -426,16 +423,25 @@ public class ModuleTasks {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="613635"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
 			return;
 		} // END OF WORKAROUND
 		
-		Assert.assertEquals(listAvailable(),"No Available subscription pools to list","Asserting that no available subscription pools remain after individually subscribing to them all.");
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=622839 - jsefler 8/10/2010
+		invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="622839"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
+			return;
+		} // END OF WORKAROUND
+		
+		Assert.assertEquals(listAvailable().getStdout(),"No Available subscription pools to list","Asserting that no available subscription pools remain after individually subscribing to them all.");
 	}
 	
 	
 	/**
-	 * Within one subscription-manager-cli command, subscribe to all of the currently available subscription pools
+	 * Collectively subscribe to all of the currently available subscription pools in one command call
 	 */
 	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
 
@@ -450,11 +456,19 @@ public class ModuleTasks {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="613635"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 			return;
 		} // END OF WORKAROUND
 		
-		Assert.assertEquals(listAvailable(),"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=622839 - jsefler 8/10/2010
+		invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="622839"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
+			return;
+		} // END OF WORKAROUND
+		
+		Assert.assertEquals(listAvailable().getStdout(),"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 	}
 	
 	// unsubscribe module tasks ************************************************************
@@ -467,7 +481,7 @@ public class ModuleTasks {
 		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
 
 		// assert that there are no product subscriptions consumed
-		Assert.assertEquals(listConsumed(),"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
+		Assert.assertEquals(listConsumed().getStdout(),"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement product cert files
 		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");

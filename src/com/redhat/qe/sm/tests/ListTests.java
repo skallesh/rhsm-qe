@@ -18,7 +18,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 	public void EnsureAvailableEntitlementsListed_Test() {
 		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		String availableSubscriptionPools = clienttasks.listAvailable();
+		String availableSubscriptionPools = clienttasks.listAvailable().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
 		
 		// TODO
@@ -37,7 +37,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		String consumedProductSubscriptions = clienttasks.listConsumed();
+		String consumedProductSubscriptions = clienttasks.listConsumed().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
 	}
 }
