@@ -148,7 +148,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,Boolean.TRUE);
 //		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 

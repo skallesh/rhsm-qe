@@ -170,7 +170,7 @@ public class ModuleTasks {
 		SSHCommandResult sshCommandResult = register_(username, password, type, consumerId, autosubscribe, force);
 
 		// assert results for a successful registration
-		if (sshCommandResult.getStderr().startsWith("This system is already registered.")) return sshCommandResult;
+		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 		
