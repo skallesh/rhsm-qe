@@ -19,7 +19,8 @@ public class UnregisterTests extends SubscriptionManagerTestScript {
 			enabled=true)
 	@ImplementsTCMS(id="46714")
 	public void RegisterSubscribeAndUnregisterTest(){
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.unregister();

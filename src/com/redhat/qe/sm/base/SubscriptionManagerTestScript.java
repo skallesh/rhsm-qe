@@ -329,12 +329,18 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		if (clienttasks==null) return ll;
 		
 		// assure we are registered
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
-		if (client2tasks!=null)	client2tasks.register(client2username, client2password, null, null, null, Boolean.TRUE);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		if (client2tasks!=null)	{
+			client2tasks.unregister();
+			client2tasks.register(client2username, client2password, null, null, null, null);
+		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		if (client2tasks!=null)	client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		if (client2tasks!=null)	{
+			client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		}
 
 		// populate a list of all available SubscriptionPools
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {

@@ -79,8 +79,12 @@ public class ModuleTasks {
 		return SubscriptionPool.parseCerts(certificates);
 	}
 	
+	/**
+	 * @return List of /etc/pki/entitlement/product/*.pem files sorted newest first
+	 */
 	public List<String> getCurrentEntitlementCertFiles() {
-		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
+		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
+		sshCommandRunner.runCommandAndWait("ls -1t /etc/pki/entitlement/product/*.pem");
 		String files = sshCommandRunner.getStdout().trim();
 		List<String> certFiles = new ArrayList<String>();
 		if (!files.equals("")) certFiles=Arrays.asList(files.split("\n"));
@@ -131,7 +135,7 @@ public class ModuleTasks {
 	
 	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {
 		String certFile = "/etc/pki/entitlement/product/"+productSubscription.serialNumber+".pem";
-		sshCommandRunner.runCommandAndWait("openssl x509 -in '"+certFile+"' -noout -text");
+		sshCommandRunner.runCommandAndWait("openssl x509 -text -noout -in '"+certFile+"'");
 		String certificates = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		return entitlementCerts;
@@ -248,8 +252,9 @@ public class ModuleTasks {
 		SSHCommandResult sshCommandResult = unregister_();
 		
 		// assert results for a successful registration
-		if (sshCommandResult.getStdout().startsWith("This system is currently not registered.")) return sshCommandResult;
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unregister command was a success.");
+		if (!sshCommandResult.getStdout().startsWith("This system is currently not registered.")) {
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unregister command was a success.");
+		}
 		
 		// assert that the consumer cert and key have been removed
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls /etc/pki/entitlement/product | grep pem");
@@ -374,24 +379,32 @@ public class ModuleTasks {
 	
 	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
+		List<String> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
 		subscribe(pool.poolId, null, null, null, null);
 
+		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
+		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
+		Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+		
+		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
+		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
+			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
+					"This remaining available pool "+afterSubscriptionPool+" does NOT contain the same productId ("+pool.productId+") after subscribing to pool: "+pool);
+		}
+
+		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement/product
+		List<String> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
+				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
+		log.info("Entitlement certificate ("+afterEntitlementCertFiles.get(0)+") has been dropped after subscribing to subscription pool: "+pool);
+		
 		// assert that consumed ProductSubscriptions has NOT decreased
 		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
 				"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 
-		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
-		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		Assert.assertTrue(!afterSubscriptionPools.contains(pool),
-				"The available subscription pools no longer contains pool: "+pool);
-		
-		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
-		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
-			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
-					"After subscribing to pool "+pool+", this remaining available pool "+afterSubscriptionPool+" does NOT contain the already subscribed to product "+pool.productId+".");
-		}
 	}
 	
 	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {

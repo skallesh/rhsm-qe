@@ -127,8 +127,8 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			enabled=false)
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test() {
-
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);	// assure we are registered
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
@@ -169,7 +169,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 //	    				"Yum reports enabled content subscribed to repo: " + cert.label);
 //	    }
 // FIXME: Untested Alternative to above procedure is:
-	    clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
+		clienttasks.unregister();
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 

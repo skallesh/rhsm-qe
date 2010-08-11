@@ -3,7 +3,6 @@ package com.redhat.qe.sm.tests;
 import java.util.List;
 
 import org.testng.annotations.AfterGroups;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
@@ -21,7 +20,8 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	@ImplementsTCMS(id="41678")
 	public void EnsureAvailableEntitlementsListed_Test() {
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String availableSubscriptionPools = clienttasks.listAvailable().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
@@ -40,10 +40,20 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=false)
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test() {
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		String consumedProductSubscriptions = clienttasks.listConsumed().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
+	}
+	
+	//TODO assert that all of the product entitlement certs in /etc/pki/entitlement/products are present in list --consumed
+	@Test(	description="subscription-manager-cli: list consumed entitlements",
+			groups={},
+			enabled=false)
+	//@ImplementsTCMS(id="")
+	public void TODOEnsureConsumedEntitlementsListed_Test() {
+
 	}
 	
 	
@@ -52,7 +62,8 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
-		clienttasks.register(clientusername, clientpassword, "person", null, null, Boolean.TRUE);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, "person", null, null, null);
 		
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool rhelPersonalPool = null;
@@ -73,7 +84,8 @@ public class ListTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
-		clienttasks.register(clientusername, clientpassword, "system", null, null, Boolean.TRUE);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, "system", null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		rhelPersonalPool = null;

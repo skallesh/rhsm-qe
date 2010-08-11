@@ -132,6 +132,20 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
 	}
 	
+	// TODO
+	@Test(	description="subscription-manager-cli: register with force",
+			enabled=false)
+	public void RegisterWithForce_Test() {
+		//https://bugzilla.redhat.com/show_bug.cgi?id=623264
+	}
+	
+	// TODO
+	@Test(	description="subscription-manager-cli: reregister",
+			enabled=false)
+	public void Reregister_Test() {
+		// see agilo
+	}
+		
 	// protected methods ***********************************************************************
 
 	protected void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
