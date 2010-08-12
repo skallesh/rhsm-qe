@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
 public class SubscriptionPool extends CandlepinAbstraction {
 	
 	public String subscriptionName;
-	public String productId;	//public String productSku;		// productSku is replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
+	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
 	public String poolId;
-	public Integer quantity;
+	public String quantity;	// public Integer quantity;	// can be "unlimited"
 	public Date endDate;
 	
 	public Date startDate;
@@ -52,7 +52,7 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		subscriptionName = components[0].trim();
 		endDate = this.parseDateString(components[1].trim());
 		poolId = components[2].trim();
-		quantity = Integer.parseInt(components[3].trim());
+		quantity = components[3].trim();	// Integer.parseInt(components[3].trim());
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	
@@ -60,7 +60,7 @@ public class SubscriptionPool extends CandlepinAbstraction {
 			Date endDate,
 			Boolean activeSubscription,
 			Integer consumed,
-			Integer quantity,
+			String quantity,	//Integer quantity,
 			String id,
 			String productId){
 		super(null);

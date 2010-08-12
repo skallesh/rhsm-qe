@@ -14,6 +14,7 @@ import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
+import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -145,7 +146,15 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	public void Reregister_Test() {
 		// see agilo
 	}
-		
+	
+
+	
+	
+	
+	
+	
+	
+	
 	// protected methods ***********************************************************************
 
 	protected void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){

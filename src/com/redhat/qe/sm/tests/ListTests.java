@@ -73,7 +73,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 		Assert.assertTrue(rhelPersonalPool!=null,"RHEL Personal is available to this consumer registered as type person");
 		Assert.assertEquals(subscriptionPools.size(),1, "RHEL Personal is the ONLY subscription pool available to this consumer registered as type person");
 	}
-	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test")
+	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		clienttasks.unregister_();
 	}
@@ -101,7 +101,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 		}
 		Assert.assertTrue(rhelPersonalPool!=null,"RHEL Personal is included in --all --available subscription pools");
 	}
-	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test")
+	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		clienttasks.unregister_();
 	}

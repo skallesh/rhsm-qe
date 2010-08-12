@@ -7,6 +7,7 @@ import java.util.List;
 
 
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -309,11 +310,140 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+client2username+").");
 		cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
 
-		Assert.assertEquals(cl2SubscriptionPool.quantity.intValue(), cl1SubscriptionPool.quantity.intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+client2username+") has decremented by one.");
+		Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+client2username+") has decremented by one.");
 	}
 	
 	
+	/*
+	 * REFERENCE MATERIAL:
+	 * https://tcms.engineering.redhat.com/case/55702/
+	 * https://tcms.engineering.redhat.com/case/55718/
+	 * https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/RH-Personal_dev_testplan
+	 * 
+Data prep
+==========================================================
+(in candlepin/client/ruby - assuming that the cp_product_utils product data has been imported)
 
+./cpc create_owner john
+./cpc create_user 10 john password   (10 happened to be the id returned from creating the john owner)
+./cpc create_subscription 10 RH09XYU34  (defaults to a quantity of 1)
+./cpc refresh_pools john
+
+RHSM
+===========================================================
+# Simulating a person accepting RHEL Personal
+sudo ./subscription-manager-cli register --username=john --password=password --type=person
+sudo ./subscription-manager-cli list --available     # (Should see RHEL Personal)
+sudo ./subscription-manager-cli subscribe --pool=13  # (or whatever the pool id is for RHEL Personal)
+
+# AT THIS POINT YOU WILL NOT HAVE ANY ENTITLEMENT CERTS
+# THIS DOES NOT MATTER, AS THIS IS NOT HOW A RHEL PERSONAL CUSTOMER WILL ACTUALLY CONSUME THIS ENTITLEMENT
+
+# Stash the consumer certs - this really just simulates using a different machine
+sudo mv /etc/pki/consumer/*.pem /tmp
+
+# Now register a system consumer under john's username
+sudo ./subscription-manager-cli register --username=john --password=password
+sudo ./subscription-manager-cli list --available    # (Should see RHEL Personal Bits - this product actually should create a real entitlement cert and allow this machine access to the actual content, hence the silly name)
+
+sudo ./subscription-manager-cli subscribe --pool=14  # (RHEL Personal Bits pool)
+sudo ./subscription-manager-cli list                 # (This should actually show entitlement cert information)
+
+I don't think that we have valid content data currently baked into the certs, so I don't think that you can use this to access protected yum repos yet.
+
+	 */
+	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are available and unlimited after a person has subscribed to RHEL Personal",
+			groups={"myDevGroup","MultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "MultiClientRHELPersonal"},
+			enabled=true)
+	@ImplementsTCMS(id="55702")
+	public void MultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test() {
+		if (!isServerOnPremises) throw new SkipException("Currently this test is designed only for on-premises.");	//TODO Make this work for IT too.  jsefler 8/12/2010 
+		if (client2==null) throw new SkipException("This test requires a second consumer.");
+		if (clientusername.equals("admin")) throw new SkipException("This test requires that the client user ("+clientusername+") is NOT admin.");
+		
+		String rhelPersonalProductName = "RHEL Personal";
+		String rhelPersonalBitsProductName = "RHEL Personal Bits";
+		SubscriptionPool rhelPersonalPool = null;
+		
+		
+		log.info("Register client2 under '"+clientusername+"' as a system and assert that RHEL Personal Bits are NOT yet available...");
+		client2tasks.unregister();
+		client2tasks.register(clientusername, clientpassword, "system", null, null, null);
+		List<SubscriptionPool> client2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		rhelPersonalPool = null;
+		for (SubscriptionPool subscriptionPool : client2SubscriptionPools) {
+			if (subscriptionPool.subscriptionName.equals(rhelPersonalBitsProductName)) rhelPersonalPool = subscriptionPool;
+		}
+		Assert.assertTrue(rhelPersonalPool==null,rhelPersonalBitsProductName+" is NOT yet available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+
+		
+		log.info("Now register client1 under '"+clientusername+"' as a person and subscribe to the RHEL Personal subscription pool...");
+		client1tasks.unregister();
+		client1tasks.register(clientusername, clientpassword, "person", null, null, null);
+		List<SubscriptionPool> client1SubscriptionPools = client1tasks.getCurrentlyAvailableSubscriptionPools();
+		rhelPersonalPool = null;
+		for (SubscriptionPool subscriptionPool : client1SubscriptionPools) {
+			if (subscriptionPool.subscriptionName.equals(rhelPersonalProductName)) rhelPersonalPool = subscriptionPool;
+		}
+		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalProductName+" is available to a user '"+clientusername+"' registered as a person.");
+		List<String> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+		client1tasks.subscribe(rhelPersonalPool.poolId, null, null, null, null);
+		Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(rhelPersonalPool),
+				"The available subscription pools no longer contains the just subscribed to pool: "+rhelPersonalPool);
+		List<String> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+		Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
+				"Subscribing to subscription pool '"+rhelPersonalProductName+"' does NOT drop a new entitlement certificate when registered as a person.");
+
+		
+		log.info("Now client2 (already registered as a system under "+clientusername+") should now have RHEL Personal Bits available with unlimited quantity...");
+		rhelPersonalPool = null;
+		List<SubscriptionPool> client2SubscriptionPoolsWithRHELPersonalBits = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool subscriptionPool : client2SubscriptionPoolsWithRHELPersonalBits) {
+			if (subscriptionPool.subscriptionName.equals(rhelPersonalBitsProductName)) rhelPersonalPool = subscriptionPool;
+		}
+		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalBitsProductName+" is now available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+		Assert.assertEquals(rhelPersonalPool.quantity.toLowerCase(),"unlimited","An unlimited quantity of entitlements is available to "+rhelPersonalBitsProductName+".");
+		
+		
+		log.info("Verifying that the available subscription pools available to client2 has increased by only the "+rhelPersonalBitsProductName+" pool...");
+		client2SubscriptionPools.add(rhelPersonalPool);
+		Assert.assertEquals(client2SubscriptionPoolsWithRHELPersonalBits,client2SubscriptionPools,"The list of available subscription pools seen by client2 increases only by RHEL Personal Bits pool: "+rhelPersonalPool);
+	
+	}
+	@Test(	description="subscription-manager-cli: Ensure that availability of RHEL Personal Bits is revoked once the person unsubscribes from RHEL Personal",
+			groups={"myDevGroup","MultiClientEnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","MultiClientRHELPersonal"},
+			dependsOnGroups={"MultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="55702")
+	public void MultiClientEnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test() {
+		
+		String rhelPersonalProductName = "RHEL Personal";
+		String rhelPersonalBitsProductName = "RHEL Personal Bits";
+		SubscriptionPool rhelPersonalPool = null;
+		
+		
+		log.info("Unsubscribe client1 registered as a person under '"+clientusername+"' from "+rhelPersonalProductName+"...");
+		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+
+		
+		log.info("Now verify that client2 under '"+clientusername+"' registered as a system can no longer subscribe to the RHEL Personal Bits pool...");
+		List<SubscriptionPool> client2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		rhelPersonalPool = null;
+		for (SubscriptionPool subscriptionPool : client2SubscriptionPools) {
+			if (subscriptionPool.subscriptionName.equals(rhelPersonalBitsProductName)) rhelPersonalPool = subscriptionPool;
+		}
+		Assert.assertTrue(rhelPersonalPool==null,rhelPersonalBitsProductName+" is no longer available on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+		
+	}
+	@AfterGroups(groups={"myDevGroup"}, value={"MultiClientRHELPersonal"}, alwaysRun=true)
+	public void teardownAfterMultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test() {
+		client2tasks.unregister_();
+		client1tasks.unregister_();
+	}
+	
+	
+	
+	
 	
 	// Protected Methods ***********************************************************************
 
