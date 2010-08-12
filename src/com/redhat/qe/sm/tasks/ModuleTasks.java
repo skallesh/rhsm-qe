@@ -512,6 +512,14 @@ public class ModuleTasks {
 			return;
 		} // END OF WORKAROUND
 		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/10/2010
+		invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="623657"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
+			return;
+		} // END OF WORKAROUND
+		
 		Assert.assertEquals(listAvailable().getStdout().trim(),
 				"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 	}
