@@ -462,25 +462,8 @@ public class ModuleTasks {
 			subscribeToSubscriptionPoolUsingPoolId(pool);
 		}
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="613635"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
-			return;
-		} // END OF WORKAROUND
-		
-		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=622839 - jsefler 8/10/2010
-		invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="622839"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
-			return;
-		} // END OF WORKAROUND
-		
-		Assert.assertEquals(listAvailable().getStdout().trim(),
-				"No Available subscription pools to list","Asserting that no available subscription pools remain after individually subscribing to them all.");
+		// assert
+		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after individually subscribing to them all.");
 	}
 	
 	
@@ -496,11 +479,18 @@ public class ModuleTasks {
 		}
 		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
+		// assert
+		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+	}
+	
+	protected void assertNoAvailableSubscriptionPoolsToList(String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
+		invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="613635"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
 		} // END OF WORKAROUND
 		
@@ -508,20 +498,21 @@ public class ModuleTasks {
 		invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="622839"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
 		} // END OF WORKAROUND
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/10/2010
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/12/2010
 		invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="623657"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$","Asserting that no available subscription pools remain after individually subscribing to them all.");
+			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
 		} // END OF WORKAROUND
 		
+		// assert
 		Assert.assertEquals(listAvailable().getStdout().trim(),
-				"No Available subscription pools to list","Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+				"No Available subscription pools to list",assertMsg);
 	}
 	
 	// unsubscribe module tasks ************************************************************
