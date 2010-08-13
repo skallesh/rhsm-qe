@@ -313,7 +313,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+client2username+") has decremented by one.");
 	}
 	
-	
+	protected static String rhelPersonalProductName = "RHEL Personal";
+	protected static String rhelPersonalBitsProductName = "RHEL Personal Bits";
 	/*
 	 * REFERENCE MATERIAL:
 	 * https://tcms.engineering.redhat.com/case/55702/
@@ -361,31 +362,22 @@ I don't think that we have valid content data currently baked into the certs, so
 		if (client2==null) throw new SkipException("This test requires a second consumer.");
 		if (clientusername.equals("admin")) throw new SkipException("This test requires that the client user ("+clientusername+") is NOT admin.");
 		
-		String rhelPersonalProductName = "RHEL Personal";
-		String rhelPersonalBitsProductName = "RHEL Personal Bits";
 		SubscriptionPool rhelPersonalPool = null;
 		
 		
-		log.info("Register client2 under '"+clientusername+"' as a system and assert that RHEL Personal Bits are NOT yet available...");
+		log.info("Register client2 under username '"+clientusername+"' as a system and assert that RHEL Personal Bits are NOT yet available...");
 		client2tasks.unregister();
 		client2tasks.register(clientusername, clientpassword, "system", null, null, null);
-		List<SubscriptionPool> client2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
-		rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : client2SubscriptionPools) {
-			if (subscriptionPool.subscriptionName.equals(rhelPersonalBitsProductName)) rhelPersonalPool = subscriptionPool;
-		}
+		List<SubscriptionPool> client2BeforeSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		rhelPersonalPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalBitsProductName,client2BeforeSubscriptionPools);
 		Assert.assertTrue(rhelPersonalPool==null,rhelPersonalBitsProductName+" is NOT yet available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
 
 		
-		log.info("Now register client1 under '"+clientusername+"' as a person and subscribe to the RHEL Personal subscription pool...");
+		log.info("Now register client1 under username '"+clientusername+"' as a person and subscribe to the RHEL Personal subscription pool...");
 		client1tasks.unregister();
 		client1tasks.register(clientusername, clientpassword, "person", null, null, null);
-		List<SubscriptionPool> client1SubscriptionPools = client1tasks.getCurrentlyAvailableSubscriptionPools();
-		rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : client1SubscriptionPools) {
-			if (subscriptionPool.subscriptionName.equals(rhelPersonalProductName)) rhelPersonalPool = subscriptionPool;
-		}
-		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalProductName+" is available to a user '"+clientusername+"' registered as a person.");
+		rhelPersonalPool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalProductName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalProductName+" is available to user '"+clientusername+"' registered as a person.");
 		List<String> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 		client1tasks.subscribe(rhelPersonalPool.poolId, null, null, null, null);
 		Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(rhelPersonalPool),
@@ -395,50 +387,121 @@ I don't think that we have valid content data currently baked into the certs, so
 				"Subscribing to subscription pool '"+rhelPersonalProductName+"' does NOT drop a new entitlement certificate when registered as a person.");
 
 		
-		log.info("Now client2 (already registered as a system under "+clientusername+") should now have RHEL Personal Bits available with unlimited quantity...");
-		rhelPersonalPool = null;
-		List<SubscriptionPool> client2SubscriptionPoolsWithRHELPersonalBits = client2tasks.getCurrentlyAvailableSubscriptionPools();
-		for (SubscriptionPool subscriptionPool : client2SubscriptionPoolsWithRHELPersonalBits) {
-			if (subscriptionPool.subscriptionName.equals(rhelPersonalBitsProductName)) rhelPersonalPool = subscriptionPool;
-		}
-		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalBitsProductName+" is now available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
-		Assert.assertEquals(rhelPersonalPool.quantity.toLowerCase(),"unlimited","An unlimited quantity of entitlements is available to "+rhelPersonalBitsProductName+".");
+		log.info("Now client2 (already registered as a system under username '"+clientusername+"') should now have RHEL Personal Bits available with unlimited quantity...");
+		List<SubscriptionPool> client2AfterSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool rhelPersonalBitsPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalBitsProductName,client2AfterSubscriptionPools);
+		Assert.assertTrue(rhelPersonalBitsPool!=null,rhelPersonalBitsProductName+" is now available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+		Assert.assertEquals(rhelPersonalBitsPool.quantity.toLowerCase(),"unlimited","An unlimited quantity of entitlements is available to "+rhelPersonalBitsProductName+".");
 		
 		
 		log.info("Verifying that the available subscription pools available to client2 has increased by only the "+rhelPersonalBitsProductName+" pool...");
-		client2SubscriptionPools.add(rhelPersonalPool);
-		Assert.assertEquals(client2SubscriptionPoolsWithRHELPersonalBits,client2SubscriptionPools,"The list of available subscription pools seen by client2 increases only by RHEL Personal Bits pool: "+rhelPersonalPool);
+		client2BeforeSubscriptionPools.add(rhelPersonalBitsPool);  // manually add the rhelPersonalBitsPool to the List
+		Assert.assertEquals(client2AfterSubscriptionPools,client2BeforeSubscriptionPools,
+				"The list of available subscription pools seen by client2 increases only by RHEL Personal Bits pool: "+rhelPersonalBitsPool);
 	
+	}
+	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are consumable after a person has subscribed to RHEL Personal",
+			groups={"myDevGroup","MultiClientEnsureRHELPersonalBitsAreConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test","MultiClientRHELPersonal"},
+			dependsOnGroups={"MultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
+			enabled=true)
+	@ImplementsTCMS(id="55702")
+	public void MultiClientEnsureRHELPersonalBitsAreConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test() {
+				
+		log.info("Now client2 (already registered as a system under username '"+clientusername+"') can now consume "+rhelPersonalBitsProductName+"...");
+		SubscriptionPool rhelPersonalBitsPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalBitsProductName,client2tasks.getCurrentlyAvailableSubscriptionPools());
+		client2tasks.subscribeToSubscriptionPoolUsingPoolId(rhelPersonalBitsPool);
+		
+		
+		log.info("Now client2 should be consuming the Product Subscription "+rhelPersonalBitsProductName+"...");
+		ProductSubscription rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertTrue(rhelPersonalBitsProduct!=null,rhelPersonalBitsProductName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+		
 	}
 	@Test(	description="subscription-manager-cli: Ensure that availability of RHEL Personal Bits is revoked once the person unsubscribes from RHEL Personal",
 			groups={"myDevGroup","MultiClientEnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","MultiClientRHELPersonal"},
-			dependsOnGroups={"MultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
+			dependsOnGroups={"MultiClientEnsureRHELPersonalBitsAreConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="55702")
 	public void MultiClientEnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test() {
 		
-		String rhelPersonalProductName = "RHEL Personal";
-		String rhelPersonalBitsProductName = "RHEL Personal Bits";
-		SubscriptionPool rhelPersonalPool = null;
+		log.info("Unsubscribe client2 (already registered as a system under username '"+clientusername+"') from all currently consumed product subscriptions...");
+		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		
-		log.info("Unsubscribe client1 registered as a person under '"+clientusername+"' from "+rhelPersonalProductName+"...");
+		log.info("Unsubscribe client1 (already registered as a person under username '"+clientusername+"') from product subscription "+rhelPersonalProductName+"...");
 		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 
 		
-		log.info("Now verify that client2 under '"+clientusername+"' registered as a system can no longer subscribe to the RHEL Personal Bits pool...");
-		List<SubscriptionPool> client2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
-		rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : client2SubscriptionPools) {
-			if (subscriptionPool.subscriptionName.equals(rhelPersonalBitsProductName)) rhelPersonalPool = subscriptionPool;
-		}
-		Assert.assertTrue(rhelPersonalPool==null,rhelPersonalBitsProductName+" is no longer available on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+		log.info("Now verify that client2 (already registered as a system under username '"+clientusername+"') can no longer subscribe to the '"+rhelPersonalBitsProductName+"' pool...");
+		SubscriptionPool rhelPersonalBitsPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalBitsProductName,client2tasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertTrue(rhelPersonalBitsPool==null,rhelPersonalBitsProductName+" is no longer available on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+	}
+	@Test(	description="subscription-manager-cli: Ensure that the entitlement cert for RHEL Personal Bits is revoked once the person unsubscribes from RHEL Personal",
+			groups={"myDevGroup","MultiClientEnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","MultiClientRHELPersonal"},
+			dependsOnGroups={"MultiClientEnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="55702")
+	public void MultiClientEnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test() {
+		// setup... make sure the clients are not subscribed to anything
+		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
+		log.info("Subscribe client1 (already registered as a person under username '"+clientusername+"') to product subscription "+rhelPersonalProductName+"...");
+		SubscriptionPool rhelPersonalPool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalProductName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalProductName+" is available to user '"+clientusername+"' registered as a person.");
+		client1tasks.subscribe(rhelPersonalPool.poolId, null, null, null, null);
+
+		
+		log.info("Subscribe client2 (already registered as a system under username '"+clientusername+"') to product subscription "+rhelPersonalBitsProductName+"...");
+		SubscriptionPool rhelPersonalBitsPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalBitsProductName,client2tasks.getCurrentlyAvailableSubscriptionPools());
+		client2tasks.subscribeToSubscriptionPoolUsingPoolId(rhelPersonalBitsPool);
+		ProductSubscription rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertTrue(rhelPersonalBitsProduct!=null,rhelPersonalBitsProductName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+
+		
+		log.info("Now, unsubscribe the person on client 1 from the "+rhelPersonalProductName+" pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the "+rhelPersonalBitsProductName+" gets revoked from client2.");
+		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		int certFrequencyMinutes = 1;
+		changeCertFrequency(client2, certFrequencyMinutes);
+		sleep(certFrequencyMinutes*60*1000 + 500);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+		rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertTrue(rhelPersonalBitsProduct==null,rhelPersonalBitsProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unsubscribed from the "+rhelPersonalProductName+" on client1");
+	}
+	@Test(	description="subscription-manager-cli: Ensure that the entitlement cert for RHEL Personal Bits is revoked once the person unregisters",
+			groups={"myDevGroup","MultiClientEnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnregisters_Test","MultiClientRHELPersonal", "blockedByBug-624063"},
+			dependsOnGroups={"MultiClientEnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="55702")
+	public void MultiClientEnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnregisters_Test() {
+		// setup... make sure the clients are not subscribed to anything
+		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+		log.info("Subscribe client1 (already registered as a person under username '"+clientusername+"') to product subscription "+rhelPersonalProductName+"...");
+		SubscriptionPool rhelPersonalPool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalProductName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertTrue(rhelPersonalPool!=null,rhelPersonalProductName+" is available to user '"+clientusername+"' registered as a person.");
+		client1tasks.subscribe(rhelPersonalPool.poolId, null, null, null, null);
+
+		
+		log.info("Subscribe client2 (already registered as a system under username '"+clientusername+"') to product subscription "+rhelPersonalBitsProductName+"...");
+		SubscriptionPool rhelPersonalBitsPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",rhelPersonalBitsProductName,client2tasks.getCurrentlyAvailableSubscriptionPools());
+		client2tasks.subscribeToSubscriptionPoolUsingPoolId(rhelPersonalBitsPool);
+		ProductSubscription rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertTrue(rhelPersonalBitsProduct!=null,rhelPersonalBitsProductName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"'.");
+
+		
+		log.info("Now, unregister the person on client 1 from the "+rhelPersonalProductName+" pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the "+rhelPersonalBitsProductName+" gets revoked from client2.");
+		client1tasks.unregister();
+		int certFrequencyMinutes = 1;
+		changeCertFrequency(client2, certFrequencyMinutes);
+		sleep(certFrequencyMinutes*60*1000 + 500);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+		rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertTrue(rhelPersonalBitsProduct==null,rhelPersonalBitsProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unregistered from the "+rhelPersonalProductName+" on client1");
 	}
 	@AfterGroups(groups={"myDevGroup"}, value={"MultiClientRHELPersonal"}, alwaysRun=true)
 	public void teardownAfterMultiClientEnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test() {
-		client2tasks.unregister_();
-		client1tasks.unregister_();
+		if (client2tasks!=null) client2tasks.unregister_();
+		if (client1tasks!=null) client1tasks.unregister_();
 	}
 	
 	

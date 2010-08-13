@@ -147,8 +147,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	@AfterSuite(groups={"setup"},description="subscription manager tear down")
 	public void teardownAfterSuite() {
-		if (clienttasks!=null) clienttasks.unregister_();	// release the entitlements consumed by the current registration
 		if (client2tasks!=null) client2tasks.unregister_();	// release the entitlements consumed by the current registration
+		if (client1tasks!=null) client1tasks.unregister_();	// release the entitlements consumed by the current registration
 	}
 	
 	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){
@@ -293,11 +293,10 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 
 	}
 
-	
-	public void sleep(long i) {
-		log.info("Sleeping for "+i+" milliseconds...");
+	public void sleep(long milliseconds) {
+		log.info("Sleeping for "+milliseconds+" milliseconds...");
 		try {
-			Thread.sleep(i);
+			Thread.sleep(milliseconds);
 		} catch (InterruptedException e) {
 			log.info("Sleep interrupted!");
 		}

@@ -1,5 +1,7 @@
 package com.redhat.qe.sm.tasks;
 
+import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -123,6 +125,10 @@ public class ModuleTasks {
 		return pkgMap;
 	}
 
+	/**
+	 * @param productSubscription
+	 * @return the SubscriptionPool from which this consumed ProductSubscription came from
+	 */
 	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription) {
 		
 		// if already known, return the SubscriptionPool from which ProductSubscription came
@@ -131,6 +137,94 @@ public class ModuleTasks {
 		productSubscription.fromPool = getCurrentSerialMapOfSubscriptionPools().get(productSubscription.serialNumber);
 
 		return productSubscription.fromPool;
+	}
+	
+//	/**
+//	 * @param subscriptionName
+//	 * @param subscriptionPools - usually getCurrentlyAvailableSubscriptionPools()
+//	 * @return the SubscriptionPool from subscriptionPools whose name is subscriptionName (if not found, null is returned)
+//	 */
+//	public SubscriptionPool findSubscriptionPoolWithNameFrom(String subscriptionName, List<SubscriptionPool> subscriptionPools) {
+//		
+//		SubscriptionPool subscriptionPoolWithSubscriptionName = null;
+//		for (SubscriptionPool subscriptionPool : subscriptionPools) {
+//			if (subscriptionPool.subscriptionName.equals(subscriptionName)) subscriptionPoolWithSubscriptionName = subscriptionPool;
+//		}
+//		return subscriptionPoolWithSubscriptionName;
+//	}
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param subscriptionPools - usually getCurrentlyAvailableSubscriptionPools()
+	 * @return - the SubscriptionPool from subscriptionPools that has a matching field (if not found, null is returned)
+	 */
+	public SubscriptionPool findSubscriptionPoolWithMatchingFieldFromList(String fieldName, Object fieldValue, List<SubscriptionPool> subscriptionPools) {
+		
+		SubscriptionPool subscriptionPoolWithMatchingField = null;
+		for (SubscriptionPool subscriptionPool : subscriptionPools) {
+			try {
+				if (SubscriptionPool.class.getField(fieldName).get(subscriptionPool).equals(fieldValue)) {
+					subscriptionPoolWithMatchingField = subscriptionPool;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return subscriptionPoolWithMatchingField;
+	}
+	
+//	/**
+//	 * @param productName
+//	 * @param productSubscriptions - usually getCurrentlyConsumedProductSubscriptions()
+//	 * @return the ProductSubscription from productSubscriptions whose name is productName (if not found, null is returned)
+//	 */
+//	public ProductSubscription findProductSubscriptionWithNameFrom(String productName, List<ProductSubscription> productSubscriptions) {
+//		ProductSubscription productSubscriptionWithProductName = null;
+//		for (ProductSubscription productSubscription : productSubscriptions) {
+//			if (productSubscription.productName.equals(productName)) productSubscriptionWithProductName = productSubscription;
+//		}
+//		return productSubscriptionWithProductName;
+//	}
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param productSubscriptions - usually getCurrentlyConsumedProductSubscriptions()
+	 * @return - the ProductSubscription from productSubscriptions that has a matching field (if not found, null is returned)
+	 */
+	public ProductSubscription findProductSubscriptionWithMatchingFieldFromList(String fieldName, Object fieldValue, List<ProductSubscription> productSubscriptions) {
+		ProductSubscription productSubscriptionWithMatchingField = null;
+		for (ProductSubscription productSubscription : productSubscriptions) {
+			try {
+				if (ProductSubscription.class.getField(fieldName).get(productSubscription).equals(fieldValue)) {
+					productSubscriptionWithMatchingField = productSubscription;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return productSubscriptionWithMatchingField;
 	}
 	
 	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {

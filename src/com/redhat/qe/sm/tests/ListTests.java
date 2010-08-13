@@ -75,7 +75,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
-		clienttasks.unregister_();
+		if (clienttasks!=null) clienttasks.unregister_();
 	}
 	
 	
@@ -103,7 +103,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
-		clienttasks.unregister_();
+		if (clienttasks!=null) clienttasks.unregister_();
 	}
 	
 	
