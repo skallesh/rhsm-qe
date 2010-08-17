@@ -1,23 +1,28 @@
 package com.redhat.qe.sm.tests;
 
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
-
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.abstractions.CandlepinAbstraction;
 import com.redhat.qe.sm.abstractions.EntitlementCert;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
+import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 @Test(groups={"subscribe"})
@@ -133,7 +138,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
-		this.adjustRHSMYumRepo(true);
+		clienttasks.adjustRHSMYumRepo(true);
 
 		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 1. Repolist contains repositories corresponding to your entitled products
@@ -144,7 +149,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 //		}
 		
 		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 0
-		this.adjustRHSMYumRepo(false);
+		clienttasks.adjustRHSMYumRepo(false);
 		
 		// 2. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 2. Repolist does not contain repositories corresponding to your entitled products
@@ -206,7 +211,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			enabled=false)
 	@ImplementsTCMS(id="41696")
 	public void DisableYumRepoAndVerifyContentNotAvailable_Test(){
-		this.adjustRHSMYumRepo(false);
+		clienttasks.adjustRHSMYumRepo(false);
 		for(SubscriptionPool sub:clienttasks.getCurrentlyAvailableSubscriptionPools())
 			for(String repo:this.getYumRepolist())
 				if(repo.contains(sub.subscriptionName))
@@ -222,21 +227,21 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@ImplementsTCMS(id="41692")
 	public void certFrequency_Test() {
 		int minutes = 1;
-		this.changeCertFrequency(client,minutes);
+		clienttasks.changeCertFrequency(minutes);
 		
-		log.info("Appending a marker in the '"+rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
+		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		String marker = "testing rhsm.conf certFrequency="+minutes; // https://tcms.engineering.redhat.com/case/41692/
-		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+rhsmcertdLogFile,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0),marker,null);
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 
-		this.sleep(minutes*60*1000);	// sleep for the cert frequency
-		this.sleep(1000);	// sleep a second longer
+		sleep(minutes*60*1000 + 500);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+
 //		Assert.assertEquals(RemoteFileTasks.grepFile(client,
 //				rhsmcertdLogFile,
 //				"certificates updated"),
 //				0,
 //				"rhsmcertd reports that certificates have been updated at new interval");
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
 		
 		/* FIXME: Notice from this output that the update may fail a few times before it starts working.  Hence this test often fails as written above.
 		Tue Jul 27 15:33:23 2010: started: interval = 1 minutes
@@ -362,6 +367,14 @@ I don't think that we have valid content data currently baked into the certs, so
 		if (client2==null) throw new SkipException("This test requires a second consumer.");
 		if (clientusername.equals("admin")) throw new SkipException("This test requires that the client user ("+clientusername+") is NOT admin.");
 		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/12/2010
+		Boolean invokeWorkaroundWhileBugIsOpen = false;
+		try {String bugId="624423"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			servertasks.restartTomcat();
+		} // END OF WORKAROUND
+		
+		
 		SubscriptionPool rhelPersonalPool = null;
 		
 		
@@ -462,7 +475,7 @@ I don't think that we have valid content data currently baked into the certs, so
 		log.info("Now, unsubscribe the person on client 1 from the "+rhelPersonalProductName+" pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the "+rhelPersonalBitsProductName+" gets revoked from client2.");
 		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		int certFrequencyMinutes = 1;
-		changeCertFrequency(client2, certFrequencyMinutes);
+		client2tasks.changeCertFrequency(certFrequencyMinutes);
 		sleep(certFrequencyMinutes*60*1000 + 500);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertTrue(rhelPersonalBitsProduct==null,rhelPersonalBitsProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unsubscribed from the "+rhelPersonalProductName+" on client1");
@@ -493,7 +506,7 @@ I don't think that we have valid content data currently baked into the certs, so
 		log.info("Now, unregister the person on client 1 from the "+rhelPersonalProductName+" pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the "+rhelPersonalBitsProductName+" gets revoked from client2.");
 		client1tasks.unregister();
 		int certFrequencyMinutes = 1;
-		changeCertFrequency(client2, certFrequencyMinutes);
+		client2tasks.changeCertFrequency(certFrequencyMinutes);
 		sleep(certFrequencyMinutes*60*1000 + 500);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		rhelPersonalBitsProduct = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",rhelPersonalBitsProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertTrue(rhelPersonalBitsProduct==null,rhelPersonalBitsProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+clientusername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unregistered from the "+rhelPersonalProductName+" on client1");
@@ -506,10 +519,136 @@ I don't think that we have valid content data currently baked into the certs, so
 	
 	
 	
+	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
+			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
+			dependsOnGroups={},
+			dataProvider="getAllAvailableSubscriptionPoolsData",
+			enabled=true)
+	@ImplementsTCMS(id="56025")
+	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) {
+//		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
+//		Actions:
+//
+//		    * In the db list the subscription pools, find a unique pool to work with
+//		    * On a sm client register, subscribe to the pool
+//		    * In the db changed the start/end dates for the subscription pool (cp_subscription)
+//		    * using the server api, refresh the subscription pools
+//		    * on the client check the entitlement certificates ls /etc/pki/entitlement/product
+//		    * use openssl x509 to inspect the certs, notice the start / end dates 
+//		    * on the client restart the rhsmcertd service
+//		    * on the client check the entitlement certificates ls /etc/pki/entitlement/product
+//		    * use openssl x509 to inspect the certs, notice the start / end dates
+//		    * check the crl list on the server and verify the original entitlement cert serials are present 
+//
+//		Expected Results:
+//
+//			* the original entitlement certificates on the client should be removed
+//		   	* new certs should be dropped to the client
+//			* the crl list on the server should be poplulated w/ the old entitlement cert serials
+
+		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
+		
+		log.info("Subscribe client (already registered as a system under username '"+clientusername+"') to subscription pool "+pool+"...");
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+
+		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
+		List<ProductSubscription> products = new ArrayList<ProductSubscription>();
+		for (ProductSubscription product : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			if (clienttasks.getSubscriptionPoolFromProductSubscription(product).equals(pool)) {
+//FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+				Assert.assertTrue(product.endDate.equals(pool.endDate), "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+				products.add(product);
+			}
+		}
+		Calendar originalStartDate = products.get(0).startDate;
+		Calendar originalEndDate = products.get(0).endDate;
+		String originalCertFile = "/etc/pki/entitlement/product/"+products.get(0).serialNumber+".pem";
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),1,"Original certificate file '"+originalCertFile+"' exists.");
+		
+		log.info("Now we will change the start and end date of the subscription pool adding one month to enddate and subtracting one month from startdate...");
+		Calendar newStartDate = originalStartDate; newStartDate.add(Calendar.MONTH, -1);
+		Calendar newEndDate = originalEndDate; newEndDate.add(Calendar.MONTH, 1);
+		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
+		
+		log.info("Now let's refresh the subscription pools...");
+		servertasks.refreshSubscriptionPools(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
+		
+		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
+		clienttasks.changeCertFrequency(1);
+		sleep(1*60*1000 + 500);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+
+		log.info("The updated certs should now be on the client...");
+
+		log.info("First, let's assert that subscription pool reflects the new end date...");
+		List<SubscriptionPool> allSubscriptionPools = client1tasks.getCurrentlyAllAvailableSubscriptionPools();
+		Assert.assertContains(allSubscriptionPools, pool);
+		for (SubscriptionPool newPool : allSubscriptionPools) {
+			if (newPool.equals(pool)) {
+				Assert.assertEquals(SubscriptionPool.formatDateString(newPool.endDate), SubscriptionPool.formatDateString(newEndDate),
+						"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
+				break;
+			}
+		}
+
+		log.info("Second, let's assert that the original cert file '"+originalCertFile+"' is gone...");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),0,"Original certificate file '"+originalCertFile+"' has been removed.");
+
+		log.info("Third, let's assert that consumed product certs have been updated...");
+		String newCertFile = "";
+		for (ProductSubscription product : products) {
+			ProductSubscription newProduct = client1tasks.findProductSubscriptionWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
+			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.startDate), ProductSubscription.formatDateString(newStartDate),
+					"Rhsmcertd has updated the entitled startdate to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product: "+newProduct.productName);
+			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.endDate), ProductSubscription.formatDateString(newEndDate),
+					"Rhsmcertd has updated the entitled enddate to '"+ProductSubscription.formatDateString(newEndDate)+"' for consumed product: "+newProduct.productName);
+
+			log.info("And, let's assert that consumed product cert serial has been updated...");
+			Assert.assertTrue(!newProduct.serialNumber.equals(product.serialNumber), 
+					"The consumed product cert serial has been updated from '"+product.serialNumber+"' to '"+newProduct.serialNumber+"' for product: "+newProduct.productName);
+			newCertFile = "/etc/pki/entitlement/product/"+newProduct.serialNumber+".pem";
+		}
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
+
+		// TODO check the crl list on the server and verify the original entitlement cert serials are present
+		log.info("//TODO check the crl list on the server and verify the original entitlement cert serials are present");
+	}
+	
 	
 	
 	// Protected Methods ***********************************************************************
 
+	
+	/**
+	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
+	 * @param pool
+	 * @param startDate
+	 * @param endDate
+	 */
+	public void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) {
+		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+		String updateSubscriptionPoolEndDateSql = "";
+		String updateSubscriptionPoolStartDateSql = "";
+		if (endDate!=null) {
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+CandlepinAbstraction.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+		}
+		if (startDate!=null) {
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+CandlepinAbstraction.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+		}
+		
+		try {
+			Statement s = dbConnection.createStatement();
+			if (endDate!=null) {
+				Assert.assertEquals(s.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
+			}
+			if (startDate!=null) {
+				Assert.assertEquals(s.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	protected ArrayList<String> getYumRepolist(){
 		ArrayList<String> repos = new ArrayList<String>();
 		client.runCommandAndWait("killall -9 yum");
@@ -532,16 +671,16 @@ I don't think that we have valid content data currently baked into the certs, so
 		return repos;
 	}
 	
-	protected void adjustRHSMYumRepo(boolean enabled){
-		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(client, 
-						rhsmYumRepoFile, 
-						"^enabled=.*$", 
-						"enabled="+(enabled?'1':'0')),
-						0,
-						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
-				);
-	}
+//	protected void adjustRHSMYumRepo(boolean enabled){
+//		Assert.assertEquals(
+//				RemoteFileTasks.searchReplaceFile(client, 
+//						rhsmYumRepoFile, 
+//						"^enabled=.*$", 
+//						"enabled="+(enabled?'1':'0')),
+//						0,
+//						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
+//				);
+//	}
 	
 	
 	// Data Providers ***********************************************************************

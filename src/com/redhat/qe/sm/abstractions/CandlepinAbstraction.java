@@ -2,9 +2,12 @@ package com.redhat.qe.sm.abstractions;
 
 import java.lang.reflect.Field;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +18,7 @@ import java.util.regex.Pattern;
 
 public abstract class CandlepinAbstraction {
 	//public final String dateFormat = "EEE MMM d HH:mm:ss yyyy";
-	public final String dateFormat = "yyyy-MM-dd";
+	public static final String dateFormat = "yyyy-MM-dd";
 	protected static Logger log = Logger.getLogger(CandlepinAbstraction.class.getName());
 	
 
@@ -29,8 +32,10 @@ public abstract class CandlepinAbstraction {
 			Field abstractionField = null;
 			try {
 				abstractionField = this.getClass().getField(keyField);
-				if (abstractionField.getType().equals(Date.class))
-					abstractionField.set(this, this.parseDateString(productData.get(keyField)));
+//				if (abstractionField.getType().equals(Date.class))
+//					abstractionField.set(this, this.parseDateString(productData.get(keyField)));
+				if (abstractionField.getType().equals(Calendar.class))
+					abstractionField.set(this, CandlepinAbstraction.parseDateString(productData.get(keyField)));
 				else if (abstractionField.getType().equals(Integer.class))
 					abstractionField.set(this, Integer.parseInt(productData.get(keyField)));
 				else if (abstractionField.getType().equals(Boolean.class))
@@ -71,15 +76,32 @@ public abstract class CandlepinAbstraction {
 	
 	// protected methods ************************************************************
 
-	protected Date parseDateString(String dateString){
+//	protected Date parseDateString(String dateString){
+//		try{
+//			DateFormat df = new SimpleDateFormat(this.dateFormat);
+//			return df.parse(dateString);
+//		}
+//		catch (Exception e){
+//			log.warning("Unparseable date string: "+dateString+"\nException: "+e.getMessage());
+//			return null;
+//		}
+//	}
+	static public Calendar parseDateString(String dateString){
 		try{
-			DateFormat df = new SimpleDateFormat(this.dateFormat);
-			return df.parse(dateString);
+			DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+			//Date date = dateFormat.parse(dateString);
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(dateFormat.parse(dateString));
+			return calendar;
 		}
-		catch (Exception e){
-			log.warning("Unparseable date string: "+dateString+"\nException: "+e.getMessage());
+		catch (ParseException e){
+			log.warning("Failed to parse date string: "+dateString+"\n"+e.getMessage());
 			return null;
 		}
+	}
+	static public String formatDateString(Calendar date){
+		DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+		return dateFormat.format(date.getTime());
 	}
 	
 	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {

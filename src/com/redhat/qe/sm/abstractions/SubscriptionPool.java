@@ -2,6 +2,7 @@ package com.redhat.qe.sm.abstractions;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -14,9 +15,9 @@ public class SubscriptionPool extends CandlepinAbstraction {
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
 	public String poolId;
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
-	public Date endDate;
+	public Calendar endDate;
 	
-	public Date startDate;
+	public Calendar startDate;
 	public Boolean activeSubscription;
 	public Integer consumed;
 	public ArrayList<ProductSubscription> associatedProductIDs;
@@ -50,14 +51,14 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		String[] components = subscriptionLine.split("\\t");
 		
 		subscriptionName = components[0].trim();
-		endDate = this.parseDateString(components[1].trim());
+		endDate = /*this.*/parseDateString(components[1].trim());
 		poolId = components[2].trim();
 		quantity = components[3].trim();	// Integer.parseInt(components[3].trim());
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	
-	public SubscriptionPool(Date startDate,
-			Date endDate,
+	public SubscriptionPool(Calendar startDate,
+			Calendar endDate,
 			Boolean activeSubscription,
 			Integer consumed,
 			String quantity,	//Integer quantity,
@@ -106,8 +107,8 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		if (quantity != null)			string += String.format(" %s='%s'", "quantity",quantity);
 		if (consumed != null)			string += String.format(" %s='%s'", "consumed",consumed);
 		if (activeSubscription != null)	string += String.format(" %s='%s'", "activeSubscription",activeSubscription);
-		if (startDate != null)			string += String.format(" %s='%s'", "startDate",startDate);
-		if (endDate != null)			string += String.format(" %s='%s'", "endDate",endDate);
+		if (startDate != null)			string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
+		if (endDate != null)			string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 
 
 		return string.trim();

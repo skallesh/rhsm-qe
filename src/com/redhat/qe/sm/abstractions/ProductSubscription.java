@@ -2,6 +2,7 @@ package com.redhat.qe.sm.abstractions;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -14,8 +15,8 @@ public class ProductSubscription extends CandlepinAbstraction {
 	public Integer serialNumber;
 	public Integer contractNumber;
 	public Boolean isActive;
-	public Date startDate;
-	public Date endDate;
+	public Calendar startDate;
+	public Calendar endDate;
 	
 	public SubscriptionPool fromPool;
 	
@@ -45,7 +46,7 @@ public class ProductSubscription extends CandlepinAbstraction {
 		
 		productName = components[0].trim();
 		isActive = components[1].toLowerCase().contains("true");
-		endDate = this.parseDateString(components[2].trim());
+		endDate = /*this.*/parseDateString(components[2].trim());
 	}
 	
 	public ProductSubscription(String productName, SubscriptionPool fromPool){
@@ -71,8 +72,8 @@ public class ProductSubscription extends CandlepinAbstraction {
 		if (serialNumber != null)	string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (contractNumber != null)	string += String.format(" %s='%s'", "contractNumber",contractNumber);
 		if (isActive != null)		string += String.format(" %s='%s'", "isActive",isActive);
-		if (startDate != null)		string += String.format(" %s='%s'", "startDate",startDate);
-		if (endDate != null)		string += String.format(" %s='%s'", "endDate",endDate);
+		if (startDate != null)		string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
+		if (endDate != null)		string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 		if (fromPool != null)		string += String.format(" %s='%s'", "fromPool",fromPool);
 
 		return string.trim();

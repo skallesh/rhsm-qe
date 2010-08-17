@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.abstractions;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,7 @@ public class InstalledProduct extends CandlepinAbstraction {
 	
 	public String productName;
 	public String status;
-	public Date expires;
+	public Calendar expires;
 	public Integer subscription;
 	
 	public InstalledProduct(Map<String, String> productData) {
@@ -30,7 +31,7 @@ public class InstalledProduct extends CandlepinAbstraction {
 		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
 		if (subscription != null)		string += String.format(" %s='%s'", "subscription",subscription);
 		if (status != null)				string += String.format(" %s='%s'", "status",status);
-		if (expires != null)			string += String.format(" %s='%s'", "expires",expires);
+		if (expires != null)			string += String.format(" %s='%s'", "expires",formatDateString(expires));
 
 		return string.trim();
 	}

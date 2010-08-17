@@ -10,5 +10,6 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/ojdbc14.jar"/>
+	<classpathentry kind="lib" path="lib/postgresql-8.4-701.jdbc4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

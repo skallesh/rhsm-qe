@@ -21,19 +21,21 @@ import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.abstractions.InstalledProduct;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
 
-public class ModuleTasks {
+public class SubscriptionManagerTasks {
 
-	protected static Logger log = Logger.getLogger(ModuleTasks.class.getName());
+	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
-	protected String redhatRepoFile = "/etc/yum.repos.d/redhat.repo";
-	
+	public static String redhatRepoFile			= "/etc/yum.repos.d/redhat.repo";
+	public static String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
+	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
+	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 
-	public ModuleTasks() {
+	public SubscriptionManagerTasks() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 	
-	public ModuleTasks(SSHCommandRunner runner) {
+	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
 	}
@@ -41,6 +43,116 @@ public class ModuleTasks {
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
 		sshCommandRunner = runner;
 	}
+	
+	
+	public void installLatestRPM(String rpmLocation, String enablerepofordeps) {
+
+		// verify the subscription-manager client is a rhel 6 machine
+		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
+
+		log.info("Retrieving latest subscription-manager RPM...");
+		String sm_rpm = "/tmp/subscription-manager.rpm";
+		sshCommandRunner.runCommandAndWait("rm -f "+sm_rpm);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmLocation+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
+
+		log.info("Uninstalling existing subscription-manager RPM...");
+		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
+		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
+		
+		log.info("Installing newest subscription-manager RPM...");
+		// using yum localinstall should enable testing on RHTS boxes right off the bat.
+		sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
+
+		log.info("Installed version of subscription-manager RPM...");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
+	}
+	
+	
+	public void cleanOutAllCerts() {
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		
+		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
+		
+		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
+	}
+	
+	public void updateSMConfigFile(String hostname, String port){
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname\\s*=.*$", "hostname="+hostname),
+				0,"Updated rhsm config hostname to point to:" + hostname);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port\\s*=.*$", "port="+port),
+				0,"Updated rhsm config port to point to:" + port);
+		
+		// jsefler - 7/21/2010
+		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
+		// TEMPORARY WORK AROUND TO AVOID ISSUES:
+		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
+		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
+		/*
+		if (isServerOnPremises) {
+
+			log.warning("TEMPORARY WORKAROUND...");
+			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
+		}
+		*/
+		/* Hi,
+		Insecure mode option moved to /etc/rhsm/rhsm.conf file after commandline option(-k, --insecure) failed to gather the popularity votes.
+
+		To enable insecure mode, add the following as a new line to rhsm.conf file
+		insecure_mode=t
+    
+
+		To disable insecure mode, either remove 'insecure_mode' or set it to any value
+		other than 't', 'True', 'true', 1.
+
+		thanks,
+		Ajay
+		*/
+		log.warning("WORKAROUND FOR INSECURITY...");
+		sshCommandRunner.runCommandAndWait("echo \"insecure_mode = true\"  >> "+defaultConfigFile);
+	}
+	
+	
+	public void adjustRHSMYumRepo(boolean enabled){
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
+						rhsmYumRepoFile, 
+						"^enabled=.*$", 
+						"enabled="+(enabled?'1':'0')),
+						0,
+						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
+				);
+	}
+	
+	
+	/**
+	 * Update the minutes value for the certFrequency setting in the default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
+	 * @param sshCommandRunner
+	 * @param minutes
+	 */
+	public void changeCertFrequency(int minutes){
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
+				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
+//		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
+//		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+minutes+"\\[  OK  \\]$",null);
+//		Assert.assertEquals(
+//				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
+//				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
+
+
+	}
+	
+	
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAvailable().getStdout());
@@ -75,6 +187,9 @@ public class ModuleTasks {
 //		return SubscriptionPool.parseCerts(certificate);
 //	}
 //	SubscriptionPool pool = new SubscriptionPool(cert.from_productId, cert.from_poolId);
+	/**
+	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
+	 */
 	public Map<Integer,SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
 		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
