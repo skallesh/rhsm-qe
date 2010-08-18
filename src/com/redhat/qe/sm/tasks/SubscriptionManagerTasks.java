@@ -839,5 +839,11 @@ repolist: 0
 		return true;
 	}
 	
-
+	protected void runRHSMCallAsLang(String lang,String rhsmCall){
+		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
+	}
+	
+	protected void setLanguage(String lang){
+		sshCommandRunner.runCommandAndWait("export LANG="+lang);
+	}
 }

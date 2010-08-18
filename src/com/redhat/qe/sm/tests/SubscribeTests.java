@@ -367,7 +367,7 @@ I don't think that we have valid content data currently baked into the certs, so
 		if (client2==null) throw new SkipException("This test requires a second consumer.");
 		if (clientusername.equals("admin")) throw new SkipException("This test requires that the client user ("+clientusername+") is NOT admin.");
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/12/2010
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=624423 - jsefler 8/16/2010
 		Boolean invokeWorkaroundWhileBugIsOpen = false;
 		try {String bugId="624423"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {

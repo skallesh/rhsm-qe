@@ -32,6 +32,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
 	protected String serverInstallDir		= System.getProperty("rhsm.server.installdir");
 	protected String serverImportDir		= System.getProperty("rhsm.server.importdir");
+	protected String serverBranch			= System.getProperty("rhsm.server.branch");
 	protected Boolean isServerOnPremises	= Boolean.valueOf(System.getProperty("rhsm.server.onpremises","false"));
 
 	protected String client1hostname		= System.getProperty("rhsm.client1.hostname");
@@ -80,6 +81,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	protected String rpmLocation			= System.getProperty("rhsm.rpm.url");
 
+//DELETEME
+//MOVED TO TASKS CLASSES
 //	protected String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
 //	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 //	protected String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
@@ -133,7 +136,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		
 		// setup the server
 		if (server!=null && isServerOnPremises) {
-			servertasks.deployLatestGitTag(serverInstallDir,serverImportDir);
+			servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
 		} 
 		
 		// connect to the server database
@@ -195,7 +198,9 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			}	// close the connection to the database
 
 	}
-	
+
+//DELETEME
+//MOVED TO TASKS CLASSES
 //	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){
 //		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
 //		
@@ -272,7 +277,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	*/
 	
 
-	
+	//DELETEME
+	//MOVED TO TASKS CLASSES	
 //	private void installLatestRPM(SSHCommandRunner sshCommandRunner) {
 //
 //		// verify the subscription-manager client is a rhel 6 machine
@@ -368,13 +374,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		return Math.abs(gen.nextInt());
 	}
 	
-	public void runRHSMCallAsLang(SSHCommandRunner sshCommandRunner, String lang,String rhsmCall){
-		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
-	}
-	
-	public void setLanguage(SSHCommandRunner sshCommandRunner, String lang){
-		sshCommandRunner.runCommandAndWait("export LANG="+lang);
-	}
+//	public void runRHSMCallAsLang(SSHCommandRunner sshCommandRunner, String lang,String rhsmCall){
+//		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
+//	}
+//	
+//	public void setLanguage(SSHCommandRunner sshCommandRunner, String lang){
+//		sshCommandRunner.runCommandAndWait("export LANG="+lang);
+//	}
 	
 
 	// Data Providers ***********************************************************************
