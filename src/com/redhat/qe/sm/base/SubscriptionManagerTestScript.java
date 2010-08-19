@@ -143,11 +143,11 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		connectToDatabase();
 		
 		// setup the client(s)
-		client1tasks.installLatestRPM(rpmLocation,enablerepofordeps);
+		client1tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
 		client1tasks.updateSMConfigFile(serverHostname, serverPort);
 		client1tasks.changeCertFrequency(certFrequency);
 		client1tasks.cleanOutAllCerts();
-		if (client2tasks!=null) client2tasks.installLatestRPM(rpmLocation,enablerepofordeps);
+		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
 		if (client2tasks!=null) client2tasks.updateSMConfigFile(serverHostname, serverPort);
 		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency);
 		if (client2tasks!=null) client2tasks.cleanOutAllCerts();

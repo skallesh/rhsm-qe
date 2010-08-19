@@ -45,13 +45,13 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	public void installLatestRPM(String rpmLocation, String enablerepofordeps) {
+	public void installSubscriptionManagerRPM(String rpmLocation, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 
-		log.info("Retrieving latest subscription-manager RPM...");
+		log.info("Retrieving subscription-manager RPM...");
 		String sm_rpm = "/tmp/subscription-manager.rpm";
 		sshCommandRunner.runCommandAndWait("rm -f "+sm_rpm);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmLocation+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
@@ -62,7 +62,7 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
 		
-		log.info("Installing newest subscription-manager RPM...");
+		log.info("Installing subscription-manager RPM...");
 		// using yum localinstall should enable testing on RHTS boxes right off the bat.
 		sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
 

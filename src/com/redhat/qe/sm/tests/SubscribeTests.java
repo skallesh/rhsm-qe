@@ -624,7 +624,7 @@ I don't think that we have valid content data currently baked into the certs, so
 	 * @param startDate
 	 * @param endDate
 	 */
-	public void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) {
+	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) {
 		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
