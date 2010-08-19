@@ -20,6 +20,11 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+/**
+ * @author ssalevan
+ * @author jsefler
+ *
+ */
 @Test(groups={"register"})
 public class RegisterTests extends SubscriptionManagerTestScript {
 	

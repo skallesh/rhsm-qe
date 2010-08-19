@@ -10,6 +10,10 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 
+/**
+ * @author ssalevan
+ *
+ */
 @Test(groups={"unregister"})
 public class UnregisterTests extends SubscriptionManagerTestScript {
 	

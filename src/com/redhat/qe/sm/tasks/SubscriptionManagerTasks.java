@@ -21,6 +21,10 @@ import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.abstractions.InstalledProduct;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
 
+/**
+ * @author jsefler
+ *
+ */
 public class SubscriptionManagerTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
@@ -82,42 +86,52 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
 	}
 	
-	public void updateSMConfigFile(String hostname, String port){
+	public void updateSMConfigFileParameter(String parameter, String value){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname\\s*=.*$", "hostname="+hostname),
-				0,"Updated rhsm config hostname to point to:" + hostname);
-		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port\\s*=.*$", "port="+port),
-				0,"Updated rhsm config port to point to:" + port);
-		
-		// jsefler - 7/21/2010
-		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
-		// TEMPORARY WORK AROUND TO AVOID ISSUES:
-		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
-		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
-		/*
-		if (isServerOnPremises) {
-
-			log.warning("TEMPORARY WORKAROUND...");
-			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
-		}
-		*/
-		/* Hi,
-		Insecure mode option moved to /etc/rhsm/rhsm.conf file after commandline option(-k, --insecure) failed to gather the popularity votes.
-
-		To enable insecure mode, add the following as a new line to rhsm.conf file
-		insecure_mode=t
-    
-
-		To disable insecure mode, either remove 'insecure_mode' or set it to any value
-		other than 't', 'True', 'true', 1.
-
-		thanks,
-		Ajay
-		*/
-		log.warning("WORKAROUND FOR INSECURITY...");
-		sshCommandRunner.runCommandAndWait("echo \"insecure_mode = true\"  >> "+defaultConfigFile);
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
+				0,"Updated rhsm config parameter '"+parameter+"' to value: " + value);
 	}
+	
+//	public void updateSMConfigFile(String hostname, String port){
+//		Assert.assertEquals(
+//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname\\s*=.*$", "hostname="+hostname),
+//				0,"Updated rhsm config hostname to point to:" + hostname);
+//		Assert.assertEquals(
+//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port\\s*=.*$", "port="+port),
+//				0,"Updated rhsm config port to point to:" + port);
+//		
+//		// jsefler - 7/21/2010
+//		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
+//		// TEMPORARY WORK AROUND TO AVOID ISSUES:
+//		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
+//		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
+//		/*
+//		if (isServerOnPremises) {
+//
+//			log.warning("TEMPORARY WORKAROUND...");
+//			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
+//		}
+//		*/
+//		/* Hi,
+//		Insecure mode option moved to /etc/rhsm/rhsm.conf file after commandline option(-k, --insecure) failed to gather the popularity votes.
+//
+//		To enable insecure mode, add the following as a new line to rhsm.conf file
+//		insecure_mode=t
+//    
+//
+//		To disable insecure mode, either remove 'insecure_mode' or set it to any value
+//		other than 't', 'True', 'true', 1.
+//
+//		thanks,
+//		Ajay
+//		*/
+//		log.warning("WORKAROUND FOR INSECURITY...");
+//		//sshCommandRunner.runCommandAndWait("echo \"insecure_mode = true\"  >> "+defaultConfigFile);	// prior workaround
+//		Assert.assertEquals(
+//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^insecure\\s*=.*$", "insecure=1"),
+//				0,"Updated rhsm config insecure to: 1");
+//
+//	}
 	
 	
 	public void adjustRHSMYumRepo(boolean enabled){
@@ -138,9 +152,10 @@ public class SubscriptionManagerTasks {
 	 * @param minutes
 	 */
 	public void changeCertFrequency(int minutes){
-		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
-				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
+		updateSMConfigFileParameter("certFrequency", String.valueOf(minutes));
+//		Assert.assertEquals(
+//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
+//				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
 //		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
 //		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+minutes+"\\[  OK  \\]$",null);

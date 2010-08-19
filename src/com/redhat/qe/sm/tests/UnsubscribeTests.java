@@ -17,6 +17,11 @@ import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 
+/**
+ * @author ssalevan
+ * @author jsefler
+ *
+ */
 @Test(groups={"unsubscribe"})
 public class UnsubscribeTests extends SubscriptionManagerTestScript{
 	

@@ -23,6 +23,11 @@ import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+/**
+ * @author ssalevan
+ * @author jsefler
+ *
+ */
 public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.TestScript{
 //	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
 //	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
@@ -118,6 +123,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.tasks.CandlepinTasks(server);
 
+			// also connect to the candlepin server database
+			connectToDatabase();
 		} else {
 			log.info("Assuming the server is already setup and running.");
 		}
@@ -139,16 +146,19 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
 		} 
 		
-		// connect to the server database
-		connectToDatabase();
-		
 		// setup the client(s)
 		client1tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
-		client1tasks.updateSMConfigFile(serverHostname, serverPort);
+		client1tasks.updateSMConfigFileParameter("hostname", serverHostname);
+		client1tasks.updateSMConfigFileParameter("port", serverPort);
+		client1tasks.updateSMConfigFileParameter("insecure", "1");
+//		client1tasks.updateSMConfigFile(serverHostname, serverPort);
 		client1tasks.changeCertFrequency(certFrequency);
 		client1tasks.cleanOutAllCerts();
 		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
-		if (client2tasks!=null) client2tasks.updateSMConfigFile(serverHostname, serverPort);
+//		if (client2tasks!=null) client2tasks.updateSMConfigFile(serverHostname, serverPort);
+		if (client2tasks!=null) client2tasks.updateSMConfigFileParameter("hostname", serverHostname);
+		if (client2tasks!=null) client2tasks.updateSMConfigFileParameter("port", serverPort);
+		if (client2tasks!=null) client2tasks.updateSMConfigFileParameter("insecure", "1");
 		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency);
 		if (client2tasks!=null) client2tasks.cleanOutAllCerts();
 		// transfer a copy of the CA Cert from the candlepin server to the client

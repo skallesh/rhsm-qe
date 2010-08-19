@@ -6,6 +6,10 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
+/**
+ * @author jsefler
+ *
+ */
 public class CandlepinTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
@@ -63,6 +67,9 @@ public class CandlepinTasks {
 	public void refreshSubscriptionPools(String server, String port, String owner, String password) {
 		log.info("Refreshing the subscription pools for owner '"+owner+"' on candlepin server '"+server+"'...");
 		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://localhost:8443/candlepin/owners/admin/subscriptions
+		// /usr/bin/curl -u candlepin_system_admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://candlepin1.devlab.phx1.redhat.com:443/candlepin/owners/1616678/subscriptions
+		//                                                                                                                                                                                                             ^orgid of the user for whom you are refreshing pools can be found by connecting to the database -> see https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/entitlement_qe_get_products
+
 		String command = "/usr/bin/curl -u "+owner+":"+password+" -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://"+server+":"+port+"/candlepin/owners/"+owner+"/subscriptions";
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 	}

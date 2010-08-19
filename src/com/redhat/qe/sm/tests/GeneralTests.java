@@ -13,6 +13,11 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 
+/**
+ * @author ssalevan
+ * @author jsefler
+ *
+ */
 @Test(groups={"general"})
 public class GeneralTests extends SubscriptionManagerTestScript{
 	

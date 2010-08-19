@@ -107,4 +107,39 @@
 		</groups>
 	</test>
 	
+	<test name="Multi-client Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="multi-client" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="RHEL Personal Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="rhelPersonal" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Certificate Revocation List (CRL) Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="crl" />
+			</run>
+		</groups>
+	</test>
 </suite>
