@@ -65,7 +65,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 	
 
 	 @Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are available and unlimited after a person has subscribed to RHEL Personal",
-			groups={"EnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal"},
+			groups={"EnsureRHELPersonalBitsAreAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal"/*, "blockedByBug-624816"*/},
 			dataProvider="getRHELPersonalData",
 			enabled=true)
 	@ImplementsTCMS(id="55702,55718")
@@ -113,7 +113,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') should now have '"+systemSubscriptionName+"' available with unlimited quantity...");
 		List<SubscriptionPool> client2AfterSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2AfterSubscriptionPools);
-		Assert.assertTrue(systemSubscriptionPool!=null,systemSubscriptionName+" is now available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"'.");
+		Assert.assertTrue(systemSubscriptionPool!=null,systemSubscriptionName+" is now available to client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+consumerUsername+"')");
 		Assert.assertEquals(systemSubscriptionPool.quantity.toLowerCase(),"unlimited","An unlimited quantity of entitlements is available to "+systemSubscriptionName+".");
 		
 		

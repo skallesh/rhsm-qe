@@ -2,6 +2,7 @@ package com.redhat.qe.sm.base;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -123,8 +124,6 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.tasks.CandlepinTasks(server);
 
-			// also connect to the candlepin server database
-			connectToDatabase();
 		} else {
 			log.info("Assuming the server is already setup and running.");
 		}
@@ -144,6 +143,9 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		// setup the server
 		if (server!=null && isServerOnPremises) {
 			servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
+			
+			// also connect to the candlepin server database
+			connectToDatabase();
 		} 
 		
 		// setup the client(s)
@@ -231,6 +233,9 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
 			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
 			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword); 
+			DatabaseMetaData dbmd = dbConnection.getMetaData(); //get MetaData to confirm connection
+		    log.fine("Connection to "+dbmd.getDatabaseProductName()+" "+dbmd.getDatabaseProductVersion()+" successful.\n");
+
 		} 
 		catch (ClassNotFoundException e) { 
 			log.warning("JDBC driver not found!:\n" + e.getMessage());

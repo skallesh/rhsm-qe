@@ -31,7 +31,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsTCMS(id="56025")
-	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) {
+	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws SQLException {
 //		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 //		Actions:
 //
@@ -66,14 +66,14 @@ public class CRLTests extends SubscriptionManagerTestScript{
 				products.add(product);
 			}
 		}
-		Calendar originalStartDate = products.get(0).startDate;
-		Calendar originalEndDate = products.get(0).endDate;
+		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
+		Calendar originalEndDate = (Calendar) products.get(0).endDate.clone();
 		String originalCertFile = "/etc/pki/entitlement/product/"+products.get(0).serialNumber+".pem";
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),1,"Original certificate file '"+originalCertFile+"' exists.");
 		
 		log.info("Now we will change the start and end date of the subscription pool adding one month to enddate and subtracting one month from startdate...");
-		Calendar newStartDate = originalStartDate; newStartDate.add(Calendar.MONTH, -1);
-		Calendar newEndDate = originalEndDate; newEndDate.add(Calendar.MONTH, 1);
+		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
+		Calendar newEndDate = (Calendar) originalEndDate.clone(); newEndDate.add(Calendar.MONTH, 1);
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
@@ -129,8 +129,9 @@ public class CRLTests extends SubscriptionManagerTestScript{
 	 * @param pool
 	 * @param startDate
 	 * @param endDate
+	 * @throws SQLException 
 	 */
-	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) {
+	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) throws SQLException {
 		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
@@ -141,18 +142,16 @@ public class CRLTests extends SubscriptionManagerTestScript{
 			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+CandlepinAbstraction.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
 		}
 		
-		try {
-			Statement s = dbConnection.createStatement();
-			if (endDate!=null) {
-				Assert.assertEquals(s.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
-			}
-			if (startDate!=null) {
-				Assert.assertEquals(s.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		Statement sql = dbConnection.createStatement();
+		if (endDate!=null) {
+			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
 		}
+		if (startDate!=null) {
+			log.fine("Executing SQL: "+updateSubscriptionPoolStartDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
+		}
+		sql.close();
 	}
 	
 
