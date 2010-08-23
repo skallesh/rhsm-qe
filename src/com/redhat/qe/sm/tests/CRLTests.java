@@ -13,6 +13,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.CandlepinAbstraction;
 import com.redhat.qe.sm.abstractions.ProductSubscription;
+import com.redhat.qe.sm.abstractions.RevokedCert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -86,7 +87,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 		log.info("The updated certs should now be on the client...");
 
 		log.info("First, let's assert that subscription pool reflects the new end date...");
-		List<SubscriptionPool> allSubscriptionPools = client1tasks.getCurrentlyAllAvailableSubscriptionPools();
+		List<SubscriptionPool> allSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		Assert.assertContains(allSubscriptionPools, pool);
 		for (SubscriptionPool newPool : allSubscriptionPools) {
 			if (newPool.equals(pool)) {
@@ -102,7 +103,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 		log.info("Third, let's assert that consumed product certs have been updated...");
 		String newCertFile = "";
 		for (ProductSubscription product : products) {
-			ProductSubscription newProduct = client1tasks.findProductSubscriptionWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
+			ProductSubscription newProduct = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.startDate), ProductSubscription.formatDateString(newStartDate),
 					"Rhsmcertd has updated the entitled startdate to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product: "+newProduct.productName);
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.endDate), ProductSubscription.formatDateString(newEndDate),
@@ -115,8 +116,14 @@ public class CRLTests extends SubscriptionManagerTestScript{
 		}
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
 
-		// TODO check the crl list on the server and verify the original entitlement cert serials are present
-		log.info("//TODO check the crl list on the server and verify the original entitlement cert serials are present");
+		log.info("Finally, check the crl list on the server and verify the original entitlement cert serials are revoked...");
+		sleep(1*60*1000);sleep(10000);	// give the CertificateRevocationListTask.schedule another minute to update the list
+		// NOTE: The refresh schedule was set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
+		for (ProductSubscription product : products) {
+			RevokedCert revokedCert = servertasks.findRevokedCertWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());
+			Assert.assertTrue(revokedCert!=null,"Original entitlement certificate serial number '"+product.serialNumber+"' for product '"+product.productName+"' has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
+			Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","Expanding the certificate start and end dates should revoke the certificated with a reason code of Privilege Withdrawn");
+		}
 	}
 	
 	

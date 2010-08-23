@@ -18,7 +18,8 @@ public class InstalledProduct extends CandlepinAbstraction {
 	public InstalledProduct(Map<String, String> productData) {
 		super(productData);
 	}
-
+	
+	
 	@Override
 	public String toString() {
 		

@@ -22,6 +22,8 @@ public class SubscriptionPool extends CandlepinAbstraction {
 	public Integer consumed;
 	public ArrayList<ProductSubscription> associatedProductIDs;
 	
+	
+	
 	public Boolean isConsumed(){
 		return (consumed > 0);
 	}

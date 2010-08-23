@@ -1,8 +1,12 @@
 package com.redhat.qe.sm.tasks;
 
+import java.util.List;
 import java.util.logging.Logger;
 
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.abstractions.RevokedCert;
+import com.redhat.qe.sm.abstractions.EntitlementCert;
+import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -14,7 +18,8 @@ public class CandlepinTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
-	
+	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
+	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 
 	public CandlepinTasks() {
 		super();
@@ -64,6 +69,23 @@ public class CandlepinTasks {
 		*/
 	}
 	
+	public void cleanOutCRL() {
+		log.info("Cleaning out the certificate revocation list (CRL) "+candlepinCRLFile+"...");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -f "+candlepinCRLFile, 0);
+	}
+	
+	/**
+	 * Note: Updating the candlepin server conf files requires a restart of the tomact server.
+	 * @param parameter
+	 * @param value
+	 * 
+	 */
+	public void updateConfigFileParameter(String parameter, String value){
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
+				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
+	}
+	
 	public void refreshSubscriptionPools(String server, String port, String owner, String password) {
 		log.info("Refreshing the subscription pools for owner '"+owner+"' on candlepin server '"+server+"'...");
 		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://localhost:8443/candlepin/owners/admin/subscriptions
@@ -76,5 +98,42 @@ public class CandlepinTasks {
 	
 	public void restartTomcat() {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
+	}
+	
+	public List<RevokedCert> getCurrentlyRevokedCerts() {
+		sshCommandRunner.runCommandAndWait("openssl crl -noout -text -in "+candlepinCRLFile);
+		String crls = sshCommandRunner.getStdout();
+		return RevokedCert.parse(crls);
+	}
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param revokedCerts - usually getCurrentlyRevokedCerts()
+	 * @return - the RevokedCert from revokedCerts that has a matching field (if not found, null is returned)
+	 */
+	public RevokedCert findRevokedCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<RevokedCert> revokedCerts) {
+		
+		RevokedCert revokedCertWithMatchingField = null;
+		for (RevokedCert revokedCert : revokedCerts) {
+			try {
+				if (RevokedCert.class.getField(fieldName).get(revokedCert).equals(fieldValue)) {
+					revokedCertWithMatchingField = revokedCert;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return revokedCertWithMatchingField;
 	}
 }

@@ -17,8 +17,7 @@ import java.util.regex.Pattern;
 
 
 public abstract class CandlepinAbstraction {
-	//public final String dateFormat = "EEE MMM d HH:mm:ss yyyy";
-	public static final String dateFormat = "yyyy-MM-dd";
+	protected static String simpleDateFormat = "yyyy-MM-dd";	// 2010-07-01	// default SimpleDateFormat 
 	protected static Logger log = Logger.getLogger(CandlepinAbstraction.class.getName());
 	
 
@@ -35,9 +34,11 @@ public abstract class CandlepinAbstraction {
 //				if (abstractionField.getType().equals(Date.class))
 //					abstractionField.set(this, this.parseDateString(productData.get(keyField)));
 				if (abstractionField.getType().equals(Calendar.class))
-					abstractionField.set(this, CandlepinAbstraction.parseDateString(productData.get(keyField)));
+					abstractionField.set(this, this.parseDateString(productData.get(keyField)));
+//				else if (abstractionField.getType().equals(Integer.class))
+//					abstractionField.set(this, Integer.parseInt(productData.get(keyField)));
 				else if (abstractionField.getType().equals(Integer.class))
-					abstractionField.set(this, Integer.parseInt(productData.get(keyField)));
+					abstractionField.set(this, this.parseInt(productData.get(keyField)));
 				else if (abstractionField.getType().equals(Boolean.class))
 					abstractionField.set(this, productData.get(keyField).toLowerCase().contains("true"));
 				else
@@ -76,32 +77,30 @@ public abstract class CandlepinAbstraction {
 	
 	// protected methods ************************************************************
 
-//	protected Date parseDateString(String dateString){
-//		try{
-//			DateFormat df = new SimpleDateFormat(this.dateFormat);
-//			return df.parse(dateString);
-//		}
-//		catch (Exception e){
-//			log.warning("Unparseable date string: "+dateString+"\nException: "+e.getMessage());
-//			return null;
-//		}
-//	}
-	static public Calendar parseDateString(String dateString){
+	protected Calendar parseDateString(String dateString){
+		return parseDateString(dateString, simpleDateFormat);
+	}
+	
+	protected final Calendar parseDateString(String dateString, String simpleDateFormat){
 		try{
-			DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
-			//Date date = dateFormat.parse(dateString);
+			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
 			Calendar calendar = Calendar.getInstance();
 			calendar.setTime(dateFormat.parse(dateString));
 			return calendar;
 		}
 		catch (ParseException e){
-			log.warning("Failed to parse date string: "+dateString+"\n"+e.getMessage());
+			log.warning("Failed to parse date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
 			return null;
 		}
 	}
-	static public String formatDateString(Calendar date){
-		DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+
+	public static String formatDateString(Calendar date){
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
 		return dateFormat.format(date.getTime());
+	}
+	
+	protected Integer parseInt(String intString){
+		return Integer.parseInt(intString);
 	}
 	
 	static protected boolean addRegexMatchesToList(Pattern regex, String to_parse, List<Map<String,String>> matchList, String sub_key) {

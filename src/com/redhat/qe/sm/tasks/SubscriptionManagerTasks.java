@@ -86,7 +86,7 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
 	}
 	
-	public void updateSMConfigFileParameter(String parameter, String value){
+	public void updateConfigFileParameter(String parameter, String value){
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
 				0,"Updated rhsm config parameter '"+parameter+"' to value: " + value);
@@ -152,7 +152,7 @@ public class SubscriptionManagerTasks {
 	 * @param minutes
 	 */
 	public void changeCertFrequency(int minutes){
-		updateSMConfigFileParameter("certFrequency", String.valueOf(minutes));
+		updateConfigFileParameter("certFrequency", String.valueOf(minutes));
 //		Assert.assertEquals(
 //				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
 //				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");

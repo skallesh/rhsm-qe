@@ -142,25 +142,27 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		
 		// setup the server
 		if (server!=null && isServerOnPremises) {
+			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");
+			servertasks.cleanOutCRL();
 			servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
 			
 			// also connect to the candlepin server database
-			connectToDatabase();
+			connectToDatabase();  // do this after the call to deploy since it will restart postgresql
 		} 
 		
 		// setup the client(s)
 		client1tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
-		client1tasks.updateSMConfigFileParameter("hostname", serverHostname);
-		client1tasks.updateSMConfigFileParameter("port", serverPort);
-		client1tasks.updateSMConfigFileParameter("insecure", "1");
+		client1tasks.updateConfigFileParameter("hostname", serverHostname);
+		client1tasks.updateConfigFileParameter("port", serverPort);
+		client1tasks.updateConfigFileParameter("insecure", "1");
 //		client1tasks.updateSMConfigFile(serverHostname, serverPort);
 		client1tasks.changeCertFrequency(certFrequency);
 		client1tasks.cleanOutAllCerts();
 		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
 //		if (client2tasks!=null) client2tasks.updateSMConfigFile(serverHostname, serverPort);
-		if (client2tasks!=null) client2tasks.updateSMConfigFileParameter("hostname", serverHostname);
-		if (client2tasks!=null) client2tasks.updateSMConfigFileParameter("port", serverPort);
-		if (client2tasks!=null) client2tasks.updateSMConfigFileParameter("insecure", "1");
+		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
+		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
+		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
 		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency);
 		if (client2tasks!=null) client2tasks.cleanOutAllCerts();
 		// transfer a copy of the CA Cert from the candlepin server to the client
@@ -211,16 +213,6 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 
 	}
 
-//DELETEME
-//MOVED TO TASKS CLASSES
-//	private void cleanOutAllCerts(SSHCommandRunner sshCommandRunner){
-//		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
-//		
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
-//		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
-//		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
-//		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
-//	}
 	
 	public void connectToDatabase() {
 		try { 
@@ -244,42 +236,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			log.warning("Could not connect to backend database:\n" + e.getMessage());
 		}
 	}
-//DELETEME
-//	public void updatePostgres() {
-//			String result = "";
-//			int update_count = 0;
-//			try {
-//				Statement s = dbConnection.createStatement();
-//				update_count = s.executeUpdate("update cp_subscription set enddate='2021-01-22' where id=(select pool.subscriptionid from cp_pool pool where pool.id='11');");
-//			} catch (SQLException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
-//			log.info(result + "  "+update_count);
-//	}
-	/*
-	public void connectToDatabase(){
-		itDBConnection = null; 
-		try { 
-			// Load the JDBC driver 
-			String driverName = this.itDBSQLDriver;
-			Class.forName(driverName); 
-			// Create a connection to the database
-			String serverName = this.itDBHostname;
-			String portNumber = this.itDBPort;
-			String sid = this.itDBDatabase;
-			String url = "jdbc:oracle:thin:@" + serverName + ":" + portNumber + ":" + sid;
-			String username = this.itDBUsername;
-			String password = this.itDBPassword;
-			itDBConnection = DriverManager.getConnection(url, username, password); 
-			} 
-		catch (ClassNotFoundException e) { 
-			log.warning("Oracle JDBC driver not found!");
-		} 
-		catch (SQLException e) {
-			log.warning("Could not connect to backend IT database!  Traceback:\n" + e.getMessage());
-		}
-	}
+
+	/* DELETEME  OLD CODE FROM ssalevan
 	
 	public void getSalesToEngineeringProductBindings(){
 		try {
@@ -291,89 +249,6 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	}
 	*/
 	
-
-	//DELETEME
-	//MOVED TO TASKS CLASSES	
-//	private void installLatestRPM(SSHCommandRunner sshCommandRunner) {
-//
-//		// verify the subscription-manager client is a rhel 6 machine
-//		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-//		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
-//
-//		log.info("Retrieving latest subscription-manager RPM...");
-//		String sm_rpm = "/tmp/subscription-manager.rpm";
-//		sshCommandRunner.runCommandAndWait("rm -f "+sm_rpm);
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmLocation+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
-//
-//		log.info("Uninstalling existing subscription-manager RPM...");
-//		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
-//		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
-//		
-//		log.info("Installing newest subscription-manager RPM...");
-//		// using yum localinstall should enable testing on RHTS boxes right off the bat.
-//		sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
-//
-//		log.info("Installed version of subscription-manager RPM...");
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
-//	}
-	
-//	private void updateSMConfigFile(SSHCommandRunner sshCommandRunner, String hostname, String port){
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^hostname\\s*=.*$", "hostname="+hostname),
-//				0,"Updated rhsm config hostname to point to:" + hostname);
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^port\\s*=.*$", "port="+port),
-//				0,"Updated rhsm config port to point to:" + port);
-//		
-//		// jsefler - 7/21/2010
-//		// FIXME DELETEME AFTER FIX FROM <alikins> so, just talked to jsefler and nadathur, we are going to temporarily turn ca verification off, till we get a DEV ca or whatever setup, so we don't break QA at the moment
-//		// TEMPORARY WORK AROUND TO AVOID ISSUES:
-//		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
-//		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
-//		/*
-//		if (isServerOnPremises) {
-//
-//			log.warning("TEMPORARY WORKAROUND...");
-//			sshCommandRunner.runCommandAndWait("echo \"candlepin_ca_file = /tmp/candlepin-ca.crt\"  >> "+defaultConfigFile);
-//		}
-//		*/
-//		/* Hi,
-//		Insecure mode option moved to /etc/rhsm/rhsm.conf file after commandline option(-k, --insecure) failed to gather the popularity votes.
-//
-//		To enable insecure mode, add the following as a new line to rhsm.conf file
-//		insecure_mode=t
-//    
-//
-//		To disable insecure mode, either remove 'insecure_mode' or set it to any value
-//		other than 't', 'True', 'true', 1.
-//
-//		thanks,
-//		Ajay
-//		*/
-//		log.warning("WORKAROUND FOR INSECURITY...");
-//		sshCommandRunner.runCommandAndWait("echo \"insecure_mode = true\"  >> "+defaultConfigFile);
-//	}
-	
-//	/**
-//	 * Update the minutes value for the certFrequency setting in the default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
-//	 * @param sshCommandRunner
-//	 * @param minutes
-//	 */
-//	public void changeCertFrequency(SSHCommandRunner sshCommandRunner, int minutes){
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
-//				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
-////		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
-////		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+minutes+"\\[  OK  \\]$",null);
-////		Assert.assertEquals(
-////				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
-////				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
-//
-//	}
 
 	public void sleep(long milliseconds) {
 		log.info("Sleeping for "+milliseconds+" milliseconds...");
