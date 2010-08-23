@@ -155,11 +155,9 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("insecure", "1");
-//		client1tasks.updateSMConfigFile(serverHostname, serverPort);
 		client1tasks.changeCertFrequency(certFrequency);
 		client1tasks.cleanOutAllCerts();
 		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
-//		if (client2tasks!=null) client2tasks.updateSMConfigFile(serverHostname, serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
