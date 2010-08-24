@@ -16,6 +16,7 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.sm.abstractions.ConsumerCert;
 import com.redhat.qe.sm.abstractions.EntitlementCert;
 import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.abstractions.InstalledProduct;
@@ -33,6 +34,8 @@ public class SubscriptionManagerTasks {
 	public static String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
 	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
+	public static String consumerCertFile		= "/etc/pki/consumer/cert.pem";
+	public static String consumerKeyFile		= "/etc/pki/consumer/key.pem";
 
 	public SubscriptionManagerTasks() {
 		super();
@@ -49,7 +52,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	public void installSubscriptionManagerRPM(String rpmLocation, String enablerepofordeps) {
+	public void installSubscriptionManagerRPM(String urlToRPM, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
@@ -58,7 +61,7 @@ public class SubscriptionManagerTasks {
 		log.info("Retrieving subscription-manager RPM...");
 		String sm_rpm = "/tmp/subscription-manager.rpm";
 		sshCommandRunner.runCommandAndWait("rm -f "+sm_rpm);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmLocation+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+urlToRPM+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 
 		log.info("Uninstalling existing subscription-manager RPM...");
 		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
@@ -191,17 +194,12 @@ public class SubscriptionManagerTasks {
 		return EntitlementCert.parse(certificates);
 	}
 	
-//	public EntitlementCert getEntitlementCertFromCertFile(String certFile) {
-//		sshCommandRunner.runCommandAndWait("openssl x509 -in "+certFile+" -noout -text");
-//		String certificate = sshCommandRunner.getStdout();
-//		return EntitlementCert.parse(certificate).get(0);
-//	}
-//	public SubscriptionPool getSubscriptionPoolFromCertFile(String certFile) {
-//		sshCommandRunner.runCommandAndWait("openssl x509 -in "+certFile+" -noout -text");
-//		String certificate = sshCommandRunner.getStdout();
-//		return SubscriptionPool.parseCerts(certificate);
-//	}
-//	SubscriptionPool pool = new SubscriptionPool(cert.from_productId, cert.from_poolId);
+	public ConsumerCert getCurrentConsumerCert() {
+		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+consumerCertFile);
+		String certificate = sshCommandRunner.getStdout();
+		return ConsumerCert.parse(certificate);
+	}
+	
 	/**
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
 	 */
@@ -415,44 +413,55 @@ public class SubscriptionManagerTasks {
 		// ([a-f,0-9,\-]{36}) (admin)
 		
 		// assert certificate files are dropped into /etc/pki/consumer
-		String consumerKeyFile = "/etc/pki/consumer/key.pem";
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(), 0, consumerKeyFile+" is present after register");
-		String consumerCertFile = "/etc/pki/consumer/cert.pem";
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(), 0, consumerCertFile+" is present after register");
 		
-// Moved to ValidRegistration_Test()   UPDATE moved back ^
-//		Assert.assertEquals(
-//				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(), 0,
-//						"/etc/pki/consumer/key.pem is present after register");
-//		Assert.assertEquals(
-//				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
-//						"/etc/pki/consumer/cert.pem is present after register");
 		return sshCommandResult; // from the register command
 	}
 	
 
 	
-//	public void registerToCandlepin(String username, String password){
-//		// FIXME may want to make force an optional arg
-//		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+" --password="+password + " --force");
-//
-//		Assert.assertEquals(
-//				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(), 0,
-//						"/etc/pki/consumer/key.pem is present after register");
-//		Assert.assertEquals(
-//				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
-//						"/etc/pki/consumer/cert.pem is present after register");
-//	}
-//	
-//	public void registerToCandlepinAutosubscribe(String username, String password){
-//		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+" --password="+password + " --force --autosubscribe");
-//		Assert.assertEquals(
-//				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(),0,
-//						"/etc/pki/consumer/key.pem is present after register");
-//		Assert.assertEquals(
-//				sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
-//						"/etc/pki/consumer/cert.pem is present after register");
-//	}
+	
+	// reregister module tasks ************************************************************
+
+	/**
+	 * reregister without asserting results
+	 */
+	public SSHCommandResult reregister_() {
+
+		// assemble the unregister command
+		String command  = "subscription-manager-cli reregister";	
+		
+		// register without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager-cli reregister"
+	 */
+	public SSHCommandResult reregister() {
+		
+		// get the current ConsumerCert
+		ConsumerCert consumerCertBefore = getCurrentConsumerCert();
+		log.fine("Consumer cert before reregistering: "+consumerCertBefore);
+		
+		SSHCommandResult sshCommandResult = reregister_();
+		
+		// get the new ConsumerCert
+		ConsumerCert consumerCertAfter = getCurrentConsumerCert();
+		log.fine("Consumer cert after reregistering: "+consumerCertAfter);
+		
+		Assert.assertEquals(consumerCertAfter.userid, consumerCertBefore.userid,
+				"The consumer cert userid remains unchanged after reregistering.");
+		Assert.assertEquals(consumerCertAfter.username, consumerCertBefore.username,
+			"The consumer cert username remains unchanged after reregistering.");
+		Assert.assertTrue(consumerCertAfter.validityNotBefore.after(consumerCertBefore.validityNotBefore),
+			"The consumer cert validityNotBefore date has been changed to a newer date after reregistering.");
+		
+		return sshCommandResult; // from the reregister command
+	}
+	
+	
 	
 	
 	// unregister module tasks ************************************************************
@@ -482,12 +491,8 @@ public class SubscriptionManagerTasks {
 		
 		// assert that the consumer cert and key have been removed
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls /etc/pki/entitlement/product | grep pem");
-//		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"stat /etc/pki/consumer/key.pem");
-//		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"stat /etc/pki/consumer/cert.pem");
-//		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, "/etc/pki/consumer/key.pem"),0,"The identify key has been removed after unregistering.");
-//		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, "/etc/pki/consumer/cert.pem"),0,"The identify certificate has been removed after unregistering.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/cert.pem").getExitCode().intValue(),1,"The identify certificate has been removed after unregistering.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat /etc/pki/consumer/key.pem").getExitCode().intValue(),1,"The identify key has been removed after unregistering.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(),1,"The identify certificate has been removed after unregistering.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(),1,"The identify key has been removed after unregistering.");
 		
 		return sshCommandResult; // from the unregister command
 	}

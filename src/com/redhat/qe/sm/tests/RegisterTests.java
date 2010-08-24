@@ -152,10 +152,48 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		// see agilo
 	}
 	
+	/**
+	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
+		Actions:
 
-	
-	
-	
+			* register a client to candlepin
+			* subscribe to a pool
+			* list consumed
+			* reregister
+			*  
+	    Expected Results:
+
+	 		* check the identity cert has not changed
+	        * check the consumed entitlements have not changed
+	 */
+	@Test(	description="subscription-manager-cli: reregister basic registration",
+			groups={},
+			enabled=true)
+	@ImplementsTCMS(id="56327")
+	public void ReregisterBasicRegistration_Test() {
+		
+		// start fresh by unregistering and registering
+		clienttasks.unregister();
+		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		
+		// subscribe to a randlom pool
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		
+		// get a list of the consumed products
+		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		
+		// reregister
+		clienttasks.reregister();
+		
+		// assert that the user is still consuming the same products
+		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(
+				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
+				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
+				"The list of consumed products after reregistering is identical.");
+	}
 	
 	
 	

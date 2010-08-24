@@ -1,7 +1,6 @@
 package com.redhat.qe.sm.abstractions;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -10,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+/**
+ * @author jsefler
+ *
+ */
 public class RevokedCert extends CandlepinAbstraction {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
@@ -23,7 +26,6 @@ public class RevokedCert extends CandlepinAbstraction {
 		// TODO Auto-generated constructor stub
 		
 		// Overridden fields
-//		simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 	}
 	
 	@Override
@@ -59,7 +61,7 @@ public class RevokedCert extends CandlepinAbstraction {
 	 * @param crls - stdout from "openssl crl -noout -text -in /var/lib/candlepin/candlepin-crl.crl"
 	 * @return
 	 */
-	static public List<RevokedCert> parse(String stdoutOfOpensslCrl) {
+	static public List<RevokedCert> parse(String stdoutFromOpensslCrl) {
 		
 		/* [root@jsefler-f12-candlepin candlepin]# openssl crl -noout -text -in /var/lib/candlepin/candlepin-crl.crl 
 Certificate Revocation List (CRL):
@@ -113,7 +115,8 @@ Revoked Certificates:
         ae:5c
 		*/
 		
-		/* EXAMPLE OF NO REVOKED CERTIFICATES:
+		// EXAMPLE OF NO REVOKED CERTIFICATES:
+		/* [root@jsefler-f12-candlepin candlepin]# openssl crl -noout -text -in /var/lib/candlepin/candlepin-crl.crl 
 Certificate Revocation List (CRL):
         Version 2 (0x1)
         Signature Algorithm: sha1WithRSAEncryption
@@ -148,17 +151,16 @@ No Revoked Certificates.
 		regexes.put("revocationDate",			"Revocation Date:\\s*(.*)");
 		regexes.put("reasonCode",				"X509v3 CRL Reason Code:[\\s\\cM]*(.*)");
 
-		
-		
 		List<Map<String,String>> listRevokedCertMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, stdoutOfOpensslCrl, listRevokedCertMaps, field);
+			addRegexMatchesToList(pat, stdoutFromOpensslCrl, listRevokedCertMaps, field);
 		}
 		
 		List<RevokedCert> revokedCerts = new ArrayList<RevokedCert>();
 		for(Map<String,String> revokedCertMap : listRevokedCertMaps)
 			revokedCerts.add(new RevokedCert(revokedCertMap));
+		
 		return revokedCerts;
 	}
 }

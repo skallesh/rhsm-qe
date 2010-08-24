@@ -40,11 +40,12 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected String serverImportDir		= System.getProperty("rhsm.server.importdir");
 	protected String serverBranch			= System.getProperty("rhsm.server.branch");
 	protected Boolean isServerOnPremises	= Boolean.valueOf(System.getProperty("rhsm.server.onpremises","false"));
+	protected Boolean deployServerOnPremises= Boolean.valueOf(System.getProperty("rhsm.server.deploy","true"));
 
 	protected String client1hostname		= System.getProperty("rhsm.client1.hostname");
 	protected String client1username		= System.getProperty("rhsm.client1.username");
 	protected String client1password		= System.getProperty("rhsm.client1.password");
-	
+
 	protected String client2hostname		= System.getProperty("rhsm.client2.hostname");
 	protected String client2username		= System.getProperty("rhsm.client2.username");
 	protected String client2password		= System.getProperty("rhsm.client2.password");
@@ -85,7 +86,9 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 
 	
 	
-	protected String rpmLocation			= System.getProperty("rhsm.rpm.url");
+	protected String urlToRPM				= System.getProperty("rhsm.rpm.url");
+	protected Boolean installRPM			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
+
 
 //DELETEME
 //MOVED TO TASKS CLASSES
@@ -106,6 +109,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	protected static SubscriptionManagerTasks client1tasks	= null;	// client1 subscription manager tasks
 	protected static SubscriptionManagerTasks client2tasks	= null;	// client2 subscription manager tasks
 	
+	protected Random randomGenerator = new Random(System.currentTimeMillis());
 	
 	public SubscriptionManagerTestScript() {
 		super();
@@ -144,20 +148,21 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		if (server!=null && isServerOnPremises) {
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");
 			servertasks.cleanOutCRL();
-			servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
+			if (deployServerOnPremises)
+				servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
 			
 			// also connect to the candlepin server database
 			connectToDatabase();  // do this after the call to deploy since it will restart postgresql
 		} 
 		
 		// setup the client(s)
-		client1tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
+		if (installRPM) client1tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 		client1tasks.changeCertFrequency(certFrequency);
 		client1tasks.cleanOutAllCerts();
-		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPM(rpmLocation,enablerepofordeps);
+		if (client2tasks!=null) if (installRPM) client2tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
@@ -174,25 +179,6 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			RemoteFileTasks.putFile(commandRunner.getConnection(), "/tmp/candlepin-ca.crt", "/tmp/", "0644");
 		}
 		*/
-//		for (SSHCommandRunner commandRunner : sshCommandRunners) {
-//			this.installLatestRPM(commandRunner);
-//			this.updateSMConfigFile(commandRunner, serverHostname, serverPort);
-//			this.changeCertFrequency(commandRunner, certFrequency);
-//			//commandRunner.runCommandAndWait("killall -9 yum");
-//			this.cleanOutAllCerts(commandRunner);
-//			
-//			// transfer a copy of the CA Cert from the candlepin server to the client
-//			// TEMPORARY WORK AROUND TO AVOID ISSUES:
-//			// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
-//			// https://bugzilla.redhat.com/show_bug.cgi?id=617303
-//			/*
-//			if (server!=null && isServerOnPremises) {
-//				log.warning("TEMPORARY WORKAROUND...");
-//				RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
-//				RemoteFileTasks.putFile(commandRunner.getConnection(), "/tmp/candlepin-ca.crt", "/tmp/", "0644");
-//			}
-//			*/
-//		}
 	}
 	
 	@AfterSuite(groups={"setup"},description="subscription manager tear down")
@@ -258,9 +244,9 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	}
 	
 	public int getRandInt(){
-		Random gen = new Random();
-		return Math.abs(gen.nextInt());
+		return Math.abs(randomGenerator.nextInt());
 	}
+	
 	
 //	public void runRHSMCallAsLang(SSHCommandRunner sshCommandRunner, String lang,String rhsmCall){
 //		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
