@@ -110,6 +110,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 			client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		}
 		
+		
 		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') should now have '"+systemSubscriptionName+"' available with unlimited quantity...");
 		List<SubscriptionPool> client2AfterSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2AfterSubscriptionPools);
@@ -118,10 +119,11 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		
 		
 		log.info("Verifying that the available subscription pools available to client2 has increased by only the '"+systemSubscriptionName+"' pool...");
-		client2BeforeSubscriptionPools.add(systemSubscriptionPool);  // manually add the systemSubscriptionPool to the List
-		Assert.assertEquals(client2AfterSubscriptionPools,client2BeforeSubscriptionPools,
+		Assert.assertTrue(
+				client2AfterSubscriptionPools.containsAll(client2BeforeSubscriptionPools) &&
+				client2AfterSubscriptionPools.contains(systemSubscriptionPool) &&
+				client2AfterSubscriptionPools.size()==client2BeforeSubscriptionPools.size()+1,
 				"The list of available subscription pools seen by client2 increases only by '"+systemSubscriptionName+"' pool: "+systemSubscriptionPool);
-	
 	}
 	 
 	 
