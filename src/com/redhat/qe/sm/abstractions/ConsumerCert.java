@@ -17,7 +17,8 @@ import java.util.regex.Pattern;
 public class ConsumerCert extends CandlepinAbstraction {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
-	public String userid;
+	// abstraction fields
+	public String consumerid;
 	public String username;
 	public String issuer;
 	public Integer serialNumber;
@@ -37,7 +38,7 @@ public class ConsumerCert extends CandlepinAbstraction {
 	public String toString() {
 		
 		String string = "";
-		if (userid != null)				string += String.format(" %s='%s'", "userid",userid);
+		if (consumerid != null)			string += String.format(" %s='%s'", "consumerid",consumerid);
 		if (username != null)			string += String.format(" %s='%s'", "username",username);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
@@ -129,8 +130,8 @@ Certificate:
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// CRL abstractionField		pattern		(Note: the abstractionField must be defined in the ConsumerCert class)
-		regexes.put("userid",				"Subject: CN=\\s*(.*)");
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("consumerid",			"Subject: CN=\\s*(.*)");
 		regexes.put("username",				"X509v3 Subject Alternative Name:[\\s\\cM]*DirName:/CN=\\s*(.*)");
 		regexes.put("issuer",				"Issuer: CN=([^,\\n]*)");
 		regexes.put("serialNumber",			"Serial Number:\\s*(\\d+)");

@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 public class InstalledProduct extends CandlepinAbstraction {
 	
+	// abstraction fields
 	public String productName;
 	public String status;
 	public Calendar expires;
@@ -63,11 +64,11 @@ public class InstalledProduct extends CandlepinAbstraction {
 //		regexes.put("expires",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
 //		regexes.put("subscription",	"Subscription:\\s*([a-zA-Z0-9 ,:()]*)");
 		
-		// ProductCert abstractionField			pattern		(Note: the abstractionField must be defined in the ProductCert class)
-		regexes.put("productName",				"ProductName:\\s*(.*)");
-		regexes.put("status",					"Status:\\s*(.*)");
-		regexes.put("expires",					"Expires:\\s*(.*)");
-		regexes.put("subscription",				"Subscription:\\s*(.*)");
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("productName",			"ProductName:\\s*(.*)");
+		regexes.put("status",				"Status:\\s*(.*)");
+		regexes.put("expires",				"Expires:\\s*(.*)");
+		regexes.put("subscription",			"Subscription:\\s*(.*)");
 		
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

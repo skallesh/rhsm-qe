@@ -3,6 +3,8 @@ package com.redhat.qe.sm.tests;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -12,6 +14,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author ssalevan
@@ -21,9 +24,43 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"general"})
 public class GeneralTests extends SubscriptionManagerTestScript{
 	
+	
+	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
+			groups={"myDevGroup"},
+			dataProvider="ExpectedCommandLineOptionsData")
+//	@ImplementsTCMS(id="")
+	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
+		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the following expected options are available.");
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
+		
+		Pattern pattern = Pattern.compile(stdoutRegex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		Assert.assertTrue(matcher.find(),"Available command line options are shown with command: "+command);
+		
+		// find all the matches to stderrRegex
+		List <String> actualOptions = new ArrayList<String>();
+		do {
+			actualOptions.add(matcher.group().trim());
+		} while (matcher.find());
+		
+		// assert all of the expectedOptions were found
+		for (String expectedOption : expectedOptions) {
+			Assert.assertTrue(actualOptions.contains(expectedOption), "Expected command '"+command+"' reports option '"+expectedOption+"' as available.");
+		}
+		
+		// assert that no unexpectedOptions were found
+		for (String actualOption : actualOptions) {
+			if (!expectedOptions.contains(actualOption)) log.warning("Found an unexpected command '"+command+"' option '"+actualOption+"' being reported as available.");
+		}
+		Assert.assertTrue(expectedOptions.containsAll(actualOptions), "All of the expected command '"+command+"' line options are available.");
+	}
+	
+	
+	// FIXME This testcase is being replaced by ExpectedCommandLineOptions_Test  jsefler - 8/24/2010
 	@Test(	description="subscription-manager-cli: ensure manpages and usage information are accurate",
 //			groups={"sm_stage1"},
-			dataProvider="CommandLineOptionsSData")
+			dataProvider="CommandLineOptionsSData",
+			enabled=false)
 	@ImplementsTCMS(id="41697")
 	public void CommandLineOptions_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying the output.");
@@ -56,6 +93,141 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 	
 	// Data Providers ***********************************************************************
 
+	
+	@DataProvider(name="ExpectedCommandLineOptionsData")
+	public Object[][] getExpectedCommandLineOptionsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getExpectedCommandLineOptionsDataAsListOfLists());
+	}
+	protected List<List<Object>> getExpectedCommandLineOptionsDataAsListOfLists() {
+		// String command, String stderrRegex, List<String> expectedOptions
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String stdoutOptionsRegex = "(^  --\\w+[(?:=\\w)]*|^  -\\w)";
+		//String stdoutOptionsRegex = "(?:^  )(--\\w+[(?:=\\w)]*|-\\w)";
+		//String stdoutOptionsRegex2 = "^  -\\w, (--\\w+[(?:=\\w)])";
+//		/* [root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli --help
+//
+//Usage: subscription-manager-cli [options] MODULENAME --help
+//
+//Supported modules:
+//
+//	facts          show information for facts
+//	list           list available or consumer subscriptions for registered user
+//	register       register the client to a Unified Entitlement Platform.
+//	subscribe      subscribe the registered user to a specified product or regtoken.
+//	unregister     unregister the client from a Unified Entitlement Platform.
+//	unsubscribe    unsubscribe the registered user from all or specific subscriptions.
+//
+//		*/
+//		for (String smHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Usage: subscription-manager-cli \\[(OPTIONS|options)\\] MODULENAME --help$"}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Supported modules:$"}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tfacts"}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tlist"}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tregister"}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tsubscribe"}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tunsubscribe"}));
+//			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^$"}));
+//		}
+		
+		// subscription-manager-cli facts -h
+		List <String> factsOptions = new ArrayList<String>();
+		factsOptions.add("-h");
+//		factsOptions.add("--help");
+		factsOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		factsOptions.add("--list");
+		factsOptions.add("--update");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli facts -h","subscription-manager-cli facts --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, factsOptions}));
+		}
+		
+		// subscription-manager-cli list -h
+		List <String> listOptions = new ArrayList<String>();
+		listOptions.add("-h");
+//		listOptions.add("--help");
+		listOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		listOptions.add("--available");
+		listOptions.add("--consumed");
+		listOptions.add("--all");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli list -h","subscription-manager-cli list --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, listOptions}));
+		}
+		
+		// subscription-manager-cli register -h
+		List <String> registerOptions = new ArrayList<String>();
+		registerOptions.add("-h");
+//		registerOptions.add("--help");
+		registerOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		registerOptions.add("--username=USERNAME");
+		registerOptions.add("--type=CONSUMERTYPE");
+		registerOptions.add("--name=CONSUMERNAME");
+		registerOptions.add("--password=PASSWORD");
+		registerOptions.add("--consumerid=CONSUMERID");
+		registerOptions.add("--autosubscribe");
+		registerOptions.add("--force");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli register -h","subscription-manager-cli register --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, registerOptions}));
+		}
+		
+		// subscription-manager-cli reregister -h
+		List <String> reregisterOptions = new ArrayList<String>();
+		reregisterOptions.add("-h");
+//		reregisterOptions.add("--help");
+		reregisterOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		reregisterOptions.add("--username=USERNAME");
+		reregisterOptions.add("--password=PASSWORD");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli reregister -h","subscription-manager-cli reregister --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, reregisterOptions}));
+		}
+		
+		// subscription-manager-cli subscribe -h
+		List <String> subscribeOptions = new ArrayList<String>();
+		subscribeOptions.add("-h");
+//		subscribeOptions.add("--help");
+		subscribeOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		subscribeOptions.add("--regtoken=REGTOKEN");
+		subscribeOptions.add("--pool=POOL");
+		subscribeOptions.add("--email=EMAIL");
+		subscribeOptions.add("--locale=LOCALE");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli subscribe -h","subscription-manager-cli subscribe --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, subscribeOptions}));
+		}
+		
+		// subscription-manager-cli unregister -h
+		List <String> unregisterOptions = new ArrayList<String>();
+		unregisterOptions.add("-h");
+//		unregisterOptions.add("--help");
+		unregisterOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli unregister -h","subscription-manager-cli unregister --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, unregisterOptions}));
+		}
+		
+		// subscription-manager-cli unsubscribe -h
+		List <String> unsubscribeOptions = new ArrayList<String>();
+		unsubscribeOptions.add("-h");
+//		unsubscribeOptions.add("--help");
+		unsubscribeOptions.add("--debug=DEBUG");
+//		expectedOptions.add("-k");
+//		expectedOptions.add("--insecure");
+		unsubscribeOptions.add("--serial=SERIAL");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli unsubscribe -h","subscription-manager-cli unsubscribe --help"}) {
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, unsubscribeOptions}));
+		}
+		
+		return ll;
+	}
+	
 	@DataProvider(name="CommandLineOptionsSData")
 	public Object[][] getCommandLineOptionsSDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getCommandLineOptionsSDataAsListOfLists());

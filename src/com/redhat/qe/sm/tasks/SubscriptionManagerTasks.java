@@ -427,10 +427,13 @@ public class SubscriptionManagerTasks {
 	/**
 	 * reregister without asserting results
 	 */
-	public SSHCommandResult reregister_() {
+	public SSHCommandResult reregister_(String username, String password, String consumerid) {
 
 		// assemble the unregister command
-		String command  = "subscription-manager-cli reregister";	
+		String					command  = "subscription-manager-cli reregister";	
+		if (username!=null)		command += " --username="+username;
+		if (password!=null)		command += " --password="+password;
+		if (consumerid!=null)	command += " --consumerid="+consumerid;
 		
 		// register without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -439,19 +442,27 @@ public class SubscriptionManagerTasks {
 	/**
 	 * "subscription-manager-cli reregister"
 	 */
-	public SSHCommandResult reregister() {
+	public SSHCommandResult reregister(String username, String password, String consumerid) {
 		
 		// get the current ConsumerCert
 		ConsumerCert consumerCertBefore = getCurrentConsumerCert();
 		log.fine("Consumer cert before reregistering: "+consumerCertBefore);
 		
-		SSHCommandResult sshCommandResult = reregister_();
+		SSHCommandResult sshCommandResult = reregister_(username,password,consumerid);
 		
+		// assert results for a successful reregistration
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The reregister command was a success.");
+		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
+		if (consumerid!=null) regex+=consumerid;	// consumerid
+		if (username!=null) regex+=username;		// username
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+
 		// get the new ConsumerCert
 		ConsumerCert consumerCertAfter = getCurrentConsumerCert();
 		log.fine("Consumer cert after reregistering: "+consumerCertAfter);
 		
-		Assert.assertEquals(consumerCertAfter.userid, consumerCertBefore.userid,
+		// assert the new ConsumerCert from a successful reregistration
+		Assert.assertEquals(consumerCertAfter.consumerid, consumerCertBefore.consumerid,
 				"The consumer cert userid remains unchanged after reregistering.");
 		Assert.assertEquals(consumerCertAfter.username, consumerCertBefore.username,
 			"The consumer cert username remains unchanged after reregistering.");

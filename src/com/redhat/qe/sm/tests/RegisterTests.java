@@ -185,7 +185,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// reregister
-		clienttasks.reregister();
+		clienttasks.reregister(null,null,null);
 		
 		// assert that the user is still consuming the same products
 		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();

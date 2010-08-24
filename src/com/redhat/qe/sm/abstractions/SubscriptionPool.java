@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 public class SubscriptionPool extends CandlepinAbstraction {
 	
+	// abstraction fields
 	public String subscriptionName;
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
 	public String poolId;
@@ -351,7 +352,7 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// EntitlementCert abstractionField		pattern		(Note: the abstractionField must be defined in the EntitlementCert class)
+		// abstraction field				regex pattern (with a capturing group)
 		/* https://docspace.corp.redhat.com/docs/DOC-30244 - appears to be out of date - jsefler 7/15/2010
 		1.3.6.1.4.1.2312.9.4 (Order Namespace)
 		  1.3.6.1.4.1.2312.9.4.1 (Name): Red Hat Enterprise Linux Server
@@ -368,10 +369,10 @@ public class SubscriptionPool extends CandlepinAbstraction {
 		  1.3.6.1.4.1.2312.9.4.12 (Contract Number): 152341643
 		  1.3.6.1.4.1.2312.9.4.13 (Quantity Used): 4
 		  */
-//		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[\\.#](.+)");
-//		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[\\.#](.+)");
-		regexes.put("productId",	"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[.\\n](.+)");
-		regexes.put("poolId",		"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[.\\n](.+)");
+//		regexes.put("productId",			"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[\\.#](.+)");
+//		regexes.put("poolId",				"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[\\.#](.+)");
+		regexes.put("productId",			"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[.\\n](.+)");
+		regexes.put("poolId",				"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[.\\n](.+)");
 		
 		Map<String, Map<String,String>> serialMapOfProductAndPoolIds = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

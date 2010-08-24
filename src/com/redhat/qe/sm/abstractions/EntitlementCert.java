@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 public class EntitlementCert extends CandlepinAbstraction {
 	
+	// abstraction fields
 	public String name;
 	public String label;
 	public String phys_ent;
@@ -235,7 +236,7 @@ public class EntitlementCert extends CandlepinAbstraction {
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// EntitlementCert abstractionField		pattern		(Note: the abstractionField must be defined in the EntitlementCert class)
+		// abstraction field				regex pattern (with a capturing group)
 		/* https://docspace.corp.redhat.com/docs/DOC-30244
 		  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (Supplementary))
 		  1.3.6.1.4.1.2312.9.2.<content_hash>.1 (Yum repo type))

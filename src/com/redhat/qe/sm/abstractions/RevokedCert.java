@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 public class RevokedCert extends CandlepinAbstraction {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
+	// abstraction fields
 	public Integer serialNumber;
 	public Calendar revocationDate;
 	public String reasonCode;
@@ -146,10 +147,10 @@ No Revoked Certificates.
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// CRL abstractionField		pattern		(Note: the abstractionField must be defined in the CRL class)
-		regexes.put("serialNumber",				"Serial Number:\\s*(.*)");
-		regexes.put("revocationDate",			"Revocation Date:\\s*(.*)");
-		regexes.put("reasonCode",				"X509v3 CRL Reason Code:[\\s\\cM]*(.*)");
+		// abstraction field				regex pattern (with a capturing group)ass)
+		regexes.put("serialNumber",			"Serial Number:\\s*(.*)");
+		regexes.put("revocationDate",		"Revocation Date:\\s*(.*)");
+		regexes.put("reasonCode",			"X509v3 CRL Reason Code:[\\s\\cM]*(.*)");
 
 		List<Map<String,String>> listRevokedCertMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

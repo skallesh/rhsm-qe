@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 public class ProductSubscription extends CandlepinAbstraction {
 	
+	// abstraction fields
 	public String productName;
 	public Integer serialNumber;
 	public Integer contractNumber;
@@ -108,13 +109,13 @@ public class ProductSubscription extends CandlepinAbstraction {
 //		regexes.put("startDate",	"Begins:\\s*([a-zA-Z0-9 ,:()]*)");
 //		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
 
-		// ProductSubscription abstractionField	pattern		(Note: the abstractionField must be defined in the ProductSubscription class)
-		regexes.put("productName",				"Name:\\s*(.*)");
-		regexes.put("serialNumber",				"SerialNumber:\\s*(.*)");
-		regexes.put("contractNumber",			"ContractNumber:\\s*(.*)");
-		regexes.put("isActive",					"Active:\\s*(.*)");
-		regexes.put("startDate",				"Begins:\\s*(.*)");
-		regexes.put("endDate",					"Expires:\\s*(.*)");
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("productName",			"Name:\\s*(.*)");
+		regexes.put("serialNumber",			"SerialNumber:\\s*(.*)");
+		regexes.put("contractNumber",		"ContractNumber:\\s*(.*)");
+		regexes.put("isActive",				"Active:\\s*(.*)");
+		regexes.put("startDate",			"Begins:\\s*(.*)");
+		regexes.put("endDate",				"Expires:\\s*(.*)");
 		
 		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
