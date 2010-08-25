@@ -176,7 +176,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		clienttasks.unregister();
 		clienttasks.register(clientusername,clientpassword,null,null,null,null);
 		
-		// subscribe to a randlom pool
+		// subscribe to a random pool
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
@@ -196,7 +196,18 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	}
 	
 	
-	
+	/**
+	 * https://tcms.engineering.redhat.com/case/56328/?from_plan=2476
+	 */
+	@Test(	description="subscription-manager-cli: bad identity cert",
+			groups={"myDevGroup", "blockedByBug-624106"},
+			enabled=false)
+	@ImplementsTCMS(id="56328")
+	public void ReregisterWithBadIdentityCert_Test() {
+		
+		// TODO  Blocked by bug https://bugzilla.redhat.com/show_bug.cgi?id=624106
+
+	}
 	
 	// protected methods ***********************************************************************
 
