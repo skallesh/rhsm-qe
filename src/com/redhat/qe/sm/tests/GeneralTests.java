@@ -28,9 +28,9 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={"myDevGroup"},
 			dataProvider="ExpectedCommandLineOptionsData")
-//	@ImplementsTCMS(id="")
+	@ImplementsTCMS(id="41697")
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
-		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the following expected options are available.");
+		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
 		
 		Pattern pattern = Pattern.compile(stdoutRegex, Pattern.MULTILINE);
@@ -43,16 +43,20 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 			actualOptions.add(matcher.group().trim());
 		} while (matcher.find());
 		
-		// assert all of the expectedOptions were found
+		// assert all of the expectedOptions were found and that no unexpectedOptions were found
 		for (String expectedOption : expectedOptions) {
-			Assert.assertTrue(actualOptions.contains(expectedOption), "Expected command '"+command+"' reports option '"+expectedOption+"' as available.");
+			if (!actualOptions.contains(expectedOption)) {
+				log.warning("Could not find the expected command '"+command+"' option '"+expectedOption+"'.");
+			} else {
+				Assert.assertTrue(actualOptions.contains(expectedOption),"The expected command '"+command+"' option '"+expectedOption+"' is available.");
+			}
 		}
-		
-		// assert that no unexpectedOptions were found
 		for (String actualOption : actualOptions) {
-			if (!expectedOptions.contains(actualOption)) log.warning("Found an unexpected command '"+command+"' option '"+actualOption+"' being reported as available.");
+			if (!expectedOptions.contains(actualOption))
+				log.warning("Found an unexpected command '"+command+"' option '"+actualOption+"'.");
 		}
-		Assert.assertTrue(expectedOptions.containsAll(actualOptions), "All of the expected command '"+command+"' line options are available.");
+		Assert.assertTrue(actualOptions.containsAll(expectedOptions), "All of the expected command '"+command+"' line options are available.");
+		Assert.assertTrue(expectedOptions.containsAll(actualOptions), "All of the available command '"+command+"' line options are expected.");
 	}
 	
 	
@@ -99,70 +103,64 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getExpectedCommandLineOptionsDataAsListOfLists());
 	}
 	protected List<List<Object>> getExpectedCommandLineOptionsDataAsListOfLists() {
-		// String command, String stderrRegex, List<String> expectedOptions
+		// String command, String stdoutRegex, List<String> expectedOptions
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		String stdoutOptionsRegex = "(^  --\\w+[(?:=\\w)]*|^  -\\w)";
-		//String stdoutOptionsRegex = "(?:^  )(--\\w+[(?:=\\w)]*|-\\w)";
-		//String stdoutOptionsRegex2 = "^  -\\w, (--\\w+[(?:=\\w)])";
-//		/* [root@jsefler-rhel6-clientpin tmp]# subscription-manager-cli --help
-//
-//Usage: subscription-manager-cli [options] MODULENAME --help
-//
-//Supported modules:
-//
-//	facts          show information for facts
-//	list           list available or consumer subscriptions for registered user
-//	register       register the client to a Unified Entitlement Platform.
-//	subscribe      subscribe the registered user to a specified product or regtoken.
-//	unregister     unregister the client from a Unified Entitlement Platform.
-//	unsubscribe    unsubscribe the registered user from all or specific subscriptions.
-//
-//		*/
-//		for (String smHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Usage: subscription-manager-cli \\[(OPTIONS|options)\\] MODULENAME --help$"}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^Supported modules:$"}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tfacts"}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tlist"}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tregister"}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tsubscribe"}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^\tunsubscribe"}));
-//			//ll.add(Arrays.asList(new Object[]{ smHelpCommand, 0, null, "^$"}));
-//		}
+		String modulesRegex = "^	\\w+";
+		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
 		
-		// subscription-manager-cli facts -h
-		List <String> factsOptions = new ArrayList<String>();
-		factsOptions.add("-h");
-//		factsOptions.add("--help");
-		factsOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
-		factsOptions.add("--list");
-		factsOptions.add("--update");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli facts -h","subscription-manager-cli facts --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, factsOptions}));
+		// MODULES
+		List <String> modules = new ArrayList<String>();
+		modules.add("facts");
+		modules.add("list");
+		modules.add("register");
+		modules.add("reregister");
+		modules.add("subscribe");
+		modules.add("unregister");
+		modules.add("unsubscribe");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli [options] MODULENAME --help";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, modulesRegex, modules}));
 		}
 		
-		// subscription-manager-cli list -h
+		// MODULE: facts
+		List <String> factsOptions = new ArrayList<String>();
+		factsOptions.add("-h, --help");
+		factsOptions.add("--debug=DEBUG");
+//		factsOptions.add("-k, --insecure");
+		factsOptions.add("--list");
+		factsOptions.add("--update");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h facts","subscription-manager-cli --help facts"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli facts [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, factsOptions}));
+		}
+		
+		// MODULE: list
 		List <String> listOptions = new ArrayList<String>();
-		listOptions.add("-h");
-//		listOptions.add("--help");
+		listOptions.add("-h, --help");
 		listOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
+//		listOptions.add("-k, --insecure");
 		listOptions.add("--available");
 		listOptions.add("--consumed");
 		listOptions.add("--all");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli list -h","subscription-manager-cli list --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, listOptions}));
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h list","subscription-manager-cli --help list"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli list [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, listOptions}));
 		}
 		
-		// subscription-manager-cli register -h
+		// MODULE: register
 		List <String> registerOptions = new ArrayList<String>();
-		registerOptions.add("-h");
-//		registerOptions.add("--help");
+		registerOptions.add("-h, --help");
 		registerOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
+//		registerOptions.add("-k, --insecure");
 		registerOptions.add("--username=USERNAME");
 		registerOptions.add("--type=CONSUMERTYPE");
 		registerOptions.add("--name=CONSUMERNAME");
@@ -170,59 +168,71 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 		registerOptions.add("--consumerid=CONSUMERID");
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli register -h","subscription-manager-cli register --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, registerOptions}));
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h register","subscription-manager-cli --help register"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli register [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, registerOptions}));
 		}
 		
-		// subscription-manager-cli reregister -h
+		// MODULE: reregister
 		List <String> reregisterOptions = new ArrayList<String>();
-		reregisterOptions.add("-h");
-//		reregisterOptions.add("--help");
+		reregisterOptions.add("-h, --help");
 		reregisterOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
+//		reregisterOptions.add("-k, --insecure");
 		reregisterOptions.add("--username=USERNAME");
 		reregisterOptions.add("--password=PASSWORD");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli reregister -h","subscription-manager-cli reregister --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, reregisterOptions}));
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h reregister","subscription-manager-cli --help reregister"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli reregister [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, reregisterOptions}));
 		}
 		
-		// subscription-manager-cli subscribe -h
+		// MODULE: subscribe
 		List <String> subscribeOptions = new ArrayList<String>();
-		subscribeOptions.add("-h");
-//		subscribeOptions.add("--help");
+		subscribeOptions.add("-h, --help");
 		subscribeOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
+//		subscribeOptions.add("-k, --insecure");
 		subscribeOptions.add("--regtoken=REGTOKEN");
 		subscribeOptions.add("--pool=POOL");
 		subscribeOptions.add("--email=EMAIL");
 		subscribeOptions.add("--locale=LOCALE");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli subscribe -h","subscription-manager-cli subscribe --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, subscribeOptions}));
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h subscribe","subscription-manager-cli --help subscribe"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli subscribe [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, subscribeOptions}));
 		}
 		
-		// subscription-manager-cli unregister -h
+		// MODULE: unregister
 		List <String> unregisterOptions = new ArrayList<String>();
-		unregisterOptions.add("-h");
-//		unregisterOptions.add("--help");
+		unregisterOptions.add("-h, --help");
 		unregisterOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli unregister -h","subscription-manager-cli unregister --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, unregisterOptions}));
+//		unregisterOptions.add("-k, --insecure");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli unregister -h","subscription-manager-cli --help unregister"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli unregister [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unregisterOptions}));
 		}
 		
-		// subscription-manager-cli unsubscribe -h
+		// MODULE: unsubscribe
 		List <String> unsubscribeOptions = new ArrayList<String>();
-		unsubscribeOptions.add("-h");
-//		unsubscribeOptions.add("--help");
+		unsubscribeOptions.add("-h, --help");
 		unsubscribeOptions.add("--debug=DEBUG");
-//		expectedOptions.add("-k");
-//		expectedOptions.add("--insecure");
+//		unsubscribeOptions.add("-k, --insecure");
 		unsubscribeOptions.add("--serial=SERIAL");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli unsubscribe -h","subscription-manager-cli unsubscribe --help"}) {
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, stdoutOptionsRegex, unsubscribeOptions}));
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h unsubscribe","subscription-manager-cli --help unsubscribe"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli unsubscribe [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unsubscribeOptions}));
 		}
 		
 		return ll;
