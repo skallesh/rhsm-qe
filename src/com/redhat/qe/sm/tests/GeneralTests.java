@@ -26,7 +26,7 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
-			groups={"myDevGroup"},
+			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsTCMS(id="41697")
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
@@ -165,7 +165,6 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 		registerOptions.add("--type=CONSUMERTYPE");
 		registerOptions.add("--name=CONSUMERNAME");
 		registerOptions.add("--password=PASSWORD");
-		registerOptions.add("--consumerid=CONSUMERID");
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
 		for (String smHelpCommand : new String[]{"subscription-manager-cli -h register","subscription-manager-cli --help register"}) {
@@ -183,6 +182,7 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 //		reregisterOptions.add("-k, --insecure");
 		reregisterOptions.add("--username=USERNAME");
 		reregisterOptions.add("--password=PASSWORD");
+		reregisterOptions.add("--consumerid=CONSUMERID");
 		for (String smHelpCommand : new String[]{"subscription-manager-cli -h reregister","subscription-manager-cli --help reregister"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: subscription-manager-cli reregister [OPTIONS]";

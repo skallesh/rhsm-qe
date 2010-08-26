@@ -404,14 +404,6 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 		
-		// FIXME: may want to assert this output and save or return it.  - jsefler 7/8/2010
-		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin admin
-		// FIXME: should assert stdout: SYSTEM_UUID  USER_SET_SYSTEM_NAME  USERNAME_OF_REGISTERER
-		// ([a-z,0-9,\-]+) (admin) (XEOPS|xeops)
-		// https://bugzilla.redhat.com/show_bug.cgi?id=616065
-		// Stdout: 3f92221c-4b26-4e49-96af-b31abd7bd28c admin
-		// ([a-f,0-9,\-]{36}) (admin)
-		
 		// assert certificate files are dropped into /etc/pki/consumer
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(), 0, consumerKeyFile+" is present after register");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(), 0, consumerCertFile+" is present after register");
@@ -445,16 +437,19 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult reregister(String username, String password, String consumerid) {
 		
 		// get the current ConsumerCert
-		ConsumerCert consumerCertBefore = getCurrentConsumerCert();
-		log.fine("Consumer cert before reregistering: "+consumerCertBefore);
+		ConsumerCert consumerCertBefore = null;
+		if (consumerid==null) {	//if (RemoteFileTasks.testFileExists(sshCommandRunner, consumerCertFile)==1) {
+			consumerCertBefore = getCurrentConsumerCert();
+			log.fine("Consumer cert before reregistering: "+consumerCertBefore);
+		}
 		
 		SSHCommandResult sshCommandResult = reregister_(username,password,consumerid);
 		
 		// assert results for a successful reregistration
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The reregister command was a success.");
 		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
-		if (consumerid!=null) regex+=consumerid;	// consumerid
-		if (username!=null) regex+=username;		// username
+		if (consumerid!=null) regex=consumerid;		// consumerid
+		if (username!=null) regex+=" "+username;	// username
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 
 		// get the new ConsumerCert
@@ -462,12 +457,24 @@ public class SubscriptionManagerTasks {
 		log.fine("Consumer cert after reregistering: "+consumerCertAfter);
 		
 		// assert the new ConsumerCert from a successful reregistration
-		Assert.assertEquals(consumerCertAfter.consumerid, consumerCertBefore.consumerid,
+		if (consumerCertBefore!=null) {
+			Assert.assertEquals(consumerCertAfter.consumerid, consumerCertBefore.consumerid,
 				"The consumer cert userid remains unchanged after reregistering.");
-		Assert.assertEquals(consumerCertAfter.username, consumerCertBefore.username,
-			"The consumer cert username remains unchanged after reregistering.");
-		Assert.assertTrue(consumerCertAfter.validityNotBefore.after(consumerCertBefore.validityNotBefore),
-			"The consumer cert validityNotBefore date has been changed to a newer date after reregistering.");
+			Assert.assertEquals(consumerCertAfter.username, consumerCertBefore.username,
+				"The consumer cert username remains unchanged after reregistering.");
+			Assert.assertTrue(consumerCertAfter.validityNotBefore.after(consumerCertBefore.validityNotBefore),
+				"The consumer cert validityNotBefore date has been changed to a newer date after reregistering.");
+		}
+		
+		// assert the new consumer certificate contains the reregistered credentials...
+		if (consumerid!=null) {
+			Assert.assertEquals(consumerCertAfter.consumerid, consumerid,
+				"The reregistered consumer cert belongs to the requested consumerid.");
+		}
+		if (username!=null) {
+			Assert.assertEquals(consumerCertAfter.username, username,
+				"The reregistered consumer cert belongs to the authenticated username.");
+		}
 		
 		return sshCommandResult; // from the reregister command
 	}
