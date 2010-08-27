@@ -11,5 +11,8 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/ojdbc14.jar"/>
 	<classpathentry kind="lib" path="lib/postgresql-8.4-701.jdbc4.jar"/>
+	<classpathentry kind="lib" path="lib/jdom.jar"/>
+	<classpathentry kind="lib" path="lib/rome-1.0-sources.jar"/>
+	<classpathentry kind="lib" path="lib/rome-1.0.jar" sourcepath="lib/rome-1.0-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

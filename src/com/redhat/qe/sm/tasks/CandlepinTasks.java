@@ -1,14 +1,23 @@
 package com.redhat.qe.sm.tasks;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.RevokedCert;
-import com.redhat.qe.sm.abstractions.EntitlementCert;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.tools.SSLCertificateTruster;
+import com.sun.syndication.feed.synd.SyndFeed;
+import com.sun.syndication.io.FeedException;
+import com.sun.syndication.io.SyndFeedInput;
+import com.sun.syndication.io.XmlReader;
+
 
 /**
  * @author jsefler
@@ -135,5 +144,64 @@ public class CandlepinTasks {
 			}
 		}
 		return revokedCertWithMatchingField;
+	}
+	
+	
+	
+
+	public static SyndFeed getSyndFeedForOwner(String id, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+		return getSyndFeedFor("owners",id,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	}
+	
+	public static SyndFeed getSyndFeedForConsumer(String id, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+		return getSyndFeedFor("consumers",id,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	}
+	
+	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String id, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+			
+		/* References:
+		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
+		 * http://www.avajava.com/tutorials/lessons/how-do-i-connect-to-a-url-using-basic-authentication.html
+		 * http://wiki.java.net/bin/view/Javawsxml/Rome
+		 */
+			
+		SSLCertificateTruster.trustAllCerts();
+		
+        
+		String url = String.format("https://%s:%s/candlepin/%s/%s/atom", candlepinHostname, candlepinPort, ownerORconsumer, id);
+        log.finer("SyndFeedUrl: "+url);
+        String authString = candlepinUsername+":"+candlepinPassword;
+        log.finer("SyndFeedAuthenticationString: "+authString);
+ 		byte[] authEncBytes = Base64.encodeBytesToBytes(authString.getBytes());
+ 		String authStringEnc = new String(authEncBytes);
+ 		log.finer("SyndFeed Base64 encoded SyndFeedAuthenticationString: "+authStringEnc);
+
+ 		SyndFeed feed = null;
+        URL feedUrl=null;
+        URLConnection urlConnection=null;
+		try {
+			feedUrl = new URL(url);
+			urlConnection = feedUrl.openConnection();
+            urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
+            SyndFeedInput input = new SyndFeedInput();
+            XmlReader xmlReader = new XmlReader(urlConnection);
+			feed = input.build(xmlReader);
+
+		} catch (MalformedURLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FeedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		log.fine("SyndFeed from "+feedUrl+": \n"+feed);
+        
+        return feed;
 	}
 }
