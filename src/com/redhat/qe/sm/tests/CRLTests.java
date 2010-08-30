@@ -29,7 +29,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
 			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
 			dependsOnGroups={},
-			dataProvider="getAllAvailableSubscriptionPoolsData",
+			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsTCMS(id="56025")
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws SQLException {

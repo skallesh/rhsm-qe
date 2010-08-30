@@ -260,11 +260,11 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	// Data Providers ***********************************************************************
 
 	
-	@DataProvider(name="getAllAvailableSubscriptionPoolsData")
-	public Object[][] getAllAvailableSubscriptionPoolsDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableSubscriptionPoolsDataAsListOfLists());
+	@DataProvider(name="getAvailableSubscriptionPoolsData")
+	public Object[][] getAvailableSubscriptionPoolsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAvailableSubscriptionPoolsDataAsListOfLists());
 	}
-	protected List<List<Object>> getAllAvailableSubscriptionPoolsDataAsListOfLists() {
+	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		

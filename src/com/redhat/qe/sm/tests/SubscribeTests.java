@@ -38,7 +38,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
-			dataProvider="getAllAvailableSubscriptionPoolsData")
+			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41680")
 	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -69,7 +69,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
-			dataProvider="getAllAvailableSubscriptionPoolsData")
+			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41686")
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
 // non-dataProvided test procedure

@@ -868,6 +868,13 @@ repolist: 0
 		 
 	}
 	
+	public String getRedhatRelease() {
+//		// verify the grinder hostname is a rhel 5 machine
+//		log.info("Verifying prerequisite...  hostname '"+grinderHostname+"' is a Red Hat Enterprise Linux .* release 5 machine.");
+//		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 5.*\"").getExitCode(),Integer.valueOf(0),"Grinder hostname must be RHEL 5.*");
+		return sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout();
+	}
+	
 	// protected methods ************************************************************
 
 	protected boolean poolsNoLongerAvailable(ArrayList<SubscriptionPool> beforeSubscription, ArrayList<SubscriptionPool> afterSubscription) {

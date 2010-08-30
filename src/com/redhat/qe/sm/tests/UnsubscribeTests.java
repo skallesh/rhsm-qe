@@ -110,7 +110,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 //			dependsOnGroups={"sm_stage4"},
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
-			dataProvider="getAllAvailableSubscriptionPoolsData")
+			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41903")
 	public void AttemptToReuseRevokedEntitlementCerts_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
