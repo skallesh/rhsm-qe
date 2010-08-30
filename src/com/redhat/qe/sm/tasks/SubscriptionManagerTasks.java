@@ -36,6 +36,7 @@ public class SubscriptionManagerTasks {
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	public static String consumerCertFile		= "/etc/pki/consumer/cert.pem";
 	public static String consumerKeyFile		= "/etc/pki/consumer/key.pem";
+	public static String factsDir				= "/etc/rhsm/facts/";
 
 	public SubscriptionManagerTasks() {
 		super();
@@ -515,6 +516,8 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the unregister command
 	}
 	
+	
+	
 	// list module tasks ************************************************************
 	
 	/**
@@ -563,6 +566,8 @@ public class SubscriptionManagerTasks {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
 		return list_(null,null,Boolean.TRUE);
 	}
+	
+	
 	
 	// subscribe module tasks ************************************************************
 
@@ -762,6 +767,8 @@ public class SubscriptionManagerTasks {
 				"No Available subscription pools to list",assertMsg);
 	}
 	
+	
+	
 	// unsubscribe module tasks ************************************************************
 
 	/**
@@ -827,6 +834,48 @@ public class SubscriptionManagerTasks {
 
 		return certFileExists;
 	}
+	
+	
+	// facts module tasks ************************************************************
+	
+	/**
+	 * facts without asserting results
+	 */
+	public SSHCommandResult facts_(Boolean list, Boolean update) {
+
+		// assemble the register command
+		String										command  = "subscription-manager-cli facts";	
+		if (list!=null && list)			command += " --list";
+		if (update!=null && update)		command += " --update";
+		
+		// register without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * @param list
+	 * @param update
+	 * @return
+	 */
+	public SSHCommandResult facts(Boolean list, Boolean update) {
+		ConsumerCert consumerCert = getCurrentConsumerCert();
+		
+		SSHCommandResult sshCommandResult = facts_(list, update);
+
+		// assert results for a successful facts
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The facts command was a success.");
+		String regex = "";
+		if (list!=null && list)		regex=".*:.*";					// list
+		if (update!=null && update)	regex=consumerCert.consumerid;	// consumerid
+
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+		
+		return sshCommandResult; // from the facts command
+	}
+	
+	
+	
+	
 	
 	
 	

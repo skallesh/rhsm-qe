@@ -142,4 +142,17 @@
 			</run>
 		</groups>
 	</test>
+	
+	<test name="Event Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="events" />
+			</run>
+		</groups>
+	</test>
+	
 </suite>

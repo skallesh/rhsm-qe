@@ -11,6 +11,7 @@ import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.abstractions.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.SSLCertificateTruster;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -98,12 +99,30 @@ public class CandlepinTasks {
 	public void refreshSubscriptionPools(String server, String port, String owner, String password) {
 		log.info("Refreshing the subscription pools for owner '"+owner+"' on candlepin server '"+server+"'...");
 		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://localhost:8443/candlepin/owners/admin/subscriptions
-		// /usr/bin/curl -u candlepin_system_admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://candlepin1.devlab.phx1.redhat.com:443/candlepin/owners/1616678/subscriptions
-		//                                                                                                                                                                                                             ^orgid of the user for whom you are refreshing pools can be found by connecting to the database -> see https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/entitlement_qe_get_products
+		// /usr/bin/curl -u candlepin_system_admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://candlepin1.devlab.phx1.redhat.com:443/candlepin/owners/1616678/subscriptions                                                                                                                                                                                                           ^orgid of the user for whom you are refreshing pools can be found by connecting to the database -> see https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/entitlement_qe_get_products
 
 		String command = "/usr/bin/curl -u "+owner+":"+password+" -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://"+server+":"+port+"/candlepin/owners/"+owner+"/subscriptions";
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		//TODO
+		// return the JobDetail from sshCommandResult.getStdout()
 	}
+	
+	//TODO
+//	public void getJobDetail(String id) {
+//		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request GET https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d
+//		
+//		{
+//			  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+//			  "state" : "FINISHED",
+//			  "result" : "Pools refreshed for owner admin",
+//			  "startTime" : "2010-08-30T20:01:11.724+0000",
+//			  "finishTime" : "2010-08-30T20:01:11.800+0000",
+//			  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+//			  "updated" : "2010-08-30T20:01:11.932+0000",
+//			  "created" : "2010-08-30T20:01:11.721+0000"
+//			}
+//	}
 	
 	public void restartTomcat() {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
