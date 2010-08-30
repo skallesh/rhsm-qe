@@ -10,6 +10,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
@@ -172,7 +173,7 @@ public class GeneralTests extends SubscriptionManagerTestScript{
 			String usage = "Usage: subscription-manager-cli register [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, registerOptions}));
+			ll.add(Arrays.asList(new Object[]{ new BlockedByBzBug("628589", smHelpCommand, optionsRegex, registerOptions)}));
 		}
 		
 		// MODULE: reregister
