@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.abstractions;
+package com.redhat.qe.sm.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class EntitlementCert extends CandlepinAbstraction {
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
+
+public class EntitlementCert extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String name;

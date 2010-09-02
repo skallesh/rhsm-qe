@@ -16,11 +16,11 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
-import com.redhat.qe.sm.abstractions.ConsumerCert;
-import com.redhat.qe.sm.abstractions.EntitlementCert;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
-import com.redhat.qe.sm.abstractions.InstalledProduct;
-import com.redhat.qe.sm.abstractions.ProductSubscription;
+import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.SubscriptionPool;
 
 /**
  * @author jsefler

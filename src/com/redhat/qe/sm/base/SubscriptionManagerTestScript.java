@@ -18,7 +18,7 @@ import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -126,7 +126,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		if (!(	serverHostname.equals("") || serverHostname.startsWith("$") ||
 				serverInstallDir.equals("") || serverInstallDir.startsWith("$") )) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.tasks.CandlepinTasks(server);
+			servertasks = new com.redhat.qe.sm.tasks.CandlepinTasks(server,serverInstallDir);
 
 		} else {
 			log.info("Assuming the server is already setup and running.");
@@ -149,7 +149,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");
 			servertasks.cleanOutCRL();
 			if (deployServerOnPremises)
-				servertasks.deploy(serverInstallDir,serverImportDir,serverBranch);
+				servertasks.deploy(serverImportDir,serverBranch);
 			
 			// also connect to the candlepin server database
 			connectToDatabase();  // do this after the call to deploy since it will restart postgresql

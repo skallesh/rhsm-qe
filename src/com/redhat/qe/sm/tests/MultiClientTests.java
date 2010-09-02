@@ -7,8 +7,8 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.data.SubscriptionPool;
 
 /**
  * @author jsefler

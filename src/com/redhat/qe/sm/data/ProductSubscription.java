@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.abstractions;
+package com.redhat.qe.sm.data;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class ProductSubscription extends CandlepinAbstraction {
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
+
+public class ProductSubscription extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String productName;

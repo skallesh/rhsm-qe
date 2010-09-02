@@ -1,83 +1,109 @@
 package com.redhat.qe.sm.tests;
 
-import java.net.URL;
-import java.net.URLConnection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.CandlepinAbstraction;
-import com.redhat.qe.sm.abstractions.ConsumerCert;
-import com.redhat.qe.sm.abstractions.ProductSubscription;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.CandlepinTasks;
-import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SSLCertificateTruster;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.XmlReader;
 
 
 
 /**
  * @author jsefler
  *
+ *
+ *
+ * https://engineering.redhat.com/trac/Entitlement/wiki/CandlepinRequirements
+ *    (A means automated, B means blocked)
+Events
+   1. The following events should be raised
+A         1. Consumer Created
+A         2. Consumer Updated
+A         3. Consumer Deleted
+B         4. Pool Created
+A         5. Pool Updated
+B         6. Pool Deleted
+A         7. Entitlement Created
+A            Entitlement Modified
+A         8. Entitlement Deleted
+B         9. Product Created
+B        10. Product Deleted
+A        11. Owner Created
+A        12. Owner Deleted
+        13. Export Created
+        14. Import Done 
+A   2. Events should be consumable via RSS based on owner
+A   3. Events should be consumable via RSS based on consumer
+   4. AMQP
+         1. It should be possible to enable each message type to be published to an AMQP Bus.
+         2. It should be possible to publish no messages to the AMQP bus. 
  */
 @Test(groups={"events"})
 public class EventTests extends SubscriptionManagerTestScript{
+	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
+	protected JSONObject testOwner;
+	protected String testProductId = "newProduct"+System.currentTimeMillis();
+	protected JSONObject testProduct;
+	protected String testPoolId = "newPool"+System.currentTimeMillis();
+	protected JSONObject testPool;
 	
 
-	@Test(	description="subscription-manager: events: basic events fire on register",
-			groups={"BasicEventsFireOnRegister_Test"}, dependsOnGroups={},
+	@Test(	description="subscription-manager: events: Consumer Created is sent over an RSS atom feed.",
+			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void BasicEventsFireOnRegister_Test() {
+	public void ConsumerCreated_Test() {
 		
 		// start fresh by unregistering
 		clienttasks.unregister();
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerId = "1"; // FIXME hard-coded owner id
-        SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
  
         // fire a register event
 		clienttasks.register(clientusername,clientpassword,null,null,null,null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerId, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
         
 		// assert the consumer feed...
 		assertTheNewConsumerFeed(consumerCert.consumerid, null, newEventTitles);
 	}
 	
 	
-	@Test(	description="subscription-manager: events: basic events fire on subscribe",
-			groups={"BasicEventsFireOnSubscribe_Test"}, dependsOnGroups={"BasicEventsFireOnRegister_Test"},
+	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
+			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsTCMS(id="50403")
-	public void BasicEventsFireOnSubscribe_Test() {
+	public void EnititlementCreated_Test() {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerId = "1"; // FIXME hard-coded owner id
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
  
         // fire a subscribe event
@@ -87,26 +113,30 @@ public class EventTests extends SubscriptionManagerTestScript{
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
 
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerId, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
        
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 	}
 	
 	
-	@Test(	description="subscription-manager: events: basic events fire on unsubscribe",
-			groups={"BasicEventsFireOnModifiedPoolAndEntitlement_Test"}, dependsOnGroups={"BasicEventsFireOnSubscribe_Test"},
+	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
+			groups={"PoolModifiedAndEntitlementModified_Test"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void BasicEventsFireOnModifiedPoolAndEntitlement_Test() throws SQLException {
+	public void PoolModifiedAndEntitlementModified_Test() throws SQLException {
 		//FIXME
-		if (true) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
+		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerId = "1"; // FIXME hard-coded owner id
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         
         // find the pool id of a currently consumed product
@@ -118,122 +148,280 @@ public class EventTests extends SubscriptionManagerTestScript{
 		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+pool+"' by subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
-		
+
 		log.info("Now let's refresh the subscription pools...");
 		servertasks.refreshSubscriptionPools(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		sleep(10*1000);
 //		sleep(1*60*1000);sleep(10*1000);  // give the server a chance to finish this asynchronous job
 
+		// assert the feed...
+		assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
+		
         // assert the owner feed...
-		assertTheNewOwnerFeed(ownerId, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
  
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, new String[]{"ENTITLEMENT MODIFIED"});
 	}
 	
 	
-	@Test(	description="subscription-manager: events: basic events fire on unsubscribe",
-			groups={"BasicEventsFireOnUnsubscribe_Test"}, dependsOnGroups={"BasicEventsFireOnModifiedPoolAndEntitlement_Test"},
+	@Test(	description="subscription-manager: events: Entitlement Deleted is sent over an RSS atom feed.",
+			groups={"EnititlementDeleted_Test"}, dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void BasicEventsFireOnUnsubscribe_Test() {
+	public void EnititlementDeleted_Test() {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerId = "1"; // FIXME hard-coded owner id
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
  
         // fire an unsubscribe event
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String[] newEventTitles = new String[]{"ENTITLEMENT DELETED"};
 
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerId, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
        
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 	}
 	
 	
-	@Test(	description="subscription-manager: events: basic events fire on facts update",
-			groups={"BasicEventsFireOnFactsUpdate_Test"}, dependsOnGroups={"BasicEventsFireOnUnsubscribe_Test"},
+	@Test(	description="subscription-manager: events: Consumer Modified is sent over an RSS atom feed.",
+			groups={"ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void BasicEventsFireOnFactsUpdate_Test() {
+	public void ConsumerModified_Test() {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerId = "1"; // FIXME hard-coded owner id
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
  
         // fire an facts update event by overriding a fact in /etc/rhsm/facts/event_tests.facts
         String factsFile = clienttasks.factsDir+"eventTests.facts";
-        client.runCommandAndWait("echo '{\"events.test.description\": \"Testing basic events fire on facts update.\", \"events.test.currentTimeMillis\": \""+System.currentTimeMillis()+"\"}' > "+factsFile);	// create an override for facts
+        client.runCommandAndWait("echo '{\"events.test.description\": \"Testing CONSUMER MODIFIED event fires on facts update.\", \"events.test.currentTimeMillis\": \""+System.currentTimeMillis()+"\"}' > "+factsFile);	// create an override for facts
 		clienttasks.facts(null,true);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerId, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
        
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 	}
 	
 	
-	@Test(	description="subscription-manager: events: basic events fire on unregister",
-			groups={"BasicEventsFireOnUnregister_Test"}, dependsOnGroups={"BasicEventsFireOnFactsUpdate_Test"},
+	@Test(	description="subscription-manager: events: Consumer Deleted is sent over an RSS atom feed.",
+			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void BasicEventsFireOnUnregister_Test() {
+	public void ConsumerDeleted_Test() {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerId = "1"; // FIXME hard-coded owner id
-        SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
  
         // fire an unregister event
 		clienttasks.unregister();
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
 		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerId, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Owner Created is sent over an RSS atom feed.",
+			groups={"OwnerCreated_Test"}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void OwnerCreated_Test() throws JSONException {
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+ 
+        // do something that will fire a create owner event
+		testOwner = servertasks.cpc_create_owner(testOwnerKey);
+		String[] newEventTitles = new String[]{"OWNER CREATED"};
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+	
+		// assert the owner feed...
+		assertTheNewOwnerFeed(testOwner.getString("key"), null, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Product Created is sent over an RSS atom feed.",
+			groups={"ProductCreated_Test"}, dependsOnGroups={"OwnerCreated_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void ProductCreated_Test() throws JSONException {
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+
+        // do something that will fire a create product event
+		testProduct = servertasks.cpc_create_product(testProductId, testProductId+" For Test");
+		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
+
+		// WORKAROUND
+		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.");
+
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Pool Created is sent over an RSS atom feed.",
+			groups={"PoolCreated_Test"}, dependsOnGroups={"ProductCreated_Test"},
+			enabled=true, alwaysRun=true)
+	//@ImplementsTCMS(id="")
+	public void PoolCreated_Test() throws JSONException {
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+
+        // do something that will fire a create product event
+		testPool = servertasks.cpc_create_pool(testProduct.getString("id"), testOwner.getString("id"), "99");
+		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
+
+		// WORKAROUND
+		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.");
+
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Pool Deleted is sent over an RSS atom feed.",
+			groups={"PoolDeleted_Test"}, dependsOnGroups={"PoolCreated_Test"},
+			enabled=true, alwaysRun=true)
+	//@ImplementsTCMS(id="")
+	public void PoolDeleted_Test() throws JSONException {
+		
+		// WORKAROUND
+		if (true) throw new SkipException("09/02/2010 Events for PRODUCT DELETED and the cpc delete_product are not yet dev complete.");
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+
+        // do something that will fire a delete pool event
+		//servertasks.cpc_delete_pool(testPool.getString("id"));
+		String[] newEventTitles = new String[]{"POOL DELETED"};
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Product Deleted is sent over an RSS atom feed.",
+			groups={"ProductDeleted_Test"}, dependsOnGroups={"PoolDeleted_Test"},
+			enabled=true, alwaysRun=true)
+	//@ImplementsTCMS(id="")
+	public void ProductDeleted_Test() throws JSONException {
+		
+		// WORKAROUND
+		if (true) throw new SkipException("09/02/2010 Events for PRODUCT DELETED and the cpc delete_product are not yet dev complete.");
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+
+        // do something that will fire a delete product event
+		//servertasks.cpc_delete_product(testProduct.getString("id"));
+		String[] newEventTitles = new String[]{"PRODUCT DELETED"};
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Owner Deleted is sent over an RSS atom feed.",
+			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ProductDeleted_Test"},
+			enabled=true, alwaysRun=true)
+	//@ImplementsTCMS(id="")
+	public void OwnerDeleted_Test() {
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+ 
+		// do something that will fire a delete owner event
+		servertasks.cpc_delete_owner(testOwnerKey);
+		String[] newEventTitles = new String[]{"OWNER DELETED"};
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 
+	
+	
+	
+	
+	
+	
 	
 	// Protected Methods ***********************************************************************
 
-	protected void assertTheNewOwnerFeed(String ownerId, SyndFeed oldOwnerFeed, String[] newEventTitles) {
+	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) {
 		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
-		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+clientOwnerUsername);
-		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed entries for owner id "+ownerId+" has increased by "+newEventTitles.length);
+		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed for owner id "+ownerKey+" has increased by "+newEventTitles.length+" entries.");
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle();
-			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for owner id "+ownerId+" is '"+newEventTitle+"'.");
+			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for owner id "+ownerKey+" is '"+newEventTitle+"'.");
 			i++;
 		}
 	}
 	
-	protected void assertTheNewConsumerFeed(String consumerId, SyndFeed oldConsumerFeed, String[] newEventTitles) {
+	protected void assertTheNewConsumerFeed(String consumerKey, SyndFeed oldConsumerFeed, String[] newEventTitles) {
 		// assert the consumer feed...
 		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerId, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
-		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerId);
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed entries for consumer "+consumerId+" has increased by "+newEventTitles.length);
+		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerKey);
+		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerKey+" has increased by "+newEventTitles.length+" entries.");
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
-			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for consumer "+consumerId+" is '"+newEventTitle+"'.");
+			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for consumer "+consumerKey+" is '"+newEventTitle+"'.");
 			i++;
 		}
 	}
 	
+	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) {
+		// assert the consumer feed...
+		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+
+		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
+		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+		int i=0;
+		for (String newEventTitle : newEventTitles) {
+			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
+			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry is '"+newEventTitle+"'.");
+			i++;
+		}
+	}
 	
 	// Data Providers ***********************************************************************
 
@@ -252,10 +440,10 @@ public class EventTests extends SubscriptionManagerTestScript{
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
 		if (endDate!=null) {
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+CandlepinAbstraction.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
 		}
 		if (startDate!=null) {
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+CandlepinAbstraction.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
 		}
 		
 		Statement sql = dbConnection.createStatement();

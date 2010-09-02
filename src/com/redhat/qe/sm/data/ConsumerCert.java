@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.abstractions;
+package com.redhat.qe.sm.data;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
+
 /**
  * @author jsefler
  *
  */
-public class ConsumerCert extends CandlepinAbstraction {
+public class ConsumerCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields

@@ -7,9 +7,12 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.RevokedCert;
+import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -28,31 +31,28 @@ public class CandlepinTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
+	protected /*NOT static*/ String serverInstallDir = null;
 	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
+	public static String rubyClientDir	= "/client/ruby/";
 
 	public CandlepinTasks() {
 		super();
 		// TODO Auto-generated constructor stub
 	}
 	
-	public CandlepinTasks(SSHCommandRunner runner) {
+	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir) {
 		super();
-		setSSHCommandRunner(runner);
+		this.sshCommandRunner = sshCommandRunner;
+		this.serverInstallDir = serverInstallDir;
 	}
-	
-	public void setSSHCommandRunner(SSHCommandRunner runner) {
-		sshCommandRunner = runner;
-	}
-	
 	
 	
 	/**
-	 * @param serverInstallDir
 	 * @param serverImportDir
 	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
 	 */
-	public void deploy(String serverInstallDir, String serverImportDir, String branch) {
+	public void deploy(String serverImportDir, String branch) {
 
 		log.info("Upgrading the server to the latest git tag...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serverInstallDir),1,"Found the server install directory "+serverInstallDir);
@@ -166,17 +166,63 @@ public class CandlepinTasks {
 	}
 	
 	
-	
+	public JSONObject cpc_create_owner(String owner_name) throws JSONException {
+		log.info("Using the ruby client to create_owner owner_name='"+owner_name+"'...");
 
-	public static SyndFeed getSyndFeedForOwner(String id, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
-		return getSyndFeedFor("owners",id,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_owner \"%s\"", serverInstallDir+rubyClientDir, owner_name);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+		
+		// REMINDER: DateFormat used in JSON objects is...
+		// protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"
+
 	}
 	
-	public static SyndFeed getSyndFeedForConsumer(String id, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
-		return getSyndFeedFor("consumers",id,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	public SSHCommandResult cpc_delete_owner(String owner_name) {
+		log.info("Using the ruby client to delete_owner owner_name='"+owner_name+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc delete_owner \"%s\"", serverInstallDir+rubyClientDir, owner_name);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+				
+		return sshCommandResult;
 	}
 	
-	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String id, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+	public JSONObject cpc_create_product(String id, String name) throws JSONException {
+		log.info("Using the ruby client to create_product id='"+id+"' name='"+name+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_product \"%s\" \"%s\"", serverInstallDir+rubyClientDir, id, name);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
+
+	public JSONObject cpc_create_pool(String productId, String ownerId, String quantity) throws JSONException {
+		log.info("Using the ruby client to create_pool productId='"+productId+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, ownerId, quantity);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
+	
+	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+		return getSyndFeedFor("owners",key,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	}
+	
+	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+		return getSyndFeedFor("consumers",key,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	}
+	
+	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+		return getSyndFeedFor(null,null,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	}
+	
+	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
 			
 		/* References:
 		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
@@ -186,9 +232,13 @@ public class CandlepinTasks {
 			
 		SSLCertificateTruster.trustAllCerts();
 		
-        
-		String url = String.format("https://%s:%s/candlepin/%s/%s/atom", candlepinHostname, candlepinPort, ownerORconsumer, id);
-        log.finer("SyndFeedUrl: "+url);
+		// set the atom feed url for an owner, consumer, or null
+		String url = String.format("https://%s:%s/candlepin/atom", candlepinHostname, candlepinPort);
+		if (ownerORconsumer!=null && key!=null) {
+			url = String.format("https://%s:%s/candlepin/%s/%s/atom", candlepinHostname, candlepinPort, ownerORconsumer, key);
+		}
+		
+        log.fine("SyndFeedUrl: "+url);
         String authString = candlepinUsername+":"+candlepinPassword;
         log.finer("SyndFeedAuthenticationString: "+authString);
  		byte[] authEncBytes = Base64.encodeBytesToBytes(authString.getBytes());
@@ -219,7 +269,7 @@ public class CandlepinTasks {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		log.fine("SyndFeed from "+feedUrl+": \n"+feed);
+		log.finer("SyndFeed from "+feedUrl+":\n"+feed);
         
         return feed;
 	}

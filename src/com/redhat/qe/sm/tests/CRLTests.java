@@ -11,12 +11,12 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.CandlepinAbstraction;
-import com.redhat.qe.sm.abstractions.ProductSubscription;
-import com.redhat.qe.sm.abstractions.RevokedCert;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.RevokedCert;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
  * @author jsefler
@@ -143,10 +143,10 @@ public class CRLTests extends SubscriptionManagerTestScript{
 		String updateSubscriptionPoolEndDateSql = "";
 		String updateSubscriptionPoolStartDateSql = "";
 		if (endDate!=null) {
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+CandlepinAbstraction.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
 		}
 		if (startDate!=null) {
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+CandlepinAbstraction.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
 		}
 		
 		Statement sql = dbConnection.createStatement();

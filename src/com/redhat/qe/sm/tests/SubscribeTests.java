@@ -17,13 +17,13 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
-import com.redhat.qe.sm.abstractions.CandlepinAbstraction;
-import com.redhat.qe.sm.abstractions.EntitlementCert;
-import com.redhat.qe.sm.abstractions.ProductSubscription;
-import com.redhat.qe.sm.abstractions.SubscriptionPool;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
  * @author ssalevan
