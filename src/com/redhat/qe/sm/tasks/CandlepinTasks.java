@@ -96,17 +96,38 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	public void refreshSubscriptionPools(String server, String port, String owner, String password) {
+	static public JSONObject curl_refresh_pools(SSHCommandRunner runner, String server, String port, String owner, String password) throws JSONException {
 		log.info("Refreshing the subscription pools for owner '"+owner+"' on candlepin server '"+server+"'...");
 		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://localhost:8443/candlepin/owners/admin/subscriptions
 		// /usr/bin/curl -u candlepin_system_admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://candlepin1.devlab.phx1.redhat.com:443/candlepin/owners/1616678/subscriptions                                                                                                                                                                                                           ^orgid of the user for whom you are refreshing pools can be found by connecting to the database -> see https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/entitlement_qe_get_products
 
 		String command = "/usr/bin/curl -u "+owner+":"+password+" -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://"+server+":"+port+"/candlepin/owners/"+owner+"/subscriptions";
-		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 		
-		//TODO
-		// return the JobDetail from sshCommandResult.getStdout()
+		// execute the command from the runner (could be *any* runner)
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout());
 	}
+	
+	static public void curl_export_consumer(SSHCommandRunner runner, String server, String port, String owner, String password, String consumerKey, String intoExportZipFile) throws JSONException {
+		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
+		// /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
+		String command = "/usr/bin/curl -k -u "+owner+":"+password+" https://"+server+":"+port+"/candlepin/consumers/"+consumerKey+"/export > "+intoExportZipFile;
+		
+		// execute the command from the runner (could be *any* runner)
+		RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+		RemoteFileTasks.runCommandAndAssert(runner, "unzip -t "+intoExportZipFile, 0);
+	}
+	
+	static public void curl_import_consumer(SSHCommandRunner runner, String server, String port, String owner, String password, String ownerKey, String fromExportZipFile) throws JSONException {
+		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
+		// curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
+		String command = "/usr/bin/curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+"/candlepin/owners/"+ownerKey+"/import";
+		
+		// execute the command from the runner (could be *any* runner)
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+	}
+	
 	
 	//TODO
 //	public void getJobDetail(String id) {
@@ -185,9 +206,7 @@ public class CandlepinTasks {
 
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc delete_owner \"%s\"", serverInstallDir+rubyClientDir, owner_name);
-		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
-				
-		return sshCommandResult;
+		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 	}
 	
 	public JSONObject cpc_create_product(String id, String name) throws JSONException {
@@ -205,6 +224,24 @@ public class CandlepinTasks {
 
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, ownerId, quantity);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
+	
+	public SSHCommandResult cpc_delete_pool(String id) {
+		log.info("Using the ruby client to delete_pool id='"+id+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc delete_pool \"%s\"", serverInstallDir+rubyClientDir, id);
+		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+	}
+	
+	public JSONObject cpc_refresh_pools(String ownerKey, boolean immediate) throws JSONException {
+		log.info("Using the ruby client to refresh_pools ownerKey='"+ownerKey+"' immediate='"+immediate+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc refresh_pools \"%s\" %s", serverInstallDir+rubyClientDir, ownerKey, Boolean.toString(immediate));
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 		
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));

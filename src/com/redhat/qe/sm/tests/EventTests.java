@@ -17,6 +17,7 @@ import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.CandlepinTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
@@ -35,9 +36,9 @@ Events
 A         1. Consumer Created
 A         2. Consumer Updated
 A         3. Consumer Deleted
-B         4. Pool Created
+A         4. Pool Created
 A         5. Pool Updated
-B         6. Pool Deleted
+A         6. Pool Deleted
 A         7. Entitlement Created
 A            Entitlement Modified
 A         8. Entitlement Deleted
@@ -45,8 +46,8 @@ B         9. Product Created
 B        10. Product Deleted
 A        11. Owner Created
 A        12. Owner Deleted
-        13. Export Created
-        14. Import Done 
+A        13. Export Created
+A         14. Import Done 
 A   2. Events should be consumable via RSS based on owner
 A   3. Events should be consumable via RSS based on consumer
    4. AMQP
@@ -128,7 +129,8 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"PoolModifiedAndEntitlementModified_Test"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void PoolModifiedAndEntitlementModified_Test() throws SQLException {
+	public void PoolModifiedAndEntitlementModified_Test() throws SQLException, JSONException {
+		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		//FIXME
 		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
 
@@ -150,9 +152,10 @@ public class EventTests extends SubscriptionManagerTestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-		servertasks.refreshSubscriptionPools(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
-		sleep(10*1000);
-//		sleep(1*60*1000);sleep(10*1000);  // give the server a chance to finish this asynchronous job
+		//CandlepinTasks.curl_refresh_pools(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
+		servertasks.cpc_refresh_pools(ownerKey, true);
+		clienttasks.changeCertFrequency(1);
+		sleep(1*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 
 		// assert the feed...
 		assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
@@ -247,10 +250,11 @@ public class EventTests extends SubscriptionManagerTestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Owner Created is sent over an RSS atom feed.",
-			groups={"OwnerCreated_Test"}, dependsOnGroups={},
-			enabled=true)
+			groups={"OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
+			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerCreated_Test() throws JSONException {
+		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
@@ -272,6 +276,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ProductCreated_Test() throws JSONException {
+		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
@@ -281,7 +286,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 
 		// WORKAROUND
-		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.");
+		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.  Agilo Story: http://mgmt1.rhq.lab.eng.bos.redhat.com:8001/web/ticket/3737");
 
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -293,19 +298,22 @@ public class EventTests extends SubscriptionManagerTestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void PoolCreated_Test() throws JSONException {
+		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
 
         // do something that will fire a create product event
 		testPool = servertasks.cpc_create_pool(testProduct.getString("id"), testOwner.getString("id"), "99");
-		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
-
-		// WORKAROUND
-		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.");
+		String[] newEventTitles = new String[]{"POOL CREATED"};
 
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
+		
+		// TODO
+//		<jsefler> dgoodwin: your timing for the event for POOL CREATED is perfect.  I'll automate a test for it now.  It looks like the event is working.
+//		 dgoodwin dgregor_pto dgao
+//		<dgoodwin> jsefler: cool, three possible cases, creation via candlepin api (post /pools), refresh pools after creating a subscription, and creation of the rh personal "sub pool"
 	}
 	
 	
@@ -314,15 +322,13 @@ public class EventTests extends SubscriptionManagerTestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void PoolDeleted_Test() throws JSONException {
-		
-		// WORKAROUND
-		if (true) throw new SkipException("09/02/2010 Events for PRODUCT DELETED and the cpc delete_product are not yet dev complete.");
+		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
 
         // do something that will fire a delete pool event
-		//servertasks.cpc_delete_pool(testPool.getString("id"));
+		servertasks.cpc_delete_pool(testPool.getString("id"));
 		String[] newEventTitles = new String[]{"POOL DELETED"};
 		
 		// assert the feed...
@@ -335,6 +341,14 @@ public class EventTests extends SubscriptionManagerTestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void ProductDeleted_Test() throws JSONException {
+		
+//		IRC CHAT ON 9/3/2010
+//		<dgoodwin> that one is worse =]
+//		 products are detached in the db (as they can also live externally)
+//		<dgoodwin> and deleting them can leave things dangling, we looked at it earlier, saw how hairy it was, and decided to *not* delete them for now
+//		 jsefler: so product delete needs to be handled as separate story, if at all IMO
+//		<jsefler> ok, so then for now there is no event firing of DELETE PRODUCT to test
+//		<dgoodwin> correct
 		
 		// WORKAROUND
 		if (true) throw new SkipException("09/02/2010 Events for PRODUCT DELETED and the cpc delete_product are not yet dev complete.");
@@ -351,11 +365,74 @@ public class EventTests extends SubscriptionManagerTestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: events: Export Created is sent over an RSS atom feed.",
+			groups={"ExportCreated_Test"}, dependsOnGroups={"ProductDeleted_Test"},
+			enabled=true, alwaysRun=true)
+	//@ImplementsTCMS(id="")
+	public void ExportCreated_Test() throws JSONException {
+		
+		// start fresh by unregistering
+		clienttasks.unregister();
+		
+		// register a type=candlepin consumer and subscribe to get an entitlement
+		// NOTE: Without the subscribe, this bugzilla is thrown: 
+		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,"candlepin",null,null,null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe(pool.poolId, null, null, null, null);
+		//String consumerKey = result.getStdout().split(" ")[0];
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        
+        // do something that will fire a exported created event
+		CandlepinTasks.curl_export_consumer(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,consumerCert.consumerid,"/tmp/export.zip");
+		String[] newEventTitles = new String[]{"EXPORT CREATED"};
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
+		// assert the owner feed...
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+        
+		// assert the consumer feed...
+		assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+	}
+	
+	
+	@Test(	description="subscription-manager: events: Import Created is sent over an RSS atom feed.",
+			groups={"ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void ImportCreated_Test() throws JSONException {
+		
+		// get the owner and consumer feeds before we test the firing of a new event
+		String ownerKey = testOwner.getString("key");
+        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+        
+        // do something that will fire an import created event
+		CandlepinTasks.curl_import_consumer(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,ownerKey,"/tmp/export.zip");
+		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
+		
+		// assert the owner feed...
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+	}
+	
+	
 	@Test(	description="subscription-manager: events: Owner Deleted is sent over an RSS atom feed.",
-			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ProductDeleted_Test"},
+			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerDeleted_Test() {
+		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
@@ -367,14 +444,6 @@ public class EventTests extends SubscriptionManagerTestScript{
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
-	
-
-	
-	
-	
-	
-	
-	
 	
 	// Protected Methods ***********************************************************************
 
@@ -411,8 +480,8 @@ public class EventTests extends SubscriptionManagerTestScript{
 	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) {
 		// assert the consumer feed...
 		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
-
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
+		
+		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);		
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
 		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
 		int i=0;
