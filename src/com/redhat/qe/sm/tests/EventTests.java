@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.tests;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Calendar;
@@ -21,6 +22,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
+import com.sun.syndication.io.FeedException;
 
 
 
@@ -68,7 +70,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerCreated_Test() {
+	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException {
 		
 		// start fresh by unregistering
 		clienttasks.unregister();
@@ -98,7 +100,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsTCMS(id="50403")
-	public void EnititlementCreated_Test() {
+	public void EnititlementCreated_Test() throws IllegalArgumentException, IOException, FeedException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
@@ -129,7 +131,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"PoolModifiedAndEntitlementModified_Test"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void PoolModifiedAndEntitlementModified_Test() throws SQLException, JSONException {
+	public void PoolModifiedAndEntitlementModified_Test() throws SQLException, JSONException, IllegalArgumentException, IOException, FeedException {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		//FIXME
 		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
@@ -172,7 +174,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"EnititlementDeleted_Test"}, dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void EnititlementDeleted_Test() {
+	public void EnititlementDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
@@ -200,7 +202,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerModified_Test() {
+	public void ConsumerModified_Test() throws IllegalArgumentException, IOException, FeedException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
@@ -230,7 +232,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerDeleted_Test() {
+	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
@@ -253,7 +255,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerCreated_Test() throws JSONException {
+	public void OwnerCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -275,7 +277,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ProductCreated_Test"}, dependsOnGroups={"OwnerCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ProductCreated_Test() throws JSONException {
+	public void ProductCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -297,7 +299,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"PoolCreated_Test"}, dependsOnGroups={"ProductCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void PoolCreated_Test() throws JSONException {
+	public void PoolCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -321,7 +323,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"PoolDeleted_Test"}, dependsOnGroups={"PoolCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void PoolDeleted_Test() throws JSONException {
+	public void PoolDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -340,7 +342,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ProductDeleted_Test"}, dependsOnGroups={"PoolDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void ProductDeleted_Test() throws JSONException {
+	public void ProductDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		
 //		IRC CHAT ON 9/3/2010
 //		<dgoodwin> that one is worse =]
@@ -369,7 +371,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ExportCreated_Test"}, dependsOnGroups={"ProductDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void ExportCreated_Test() throws JSONException {
+	public void ExportCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		
 		// start fresh by unregistering
 		clienttasks.unregister();
@@ -408,7 +410,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ImportCreated_Test() throws JSONException {
+	public void ImportCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = testOwner.getString("key");
@@ -431,7 +433,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerDeleted_Test() {
+	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -445,9 +447,41 @@ public class EventTests extends SubscriptionManagerTestScript{
 		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
+	
+	@Test(	description="subscription-manager: events: negative test for user/password.",
+			groups={"NegativeUserPassword_Test"}, dependsOnGroups={},
+			enabled=true, alwaysRun=true)
+	@ImplementsTCMS(id="50404")
+	public void NegativeUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
+		String authuser="",authpwd="";
+
+		try {
+			// enter the wrong user, correct passwd
+			authuser = clientOwnerUsername+getRandInt();
+			authpwd = clientOwnerPassword;
+			CandlepinTasks.getSyndFeed(serverHostname, serverPort, authuser, authpwd);
+			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
+
+		} catch (IOException e) {
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is rejected when attempting to authorize with credentials "+authuser+":"+authpwd);
+		}
+		
+		try {
+			// enter the correct user, wrong passwd
+			authuser = clientOwnerUsername;
+			authpwd = clientOwnerPassword+getRandInt();
+			CandlepinTasks.getSyndFeed(serverHostname, serverPort, authuser, authpwd);
+			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
+
+		} catch (IOException e) {
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is rejected when attempting to authorize with credentials "+authuser+":"+authpwd);
+		}
+	}
+	
+	
 	// Protected Methods ***********************************************************************
 
-	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) {
+	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
@@ -462,7 +496,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 		}
 	}
 	
-	protected void assertTheNewConsumerFeed(String consumerKey, SyndFeed oldConsumerFeed, String[] newEventTitles) {
+	protected void assertTheNewConsumerFeed(String consumerKey, SyndFeed oldConsumerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		// assert the consumer feed...
 		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
@@ -477,7 +511,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 		}
 	}
 	
-	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) {
+	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		// assert the consumer feed...
 		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
@@ -491,11 +525,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			i++;
 		}
 	}
-	
-	// Data Providers ***********************************************************************
-
-	
-	
+		
 	
 	/**
 	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
@@ -526,5 +556,10 @@ public class EventTests extends SubscriptionManagerTestScript{
 		}
 		sql.close();
 	}
+
+	
+	
+	
+	// Data Providers ***********************************************************************
 
 }

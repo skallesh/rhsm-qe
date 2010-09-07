@@ -247,19 +247,19 @@ public class CandlepinTasks {
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 	
-	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
 		return getSyndFeedFor("owners",key,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
 	}
 	
-	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
 		return getSyndFeedFor("consumers",key,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
 	}
 	
-	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
 		return getSyndFeedFor(null,null,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
 	}
 	
-	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) {
+	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
 			
 		/* References:
 		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
@@ -285,7 +285,7 @@ public class CandlepinTasks {
  		SyndFeed feed = null;
         URL feedUrl=null;
         URLConnection urlConnection=null;
-		try {
+//		try {
 			feedUrl = new URL(url);
 			urlConnection = feedUrl.openConnection();
             urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
@@ -293,19 +293,19 @@ public class CandlepinTasks {
             XmlReader xmlReader = new XmlReader(urlConnection);
 			feed = input.build(xmlReader);
 
-		} catch (MalformedURLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FeedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		} catch (MalformedURLException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (IllegalArgumentException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (FeedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		log.finer("SyndFeed from "+feedUrl+":\n"+feed);
         
         return feed;
