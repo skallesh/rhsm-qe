@@ -229,7 +229,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Consumer Deleted is sent over an RSS atom feed.",
-			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test"},
+			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
@@ -448,11 +448,12 @@ public class EventTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager: events: negative test for user/password.",
-			groups={"NegativeUserPassword_Test"}, dependsOnGroups={},
+	@Test(	description="subscription-manager: events: negative test for super user/password.",
+			groups={"NegativeSuperUserPassword_Test"}, dependsOnGroups={},
+			
 			enabled=true, alwaysRun=true)
 	@ImplementsTCMS(id="50404")
-	public void NegativeUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void NegativeSuperUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
 		String authuser="",authpwd="";
 
 		try {
@@ -463,7 +464,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
 
 		} catch (IOException e) {
-			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is rejected when attempting to authorize with credentials "+authuser+":"+authpwd);
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is unauthorized when attempting to authorize with credentials "+authuser+":"+authpwd);
 		}
 		
 		try {
@@ -474,10 +475,65 @@ public class EventTests extends SubscriptionManagerTestScript{
 			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
 
 		} catch (IOException e) {
-			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is rejected when attempting to authorize with credentials "+authuser+":"+authpwd);
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is unauthorized when attempting to authorize with credentials "+authuser+":"+authpwd);
 		}
+		
+		// finally assert success with valid credentials
+		authuser = clientOwnerUsername;
+		authpwd = clientOwnerPassword;
+		SyndFeed feed = CandlepinTasks.getSyndFeed(serverHostname, serverPort, authuser, authpwd);
+		Assert.assertTrue(!feed.getEntries().isEmpty(),"Atom feed for all events is successful with valid credentials "+authuser+":"+authpwd);
 	}
 	
+	
+	@Test(	description="subscription-manager: events: negative test for consumer user/password.",
+			groups={"NegativeConsumerUserPassword_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
+			enabled=true)
+	@ImplementsTCMS(id="50404")
+	public void NegativeConsumerUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
+		String authuser="",authpwd="";
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+
+		try {
+			// enter the wrong user, correct passwd
+			authuser = client1username+getRandInt();
+			authpwd = client1password;
+			CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname, serverPort, authuser, authpwd);
+			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
+
+		} catch (IOException e) {
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is unauthorized when attempting to authorize with credentials "+authuser+":"+authpwd);
+		}
+		
+		try {
+			// enter the correct user, wrong passwd
+			authuser = client1username;
+			authpwd = client1password+getRandInt();
+			CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname, serverPort, authuser, authpwd);
+			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
+
+		} catch (IOException e) {
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 401", "Atom feed is unauthorized when attempting to authorize with credentials "+authuser+":"+authpwd);
+		}
+		
+		try {
+			// enter the correct user, correct passwd for super admin atom
+			authuser = client1username;
+			authpwd = client1password;
+			CandlepinTasks.getSyndFeed(serverHostname, serverPort, authuser, authpwd);
+			Assert.fail("Expected the candlepin server request for a syndication feed to return an HTTP response code 401 Unauthorized due to invalid authorization credentials "+authuser+":"+authpwd);
+
+		} catch (IOException e) {
+			Assert.assertContainsMatch(e.getMessage(), "HTTP response code: 403", "Atom feed is forbidden when attempting to authorize with credentials "+authuser+":"+authpwd);
+		}
+		
+		// finally assert success with valid credentials
+		authuser = client1username;
+		authpwd = client1password;
+		SyndFeed feed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname, serverPort, authuser, authpwd);
+		Assert.assertTrue(!feed.getEntries().isEmpty(),"Atom feed for consumer events is successful with valid credentials "+authuser+":"+authpwd);
+	}
+
 	
 	// Protected Methods ***********************************************************************
 
