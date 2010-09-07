@@ -18,6 +18,8 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
@@ -87,6 +89,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		
 		log.info("Register client2 under username '"+consumerUsername+"' as a system and assert that '"+systemSubscriptionName+"' is NOT yet available...");
 		client2tasks.unregister();
+		client1tasks.unregister();	// just in case client1 is still registered as the person consumer
 		client2tasks.register(consumerUsername, consumerPassword, "system", null, null, null);
 		List<SubscriptionPool> client2BeforeSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		pool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2BeforeSubscriptionPools);
@@ -205,7 +208,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 	
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement cert for RHEL Personal Bits is revoked once the person unregisters",
 			groups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnregisters_Test","RHELPersonal", "blockedByBug-624063"},
-			dependsOnGroups={"EnsureAvailabilityOfRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
+			dependsOnGroups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
 			dataProvider="getRHELPersonalData",
 			enabled=true)
 	//@ImplementsTCMS(id="55702,55718")
@@ -227,13 +230,23 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		Assert.assertTrue(systemProductSubscription!=null,systemSubscriptionName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"'.");
 
 		
-		log.info("Now, unregister the person on client 1 from the "+personSubscriptionName+" pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the '"+systemSubscriptionName+"' gets revoked from client2.");
+//		log.info("Now, unregister the person on client 1 from the "+personSubscriptionName+" pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the '"+systemSubscriptionName+"' gets revoked from client2.");
+//		client1tasks.unregister();
+//		int certFrequencyMinutes = 1;
+//		client2tasks.changeCertFrequency(certFrequencyMinutes);
+//		sleep(certFrequencyMinutes*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+//		systemProductSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemSubscriptionName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+//		Assert.assertTrue(systemProductSubscription==null,systemSubscriptionName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unregistered from the '"+personSubscriptionName+"' on client1");
+	
+		// REFERENCE FIX TO https://bugzilla.redhat.com/show_bug.cgi?id=624063
+		// FIXME: should probably rename this test
+		log.info("Now, attempt to unregister the person on client 1 from the "+personSubscriptionName+" pool and assert the unregister is blocked.");
+		SSHCommandResult result = client1tasks.unregister_();
+		Assert.assertTrue(result.getStderr().startsWith("Cannot unregister due to outstanding entitlement:"),"Attempting to unregister the person consumer is blocked when another system is register by the same consumer."); // stderr: Cannot unregister due to outstanding entitlement: 9
+		client2tasks.unsubscribeFromProductSubscription(systemProductSubscription);
 		client1tasks.unregister();
-		int certFrequencyMinutes = 1;
-		client2tasks.changeCertFrequency(certFrequencyMinutes);
-		sleep(certFrequencyMinutes*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
-		systemProductSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemSubscriptionName,client2tasks.getCurrentlyConsumedProductSubscriptions());
-		Assert.assertTrue(systemProductSubscription==null,systemSubscriptionName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unregistered from the '"+personSubscriptionName+"' on client1");
+		client2tasks.unregister();
+		
 	}
 	
 	
