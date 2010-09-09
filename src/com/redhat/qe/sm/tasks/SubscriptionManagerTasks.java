@@ -510,8 +510,8 @@ public class SubscriptionManagerTasks {
 		
 		// assert that the consumer cert and key have been removed
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls /etc/pki/entitlement/product | grep pem");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(),1,"The identify certificate has been removed after unregistering.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(),1,"The identify key has been removed after unregistering.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(),1,"The identity certificate '"+consumerCertFile+"' has been removed after unregistering.");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(),1,"The identity key '"+consumerKeyFile+"' has been removed after unregistering.");
 		
 		return sshCommandResult; // from the unregister command
 	}
