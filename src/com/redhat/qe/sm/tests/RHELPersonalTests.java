@@ -199,8 +199,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		log.info("Now, unsubscribe the person on client 1 from the '"+personSubscriptionName+"' pool and update the rhsmcertd frequency to 1 minute on client2.  Then assert that the '"+systemSubscriptionName+"' gets revoked from client2.");
 		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		int certFrequencyMinutes = 1;
-		client2tasks.changeCertFrequency(certFrequencyMinutes);
-		sleep(certFrequencyMinutes*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+		client2tasks.changeCertFrequency(certFrequencyMinutes, true);
 		systemProductSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertTrue(systemProductSubscription==null,systemConsumedProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unsubscribed from the "+personSubscriptionName+" on client1");
 	}

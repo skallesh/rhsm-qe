@@ -160,13 +160,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("insecure", "1");
-		client1tasks.changeCertFrequency(certFrequency);
+		client1tasks.changeCertFrequency(certFrequency,false);
 		client1tasks.cleanOutAllCerts();
 		if (client2tasks!=null) if (installRPM) client2tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
-		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency);
+		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency,false);
 		if (client2tasks!=null) client2tasks.cleanOutAllCerts();
 		// transfer a copy of the CA Cert from the candlepin server to the client
 		// TEMPORARY WORK AROUND TO AVOID ISSUES:
@@ -234,7 +234,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	*/
 	
 
-	public void sleep(long milliseconds) {
+	public static void sleep(long milliseconds) {
 		log.info("Sleeping for "+milliseconds+" milliseconds...");
 		try {
 			Thread.sleep(milliseconds);

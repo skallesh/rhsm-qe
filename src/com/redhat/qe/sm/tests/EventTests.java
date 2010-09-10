@@ -156,11 +156,9 @@ public class EventTests extends SubscriptionManagerTestScript{
 		log.info("Now let's refresh the subscription pools...");
 		//CandlepinTasks.curl_refresh_pools(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		servertasks.cpc_refresh_pools(ownerKey, true);
-		clienttasks.changeCertFrequency(1);
-		sleep(1*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+		clienttasks.changeCertFrequency(1, true);
 
 		// assert the feed...
-		assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
 		
         // assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});

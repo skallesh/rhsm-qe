@@ -16,6 +16,7 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
@@ -33,6 +34,7 @@ public class SubscriptionManagerTasks {
 	public static String redhatRepoFile			= "/etc/yum.repos.d/redhat.repo";
 	public static String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
 	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
+	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	public static String consumerCertFile		= "/etc/pki/consumer/cert.pem";
 	public static String consumerKeyFile		= "/etc/pki/consumer/key.pem";
@@ -150,12 +152,13 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+
 	/**
 	 * Update the minutes value for the certFrequency setting in the default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
-	 * @param sshCommandRunner
 	 * @param minutes
+	 * @param waitForMinutes - after making the change, should we wait for the next refresh?
 	 */
-	public void changeCertFrequency(int minutes){
+	public void changeCertFrequency(int minutes, boolean waitForMinutes){
 		updateConfigFileParameter("certFrequency", String.valueOf(minutes));
 //		Assert.assertEquals(
 //				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
@@ -168,6 +171,10 @@ public class SubscriptionManagerTasks {
 //				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
 
+		if (waitForMinutes) {
+			SubscriptionManagerTestScript.sleep(minutes*60*1000);
+			SubscriptionManagerTestScript.sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+		}
 
 	}
 	

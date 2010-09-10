@@ -1,20 +1,15 @@
 package com.redhat.qe.sm.tests;
 
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
-import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
@@ -23,7 +18,6 @@ import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
  * @author ssalevan
@@ -227,38 +221,48 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@Test(	description="rhsmcertd: change certFrequency",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
-//			groups={"blockedByBug-617703"},
+			dataProvider="getCertFrequencyData",
+			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsTCMS(id="41692")
-	public void certFrequency_Test() {
-		int minutes = 1;
-		clienttasks.changeCertFrequency(minutes);
-		
+	public void certFrequency_Test(int minutes) {
+
+		log.info("First test with an unregistered user and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
+		clienttasks.unregister();
+		clienttasks.changeCertFrequency(minutes, false);
 		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
-		String marker = "testing rhsm.conf certFrequency="+minutes; // https://tcms.engineering.redhat.com/case/41692/
+		String marker = "Testing rhsm.conf certFrequency="+minutes+" when unregistered..."; // https://tcms.engineering.redhat.com/case/41692/
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
-
 		sleep(minutes*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
-
-//		Assert.assertEquals(RemoteFileTasks.grepFile(client,
-//				rhsmcertdLogFile,
-//				"certificates updated"),
-//				0,
-//				"rhsmcertd reports that certificates have been updated at new interval");
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmLogFile,Integer.valueOf(0),"Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.",null);
 		
-		/* FIXME: Notice from this output that the update may fail a few times before it starts working.  Hence this test often fails as written above.
-		Tue Jul 27 15:33:23 2010: started: interval = 1 minutes
-		testing rhsm.conf certFrequency=1
-		Tue Jul 27 15:33:24 2010: update failed (1), retry in 1 minutes
-		Tue Jul 27 15:34:24 2010: update failed (1), retry in 1 minutes
-		Tue Jul 27 15:35:24 2010: update failed (1), retry in 1 minutes
-		Tue Jul 27 15:36:24 2010: certificates updated
-		Tue Jul 27 15:37:25 2010: certificates updated
-		Tue Jul 27 15:38:25 2010: certificates updated
-		*/
+		
+		log.info("Now test with an registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.changeCertFrequency(minutes, false);
+		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
+		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
+		sleep(minutes*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
 
+		/* tail -f /var/log/rhsm/rhsm.log
+		 * 2010-09-10 12:05:06,338 [ERROR] main() @certmgr.py:75 - Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.
+		 */
+		
+		/* tail -f /var/log/rhsm/rhsmcertd.log
+		 * Fri Sep 10 11:59:50 2010: started: interval = 1 minutes
+		 * Fri Sep 10 11:59:51 2010: update failed (255), retry in 1 minutes
+		 * testing rhsm.conf certFrequency=1 when unregistered.
+		 * Fri Sep 10 12:00:51 2010: update failed (255), retry in 1 minutes
+		 * Fri Sep 10 12:01:04 2010: started: interval = 1 minutes
+		 * Fri Sep 10 12:01:05 2010: certificates updated
+		 * testing rhsm.conf certFrequency=1 when registered.
+		 * Fri Sep 10 12:02:05 2010: certificates updated
+		*/
 	}
 	
 	
@@ -274,7 +278,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
 		client.runCommandAndWait("rm -f /etc/pki/product/*");
-		certFrequency_Test();
+		//certFrequency_Test(1);
+		clienttasks.changeCertFrequency(1,true);
 //		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
 //		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
 //		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
@@ -349,6 +354,19 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			}
 			
 		}
+		
+		return ll;
+	}
+	
+	@DataProvider(name="getCertFrequencyData")
+	public Object[][] getCertFrequencyDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getCertFrequencyDataAsListOfLists());
+	}
+	protected List<List<Object>> getCertFrequencyDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// int minutes
+		ll.add(Arrays.asList(new Object[]{2}));
+		ll.add(Arrays.asList(new Object[]{1}));
 		
 		return ll;
 	}
