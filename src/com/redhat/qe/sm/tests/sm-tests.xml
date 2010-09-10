@@ -155,4 +155,16 @@
 		</groups>
 	</test>
 	
+	<test name="Facts Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="facts" />
+			</run>
+		</groups>
+	</test>
+	
 </suite>
