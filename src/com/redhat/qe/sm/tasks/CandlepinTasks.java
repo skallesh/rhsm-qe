@@ -7,6 +7,7 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -94,6 +95,17 @@ public class CandlepinTasks {
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
+	}
+	
+	static public JSONArray curl_hateos_ref(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
+		log.info("Running HATEOS command for '"+owner+"' on candlepin server '"+server+"'...");
+
+		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
+		
+		// execute the command from the runner (could be *any* runner)
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+		
+		return new JSONArray(sshCommandResult.getStdout());
 	}
 	
 	static public JSONObject curl_refresh_pools(SSHCommandRunner runner, String server, String port, String owner, String password) throws JSONException {

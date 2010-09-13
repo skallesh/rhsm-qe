@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
 
@@ -206,6 +208,21 @@ public class SubscriptionManagerTasks {
 		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+consumerCertFile);
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
+	}
+	
+	public String getFactValue(String factName) {
+		SSHCommandResult result = facts_(true, false);
+		
+		String regex=factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+":(.*)";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		Assert.assertTrue(matcher.find(),"Found fact "+factName); 
+
+//		log.fine("Matches: ");
+//		do {
+//			log.fine(matcher.group());
+//		} while (matcher.find());
+		return matcher.group(1).trim();	// return the contents of the first capturing group
 	}
 	
 	/**
@@ -851,7 +868,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult facts_(Boolean list, Boolean update) {
 
 		// assemble the register command
-		String										command  = "subscription-manager-cli facts";	
+		String							command  = "subscription-manager-cli facts";	
 		if (list!=null && list)			command += " --list";
 		if (update!=null && update)		command += " --update";
 		
