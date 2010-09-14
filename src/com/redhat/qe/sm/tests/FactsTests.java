@@ -34,15 +34,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	// Configuration Methods ***********************************************************************
 
 	@BeforeClass(groups={"setup"})
-	public void registerBeforeFactsTests() {
 
-		// start with fresh registrations using the same clientusername user
-		client1tasks.unregister();
-		client2tasks.unregister();
-		client1tasks.register(clientusername, clientpassword, null, null, null, null);
-		client2tasks.register(clientusername, clientpassword, null, null, null, null);
-
-	}
 	
 	
 	// Test Methods ***********************************************************************
@@ -53,6 +45,9 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	@ImplementsTCMS(id="56329")
 	public void FactCheckRhelDistribution_Test() {
 		if (client2==null) throw new SkipException("This test requires a second consumer.");
+		
+		// start with fresh registrations using the same clientusername user
+		registerClients(null);
 		
 		// skip if client1 and client2 are not a Server and Workstation distributions
 		String client1RedhatRelease = client1tasks.getRedhatRelease();
@@ -77,11 +72,12 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: check sockets",
-			groups={"myDevGroup"}, dependsOnGroups={},
+			groups={}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
+		registerClients(null);
 		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(client);
 	}
 	
@@ -91,14 +87,71 @@ public class FactsTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
+		registerClients(null);
 		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(client);
 	}
 	
+	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
+			groups={"myDevGroup"}, dependsOnGroups={},
+			enabled=true)
+	@ImplementsTCMS(id="56331")
+	public void BypassRulesDueToType_Test() throws JSONException {
+		// determine which client is a RHEL Workstation
+		SSHCommandRunner client = null;
+		SubscriptionManagerTasks clienttasks = null;
+		if (client1!=null && client1tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
+			client = client1;
+			clienttasks = client1tasks;
+		} else if (client2!=null && client2tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
+			client = client2;
+			clienttasks = client2tasks;
+		} else {
+			throw new SkipException("This test requires a RHEL Workstation client.");
+		}
+
+		// on a RHEL workstation register to candlepin (as type system)
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, "system", null, null, null);
+
+		// get a list of available pools and all available pools (for this system consumer)
+		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> allPoolsAsSystemConsumer = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		
+		Assert.assertFalse(compatiblePoolsAsSystemConsumer.containsAll(allPoolsAsSystemConsumer),
+				"Without bypassing the rules, not *all* pools are available for subscribing by a type=system consumer.");
+		Assert.assertTrue(allPoolsAsSystemConsumer.containsAll(compatiblePoolsAsSystemConsumer),
+				"The pools available to a type=system consumer is a subset of --all --available pools.");
+		
+		// now register to candlepin (as type candlepin)
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, "candlepin", null, null, null);
+
+		// get a list of available pools and all available pools (for this candlepin consumer)
+		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> allPoolsAsCandlepinConsumer = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+
+		Assert.assertTrue(compatiblePoolsAsCandlepinConsumer.containsAll(allPoolsAsCandlepinConsumer) && allPoolsAsCandlepinConsumer.containsAll(compatiblePoolsAsCandlepinConsumer),
+				"The pools available to a type=candlepin consumer bypass the rules (list --all --available is identical to list --available).");
+	
+		// now assert that all the pools can be subscribed to by the candlepin user
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("candlepin");
+	}
 	
 	
 	// Protected Methods ***********************************************************************
 
-	public void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
+	
+	protected void registerClients(String type) {
+
+		// start with fresh registrations using the same clientusername user
+		client1tasks.unregister();
+		client2tasks.unregister();
+		client1tasks.register(clientusername, clientpassword, type, null, null, null);
+		client2tasks.register(clientusername, clientpassword, type, null, null, null);
+	}
+	
+	
+	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
@@ -147,7 +200,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	public void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
+	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithArchAttributes = false;
 		boolean conclusiveTest = false;

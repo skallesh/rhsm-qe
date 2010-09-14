@@ -156,7 +156,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername,clientpassword,null,null,null,null);
 //		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("system");
 
 		
 		// then assemble a list of all consumed ProductSubscriptions

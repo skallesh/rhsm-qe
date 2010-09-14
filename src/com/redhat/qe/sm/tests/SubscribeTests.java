@@ -176,7 +176,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 // FIXME: Untested Alternative to above procedure is:
 		clienttasks.unregister();
 	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("system");
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
 	    clienttasks.assertEntitlementCertsAreReportedInYumRepolist(entitlementCerts);
@@ -273,7 +273,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			enabled=true)
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("system");
 		//SubscribeToASingleEntitlementByProductID_Test();
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");

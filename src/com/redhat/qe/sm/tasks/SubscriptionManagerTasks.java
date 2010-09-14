@@ -749,19 +749,59 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * Collectively subscribe to all of the currently available subscription pools in one command call
+	 * @param assumingRegisterType - "system" or "candlepin"
 	 */
-	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
+	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(String assumingRegisterType) {
 
 		// assemble a list of all the available SubscriptionPool ids
 		List <Integer> poolIds = new ArrayList<Integer>();
-		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
+		List <SubscriptionPool> poolsBeforeSubscribe = getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
 		}
 		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
 		
-		// assert
-		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+		// assert results when assumingRegisterType="system"
+		if (assumingRegisterType==null || assumingRegisterType.equalsIgnoreCase("system")) {
+			assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+			return;
+		}
+		
+		// assert results when assumingRegisterType="candlepin"
+		else if (assumingRegisterType.equalsIgnoreCase("candlepin")) {
+			List <SubscriptionPool> poolsAfterSubscribe = getCurrentlyAvailableSubscriptionPools();
+			for (SubscriptionPool beforePool : poolsBeforeSubscribe) {
+				boolean foundPool = false;
+				for (SubscriptionPool afterPool : poolsAfterSubscribe) {
+					if (afterPool.equals(beforePool)) {
+						foundPool = true;
+						// assert the quantity has decremented;
+						Assert.assertEquals(Integer.valueOf(afterPool.quantity).intValue(), Integer.valueOf(beforePool.quantity).intValue()-1,
+								"The quantity of entitlements from subscription pool id '"+afterPool.poolId+"' has decremented by one.");
+						break;
+					}
+				}
+				if (!foundPool) {
+					Assert.fail("Could not find subscription pool "+beforePool+" listed after subscribing to it as a registered "+assumingRegisterType+" consumer.");
+				}
+			}
+			return;
+		}
+		
+		Assert.fail("Do not know how to assert subscribeToAllOfTheCurrentlyAvailableSubscriptionPools assumingRegisterType="+assumingRegisterType);
 	}
+//	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
+//
+//		// assemble a list of all the available SubscriptionPool ids
+//		List <Integer> poolIds = new ArrayList<Integer>();
+//		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
+//			poolIds.add(pool.poolId);
+//		}
+//		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
+//		
+//		// assert
+//		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+//	}
 	
 	protected void assertNoAvailableSubscriptionPoolsToList(String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
