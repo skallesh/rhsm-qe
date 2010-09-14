@@ -86,6 +86,10 @@ public class SubscriptionManagerTasks {
 	public void cleanOutAllCerts() {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
+		// FIXME
+		log.info("NOT Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/   I am not convinced that this is a good idea since RHEL Distros may come with a pre-installed /etc/pki/product/'cert'.pem jsefler 7/14/2010");
+		if(true) return;
+		
 		log.info("Cleaning out certs from /etc/pki/consumer, /etc/pki/entitlement/, /etc/pki/entitlement/product, and /etc/pki/product/");
 		
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
