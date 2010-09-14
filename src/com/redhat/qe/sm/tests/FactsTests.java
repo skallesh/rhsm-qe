@@ -1,6 +1,5 @@
 package com.redhat.qe.sm.tests;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,12 +8,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -34,36 +31,67 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	
 	// Configuration Methods ***********************************************************************
 
-	@BeforeClass(groups={"setup"})
 
 	
 	
 	// Test Methods ***********************************************************************
 
+	
+	@Test(	description="subscription-manager: facts and rules: consumer facts list",
+			groups={}, dependsOnGroups={},
+			dataProvider="getClientsData",
+			enabled=true)
+	@ImplementsTCMS(id="56386")
+	public void ConsumerFactsList_Test(SSHCommandRunner client) {
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		
+		// start with fresh registrations using the same clientusername user
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		
+		// list the system facts
+		clienttasks.facts(true, false);
+	}
+	
+	
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsTCMS(id="56329")
 	public void FactCheckRhelDistribution_Test() {
-		if (client2==null) throw new SkipException("This test requires a second consumer.");
-		
-		// start with fresh registrations using the same clientusername user
-		registerClients(null);
 		
 		// skip if client1 and client2 are not a Server and Workstation distributions
-		String client1RedhatRelease = client1tasks.getRedhatRelease();
-		if (!client1RedhatRelease.startsWith("Red Hat Enterprise Linux Server"))
-			throw new SkipException("This test requires that client1 be a Red Hat Enterprise Linux Server.");
-		String client2RedhatRelease = client2tasks.getRedhatRelease();
-		if (!client2RedhatRelease.startsWith("Red Hat Enterprise Linux Workstation"))
-			throw new SkipException("This test requires that client2 be a Red Hat Enterprise Linux Workstation.");
+		SSHCommandRunner workClient = null,servClient = null;
+		SubscriptionManagerTasks workClientTasks = null, servClientTasks = null;
+		if (client1!=null && client1tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
+			workClient = client1; workClientTasks = client1tasks;
+		}
+		if (client2!=null && client2tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
+			workClient = client2; workClientTasks = client2tasks;
+		}
+		if (client1!=null && client1tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Server")) {
+			servClient = client1; servClientTasks = client1tasks;
+		}
+		if (client2!=null && client2tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Server")) {
+			servClient = client2; servClientTasks = client2tasks;
+		}
+		if (workClient==null || servClient==null) {
+			throw new SkipException("This test requires a RHEL Workstation client and a RHEL Server client.");
+		}
+		
+		// start with fresh registrations using the same clientusername user
+		workClientTasks.unregister();
+		servClientTasks.unregister();
+		workClientTasks.register(clientusername, clientpassword, null, null, null, null);
+		servClientTasks.register(clientusername, clientpassword, null, null, null, null);
+		
 
 		// get all the pools available to each client
-		List<SubscriptionPool> client1Pools = client1tasks.getCurrentlyAvailableSubscriptionPools();
-		List<SubscriptionPool> client2Pools = client2tasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> workClientPools = workClientTasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> servClientPools = servClientTasks.getCurrentlyAvailableSubscriptionPools();
 		
 		log.info("Verifying that the pools available to the Workstation consumer are not identitcal to those available to the Server consumer...");
-		Assert.assertTrue(!(client1Pools.containsAll(client2Pools) && client2Pools.containsAll(client1Pools)),
+		Assert.assertTrue(!(workClientPools.containsAll(servClientPools) && servClientPools.containsAll(workClientPools)),
 				"The subscription pools available to the Workstation and Server are NOT identical");
 
 		// FIXME TODO Verify with development that these are valid asserts
@@ -78,7 +106,9 @@ public class FactsTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
-		registerClients(null);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(client);
 	}
 	
@@ -88,7 +118,9 @@ public class FactsTests extends SubscriptionManagerTestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
-		registerClients(null);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(client);
 	}
 	
@@ -101,11 +133,9 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		SSHCommandRunner client = null;
 		SubscriptionManagerTasks clienttasks = null;
 		if (client1!=null && client1tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
-			client = client1;
-			clienttasks = client1tasks;
+			client = client1; clienttasks = client1tasks;
 		} else if (client2!=null && client2tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
-			client = client2;
-			clienttasks = client2tasks;
+			client = client2; clienttasks = client2tasks;
 		} else {
 			throw new SkipException("This test requires a RHEL Workstation client.");
 		}
@@ -142,14 +172,14 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	// Protected Methods ***********************************************************************
 
 	
-	protected void registerClients(ConsumerType type) {
-
-		// start with fresh registrations using the same clientusername user
-		client1tasks.unregister();
-		client2tasks.unregister();
-		client1tasks.register(clientusername, clientpassword, type, null, null, null);
-		client2tasks.register(clientusername, clientpassword, type, null, null, null);
-	}
+//	protected void registerClients(ConsumerType type) {
+//
+//		// start with fresh registrations using the same clientusername user
+//		client1tasks.unregister();
+//		client2tasks.unregister();
+//		client1tasks.register(clientusername, clientpassword, type, null, null, null);
+//		client2tasks.register(clientusername, clientpassword, type, null, null, null);
+//	}
 	
 	
 	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
