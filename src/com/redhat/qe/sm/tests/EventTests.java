@@ -13,6 +13,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -376,7 +377,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,"candlepin",null,null,null);
+		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(pool.poolId, null, null, null, null);

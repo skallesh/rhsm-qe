@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -77,7 +78,7 @@ public class SubscribeTests extends SubscriptionManagerTestScript{
 			groups={"blockedByBug-584137"},
 			dataProvider="getValidConsumerData")
 	@ImplementsTCMS(id="41686")
-	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String type, String consumerId){
+	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, ConsumerType type, String consumerId){
 		clienttasks.unregister();
 		clienttasks.register(username, password, type, consumerId, Boolean.FALSE, Boolean.FALSE);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -176,7 +177,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 // FIXME: Untested Alternative to above procedure is:
 		clienttasks.unregister();
 	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("system");
+	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
 	    clienttasks.assertEntitlementCertsAreReportedInYumRepolist(entitlementCerts);
@@ -273,7 +274,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			enabled=true)
 	@ImplementsTCMS(id="41694")
 	public void refreshCerts_Test(){
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("system");
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		//SubscribeToASingleEntitlementByProductID_Test();
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
 		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");

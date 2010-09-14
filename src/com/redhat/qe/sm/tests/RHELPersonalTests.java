@@ -15,6 +15,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -90,7 +91,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		log.info("Register client2 under username '"+consumerUsername+"' as a system and assert that '"+systemSubscriptionName+"' is NOT yet available...");
 		client2tasks.unregister();
 		client1tasks.unregister();	// just in case client1 is still registered as the person consumer
-		client2tasks.register(consumerUsername, consumerPassword, "system", null, null, null);
+		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null);
 		List<SubscriptionPool> client2BeforeSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		pool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2BeforeSubscriptionPools);
 		Assert.assertTrue(pool==null,systemSubscriptionName+" is NOT yet available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"'.");
@@ -98,7 +99,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		
 		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
 		client1tasks.unregister();
-		client1tasks.register(consumerUsername, consumerPassword, "person", null, null, null);
+		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null);
 		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
 		List<String> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();

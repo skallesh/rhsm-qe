@@ -17,6 +17,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.CandlepinTasks;
@@ -92,7 +93,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
-			groups={"myDevGroup"}, dependsOnGroups={},
+			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsTCMS(id="56331")
 	public void BypassRulesDueToType_Test() throws JSONException {
@@ -111,7 +112,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 
 		// on a RHEL workstation register to candlepin (as type system)
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, "system", null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null);
 
 		// get a list of available pools and all available pools (for this system consumer)
 		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -124,7 +125,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		
 		// now register to candlepin (as type candlepin)
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, "candlepin", null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.candlepin, null, null, null);
 
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -133,15 +134,15 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		Assert.assertTrue(compatiblePoolsAsCandlepinConsumer.containsAll(allPoolsAsCandlepinConsumer) && allPoolsAsCandlepinConsumer.containsAll(compatiblePoolsAsCandlepinConsumer),
 				"The pools available to a type=candlepin consumer bypass the rules (list --all --available is identical to list --available).");
 	
-		// now assert that all the pools can be subscribed to by the candlepin user
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("candlepin");
+		// now assert that all the pools can be subscribed to by the consumer (registered as type candlepin)
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.candlepin);
 	}
 	
 	
 	// Protected Methods ***********************************************************************
 
 	
-	protected void registerClients(String type) {
+	protected void registerClients(ConsumerType type) {
 
 		// start with fresh registrations using the same clientusername user
 		client1tasks.unregister();

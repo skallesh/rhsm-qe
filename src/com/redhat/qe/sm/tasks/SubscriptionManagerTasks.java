@@ -18,6 +18,7 @@ import com.redhat.qe.auto.testopia.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -397,7 +398,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * register without asserting results
 	 */
-	public SSHCommandResult register_(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register_(String username, String password, ConsumerType type, String consumerId, Boolean autosubscribe, Boolean force) {
 
 		// assemble the register command
 		String										command  = "subscription-manager-cli register";	
@@ -424,7 +425,7 @@ public class SubscriptionManagerTasks {
 	 * @param autosubscribe
 	 * @param force
 	 */
-	public SSHCommandResult register(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register(String username, String password, ConsumerType type, String consumerId, Boolean autosubscribe, Boolean force) {
 		
 		SSHCommandResult sshCommandResult = register_(username, password, type, consumerId, autosubscribe, force);
 
@@ -751,7 +752,7 @@ public class SubscriptionManagerTasks {
 	 * Collectively subscribe to all of the currently available subscription pools in one command call
 	 * @param assumingRegisterType - "system" or "candlepin"
 	 */
-	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(String assumingRegisterType) {
+	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType assumingRegisterType) {
 
 		// assemble a list of all the available SubscriptionPool ids
 		List <Integer> poolIds = new ArrayList<Integer>();
@@ -762,13 +763,13 @@ public class SubscriptionManagerTasks {
 		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
-		if (assumingRegisterType==null || assumingRegisterType.equalsIgnoreCase("system")) {
+		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {
 			assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 			return;
 		}
 		
 		// assert results when assumingRegisterType="candlepin"
-		else if (assumingRegisterType.equalsIgnoreCase("candlepin")) {
+		else if (assumingRegisterType.equals(ConsumerType.candlepin)) {
 			List <SubscriptionPool> poolsAfterSubscribe = getCurrentlyAvailableSubscriptionPools();
 			for (SubscriptionPool beforePool : poolsBeforeSubscribe) {
 				boolean foundPool = false;
@@ -981,8 +982,10 @@ repolist: 0
 			stdoutRegexs.add(String.format("^%s\\s+(?:%s|.*)\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 25)), entitlementCert.enabled.equals("1")? "enabled":"disabled"));	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
 		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum repolist all", 0, stdoutRegexs, null);
-		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
-		 
+		
+		// assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
+		// FIXME EVENTUALLY WE NEED TO UNCOMMENT THIS ASSERT
+		//Assert.assertContainsNoMatch(sshCommandRunner.getStderr(), "HTTP Error \\d+", "HTTP Errors were encountered when runnning yum repolist all.");
 	}
 	
 	public String getRedhatRelease() {

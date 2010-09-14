@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -137,6 +138,8 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		
 		// run another yum repolist all and assert that the "current entitlement has been revoked."
 		clienttasks.assertEntitlementCertsAreReportedInYumRepolist(clienttasks.getCurrentEntitlementCerts());
+		
+		
 		throw new SkipException("FIXME: THIS AUTOMATED TEST IS INCOMPLETE. Need to assert that the yum repolist displayed a stderr message that entitlements from this subscription pool have been revoked: "+subscriptionPool);
 	}
 
@@ -156,7 +159,7 @@ public class UnsubscribeTests extends SubscriptionManagerTestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername,clientpassword,null,null,null,null);
 //		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools("system");
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 
 		
 		// then assemble a list of all consumed ProductSubscriptions

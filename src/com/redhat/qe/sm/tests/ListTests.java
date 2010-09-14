@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -68,7 +69,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 	//@ImplementsTCMS(id="")
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, "person", null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null);
 		
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool rhelPersonalPool = null;
@@ -90,7 +91,7 @@ public class ListTests extends SubscriptionManagerTestScript{
 	//@ImplementsTCMS(id="")
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, "system", null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		rhelPersonalPool = null;
