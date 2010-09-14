@@ -598,7 +598,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * subscribe without asserting results
 	 */
-	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale) {
+	public SSHCommandResult subscribe_(Integer poolId, String productId, String regtoken, String email, String locale) {
 		
 		// assemble the subscribe command
 		String					command  = "subscription-manager-cli subscribe";	
@@ -612,7 +612,7 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 
-	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale) {
+	public SSHCommandResult subscribe(Integer poolId, String productId, String regtoken, String email, String locale) {
 
 		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
 		
@@ -625,11 +625,11 @@ public class SubscriptionManagerTasks {
 	/**
 	 * subscribe without asserting results
 	 */
-	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	public SSHCommandResult subscribe_(List<Integer> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		// assemble the subscribe command
 		String														command  = "subscription-manager-cli subscribe";	
-		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
+		if (poolIds!=null)		for (Integer poolId : poolIds)		command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
 		if (email!=null)											command += " --email="+email;
@@ -639,7 +639,7 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	public SSHCommandResult subscribe(List<Integer> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale);
 		
@@ -749,7 +749,7 @@ public class SubscriptionManagerTasks {
 	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
 
 		// assemble a list of all the available SubscriptionPool ids
-		List <String> poolIds = new ArrayList<String>();
+		List <Integer> poolIds = new ArrayList<Integer>();
 		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
 			poolIds.add(pool.poolId);
 		}

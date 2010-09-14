@@ -16,7 +16,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	// abstraction fields
 	public String subscriptionName;
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
-	public String poolId;
+	public Integer poolId;
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
 	public Calendar endDate;
 	
@@ -57,7 +57,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		
 		subscriptionName = components[0].trim();
 		endDate = /*this.*/parseDateString(components[1].trim());
-		poolId = components[2].trim();
+		poolId = Integer.valueOf(components[2].trim());
 		quantity = components[3].trim();	// Integer.parseInt(components[3].trim());
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
@@ -67,7 +67,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			Boolean activeSubscription,
 			Integer consumed,
 			String quantity,	//Integer quantity,
-			String id,
+			Integer id,
 			String productId){
 		super(null);
 		
@@ -81,7 +81,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	
-	public SubscriptionPool(String productId, String poolId){
+	public SubscriptionPool(String productId, Integer poolId){
 		super(null);
 		
 		this.productId = productId;
@@ -384,7 +384,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		
 		Map<Integer, SubscriptionPool> serialMapOfSubscriptionPools = new HashMap<Integer, SubscriptionPool>();
 		for(String serialNumber : serialMapOfProductAndPoolIds.keySet())
-			serialMapOfSubscriptionPools.put(Integer.valueOf(serialNumber), new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"),serialMapOfProductAndPoolIds.get(serialNumber).get("poolId")));
+			serialMapOfSubscriptionPools.put(Integer.valueOf(serialNumber), new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"),Integer.valueOf(serialMapOfProductAndPoolIds.get(serialNumber).get("poolId"))));
 		return serialMapOfSubscriptionPools;
 	}
 }

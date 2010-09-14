@@ -107,7 +107,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		log.info(factName+" for this system consumer: "+systemSockets);
 		
 		// loop through the subscriptions
-		JSONArray jsonSubscriptions = CandlepinTasks.curl_hateos_ref(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions");	
+		JSONArray jsonSubscriptions = CandlepinTasks.curl_hateoas_ref(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions");	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			int poolId = jsonSubscription.getInt("id");
@@ -126,9 +126,9 @@ public class FactsTests extends SubscriptionManagerTestScript{
 					
 					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
 					log.info("Maximum sockets for this subscriptionPool name="+subscriptionName+": "+value);
-					SubscriptionPool pool = new SubscriptionPool(productId,String.valueOf(poolId));
+					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
 					if (value < systemSockets) {
-						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemSockets+") exceeds the maximum ("+value+") for this pool to be a candidate for availablity.");
+						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemSockets+") exceeds the maximum ("+value+") for this pool to be a candidate for availability.");
 						conclusiveTest = true;
 					} else {
 						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");

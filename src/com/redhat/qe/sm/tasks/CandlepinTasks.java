@@ -97,8 +97,8 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public JSONArray curl_hateos_ref(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
-		log.info("Running HATEOS command for '"+owner+"' on candlepin server '"+server+"'...");
+	static public JSONArray curl_hateoas_ref(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
+		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
 
 		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
 		
