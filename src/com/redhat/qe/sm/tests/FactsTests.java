@@ -48,7 +48,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	// Test Methods ***********************************************************************
 
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
-			groups={"FactCheckRhelDistribution_Test"}, dependsOnGroups={},
+			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsTCMS(id="56329")
 	public void FactCheckRhelDistribution_Test() {
@@ -57,17 +57,14 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		// skip if client1 and client2 are not a Server and Workstation distributions
 		String client1RedhatRelease = client1tasks.getRedhatRelease();
 		if (!client1RedhatRelease.startsWith("Red Hat Enterprise Linux Server"))
-			throw new SkipException("This test requires that client1 is a Red Hat Enterprise Linux Server.");
+			throw new SkipException("This test requires that client1 be a Red Hat Enterprise Linux Server.");
 		String client2RedhatRelease = client2tasks.getRedhatRelease();
 		if (!client2RedhatRelease.startsWith("Red Hat Enterprise Linux Workstation"))
-			throw new SkipException("This test requires that client2 is a Red Hat Enterprise Linux Workstation.");
-	
+			throw new SkipException("This test requires that client2 be a Red Hat Enterprise Linux Workstation.");
 
 		// get all the pools available to each client
 		List<SubscriptionPool> client1Pools = client1tasks.getCurrentlyAvailableSubscriptionPools();
 		List<SubscriptionPool> client2Pools = client2tasks.getCurrentlyAvailableSubscriptionPools();
-	
-		
 		
 		log.info("Verifying that the pools available to the Workstation consumer are not identitcal to those available to the Server consumer...");
 		Assert.assertTrue(!(client1Pools.containsAll(client2Pools) && client2Pools.containsAll(client1Pools)),
@@ -75,25 +72,33 @@ public class FactsTests extends SubscriptionManagerTestScript{
 
 		// FIXME TODO Verify with development that these are valid asserts
 		//log.info("Verifying that the pools available to the Workstation consumer do not contain Server in the ProductName...");
-
 		//log.info("Verifying that the pools available to the Server consumer do not contain Workstation in the ProductName...");
 
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: check sockets",
-			groups={"myDevGroup","FactCheckRhelDistribution_Test"}, dependsOnGroups={},
+			groups={"myDevGroup"}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
-	@ImplementsTCMS(id="56329")
-	public void AssertPoolsWithSocketsGreaterThanSystemSocketFactsAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
-		assertPoolsWithSocketsGreaterThanSystemSocketFactsAreNotAvailableOnClient(client);
+	//@ImplementsTCMS(id="")
+	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
+		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(client);
 	}
 	
-
+	@Test(	description="subscription-manager: facts and rules: check arch",
+			groups={}, dependsOnGroups={},
+			dataProvider="getClientsData",
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
+		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(client);
+	}
+	
+	
 	
 	// Protected Methods ***********************************************************************
 
-	public void assertPoolsWithSocketsGreaterThanSystemSocketFactsAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
+	public void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
@@ -103,8 +108,8 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		
 		// get the number of cpu_sockets for this system consumer
 		String factName = "cpu.cpu_socket(s)";
-		int systemSockets = Integer.valueOf(clienttasks.getFactValue(factName));
-		log.info(factName+" for this system consumer: "+systemSockets);
+		int systemValue = Integer.valueOf(clienttasks.getFactValue(factName));
+		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
 		JSONArray jsonSubscriptions = CandlepinTasks.curl_hateoas_ref(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions");	
@@ -122,13 +127,13 @@ public class FactsTests extends SubscriptionManagerTestScript{
 				if (attributeName.equals("sockets")) {
 					// found the sockets attribute - get its value
 					foundPoolWithSocketAttributes = true;
-					int value = jsonAttribute.getInt("value");
+					int poolValue = jsonAttribute.getInt("value");
 					
 					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
-					log.info("Maximum sockets for this subscriptionPool name="+subscriptionName+": "+value);
+					log.fine("Maximum sockets for this subscriptionPool name="+subscriptionName+": "+poolValue);
 					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
-					if (value < systemSockets) {
-						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemSockets+") exceeds the maximum ("+value+") for this pool to be a candidate for availability.");
+					if (poolValue < systemValue) {
+						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") exceeds the maximum ("+poolValue+") for this pool to be a candidate for availability.");
 						conclusiveTest = true;
 					} else {
 						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
@@ -141,6 +146,54 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
 	}
 	
+	
+	public void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		boolean foundPoolWithArchAttributes = false;
+		boolean conclusiveTest = false;
+		
+		// get all the pools available to each client
+		List<SubscriptionPool> clientPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		
+		// get the number of cpu_sockets for this system consumer
+		String factName = "cpu.architecture";
+		String systemValue = clienttasks.getFactValue(factName);
+		log.info(factName+" for this system consumer: "+systemValue);
+		
+		// loop through the subscriptions
+		JSONArray jsonSubscriptions = CandlepinTasks.curl_hateoas_ref(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions");	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			int poolId = jsonSubscription.getInt("id");
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String subscriptionName = jsonProduct.getString("name");
+			String productId = jsonProduct.getString("id");
+			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
+			// loop through the attributes of this subscription looking for the "sockets" attribute
+			for (int j = 0; j < jsonAttributes.length(); j++) {
+				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+				String attributeName = jsonAttribute.getString("name");
+				if (attributeName.equals("arch")) {
+					// found the arch attribute - get its value
+					foundPoolWithArchAttributes = true;
+					String poolValue = jsonAttribute.getString("value");
+					
+					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
+					log.fine("Arch for this subscriptionPool name="+subscriptionName+": "+poolValue);
+					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
+					if (!poolValue.equalsIgnoreCase(systemValue) && !poolValue.equalsIgnoreCase("ALL")) {
+						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") does not match ("+poolValue+") for this pool to be a candidate for availability.");
+						conclusiveTest = true;
+					} else {
+						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
+					}
+					break;
+				}
+			}
+		}
+		if (!conclusiveTest) log.warning("The facts for this system did not allow us to perform a conclusive test.");
+		Assert.assertTrue(foundPoolWithArchAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
+	}
 	
 	// Data Providers ***********************************************************************
 
