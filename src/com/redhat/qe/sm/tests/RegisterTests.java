@@ -66,6 +66,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
 //			groups={"sm_stage1", "sprint9-script"},
+			groups={},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	public void InvalidRegistrationWithLocalizedStrings_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 //		sm.unregister();
@@ -75,7 +76,8 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //				"Actual localized error message from failed registration: "+stdErr+" as language "+lang+" matches: "+expectedMessage);
 		
 		log.info("Testing the registration to a candlepin server using invalid credentials and expecting results in language "+lang+". ");
-		RemoteFileTasks.runCommandAndAssert(client, "export LANG="+lang+"; subscription-manager-cli register --force --username="+username+" --password="+password, exitCode, stdoutRegex, stderrRegex);
+//		RemoteFileTasks.runCommandAndAssert(client, "export LANG="+lang+"; subscription-manager-cli register --force --username="+username+" --password="+password, exitCode, stdoutRegex, stderrRegex);
+		RemoteFileTasks.runCommandAndAssert(client, "LANG="+lang+"  subscription-manager-cli register --force --username="+username+" --password="+password, exitCode, stdoutRegex, stderrRegex);
 //		Assert.assertEquals(sshCommandRunner.getStderr().trim(),expectedMessage,
 //				"Testing the registration to a candlepin server using invalid credentials and expecting results in language "+lang+". ");
 	}
@@ -333,11 +335,12 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
-		if (isServerOnPremises)  ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid username or password"}));	// FIXME: I don't know why this message is dependent if server is On Premises - jsefler
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
 		
-		// registration test for a user who has no accepted Red Hat's Terms and conditions
+		// registration test for a user who is invalid
+		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Invalid username or password":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+	
+		// registration test for a user who has not accepted Red Hat's Terms and conditions
 		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc"}));
 
 		// registration test for a user who has been disabled
