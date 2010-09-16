@@ -251,7 +251,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 //			this.subscriptionPools = subscriptionPools;
 //		}
 	}
-	@BeforeSuite(groups={"setup"}, dependsOnMethods={"setupBeforeSuite"}, description="create a user report table")
+//	@BeforeSuite(groups={"setup"}, dependsOnMethods={"setupBeforeSuite"}, description="create a user report table")
 	public void reportUserTableBeforeSuite() {
 		
 		Map<String,Map<String,UserData>> tableMap = new HashMap<String,Map<String,UserData>>();
@@ -294,17 +294,22 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		// now dump out the list of userData to a file
 	    Writer output = null;
 	    String text = "Rajesh Kumar";
-	    File file = new File("/var/www/html/"+serverHostname+".UserTable.html");
+	    File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
 	    try {
 			output = new BufferedWriter(new FileWriter(file));
 			
 			// write out the rows of the table
-			output.write("<table>");
-			output.write("<tr><td>User/password</td></tr>");
+			output.write("<html>\n");
+			output.write("<table>\n");
+			output.write("<tr><th>User/password</th><th>Owner</th></tr>\n");
 			for (UserData userData : userDataList) {
-				output.write(text);
+				output.write("<tr>");
+				output.write("<td>"+userData.username+" / "+userData.password+"</td>");
+				if (userData.ownerId!=null) {output.write("<td>"+userData.ownerId+"</td>");} else {output.write("</td>");};
+				output.write("</tr>\n");
 			}
-			output.write("</table>");
+			output.write("</table>\n");
+			output.write("</html>\n");
 		    output.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
