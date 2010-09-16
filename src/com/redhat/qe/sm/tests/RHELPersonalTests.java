@@ -179,6 +179,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 			dataProvider="getRHELPersonalData",
 			enabled=true)
 	//@ImplementsTCMS(id="55702,55718")
+	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
 	public void EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test(String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName) {
 		log.info("Making sure the clients are not subscribed to anything...");
 		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -204,7 +205,12 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		systemProductSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertTrue(systemProductSubscription==null,systemConsumedProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unsubscribed from the "+personSubscriptionName+" on client1");
 	}
-	
+
+	// TODO
+//	2) unsubscribe system from subpool while other systems are subscribed to subpool, make sure the subpool doesn't go away (scenario from calfanso@redhat.com)
+//	3) unsubscribe system from subpool as the last system subscribed, make sure the subpool doesn't get deleted (scenario from calfanso@redhat.com)
+//	https://bugzilla.redhat.com/show_bug.cgi?id=634569
+
 	
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement cert for RHEL Personal Bits is revoked once the person unregisters",
 			groups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnregisters_Test","RHELPersonal", "blockedByBug-624063"},

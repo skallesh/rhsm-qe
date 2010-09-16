@@ -135,6 +135,18 @@ public class CandlepinTasks {
 		return getHTTPResponseAsString(client, get, owner, password);
 	}
 	
+
+//	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
+//		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
+//
+//		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
+//		
+//		// execute the command from the runner (could be *any* runner)
+//		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+//		
+//		return new JSONObject(sshCommandResult.getStdout());
+//	}
+	
 	protected static String getHTTPResponseAsString(HttpClient client, HttpMethod method, String username, String password) 
 	throws Exception {
 		HttpMethod m = doHTTPRequest(client, method, username, password);
@@ -163,8 +175,7 @@ public class CandlepinTasks {
 		int responseCode = client.executeMethod(method);
 		log.info("HTTP server returned " + responseCode) ;
 		return method;
-		
-}
+	}
 	
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
 		client.getState().setCredentials(
