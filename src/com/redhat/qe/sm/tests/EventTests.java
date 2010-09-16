@@ -370,7 +370,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ExportCreated_Test"}, dependsOnGroups={"ProductDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void ExportCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void ExportCreated_Test() throws Exception {
 		
 		// start fresh by unregistering
 		clienttasks.unregister();
@@ -391,7 +391,7 @@ public class EventTests extends SubscriptionManagerTestScript{
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         
         // do something that will fire a exported created event
-		CandlepinTasks.curl_export_consumer(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,consumerCert.consumerid,"/tmp/export.zip");
+		CandlepinTasks.exportConsumerREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,consumerCert.consumerid,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"EXPORT CREATED"};
 		
 		// assert the feed...
@@ -409,7 +409,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 			groups={"ImportCreated_Test"}, dependsOnGroups={"ExportCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ImportCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void ImportCreated_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		String ownerKey = testOwner.getString("key");
@@ -417,7 +417,7 @@ public class EventTests extends SubscriptionManagerTestScript{
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname, serverPort, clientOwnerUsername, clientOwnerPassword);
         
         // do something that will fire an import created event
-		CandlepinTasks.curl_import_consumer(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,ownerKey,"/tmp/export.zip");
+		CandlepinTasks.importConsumerREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,ownerKey,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
 		
 		// assert the feed...

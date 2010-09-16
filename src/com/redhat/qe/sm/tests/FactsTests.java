@@ -105,7 +105,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
+	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
@@ -117,7 +117,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws JSONException {
+	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
@@ -182,7 +182,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 //	}
 	
 	
-	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
+	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws Exception {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
@@ -196,7 +196,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
-		JSONArray jsonSubscriptions = CandlepinTasks.curl_hateoas_ref(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions");	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			int poolId = jsonSubscription.getInt("id");
@@ -231,7 +231,7 @@ public class FactsTests extends SubscriptionManagerTestScript{
 	}
 	
 	
-	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws JSONException {
+	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws Exception {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithArchAttributes = false;
 		boolean conclusiveTest = false;
@@ -245,7 +245,8 @@ public class FactsTests extends SubscriptionManagerTestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
-		JSONArray jsonSubscriptions = CandlepinTasks.curl_hateoas_ref(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions");	
+		JSONArray jsonSubscriptions = 
+			new JSONArray(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			int poolId = jsonSubscription.getInt("id");
