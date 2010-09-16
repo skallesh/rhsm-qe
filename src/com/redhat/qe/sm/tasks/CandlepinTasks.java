@@ -108,6 +108,17 @@ public class CandlepinTasks {
 		return new JSONArray(sshCommandResult.getStdout());
 	}
 	
+	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
+		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
+
+		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
+		
+		// execute the command from the runner (could be *any* runner)
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout());
+	}
+	
 	static public JSONObject curl_refresh_pools(SSHCommandRunner runner, String server, String port, String owner, String password) throws JSONException {
 		log.info("Refreshing the subscription pools for owner '"+owner+"' on candlepin server '"+server+"'...");
 		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://localhost:8443/candlepin/owners/admin/subscriptions
