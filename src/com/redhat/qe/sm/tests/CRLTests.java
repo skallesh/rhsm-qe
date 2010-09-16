@@ -34,7 +34,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsTCMS(id="56025")
-	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws SQLException, JSONException {
+	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws Exception {
 //		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 //		Actions:
 //
@@ -80,7 +80,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		CandlepinTasks.curl_refresh_pools(client, serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
+		CandlepinTasks.refreshPoolsREST( serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		
 		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
 		clienttasks.changeCertFrequency(1, true);

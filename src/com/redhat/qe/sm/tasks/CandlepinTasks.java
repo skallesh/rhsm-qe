@@ -1,13 +1,27 @@
 package com.redhat.qe.sm.tasks;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.List;
-import java.util.logging.Logger;
 
-import org.json.JSONArray;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.multipart.FilePart;
+import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
+import org.apache.commons.httpclient.methods.multipart.Part;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,9 +50,19 @@ public class CandlepinTasks {
 	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/client/ruby/";
+	public static HttpClient client;
 
+	static {
+		client = new HttpClient();
+		try {
+			SSLCertificateTruster.trustAllCertsForApacheHttp();
+		}catch(Exception e) {
+			log.log(Level.SEVERE, "Failed to trust all certificates for Apache HTTP Client", e);
+		}
+	}
 	public CandlepinTasks() {
 		super();
+		
 		// TODO Auto-generated constructor stub
 	}
 	
@@ -97,58 +121,91 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public JSONArray curl_hateoas_ref(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
-		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
-
-		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
-		
-		// execute the command from the runner (could be *any* runner)
-		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
-		
-		return new JSONArray(sshCommandResult.getStdout());
+	static public String getResourceREST(String server, String port, String owner, String password, String resource) throws Exception {
+		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin/"+resource);
+		return getHTTPResponseAsString(client, get, owner, password);
 	}
 	
-	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
-		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
 
-		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
-		
-		// execute the command from the runner (could be *any* runner)
-		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
-		
-		return new JSONObject(sshCommandResult.getStdout());
+//	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
+//		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
+//
+//		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
+//		
+//		// execute the command from the runner (could be *any* runner)
+//		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+//		
+//		return new JSONObject(sshCommandResult.getStdout());
+//	}
+	
+	protected static String getHTTPResponseAsString(HttpClient client, HttpMethod method, String username, String password) 
+	throws Exception {
+		String response = doHTTPRequest(client, method, username, password).getResponseBodyAsString();
+		log.info("HTTP server returned content = " + response);
+		return response;
 	}
 	
-	static public JSONObject curl_refresh_pools(SSHCommandRunner runner, String server, String port, String owner, String password) throws JSONException {
-		log.info("Refreshing the subscription pools for owner '"+owner+"' on candlepin server '"+server+"'...");
-		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://localhost:8443/candlepin/owners/admin/subscriptions
-		// /usr/bin/curl -u candlepin_system_admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://candlepin1.devlab.phx1.redhat.com:443/candlepin/owners/1616678/subscriptions                                                                                                                                                                                                           ^orgid of the user for whom you are refreshing pools can be found by connecting to the database -> see https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/entitlement_qe_get_products
-
-		String command = "/usr/bin/curl -u "+owner+":"+password+" -k --header 'Content-type: application/json' --header 'Accept: application/json' --request PUT https://"+server+":"+port+"/candlepin/owners/"+owner+"/subscriptions";
-		
-		// execute the command from the runner (could be *any* runner)
-		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
-		
-		return new JSONObject(sshCommandResult.getStdout());
+	protected static InputStream getHTTPResponseAsStream(HttpClient client, HttpMethod method, String username, String password) 
+	throws Exception {
+		return doHTTPRequest(client, method, username, password).getResponseBodyAsStream();
 	}
 	
-	static public void curl_export_consumer(SSHCommandRunner runner, String server, String port, String owner, String password, String consumerKey, String intoExportZipFile) throws JSONException {
+	protected static HttpMethod doHTTPRequest(HttpClient client, HttpMethod method, String username, String password) 
+	throws Exception {
+		String server = method.getURI().getHost();
+		int port = method.getURI().getPort();
+	
+		setCredentials(client, server, port, username, password);
+		log.info("Running HTTP request for '"+username+"' on server '"+server+"'...");
+	
+		int responseCode = client.executeMethod(method);
+		log.info("HTTP server returned " + responseCode) ;
+		return method;
+	}
+	
+	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
+		client.getState().setCredentials(
+	            new AuthScope(server, port, null),
+	            new UsernamePasswordCredentials(username, password)
+	        );
+	}
+	static public JSONObject refreshPoolsREST(String server, String port, String owner, String password) throws Exception {
+		PutMethod put = new PutMethod("https://"+server+":"+port+"/candlepin/owners/"+owner+"/subscriptions");
+		String response = getHTTPResponseAsString(client, put, owner, password);
+				
+		return new JSONObject(response);
+	}
+	
+	static public void exportConsumerREST(String server, String port, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
 		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
-		// /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
-		String command = "/usr/bin/curl -k -u "+owner+":"+password+" https://"+server+":"+port+"/candlepin/consumers/"+consumerKey+"/export > "+intoExportZipFile;
 		
-		// execute the command from the runner (could be *any* runner)
-		RemoteFileTasks.runCommandAndAssert(runner, command, 0);
-		RemoteFileTasks.runCommandAndAssert(runner, "unzip -t "+intoExportZipFile, 0);
+		boolean validzip = false;
+		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin/consumers/"+consumerKey+"/export");
+		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
+		try {
+			ZipInputStream zip = new ZipInputStream(response);
+			ZipEntry ze = zip.getNextEntry();
+			validzip = true;
+		}
+		catch(Exception e) {
+			log.log(Level.FINE, "Unable to read response as zip file.", e);
+		}
+		
+		Assert.assertTrue(validzip, "Response is a valid zip file.");
 	}
 	
-	static public void curl_import_consumer(SSHCommandRunner runner, String server, String port, String owner, String password, String ownerKey, String fromExportZipFile) throws JSONException {
+	static public void importConsumerREST(String server, String port, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
-		// curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
-		String command = "/usr/bin/curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+"/candlepin/owners/"+ownerKey+"/import";
 		
-		// execute the command from the runner (could be *any* runner)
-		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(runner, command, 0);
+		PostMethod post = new PostMethod("https://"+server+":"+port+"/candlepin/owners/"+ownerKey+"/import");
+		File f = new File(fromExportZipFile);
+		Part[] parts = {
+			      new FilePart(f.getName(), f)
+			  };
+		post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
+		int status = client.executeMethod(post);
+		
+		Assert.assertEquals(status, 200);
 	}
 	
 	
@@ -332,5 +389,14 @@ public class CandlepinTasks {
 		log.finer("SyndFeed from "+feedUrl+":\n"+feed);
         
         return feed;
+	}
+	
+	public static void deleteAllConsumers(URL url, String login, String password) {
+		
+	}
+	
+	public static void main (String... args) throws Exception {
+		
+		System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
 	}
 }
