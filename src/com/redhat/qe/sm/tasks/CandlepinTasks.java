@@ -6,7 +6,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -14,14 +18,17 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -53,7 +60,9 @@ public class CandlepinTasks {
 	public static HttpClient client;
 
 	static {
-		client = new HttpClient();
+		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
+      	client = new HttpClient(connectionManager);
+		//client = new HttpClient();
 		try {
 			SSLCertificateTruster.trustAllCertsForApacheHttp();
 		}catch(Exception e) {
@@ -128,14 +137,19 @@ public class CandlepinTasks {
 	
 	protected static String getHTTPResponseAsString(HttpClient client, HttpMethod method, String username, String password) 
 	throws Exception {
-		String response = doHTTPRequest(client, method, username, password).getResponseBodyAsString();
+		HttpMethod m = doHTTPRequest(client, method, username, password);
+		String response = m.getResponseBodyAsString();
 		log.info("HTTP server returned content = " + response);
+		m.releaseConnection();
 		return response;
 	}
 	
 	protected static InputStream getHTTPResponseAsStream(HttpClient client, HttpMethod method, String username, String password) 
 	throws Exception {
-		return doHTTPRequest(client, method, username, password).getResponseBodyAsStream();
+		HttpMethod m =  doHTTPRequest(client, method, username, password);
+		InputStream result = m.getResponseBodyAsStream();
+		m.releaseConnection();
+		return result;
 	}
 	
 	protected static HttpMethod doHTTPRequest(HttpClient client, HttpMethod method, String username, String password) 
@@ -144,7 +158,7 @@ public class CandlepinTasks {
 		int port = method.getURI().getPort();
 	
 		setCredentials(client, server, port, username, password);
-		log.info("Running HTTP request for '"+username+"' on server '"+server+"'...");
+		log.info("Running HTTP request " + method.getName() + " on " + method.getURI() + " for '"+username+"' on server '"+server+"'...");
 	
 		int responseCode = client.executeMethod(method);
 		log.info("HTTP server returned " + responseCode) ;
@@ -195,6 +209,32 @@ public class CandlepinTasks {
 		int status = client.executeMethod(post);
 		
 		Assert.assertEquals(status, 200);
+	}
+	
+	public static void dropAllConsumers(final String server, final String port, final String owner, final String password) throws Exception{
+		JSONArray consumers = new JSONArray(getResourceREST(server, port, owner, password, "consumers"));
+		List<String> refs = new ArrayList<String>();
+		for (int i=0;i<consumers.length();i++) {
+			JSONObject o = consumers.getJSONObject(i);
+			refs.add(o.getString("href"));
+		}
+		final ExecutorService service = Executors.newFixedThreadPool(4);  //run 4 concurrent deletes
+		for (final String consumer: refs) {
+			service.submit(new Runnable() {
+				public void run() {
+					try {
+						HttpMethod m = new DeleteMethod("https://"+server+":"+port+"/candlepin" + consumer);
+						doHTTPRequest(client, m, owner, password);
+						m.releaseConnection();
+					}catch (Exception e) {
+						log.log(Level.SEVERE, "Could not delete consumer: " + consumer, e);
+					}
+				}
+			});
+		}
+		
+		service.shutdown();
+		service.awaitTermination(6, TimeUnit.HOURS);
 	}
 	
 	
@@ -379,13 +419,11 @@ public class CandlepinTasks {
         
         return feed;
 	}
-	
-	public static void deleteAllConsumers(URL url, String login, String password) {
 		
-	}
-	
 	public static void main (String... args) throws Exception {
 		
-		System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
+		//System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
+		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
+		CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
 	}
 }
