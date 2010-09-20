@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 import org.apache.xmlrpc.XmlRpcException;
 
 import com.redhat.qe.auto.testng.BzChecker;
-import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;

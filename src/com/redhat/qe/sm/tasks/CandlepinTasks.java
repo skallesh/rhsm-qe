@@ -33,7 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.redhat.qe.auto.selenium.Base64;
-import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;

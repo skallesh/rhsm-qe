@@ -27,7 +27,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.TestNGUtils;
-import com.redhat.qe.auto.testopia.Assert;
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
