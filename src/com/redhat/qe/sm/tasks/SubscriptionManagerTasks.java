@@ -89,12 +89,12 @@ public class SubscriptionManagerTasks {
 		
 		log.info("Cleaning out certs from /etc/pki/consumer/*");
 		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
-		//log.info("Cleaning out certs from /etc/pki/entitlement/*");
-		//sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
-		//log.info("Cleaning out certs from /etc/pki/entitlement/product/*");
-		//sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
-		//log.info("Cleaning out certs from /etc/pki/product/*");
-		//sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
+		log.info("Cleaning out certs from /etc/pki/entitlement/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
+		log.info("Cleaning out certs from /etc/pki/entitlement/product/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
+		log.info("Cleaning out certs from /etc/pki/product/*");
+		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
 	}
 	
 	public void updateConfigFileParameter(String parameter, String value){
