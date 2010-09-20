@@ -331,7 +331,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		// now dump out the list of userData to a file
 	    //File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
 	    //File file = new File("test-output/"+serverHostname+".UserTable.html");
-	    File file = new File("test-output/CandlepinRegistrationReport.html");
+	    File file = new File("CandlepinRegistrationReport.html");
 	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
