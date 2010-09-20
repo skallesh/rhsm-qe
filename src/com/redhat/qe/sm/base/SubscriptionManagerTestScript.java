@@ -10,7 +10,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -67,6 +69,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	protected String clientOwnerUsername	= System.getProperty("rhsm.client.owner.username");
 	protected String clientOwnerPassword	= System.getProperty("rhsm.client.owner.password");
+	protected String clientUsernames		= System.getProperty("rhsm.client.usernames");
+	protected String clientPasswords		= System.getProperty("rhsm.client.passwords");
 
 	protected String tcUnacceptedUsername	= System.getProperty("rhsm.client.username.tcunaccepted");
 	protected String tcUnacceptedPassword	= System.getProperty("rhsm.client.password.tcunaccepted");
@@ -220,152 +224,127 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		}
 	}
 
-	protected class UserData {
-		public String username=null;
-		public String password=null;
-		public String ownerId=null;
-		public SSHCommandResult registerResult=null;
-		public List<SubscriptionPool> availableSubscriptionPools=new ArrayList<SubscriptionPool>();
-		public UserData() {
-			super();
-			// TODO Auto-generated constructor stub
-		}
-//		public UserData(String username, String password) {
+//	protected class UserData {
+//		public String username=null;
+//		public String password=null;
+//		public JSONObject jsonOwner=null;
+//		public SSHCommandResult registerResult=null;
+//		public List<SubscriptionPool> allAvailableSubscriptionPools=new ArrayList<SubscriptionPool>();
+//		public UserData() {
 //			super();
-//			this.username = username;
-//			this.password = password;
+//			// TODO Auto-generated constructor stub
 //		}
-//		public void setUsername(String username) {
-//			this.username = username;
-//		}
-//		public void setPassword(String password) {
-//			this.password = password;
-//		}
-//		public void setOwnerId(String ownerId) {
-//			this.ownerId = ownerId;
-//		}
-//		public void setRegisterResult(SSHCommandResult registerResult) {
-//			this.registerResult = registerResult;
-//		}
-//		public void setSubscriptionPools(List<SubscriptionPool> subscriptionPools) {
-//			this.subscriptionPools = subscriptionPools;
-//		}
-	}
+////		public UserData(String username, String password) {
+////			super();
+////			this.username = username;
+////			this.password = password;
+////		}
+////		public void setUsername(String username) {
+////			this.username = username;
+////		}
+////		public void setPassword(String password) {
+////			this.password = password;
+////		}
+////		public void setOwnerId(String ownerId) {
+////			this.ownerId = ownerId;
+////		}
+////		public void setRegisterResult(SSHCommandResult registerResult) {
+////			this.registerResult = registerResult;
+////		}
+////		public void setSubscriptionPools(List<SubscriptionPool> subscriptionPools) {
+////			this.subscriptionPools = subscriptionPools;
+////		}
+//	}
 //	@BeforeSuite(groups={"setup"}, dependsOnMethods={"setupBeforeSuite"}, description="create a user report table")
-	public void reportUserTableBeforeSuite() {
-		
-		Map<String,Map<String,UserData>> tableMap = new HashMap<String,Map<String,UserData>>();
-		Map<String,UserData> userMap = new HashMap<String,UserData>();
-		
-		// iterate over all of the Usernames and Passwords (FIXME Ideally this is returned from an api call to the candlepin server)
-		List<UserData> userDataList = new ArrayList<UserData>();
-		for (List<Object>  usernameAndPasssword : getUsernameAndPasswordsDataAsListOfLists()) {
-			UserData userData = new UserData();
-			userData.username = (String) usernameAndPasssword.get(0);
-			userData.password = (String) usernameAndPasssword.get(1);
-
-			// determine this user's ability to register
-			userData.registerResult = clienttasks.register_(userData.username, userData.password, ConsumerType.system, null, null, true);
-				
-			// determine this user's available subscriptions
-			if (userData.registerResult.getExitCode()==0) {
-				userData.availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-			}
-			
-			// determine this user's owner
-			if (userData.registerResult.getExitCode()==0) {
-				String uuid = userData.registerResult.getStdout().split(" ")[0];
-				try {
-//					JSONObject jsonConsumer = CandlepinTasks.curl_hateoas_ref_ASJSONOBJECT(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"consumers/"+uuid);	
-					JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"consumers/"+uuid));	
-					JSONObject jsonOwner = (JSONObject) jsonConsumer.getJSONObject("owner");
-					userData.ownerId = jsonOwner.getString("id");
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}
-			
-			userDataList.add(userData);
-			clienttasks.unregister_();
-		}
-
-		// now dump out the list of userData to a file
-	    Writer output = null;
-	    String text = "Rajesh Kumar";
-	    File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
-	    try {
-			output = new BufferedWriter(new FileWriter(file));
-			
-			// write out the rows of the table
-			output.write("<html>\n");
-			output.write("<table>\n");
-			output.write("<tr><th>User/password</th><th>Owner</th></tr>\n");
-			for (UserData userData : userDataList) {
-				output.write("<tr>");
-				output.write("<td>"+userData.username+" / "+userData.password+"</td>");
-				if (userData.ownerId!=null) {output.write("<td>"+userData.ownerId+"</td>");} else {output.write("</td>");};
-				output.write("</tr>\n");
-			}
-			output.write("</table>\n");
-			output.write("</html>\n");
-		    output.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	    
-		/*
-		// initialize another member map that will be used to update the "Type" config property
-		Map<String, String> memberMap2 = new HashMap<String, String>();
-		memberMap2.put(memberMap.keySet().toArray(new String[]{})[0], "XA Datasource");
-		memberMap2.put(memberMap.keySet().toArray(new String[]{})[1], "Local TX Datasource");
-		memberMap2.put(memberMap.keySet().toArray(new String[]{})[2], "No TX Datasource");
-		
-		//change config
-		nav.openGroup(groupName, GroupType.Compatible);
-		HashMap<String,Map<String,String>> configMap = new HashMap<String,Map<String,String>>();
-		configMap.put("User Name", memberMap);
-		configMap.put("Type", memberMap2);
-		tasks22.editMemberConfigs(configMap);
-
-		//verify memberMap is persisted on filesystem
-		for (String member: memberMap.keySet()){
-			String value = memberMap.get(member);
-			String resource = getResourceNameFromDatasourceMemberName(member);
-			String dsConfigFile = getConfigFilenameFromResourceName(resource);
-			String dsConfigFilePath = ASInstallPath + "/server/default/deploy/" + dsConfigFile;
-
-			// verify the config file for this member has the expected value
-			tasks.assertFilesystemPersistenceForConfigEntry(jonServerCmdRunner, dsConfigFilePath,value,0);
-		}
-		
-		
-		
-		protected void processMemberConfigs(String process, Map<String,Map<String,String>> configMap) {
-			
-			// navigate to the current resource's Configure tab
-			nav.navigateToTab(UI.Configure,UI.Current);
-			
-			// put the page into edit mode
-			if (process.equals("edit")) sel().clickAndWait(UI22.ChangeProperties);
-			
-			// process each of the configs in the configMap
-			for (Iterator<String> i=configMap.keySet().iterator(); i.hasNext(); ) {
-				String configName = i.next();
-				
-				// process the member values for this configName
-				sel().click(UI22.EditMemberValues(configName));
-				sel().waitForVisible(OK_button, "60000"); // wait for the AJAXy member editor to open
-				
-				// process each of the members in the memberMap for this configMap
-				for (Iterator<String> j=configMap.get(configName).keySet().iterator(); j.hasNext(); ) {
-					String memberName = j.next();
-					String value = configMap.get(configName).get(memberName);
-					*/
-	}
+//	public void reportUserTableBeforeSuite() {
+//		
+//		Map<String,Map<String,UserData>> tableMap = new HashMap<String,Map<String,UserData>>();
+//		Map<String,UserData> userMap = new HashMap<String,UserData>();
+//		
+//		// iterate over all of the Usernames and Passwords (FIXME Ideally this is returned from an api call to the candlepin server)
+//		List<UserData> userDataList = new ArrayList<UserData>();
+//		for (List<Object>  usernameAndPasssword : getUsernameAndPasswordsDataAsListOfLists()) {
+//			UserData userData = new UserData();
+//			userData.username = (String) usernameAndPasssword.get(0);
+//			userData.password = (String) usernameAndPasssword.get(1);
+//
+//			// determine this user's ability to register
+//			userData.registerResult = clienttasks.register_(userData.username, userData.password, ConsumerType.system, null, null, true);
+//				
+//			// determine this user's available subscriptions
+//			if (userData.registerResult.getExitCode()==0) {
+//				userData.allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+//			}
+//			
+//			// determine this user's owner
+//			if (userData.registerResult.getExitCode()==0) {
+//				String uuid = userData.registerResult.getStdout().split(" ")[0];
+//				try {
+//					JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/consumers/"+uuid));	
+//					JSONObject jsonOwner = (JSONObject) jsonConsumer.getJSONObject("owner");
+//					userData.jsonOwner = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,jsonOwner.getString("href")));	
+//				} catch (Exception e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				
+//			}
+//			
+//			userDataList.add(userData);
+//			clienttasks.unregister_();
+//		}
+//
+//		// now dump out the list of userData to a file
+//	    //File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
+//	    //File file = new File("test-output/"+serverHostname+".UserTable.html");
+//	    File file = new File("test-output/CandlepinUserReport.html");
+//	    try {
+//	    	Writer output = new BufferedWriter(new FileWriter(file));
+//			
+//			// write out the rows of the table
+//			output.write("<html>\n");
+//			output.write("<table border=1>\n");
+//			output.write("<h2>Candlepin User Report</h2>\n");
+//			output.write("<b>"+serverHostname+"</b>\n");
+//			
+//			DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
+//			
+//			
+//			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
+//			output.write("<tr><th>Owner</th><th>User/password</th><th>Registration Output</th><th>All Available Subscriptions</th></tr>\n");
+//			for (UserData userData : userDataList) {
+//				if (userData.jsonOwner==null) {
+//					output.write("<tr bgcolor=#F47777>");
+//				} else {output.write("<tr>");}
+//				if (userData.jsonOwner!=null) {
+//					output.write("<td>"+userData.jsonOwner.getString("key")+"</td>");
+//				} else {output.write("<td/>");};
+//				if (userData.username!=null) {
+//					output.write("<td>"+userData.username+"/"+userData.password+"</td>");
+//				} else {output.write("<td/>");};
+//				if (userData.registerResult!=null) {
+//					output.write("<td>"+userData.registerResult.getStdout()+userData.registerResult.getStderr()+"</td>");
+//				} else {output.write("<td/>");};
+//				if (userData.allAvailableSubscriptionPools!=null) {
+//					output.write("<td><ul>");
+//					for (SubscriptionPool availableSubscriptionPool : userData.allAvailableSubscriptionPools) {
+//						output.write("<li>"+availableSubscriptionPool+"</li>");
+//					}
+//					output.write("</ul></td>");
+//				} else {output.write("<td/>");};
+//				output.write("</tr>\n");
+//			}
+//			output.write("</table>\n");
+//			output.write("</html>\n");
+//		    output.close();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		} catch (JSONException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
 	
 	// Protected Methods ***********************************************************************
 	
@@ -428,8 +407,61 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 //	}
 	
 
+	// Protected Inner Data Class ***********************************************************************
+	
+	protected class RegistrationData {
+		public String username=null;
+		public String password=null;
+		public JSONObject jsonOwner=null;
+		public SSHCommandResult registerResult=null;
+		public List<SubscriptionPool> allAvailableSubscriptionPools=null;/*new ArrayList<SubscriptionPool>();*/
+		public RegistrationData() {
+			super();
+		}
+		public RegistrationData(String username, String password, JSONObject jsonOwner,	SSHCommandResult registerResult, List<SubscriptionPool> allAvailableSubscriptionPools) {
+			super();
+			this.username = username;
+			this.password = password;
+			this.jsonOwner = jsonOwner;
+			this.registerResult = registerResult;
+			this.allAvailableSubscriptionPools = allAvailableSubscriptionPools;
+		}
+	}
+	
+	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
+	protected List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
+
+	
+	
 	// Data Providers ***********************************************************************
 
+	
+	@DataProvider(name="getGoodRegistrationData")
+	public Object[][] getGoodRegistrationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getGoodRegistrationDataAsListOfLists());
+	}
+	protected List<List<Object>> getGoodRegistrationDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+//		for (List<Object> registrationDataList : getBogusRegistrationDataAsListOfLists()) {
+//			// pull out all of the valid registration data (indicated by an Integer exitCode of 0)
+//			if (registrationDataList.contains(Integer.valueOf(0))) {
+//				// String username, String password, String type, String consumerId
+//				ll.add(registrationDataList.subList(0, 4));
+//			}
+//			
+//		}
+// changing to registrationDataList to get all the valid registeredConsumer
+		
+		for (RegistrationData registeredConsumer : registrationDataList) {
+			if (registeredConsumer.registerResult.getExitCode().intValue()==0) {
+				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password}));
+			}
+		}
+		
+		return ll;
+	}
+	
 	
 	@DataProvider(name="getAvailableSubscriptionPoolsData")
 	public Object[][] getAvailableSubscriptionPoolsDataAs2dArray() {
@@ -461,82 +493,5 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		return ll;
 	}
 	
-	
-	protected List<List<Object>> getRegistrationDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		// 									username,			password,						type,	consumerId,	autosubscribe,	force,			debug,	exitCode,	stdoutRegex,																	stderrRegex
-		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	null,		"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	null,		null,																			"Invalid username or password"}));
 
-		// force a successful registration, and then...
-		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
-		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	null,		"[a-f,0-9,\\-]{36} "+clientusername,											null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
-
-		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.FALSE,	null,	null,		"This system is already registered. Use --force to override",					null}));
-
-		if (isServerOnPremises) {
-			ll.add(Arrays.asList(new Object[]{	"admin",					"admin",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"admin"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"testuser1",				"password",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"testuser1"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"testuser2",				"password",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"testuser2"+"$",					null}));
-		}
-		else {	// user data comes from https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/imanage_qe_IT_data_spec
-			ll.add(Arrays.asList(new Object[]{	"ewayte",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"ewayte"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"sehuffman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"epgyadmin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"epgyadmin"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"onthebus",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"onthebus"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"epgy_bsears",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-			ll.add(Arrays.asList(new Object[]{	"Dadaless",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"emmapease",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"aaronwen",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"davidmcmath",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"davidmcmath"+"$",				null}));
-			ll.add(Arrays.asList(new Object[]{	"cfairman2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"cfairman2"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"macfariman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"isu-ardwin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"isu-paras",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"isuchaos",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"isucnc",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"isu-thewags",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isu-thewags"+"$",				null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-sukhoy",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isu-sukhoy"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"isu-debrm",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-			ll.add(Arrays.asList(new Object[]{	"isu-acoster",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"isunpappas",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-			ll.add(Arrays.asList(new Object[]{	"isujdwarn",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isujdwarn"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"pascal.catric@a-sis.com",	"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"pascal.catric@a-sis.com"+"$",	null}));
-			ll.add(Arrays.asList(new Object[]{	"xeops",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"xeops"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"xeops-js",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"xeop-stenjoa",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"xeop-stenjoa"+"$",				null}));
-			ll.add(Arrays.asList(new Object[]{	"tmgedp",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"tmgedp"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"jmarra",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"jmarra"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"nisadmin",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"nisadmin"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"darkrider1",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"darkrider1"+"$",					null}));
-			ll.add(Arrays.asList(new Object[]{	"test5",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-			ll.add(Arrays.asList(new Object[]{	"amy_redhat2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-			ll.add(Arrays.asList(new Object[]{	"test_1",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test_1"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"test2",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test2"+"$",						null}));
-			ll.add(Arrays.asList(new Object[]{	"test3",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test3"+"$",						null}));
-
-		}
-		return ll;
-	}
-
-	protected List<List<Object>> getUsernameAndPasswordsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		
-		for (List<Object> registrationDataList : getRegistrationDataAsListOfLists()) {
-			// pull out all of the valid registration data (indicated by a non null exitCode - index 7)
-			if (registrationDataList.get(7) != null) {
-				// String username, String password
-				ll.add(registrationDataList.subList(0, 2));
-			}
-			
-		}
-		
-		return ll;
-	}
 }

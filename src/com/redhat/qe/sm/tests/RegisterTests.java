@@ -1,11 +1,21 @@
 package com.redhat.qe.sm.tests;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -19,7 +29,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
+import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -31,11 +41,55 @@ import com.redhat.qe.tools.SSHCommandRunner;
  */
 @Test(groups={"register"})
 public class RegisterTests extends SubscriptionManagerTestScript {
+
 	
-	@Test(	description="subscription-manager-cli: register to a Candlepin server using various options and data",
+	
+	
+
+	@Test(	description="subscription-manager-cli: register to a Candlepin server",
+			groups={"myDevGroup","RegisterWithUsernameAndPassword_Test"},
+			dataProvider="getUsernameAndPasswordData")
+	@ImplementsTCMS(id="41677")
+	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
+		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
+		
+		// determine this user's ability to register
+		SSHCommandResult registerResult = clienttasks.register_(username, password, null, null, null, null);
+			
+		// determine this user's available subscriptions
+		List<SubscriptionPool> allAvailableSubscriptionPools=null;
+		if (registerResult.getExitCode()==0) {
+			allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		}
+		
+		// determine this user's owner
+		JSONObject jsonOwner = null;
+		if (registerResult.getExitCode()==0) {
+			String uuid = registerResult.getStdout().split(" ")[0];	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
+			try {
+				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/consumers/"+uuid));	
+				JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
+				jsonOwner = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		RegistrationData userData = new RegistrationData(username,password,jsonOwner,registerResult,allAvailableSubscriptionPools);
+		registrationDataList.add(userData);
+		clienttasks.unregister_();
+		
+		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
+		Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
+	}
+	
+
+	
+	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
-			dataProvider="getRegistrationData")
-	@ImplementsTCMS(id="41677, 41691, 47918")
+			dataProvider="getBogusRegistrationData")
+	@ImplementsTCMS(id="41691, 47918")
 	public void Registration_Test(String username, String password, ConsumerType type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
@@ -50,6 +104,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex);
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex);
 	}
+
 	
 // FIXME DELETEME: Moved to Registration_Test
 //	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
@@ -266,11 +321,64 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	
 	
+	// Configuration methods ***********************************************************************
 	
+
 	
+	@AfterGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
+	public void generateRegistrationReportTable() {
+		
+		// now dump out the list of userData to a file
+	    //File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
+	    //File file = new File("test-output/"+serverHostname+".UserTable.html");
+	    File file = new File("test-output/CandlepinRegistrationReport.html");
+	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
+	    try {
+	    	Writer output = new BufferedWriter(new FileWriter(file));
+			
+			// write out the rows of the table
+			output.write("<html>\n");
+			output.write("<table border=1>\n");
+			output.write("<h2>Candlepin Registration Report</h2>");
+			//output.write("<h3>(generated on "+dateFormat.format(System.currentTimeMillis())+")</h3>");
+			output.write("Candlepin hostname= <b>"+serverHostname+"</b>\n");
+			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
+			output.write("<tr><th>Owner</th><th>Username/<BR>Password</th><th>Registration Output</th><th>All Available Subscriptions</th></tr>\n");
+			for (RegistrationData registeredConsumer : registrationDataList) {
+				if (registeredConsumer.jsonOwner==null) {
+					output.write("<tr bgcolor=#F47777>");
+				} else {output.write("<tr>");}
+				if (registeredConsumer.jsonOwner!=null) {
+					output.write("<td valign=top>"+registeredConsumer.jsonOwner.getString("key")+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.username!=null) {
+					output.write("<td valign=top>"+registeredConsumer.username+"/<BR>"+registeredConsumer.password+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.registerResult!=null) {
+					output.write("<td valign=top>"+registeredConsumer.registerResult.getStdout()+registeredConsumer.registerResult.getStderr()+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.allAvailableSubscriptionPools!=null) {
+					output.write("<td valign=top><ul>");
+					for (SubscriptionPool availableSubscriptionPool : registeredConsumer.allAvailableSubscriptionPools) {
+						output.write("<li>"+availableSubscriptionPool+"</li>");
+					}
+					output.write("</ul></td>");
+				} else {output.write("<td/>");};
+				output.write("</tr>\n");
+			}
+			output.write("</table>\n");
+			output.write("</html>\n");
+		    output.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
-	
-	// protected methods ***********************************************************************
+	// Protected methods ***********************************************************************
 
 	protected void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
 		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+this.getRandInt()+" --password="+password+this.getRandInt()+" --force");
@@ -280,11 +388,73 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	// Data Providers ***********************************************************************
 
-	@DataProvider(name="getRegistrationData")
-	public Object[][] getRegistrationDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegistrationDataAsListOfLists());
+	@DataProvider(name="getBogusRegistrationData")
+	public Object[][] getBogusRegistrationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getBogusRegistrationDataAsListOfLists());
 	}
+	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
+		// 									username,			password,						type,	consumerId,	autosubscribe,	force,			debug,	exitCode,				stdoutRegex,																	stderrRegex
+		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
 
+		// force a successful registration, and then...
+		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+clientusername,											null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
+
+		// ... try to register again even though the system is already registered
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(255),	"This system is already registered. Use --force to override",					null}));
+
+// DELETEME This data moved to a script arguments for clientUsernames and clientPasswords 
+//		if (isServerOnPremises) {
+//			ll.add(Arrays.asList(new Object[]{	"admin",					"admin",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"admin"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"testuser1",				"password",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"testuser1"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"testuser2",				"password",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"testuser2"+"$",					null}));
+//		}
+//		else {	// user data comes from https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/imanage_qe_IT_data_spec
+//			ll.add(Arrays.asList(new Object[]{	"ewayte",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"ewayte"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"sehuffman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"epgyadmin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"epgyadmin"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"onthebus",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"onthebus"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"epgy_bsears",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
+//			ll.add(Arrays.asList(new Object[]{	"Dadaless",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"emmapease",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"aaronwen",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"davidmcmath",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"davidmcmath"+"$",				null}));
+//			ll.add(Arrays.asList(new Object[]{	"cfairman2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"cfairman2"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"macfariman",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isu-ardwin",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isu-paras",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isuchaos",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isucnc",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isu-thewags",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isu-thewags"+"$",				null}));
+//			ll.add(Arrays.asList(new Object[]{	"isu-sukhoy",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isu-sukhoy"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"isu-debrm",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isu-acoster",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isunpappas",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
+//			ll.add(Arrays.asList(new Object[]{	"isujdwarn",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isujdwarn"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"pascal.catric@a-sis.com",	"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"pascal.catric@a-sis.com"+"$",	null}));
+//			ll.add(Arrays.asList(new Object[]{	"xeops",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"xeops"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"xeops-js",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"xeop-stenjoa",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"xeop-stenjoa"+"$",				null}));
+//			ll.add(Arrays.asList(new Object[]{	"tmgedp",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"tmgedp"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"jmarra",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"jmarra"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"nisadmin",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"nisadmin"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"darkrider1",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"darkrider1"+"$",					null}));
+//			ll.add(Arrays.asList(new Object[]{	"test5",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
+//			ll.add(Arrays.asList(new Object[]{	"amy_redhat2",				"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
+//			ll.add(Arrays.asList(new Object[]{	"test_1",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test_1"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"test2",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test2"+"$",						null}));
+//			ll.add(Arrays.asList(new Object[]{	"test3",					"redhat",			null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test3"+"$",						null}));
+//
+//		}
+		return ll;
+	}
 	
 // FIXME DELETEME	
 //	@DataProvider(name="invalidRegistrationTermsAndConditionsLocalizedTest")
@@ -302,7 +472,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //	}
 	
 
-// FIXME DELETEME Moved to getRegistrationData
+// FIXME DELETEME Moved to getBogusRegistrationData
 //	@DataProvider(name="getInvalidRegistrationData")
 //	public Object[][] getInvalidRegistrationDataAs2dArray() {
 //		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
@@ -351,4 +521,25 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		return ll;
 	}
 	
+	
+	@DataProvider(name="getUsernameAndPasswordData")
+	public Object[][] getUsernameAndPasswordDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+	}
+	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		String[] usernames = clientUsernames.split(",");
+		String[] passwords = clientPasswords.split(",");
+		String password = passwords[0].trim();
+		for (int i = 0; i < usernames.length; i++) {
+			String username = usernames[i].trim();
+			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
+			// this allows one to specify only one password when all the usernames share the same password
+			if (i<passwords.length) password = passwords[i].trim();
+			ll.add(Arrays.asList(new Object[]{username,password}));
+		}
+		
+		return ll;
+	}
 }

@@ -121,8 +121,8 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public String getResourceREST(String server, String port, String owner, String password, String resource) throws Exception {
-		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin/"+resource);
+	static public String getResourceREST(String server, String port, String owner, String password, String path) throws Exception {
+		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin"+path);
 		return getHTTPResponseAsString(client, get, owner, password);
 	}
 	
@@ -397,6 +397,6 @@ public class CandlepinTasks {
 	
 	public static void main (String... args) throws Exception {
 		
-		System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
+		System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", "/"));
 	}
 }

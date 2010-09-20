@@ -556,9 +556,10 @@ public class SubscriptionManagerTasks {
 
 		// assemble the register command
 		String								command  = "subscription-manager-cli list";	
+		if (all!=null && all)				command += " --all";
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
-		if (all!=null && all)				command += " --all";
+
 		
 		// list without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
