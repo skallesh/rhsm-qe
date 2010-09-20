@@ -169,7 +169,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");
 			servertasks.cleanOutCRL();
 			if (deployServerOnPremises)
-				servertasks.deploy(serverImportDir,serverBranch);
+				servertasks.deploy(serverHostname, serverImportDir,serverBranch);
 			
 			// also connect to the candlepin server database
 			connectToDatabase();  // do this after the call to deploy since it will restart postgresql
