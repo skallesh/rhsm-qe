@@ -237,7 +237,7 @@ public class CandlepinTasks {
 		post.setRequestEntity(new MultipartRequestEntity(parts, post.getParams()));
 		int status = client.executeMethod(post);
 		
-		Assert.assertEquals(status, 200);
+		Assert.assertEquals(status, 204);
 	}
 	
 	public static void dropAllConsumers(final String server, final String port, final String owner, final String password) throws Exception{
