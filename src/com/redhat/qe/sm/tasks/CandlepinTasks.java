@@ -195,6 +195,7 @@ public class CandlepinTasks {
 	}
 	
 	static public void exportConsumerREST(String server, String port, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
+		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
 		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
 		
 		boolean validzip = false;
@@ -227,8 +228,9 @@ public class CandlepinTasks {
 	}
 	
 	static public void importConsumerREST(String server, String port, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
+		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
-		
+
 		PostMethod post = new PostMethod("https://"+server+":"+port+"/candlepin/owners/"+ownerKey+"/import");
 		File f = new File(fromExportZipFile);
 		Part[] parts = {
