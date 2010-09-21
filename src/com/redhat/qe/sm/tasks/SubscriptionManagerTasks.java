@@ -99,7 +99,7 @@ public class SubscriptionManagerTasks {
 	
 	public void updateConfigFileParameter(String parameter, String value){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
 				0,"Updated rhsm config parameter '"+parameter+"' to value: " + value);
 	}
 	
