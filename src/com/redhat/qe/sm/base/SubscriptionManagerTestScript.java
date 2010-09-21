@@ -48,6 +48,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	
 	protected String serverHostname			= System.getProperty("rhsm.server.hostname");
 	protected String serverPort 			= System.getProperty("rhsm.server.port");
+	protected String serverPrefix 			= System.getProperty("rhsm.server.prefix");
 	protected String serverBaseUrl			= System.getProperty("rhsm.server.baseurl");
 	protected String serverInstallDir		= System.getProperty("rhsm.server.installdir");
 	protected String serverImportDir		= System.getProperty("rhsm.server.importdir");
@@ -182,12 +183,14 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		if (installRPM) client1tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
+		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 		client1tasks.changeCertFrequency(certFrequency,false);
 		client1tasks.cleanOutAllCerts();
 		if (client2tasks!=null) if (installRPM) client2tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
+		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
 		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency,false);
 		if (client2tasks!=null) client2tasks.cleanOutAllCerts();
@@ -224,127 +227,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		}
 	}
 
-//	protected class UserData {
-//		public String username=null;
-//		public String password=null;
-//		public JSONObject jsonOwner=null;
-//		public SSHCommandResult registerResult=null;
-//		public List<SubscriptionPool> allAvailableSubscriptionPools=new ArrayList<SubscriptionPool>();
-//		public UserData() {
-//			super();
-//			// TODO Auto-generated constructor stub
-//		}
-////		public UserData(String username, String password) {
-////			super();
-////			this.username = username;
-////			this.password = password;
-////		}
-////		public void setUsername(String username) {
-////			this.username = username;
-////		}
-////		public void setPassword(String password) {
-////			this.password = password;
-////		}
-////		public void setOwnerId(String ownerId) {
-////			this.ownerId = ownerId;
-////		}
-////		public void setRegisterResult(SSHCommandResult registerResult) {
-////			this.registerResult = registerResult;
-////		}
-////		public void setSubscriptionPools(List<SubscriptionPool> subscriptionPools) {
-////			this.subscriptionPools = subscriptionPools;
-////		}
-//	}
-//	@BeforeSuite(groups={"setup"}, dependsOnMethods={"setupBeforeSuite"}, description="create a user report table")
-//	public void reportUserTableBeforeSuite() {
-//		
-//		Map<String,Map<String,UserData>> tableMap = new HashMap<String,Map<String,UserData>>();
-//		Map<String,UserData> userMap = new HashMap<String,UserData>();
-//		
-//		// iterate over all of the Usernames and Passwords (FIXME Ideally this is returned from an api call to the candlepin server)
-//		List<UserData> userDataList = new ArrayList<UserData>();
-//		for (List<Object>  usernameAndPasssword : getUsernameAndPasswordsDataAsListOfLists()) {
-//			UserData userData = new UserData();
-//			userData.username = (String) usernameAndPasssword.get(0);
-//			userData.password = (String) usernameAndPasssword.get(1);
-//
-//			// determine this user's ability to register
-//			userData.registerResult = clienttasks.register_(userData.username, userData.password, ConsumerType.system, null, null, true);
-//				
-//			// determine this user's available subscriptions
-//			if (userData.registerResult.getExitCode()==0) {
-//				userData.allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-//			}
-//			
-//			// determine this user's owner
-//			if (userData.registerResult.getExitCode()==0) {
-//				String uuid = userData.registerResult.getStdout().split(" ")[0];
-//				try {
-//					JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/consumers/"+uuid));	
-//					JSONObject jsonOwner = (JSONObject) jsonConsumer.getJSONObject("owner");
-//					userData.jsonOwner = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,jsonOwner.getString("href")));	
-//				} catch (Exception e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//				
-//			}
-//			
-//			userDataList.add(userData);
-//			clienttasks.unregister_();
-//		}
-//
-//		// now dump out the list of userData to a file
-//	    //File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
-//	    //File file = new File("test-output/"+serverHostname+".UserTable.html");
-//	    File file = new File("test-output/CandlepinUserReport.html");
-//	    try {
-//	    	Writer output = new BufferedWriter(new FileWriter(file));
-//			
-//			// write out the rows of the table
-//			output.write("<html>\n");
-//			output.write("<table border=1>\n");
-//			output.write("<h2>Candlepin User Report</h2>\n");
-//			output.write("<b>"+serverHostname+"</b>\n");
-//			
-//			DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
-//			
-//			
-//			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
-//			output.write("<tr><th>Owner</th><th>User/password</th><th>Registration Output</th><th>All Available Subscriptions</th></tr>\n");
-//			for (UserData userData : userDataList) {
-//				if (userData.jsonOwner==null) {
-//					output.write("<tr bgcolor=#F47777>");
-//				} else {output.write("<tr>");}
-//				if (userData.jsonOwner!=null) {
-//					output.write("<td>"+userData.jsonOwner.getString("key")+"</td>");
-//				} else {output.write("<td/>");};
-//				if (userData.username!=null) {
-//					output.write("<td>"+userData.username+"/"+userData.password+"</td>");
-//				} else {output.write("<td/>");};
-//				if (userData.registerResult!=null) {
-//					output.write("<td>"+userData.registerResult.getStdout()+userData.registerResult.getStderr()+"</td>");
-//				} else {output.write("<td/>");};
-//				if (userData.allAvailableSubscriptionPools!=null) {
-//					output.write("<td><ul>");
-//					for (SubscriptionPool availableSubscriptionPool : userData.allAvailableSubscriptionPools) {
-//						output.write("<li>"+availableSubscriptionPool+"</li>");
-//					}
-//					output.write("</ul></td>");
-//				} else {output.write("<td/>");};
-//				output.write("</tr>\n");
-//			}
-//			output.write("</table>\n");
-//			output.write("</html>\n");
-//		    output.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (JSONException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
+
 	
 	// Protected Methods ***********************************************************************
 	
