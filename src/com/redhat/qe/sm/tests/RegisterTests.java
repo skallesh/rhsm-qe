@@ -329,9 +329,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	public void generateRegistrationReportTable() {
 		
 		// now dump out the list of userData to a file
-	    //File file = new File("/var/www/html/hudson/"+serverHostname+".UserTable.html");
-	    //File file = new File("test-output/"+serverHostname+".UserTable.html");
-	    File file = new File("CandlepinRegistrationReport.html");
+	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the workspace directory on hudson
 	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
@@ -369,7 +367,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 			output.write("</table>\n");
 			output.write("</html>\n");
 		    output.close();
-		    log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
+		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
