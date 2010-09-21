@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -47,7 +48,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"myDevGroup","RegisterWithUsernameAndPassword_Test"},
+			groups={"RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getUsernameAndPasswordData")
 	@ImplementsTCMS(id="41677")
 	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
@@ -324,9 +325,12 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	// Configuration methods ***********************************************************************
 	
 
-	
+	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
+	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
+		clienttasks.unregister_();
+	}
 	@AfterGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
-	public void generateRegistrationReportTable() {
+	public void generateRegistrationReportTableAfterRegisterWithUsernameAndPassword_Test() {
 		
 		// now dump out the list of userData to a file
 	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the workspace directory on hudson
@@ -407,7 +411,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+clientusername,											null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
 
 		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(255),	"This system is already registered. Use --force to override",					null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
 
 // DELETEME This data moved to a script arguments for clientUsernames and clientPasswords 
 //		if (isServerOnPremises) {
