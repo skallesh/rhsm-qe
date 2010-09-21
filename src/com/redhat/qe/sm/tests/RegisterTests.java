@@ -369,6 +369,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 			output.write("</table>\n");
 			output.write("</html>\n");
 		    output.close();
+		    log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
