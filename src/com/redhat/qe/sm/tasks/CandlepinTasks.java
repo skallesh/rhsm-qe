@@ -1,6 +1,9 @@
 package com.redhat.qe.sm.tasks;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -14,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -160,7 +164,7 @@ public class CandlepinTasks {
 	throws Exception {
 		HttpMethod m =  doHTTPRequest(client, method, username, password);
 		InputStream result = m.getResponseBodyAsStream();
-		m.releaseConnection();
+		//m.releaseConnection();
 		return result;
 	}
 	
@@ -196,13 +200,27 @@ public class CandlepinTasks {
 		boolean validzip = false;
 		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin/consumers/"+consumerKey+"/export");
 		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
+		File zipFile = new File(intoExportZipFile);
+		FileOutputStream fos = new FileOutputStream(zipFile);
+
 		try {
-			ZipInputStream zip = new ZipInputStream(response);
-			ZipEntry ze = zip.getNextEntry();
+			//ZipInputStream zip = new ZipInputStream(response);
+			//ZipEntry ze = zip.getNextEntry();
+			byte[] buffer = new byte[1024];
+			int len;
+			while ((len = response.read(buffer)) != -1) {
+			    fos.write(buffer, 0, len);
+			}
+			new ZipFile(zipFile);  //will throw exception if not valid zipfile
 			validzip = true;
 		}
 		catch(Exception e) {
-			log.log(Level.FINE, "Unable to read response as zip file.", e);
+			log.log(Level.INFO, "Unable to read response as zip file.", e);
+		}
+		finally{
+			get.releaseConnection();
+			fos.flush();
+			fos.close();
 		}
 		
 		Assert.assertTrue(validzip, "Response is a valid zip file.");
@@ -436,7 +454,8 @@ public class CandlepinTasks {
 
 		//System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
 		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
-		CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
+		//CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
+		CandlepinTasks.exportConsumerREST("jweiss.usersys.redhat.com", "8443", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
 
 	}
 }
