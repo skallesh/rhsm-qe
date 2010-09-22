@@ -62,7 +62,42 @@ sudo ./subscription-manager-cli list                 # (This should actually sho
 
 I don't think that we have valid content data currently baked into the certs, so I don't think that you can use this to access protected yum repos yet.
 
+
+
+EMAIL FROM dgoodwin@redhat.com:
+Sub-pools are something we refer to related to Red Hat Personal.
+
+Customers register as what we call "person consumers" with candlepin
+through this Kingpin application.
+
+They will then see a Red Hat Personal subscription and be able to bind
+(request an entitlement). This is only for "person consumers", not systems.
+
+Once granted, this entitlement results in a sub-pool being created (of
+unlimited size) which they can then subscribe their systems to. It is
+tied to an entitlement that created it.
+
+When the person consumer's entitlement is removed, that sub-pool needs
+to be cleaned up, including all outstanding entitlements it has given out.
+
+Hope that was clear, it is certainly not the simplest thing in the world. :)
+
+Devan
+
+
+EMAIL FROM jharris@redhat.com
+Subpools are currently something that is currently pretty specific to RH Personal, but I will try and explain it generally first...
+
+In most cases, a pool is a 1-to-1 match with a subscription - so a subscription with quantity 20 for "Super Cool Linux" gives you a pool with the same quantity and product(s).  There are special cases where the act of consuming an entitlement from one pool actually spins off a new pool as a result.  A case for this might be "Developer Tools" where a subscription for a 10 person license is purchased (quantity 10), and when someone consumes an entitlement from that pool, a new sub-pool is created specifically for that user.  Each system that this user installs the product on pulls from this sub-pool, and when this user gives up his/her seat (unbinds from the original pool), the sub-pool and all of its entitlements are removed, which means that any systems that that "Developer Tools" installed by this user are no longer in compliance.
+
+We are using this same construct to model the RH Personal case, where the "person" consumes an entitlement for RHEL Personal, and any systems that want to install RHEL on are entitled off of the created sub-pool.
+
+I'm not really sure if this helps any, but here is the original design doc:  https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
+
+ - Justin
  */
+
+
 @Test(groups={"rhelPersonal"})
 public class RHELPersonalTests extends SubscriptionManagerTestScript{
 	
