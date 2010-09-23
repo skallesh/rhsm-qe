@@ -230,7 +230,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	        * check the consumed entitlements have not changed
 	 */
 	@Test(	description="subscription-manager-cli: reregister basic registration",
-			groups={},
+			groups={"blockedByBug-636843"},
 			enabled=true)
 	@ImplementsTCMS(id="56327")
 	public void ReregisterBasicRegistration_Test() {
