@@ -209,13 +209,13 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement cert for RHEL Personal Bits is revoked once the person unsubscribes from RHEL Personal",
-			groups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
+			groups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
 			dependsOnGroups={"EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
 			dataProvider="getRHELPersonalData",
 			enabled=true)
-	//@ImplementsTCMS(id="55702,55718")
+	@ImplementsTCMS(id="58898")
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
-	public void EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test(String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName) {
+	public void EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test(String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName) {
 		log.info("Making sure the clients are not subscribed to anything...");
 		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -241,15 +241,58 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		Assert.assertTrue(systemProductSubscription==null,systemConsumedProductName+" was revoked on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"' after the certFrquency of '"+certFrequencyMinutes+"' minutes since this same person has unsubscribed from the "+personSubscriptionName+" on client1");
 	}
 
+	
+	@Test(	description="subscription-manager-cli: Ensure that unsubscribing system from subpool while other systems are subscribed to subpool does not cause subpool to go away",
+			groups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test","RHELPersonal"},
+			dependsOnGroups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
+			dataProvider="getRHELPersonalData",
+			enabled=true)
+	@ImplementsTCMS(id="58899")
+	// 2) unsubscribe system from subpool while other systems are subscribed to subpool, make sure the subpool doesn't go away (scenario from calfanso@redhat.com)
+	public void EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test(String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName) {
+		log.info("Making sure the clients are not subscribed to anything...");
+		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		client2tasks.unregister();
+		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+		log.info("Subscribe client1 (already registered as a person under username '"+consumerUsername+"') to product subscription '"+personSubscriptionName+"'...");
+		SubscriptionPool personSubscriptionPool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertTrue(personSubscriptionPool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
+		client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
+
+		int numSystems = 4;
+		log.info("Register "+numSystems+" new systems under username '"+consumerUsername+"' and subscribe to product subscription '"+systemSubscriptionName+"'...");
+		List<String> registeredUsers = new ArrayList<String>();
+		for (int systemNum = 1; systemNum <=numSystems; systemNum++) {
+			client2.runCommandAndWait("rm -rf "+client2tasks.consumerCertFile);
+			SSHCommandResult result = client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, Boolean.TRUE);
+			registeredUsers.add(result.getStdout().split(" ")[0]);
+			SubscriptionPool subPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
+			client2tasks.subscribeToSubscriptionPoolUsingPoolId(subPool);
+		}
+		
+		log.info("Now start unsubscribing each system from the consumed product '"+systemConsumedProductName+"' and assert the sub pool '"+systemSubscriptionName+"' is still available...");
+		for (int systemNum = 1; systemNum <=numSystems; systemNum++) {
+			String consumerId = registeredUsers.get(systemNum-1);
+			client2.runCommandAndWait("rm -rf "+client2tasks.consumerCertFile);
+			SSHCommandResult result = client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
+			client2tasks.changeCertFrequency(1, false);
+			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+			client2tasks.unsubscribeFromProductSubscription(productSubscription);
+			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
+			Assert.assertTrue(systemSubscriptionPool!=null,systemSubscriptionName+" is once again available to consumer '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
+		}
+		
+	}
+	
 	// TODO
-//	2) unsubscribe system from subpool while other systems are subscribed to subpool, make sure the subpool doesn't go away (scenario from calfanso@redhat.com)
 //	3) unsubscribe system from subpool as the last system subscribed, make sure the subpool doesn't get deleted (scenario from calfanso@redhat.com)
 //	https://bugzilla.redhat.com/show_bug.cgi?id=634569
 
 	
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement cert for RHEL Personal Bits is revoked once the person unregisters",
 			groups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnregisters_Test","RHELPersonal", "blockedByBug-624063"},
-			dependsOnGroups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
+			dependsOnGroups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
 			dataProvider="getRHELPersonalData",
 			enabled=true)
 	//@ImplementsTCMS(id="55702,55718")
@@ -290,6 +333,42 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 		
 	}
 	
+	
+	@Test(	description="subscription-manager-cli: verify system autosubscribe consumes subpool RHEL Personal Bits",
+			groups={"EnsureSystemAutosubscribeConsumesSubPool_Test","RHELPersonal", "blockedByBug-637937"},
+			dependsOnGroups={"EnsureEntitlementCertForRHELPersonalBitsIsRevokedOncePersonUnregisters_Test"},
+			dataProvider="getRHELPersonalData",
+			alwaysRun=true,
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void EnsureSystemAutosubscribeConsumesSubPool_Test(String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName) {
+		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
+		client1tasks.unregister();
+		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null);
+		SubscriptionPool pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
+		List<String> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
+			client1tasks.subscribe(pool.poolId, null, null, null, null);
+			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
+				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+			List<String> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+			Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
+				"Subscribing to subscription pool '"+personSubscriptionName+"' does NOT drop a new entitlement certificate when registered as a person.");
+		} else {
+			client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		}
+		
+		
+		log.info("Now register client2 under username '"+consumerUsername+"' as a system with autosubscribe to assert that '"+systemConsumedProductName+"' gets consumed...");
+		client2tasks.unregister();
+		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, Boolean.TRUE, null);
+		List<ProductSubscription> client2ConsumedProductSubscriptions = client2tasks.getCurrentlyConsumedProductSubscriptions();
+		
+		
+		ProductSubscription consumedProductSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2ConsumedProductSubscriptions);
+		Assert.assertTrue(consumedProductSubscription!=null,systemConsumedProductName+" has been autosubscribed by client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+consumerUsername+"')");
+	}
 	
 	
 	
