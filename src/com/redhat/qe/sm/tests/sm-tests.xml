@@ -56,6 +56,19 @@
 	</test>
 	
 	
+	<test name="Reregister Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="reregister" />
+			</run>
+		</groups>
+	</test>
+	
+	
 	<test name="List Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.tests" />
