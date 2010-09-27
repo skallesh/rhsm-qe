@@ -30,9 +30,9 @@ import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
-import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -141,13 +141,13 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 	public void setupBeforeSuite() throws ParseException, IOException{
 	
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-		clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		
 		// will we be connecting to the candlepin server?
 		if (!(	serverHostname.equals("") || serverHostname.startsWith("$") ||
 				serverInstallDir.equals("") || serverInstallDir.startsWith("$") )) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.tasks.CandlepinTasks(server,serverInstallDir);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
 
 		} else {
 			log.info("Assuming the server is already setup and running.");
@@ -160,7 +160,7 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 			client1 = client;
 			client1tasks = clienttasks;
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			client2tasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client2);
+			client2tasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client2);
 		} else {
 			log.info("Multi-client testing will be skipped.");
 		}

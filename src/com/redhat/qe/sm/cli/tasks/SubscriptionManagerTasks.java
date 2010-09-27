@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tasks;
+package com.redhat.qe.sm.cli.tasks;
 
 import java.lang.reflect.Field;
 import java.text.ParseException;
@@ -39,11 +39,11 @@ public class SubscriptionManagerTasks {
 	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	public String productCertDir				= getConfigFileParameter("productCertDir");
-	public String entitlementCertDir			= getConfigFileParameter("entitlementCertDir");
-	public String consumerCertDir				= getConfigFileParameter("consumerCertDir");
-	public String consumerKeyFile				= consumerCertDir+"/key.pem";
-	public String consumerCertFile				= consumerCertDir+"/cert.pem";
+	public String productCertDir				= null; // "/etc/pki/product";
+	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
+	public String consumerCertDir				= null; // "/etc/pki/consumer";
+	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
+	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
 	public static String factsDir				= "/etc/rhsm/facts/";
 
 	public SubscriptionManagerTasks() {
@@ -54,6 +54,11 @@ public class SubscriptionManagerTasks {
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
+		productCertDir				= getConfigFileParameter("productCertDir");
+		entitlementCertDir			= getConfigFileParameter("entitlementCertDir");
+		consumerCertDir				= getConfigFileParameter("consumerCertDir");
+		consumerKeyFile				= consumerCertDir+"/key.pem";
+		consumerCertFile			= consumerCertDir+"/cert.pem";
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {

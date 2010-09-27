@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,10 +13,10 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 

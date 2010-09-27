@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,10 +27,10 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -172,7 +172,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //				"/etc/pki/consumer/cert.pem is present after register");
 //	}
 	
-	String autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 //			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378", "blockedByBug-616137"},
 //			alwaysRun=true,
@@ -195,10 +195,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 				"Expected product "+this.prodCertProduct+" appears in list --consumed call after autosubscribe");
 //		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 	}
-	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
-	public void teardownAfterValidRegistrationAutosubscribe_Test() {
-		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
-	}
+
 	
 	// TODO
 	@Test(	description="subscription-manager-cli: register with force",
@@ -213,7 +210,17 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 	
 	// Configuration methods ***********************************************************************
 	
+	String autosubscribeProdCertFile = null;
+	@BeforeGroups(value={"ValidRegistrationAutosubscribe_Test"},alwaysRun=true)
+	public void autosubscribeProdCertFileBeforeValidRegistrationAutosubscribe_Test() {
+		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+	}
 
+	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
+	public void teardownAfterValidRegistrationAutosubscribe_Test() {
+		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
+	}
+	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
 		clienttasks.unregister_();
