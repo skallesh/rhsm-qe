@@ -39,8 +39,11 @@ public class SubscriptionManagerTasks {
 	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	public static String consumerCertFile		= "/etc/pki/consumer/cert.pem";
-	public static String consumerKeyFile		= "/etc/pki/consumer/key.pem";
+	public String productCertDir				= getConfigFileParameter("productCertDir");
+	public String entitlementCertDir			= getConfigFileParameter("entitlementCertDir");
+	public String consumerCertDir				= getConfigFileParameter("consumerCertDir");
+	public String consumerKeyFile				= consumerCertDir+"/key.pem";
+	public String consumerCertFile				= consumerCertDir+"/cert.pem";
 	public static String factsDir				= "/etc/rhsm/facts/";
 
 	public SubscriptionManagerTasks() {
@@ -86,21 +89,34 @@ public class SubscriptionManagerTasks {
 	
 	public void cleanOutAllCerts() {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		String value;
 		
-		log.info("Cleaning out certs from /etc/pki/consumer/*");
-		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/consumer/*");
-		log.info("Cleaning out certs from /etc/pki/entitlement/*");
-		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/*");
-		log.info("Cleaning out certs from /etc/pki/entitlement/product/*");
-		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/entitlement/product/*");
-		log.info("Cleaning out certs from /etc/pki/product/*");
-		sshCommandRunner.runCommandAndWait("rm -rf /etc/pki/product/*");
+		value = getConfigFileParameter("consumerCertDir");
+		log.info("Cleaning out certs from consumerCertDir: "+value);
+		if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
+		else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+		
+		value = getConfigFileParameter("entitlementCertDir");
+		log.info("Cleaning out certs from entitlementCertDir: "+value);
+		if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
+		else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+		
+		value = getConfigFileParameter("productCertDir");
+		log.info("Cleaning out certs from productCertDir: "+value);
+		if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
+		else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
 	}
 	
 	public void updateConfigFileParameter(String parameter, String value){
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
 				0,"Updated rhsm config parameter '"+parameter+"' to value: " + value);
+	}
+	
+	public String getConfigFileParameter(String parameter){
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+defaultConfigFile, 0, "^"+parameter, null);
+		String value = result.getStdout().split("=|:")[1];
+		return value.trim();
 	}
 	
 //	public void updateSMConfigFile(String hostname, String port){
@@ -202,7 +218,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
-		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
 	}
@@ -232,7 +248,7 @@ public class SubscriptionManagerTasks {
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
 	 */
 	public Map<Integer,SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
-		sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return SubscriptionPool.parseCerts(certificates);
 	}
@@ -242,7 +258,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentEntitlementCertFiles() {
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1t /etc/pki/entitlement/product/*.pem");
+		sshCommandRunner.runCommandAndWait("ls -1t "+entitlementCertDir+"/product/*.pem");
 		String files = sshCommandRunner.getStdout().trim();
 		List<String> certFiles = new ArrayList<String>();
 		if (!files.equals("")) certFiles=Arrays.asList(files.split("\n"));
@@ -384,7 +400,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {
-		String certFile = "/etc/pki/entitlement/product/"+productSubscription.serialNumber+".pem";
+		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
 		sshCommandRunner.runCommandAndWait("openssl x509 -text -noout -in '"+certFile+"'");
 		String certificates = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
@@ -536,7 +552,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert that the consumer cert and key have been removed
-		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls /etc/pki/entitlement/product | grep pem");
+		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls "+entitlementCertDir+"/product | grep pem");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(),1,"The identity certificate '"+consumerCertFile+"' has been removed after unregistering.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(),1,"The identity key '"+consumerKeyFile+"' has been removed after unregistering.");
 		
@@ -851,7 +867,7 @@ public class SubscriptionManagerTasks {
 				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement product cert files
-		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'").getStdout().equals(""),
+		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem'").getStdout().equals(""),
 				"No entitlement product cert files exist after unsubscribing from all subscription pools.");
 		
 		// assert that the yum redhat repo file is gone
@@ -878,7 +894,7 @@ public class SubscriptionManagerTasks {
 	 * @return - false when the productSubscription has already been unsubscribed at a previous time
 	 */
 	public boolean unsubscribeFromProductSubscription(ProductSubscription productSubscription) {
-		String certFile = "/etc/pki/entitlement/product/"+productSubscription.serialNumber+".pem";
+		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from product subscription: "+ productSubscription);

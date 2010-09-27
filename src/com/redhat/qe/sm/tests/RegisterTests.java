@@ -172,7 +172,7 @@ public class RegisterTests extends SubscriptionManagerTestScript {
 //				"/etc/pki/consumer/cert.pem is present after register");
 //	}
 	
-	String autosubscribeProdCertFile =  "/etc/pki/product/"+"autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+	String autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert-"+/*getRandInt()+*/".pem";
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 //			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378", "blockedByBug-616137"},
 //			alwaysRun=true,

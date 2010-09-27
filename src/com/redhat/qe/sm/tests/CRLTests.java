@@ -71,7 +71,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 		}
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		Calendar originalEndDate = (Calendar) products.get(0).endDate.clone();
-		String originalCertFile = "/etc/pki/entitlement/product/"+products.get(0).serialNumber+".pem";
+		String originalCertFile = clienttasks.entitlementCertDir+"/product/"+products.get(0).serialNumber+".pem";
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),1,"Original certificate file '"+originalCertFile+"' exists.");
 		
 		log.info("Now we will change the start and end date of the subscription pool adding one month to enddate and subtracting one month from startdate...");
@@ -113,7 +113,7 @@ public class CRLTests extends SubscriptionManagerTestScript{
 			log.info("And, let's assert that consumed product cert serial has been updated...");
 			Assert.assertTrue(!newProduct.serialNumber.equals(product.serialNumber), 
 					"The consumed product cert serial has been updated from '"+product.serialNumber+"' to '"+newProduct.serialNumber+"' for product: "+newProduct.productName);
-			newCertFile = "/etc/pki/entitlement/product/"+newProduct.serialNumber+".pem";
+			newCertFile = clienttasks.entitlementCertDir+"/product/"+newProduct.serialNumber+".pem";
 		}
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
 

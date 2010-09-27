@@ -276,9 +276,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	public void refreshCerts_Test(){
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		//SubscribeToASingleEntitlementByProductID_Test();
-		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
-		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
-		client.runCommandAndWait("rm -f /etc/pki/product/*");
+		client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
+		client.runCommandAndWait("rm -rf "+clienttasks.productCertDir+"/*");
 		//certFrequency_Test(1);
 		clienttasks.changeCertFrequency(1,true);
 //		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
@@ -293,8 +292,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 //				"rhsmcertd reports that certificates have been updated");
 		
 		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(client, "ls /etc/pki/entitlement | grep pem", 0, "pem", null);
-		RemoteFileTasks.runCommandAndAssert(client, "ls /etc/pki/entitlement/product | grep pem", 0, "pem", null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+" | grep pem", 0, "pem", null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+"/product | grep pem", 0, "pem", null);
 		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
 		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "ls /etc/pki/product", 0, "pem", null);*/
 	}
