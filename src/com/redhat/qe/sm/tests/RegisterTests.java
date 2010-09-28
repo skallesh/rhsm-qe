@@ -26,7 +26,7 @@ import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -41,7 +41,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *
  */
 @Test(groups={"register"})
-public class RegisterTests extends SubscriptionManagerTestScript {
+public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
 	

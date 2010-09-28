@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
 
 /**
@@ -15,7 +15,7 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  *
  */
 @Test(groups={"multi-client"})
-public class MultiClientTests extends SubscriptionManagerTestScript{
+public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	
 	
 	

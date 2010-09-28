@@ -16,7 +16,7 @@ import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -99,7 +99,7 @@ I'm not really sure if this helps any, but here is the original design doc:  htt
 
 
 @Test(groups={"rhelPersonal"})
-public class RHELPersonalTests extends SubscriptionManagerTestScript{
+public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 
 	 @Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are available and unlimited after a person has subscribed to RHEL Personal",

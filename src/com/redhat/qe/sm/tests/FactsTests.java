@@ -15,7 +15,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
@@ -27,7 +27,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * @author jsefler
  */
 @Test(groups={"facts"})
-public class FactsTests extends SubscriptionManagerTestScript{
+public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 

@@ -14,7 +14,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -58,7 +58,7 @@ A   3. Events should be consumable via RSS based on consumer
          2. It should be possible to publish no messages to the AMQP bus. 
  */
 @Test(groups={"events"})
-public class EventTests extends SubscriptionManagerTestScript{
+public class EventTests extends SubscriptionManagerCLITestScript{
 	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
 	protected JSONObject testOwner;
 	protected String testProductId = "newProduct"+System.currentTimeMillis();
