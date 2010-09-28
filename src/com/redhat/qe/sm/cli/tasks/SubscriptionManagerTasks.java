@@ -230,6 +230,14 @@ public class SubscriptionManagerTasks {
 		return ConsumerCert.parse(certificate);
 	}
 	
+	public String getCurrentConsumerId() {
+		return getCurrentConsumerCert().consumerid;
+	}
+	
+	public String getCurrentConsumerId(SSHCommandResult registerResult) {
+		return registerResult.getStdout().split(" ")[0];
+	}
+	
 	public String getFactValue(String factName) {
 		SSHCommandResult result = facts_(true, false);
 		
@@ -601,7 +609,19 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAllAvailable() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --all --available");
+
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=638266 - jsefler 9/28/2010
+// FIXME THIS CODE SHOULD NOT BE COMITTED WITH true
+		boolean invokeWorkaroundWhileBugIsOpen = false;// true;
+		String bugId="638266"; 
+		try {if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			return list_(Boolean.FALSE,Boolean.TRUE,null);
+		}
+		// END OF WORKAROUND
+		
 		return list_(Boolean.TRUE,Boolean.TRUE,null);
+		
 	}
 	
 	/**
@@ -857,6 +877,20 @@ public class SubscriptionManagerTasks {
 	// unsubscribe module tasks ************************************************************
 
 	/**
+	 * unsubscribe without asserting results
+	 */
+	public SSHCommandResult unsubscribe_(Integer serial) {
+
+		// assemble the unsubscribe command
+		String				command  = "subscription-manager-cli unsubscribe";	
+		if (serial!=null)	command += " --serial="+serial;
+
+		
+		// unsubscribe without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
 	 * Issues a call to "subscription-manager-cli unsubscribe" which will unsubscribe from
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
@@ -899,7 +933,7 @@ public class SubscriptionManagerTasks {
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from product subscription: "+ productSubscription);
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli unsubscribe --serial="+productSubscription.serialNumber);
+		unsubscribe_(productSubscription.serialNumber);
 		
 		if (certFileExists) {
 			// assert that the cert file was removed
