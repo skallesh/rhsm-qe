@@ -4,6 +4,16 @@ import com.redhat.qe.ldtpclient.Element;
 
 public class UI {
 
+	protected static UI instance = null;
+	public static UI getInstance() {
+		if (instance == null)	instance = new UI();
+		return instance;
+	}
+	
+	private UI() {
+		super();
+	}
+	
 	public static String mainWindowName = "dialog_updates";
 	
 	public static Element mainWindow = new Element (mainWindowName, "");
@@ -16,10 +26,11 @@ public class UI {
 	
 	public static String registerDialogName = "register_dialog";
 
-	public static Element useridTextbox = new Element (registerDialogName, "account_login");
-	public static Element passwordTextbox = new Element (registerDialogName, "account_password");
-	public static Element autoregisterCheckbox = new Element (registerDialogName, "auto_bind");
-	public static Element registerButton = new Element (registerDialogName, "Register");
+	public static Element redhatLogin = new Element (registerDialogName, "account_login");
+	public static Element password = new Element (registerDialogName, "account_password");
+	public static Element systemName = new Element (registerDialogName, "consumer_name");
+	public static Element automaticallySubscribe = new Element (registerDialogName, "auto_bind");
+	public static Element register = new Element (registerDialogName, "Register");
 	
 
 }

@@ -5,27 +5,31 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.ldtpclient.LDTPClient;
 import com.redhat.qe.sm.gui.locators.UI;
+import com.redhat.qe.sm.gui.tasks.SMGuiTasks;
 
 
 public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTestScript {
 
-	UI ui = new UI();
-	LDTPClient ldtp;
+	protected static UI ui = UI.getInstance();
+	protected static SMGuiTasks tasks = SMGuiTasks.getInstance();
+	protected static LDTPClient ldtpInstance = null;
+	
+	
+	public static LDTPClient ldtp() {
+		return ldtpInstance;
+	}
 	
 	@BeforeSuite
 	public void startLDTP(){
-		ldtp  = new LDTPClient("http://"  + clienthostname + ":8001/");
-		ldtp.init();
-		ldtp.launchApp("subscription-manager-gui", new String[] {});
-		ldtp.waitTilGuiExist(UI.mainWindow);
+		ldtpInstance  = new LDTPClient("http://"  + clienthostname + ":8001/");
+		ldtp().init();
+		ldtp().launchApp("subscription-manager-gui", new String[] {});
+		ldtp().waitTilGuiExist(UI.mainWindow);
 	}
 	
 	//test test, really belongs elsewhere, but here now for convenience - jweiss
 	@Test
 	public void register(){
-		ldtp.click(UI.registrationButton);
-		ldtp.setTextValue(UI.useridTextbox, clientusername);
-		ldtp.setTextValue(UI.passwordTextbox, clientpassword);
-		ldtp.click(UI.registerButton);
+		tasks.register(clientusername, clientpassword, clienthostname, true);
 	}
 }
