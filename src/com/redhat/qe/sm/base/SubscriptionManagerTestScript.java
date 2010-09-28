@@ -102,8 +102,8 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 
 	
 	
-	protected String urlToRPM				= System.getProperty("rhsm.rpm.url");
-	protected Boolean installRPM			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
+	protected String[] rpmUrls				= System.getProperty("rhsm.rpm.urls").split(",");
+	protected Boolean installRPMs			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
 
 
 //DELETEME
@@ -180,14 +180,24 @@ public class SubscriptionManagerTestScript extends com.redhat.qe.auto.testng.Tes
 		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
-		if (installRPM) client1tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
+		if (installRPMs) client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+		client1tasks.consumerCertDir	= client1tasks.getConfigFileParameter("consumerCertDir");
+		client1tasks.entitlementCertDir	= client1tasks.getConfigFileParameter("entitlementCertDir");
+		client1tasks.productCertDir		= client1tasks.getConfigFileParameter("productCertDir");
+		client1tasks.consumerCertFile	= client1tasks.consumerCertDir+"/cert.pem";
+		client1tasks.consumerKeyFile	= client1tasks.consumerCertDir+"/key.pem";
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 		client1tasks.changeCertFrequency(certFrequency,false);
 		client1tasks.cleanOutAllCerts();
-		if (client2tasks!=null) if (installRPM) client2tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
+		if (client2tasks!=null) if (installRPMs) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+		if (client2tasks!=null) client2tasks.consumerCertDir	= client2tasks.getConfigFileParameter("consumerCertDir");
+		if (client2tasks!=null) client2tasks.entitlementCertDir	= client2tasks.getConfigFileParameter("entitlementCertDir");
+		if (client2tasks!=null) client2tasks.productCertDir		= client2tasks.getConfigFileParameter("productCertDir");
+		if (client2tasks!=null) client2tasks.consumerCertFile	= client2tasks.consumerCertDir+"/cert.pem";
+		if (client2tasks!=null) client2tasks.consumerKeyFile	= client2tasks.consumerCertDir+"/key.pem";
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);

@@ -39,26 +39,19 @@ public class SubscriptionManagerTasks {
 	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
+	public static String factsDir				= "/etc/rhsm/facts/";
+	
+	// must be explicitly set after call to installSubscriptionManagerRPM
 	public String productCertDir				= null; // "/etc/pki/product";
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
-	public static String factsDir				= "/etc/rhsm/facts/";
-
-	public SubscriptionManagerTasks() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+	
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
-		productCertDir				= getConfigFileParameter("productCertDir");
-		entitlementCertDir			= getConfigFileParameter("entitlementCertDir");
-		consumerCertDir				= getConfigFileParameter("consumerCertDir");
-		consumerKeyFile				= consumerCertDir+"/key.pem";
-		consumerCertFile			= consumerCertDir+"/cert.pem";
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -66,29 +59,32 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	public void installSubscriptionManagerRPM(String urlToRPM, String enablerepofordeps) {
+	public void installSubscriptionManagerRPMs(String[] rpmUrls, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 
-		log.info("Retrieving subscription-manager RPM...");
-		String sm_rpm = "/tmp/subscription-manager.rpm";
-		sshCommandRunner.runCommandAndWait("rm -f "+sm_rpm);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+urlToRPM+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
-
-		log.info("Uninstalling existing subscription-manager RPM...");
+		log.info("Uninstalling existing subscription-manager RPMs...");
 		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
 		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
+		sshCommandRunner.runCommandAndWait("rpm -e python-rhsm");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q python-rhsm",Integer.valueOf(1),"package python-rhsm is not installed",null);
 		
-		log.info("Installing subscription-manager RPM...");
-		// using yum localinstall should enable testing on RHTS boxes right off the bat.
-		sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
-
+		for (String rpmUrl : rpmUrls) {
+			rpmUrl = rpmUrl.trim();
+			log.info("Installing RPM from "+rpmUrl+"...");
+			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/")).get(rpmUrl.split("/").length-1);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
+			// using yum localinstall should enable testing on RHTS boxes right off the bat.
+			sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
+		}
+		
 		log.info("Installed version of subscription-manager RPM...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
+
 	}
 	
 	

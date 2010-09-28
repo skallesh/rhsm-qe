@@ -276,7 +276,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 			String consumerId = registeredUsers.get(systemNum-1);
 			client2.runCommandAndWait("rm -rf "+client2tasks.consumerCertFile);
 			SSHCommandResult result = client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
-			client2tasks.changeCertFrequency(1, false);
+			client2tasks.changeCertFrequency(1, true);
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			client2tasks.unsubscribeFromProductSubscription(productSubscription);
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
