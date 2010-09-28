@@ -23,6 +23,7 @@ public class SMGuiTasks {
 	
 	public void register(String username, String password, String systemName, boolean autoSubscribe){
 		ldtp().click(UI.registrationButton);
+		ldtp().waitTilGuiExist(UI.registerDialog);
 		ldtp().setTextValue(UI.redhatLogin, username);
 		ldtp().setTextValue(UI.password, password);
 		if (systemName != null) ldtp().setTextValue(UI.systemName, systemName);

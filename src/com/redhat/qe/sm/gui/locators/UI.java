@@ -14,7 +14,7 @@ public class UI {
 		super();
 	}
 	
-	public static String mainWindowName = "dialog_updates";
+	public static String mainWindowName = "manage_subscriptions_dialog";
 	
 	public static Element mainWindow = new Element (mainWindowName, "");
 	public static Element closeButton = new Element (mainWindowName, "button_close");
@@ -26,11 +26,12 @@ public class UI {
 	
 	public static String registerDialogName = "register_dialog";
 
+	public static Element registerDialog = new Element (registerDialogName, "");
 	public static Element redhatLogin = new Element (registerDialogName, "account_login");
 	public static Element password = new Element (registerDialogName, "account_password");
 	public static Element systemName = new Element (registerDialogName, "consumer_name");
 	public static Element automaticallySubscribe = new Element (registerDialogName, "auto_bind");
-	public static Element register = new Element (registerDialogName, "Register");
+	public static Element register = new Element (registerDialogName, "register_button");
 	
 
 }

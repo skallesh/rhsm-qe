@@ -23,7 +23,8 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 	public void startLDTP(){
 		ldtpInstance  = new LDTPClient("http://"  + clienthostname + ":8001/");
 		ldtp().init();
-		ldtp().launchApp("subscription-manager-gui", new String[] {});
+		String binary = System.getProperty("rhsm.gui.binary", "subscription-manager-gui");
+		ldtp().launchApp(binary, new String[] {});
 		ldtp().waitTilGuiExist(UI.mainWindow);
 	}
 	
