@@ -13,7 +13,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -23,7 +23,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  */
 @Test(groups={"general"})
-public class GeneralTests extends SubscriptionManagerTestScript{
+public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",

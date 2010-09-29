@@ -16,19 +16,16 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
-import com.redhat.qe.auto.testng.LogMessageUtil;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -41,7 +38,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *
  */
 @Test(groups={"register"})
-public class RegisterTests extends SubscriptionManagerTestScript {
+public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
 	

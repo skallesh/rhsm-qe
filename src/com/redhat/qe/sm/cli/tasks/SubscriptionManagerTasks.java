@@ -19,7 +19,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
@@ -194,8 +194,8 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
 
 		if (waitForMinutes) {
-			SubscriptionManagerTestScript.sleep(minutes*60*1000);
-			SubscriptionManagerTestScript.sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
+			SubscriptionManagerCLITestScript.sleep(minutes*60*1000);
+			SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		}
 
 	}

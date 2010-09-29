@@ -12,7 +12,7 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -24,7 +24,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *
  */
 @Test(groups={"unsubscribe"})
-public class UnsubscribeTests extends SubscriptionManagerTestScript{
+public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(description="subscription-manager-cli: unsubscribe consumer to an entitlement using product ID",
 //			dependsOnGroups={"sm_stage4"},

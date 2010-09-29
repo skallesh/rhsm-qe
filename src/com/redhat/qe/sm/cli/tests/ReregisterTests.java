@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -18,7 +18,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *
  */
 @Test(groups={"reregister"})
-public class ReregisterTests extends SubscriptionManagerTestScript {
+public class ReregisterTests extends SubscriptionManagerCLITestScript {
 
 	
 	

@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.RevokedCert;
@@ -25,7 +24,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  *
  */
 @Test(groups={"crl"})
-public class CRLTests extends SubscriptionManagerTestScript{
+public class CRLTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",

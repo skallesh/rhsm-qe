@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
 
 /**
@@ -15,7 +15,7 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  *
  */
 @Test(groups={"unregister"})
-public class UnregisterTests extends SubscriptionManagerTestScript {
+public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(description="unregister the consumer",
 //			groups={"sm_stage1", "blockedByBug-589626"},

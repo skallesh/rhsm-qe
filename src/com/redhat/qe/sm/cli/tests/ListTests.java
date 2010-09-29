@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
@@ -18,7 +18,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *
  */
 @Test(groups={"list"})
-public class ListTests extends SubscriptionManagerTestScript{
+public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: list available entitlements",
 //			dependsOnGroups={"sm_stage2"},

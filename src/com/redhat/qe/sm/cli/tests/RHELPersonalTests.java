@@ -12,15 +12,14 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
-import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
-import com.redhat.qe.sm.base.SubscriptionManagerTestScript;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
@@ -99,8 +98,7 @@ I'm not really sure if this helps any, but here is the original design doc:  htt
 
 
 @Test(groups={"rhelPersonal"})
-public class RHELPersonalTests extends SubscriptionManagerTestScript{
-	
+public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	protected List<String> consumerIds = new ArrayList<String>();
 	protected String personConsumerId = null;
 	protected int multipleSystems = 4;	// multiple (unlimited)
@@ -466,6 +464,7 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 	// Data Providers ***********************************************************************
 
 	
+
 //	@DataProvider(name="getRHELPersonalData")
 //	public Object[][] getRHELPersonalDataAs2dArray() {
 //		return TestNGUtils.convertListOfListsTo2dArray(getRHELPersonalDataAsListOfLists());
@@ -484,3 +483,4 @@ public class RHELPersonalTests extends SubscriptionManagerTestScript{
 //		return ll;
 //	}
 }
+
