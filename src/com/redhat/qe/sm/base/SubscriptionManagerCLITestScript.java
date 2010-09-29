@@ -31,8 +31,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
 //	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
-	protected String[] rpmUrls				= System.getProperty("rhsm.rpm.urls").split(",");
-	protected Boolean installRPMs			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
 
 //DELETEME
 //MOVED TO TASKS CLASSES
