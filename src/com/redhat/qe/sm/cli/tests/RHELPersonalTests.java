@@ -296,7 +296,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement certs for subscribed subpool is revoked once the person unsubscribes from RHEL Personal",
 			groups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
 			dependsOnGroups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
-			dataProvider="getRHELPersonalData",
+//			dataProvider="getRHELPersonalData",
 			enabled=true)
 	@ImplementsTCMS(id="58898")
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
@@ -309,7 +309,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		log.info("Now the the certs for '"+systemConsumedProductName+"' and '"+systemSubscriptionName+"' should be revoked from the system consumers...");
 		for (String consumerId : consumerIds) {
 			client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
-			client2tasks.changeCertFrequency(1, true);	// give rhsmcertd a chance to download the consumer's certs
+			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertTrue(productSubscription==null,systemConsumedProductName+" is no longer consumed by '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -331,7 +331,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		log.info("Now start unsubscribing each system from the consumed product '"+systemConsumedProductName+"' and assert the sub pool '"+systemSubscriptionName+"' is still available...");
 		for (String consumerId : consumerIds) {
 			client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
-			client2tasks.changeCertFrequency(1, true);	// give rhsmcertd a chance to download the consumer's certs
+			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			client2tasks.unsubscribeFromProductSubscription(productSubscription);
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -343,7 +343,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: Ensure that after unsubscribing all systems from a subpool, the subpool should not get deleted",
 			groups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test","RHELPersonal"},
 			dependsOnGroups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
-			dataProvider="getRHELPersonalData",
+//			dataProvider="getRHELPersonalData",
 			enabled=true)
 	@ImplementsTCMS(id="58907")
 	// 3) unsubscribe system from subpool as the last system subscribed, make sure the subpool doesn't get deleted (scenario from calfanso@redhat.com)
@@ -352,7 +352,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 		for (String consumerId : consumerIds) {
 			SSHCommandResult result = client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
-			client2tasks.changeCertFrequency(1, true);	// give rhsmcertd a chance to download the consumer's certs
+			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertTrue(productSubscription==null,systemConsumedProductName+" is not consumed by consumer '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -402,7 +402,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: No consumer created by any other user in the same owner can see the sub pool",
-			groups={"myDevGroup","EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsername_Test","RHELPersonal"},
+			groups={"EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsername_Test","RHELPersonal"},
 //			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)

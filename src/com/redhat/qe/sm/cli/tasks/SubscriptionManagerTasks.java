@@ -41,7 +41,7 @@ public class SubscriptionManagerTasks {
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	public static String factsDir				= "/etc/rhsm/facts/";
 	
-	// must be explicitly set after call to installSubscriptionManagerRPM
+	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
@@ -52,10 +52,27 @@ public class SubscriptionManagerTasks {
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
+		initializeFieldsFromConfigFile();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
 		sshCommandRunner = runner;
+	}
+	
+	/**
+	 * should be called from constructor and after install
+	 */
+	protected void initializeFieldsFromConfigFile() {
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, defaultConfigFile)==1) {
+			this.consumerCertDir	= getConfigFileParameter("consumerCertDir");
+			this.entitlementCertDir	= getConfigFileParameter("entitlementCertDir");
+			this.productCertDir		= getConfigFileParameter("productCertDir");
+			this.consumerCertFile	= consumerCertDir+"/cert.pem";
+			this.consumerKeyFile	= consumerCertDir+"/key.pem";
+			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
+		} else {
+			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+defaultConfigFile);
+		}
 	}
 	
 	
@@ -85,6 +102,7 @@ public class SubscriptionManagerTasks {
 		log.info("Installed version of subscription-manager RPM...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
 
+		initializeFieldsFromConfigFile();
 	}
 	
 	
@@ -176,30 +194,21 @@ public class SubscriptionManagerTasks {
 	
 
 	/**
-	 * Update the minutes value for the certFrequency setting in the default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
-	 * @param minutes
-	 * @param waitForMinutes - after making the change, should we wait for the next refresh?
+	 * Update the minutes value for the certFrequency setting in the
+	 * default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
+	 * @param certFrequency - Frequency of certificate refresh (in minutes)
+	 * @param waitForMinutes - after restarting, should we wait for the next refresh?
 	 */
-	public void changeCertFrequency(int minutes, boolean waitForMinutes){
-		updateConfigFileParameter("certFrequency", String.valueOf(minutes));
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
-//				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
-//		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
-//		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+minutes+"\\[  OK  \\]$",null);
-//		Assert.assertEquals(
-//				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
-//				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
+	public void restart_rhsmcertd (int certFrequency, boolean waitForMinutes){
+		updateConfigFileParameter("certFrequency", String.valueOf(certFrequency));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+certFrequency+" minutes",null);
 
 		if (waitForMinutes) {
-			SubscriptionManagerCLITestScript.sleep(minutes*60*1000);
+			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 			SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		}
-
 	}
-	
 	
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {

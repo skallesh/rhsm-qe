@@ -101,29 +101,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// setup the client(s)
 		if (installRPMs) client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-		client1tasks.consumerCertDir	= client1tasks.getConfigFileParameter("consumerCertDir");
-		client1tasks.entitlementCertDir	= client1tasks.getConfigFileParameter("entitlementCertDir");
-		client1tasks.productCertDir		= client1tasks.getConfigFileParameter("productCertDir");
-		client1tasks.consumerCertFile	= client1tasks.consumerCertDir+"/cert.pem";
-		client1tasks.consumerKeyFile	= client1tasks.consumerCertDir+"/key.pem";
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
 		client1tasks.updateConfigFileParameter("insecure", "1");
-		client1tasks.changeCertFrequency(certFrequency,false);
+//		client1tasks.restart_rhsmcertd(certFrequency,false);
 		client1tasks.cleanOutAllCerts();
 		if (client2tasks!=null) if (installRPMs) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-		if (client2tasks!=null) client2tasks.consumerCertDir	= client2tasks.getConfigFileParameter("consumerCertDir");
-		if (client2tasks!=null) client2tasks.entitlementCertDir	= client2tasks.getConfigFileParameter("entitlementCertDir");
-		if (client2tasks!=null) client2tasks.productCertDir		= client2tasks.getConfigFileParameter("productCertDir");
-		if (client2tasks!=null) client2tasks.consumerCertFile	= client2tasks.consumerCertDir+"/cert.pem";
-		if (client2tasks!=null) client2tasks.consumerKeyFile	= client2tasks.consumerCertDir+"/key.pem";
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
-		if (client2tasks!=null) client2tasks.changeCertFrequency(certFrequency,false);
+//		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
 		if (client2tasks!=null) client2tasks.cleanOutAllCerts();
+		
 		// transfer a copy of the CA Cert from the candlepin server to the client
 		// TEMPORARY WORK AROUND TO AVOID ISSUES:
 		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 

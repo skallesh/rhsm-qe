@@ -230,7 +230,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 
 		log.info("First test with an unregistered user and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
 		clienttasks.unregister();
-		clienttasks.changeCertFrequency(minutes, false);
+		clienttasks.restart_rhsmcertd(minutes, false);
 		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		String marker = "Testing rhsm.conf certFrequency="+minutes+" when unregistered..."; // https://tcms.engineering.redhat.com/case/41692/
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
@@ -242,7 +242,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		
 		log.info("Now test with an registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
 	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
-		clienttasks.changeCertFrequency(minutes, false);
+		clienttasks.restart_rhsmcertd(minutes, false);
 		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
@@ -279,7 +279,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
 		client.runCommandAndWait("rm -rf "+clienttasks.productCertDir+"/*");
 		//certFrequency_Test(1);
-		clienttasks.changeCertFrequency(1,true);
+		clienttasks.restart_rhsmcertd(1,true);
 //		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
 //		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
 //		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
