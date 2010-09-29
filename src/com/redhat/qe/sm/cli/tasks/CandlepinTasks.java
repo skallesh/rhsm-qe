@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tasks;
+package com.redhat.qe.sm.cli.tasks;
 
 import java.io.BufferedWriter;
 import java.io.File;

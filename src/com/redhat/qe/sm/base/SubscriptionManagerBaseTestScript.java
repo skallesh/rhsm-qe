@@ -1,7 +1,7 @@
 package com.redhat.qe.sm.base;
 
 import com.redhat.qe.auto.testng.TestScript;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 public class SubscriptionManagerBaseTestScript extends TestScript {
@@ -60,10 +60,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String dbUsername				= System.getProperty("rhsm.server.db.username");
 	protected String dbPassword				= System.getProperty("rhsm.server.db.password");
 
-	
-	
-	protected String urlToRPM				= System.getProperty("rhsm.rpm.url");
-	protected Boolean installRPM			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
+	protected String[] rpmUrls				= System.getProperty("rhsm.rpm.urls").split(",");
+	protected Boolean installRPMs			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
 
 	public static SSHCommandRunner server	= null;
 	public static SSHCommandRunner client	= null;

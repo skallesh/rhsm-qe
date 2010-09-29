@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,21 +16,18 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
-import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
-import com.redhat.qe.auto.testng.LogMessageUtil;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -66,9 +63,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// determine this user's owner
 		JSONObject jsonOwner = null;
 		if (registerResult.getExitCode()==0) {
-			String uuid = registerResult.getStdout().split(" ")[0];	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
+			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/consumers/"+uuid));	
+				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/consumers/"+consumerId));	
 				JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 				jsonOwner = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
 			} catch (Exception e) {
@@ -172,7 +169,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 //				"/etc/pki/consumer/cert.pem is present after register");
 //	}
 	
-	String autosubscribeProdCertFile =  "/etc/pki/product/"+"autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 //			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378", "blockedByBug-616137"},
 //			alwaysRun=true,
@@ -195,10 +192,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"Expected product "+this.prodCertProduct+" appears in list --consumed call after autosubscribe");
 //		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 	}
-	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
-	public void teardownAfterValidRegistrationAutosubscribe_Test() {
-		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
-	}
+
 	
 	// TODO
 	@Test(	description="subscription-manager-cli: register with force",
@@ -207,124 +201,23 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//https://bugzilla.redhat.com/show_bug.cgi?id=623264
 	}
 	
-	// TODO
-	@Test(	description="subscription-manager-cli: reregister",
-			enabled=false)
-	public void Reregister_Test() {
-		// see agilo
-	}
-	
-	
-	/**
-	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
-		Actions:
-
-			* register a client to candlepin
-			* subscribe to a pool
-			* list consumed
-			* reregister
-
-	    Expected Results:
-
-	 		* check the identity cert has not changed
-	        * check the consumed entitlements have not changed
-	 */
-	@Test(	description="subscription-manager-cli: reregister basic registration",
-			groups={"blockedByBug-636843"},
-			enabled=true)
-	@ImplementsTCMS(id="56327")
-	public void ReregisterBasicRegistration_Test() {
-		
-		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
-		
-		// subscribe to a random pool
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		
-		// get a list of the consumed products
-		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		
-		// reregister
-		clienttasks.reregister(null,null,null);
-		
-		// assert that the user is still consuming the same products
-		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(
-				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
-				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
-				"The list of consumed products after reregistering is identical.");
-	}
-	
-	
-	/**
-	 * https://tcms.engineering.redhat.com/case/56328/?from_plan=2476
-	 * 
-		Actions:
-
-	 		* register a client to candlepin (take note of the uuid returned)
-	 		* take note of your identity cert info using openssl x509
-	 		* subscribe to a pool
-	 		* list consumed
-	 		* ls /etc/pki/entitlement/products
-	 		* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak
-	 		* run the "reregister" command w/ username and passwd AND w/consumerid=<uuid>
-
-		Expected Results:
-
-	 		* after running reregister you should have a new identity cert
-	 		* after registering you should still the same products consumed (list consumed)
-	 		* the entitlement serials should be the same as before the registration
-	 */
-	@Test(	description="subscription-manager-cli: bad identity cert",
-			groups={/*"blockedByBug-624106"*/},
-			enabled=true)
-	@ImplementsTCMS(id="56328")
-	public void ReregisterWithBadIdentityCert_Test() {
-		
-		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
-		
-		// take note of your identity cert
-		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
-		
-		// subscribe to a random pool
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		
-		// get a list of the consumed products
-		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		
-		// Now.. mess up your identity..  by deleting it
-		RemoteFileTasks.runCommandAndWait(client, "rm -f "+clienttasks.consumerCertFile, LogMessageUtil.action());
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.consumerCertFile)==0,"The identity cert '"+clienttasks.consumerCertFile+"' has been lost.");
-
-		// reregister w/ username, password, and consumerid
-		clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
-		
-		// assert that the user is still consuming the same products
-		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(
-				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
-				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
-				"The list of consumed products after reregistering is identical.");
-	}
-	
-// TODO Automation Candidates for Reregister tests: 
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627681
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 
 	
 	
 	
 	// Configuration methods ***********************************************************************
 	
+	String autosubscribeProdCertFile = null;
+	@BeforeGroups(value={"ValidRegistrationAutosubscribe_Test"},alwaysRun=true)
+	public void autosubscribeProdCertFileBeforeValidRegistrationAutosubscribe_Test() {
+		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+	}
 
+	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
+	public void teardownAfterValidRegistrationAutosubscribe_Test() {
+		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
+	}
+	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
 		clienttasks.unregister_();

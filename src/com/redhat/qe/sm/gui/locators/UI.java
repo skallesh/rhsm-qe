@@ -33,12 +33,7 @@ public class UI {
 	public static Element automaticallySubscribe = new Element (registerDialogName, "auto_bind");
 	public static Element register = new Element (registerDialogName, "register_button");
 	
-<<<<<<< Updated upstream
-	public static Element errorDialog = new Element ("Error", "");
 
-	
-=======
-	
 	public static String registrationSettingsDialogName = "register_token_dialog";
 
 	public static Element registrationToken = new Element (registrationSettingsDialogName, "regtoken_entry");
@@ -48,6 +43,7 @@ public class UI {
 	public static Element emailAddress = new Element (registrationSettingsDialogName, "");  //TODO dev needs to add accessibility string 
 	public static Element closeRegistrationSettings = new Element (registrationSettingsDialogName, "cancel_add_button4");
 
->>>>>>> Stashed changes
+	public static Element errorDialog = new Element ("Error", "");
+
 
 }

@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -6,17 +6,16 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
@@ -71,7 +70,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		}
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		Calendar originalEndDate = (Calendar) products.get(0).endDate.clone();
-		String originalCertFile = "/etc/pki/entitlement/product/"+products.get(0).serialNumber+".pem";
+		String originalCertFile = clienttasks.entitlementCertDir+"/product/"+products.get(0).serialNumber+".pem";
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),1,"Original certificate file '"+originalCertFile+"' exists.");
 		
 		log.info("Now we will change the start and end date of the subscription pool adding one month to enddate and subtracting one month from startdate...");
@@ -113,7 +112,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			log.info("And, let's assert that consumed product cert serial has been updated...");
 			Assert.assertTrue(!newProduct.serialNumber.equals(product.serialNumber), 
 					"The consumed product cert serial has been updated from '"+product.serialNumber+"' to '"+newProduct.serialNumber+"' for product: "+newProduct.productName);
-			newCertFile = "/etc/pki/entitlement/product/"+newProduct.serialNumber+".pem";
+			newCertFile = clienttasks.entitlementCertDir+"/product/"+newProduct.serialNumber+".pem";
 		}
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
 

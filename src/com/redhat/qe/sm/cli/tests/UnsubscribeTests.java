@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,13 +128,13 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		// copy certs to temp dir
 		client.runCommandAndWait("rm -rf "+randDir);
 		client.runCommandAndWait("mkdir -p "+randDir);
-		client.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
+		client.runCommandAndWait("cp "+clienttasks.entitlementCertDir+"/product/* "+randDir);
 		
 		// unsubscribe from the subscription pool (Note: should be the only one subscribed too
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// copy revoked certs back to /etc/pki/entitlement/product/
-		client.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
+		client.runCommandAndWait("cp -f "+randDir+"/* "+clienttasks.entitlementCertDir+"/product");
 		
 		// run another yum repolist all and assert that the "current entitlement has been revoked."
 		clienttasks.assertEntitlementCertsAreReportedInYumRepolist(clienttasks.getCurrentEntitlementCerts());

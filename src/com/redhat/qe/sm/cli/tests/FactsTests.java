@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,13 +12,13 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
-import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 
@@ -43,7 +43,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsTCMS(id="56386")
 	public void ConsumerFactsList_Test(SSHCommandRunner client) {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		
 		// start with fresh registrations using the same clientusername user
 		clienttasks.unregister();
@@ -106,7 +106,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(client);
@@ -118,7 +118,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(client);
@@ -183,7 +183,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
 		
@@ -232,7 +232,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		boolean foundPoolWithArchAttributes = false;
 		boolean conclusiveTest = false;
 		

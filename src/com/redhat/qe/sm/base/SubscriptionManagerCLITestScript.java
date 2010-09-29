@@ -1,39 +1,24 @@
 package com.redhat.qe.sm.base;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.TestNGUtils;
-import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
-import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
-import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -46,7 +31,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
 //	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
 	
-
+	protected String[] rpmUrls				= System.getProperty("rhsm.rpm.urls").split(",");
+	protected Boolean installRPMs			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
 
 //DELETEME
 //MOVED TO TASKS CLASSES
@@ -77,13 +63,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void setupBeforeSuite() throws ParseException, IOException{
 	
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-		clienttasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client);
+		clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		
 		// will we be connecting to the candlepin server?
 		if (!(	serverHostname.equals("") || serverHostname.startsWith("$") ||
 				serverInstallDir.equals("") || serverInstallDir.startsWith("$") )) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.tasks.CandlepinTasks(server,serverInstallDir);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
 
 		} else {
 			log.info("Assuming the server is already setup and running.");
@@ -96,7 +82,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			client1 = client;
 			client1tasks = clienttasks;
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			client2tasks = new com.redhat.qe.sm.tasks.SubscriptionManagerTasks(client2);
+			client2tasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client2);
 		} else {
 			log.info("Multi-client testing will be skipped.");
 		}
@@ -116,14 +102,24 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
-		if (installRPM) client1tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
+		if (installRPMs) client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+		client1tasks.consumerCertDir	= client1tasks.getConfigFileParameter("consumerCertDir");
+		client1tasks.entitlementCertDir	= client1tasks.getConfigFileParameter("entitlementCertDir");
+		client1tasks.productCertDir		= client1tasks.getConfigFileParameter("productCertDir");
+		client1tasks.consumerCertFile	= client1tasks.consumerCertDir+"/cert.pem";
+		client1tasks.consumerKeyFile	= client1tasks.consumerCertDir+"/key.pem";
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 		client1tasks.changeCertFrequency(certFrequency,false);
 		client1tasks.cleanOutAllCerts();
-		if (client2tasks!=null) if (installRPM) client2tasks.installSubscriptionManagerRPM(urlToRPM,enablerepofordeps);
+		if (client2tasks!=null) if (installRPMs) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+		if (client2tasks!=null) client2tasks.consumerCertDir	= client2tasks.getConfigFileParameter("consumerCertDir");
+		if (client2tasks!=null) client2tasks.entitlementCertDir	= client2tasks.getConfigFileParameter("entitlementCertDir");
+		if (client2tasks!=null) client2tasks.productCertDir		= client2tasks.getConfigFileParameter("productCertDir");
+		if (client2tasks!=null) client2tasks.consumerCertFile	= client2tasks.consumerCertDir+"/cert.pem";
+		if (client2tasks!=null) client2tasks.consumerKeyFile	= client2tasks.consumerCertDir+"/key.pem";
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);

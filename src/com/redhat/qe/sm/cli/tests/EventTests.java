@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -15,10 +15,10 @@ import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 import com.sun.syndication.feed.synd.SyndEntryImpl;

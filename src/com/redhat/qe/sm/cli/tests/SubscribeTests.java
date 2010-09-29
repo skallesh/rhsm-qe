@@ -1,4 +1,4 @@
-package com.redhat.qe.sm.tests;
+package com.redhat.qe.sm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,14 +10,14 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsTCMS;
-import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 /**
@@ -276,9 +276,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	public void refreshCerts_Test(){
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		//SubscribeToASingleEntitlementByProductID_Test();
-		client.runCommandAndWait("rm -f /etc/pki/entitlement/*");
-		client.runCommandAndWait("rm -f /etc/pki/entitlement/product/*");
-		client.runCommandAndWait("rm -f /etc/pki/product/*");
+		client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
+		client.runCommandAndWait("rm -rf "+clienttasks.productCertDir+"/*");
 		//certFrequency_Test(1);
 		clienttasks.changeCertFrequency(1,true);
 //		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
@@ -293,8 +292,8 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 //				"rhsmcertd reports that certificates have been updated");
 		
 		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(client, "ls /etc/pki/entitlement | grep pem", 0, "pem", null);
-		RemoteFileTasks.runCommandAndAssert(client, "ls /etc/pki/entitlement/product | grep pem", 0, "pem", null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+" | grep pem", 0, "pem", null);
+		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+"/product | grep pem", 0, "pem", null);
 		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
 		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "ls /etc/pki/product", 0, "pem", null);*/
 	}
