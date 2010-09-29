@@ -40,6 +40,8 @@ public class SMGuiTasks {
 		if (systemName != null) ldtp().setTextValue(UI.systemName, systemName);
 		ldtp().setChecked(UI.automaticallySubscribe, autoSubscribe);
 		ldtp().click(UI.register);
+		
+		ldtp().click(UI.closeRegistrationSettings);
 	}
 
 }
