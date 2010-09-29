@@ -33,5 +33,8 @@ public class UI {
 	public static Element automaticallySubscribe = new Element (registerDialogName, "auto_bind");
 	public static Element register = new Element (registerDialogName, "register_button");
 	
+	public static Element errorDialog = new Element ("Error", "");
+
+	
 
 }

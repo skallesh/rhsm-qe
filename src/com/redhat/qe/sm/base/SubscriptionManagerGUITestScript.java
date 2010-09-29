@@ -32,5 +32,6 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 	@Test
 	public void register(){
 		tasks.register(clientusername, clientpassword, clienthostname, true);
+		tasks.checkForError();
 	}
 }
