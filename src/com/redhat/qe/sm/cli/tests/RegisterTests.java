@@ -238,7 +238,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			//output.write("<h3>(generated on "+dateFormat.format(System.currentTimeMillis())+")</h3>");
 			output.write("Candlepin hostname= <b>"+serverHostname+"</b>\n");
 			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
-			output.write("<tr><th>Owner</th><th>Username/<BR>Password</th><th>Registration Output</th><th>All Available Subscriptions</th></tr>\n");
+			output.write("<tr><th>Owner</th><th>Username/<BR>Password</th><th>Registration Output</th><th>All Available Subscriptions (to system consumers)</th></tr>\n");
 			for (RegistrationData registeredConsumer : registrationDataList) {
 				if (registeredConsumer.jsonOwner==null) {
 					output.write("<tr bgcolor=#F47777>");
