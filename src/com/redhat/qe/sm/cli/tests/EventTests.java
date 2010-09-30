@@ -157,7 +157,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		log.info("Now let's refresh the subscription pools...");
 		//CandlepinTasks.curl_refresh_pools(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		servertasks.cpc_refresh_pools(ownerKey, true);
-		clienttasks.changeCertFrequency(1, true);
+		clienttasks.restart_rhsmcertd(1, true);
 
 		// assert the feed...
 		

@@ -41,7 +41,7 @@ public class SubscriptionManagerTasks {
 	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	public static String factsDir				= "/etc/rhsm/facts/";
 	
-	// must be explicitly set after call to installSubscriptionManagerRPM
+	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
@@ -52,10 +52,27 @@ public class SubscriptionManagerTasks {
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
+		initializeFieldsFromConfigFile();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
 		sshCommandRunner = runner;
+	}
+	
+	/**
+	 * should be called from constructor and after install
+	 */
+	protected void initializeFieldsFromConfigFile() {
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, defaultConfigFile)==1) {
+			this.consumerCertDir	= getConfigFileParameter("consumerCertDir");
+			this.entitlementCertDir	= getConfigFileParameter("entitlementCertDir");
+			this.productCertDir		= getConfigFileParameter("productCertDir");
+			this.consumerCertFile	= consumerCertDir+"/cert.pem";
+			this.consumerKeyFile	= consumerCertDir+"/key.pem";
+			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
+		} else {
+			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+defaultConfigFile);
+		}
 	}
 	
 	
@@ -85,6 +102,7 @@ public class SubscriptionManagerTasks {
 		log.info("Installed version of subscription-manager RPM...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
 
+		initializeFieldsFromConfigFile();
 	}
 	
 	
@@ -176,30 +194,21 @@ public class SubscriptionManagerTasks {
 	
 
 	/**
-	 * Update the minutes value for the certFrequency setting in the default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
-	 * @param minutes
-	 * @param waitForMinutes - after making the change, should we wait for the next refresh?
+	 * Update the minutes value for the certFrequency setting in the
+	 * default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
+	 * @param certFrequency - Frequency of certificate refresh (in minutes)
+	 * @param waitForMinutes - after restarting, should we wait for the next refresh?
 	 */
-	public void changeCertFrequency(int minutes, boolean waitForMinutes){
-		updateConfigFileParameter("certFrequency", String.valueOf(minutes));
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^certFrequency\\s*=.*$", "certFrequency="+minutes),
-//				0,"Updated rhsmd cert refresh frequency to "+minutes+" minutes");
-//		sshCommandRunner.runCommandAndWait("mv "+rhsmcertdLogFile+" "+rhsmcertdLogFile+".bak");
-//		sshCommandRunner.runCommandAndWait("service rhsmcertd restart");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+minutes+"\\[  OK  \\]$",null);
-//		Assert.assertEquals(
-//				RemoteFileTasks.grepFile(sshCommandRunner,rhsmcertdLogFile, "started: interval = "+frequency),
-//				0,"interval reported as "+frequency+" in "+rhsmcertdLogFile);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+minutes+" minutes",null);
+	public void restart_rhsmcertd (int certFrequency, boolean waitForMinutes){
+		updateConfigFileParameter("certFrequency", String.valueOf(certFrequency));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+certFrequency+" minutes",null);
 
 		if (waitForMinutes) {
-			SubscriptionManagerCLITestScript.sleep(minutes*60*1000);
+			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 			SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		}
-
 	}
-	
 	
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
@@ -611,10 +620,9 @@ public class SubscriptionManagerTasks {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --all --available");
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=638266 - jsefler 9/28/2010
-// FIXME THIS CODE SHOULD NOT BE COMITTED WITH true
-		boolean invokeWorkaroundWhileBugIsOpen = false;// true;
+		boolean invokeWorkaroundWhileBugIsOpen = false;
 		String bugId="638266"; 
-		try {if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			return list_(Boolean.FALSE,Boolean.TRUE,null);
 		}
@@ -845,7 +853,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
 		invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="613635"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {String bugId="613635"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
@@ -853,7 +861,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=622839 - jsefler 8/10/2010
 		invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="622839"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {String bugId="622839"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
@@ -861,7 +869,7 @@ public class SubscriptionManagerTasks {
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/12/2010
 		invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="623657"; if (BzChecker.getInstance().isBugOpen(bugId)&&invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {String bugId="623657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;

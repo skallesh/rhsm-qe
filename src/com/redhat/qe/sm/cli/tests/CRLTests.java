@@ -82,7 +82,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.refreshPoolsREST( serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		
 		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
-		clienttasks.changeCertFrequency(1, true);
+		clienttasks.restart_rhsmcertd(1, true);
 
 		log.info("The updated certs should now be on the client...");
 
