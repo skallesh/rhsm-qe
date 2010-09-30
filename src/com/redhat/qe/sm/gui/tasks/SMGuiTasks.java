@@ -70,4 +70,14 @@ public class SMGuiTasks {
 		}
 		return p;
 	}
+	
+	public void subscribeTo(String... productNames){
+		ldtp().click(UI.add);
+		ldtp().waitTilGuiExist(UI.subscribeDialog);
+		for (String productName: productNames){
+			ldtp().checkRow(UI.compatibleSubscriptions, ldtp().getTableRowIndex(UI.compatibleSubscriptions, productName), 0);
+		}
+		ldtp().click(UI.apply_subscribe);
+		checkForError();
+	}
 }

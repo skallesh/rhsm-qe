@@ -32,7 +32,7 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	//test test, really belongs elsewhere, but here now for convenience - jweiss
-	@Test(enabled=false)
+	@Test(enabled=true)
 	public void register(){
 		tasks.register(clientusername, clientpassword, clienthostname, true);
 		tasks.checkForError();
@@ -43,10 +43,15 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 		tasks.unregister();
 	}
 	
-	@Test
+	@Test(enabled=false)
 	public void printFacts(){
 		Properties p = tasks.getAllFacts();
 		log.info("Retrieved facts:" + p.toString());
+	}
+	
+	@Test
+	public void subscribeTest(){
+		tasks.subscribeTo("RHEL Workstation");
 	}
 	
 	@AfterSuite

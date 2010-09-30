@@ -18,7 +18,7 @@ public class UI {
 	
 	public static Element mainWindow = new Element (mainWindowName, "");
 	public static Element close_main = new Element (mainWindowName, "button_close");
-	public static Element add = new Element (mainWindowName, "button_add1");
+	public static Element add = new Element (mainWindowName, "add_button");
 	public static Element registration = new Element (mainWindowName, "account_settings");
 	public static Element update = new Element (mainWindowName, "button_update1");
 	public static Element unsubscribe = new Element (mainWindowName, "button_unsubscribe1");
@@ -58,5 +58,12 @@ public class UI {
 	public static Element factsTable = new Element (factsDialogName, "facts_view");
 	public static Element close_facts = new Element (factsDialogName, "close_button");
 
+	public static String subscribeDialogName = "dialog_add";
+	public static Element subscribeDialog = new Element (subscribeDialogName, "");
+	public static Element installedSubscriptions = new Element (subscribeDialogName, "treeview_available2");
+	public static Element compatibleSubscriptions = new Element (subscribeDialogName, "treeview_available3");
+	public static Element apply_subscribe = new Element (subscribeDialogName, "add_subscribe_button3");
+	public static Element close_subscriptions = new Element (subscribeDialogName, "cancel_add_button2s");
+	
 
 }
