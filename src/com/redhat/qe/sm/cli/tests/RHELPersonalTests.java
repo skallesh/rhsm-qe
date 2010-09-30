@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -173,12 +174,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		personConsumerId = client1tasks.getCurrentConsumerId();
 		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
-		List<String> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+		List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
 			client1tasks.subscribe(pool.poolId, null, null, null, null);
 			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
 				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
-			List<String> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+			List<File> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 			Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
 				"Subscribing to subscription pool '"+personSubscriptionName+"' does NOT drop a new entitlement certificate when registered as a person.");
 		} else {
@@ -377,12 +378,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		personConsumerId = client1tasks.getCurrentConsumerId();
 		SubscriptionPool pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
-		List<String> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+		List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
 			client1tasks.subscribe(pool.poolId, null, null, null, null);
 			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
 				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
-			List<String> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+			List<File> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 			Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
 				"Subscribing to subscription pool '"+personSubscriptionName+"' does NOT drop a new entitlement certificate when registered as a person.");
 		} else {

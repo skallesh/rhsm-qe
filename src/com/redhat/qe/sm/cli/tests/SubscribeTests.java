@@ -180,7 +180,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
-	    clienttasks.assertEntitlementCertsAreReportedInYumRepolist(entitlementCerts);
+	    clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
 	}
 	
 	
