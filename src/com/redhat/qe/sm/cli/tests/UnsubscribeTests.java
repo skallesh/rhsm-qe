@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -107,40 +108,50 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		 */
 //	}
 	
-	@Test(description="Attempt to re-use revoked entitlement certificates",
+	@Test(description="Entitlement, malicious negative tests",
 //			dependsOnGroups={"sm_stage4"},
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
-			groups={"blockedByBug-584137", "blockedByBug-602852"},
+			groups={"myDevGroup","blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41903")
-	public void AttemptToReuseRevokedEntitlementCerts_Test(SubscriptionPool subscriptionPool){
+	public void EntitlementMaliciousNegative_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
-		String randDir = "/tmp/sm-certForSubscriptionPool-"+subscriptionPool.poolId;
 		
-		// subscribe to the subscription pool (one at a time)
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();	// assure we are completely unsubscribed
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
-		
-		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
-		clienttasks.assertEntitlementCertsAreReportedInYumRepolist(clienttasks.getCurrentEntitlementCerts());
-		// FIXME: may want to also assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
+		// subscribe to a pool
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
+		List <EntitlementCert> entitlementCerts = clienttasks.getEntitlementCertsFromEntitlementCertFile(entitlementCertFile);
+
+		// assert all of the entitlement certs are reported in the "yum repolist all"
+		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
  
-		// copy certs to temp dir
+		// copy entitlement certificate from location /etc/pki/entitlement/product/ to /tmp
+		String randDir = "/tmp/sm-certForSubscriptionPool-"+subscriptionPool.poolId;
 		client.runCommandAndWait("rm -rf "+randDir);
 		client.runCommandAndWait("mkdir -p "+randDir);
-		client.runCommandAndWait("cp "+clienttasks.entitlementCertDir+"/product/* "+randDir);
+		client.runCommandAndWait("cp "+entitlementCertFile.getPath()+" "+randDir);
 		
-		// unsubscribe from the subscription pool (Note: should be the only one subscribed too
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		// unsubscribe from the pool (Note: should be the only one subscribed too
+		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 		
-		// copy revoked certs back to /etc/pki/entitlement/product/
+		// assert all of the entitlement certs are no longer reported in the "yum repolist all"
+		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
+
+		// restart the rhsm cert deamon
+		int certFrequency = 1;
+		clienttasks.restart_rhsmcertd(certFrequency, false);
+		
+		// move the copied entitlement certificate from /tmp to location /etc/pki/entitlement/product
+		// Note: this is malicious activity
 		client.runCommandAndWait("cp -f "+randDir+"/* "+clienttasks.entitlementCertDir+"/product");
 		
-		// run another yum repolist all and assert that the "current entitlement has been revoked."
-		clienttasks.assertEntitlementCertsAreReportedInYumRepolist(clienttasks.getCurrentEntitlementCerts());
+		// assert all of the entitlement certs are reported in the "yum repolist all" again
+		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
 		
-		
-		throw new SkipException("FIXME: THIS AUTOMATED TEST IS INCOMPLETE. Need to assert that the yum repolist displayed a stderr message that entitlements from this subscription pool have been revoked: "+subscriptionPool);
+		// assert that the rhsmcertd will clean up the malicious activity
+		log.info("Now let's restart the rhsmcertd and assert that the deamon deletes the entitlement certificate since it was put on candlepins certificate revocation list during the unsubscribe.");
+		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath())==0,"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
+		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
 	}
 
 	

@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tasks;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -274,13 +275,17 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return List of /etc/pki/entitlement/product/*.pem files sorted newest first
 	 */
-	public List<String> getCurrentEntitlementCertFiles() {
+	public List<File> getCurrentEntitlementCertFiles() {
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
 		sshCommandRunner.runCommandAndWait("ls -1t "+entitlementCertDir+"/product/*.pem");
-		String files = sshCommandRunner.getStdout().trim();
-		List<String> certFiles = new ArrayList<String>();
-		if (!files.equals("")) certFiles=Arrays.asList(files.split("\n"));
-		return certFiles;
+		String lsFiles = sshCommandRunner.getStdout().trim();
+		List<File> files = new ArrayList<File>();
+		if (!lsFiles.isEmpty()) {
+			for (String lsFile : Arrays.asList(lsFiles.split("\n"))) {
+				files.add(new File(lsFile));
+			}
+		}
+		return files;
 	}
 	
 	public HashMap<String,String[]> getPackagesCorrespondingToSubscribedRepos(){
@@ -417,6 +422,11 @@ public class SubscriptionManagerTasks {
 		return productSubscriptionWithMatchingField;
 	}
 	
+	/**
+	 * For the given consumed ProductSubscription, get the EntitlementCerts
+	 * @param productSubscription
+	 * @return
+	 */
 	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {
 		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
 		sshCommandRunner.runCommandAndWait("openssl x509 -text -noout -in '"+certFile+"'");
@@ -424,6 +434,23 @@ public class SubscriptionManagerTasks {
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		return entitlementCerts;
 	}
+	
+	public List<EntitlementCert> getEntitlementCertsFromEntitlementCertFile(File serialPemFile) {
+		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+serialPemFile.getPath());
+		String certificates = sshCommandRunner.getStdout();
+		return EntitlementCert.parse(certificates);
+
+	}
+	
+	public Integer getSerialNumberFromEntitlementCertFile(File serialPemFile) {
+		// example serialPemFile: /etc/pki/entitlement/product/196.pem
+		// extract the serial number from the certFile name
+		// Note: probably a more robust way to do this is to get it from inside the file
+		Integer serialNumber = Integer.valueOf(serialPemFile.getName().split("\\.")[0]);
+		return serialNumber;
+	}
+	
+
 	
 	// register module tasks ************************************************************
 	
@@ -702,9 +729,14 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
 	}
 	
-	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
+	/**
+	 * subscribe to the given SubscriptionPool and return the newly dropped EntitlementCert file to the newly consumed ProductSubscriptions 
+	 * @param pool
+	 * @return
+	 */
+	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
-		List<String> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
 		subscribe(pool.poolId, null, null, null, null);
 
@@ -720,16 +752,18 @@ public class SubscriptionManagerTasks {
 		}
 
 		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement/product
-		List<String> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
-		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
-				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
-		log.info("Entitlement certificate ("+afterEntitlementCertFiles.get(0)+") has been dropped after subscribing to subscription pool: "+pool);
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		File newCertFile = afterEntitlementCertFiles.get(0);
+		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile) && afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
+				"A new entitlement certificate ("+newCertFile+") has been dropped after after subscribing to pool: "+pool);
 		
 		// assert that consumed ProductSubscriptions has NOT decreased
 		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
 				"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 
+		//return getEntitlementCertsFromEntitlementCertFile(newCertFile);
+		return newCertFile;
 	}
 	
 	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
@@ -899,6 +933,32 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * unsubscribe from entitlement product certificate serial and assert results
+	 * @param serialNumber
+	 * @return - false when no unsubscribe took place
+	 */
+	public boolean unsubscribeFromSerialNumber(Integer serialNumber) {
+		String certFile = entitlementCertDir+"/product/"+serialNumber+".pem";
+		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
+		
+		log.info("Unsubscribing from certificate serial: "+ serialNumber);
+		SSHCommandResult result = unsubscribe_(serialNumber);
+		
+		// assert the results
+		if (!certFileExists) {
+			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+serialNumber+" could not be found.",
+				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");			
+			return false;
+		}
+		
+		// assert the certFileExists is removed
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==0,
+				"Entitlement Certificate with serial "+serialNumber+" ("+certFile+") has been removed.");
+
+		return true;
+	}
+	
+	/**
 	 * Issues a call to "subscription-manager-cli unsubscribe" which will unsubscribe from
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
@@ -937,29 +997,29 @@ public class SubscriptionManagerTasks {
 	 * @return - false when the productSubscription has already been unsubscribed at a previous time
 	 */
 	public boolean unsubscribeFromProductSubscription(ProductSubscription productSubscription) {
-		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
-		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
+//		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
+//		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from product subscription: "+ productSubscription);
-		unsubscribe_(productSubscription.serialNumber);
+		boolean unsubscribed = unsubscribeFromSerialNumber(productSubscription.serialNumber);
 		
-		if (certFileExists) {
-			// assert that the cert file was removed
+//		if (certFileExists) {
+//			// assert that the cert file was removed
 //			Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==0,
 //					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
-			Assert.assertTrue(!getCurrentEntitlementCertFiles().contains(certFile),
-					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
-		} else {
-			// assert an error message when the product subscription was not found
-			// Example Stderr: Entitlement Certificate with serial number 301 could not be found.
-			Assert.assertEquals(sshCommandRunner.getStderr().trim(), "Entitlement Certificate with serial number "+productSubscription.serialNumber+" could not be found.",
-					"When the entitlement cert file corresponding to a product subscription does not exist, then you cannot unsubscribe from it.");
-		}
+//			Assert.assertTrue(!getCurrentEntitlementCertFiles().contains(certFile),
+//					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
+//		} else {
+//			// assert an error message when the product subscription was not found
+//			// Example Stderr: Entitlement Certificate with serial number 301 could not be found.
+//			Assert.assertEquals(sshCommandRunner.getStderr().trim(), "Entitlement Certificate with serial number "+productSubscription.serialNumber+" could not be found.",
+//					"When the entitlement cert file corresponding to a product subscription does not exist, then you cannot unsubscribe from it.");
+//		}
 		
 		Assert.assertTrue(!getCurrentlyConsumedProductSubscriptions().contains(productSubscription),
 				"The currently consumed product subscriptions does not contain product: "+productSubscription);
 
-		return certFileExists;
+		return unsubscribed;
 	}
 	
 	
@@ -1011,7 +1071,7 @@ public class SubscriptionManagerTasks {
 	 * Assert that the given entitlement certs are displayed in the stdout from "yum repolist all".
 	 * @param entitlementCerts
 	 */
-	public void assertEntitlementCertsAreReportedInYumRepolist(List<EntitlementCert> entitlementCerts) {
+	public void assertEntitlementCertsInYumRepolist(List<EntitlementCert> entitlementCerts, boolean areReported) {
 		/* # yum repolist all
 Loaded plugins: refresh-packagekit, rhnplugin, rhsmplugin
 Updating Red Hat repositories.
@@ -1033,17 +1093,19 @@ rhel-latest                  Latest RHEL 6                                      
 repolist: 0
 		*/
 		
-		// assert all of the entitlement certs are displayed in the stdout from "yum repolist all"
-		List<String> stdoutRegexs = new ArrayList<String>();
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			//stdoutRegexs.add(String.format("^%s\\s+%s\\s+%s", entitlementCert.label.trim(), entitlementCert.name.trim(), entitlementCert.enabled.equals("1")? "enabled":"disabled"));
-			stdoutRegexs.add(String.format("^%s\\s+(?:%s|.*)\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 25)), entitlementCert.enabled.equals("1")? "enabled":"disabled"));	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-		}
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "yum repolist all", 0, stdoutRegexs, null);
-		
+		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");
+ 		for (EntitlementCert entitlementCert : entitlementCerts) {
+			String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 25)), entitlementCert.enabled.equals("1")? "enabled":"disabled");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
+			if (areReported)
+				Assert.assertContainsMatch(result.getStdout(), regex);
+			else
+				Assert.assertContainsNoMatch(result.getStdout(), regex);
+ 		}
+
 		// assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
 		// FIXME EVENTUALLY WE NEED TO UNCOMMENT THIS ASSERT
-		//Assert.assertContainsNoMatch(sshCommandRunner.getStderr(), "HTTP Error \\d+", "HTTP Errors were encountered when runnning yum repolist all.");
+		//Assert.assertContainsNoMatch(result.getStderr(), "HTTP Error \\d+", "HTTP Errors were encountered when runnning yum repolist all.");
 	}
 	
 	public String getRedhatRelease() {
