@@ -37,6 +37,7 @@ public class UI {
 	public static String registrationSettingsDialogName = "register_token_dialog";
 
 	public static Element registrationToken = new Element (registrationSettingsDialogName, "regtoken_entry");
+	public static Element registrationTokenDialog = new Element (registrationSettingsDialogName, "");
 	public static Element regTokenSubmit = new Element (registrationSettingsDialogName, "submit_button");
 	public static Element unregister = new Element (registrationSettingsDialogName, "Unregister");
 	public static Element changeAccount = new Element (registrationSettingsDialogName, "button1");
@@ -44,6 +45,13 @@ public class UI {
 	public static Element closeRegistrationSettings = new Element (registrationSettingsDialogName, "cancel_add_button4");
 
 	public static Element errorDialog = new Element ("Error", "");
+	
+	public static String questionDialogName = "Question";
+	public static Element questionDialog = new Element (questionDialogName, "");
+	public static Element yes = new Element (questionDialogName, "Yes");
+	public static Element no = new Element (questionDialogName, "No");
+	
+
 
 
 }

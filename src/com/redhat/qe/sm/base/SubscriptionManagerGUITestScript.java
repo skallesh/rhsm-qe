@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.base;
 
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -34,4 +35,15 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 		tasks.register(clientusername, clientpassword, clienthostname, true);
 		tasks.checkForError();
 	}
+	
+	@Test(dependsOnMethods="register")
+	public void unregister(){
+		tasks.unregister();
+	}
+	
+	@AfterSuite
+	public void closeSM(){
+		ldtp().closeWindow("Subscription Manager");
+	}
+	
 }

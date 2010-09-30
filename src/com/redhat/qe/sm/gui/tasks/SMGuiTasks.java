@@ -40,8 +40,16 @@ public class SMGuiTasks {
 		if (systemName != null) ldtp().setTextValue(UI.systemName, systemName);
 		ldtp().setChecked(UI.automaticallySubscribe, autoSubscribe);
 		ldtp().click(UI.register);
-		
+		checkForError();
 		ldtp().click(UI.closeRegistrationSettings);
 	}
 
+	public void unregister(){
+		ldtp().click(UI.registrationButton);
+		ldtp().waitTilGuiExist(UI.registrationTokenDialog);
+		ldtp().click(UI.unregister);
+		ldtp().waitTilGuiExist(UI.questionDialog, 5);
+		ldtp().click(UI.yes);
+		checkForError();
+	}
 }
