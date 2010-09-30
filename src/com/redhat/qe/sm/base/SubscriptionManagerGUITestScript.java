@@ -1,5 +1,7 @@
 package com.redhat.qe.sm.base;
 
+import java.util.Properties;
+
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -30,15 +32,21 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	//test test, really belongs elsewhere, but here now for convenience - jweiss
-	@Test
+	@Test(enabled=false)
 	public void register(){
 		tasks.register(clientusername, clientpassword, clienthostname, true);
 		tasks.checkForError();
 	}
 	
-	@Test(dependsOnMethods="register")
+	@Test(dependsOnMethods="register", enabled=false)
 	public void unregister(){
 		tasks.unregister();
+	}
+	
+	@Test
+	public void printFacts(){
+		Properties p = tasks.getAllFacts();
+		log.info("Retrieved facts:" + p.toString());
 	}
 	
 	@AfterSuite

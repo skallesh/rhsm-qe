@@ -17,11 +17,12 @@ public class UI {
 	public static String mainWindowName = "manage_subscriptions_dialog";
 	
 	public static Element mainWindow = new Element (mainWindowName, "");
-	public static Element closeButton = new Element (mainWindowName, "button_close");
-	public static Element addButton = new Element (mainWindowName, "button_add1");
-	public static Element registrationButton = new Element (mainWindowName, "account_settings");
-	public static Element updateButton = new Element (mainWindowName, "button_update1");
-	public static Element unsubscribeButton = new Element (mainWindowName, "button_unsubscribe1");
+	public static Element close_main = new Element (mainWindowName, "button_close");
+	public static Element add = new Element (mainWindowName, "button_add1");
+	public static Element registration = new Element (mainWindowName, "account_settings");
+	public static Element update = new Element (mainWindowName, "button_update1");
+	public static Element unsubscribe = new Element (mainWindowName, "button_unsubscribe1");
+	public static Element systemFacts = new Element (mainWindowName, "system_facts_button");
 	
 	
 	public static String registerDialogName = "register_dialog";
@@ -52,6 +53,10 @@ public class UI {
 	public static Element no = new Element (questionDialogName, "No");
 	
 
+	public static String factsDialogName = "facts_dialog";
+	public static Element factsDialog = new Element (factsDialogName, "");
+	public static Element factsTable = new Element (factsDialogName, "facts_view");
+	public static Element close_facts = new Element (factsDialogName, "close_button");
 
 
 }
