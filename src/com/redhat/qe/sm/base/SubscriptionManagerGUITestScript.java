@@ -38,7 +38,7 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 		tasks.checkForError();
 	}
 	
-	@Test(dependsOnMethods="register", enabled=false)
+	@Test(dependsOnMethods="register", enabled=true)
 	public void unregister(){
 		tasks.unregister();
 	}
@@ -49,7 +49,7 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 		log.info("Retrieved facts:" + p.toString());
 	}
 	
-	@Test
+	@Test(enabled=false)
 	public void subscribeTest(){
 		tasks.subscribeTo("RHEL Workstation");
 	}

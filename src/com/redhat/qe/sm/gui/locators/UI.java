@@ -23,7 +23,8 @@ public class UI {
 	public static Element update = new Element (mainWindowName, "button_update1");
 	public static Element unsubscribe = new Element (mainWindowName, "button_unsubscribe1");
 	public static Element systemFacts = new Element (mainWindowName, "system_facts_button");
-	
+	public static Element unregister = new Element (mainWindowName, "Unregister System");
+
 	
 	public static String registerDialogName = "register_dialog";
 
@@ -40,7 +41,6 @@ public class UI {
 	public static Element registrationToken = new Element (registrationSettingsDialogName, "regtoken_entry");
 	public static Element registrationTokenDialog = new Element (registrationSettingsDialogName, "");
 	public static Element regTokenSubmit = new Element (registrationSettingsDialogName, "submit_button");
-	public static Element unregister = new Element (registrationSettingsDialogName, "Unregister");
 	public static Element changeAccount = new Element (registrationSettingsDialogName, "button1");
 	public static Element emailAddress = new Element (registrationSettingsDialogName, "");  //TODO dev needs to add accessibility string 
 	public static Element closeRegistrationSettings = new Element (registrationSettingsDialogName, "cancel_add_button4");
