@@ -615,6 +615,8 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls "+entitlementCertDir+"/product | grep pem");
 
+		Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
+
 		return sshCommandResult; // from the unregister command
 	}
 	

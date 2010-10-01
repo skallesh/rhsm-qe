@@ -100,9 +100,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// MODULES
 		List <String> modules = new ArrayList<String>();
 		modules.add("facts");
+		modules.add("identity");
 		modules.add("list");
 		modules.add("register");
-		modules.add("reregister");
+//		modules.add("reregister");
 		modules.add("subscribe");
 		modules.add("unregister");
 		modules.add("unsubscribe");
@@ -127,6 +128,21 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, factsOptions}));
+		}
+		
+		// MODULE: identity
+		List <String> identityOptions = new ArrayList<String>();
+		identityOptions.add("-h, --help");
+		identityOptions.add("--debug=DEBUG");
+		identityOptions.add("--username=USERNAME");
+		identityOptions.add("--password=PASSWORD");
+		identityOptions.add("--regenerate");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h identity","subscription-manager-cli --help identity"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: subscription-manager-cli identity [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, identityOptions}));
 		}
 		
 		// MODULE: list
@@ -164,21 +180,21 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{ new BlockedByBzBug("628589", smHelpCommand, optionsRegex, registerOptions)}));
 		}
 		
-		// MODULE: reregister
-		List <String> reregisterOptions = new ArrayList<String>();
-		reregisterOptions.add("-h, --help");
-		reregisterOptions.add("--debug=DEBUG");
-//		reregisterOptions.add("-k, --insecure");
-		reregisterOptions.add("--username=USERNAME");
-		reregisterOptions.add("--password=PASSWORD");
-		reregisterOptions.add("--consumerid=CONSUMERID");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h reregister","subscription-manager-cli --help reregister"}) {
-			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli reregister [OPTIONS]";
-			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, reregisterOptions}));
-		}
+//		// MODULE: reregister
+//		List <String> reregisterOptions = new ArrayList<String>();
+//		reregisterOptions.add("-h, --help");
+//		reregisterOptions.add("--debug=DEBUG");
+////		reregisterOptions.add("-k, --insecure");
+//		reregisterOptions.add("--username=USERNAME");
+//		reregisterOptions.add("--password=PASSWORD");
+//		reregisterOptions.add("--consumerid=CONSUMERID");
+//		for (String smHelpCommand : new String[]{"subscription-manager-cli -h reregister","subscription-manager-cli --help reregister"}) {
+//			List <String> usages = new ArrayList<String>();
+//			String usage = "Usage: subscription-manager-cli reregister [OPTIONS]";
+//			usages.add(usage);
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, reregisterOptions}));
+//		}
 		
 		// MODULE: subscribe
 		List <String> subscribeOptions = new ArrayList<String>();
