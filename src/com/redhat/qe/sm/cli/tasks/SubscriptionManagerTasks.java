@@ -213,19 +213,19 @@ public class SubscriptionManagerTasks {
 	
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
-		return SubscriptionPool.parse(listAvailable().getStdout());
+		return SubscriptionPool.parse(listAvailableSubscriptionPools().getStdout());
 	}
 	
 	public List<SubscriptionPool> getCurrentlyAllAvailableSubscriptionPools() {
-		return SubscriptionPool.parse(listAllAvailable().getStdout());
+		return SubscriptionPool.parse(listAllAvailableSubscriptionPools().getStdout());
 	}
 	
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
-		return ProductSubscription.parse(listConsumed().getStdout());
+		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
 	}
 	
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
-		return InstalledProduct.parse(list().getStdout());
+		return InstalledProduct.parse(listInstalledProducts().getStdout());
 	}
 	
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
@@ -266,7 +266,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
 	 */
-	public Map<Integer,SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
+	public Map<String, SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
 		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return SubscriptionPool.parseCerts(certificates);
@@ -442,11 +442,12 @@ public class SubscriptionManagerTasks {
 
 	}
 	
-	public Integer getSerialNumberFromEntitlementCertFile(File serialPemFile) {
+	public String getSerialNumberFromEntitlementCertFile(File serialPemFile) {
 		// example serialPemFile: /etc/pki/entitlement/product/196.pem
 		// extract the serial number from the certFile name
 		// Note: probably a more robust way to do this is to get it from inside the file
-		Integer serialNumber = Integer.valueOf(serialPemFile.getName().split("\\.")[0]);
+		//Integer serialNumber = Integer.valueOf(serialPemFile.getName().split("\\.")[0]);
+		String serialNumber = serialPemFile.getName().split("\\.")[0];
 		return serialNumber;
 	}
 	
@@ -494,8 +495,18 @@ public class SubscriptionManagerTasks {
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 		
 		// assert certificate files are dropped into /etc/pki/consumer
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(), 0, consumerKeyFile+" is present after register");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(), 0, consumerCertFile+" is present after register");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" is present after register.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" is present after register.");
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="639417"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			restart_rhsmcertd(Integer.valueOf(getConfigFileParameter("certFrequency")), false);
+		}
+		// END OF WORKAROUND
+		
 		
 		return sshCommandResult; // from the register command
 	}
@@ -597,10 +608,13 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert that the consumer cert and key have been removed
+		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" is present after unregister.");
+		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" is present after unregister.");
+
+		// assert that all of the entitlement product certs have been removed
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls "+entitlementCertDir+"/product | grep pem");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerCertFile).getExitCode().intValue(),1,"The identity certificate '"+consumerCertFile+"' has been removed after unregistering.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("stat "+consumerKeyFile).getExitCode().intValue(),1,"The identity key '"+consumerKeyFile+"' has been removed after unregistering.");
-		
+
 		return sshCommandResult; // from the unregister command
 	}
 	
@@ -627,7 +641,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return SSHCommandResult from "subscription-manager-cli list"
 	 */
-	public SSHCommandResult list() {
+	public SSHCommandResult listInstalledProducts() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
 		return list_(null,null,null);
 	}
@@ -635,7 +649,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return SSHCommandResult from "subscription-manager-cli list --available"
 	 */
-	public SSHCommandResult listAvailable() {
+	public SSHCommandResult listAvailableSubscriptionPools() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
 		return list_(null,Boolean.TRUE,null);
 	}
@@ -643,7 +657,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return SSHCommandResult from "subscription-manager-cli list --all --available"
 	 */
-	public SSHCommandResult listAllAvailable() {
+	public SSHCommandResult listAllAvailableSubscriptionPools() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --all --available");
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=638266 - jsefler 9/28/2010
@@ -662,7 +676,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return SSHCommandResult from "subscription-manager-cli list --consumed"
 	 */
-	public SSHCommandResult listConsumed() {
+	public SSHCommandResult listConsumedProductSubscriptions() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
 		return list_(null,null,Boolean.TRUE);
 	}
@@ -674,7 +688,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * subscribe without asserting results
 	 */
-	public SSHCommandResult subscribe_(Integer poolId, String productId, String regtoken, String email, String locale) {
+	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale) {
 		
 		// assemble the subscribe command
 		String					command  = "subscription-manager-cli subscribe";	
@@ -688,24 +702,14 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 
-	public SSHCommandResult subscribe(Integer poolId, String productId, String regtoken, String email, String locale) {
-
-		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
-		
-		// assert results
-		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
-		return sshCommandResult;
-	}
-	
 	/**
 	 * subscribe without asserting results
 	 */
-	public SSHCommandResult subscribe_(List<Integer> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		// assemble the subscribe command
 		String														command  = "subscription-manager-cli subscribe";	
-		if (poolIds!=null)		for (Integer poolId : poolIds)		command += " --pool="+poolId;
+		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
 		if (email!=null)											command += " --email="+email;
@@ -715,7 +719,17 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult subscribe(List<Integer> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale) {
+
+		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
+		
+		// assert results
+		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
+		return sshCommandResult;
+	}
+	
+	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale);
 		
@@ -833,7 +847,7 @@ public class SubscriptionManagerTasks {
 	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType assumingRegisterType) {
 
 		// assemble a list of all the available SubscriptionPool ids
-		List <Integer> poolIds = new ArrayList<Integer>();
+		List <String> poolIds = new ArrayList<String>();
 		List <SubscriptionPool> poolsBeforeSubscribe = getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
@@ -889,7 +903,7 @@ public class SubscriptionManagerTasks {
 		invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="613635"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
+			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
 		} // END OF WORKAROUND
 		
@@ -897,7 +911,7 @@ public class SubscriptionManagerTasks {
 		invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="622839"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
+			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
 		} // END OF WORKAROUND
 		
@@ -905,12 +919,12 @@ public class SubscriptionManagerTasks {
 		invokeWorkaroundWhileBugIsOpen = true;
 		try {String bugId="623657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			Assert.assertContainsMatch(listAvailable().getStdout(),"^No Available subscription pools to list$",assertMsg);
+			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
 		} // END OF WORKAROUND
 		
 		// assert
-		Assert.assertEquals(listAvailable().getStdout().trim(),
+		Assert.assertEquals(listAvailableSubscriptionPools().getStdout().trim(),
 				"No Available subscription pools to list",assertMsg);
 	}
 	
@@ -921,15 +935,25 @@ public class SubscriptionManagerTasks {
 	/**
 	 * unsubscribe without asserting results
 	 */
-	public SSHCommandResult unsubscribe_(Integer serial) {
+	public SSHCommandResult unsubscribe_(Boolean all, String serial) {
 
 		// assemble the unsubscribe command
-		String				command  = "subscription-manager-cli unsubscribe";	
-		if (serial!=null)	command += " --serial="+serial;
+		String					command  = "subscription-manager-cli unsubscribe";
+		if (all!=null && all)	command += " --all";
+		if (serial!=null)		command += " --serial="+serial;
 
 		
 		// unsubscribe without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	public SSHCommandResult unsubscribe(Boolean all, String serial) {
+
+		SSHCommandResult sshCommandResult = unsubscribe_(all, serial);
+		
+		// assert results
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unsubscribe command was a success.");
+		return sshCommandResult;
 	}
 	
 	/**
@@ -937,12 +961,12 @@ public class SubscriptionManagerTasks {
 	 * @param serialNumber
 	 * @return - false when no unsubscribe took place
 	 */
-	public boolean unsubscribeFromSerialNumber(Integer serialNumber) {
+	public boolean unsubscribeFromSerialNumber(String serialNumber) {
 		String certFile = entitlementCertDir+"/product/"+serialNumber+".pem";
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
-		SSHCommandResult result = unsubscribe_(serialNumber);
+		SSHCommandResult result = unsubscribe(Boolean.FALSE, serialNumber);
 		
 		// assert the results
 		if (!certFileExists) {
@@ -963,10 +987,11 @@ public class SubscriptionManagerTasks {
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
-		RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
+		//RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
+		unsubscribe(Boolean.TRUE, null);
 
 		// assert that there are no product subscriptions consumed
-		Assert.assertEquals(listConsumed().getStdout().trim(),
+		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
 				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement product cert files

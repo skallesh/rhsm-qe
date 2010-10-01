@@ -111,7 +111,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(description="Entitlement, malicious negative tests",
 //			dependsOnGroups={"sm_stage4"},
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
-			groups={"myDevGroup","blockedByBug-584137", "blockedByBug-602852"},
+			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsTCMS(id="41903")
 	public void EntitlementMaliciousNegative_Test(SubscriptionPool subscriptionPool){

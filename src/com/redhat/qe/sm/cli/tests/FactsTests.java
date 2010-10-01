@@ -199,7 +199,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
-			int poolId = jsonSubscription.getInt("id");
+			String poolId = jsonSubscription.getString("id");
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
 			String subscriptionName = jsonProduct.getString("name");
 			String productId = jsonProduct.getString("id");
@@ -249,7 +249,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			new JSONArray(CandlepinTasks.getResourceREST(serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
-			int poolId = jsonSubscription.getInt("id");
+			String poolId = jsonSubscription.getString("id");
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
 			String subscriptionName = jsonProduct.getString("name");
 			String productId = jsonProduct.getString("id");

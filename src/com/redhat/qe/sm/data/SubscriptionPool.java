@@ -16,7 +16,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	// abstraction fields
 	public String subscriptionName;
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
-	public Integer poolId;
+	public String poolId;
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
 	public Calendar endDate;
 	
@@ -57,7 +57,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		
 		subscriptionName = components[0].trim();
 		endDate = /*this.*/parseDateString(components[1].trim());
-		poolId = Integer.valueOf(components[2].trim());
+		poolId = components[2].trim();
 		quantity = components[3].trim();	// Integer.parseInt(components[3].trim());
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
@@ -67,7 +67,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			Boolean activeSubscription,
 			Integer consumed,
 			String quantity,	//Integer quantity,
-			Integer id,
+			String id,
 			String productId){
 		super(null);
 		
@@ -81,7 +81,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	
-	public SubscriptionPool(String productId, Integer poolId){
+	public SubscriptionPool(String productId, String poolId){
 		super(null);
 		
 		this.productId = productId;
@@ -170,7 +170,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	 * @param certificates - stdout from "find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
 	 * @return - a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber came from.
 	 */
-	static public Map<Integer,SubscriptionPool> parseCerts(String certificates) {
+	static public Map<String, SubscriptionPool> parseCerts(String certificates) {
 		/* # openssl x509 -in /etc/pki/entitlement/product/314.pem -noout -text
 		Certificate:
 		    Data:
@@ -382,9 +382,9 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			addRegexMatchesToMap(pat, certificates, serialMapOfProductAndPoolIds, field);
 		}
 		
-		Map<Integer, SubscriptionPool> serialMapOfSubscriptionPools = new HashMap<Integer, SubscriptionPool>();
+		Map<String, SubscriptionPool> serialMapOfSubscriptionPools = new HashMap<String, SubscriptionPool>();
 		for(String serialNumber : serialMapOfProductAndPoolIds.keySet())
-			serialMapOfSubscriptionPools.put(Integer.valueOf(serialNumber), new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"),Integer.valueOf(serialMapOfProductAndPoolIds.get(serialNumber).get("poolId"))));
+			serialMapOfSubscriptionPools.put(serialNumber, new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"), serialMapOfProductAndPoolIds.get(serialNumber).get("poolId")));
 		return serialMapOfSubscriptionPools;
 	}
 }

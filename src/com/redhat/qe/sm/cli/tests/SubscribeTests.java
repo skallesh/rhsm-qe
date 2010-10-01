@@ -49,7 +49,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=false)
 	public void SubscribeToASingleEntitlementByProductID_Test(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", 696);
+		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");
 		MCT0696.addProductID("Red Hat Directory Server");
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(MCT0696);
 		//this.refreshSubscriptions();

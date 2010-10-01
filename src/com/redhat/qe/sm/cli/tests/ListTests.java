@@ -29,7 +29,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		String availableSubscriptionPools = clienttasks.listAvailable().getStdout();
+		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
 		
 		// TODO
@@ -49,7 +49,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		String consumedProductSubscriptions = clienttasks.listConsumed().getStdout();
+		String consumedProductSubscriptions = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
 	}
 	
