@@ -278,7 +278,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
-			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063"},
+			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
@@ -296,8 +296,9 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement certs for subscribed subpool is revoked once the person unsubscribes from RHEL Personal",
 			groups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal"},
-			dependsOnGroups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
+			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
 //			dataProvider="getRHELPersonalData",
+			alwaysRun=true,	// FIXME delete this line once blockedByBug-639434 is resolved
 			enabled=true)
 	@ImplementsTCMS(id="58898")
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
@@ -439,7 +440,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(groups={}, value={"RHELPersonal"}, alwaysRun=true)
 	public void teardownAfterGroups() {
 		if (client2tasks!=null) {
-			client2tasks.unsubscribe_(null);
+			client2tasks.unsubscribe_(Boolean.TRUE,null);
 			client2tasks.unregister_();
 		}
 
@@ -447,7 +448,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			if (personConsumerId!=null) {
 				client1tasks.reregister_(client1username, client1password, personConsumerId);
 			}
-			client1tasks.unsubscribe_(null);
+			client1tasks.unsubscribe_(Boolean.TRUE,null);
 			client1tasks.unregister_();
 		}
 	}
