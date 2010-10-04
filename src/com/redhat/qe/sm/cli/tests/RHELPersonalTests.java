@@ -310,7 +310,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now the the certs for '"+systemConsumedProductName+"' and '"+systemSubscriptionName+"' should be revoked from the system consumers...");
 		for (String consumerId : consumerIds) {
-			client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
+			//client2tasks.reregister(consumerUsername,consumerPassword,consumerId);
+			client2tasks.reregisterToExistingConsumer(consumerUsername,consumerPassword,consumerId);
 			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertTrue(productSubscription==null,systemConsumedProductName+" is no longer consumed by '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
@@ -332,7 +333,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now start unsubscribing each system from the consumed product '"+systemConsumedProductName+"' and assert the sub pool '"+systemSubscriptionName+"' is still available...");
 		for (String consumerId : consumerIds) {
-			client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
+			//client2tasks.reregister(consumerUsername,consumerPassword,consumerId);
+			client2tasks.reregisterToExistingConsumer(consumerUsername,consumerPassword,consumerId);
 			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			client2tasks.unsubscribeFromProductSubscription(productSubscription);
@@ -353,7 +355,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		log.info("After having unsubscribed all systems from product '"+systemConsumedProductName+"' in the prior testcase , we will now verify that the subpool '"+systemSubscriptionName+"' has not been deleted and that all systems can still subscribe to it ...");
 
 		for (String consumerId : consumerIds) {
-			SSHCommandResult result = client2tasks.reregister(consumerUsername, consumerPassword,consumerId);
+			//client2tasks.reregister(consumerUsername,consumerPassword,consumerId);
+			client2tasks.reregisterToExistingConsumer(consumerUsername,consumerPassword,consumerId);
 			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertTrue(productSubscription==null,systemConsumedProductName+" is not consumed by consumer '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
@@ -446,7 +449,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 		if (client1tasks!=null) {
 			if (personConsumerId!=null) {
-				client1tasks.reregister_(client1username, client1password, personConsumerId);
+				//client1tasks.reregister_(client1username, client1password, personConsumerId);
+				client1tasks.reregisterToExistingConsumer(client1username, client1password, personConsumerId);
 			}
 			client1tasks.unsubscribe_(Boolean.TRUE,null);
 			client1tasks.unregister_();
@@ -461,7 +465,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 //	protected static String personSubscriptionName = "RHEL Personal";
 //	protected static String systemSubscriptionName = "RHEL Personal Bits";
 
-	
+
 	
 	// Data Providers ***********************************************************************
 

@@ -56,14 +56,14 @@
 	</test>
 	
 	
-	<test name="Reregister Tests">
+	<test name="Identity Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="reregister" />
+				<include name="identity" />
 			</run>
 		</groups>
 	</test>

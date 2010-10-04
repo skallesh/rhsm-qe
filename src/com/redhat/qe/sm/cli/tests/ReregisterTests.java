@@ -44,7 +44,10 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null));
+		
+		// take note of your identity cert before reregister
+		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
 		
 		// subscribe to a random pool
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -55,7 +58,12 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// reregister
-		clienttasks.reregister(null,null,null);
+		//clienttasks.reregister(null,null,null);
+		clienttasks.reregisterToExistingConsumer(clientusername,clientpassword,consumerIdBefore);
+		
+		// assert that the identity cert has not changed
+		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
+		Assert.assertEquals(consumerCertBefore, consumerCertAfter, "The consumer identity cert has not changed after reregistering with consumerid.");
 		
 		// assert that the user is still consuming the same products
 		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -106,13 +114,19 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 		// get a list of the consumed products
 		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
-		// Now.. mess up your identity..  by deleting it
-		RemoteFileTasks.runCommandAndWait(client, "rm -f "+clienttasks.consumerCertFile, LogMessageUtil.action());
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.consumerCertFile)==0,"The identity cert '"+clienttasks.consumerCertFile+"' has been lost.");
-
-		// reregister w/ username, password, and consumerid
-		clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
+		// Now.. mess up your identity..  by borking its content
+		log.info("Messing up the identity cert by borking its content...");
+		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
 		
+		// reregister w/ username, password, and consumerid
+		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
+		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
+		clienttasks.register(clientusername,clientpassword,null,consumerCertBefore.consumerid,null,Boolean.TRUE);
+		
+		// assert that the identity cert has not changed
+		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
+		Assert.assertEquals(consumerCertBefore, consumerCertAfter, "The consumer identity cert has not changed after reregistering with consumerid.");
+	
 		// assert that the user is still consuming the same products
 		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(

@@ -16,6 +16,7 @@ import org.apache.xmlrpc.XmlRpcException;
 
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -234,16 +235,26 @@ public class SubscriptionManagerTasks {
 		return EntitlementCert.parse(certificates);
 	}
 	
+	/**
+	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
+	 */
 	public ConsumerCert getCurrentConsumerCert() {
 		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+consumerCertFile);
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
 	}
 	
+	/**
+	 * @return from the contents of the current /etc/pki/consumer/cert.pem
+	 */
 	public String getCurrentConsumerId() {
 		return getCurrentConsumerCert().consumerid;
 	}
 	
+	/**
+	 * @param registerResult
+	 * @return from the stdout of the register command
+	 */
 	public String getCurrentConsumerId(SSHCommandResult registerResult) {
 		return registerResult.getStdout().split(" ")[0];
 	}
@@ -494,6 +505,11 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 		
+		// assert that register with consumerId returns the expected uuid
+		if (consumerId!=null) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
+		}
+		
 		// assert certificate files are dropped into /etc/pki/consumer
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" is present after register.");
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" is present after register.");
@@ -516,71 +532,125 @@ public class SubscriptionManagerTasks {
 	
 	// reregister module tasks ************************************************************
 
+//	/**
+//	 * reregister without asserting results
+//	 */
+//	public SSHCommandResult reregister_(String username, String password, String consumerid) {
+//
+//		// assemble the unregister command
+//		String					command  = "subscription-manager-cli reregister";	
+//		if (username!=null)		command += " --username="+username;
+//		if (password!=null)		command += " --password="+password;
+//		if (consumerid!=null)	command += " --consumerid="+consumerid;
+//		
+//		// register without asserting results
+//		return sshCommandRunner.runCommandAndWait(command);
+//	}
+//	
+//	/**
+//	 * "subscription-manager-cli reregister"
+//	 */
+//	public SSHCommandResult reregister(String username, String password, String consumerid) {
+//		
+//		// get the current ConsumerCert
+//		ConsumerCert consumerCertBefore = null;
+//		if (consumerid==null) {	//if (RemoteFileTasks.testFileExists(sshCommandRunner, consumerCertFile)==1) {
+//			consumerCertBefore = getCurrentConsumerCert();
+//			log.fine("Consumer cert before reregistering: "+consumerCertBefore);
+//		}
+//		
+//		SSHCommandResult sshCommandResult = reregister_(username,password,consumerid);
+//		
+//		// assert results for a successful reregistration
+//		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The reregister command was a success.");
+//		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
+//		if (consumerid!=null) regex=consumerid;		// consumerid
+//		if (username!=null) regex+=" "+username;	// username
+//		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+//
+//		// get the new ConsumerCert
+//		ConsumerCert consumerCertAfter = getCurrentConsumerCert();
+//		log.fine("Consumer cert after reregistering: "+consumerCertAfter);
+//		
+//		// assert the new ConsumerCert from a successful reregistration
+//		if (consumerCertBefore!=null) {
+//			Assert.assertEquals(consumerCertAfter.consumerid, consumerCertBefore.consumerid,
+//				"The consumer cert userid remains unchanged after reregistering.");
+//			Assert.assertEquals(consumerCertAfter.username, consumerCertBefore.username,
+//				"The consumer cert username remains unchanged after reregistering.");
+//			Assert.assertTrue(consumerCertAfter.validityNotBefore.after(consumerCertBefore.validityNotBefore),
+//				"The consumer cert validityNotBefore date has been changed to a newer date after reregistering.");
+//		}
+//		
+//		// assert the new consumer certificate contains the reregistered credentials...
+//		if (consumerid!=null) {
+//			Assert.assertEquals(consumerCertAfter.consumerid, consumerid,
+//				"The reregistered consumer cert belongs to the requested consumerid.");
+//		}
+//		if (username!=null) {
+//			Assert.assertEquals(consumerCertAfter.username, username,
+//				"The reregistered consumer cert belongs to the authenticated username.");
+//		}
+//		
+//		return sshCommandResult; // from the reregister command
+//	}
+	
+	public SSHCommandResult reregisterToExistingConsumer(String username, String password, String consumerId) {
+		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (10/4/2010 git hash b3c728183c7259841100eeacb7754c727dc523cd)...");
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
+		return register(username,password,null,consumerId,null,null);
+	}
+	
+	
+	// identity module tasks ************************************************************
+
 	/**
-	 * reregister without asserting results
+	 * identity without asserting results
 	 */
-	public SSHCommandResult reregister_(String username, String password, String consumerid) {
+	public SSHCommandResult identity_(String username, String password, Boolean regenerate) {
 
 		// assemble the unregister command
-		String					command  = "subscription-manager-cli reregister";	
-		if (username!=null)		command += " --username="+username;
-		if (password!=null)		command += " --password="+password;
-		if (consumerid!=null)	command += " --consumerid="+consumerid;
+		String								command  = "subscription-manager-cli identity";	
+		if (username!=null)					command += " --username="+username;
+		if (password!=null)					command += " --password="+password;
+		if (regenerate!=null && regenerate)	command += " --regenerate";
 		
 		// register without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
 	/**
-	 * "subscription-manager-cli reregister"
+	 * "subscription-manager-cli identity"
 	 */
-	public SSHCommandResult reregister(String username, String password, String consumerid) {
+	public SSHCommandResult identity(String username, String password, Boolean regenerate) {
 		
-		// get the current ConsumerCert
-		ConsumerCert consumerCertBefore = null;
-		if (consumerid==null) {	//if (RemoteFileTasks.testFileExists(sshCommandRunner, consumerCertFile)==1) {
-			consumerCertBefore = getCurrentConsumerCert();
-			log.fine("Consumer cert before reregistering: "+consumerCertBefore);
-		}
+		SSHCommandResult sshCommandResult = identity_(username,password,regenerate);
 		
-		SSHCommandResult sshCommandResult = reregister_(username,password,consumerid);
+//		String corruptIdentityMsg = "Consumer identity either does not exist or is corrupted.";
+//		
+//		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=640128 - jsefler 9/28/2010
+//		boolean invokeWorkaroundWhileBugIsOpen = true;
+//		String bugId="640128"; 
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		if (invokeWorkaroundWhileBugIsOpen) {
+//			corruptIdentityMsg = "Consumer identity either does not exists or is corrupted.";
+//		}
+//		// END OF WORKAROUND
+//		
+//		if (sshCommandResult.getStdout().startsWith(corruptIdentityMsg)) {
+//			return sshCommandResult;
+//		}
 		
-		// assert results for a successful reregistration
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The reregister command was a success.");
+//		// get the current identity cert
+//		ConsumerCert consumerCert = getCurrentConsumerCert();
+		
+		// assert results for a successful identify
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The identify command was a success.");
 		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
-		if (consumerid!=null) regex=consumerid;		// consumerid
-		if (username!=null) regex+=" "+username;	// username
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
-
-		// get the new ConsumerCert
-		ConsumerCert consumerCertAfter = getCurrentConsumerCert();
-		log.fine("Consumer cert after reregistering: "+consumerCertAfter);
-		
-		// assert the new ConsumerCert from a successful reregistration
-		if (consumerCertBefore!=null) {
-			Assert.assertEquals(consumerCertAfter.consumerid, consumerCertBefore.consumerid,
-				"The consumer cert userid remains unchanged after reregistering.");
-			Assert.assertEquals(consumerCertAfter.username, consumerCertBefore.username,
-				"The consumer cert username remains unchanged after reregistering.");
-			Assert.assertTrue(consumerCertAfter.validityNotBefore.after(consumerCertBefore.validityNotBefore),
-				"The consumer cert validityNotBefore date has been changed to a newer date after reregistering.");
-		}
-		
-		// assert the new consumer certificate contains the reregistered credentials...
-		if (consumerid!=null) {
-			Assert.assertEquals(consumerCertAfter.consumerid, consumerid,
-				"The reregistered consumer cert belongs to the requested consumerid.");
-		}
-		if (username!=null) {
-			Assert.assertEquals(consumerCertAfter.username, username,
-				"The reregistered consumer cert belongs to the authenticated username.");
-		}
 		
 		return sshCommandResult; // from the reregister command
 	}
-	
-	
-	
 	
 	// unregister module tasks ************************************************************
 
@@ -603,9 +673,13 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = unregister_();
 		
 		// assert results for a successful registration
-		if (!sshCommandResult.getStdout().startsWith("This system is currently not registered.")) {
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unregister command was a success.");
-		}
+		if (sshCommandResult.getExitCode()==0) {
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unregister command was a success with exit code 0.");
+		} else {
+			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."),"The unregister command was not necessary.  It was already unregistered");
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The unregister command returned exit code 1 meaning that it was already unregistered.");
+		} 
 		
 		// assert that the consumer cert and key have been removed
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" is present after unregister.");
@@ -614,8 +688,6 @@ public class SubscriptionManagerTasks {
 		// assert that all of the entitlement product certs have been removed
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
 		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls "+entitlementCertDir+"/product | grep pem");
-
-		Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
 
 		return sshCommandResult; // from the unregister command
 	}
