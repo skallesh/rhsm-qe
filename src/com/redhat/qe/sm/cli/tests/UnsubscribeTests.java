@@ -43,7 +43,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
 //			dependsOnGroups={"sm_stage4"},
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
-			groups={"blockedByBug-584137", "blockedByBug-602852"},
+			groups={"myDevGroup","blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsTCMS(id="41898")
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription){

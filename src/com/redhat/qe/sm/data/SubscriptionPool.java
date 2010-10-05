@@ -170,7 +170,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	 * @param certificates - stdout from "find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
 	 * @return - a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber came from.
 	 */
-	static public Map<String, SubscriptionPool> parseCerts(String certificates) {
+	static public Map<Long, SubscriptionPool> parseCerts(String certificates) {
 		/* # openssl x509 -in /etc/pki/entitlement/product/314.pem -noout -text
 		Certificate:
 		    Data:
@@ -348,8 +348,18 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		        30:28
 		*/
 		/* have also seen:
-            1.3.6.1.4.1.2312.9.4.1: 
-                .#MKT-rhel-physical-2-sockets-premium
+        1.3.6.1.4.1.2312.9.4.1: 
+            .#MKT-rhel-physical-2-sockets-premium
+		*/
+		
+		/* the serial number has changed to:
+        Serial Number:
+            28:18:d4:64:0d:da:e0
+		 */
+		
+		/* poolIds have changed to:
+        1.3.6.1.4.1.2312.9.4.2: 
+            . ff8080812b7b6b08012b7b6bcb3a007a
 		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -373,8 +383,10 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		  */
 //		regexes.put("productId",			"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[\\.#](.+)");
 //		regexes.put("poolId",				"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[\\.#](.+)");
-		regexes.put("productId",			"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[.\\n](.+)");
-		regexes.put("poolId",				"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[.\\n](.+)");
+//		regexes.put("productId",			"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[.\\n](.+)");
+//		regexes.put("poolId",				"Serial Number: (\\d+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[.\\n](.+)");
+		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.[.\\s\\n](.+)");
+		regexes.put("poolId",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.[.\\s\\n](.+)");
 		
 		Map<String, Map<String,String>> serialMapOfProductAndPoolIds = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
@@ -382,9 +394,13 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			addRegexMatchesToMap(pat, certificates, serialMapOfProductAndPoolIds, field);
 		}
 		
-		Map<String, SubscriptionPool> serialMapOfSubscriptionPools = new HashMap<String, SubscriptionPool>();
-		for(String serialNumber : serialMapOfProductAndPoolIds.keySet())
-			serialMapOfSubscriptionPools.put(serialNumber, new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"), serialMapOfProductAndPoolIds.get(serialNumber).get("poolId")));
+		Map<Long, SubscriptionPool> serialMapOfSubscriptionPools = new HashMap<Long, SubscriptionPool>();
+		for(String serialNumber : serialMapOfProductAndPoolIds.keySet()) {
+			//serialMapOfSubscriptionPools.put(serialNumber, new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"), serialMapOfProductAndPoolIds.get(serialNumber).get("poolId")));
+			// the serialNumber formats have changed - jsefler 10/5/2010
+			Long serialPem = Long.parseLong(serialNumber.replaceAll(":", ""), 16);
+			serialMapOfSubscriptionPools.put(serialPem, new SubscriptionPool(serialMapOfProductAndPoolIds.get(serialNumber).get("productId"), serialMapOfProductAndPoolIds.get(serialNumber).get("poolId")));
+		}
 		return serialMapOfSubscriptionPools;
 	}
 }

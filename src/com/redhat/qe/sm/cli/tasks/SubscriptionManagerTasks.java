@@ -277,7 +277,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
 	 */
-	public Map<String, SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
+	public Map<Long, SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
 		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return SubscriptionPool.parseCerts(certificates);
@@ -453,13 +453,14 @@ public class SubscriptionManagerTasks {
 
 	}
 	
-	public String getSerialNumberFromEntitlementCertFile(File serialPemFile) {
+	public Long getSerialNumberFromEntitlementCertFile(File serialPemFile) {
 		// example serialPemFile: /etc/pki/entitlement/product/196.pem
 		// extract the serial number from the certFile name
 		// Note: probably a more robust way to do this is to get it from inside the file
 		//Integer serialNumber = Integer.valueOf(serialPemFile.getName().split("\\.")[0]);
 		String serialNumber = serialPemFile.getName().split("\\.")[0];
-		return serialNumber;
+		//return Long.parseLong(serialNumber, 10);
+		return new Long(serialNumber);
 	}
 	
 
@@ -799,6 +800,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert results
 		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
+		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
 		return sshCommandResult;
 	}
@@ -1014,7 +1016,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * unsubscribe without asserting results
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, String serial) {
+	public SSHCommandResult unsubscribe_(Boolean all, Long serial) {
 
 		// assemble the unsubscribe command
 		String					command  = "subscription-manager-cli unsubscribe";
@@ -1026,7 +1028,7 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult unsubscribe(Boolean all, String serial) {
+	public SSHCommandResult unsubscribe(Boolean all, Long serial) {
 
 		SSHCommandResult sshCommandResult = unsubscribe_(all, serial);
 		
@@ -1040,7 +1042,7 @@ public class SubscriptionManagerTasks {
 	 * @param serialNumber
 	 * @return - false when no unsubscribe took place
 	 */
-	public boolean unsubscribeFromSerialNumber(String serialNumber) {
+	public boolean unsubscribeFromSerialNumber(Long serialNumber) {
 		String certFile = entitlementCertDir+"/product/"+serialNumber+".pem";
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
