@@ -1,17 +1,10 @@
 package com.redhat.qe.sm.cli.tests;
 
-import java.util.List;
-
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
-import com.redhat.qe.sm.data.ProductSubscription;
-import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -83,10 +76,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(newConsumerCert.consumerid, origConsumerCert.consumerid, "The consumerids are a match.");
 		Assert.assertEquals(newConsumerCert.issuer, origConsumerCert.issuer, "The issuers are a match.");
 		Assert.assertEquals(newConsumerCert.username, origConsumerCert.username, "The usernames are a match.");
-		//Assert.assertEquals(newConsumerCert.serialNumber, origConsumerCert.serialNumber, "The serial numbers are a match.");
-		Assert.assertNotSame(newConsumerCert.serialNumber, origConsumerCert.serialNumber, "The serial numbers should not match.");
 		Assert.assertEquals(newConsumerCert.validityNotAfter, origConsumerCert.validityNotAfter, "The validity end dates are a match.");
 		Assert.assertTrue(newConsumerCert.validityNotBefore.after(origConsumerCert.validityNotBefore), "The new validity start date is after the original.");
+		Assert.assertNotSame(newConsumerCert.serialNumber, origConsumerCert.serialNumber, "The serial numbers should not match.");
 	}
 	
 	
