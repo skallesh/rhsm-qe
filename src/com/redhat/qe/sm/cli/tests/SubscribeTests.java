@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -226,7 +227,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsTCMS(id="41692")
-	public void certFrequency_Test(int minutes) {
+	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
 
 		log.info("First test with an unregistered user and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
 		clienttasks.unregister();
@@ -270,32 +271,57 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
 //			dependsOnGroups={"sm_stage3"},
 //			groups={"sm_stage4"},
-//			groups={"blockedByBug-617703"},
+			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsTCMS(id="41694")
-	public void refreshCerts_Test(){
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
-		//SubscribeToASingleEntitlementByProductID_Test();
-		client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
-		client.runCommandAndWait("rm -rf "+clienttasks.productCertDir+"/*");
-		//certFrequency_Test(1);
-		clienttasks.restart_rhsmcertd(1,true);
-//		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
-//		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
-//		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
-//		this.sleep(70*1000);
+	public void rhsmcertdEnsureCertificatesSynchronize_Test(){
+//FIXME Replacing ssalevan's original implementation of this test... 10/5/2010 jsefler
+//		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+//		//SubscribeToASingleEntitlementByProductID_Test();
+//		client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
+//		client.runCommandAndWait("rm -rf "+clienttasks.productCertDir+"/*");
+//		//certFrequency_Test(1);
+//		clienttasks.restart_rhsmcertd(1,true);
+////		client.runCommandAndWait("cat /dev/null > "+rhsmcertdLogFile);
+////		//sshCommandRunner.runCommandAndWait("rm -f "+rhsmcertdLogFile);
+////		//sshCommandRunner.runCommandAndWait("/etc/init.d/rhsmcertd restart");
+////		this.sleep(70*1000);
+////		
+////		Assert.assertEquals(RemoteFileTasks.grepFile(client,
+////				rhsmcertdLogFile,
+////				"certificates updated"),
+////				0,
+////				"rhsmcertd reports that certificates have been updated");
 //		
-//		Assert.assertEquals(RemoteFileTasks.grepFile(client,
-//				rhsmcertdLogFile,
-//				"certificates updated"),
-//				0,
-//				"rhsmcertd reports that certificates have been updated");
+//		//verify that PEM files are present in all certificate directories
+//		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+" | grep pem", 0, "pem", null);
+//		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+"/product | grep pem", 0, "pem", null);
+//		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
+//		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "ls /etc/pki/product", 0, "pem", null);*/
 		
-		//verify that PEM files are present in all certificate directories
-		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+" | grep pem", 0, "pem", null);
-		RemoteFileTasks.runCommandAndAssert(client, "ls "+clienttasks.entitlementCertDir+"/product | grep pem", 0, "pem", null);
-		// this directory will only be populated if you upload ur own license, not while working w/ candlepin
-		/*RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "ls /etc/pki/product", 0, "pem", null);*/
+		// start with a cleanly unregistered system
+		clienttasks.unregister();
+		
+		// register a clean user
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
+	    
+	    // subscribe to all the available pools
+	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+	    
+	    // get all of the current entitlement product certs and remember them
+	    List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
+	    
+	    // delete all of the entitlement cert files
+	    client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
+	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), 0,
+	    		"All the entitlement product certs have been deleted.");
+		
+	    // restart the rhsmcertd to run every 1 minute and wait for a refresh
+		clienttasks.restart_rhsmcertd(1, true);
+		
+		// assert that rhsmcertd has refreshed the entitled product certs back to the original
+	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles(), entitlementCertFiles,
+	    		"All the deleted entitlement product certs have been re-synchronized by rhsm cert deamon.");
 	}
 	
 	
