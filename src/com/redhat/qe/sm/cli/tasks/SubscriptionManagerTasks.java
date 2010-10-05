@@ -842,8 +842,13 @@ public class SubscriptionManagerTasks {
 		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement/product
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		File newCertFile = afterEntitlementCertFiles.get(0);
-		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile) && afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
+		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile),
 				"A new entitlement certificate ("+newCertFile+") has been dropped after after subscribing to pool: "+pool);
+		
+		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement/product
+		// https://bugzilla.redhat.com/show_bug.cgi?id=640338
+		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
+				"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs) has been dropped after after subscribing to pool: "+pool);
 		
 		// assert that consumed ProductSubscriptions has NOT decreased
 		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
