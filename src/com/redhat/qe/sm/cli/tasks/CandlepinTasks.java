@@ -139,6 +139,9 @@ public class CandlepinTasks {
 		return getHTTPResponseAsString(client, get, owner, password);
 	}
 	
+	static public JSONObject getEntitlementREST(String server, String port, String owner, String password, String dbid) throws Exception {
+		return new JSONObject(getResourceREST(server, port, owner, password, "/entitlements/"+dbid));
+	}
 
 //	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
 //		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");

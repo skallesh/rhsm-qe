@@ -132,7 +132,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"PoolModifiedAndEntitlementModified_Test"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void PoolModifiedAndEntitlementModified_Test() throws SQLException, JSONException, IllegalArgumentException, IOException, FeedException {
+	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
 		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		//FIXME
 		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
@@ -146,7 +146,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
         // find the pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0));
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)

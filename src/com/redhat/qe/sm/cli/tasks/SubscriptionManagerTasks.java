@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONObject;
 
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.Assert;
@@ -23,6 +24,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -276,11 +278,23 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
+	 * @throws Exception 
 	 */
-	public Map<Long, SubscriptionPool> getCurrentSerialMapOfSubscriptionPools() {
-		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
-		String certificates = sshCommandRunner.getStdout();
-		return SubscriptionPool.parseCerts(certificates);
+//	public Map<Long, SubscriptionPool> getCurrentSerialMapToSubscriptionPools() {
+//		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+//		String certificates = sshCommandRunner.getStdout();
+//		return SubscriptionPool.parseCerts(certificates);
+//	}
+	public Map<Long, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String server, String port, String owner, String password) throws Exception {
+		
+		Map<Long, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<Long, SubscriptionPool>();
+
+		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
+			JSONObject jsonPool = CandlepinTasks.getEntitlementREST(server, port, owner, password, entitlementCert.id);
+			String poolId = jsonPool.getJSONObject("pool").getString("id");
+			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, new SubscriptionPool(entitlementCert.productId, poolId));
+		}
+		return serialMapToSubscriptionPools;
 	}
 	
 	/**
@@ -334,15 +348,16 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @param productSubscription
 	 * @return the SubscriptionPool from which this consumed ProductSubscription came from
+	 * @throws Exception 
 	 */
-	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription) {
+	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription, String server, String port, String owner, String password) throws Exception {
 		
 		// if already known, return the SubscriptionPool from which ProductSubscription came
-		if (productSubscription.fromPool != null) return productSubscription.fromPool;
+		if (productSubscription.fromSubscriptionPool != null) return productSubscription.fromSubscriptionPool;
 		
-		productSubscription.fromPool = getCurrentSerialMapOfSubscriptionPools().get(productSubscription.serialNumber);
+		productSubscription.fromSubscriptionPool = getCurrentSerialMapToSubscriptionPools(server, port, owner, password).get(productSubscription.serialNumber);
 
-		return productSubscription.fromPool;
+		return productSubscription.fromSubscriptionPool;
 	}
 	
 //	/**
@@ -894,7 +909,8 @@ public class SubscriptionManagerTasks {
 			log.info("Subscribing to pool with pool name:"+ pool.subscriptionName);
 			sshCommandRunner.runCommandAndWait("subscription-manager-cli subscribe --product=\""+pool.productId+"\"");
 		}
-		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size() > 0, "Successfully subscribed to pool with pool ID: "+ pool.poolId +" and pool name: "+ pool.subscriptionName);
+		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size() > 0,
+				"Successfully subscribed to pool with pool ID: "+ pool.poolId +" and pool name: "+ pool.subscriptionName);
 		//TODO: add in more thorough product subscription verification
 		// first improvement is to assert that the count of consumedProductIDs is at least one greater than the count of consumedProductIDs before the new pool was subscribed to.
 	}
@@ -1047,12 +1063,24 @@ public class SubscriptionManagerTasks {
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
-		SSHCommandResult result = unsubscribe(Boolean.FALSE, serialNumber);
+		SSHCommandResult result = unsubscribe_(Boolean.FALSE, serialNumber);
 		
 		// assert the results
 		if (!certFileExists) {
-			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+serialNumber+" could not be found.",
-				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");			
+			String regexForSerialNumber = serialNumber.toString();
+			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639320 - jsefler 10/1/2010
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="639320"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				regexForSerialNumber = "[\\d,]*";
+			}
+			// END OF WORKAROUND
+						
+			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
+				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFile+") does not exist.");
 			return false;
 		}
 		
@@ -1061,6 +1089,22 @@ public class SubscriptionManagerTasks {
 				"Entitlement Certificate with serial "+serialNumber+" ("+certFile+") has been removed.");
 
 		return true;
+	}
+	
+	/**
+	 * Unsubscribe from the given product subscription using its serial number.
+	 * @param productSubscription
+	 * @return - false when the productSubscription has already been unsubscribed at a previous time
+	 */
+	public boolean unsubscribeFromProductSubscription(ProductSubscription productSubscription) {
+		
+		log.info("Unsubscribing from product subscription: "+ productSubscription);
+		boolean unsubscribed = unsubscribeFromSerialNumber(productSubscription.serialNumber);
+		
+		Assert.assertTrue(!getCurrentlyConsumedProductSubscriptions().contains(productSubscription),
+				"The currently consumed product subscriptions does not contain product: "+productSubscription);
+
+		return unsubscribed;
 	}
 	
 	/**
@@ -1097,36 +1141,6 @@ public class SubscriptionManagerTasks {
 				"This machine has no entitlement certificate files.");			
 	}
 	
-	/**
-	 * Unsubscribe from the given product subscription using its serial number.
-	 * @param productSubscription
-	 * @return - false when the productSubscription has already been unsubscribed at a previous time
-	 */
-	public boolean unsubscribeFromProductSubscription(ProductSubscription productSubscription) {
-//		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
-//		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
-		
-		log.info("Unsubscribing from product subscription: "+ productSubscription);
-		boolean unsubscribed = unsubscribeFromSerialNumber(productSubscription.serialNumber);
-		
-//		if (certFileExists) {
-//			// assert that the cert file was removed
-//			Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==0,
-//					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
-//			Assert.assertTrue(!getCurrentEntitlementCertFiles().contains(certFile),
-//					"After unsubscribing from serial number "+productSubscription.serialNumber+", the entitlement cert file '"+certFile+"' has been removed.");
-//		} else {
-//			// assert an error message when the product subscription was not found
-//			// Example Stderr: Entitlement Certificate with serial number 301 could not be found.
-//			Assert.assertEquals(sshCommandRunner.getStderr().trim(), "Entitlement Certificate with serial number "+productSubscription.serialNumber+" could not be found.",
-//					"When the entitlement cert file corresponding to a product subscription does not exist, then you cannot unsubscribe from it.");
-//		}
-		
-		Assert.assertTrue(!getCurrentlyConsumedProductSubscriptions().contains(productSubscription),
-				"The currently consumed product subscriptions does not contain product: "+productSubscription);
-
-		return unsubscribed;
-	}
 	
 	
 	// facts module tasks ************************************************************
@@ -1202,11 +1216,14 @@ repolist: 0
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");
  		for (EntitlementCert entitlementCert : entitlementCerts) {
-			String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", entitlementCert.label.trim(), entitlementCert.name.substring(0,Math.min(entitlementCert.name.length(), 25)), entitlementCert.enabled.equals("1")? "enabled":"disabled");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-			if (areReported)
-				Assert.assertContainsMatch(result.getStdout(), regex);
-			else
-				Assert.assertContainsNoMatch(result.getStdout(), regex);
+ 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+
+				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled":"disabled");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
+				if (areReported)
+					Assert.assertContainsMatch(result.getStdout(), regex);
+				else
+					Assert.assertContainsNoMatch(result.getStdout(), regex);
+	 		}
  		}
 
 		// assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 

@@ -62,7 +62,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
 		List<ProductSubscription> products = new ArrayList<ProductSubscription>();
 		for (ProductSubscription product : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			if (clienttasks.getSubscriptionPoolFromProductSubscription(product).equals(pool)) {
+			if (clienttasks.getSubscriptionPoolFromProductSubscription(product,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword).equals(pool)) {
 //FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 				Assert.assertTrue(product.endDate.equals(pool.endDate), "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 				products.add(product);

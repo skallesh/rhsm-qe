@@ -21,7 +21,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public Calendar startDate;
 	public Calendar endDate;
 	
-	public SubscriptionPool fromPool;
+	public SubscriptionPool fromSubscriptionPool;
 	
 	public Boolean isExpired(){
 		return endDate.after(new Date());
@@ -56,7 +56,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		super(null);
 		
 		this.productName = productName;
-		this.fromPool = fromPool;
+		this.fromSubscriptionPool = fromPool;
 	}
 	
 	@Override
@@ -77,7 +77,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		if (isActive != null)		string += String.format(" %s='%s'", "isActive",isActive);
 		if (startDate != null)		string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)		string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
-		if (fromPool != null)		string += String.format(" %s='%s'", "fromPool",fromPool);
+		if (fromSubscriptionPool != null)		string += String.format(" %s='%s'", "fromPool",fromSubscriptionPool);
 
 		return string.trim();
 	}

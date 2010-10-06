@@ -19,7 +19,7 @@ public class RevokedCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields
-	public Integer serialNumber;
+	public Long serialNumber;
 	public Calendar revocationDate;
 	public String reasonCode;
 
@@ -47,6 +47,12 @@ public class RevokedCert extends AbstractCommandLineData {
 	@Override
 	protected Integer parseInt(String intString){
 		return Integer.parseInt(intString,16);	
+	}
+	
+	// Note: Override needed since the raw CRL renders the serialNumber as a hexadecimal.
+	@Override
+	protected Long parseLong(String intString){
+		return Long.parseLong(intString,16);	
 	}
 	
 	@Override

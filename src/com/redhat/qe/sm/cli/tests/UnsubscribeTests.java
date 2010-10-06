@@ -43,10 +43,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
 //			dependsOnGroups={"sm_stage4"},
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
-			groups={"myDevGroup","blockedByBug-584137", "blockedByBug-602852"},
+			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsTCMS(id="41898")
-	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription){
+	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -56,7 +56,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription);
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
 		if (clienttasks.unsubscribeFromProductSubscription(productSubscription))
 			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}
