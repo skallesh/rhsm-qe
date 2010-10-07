@@ -125,7 +125,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
-			groups={}, dependsOnGroups={},
+			groups={"blockedByBug-641027"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsTCMS(id="56331")
 	public void BypassRulesDueToType_Test() throws JSONException {
