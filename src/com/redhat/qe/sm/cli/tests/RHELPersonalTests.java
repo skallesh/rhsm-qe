@@ -265,7 +265,9 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		log.info("Register "+multipleSystems+" new systems under username '"+consumerUsername+"' and subscribe to product subscription '"+systemSubscriptionName+"'...");
 		consumerIds = new ArrayList<String>();
 		for (int systemNum = 1; systemNum <=multipleSystems; systemNum++) {
-			client2.runCommandAndWait("rm -rf "+client2tasks.consumerCertDir);
+			// simulate a clean system
+			client2tasks.removeAllCerts(true,true);
+			
 			String consumerId = client2tasks.getCurrentConsumerId(client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, Boolean.TRUE));
 			consumerIds.add(consumerId);
 			SubscriptionPool subPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -450,7 +452,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		if (client1tasks!=null) {
 			if (personConsumerId!=null) {
 				//client1tasks.reregister_(client1username, client1password, personConsumerId);
-				client1tasks.reregisterToExistingConsumer(client1username, client1password, personConsumerId);
+				client1tasks.removeAllCerts(true, true);
+				client1tasks.register_(client1username,client1password,null,personConsumerId,null,null);
 			}
 			client1tasks.unsubscribe_(Boolean.TRUE,null);
 			client1tasks.unregister_();

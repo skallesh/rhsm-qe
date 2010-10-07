@@ -110,24 +110,31 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	public void cleanOutAllCerts() {
+	public void removeAllCerts(boolean consumer, boolean entitlements/*, boolean product*/) {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String value;
 		
-		value = getConfigFileParameter("consumerCertDir");
-		log.info("Cleaning out certs from consumerCertDir: "+value);
-		if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
-		else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+		if (consumer) {
+			value = getConfigFileParameter("consumerCertDir");
+			log.info("Cleaning out certs from consumerCertDir: "+value);
+			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+		}
 		
-		value = getConfigFileParameter("entitlementCertDir");
-		log.info("Cleaning out certs from entitlementCertDir: "+value);
-		if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
-		else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+		if (consumer) {
+			value = getConfigFileParameter("entitlementCertDir");
+			log.info("Cleaning out certs from entitlementCertDir: "+value);
+			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+		}
 		
-		value = getConfigFileParameter("productCertDir");
-		log.info("Cleaning out certs from productCertDir: "+value);
-		if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
-		else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+// NOT SURE THIS IS A GOOD IDEA - jsefler 10/7/2010
+//		if (product) {
+//			value = getConfigFileParameter("productCertDir");
+//			log.info("Cleaning out certs from productCertDir: "+value);
+//			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
+//			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+//		}
 	}
 	
 	public void updateConfigFileParameter(String parameter, String value){
@@ -311,12 +318,12 @@ public class SubscriptionManagerTasks {
 				
 				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=640338 - jsefler 10/7/2010
 				if (lsFile.matches(".*\\(\\d+\\)\\.pem")) {
-				boolean invokeWorkaroundWhileBugIsOpen = true;
-				String bugId="640338"; 
-				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-				if (invokeWorkaroundWhileBugIsOpen) {
-					continue;
-				}
+					boolean invokeWorkaroundWhileBugIsOpen = true;
+					String bugId="640338"; 
+					try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+					if (invokeWorkaroundWhileBugIsOpen) {
+						continue;
+					}
 				}
 				// END OF WORKAROUND
 				
@@ -628,7 +635,8 @@ public class SubscriptionManagerTasks {
 	
 	public SSHCommandResult reregisterToExistingConsumer(String username, String password, String consumerId) {
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (10/4/2010 git hash b3c728183c7259841100eeacb7754c727dc523cd)...");
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
+		removeAllCerts(true, false);
 		return register(username,password,null,consumerId,null,null);
 	}
 	

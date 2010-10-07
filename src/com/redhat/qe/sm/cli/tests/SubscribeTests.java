@@ -162,7 +162,6 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 	@Test(	description="subscription-manager Yum plugin: ensure ...",
 //	        dependsOnGroups={"sm_stage6"},
 //	        groups={"sm_stage7"},
-			groups={"myDevGroup"},
 	        enabled=true)
 	@ImplementsTCMS(id="47578")
 	public void VerifyReposAvailableForEnabledContent(){

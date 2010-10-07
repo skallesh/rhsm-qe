@@ -106,14 +106,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 //		client1tasks.restart_rhsmcertd(certFrequency,false);
-		client1tasks.cleanOutAllCerts();
+		client1tasks.removeAllCerts(true,true);
 		if (client2tasks!=null) if (installRPMs) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
 //		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
-		if (client2tasks!=null) client2tasks.cleanOutAllCerts();
+		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
 		
 		// transfer a copy of the CA Cert from the candlepin server to the client
 		// TEMPORARY WORK AROUND TO AVOID ISSUES:
