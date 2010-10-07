@@ -285,12 +285,13 @@ public class SubscriptionManagerTasks {
 //		String certificates = sshCommandRunner.getStdout();
 //		return SubscriptionPool.parseCerts(certificates);
 //	}
-	public Map<Long, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String server, String port, String owner, String password) throws Exception {
+	public Map<Long, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception {
 		
 		Map<Long, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<Long, SubscriptionPool>();
-
+		String hostname = getConfigFileParameter("hostname");
+		String port = getConfigFileParameter("port");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonPool = CandlepinTasks.getEntitlementREST(server, port, owner, password, entitlementCert.id);
+			JSONObject jsonPool = CandlepinTasks.getEntitlementREST(hostname, port, owner, password, entitlementCert.id);
 			String poolId = jsonPool.getJSONObject("pool").getString("id");
 			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, new SubscriptionPool(entitlementCert.productId, poolId));
 		}
@@ -347,15 +348,17 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * @param productSubscription
+	 * @param owner	- owner of the subscription pool (will be used in a REST api call to the candlepin server)
+	 * @param password
 	 * @return the SubscriptionPool from which this consumed ProductSubscription came from
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription, String server, String port, String owner, String password) throws Exception {
+	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription, String owner, String password) throws Exception {
 		
 		// if already known, return the SubscriptionPool from which ProductSubscription came
 		if (productSubscription.fromSubscriptionPool != null) return productSubscription.fromSubscriptionPool;
 		
-		productSubscription.fromSubscriptionPool = getCurrentSerialMapToSubscriptionPools(server, port, owner, password).get(productSubscription.serialNumber);
+		productSubscription.fromSubscriptionPool = getCurrentSerialMapToSubscriptionPools(owner, password).get(productSubscription.serialNumber);
 
 		return productSubscription.fromSubscriptionPool;
 	}

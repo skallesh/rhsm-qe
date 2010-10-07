@@ -146,7 +146,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
         // find the pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),clientOwnerUsername,clientOwnerPassword);
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
