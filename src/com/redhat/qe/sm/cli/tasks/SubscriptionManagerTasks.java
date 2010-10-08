@@ -885,21 +885,22 @@ public class SubscriptionManagerTasks {
 
 		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement/product
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
-		File newCertFile = afterEntitlementCertFiles.get(0);
-		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile),
-				"A new entitlement certificate ("+newCertFile+") has been dropped after after subscribing to pool: "+pool);
-		
+		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
+				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
+
 		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement/product
 		// https://bugzilla.redhat.com/show_bug.cgi?id=640338
 		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
-				"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs) has been dropped after after subscribing to pool: "+pool);
+				"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after after subscribing to pool: "+pool);
+
+		File newCertFile = afterEntitlementCertFiles.get(0);
+		log.info("The new entitlement certificate file is: "+newCertFile);
 		
 		// assert that consumed ProductSubscriptions has NOT decreased
 		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
 				"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 
-		//return getEntitlementCertsFromEntitlementCertFile(newCertFile);
 		return newCertFile;
 	}
 	
