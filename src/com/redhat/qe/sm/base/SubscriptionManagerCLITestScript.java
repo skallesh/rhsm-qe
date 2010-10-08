@@ -105,6 +105,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
+		client1tasks.updateConfigFileParameter("baseurl", serverBaseUrl);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 //		client1tasks.restart_rhsmcertd(certFrequency,false);
 		client1tasks.removeAllCerts(true,true);
@@ -112,6 +113,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
+		if (client2tasks!=null) client2tasks.updateConfigFileParameter("baseurl", serverBaseUrl);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
 //		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
 		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
