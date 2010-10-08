@@ -86,14 +86,18 @@ public class SubscriptionManagerTasks {
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 
-		log.info("Uninstalling existing subscription-manager RPMs...");
-		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
-		sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
-		sshCommandRunner.runCommandAndWait("rpm -e python-rhsm");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q python-rhsm",Integer.valueOf(1),"package python-rhsm is not installed",null);
-		
+		// only uninstall rpms when there are new rpms to install
+		if (rpmUrls.length > 0) {
+			log.info("Uninstalling existing subscription-manager RPMs...");
+			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
+			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
+			sshCommandRunner.runCommandAndWait("rpm -e python-rhsm");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q python-rhsm",Integer.valueOf(1),"package python-rhsm is not installed",null);
+		}
+
+		// install new rpms
 		for (String rpmUrl : rpmUrls) {
 			rpmUrl = rpmUrl.trim();
 			log.info("Installing RPM from "+rpmUrl+"...");
@@ -837,7 +841,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
 		
 		// assert results
-		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
+		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;	// This consumer is already subscribed to the product matching pool with id '8a878c912b8717f6012b872f17ea00b1'
 		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
 		return sshCommandResult;

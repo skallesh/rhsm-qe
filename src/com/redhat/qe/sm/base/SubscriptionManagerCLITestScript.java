@@ -100,14 +100,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
-		if (installRPMs) client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+		client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
 		client1tasks.updateConfigFileParameter("hostname", serverHostname);
 		client1tasks.updateConfigFileParameter("port", serverPort);
 		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
 		client1tasks.updateConfigFileParameter("insecure", "1");
 //		client1tasks.restart_rhsmcertd(certFrequency,false);
 		client1tasks.removeAllCerts(true,true);
-		if (client2tasks!=null) if (installRPMs) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
 		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);

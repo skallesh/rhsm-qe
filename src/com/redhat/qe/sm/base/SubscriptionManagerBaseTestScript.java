@@ -61,7 +61,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String dbPassword				= System.getProperty("rhsm.server.db.password");
 
 	protected String[] rpmUrls				= System.getProperty("rhsm.rpm.urls", "").split(",");
-	protected Boolean installRPMs			= Boolean.valueOf(System.getProperty("rhsm.rpm.install","true"));
 
 	public static SSHCommandRunner server	= null;
 	public static SSHCommandRunner client	= null;
