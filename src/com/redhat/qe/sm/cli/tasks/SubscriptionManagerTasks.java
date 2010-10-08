@@ -80,14 +80,14 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	public void installSubscriptionManagerRPMs(String[] rpmUrls, String enablerepofordeps) {
+	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 
 		// only uninstall rpms when there are new rpms to install
-		if (rpmUrls.length > 0) {
+		if (rpmUrls.size() > 0) {
 			log.info("Uninstalling existing subscription-manager RPMs...");
 			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
@@ -108,7 +108,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		log.info("Installed version of subscription-manager RPM...");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(0),"^subscription-manager-\\d.*",null);	// subscription-manager-0.63-1.el6.i686
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
 
 		initializeFieldsFromConfigFile();
 	}

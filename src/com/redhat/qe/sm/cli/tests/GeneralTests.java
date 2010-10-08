@@ -99,9 +99,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
+		modules.add("clean");
 		modules.add("facts");
 		modules.add("identity");
 		modules.add("list");
+		modules.add("refresh");
 		modules.add("register");
 //		modules.add("reregister");
 		modules.add("subscribe");
@@ -113,6 +115,19 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, modulesRegex, modules}));
+		}
+		
+		// MODULE: clean
+		List <String> cleanOptions = new ArrayList<String>();
+		cleanOptions.add("-h, --help");
+		cleanOptions.add("--debug=DEBUG");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h clean","subscription-manager-cli --help clean"}) {
+			List <String> usages = new ArrayList<String>();
+//			String usage = "Usage: subscription-manager-cli clean [OPTIONS]";
+			String usage = "Usage: subscription-manager-cli clean";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, cleanOptions}));
 		}
 		
 		// MODULE: facts
@@ -159,6 +174,19 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, listOptions}));
+		}
+		
+		// MODULE: refresh
+		List <String> refreshOptions = new ArrayList<String>();
+		refreshOptions.add("-h, --help");
+		refreshOptions.add("--debug=DEBUG");
+		for (String smHelpCommand : new String[]{"subscription-manager-cli -h refresh","subscription-manager-cli --help refresh"}) {
+			List <String> usages = new ArrayList<String>();
+//			String usage = "Usage: subscription-manager-cli refresh [OPTIONS]";
+			String usage = "Usage: subscription-manager-cli refresh";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, refreshOptions}));
 		}
 		
 		// MODULE: register

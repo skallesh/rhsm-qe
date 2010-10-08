@@ -1,5 +1,9 @@
 package com.redhat.qe.sm.base;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -60,7 +64,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String dbUsername				= System.getProperty("rhsm.server.db.username");
 	protected String dbPassword				= System.getProperty("rhsm.server.db.password");
 
-	protected String[] rpmUrls				= System.getProperty("rhsm.rpm.urls", "").split(",");
+	protected List<String> rpmUrls			= Arrays.asList(System.getProperty("rhsm.rpm.urls", "").trim().split(","));
 
 	public static SSHCommandRunner server	= null;
 	public static SSHCommandRunner client	= null;
@@ -68,5 +72,15 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static SSHCommandRunner client2	= null;	// client2
 	
 	protected static CandlepinTasks servertasks	= null;
+	
+	
+	
+	
+	
+	public SubscriptionManagerBaseTestScript() {
+		super();
+		// TODO Auto-generated constructor stub
+		if (rpmUrls.contains("")) rpmUrls = new ArrayList<String>();	// rpmUrls list should be empty when rhsm.rpm.urls is ""
+	}
 
 }
