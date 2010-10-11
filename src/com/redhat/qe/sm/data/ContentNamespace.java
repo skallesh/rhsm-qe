@@ -59,7 +59,19 @@ public class ContentNamespace extends AbstractCommandLineData {
 		return string.trim();
 	}
 	
-	
+	@Override
+	public boolean equals(Object obj){
+
+		return	((ContentNamespace)obj).hash.equals(this.hash) &&
+				((ContentNamespace)obj).label.equals(this.label) &&
+				((ContentNamespace)obj).name.equals(this.name) &&
+				((ContentNamespace)obj).physicalEntitlement.equals(this.physicalEntitlement) &&
+				((ContentNamespace)obj).flexGuestEntitlement.equals(this.flexGuestEntitlement) &&
+				((ContentNamespace)obj).vendorId.equals(this.vendorId) &&
+				((ContentNamespace)obj).downloadUrl.equals(this.downloadUrl) &&
+				((ContentNamespace)obj).gpgKeyUrl.equals(this.gpgKeyUrl) &&
+				((ContentNamespace)obj).enabled.equals(this.enabled);
+	}
 	
 	/**
 	 * @param certificates - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/product/314.pem "

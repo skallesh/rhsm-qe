@@ -26,14 +26,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public Boolean isExpired(){
 		return endDate.after(new Date());
 	}
-	
-	@Override
-	public boolean equals(Object obj){
-		//return ((ProductSubscription)obj).productName.contains(this.productName);	// I think we need to compare more attributes than using .contains(...) on the productName jsefler 7/13/2010
 
-		// assume the combination of productName and serialNumber is unique across all ProductSubscriptions
-		return ((ProductSubscription)obj).productName.equals(this.productName) && ((ProductSubscription)obj).serialNumber.equals(this.serialNumber);
-	}
 	
 	public ProductSubscription(Map<String, String> productData){
 		super(productData);
@@ -62,14 +55,6 @@ public class ProductSubscription extends AbstractCommandLineData {
 	@Override
 	public String toString() {
 		
-//		public String productName;
-//		public Integer serialNumber;
-//		public Integer contractNumber;
-//		public Pool fromPool;
-//		public Boolean isActive;
-//		public Date startDate;
-//		public Date endDate;
-		
 		String string = "";
 		if (productName != null)	string += String.format(" %s='%s'", "productName",productName);
 		if (serialNumber != null)	string += String.format(" %s='%s'", "serialNumber",serialNumber);
@@ -82,6 +67,15 @@ public class ProductSubscription extends AbstractCommandLineData {
 		return string.trim();
 	}
 	
+	
+	@Override
+	public boolean equals(Object obj){
+		//return ((ProductSubscription)obj).productName.contains(this.productName);	// I think we need to compare more attributes than using .contains(...) on the productName jsefler 7/13/2010
+
+		// assume the combination of productName and serialNumber is unique across all ProductSubscriptions
+		return	((ProductSubscription)obj).productName.equals(this.productName) &&
+				((ProductSubscription)obj).serialNumber.equals(this.serialNumber);
+	}
 	
 	/**
 	 * @param stdoutListOfConsumedProducts - stdout from "subscription-manager-cli list --consumed"
