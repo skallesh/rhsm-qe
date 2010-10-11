@@ -149,7 +149,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert that the rhsmcertd will clean up the malicious activity
 		log.info("Now let's restart the rhsmcertd and assert that the deamon deletes the entitlement certificate since it was put on candlepins certificate revocation list during the unsubscribe.");
-		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		SubscriptionManagerCLITestScript.sleep((certFrequency*60+10)*1000);
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath())==0,"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
 	}

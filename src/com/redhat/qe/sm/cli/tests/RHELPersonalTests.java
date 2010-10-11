@@ -314,7 +314,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		for (String consumerId : consumerIds) {
 			//client2tasks.reregister(consumerUsername,consumerPassword,consumerId);
 			client2tasks.reregisterToExistingConsumer(consumerUsername,consumerPassword,consumerId);
-			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
+			// 10/11/2010 NOT NEEDED SINCE register --consumerid NOW REFRESHES CERTS			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertTrue(productSubscription==null,systemConsumedProductName+" is no longer consumed by '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -337,7 +337,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		for (String consumerId : consumerIds) {
 			//client2tasks.reregister(consumerUsername,consumerPassword,consumerId);
 			client2tasks.reregisterToExistingConsumer(consumerUsername,consumerPassword,consumerId);
-			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
+			// 10/11/2010 NOT NEEDED SINCE register --consumerid NOW REFRESHES CERTS			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			client2tasks.unsubscribeFromProductSubscription(productSubscription);
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -359,7 +359,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		for (String consumerId : consumerIds) {
 			//client2tasks.reregister(consumerUsername,consumerPassword,consumerId);
 			client2tasks.reregisterToExistingConsumer(consumerUsername,consumerPassword,consumerId);
-			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
+			// 10/11/2010 NOT NEEDED SINCE register --consumerid NOW REFRESHES CERTS			client2tasks.restart_rhsmcertd(1, true);	// give rhsmcertd a chance to download the consumer's certs
 			ProductSubscription productSubscription = client2tasks.findProductSubscriptionWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertTrue(productSubscription==null,systemConsumedProductName+" is not consumed by consumer '"+consumerId+"' (registered as a system under username '"+consumerUsername+"')");
 			SubscriptionPool systemSubscriptionPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
