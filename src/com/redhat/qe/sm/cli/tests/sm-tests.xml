@@ -192,4 +192,17 @@
 		</groups>
 	</test>
 	
+	<test name="Refresh Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="refresh" />
+			</run>
+		</groups>
+	</test>
+	
+	
 </suite>

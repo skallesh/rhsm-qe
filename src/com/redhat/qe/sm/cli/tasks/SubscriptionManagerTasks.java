@@ -125,7 +125,7 @@ public class SubscriptionManagerTasks {
 			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
 		}
 		
-		if (consumer) {
+		if (entitlements) {
 			value = getConfigFileParameter("entitlementCertDir");
 			log.info("Cleaning out certs from entitlementCertDir: "+value);
 			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
@@ -679,6 +679,37 @@ public class SubscriptionManagerTasks {
 
 		return sshCommandResult; // from the clean command
 	}
+	
+	
+	
+	// clean module tasks ************************************************************
+
+	/**
+	 * refresh without asserting results
+	 */
+	public SSHCommandResult refresh_() {
+
+		// assemble the unregister command
+		String	command  = "subscription-manager-cli refresh";	
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager-cli refresh"
+	 */
+	public SSHCommandResult refresh() {
+		
+		SSHCommandResult sshCommandResult = refresh_();
+		
+		// assert results for a successful clean
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The refresh command was a success.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data refreshed");
+		
+		return sshCommandResult; // from the refresh command
+	}
+	
 	
 	
 	// identity module tasks ************************************************************
