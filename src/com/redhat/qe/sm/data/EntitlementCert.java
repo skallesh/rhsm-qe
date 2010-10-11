@@ -58,6 +58,17 @@ public class EntitlementCert extends AbstractCommandLineData {
 		return dateFormat.format(date.getTime());
 	}
 	
+	@Override
+	public boolean equals(Object obj){
+
+		return	((EntitlementCert)obj).serialNumber.equals(this.serialNumber) &&
+				((EntitlementCert)obj).id.equals(this.id) &&
+				((EntitlementCert)obj).issuer.equals(this.issuer) &&
+				((EntitlementCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
+				((EntitlementCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
+				((EntitlementCert)obj).productId.equals(this.productId);
+	}
+	
 	/**
 	 * @param certificates - stdout from "find /etc/pki/entitlement/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
 	 * @return
