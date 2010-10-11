@@ -35,7 +35,7 @@ public class SMGuiTasks {
 	
 	public void register(String username, String password, String systemName, boolean autoSubscribe){
 		ldtp().click(UI.registration);
-		ldtp().waitTilGuiExist(UI.registerDialog);
+		ldtp().waitTilGuiExist(UI.redhatLogin);
 		ldtp().setTextValue(UI.redhatLogin, username);
 		ldtp().setTextValue(UI.password, password);
 		if (systemName != null) ldtp().setTextValue(UI.systemName, systemName);
@@ -76,5 +76,14 @@ public class SMGuiTasks {
 		}
 		ldtp().click(UI.apply_subscribe);
 		checkForError();
+	}
+	
+	public void unsubscribeFrom(String... productNames){
+		for (String productName: productNames) {
+			ldtp().selectRowPartialMatch(UI.subscriptions, productName);
+			ldtp().click(UI.unsubscribe);
+			ldtp().waitTilGuiExist(UI.questionDialog);
+			ldtp().click(UI.yes);
+		}
 	}
 }

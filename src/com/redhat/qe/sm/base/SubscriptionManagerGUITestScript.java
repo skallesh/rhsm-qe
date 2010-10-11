@@ -24,7 +24,7 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 	
 	@BeforeSuite
 	public void startLDTP(){
-		ldtpInstance  = new LDTPClient("http://"  + clienthostname + ":8001/");
+		ldtpInstance  = new LDTPClient("http://"  + clienthostname + ":4118/");
 		ldtp().init();
 		String binary = System.getProperty("rhsm.gui.binary", "subscription-manager-gui");
 		ldtp().launchApp(binary, new String[] {});
@@ -38,7 +38,7 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 		tasks.checkForError();
 	}
 	
-	@Test(dependsOnMethods="register", enabled=true)
+	@Test(dependsOnMethods="register", enabled=false)
 	public void unregister(){
 		tasks.unregister();
 	}
@@ -49,9 +49,14 @@ public class SubscriptionManagerGUITestScript extends SubscriptionManagerBaseTes
 		log.info("Retrieved facts:" + p.toString());
 	}
 	
-	@Test(enabled=false)
+	@Test(enabled=true, dependsOnMethods="register")
 	public void subscribeTest(){
 		tasks.subscribeTo("RHEL Workstation");
+	}
+	
+	@Test(enabled=true, dependsOnMethods="subscribeTest")
+	public void unsubscribeTest(){
+		tasks.unsubscribeFrom("RHEL for Workstations SVC");
 	}
 	
 	@AfterSuite
