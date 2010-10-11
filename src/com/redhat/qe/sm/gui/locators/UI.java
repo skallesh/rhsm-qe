@@ -47,7 +47,9 @@ public class UI {
 	public static Element emailAddress = new Element (registrationSettingsDialogName, "");  //TODO dev needs to add accessibility string 
 	public static Element closeRegistrationSettings = new Element (registrationSettingsDialogName, "cancel_add_button4");
 
-	public static Element errorDialog = new Element ("Error", "");
+	public static String errorDialogName = "Error";
+	public static Element errorDialog = new Element (errorDialogName, "");
+	public static Element OK_error = new Element (errorDialogName, "OK");
 	
 	public static String questionDialogName = "Question";
 	public static Element questionDialog = new Element (questionDialogName, "");

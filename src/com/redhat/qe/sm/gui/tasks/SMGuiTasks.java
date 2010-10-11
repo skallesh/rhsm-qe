@@ -28,6 +28,8 @@ public class SMGuiTasks {
 	
 	public void checkForError() {		
 		if (ldtp().waitTilGuiExist(UI.errorDialog, 3) == 1) {
+			//dismiss the dialog
+			ldtp().click(UI.OK_error);
 			throw new AssertionError("Error dialog was displayed.");
 		}
 		log.log(Level.FINER, "Error dialog did not appear");
