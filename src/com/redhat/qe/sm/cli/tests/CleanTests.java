@@ -20,7 +20,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 
 	
 	
-	@Test(	description="subscription-manager-cli: clean",
+	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
 			groups={"Clean_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")	// http://gibson.usersys.redhat.com/agilo/ticket/4020
@@ -40,6 +40,9 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		// Clean
 		log.info("Clean...");
 		clienttasks.clean();
+		
+		// Assert the entitlements are removed
+		// this was already tested in clienttasks.clean();
 		
 		// Assert the current identity does not exist
 		log.info("After running clean, assert that the identity does not exist...");
