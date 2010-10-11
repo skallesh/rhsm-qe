@@ -522,7 +522,7 @@ public class SubscriptionManagerTasks {
 		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
 		if (force!=null && force)					command += " --force";
 		
-		// register without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -553,8 +553,8 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert certificate files are dropped into /etc/pki/consumer
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" is present after register.");
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" is present after register.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" does exist after register.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" does exist after register.");
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -645,6 +645,42 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	
+	// clean module tasks ************************************************************
+
+	/**
+	 * clean without asserting results
+	 */
+	public SSHCommandResult clean_() {
+
+		// assemble the unregister command
+		String	command  = "subscription-manager-cli clean";	
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager-cli clean"
+	 */
+	public SSHCommandResult clean() {
+		
+		SSHCommandResult sshCommandResult = clean_();
+		
+		// assert results for a successful clean
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The clean command was a success.");
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data removed");
+		
+		// assert that the consumer cert directory is gone
+		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
+
+		// assert that the entitlement cert directory is gone
+		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
+
+		return sshCommandResult; // from the clean command
+	}
+	
+	
 	// identity module tasks ************************************************************
 
 	/**
@@ -658,7 +694,7 @@ public class SubscriptionManagerTasks {
 		if (password!=null)					command += " --password="+password;
 		if (regenerate!=null && regenerate)	command += " --regenerate";
 		
-		// register without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -705,7 +741,7 @@ public class SubscriptionManagerTasks {
 		// assemble the unregister command
 		String command  = "subscription-manager-cli unregister";	
 		
-		// register without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -725,8 +761,8 @@ public class SubscriptionManagerTasks {
 		} 
 		
 		// assert that the consumer cert and key have been removed
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" is present after unregister.");
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" is present after unregister.");
+		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" does NOT exist after unregister.");
+		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" does NOT exist after unregister.");
 
 		// assert that all of the entitlement product certs have been removed
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
@@ -750,8 +786,7 @@ public class SubscriptionManagerTasks {
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
 
-		
-		// list without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -815,7 +850,7 @@ public class SubscriptionManagerTasks {
 		if (email!=null)		command += " --email="+email;
 		if (locale!=null)		command += " --locale="+locale;
 		
-		// subscribe without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 
@@ -832,7 +867,7 @@ public class SubscriptionManagerTasks {
 		if (email!=null)											command += " --email="+email;
 		if (locale!=null)											command += " --locale="+locale;
 
-		// subscribe without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -1067,8 +1102,7 @@ public class SubscriptionManagerTasks {
 		if (all!=null && all)	command += " --all";
 		if (serial!=null)		command += " --serial="+serial;
 
-		
-		// unsubscribe without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
@@ -1183,7 +1217,7 @@ public class SubscriptionManagerTasks {
 		if (list!=null && list)			command += " --list";
 		if (update!=null && update)		command += " --update";
 		
-		// register without asserting results
+		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
