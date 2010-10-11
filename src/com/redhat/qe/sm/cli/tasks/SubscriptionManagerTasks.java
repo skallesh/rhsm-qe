@@ -640,7 +640,8 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult reregisterToExistingConsumer(String username, String password, String consumerId) {
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (10/4/2010 git hash b3c728183c7259841100eeacb7754c727dc523cd)...");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
-		removeAllCerts(true, false);
+		//removeAllCerts(true, true);
+		clean();
 		return register(username,password,null,consumerId,null,null);
 	}
 	
