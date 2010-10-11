@@ -61,11 +61,6 @@ public class InstalledProduct extends AbstractCommandLineData {
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-//		regexes.put("productName",	"ProductName:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("status",		"Status:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("expires",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("subscription",	"Subscription:\\s*([a-zA-Z0-9 ,:()]*)");
-		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("productName",			"ProductName:\\s*(.*)");
 		regexes.put("status",				"Status:\\s*(.*)");
