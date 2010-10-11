@@ -238,8 +238,9 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmLogFile,Integer.valueOf(0),"Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.",null);
-		
+		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmLogFile,Integer.valueOf(0),"Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmLogFile,Integer.valueOf(0),"Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.",null);
+
 		
 		log.info("Now test with an registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
 	    clienttasks.register(clientusername, clientpassword, null, null, null, null);

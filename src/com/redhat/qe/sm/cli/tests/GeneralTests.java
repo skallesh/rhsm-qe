@@ -123,8 +123,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		cleanOptions.add("--debug=DEBUG");
 		for (String smHelpCommand : new String[]{"subscription-manager-cli -h clean","subscription-manager-cli --help clean"}) {
 			List <String> usages = new ArrayList<String>();
-//			String usage = "Usage: subscription-manager-cli clean [OPTIONS]";
-			String usage = "Usage: subscription-manager-cli clean";
+			String usage = "Usage: subscription-manager-cli clean [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, cleanOptions}));
@@ -182,8 +181,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		refreshOptions.add("--debug=DEBUG");
 		for (String smHelpCommand : new String[]{"subscription-manager-cli -h refresh","subscription-manager-cli --help refresh"}) {
 			List <String> usages = new ArrayList<String>();
-//			String usage = "Usage: subscription-manager-cli refresh [OPTIONS]";
-			String usage = "Usage: subscription-manager-cli refresh";
+			String usage = "Usage: subscription-manager-cli refresh [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, refreshOptions}));
