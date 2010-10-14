@@ -65,8 +65,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		
 		// will we be connecting to the candlepin server?
-		if (!(	serverHostname.equals("") || serverHostname.startsWith("$") ||
-				serverInstallDir.equals("") || serverInstallDir.startsWith("$") )) {
+		if (!(	serverHostname.equals("") || serverInstallDir.equals("") )) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
 
@@ -75,9 +74,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// will we be testing multiple clients?
-		if (!(	client2hostname.equals("") || client2hostname.startsWith("$") ||
-				client2username.equals("") || client2username.startsWith("$") ||
-				client2password.equals("") || client2password.startsWith("$") )) {
+		if (!(	client2hostname.equals("") || client2username.equals("") || client2password.equals("") )) {
 			client1 = client;
 			client1tasks = clienttasks;
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
