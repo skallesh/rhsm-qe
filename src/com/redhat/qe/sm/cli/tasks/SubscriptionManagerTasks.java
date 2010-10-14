@@ -104,7 +104,8 @@ public class SubscriptionManagerTasks {
 			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/")).get(rpmUrl.split("/").length-1);
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
-			sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* --enablerepo="+enablerepofordeps);
+			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
+			sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option);
 		}
 		
 		log.info("Installed version of subscription-manager RPM...");
