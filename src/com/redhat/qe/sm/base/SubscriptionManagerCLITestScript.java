@@ -294,9 +294,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// populate a list of all available SubscriptionPools
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+// FIXME CLEAR USED FOR FASTER TESTING
+//ll.clear();
 			ll.add(Arrays.asList(new Object[]{pool}));		
 		}
-		
 		return ll;
 	}
 	

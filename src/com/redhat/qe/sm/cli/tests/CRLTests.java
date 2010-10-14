@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
@@ -79,10 +80,12 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		CandlepinTasks.refreshPoolsREST( serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
-		
-		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
-		clienttasks.restart_rhsmcertd(1, true);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
+		jobDetail = CandlepinTasks.waitForJobDetailStateREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, jobDetail, "FINISHED", 10*1000, 3);
+		log.info("Refresh to make sure the latest certs are on the client...");
+		clienttasks.refresh(); // make sure the new entitlements are downloaded
+//		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
+//		clienttasks.restart_rhsmcertd(1, true);
 
 		log.info("The updated certs should now be on the client...");
 
@@ -117,7 +120,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
 
 		log.info("Finally, check the crl list on the server and verify the original entitlement cert serials are revoked...");
-		sleep(1*60*1000);sleep(10000);	// give the CertificateRevocationListTask.schedule another minute to update the list
+//		sleep(1*60*1000);sleep(10000);	// give the CertificateRevocationListTask.schedule another minute to update the list
 		// NOTE: The refresh schedule was set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
 		for (ProductSubscription product : products) {
 			RevokedCert revokedCert = servertasks.findRevokedCertWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());

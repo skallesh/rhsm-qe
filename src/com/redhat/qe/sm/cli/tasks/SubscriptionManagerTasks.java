@@ -301,8 +301,9 @@ public class SubscriptionManagerTasks {
 		Map<Long, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<Long, SubscriptionPool>();
 		String hostname = getConfigFileParameter("hostname");
 		String port = getConfigFileParameter("port");
+		String prefix = getConfigFileParameter("prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonPool = CandlepinTasks.getEntitlementREST(hostname, port, owner, password, entitlementCert.id);
+			JSONObject jsonPool = CandlepinTasks.getEntitlementREST(hostname,port,prefix,owner,password,entitlementCert.id);
 			String poolId = jsonPool.getJSONObject("pool").getString("id");
 			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, new SubscriptionPool(entitlementCert.productId, poolId));
 		}
@@ -544,7 +545,7 @@ public class SubscriptionManagerTasks {
 
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 		
 		// assert that register with consumerId returns the expected uuid
@@ -604,7 +605,7 @@ public class SubscriptionManagerTasks {
 //		SSHCommandResult sshCommandResult = reregister_(username,password,consumerid);
 //		
 //		// assert results for a successful reregistration
-//		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The reregister command was a success.");
+//		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the reregister command indicates a success.");
 //		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
 //		if (consumerid!=null) regex=consumerid;		// consumerid
 //		if (username!=null) regex+=" "+username;	// username
@@ -669,7 +670,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = clean_();
 		
 		// assert results for a successful clean
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The clean command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the clean command indicates a success.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data removed");
 		
 		// assert that the consumer cert directory is gone
@@ -705,7 +706,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = refresh_();
 		
 		// assert results for a successful clean
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The refresh command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the refresh command indicates a success.");
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data refreshed");
 		
 		return sshCommandResult; // from the refresh command
@@ -756,7 +757,7 @@ public class SubscriptionManagerTasks {
 //		ConsumerCert consumerCert = getCurrentConsumerCert();
 		
 		// assert results for a successful identify
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The identify command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the identity command indicates a success.");
 		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
@@ -786,7 +787,7 @@ public class SubscriptionManagerTasks {
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unregister command was a success with exit code 0.");
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unregister command indicates a success.");
 		} else {
 			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."),"The unregister command was not necessary.  It was already unregistered");
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The unregister command returned exit code 1 meaning that it was already unregistered.");
@@ -908,9 +909,10 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
 		
 		// assert results
+		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
 		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;	// This consumer is already subscribed to the product matching pool with id '8a878c912b8717f6012b872f17ea00b1'
 		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		return sshCommandResult;
 	}
 	
@@ -919,8 +921,9 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale);
 		
 		// assert results
+		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
 		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The subscribe command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		return sshCommandResult;
 	}
 	
@@ -1143,7 +1146,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = unsubscribe_(all, serial);
 		
 		// assert results
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The unsubscribe command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		return sshCommandResult;
 	}
 	
@@ -1264,7 +1267,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = facts_(list, update);
 
 		// assert results for a successful facts
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The facts command was a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
 		if (list!=null && list)		regex=".*:.*";					// list
 		if (update!=null && update)	regex=consumerCert.consumerid;	// consumerid

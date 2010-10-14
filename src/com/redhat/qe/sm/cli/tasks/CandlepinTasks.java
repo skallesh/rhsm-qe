@@ -38,6 +38,7 @@ import org.json.JSONObject;
 
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -109,6 +110,7 @@ public class CandlepinTasks {
 		}
 //		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+latestGitTag, Integer.valueOf(0), null, "HEAD is now at .* package \\[candlepin\\] release \\["+latestGitTag.substring(latestGitTag.indexOf("-")+1)+"\\]."); //HEAD is now at 560b098... Automatic commit of package [candlepin] release [0.0.26-1].
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", Integer.valueOf(0), "Starting postgresql service:\\s+\\[  OK  \\]", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export FORCECERT=1; export GENDB=1; export HOSTNAME="+hostname+"; export IMPORTDIR="+serverImportDir+"; cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 		/* attempt to use live logging
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", true);
@@ -134,16 +136,16 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public String getResourceREST(String server, String port, String owner, String password, String path) throws Exception {
-		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin"+path);
+	static public String getResourceREST(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, get, owner, password);
 	}
 	
-	static public JSONObject getEntitlementREST(String server, String port, String owner, String password, String dbid) throws Exception {
-		return new JSONObject(getResourceREST(server, port, owner, password, "/entitlements/"+dbid));
+	static public JSONObject getEntitlementREST(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
+		return new JSONObject(getResourceREST(server, port, prefix, owner, password, "/entitlements/"+dbid));
 	}
 
-//	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String owner, String password, String ref) throws JSONException {
+//	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String prefix, String owner, String password, String ref) throws JSONException {
 //		log.info("Running HATEOAS command for '"+owner+"' on candlepin server '"+server+"'...");
 //
 //		String command = "/usr/bin/curl -u "+owner+":"+password+" -k https://"+server+":"+port+"/candlepin/"+ref;
@@ -190,19 +192,38 @@ public class CandlepinTasks {
 	            new UsernamePasswordCredentials(username, password)
 	        );
 	}
-	static public JSONObject refreshPoolsREST(String server, String port, String owner, String password) throws Exception {
-		PutMethod put = new PutMethod("https://"+server+":"+port+"/candlepin/owners/"+owner+"/subscriptions");
+	/**
+	 * @param server
+	 * @param port
+	 * @param prefix
+	 * @param owner
+	 * @param password
+	 * @return a JSONObject representing the jobDetail.  Example:<br>
+	 * 	{
+	 * 	  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+	 * 	  "state" : "FINISHED",
+	 * 	  "result" : "Pools refreshed for owner admin",
+	 * 	  "startTime" : "2010-08-30T20:01:11.724+0000",
+	 * 	  "finishTime" : "2010-08-30T20:01:11.800+0000",
+	 * 	  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+	 * 	  "updated" : "2010-08-30T20:01:11.932+0000",
+	 * 	  "created" : "2010-08-30T20:01:11.721+0000"
+	 * 	}
+	 * @throws Exception
+	 */
+	static public JSONObject refreshPoolsREST(String server, String port, String prefix, String owner, String password) throws Exception {
+		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
 		String response = getHTTPResponseAsString(client, put, owner, password);
 				
 		return new JSONObject(response);
 	}
 	
-	static public void exportConsumerREST(String server, String port, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
+	static public void exportConsumerREST(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
 		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
 		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
 		
 		boolean validzip = false;
-		GetMethod get = new GetMethod("https://"+server+":"+port+"/candlepin/consumers/"+consumerKey+"/export");
+		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export");
 		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
 		File zipFile = new File(intoExportZipFile);
 		FileOutputStream fos = new FileOutputStream(zipFile);
@@ -230,11 +251,11 @@ public class CandlepinTasks {
 		Assert.assertTrue(validzip, "Response is a valid zip file.");
 	}
 	
-	static public void importConsumerREST(String server, String port, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
+	static public void importConsumerREST(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
 		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
 
-		PostMethod post = new PostMethod("https://"+server+":"+port+"/candlepin/owners/"+ownerKey+"/import");
+		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
 		File f = new File(fromExportZipFile);
 		Part[] parts = {
 			      new FilePart(f.getName(), f)
@@ -245,8 +266,8 @@ public class CandlepinTasks {
 		Assert.assertEquals(status, 204);
 	}
 	
-	public static void dropAllConsumers(final String server, final String port, final String owner, final String password) throws Exception{
-		JSONArray consumers = new JSONArray(getResourceREST(server, port, owner, password, "consumers"));
+	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
+		JSONArray consumers = new JSONArray(getResourceREST(server, port, prefix, owner, password, "consumers"));
 		List<String> refs = new ArrayList<String>();
 		for (int i=0;i<consumers.length();i++) {
 			JSONObject o = consumers.getJSONObject(i);
@@ -257,7 +278,7 @@ public class CandlepinTasks {
 			service.submit(new Runnable() {
 				public void run() {
 					try {
-						HttpMethod m = new DeleteMethod("https://"+server+":"+port+"/candlepin" + consumer);
+						HttpMethod m = new DeleteMethod("https://"+server+":"+port+prefix + consumer);
 						doHTTPRequest(client, m, owner, password);
 						m.releaseConnection();
 					}catch (Exception e) {
@@ -272,21 +293,63 @@ public class CandlepinTasks {
 	}
 	
 	
-	//TODO
-//	public void getJobDetail(String id) {
-//		// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request GET https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d
-//		
-//		{
-//			  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
-//			  "state" : "FINISHED",
-//			  "result" : "Pools refreshed for owner admin",
-//			  "startTime" : "2010-08-30T20:01:11.724+0000",
-//			  "finishTime" : "2010-08-30T20:01:11.800+0000",
-//			  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
-//			  "updated" : "2010-08-30T20:01:11.932+0000",
-//			  "created" : "2010-08-30T20:01:11.721+0000"
-//			}
-//	}
+	/**
+	 * @param server
+	 * @param port
+	 * @param prefix
+	 * @param owner
+	 * @param password
+	 * @param jobDetail - JSONObject of a jobDetail. Example:<br>
+	 * 	{
+	 * 	  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+	 * 	  "state" : "RUNNING",
+	 * 	  "result" : "Pools refreshed for owner admin",
+	 * 	  "startTime" : "2010-08-30T20:01:11.724+0000",
+	 * 	  "finishTime" : "2010-08-30T20:01:11.800+0000",
+	 * 	  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+	 * 	  "updated" : "2010-08-30T20:01:11.932+0000",
+	 * 	  "created" : "2010-08-30T20:01:11.721+0000"
+	 * 	}
+	 * @param state - valid states: "PENDING", "CREATED", "RUNNING", "FINISHED"
+	 * @param retryMilliseconds - sleep time between attempts to get latest JobDetail
+	 * @param timeoutMinutes - give up waiting
+	 * @return
+	 * @throws Exception
+	 */
+	static public JSONObject waitForJobDetailStateREST(String server, String port, String prefix, String owner, String password, JSONObject jobDetail, String state, int retryMilliseconds, int timeoutMinutes) throws Exception {
+		String statusPath = jobDetail.getString("statusPath");
+		int t = 0;
+		
+		// pause for the sleep interval; get the updated job detail; while the job detail's state has not yet changed
+		do {
+			// pause for the sleep interval
+			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
+			
+			// get the updated job detail
+			jobDetail = new JSONObject(getResourceREST(server,port,prefix,owner,password,statusPath));
+		} while (!jobDetail.getString("state").equalsIgnoreCase(state) || (t*retryMilliseconds >= timeoutMinutes*60*1000));
+		
+		// assert that the state was achieved within the timeout
+		Assert.assertFalse((t*retryMilliseconds >= timeoutMinutes*60*1000), "JobDetail '"+jobDetail.getString("id")+"' changed state to '"+state+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
+
+		return jobDetail;
+// TODO
+//		public void getJobDetail(String id) {
+//			// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request GET https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d
+//			
+//			{
+//				  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+//				  "state" : "FINISHED",
+//				  "result" : "Pools refreshed for owner admin",
+//				  "startTime" : "2010-08-30T20:01:11.724+0000",
+//				  "finishTime" : "2010-08-30T20:01:11.800+0000",
+//				  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
+//				  "updated" : "2010-08-30T20:01:11.932+0000",
+//				  "created" : "2010-08-30T20:01:11.721+0000"
+//				}
+//		}
+
+	}
 	
 	public void restartTomcat() {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
@@ -390,19 +453,19 @@ public class CandlepinTasks {
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 	
-	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("owners",key,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor("owners",key,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
 	}
 	
-	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("consumers",key,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor("consumers",key,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
 	}
 	
-	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor(null,null,candlepinHostname,candlepinPort,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor(null,null,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
 	}
 	
-	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
+	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
 			
 		/* References:
 		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
@@ -413,9 +476,9 @@ public class CandlepinTasks {
 		SSLCertificateTruster.trustAllCerts();
 		
 		// set the atom feed url for an owner, consumer, or null
-		String url = String.format("https://%s:%s/candlepin/atom", candlepinHostname, candlepinPort);
+		String url = String.format("https://%s:%s%s/atom", candlepinHostname, candlepinPort, candlepinPrefix);
 		if (ownerORconsumer!=null && key!=null) {
-			url = String.format("https://%s:%s/candlepin/%s/%s/atom", candlepinHostname, candlepinPort, ownerORconsumer, key);
+			url = String.format("https://%s:%s%s/%s/%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, ownerORconsumer, key);
 		}
 		
         log.fine("SyndFeedUrl: "+url);
@@ -460,7 +523,7 @@ public class CandlepinTasks {
 		//System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
 		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
 		//CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
-		CandlepinTasks.exportConsumerREST("jweiss.usersys.redhat.com", "8443", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
+		CandlepinTasks.exportConsumerREST("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
 
 	}
 }
