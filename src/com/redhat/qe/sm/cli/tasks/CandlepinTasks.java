@@ -53,6 +53,7 @@ import com.sun.syndication.io.XmlReader;
 /**
  * @author jsefler
  *
+ * Reference: Candlepin RESTful API Documentation: https://fedorahosted.org/candlepin/wiki/API
  */
 public class CandlepinTasks {
 
@@ -136,13 +137,19 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public String getResourceREST(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path) throws Exception {
 		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+path);
+		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" --request GET https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, get, owner, password);
 	}
+	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+path);
+		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" --request PUT https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, put, owner, password);
+	}
 	
-	static public JSONObject getEntitlementREST(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
-		return new JSONObject(getResourceREST(server, port, prefix, owner, password, "/entitlements/"+dbid));
+	static public JSONObject getEntitlementUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
+		return new JSONObject(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/entitlements/"+dbid));
 	}
 
 //	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String prefix, String owner, String password, String ref) throws JSONException {
@@ -211,17 +218,19 @@ public class CandlepinTasks {
 	 * 	}
 	 * @throws Exception
 	 */
-	static public JSONObject refreshPoolsREST(String server, String port, String prefix, String owner, String password) throws Exception {
-		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
-		String response = getHTTPResponseAsString(client, put, owner, password);
-				
-		return new JSONObject(response);
+	static public JSONObject refreshPoolsUsingRESTfulAPI(String server, String port, String prefix, String owner, String password) throws Exception {
+//		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
+//		String response = getHTTPResponseAsString(client, put, owner, password);
+//				
+//		return new JSONObject(response);
+		return new JSONObject(putResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/owners/"+owner+"/subscriptions"));
 	}
 	
-	static public void exportConsumerREST(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
-		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
+	static public void exportConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
 		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
-		
+		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export > "+intoExportZipFile);
+		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
+	
 		boolean validzip = false;
 		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export");
 		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
@@ -251,9 +260,10 @@ public class CandlepinTasks {
 		Assert.assertTrue(validzip, "Response is a valid zip file.");
 	}
 	
-	static public void importConsumerREST(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
-		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
+	static public void importConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
+		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
+		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
 		File f = new File(fromExportZipFile);
@@ -267,7 +277,7 @@ public class CandlepinTasks {
 	}
 	
 	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
-		JSONArray consumers = new JSONArray(getResourceREST(server, port, prefix, owner, password, "consumers"));
+		JSONArray consumers = new JSONArray(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "consumers"));
 		List<String> refs = new ArrayList<String>();
 		for (int i=0;i<consumers.length();i++) {
 			JSONObject o = consumers.getJSONObject(i);
@@ -316,7 +326,7 @@ public class CandlepinTasks {
 	 * @return
 	 * @throws Exception
 	 */
-	static public JSONObject waitForJobDetailStateREST(String server, String port, String prefix, String owner, String password, JSONObject jobDetail, String state, int retryMilliseconds, int timeoutMinutes) throws Exception {
+	static public JSONObject waitForJobDetailStateUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, JSONObject jobDetail, String state, int retryMilliseconds, int timeoutMinutes) throws Exception {
 		String statusPath = jobDetail.getString("statusPath");
 		int t = 0;
 		
@@ -326,7 +336,7 @@ public class CandlepinTasks {
 			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
 			
 			// get the updated job detail
-			jobDetail = new JSONObject(getResourceREST(server,port,prefix,owner,password,statusPath));
+			jobDetail = new JSONObject(getResourceUsingRESTfulAPI(server,port,prefix,owner,password,statusPath));
 		} while (!jobDetail.getString("state").equalsIgnoreCase(state) || (t*retryMilliseconds >= timeoutMinutes*60*1000));
 		
 		// assert that the state was achieved within the timeout
@@ -393,7 +403,7 @@ public class CandlepinTasks {
 	}
 	
 	
-	public JSONObject cpc_create_owner(String owner_name) throws JSONException {
+	public JSONObject createOwnerUsingCPC(String owner_name) throws JSONException {
 		log.info("Using the ruby client to create_owner owner_name='"+owner_name+"'...");
 
 		// call the ruby client
@@ -407,7 +417,7 @@ public class CandlepinTasks {
 
 	}
 	
-	public SSHCommandResult cpc_delete_owner(String owner_name) {
+	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
 		log.info("Using the ruby client to delete_owner owner_name='"+owner_name+"'...");
 
 		// call the ruby client
@@ -415,7 +425,7 @@ public class CandlepinTasks {
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 	}
 	
-	public JSONObject cpc_create_product(String id, String name) throws JSONException {
+	public JSONObject createProductUsingCPC(String id, String name) throws JSONException {
 		log.info("Using the ruby client to create_product id='"+id+"' name='"+name+"'...");
 
 		// call the ruby client
@@ -425,7 +435,7 @@ public class CandlepinTasks {
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 
-	public JSONObject cpc_create_pool(String productId, String ownerId, String quantity) throws JSONException {
+	public JSONObject createPoolUsingCPC(String productId, String ownerId, String quantity) throws JSONException {
 		log.info("Using the ruby client to create_pool productId='"+productId+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
 
 		// call the ruby client
@@ -435,7 +445,7 @@ public class CandlepinTasks {
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 	
-	public SSHCommandResult cpc_delete_pool(String id) {
+	public SSHCommandResult deletePoolUsingCPC(String id) {
 		log.info("Using the ruby client to delete_pool id='"+id+"'...");
 
 		// call the ruby client
@@ -443,7 +453,7 @@ public class CandlepinTasks {
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 	}
 	
-	public JSONObject cpc_refresh_pools(String ownerKey, boolean immediate) throws JSONException {
+	public JSONObject refreshPoolsUsingCPC(String ownerKey, boolean immediate) throws JSONException {
 		log.info("Using the ruby client to refresh_pools ownerKey='"+ownerKey+"' immediate='"+immediate+"'...");
 
 		// call the ruby client
@@ -523,7 +533,7 @@ public class CandlepinTasks {
 		//System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
 		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
 		//CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
-		CandlepinTasks.exportConsumerREST("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
+		CandlepinTasks.exportConsumerUsingRESTfulAPI("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
 
 	}
 }

@@ -155,9 +155,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-		//CandlepinTasks.curl_refresh_pools(client,serverHostname,serverPort,clientOwnerUsername,clientOwnerPassword);
-		servertasks.cpc_refresh_pools(ownerKey, true);
-		clienttasks.restart_rhsmcertd(1, true);
+//		servertasks.cpc_refresh_pools(ownerKey, true);
+//		clienttasks.restart_rhsmcertd(1, true);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, jobDetail, "FINISHED", 10*1000, 3);
+		clienttasks.refresh();
 
 		// assert the feed...
 		
@@ -261,7 +263,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
  
         // do something that will fire a create owner event
-		testOwner = servertasks.cpc_create_owner(testOwnerKey);
+		testOwner = servertasks.createOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER CREATED"};
 		
 		// assert the feed...
@@ -283,7 +285,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 
         // do something that will fire a create product event
-		testProduct = servertasks.cpc_create_product(testProductId, testProductId+" For Test");
+		testProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" For Test");
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 
 		// WORKAROUND
@@ -305,7 +307,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 
         // do something that will fire a create product event
-		testPool = servertasks.cpc_create_pool(testProduct.getString("id"), testOwner.getString("id"), "99");
+		testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testOwner.getString("id"), "99");
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
 		// assert the feed...
@@ -329,7 +331,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 
         // do something that will fire a delete pool event
-		servertasks.cpc_delete_pool(testPool.getString("id"));
+		servertasks.deletePoolUsingCPC(testPool.getString("id"));
 		String[] newEventTitles = new String[]{"POOL DELETED"};
 		
 		// assert the feed...
@@ -391,7 +393,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         
         // do something that will fire a exported created event
-		CandlepinTasks.exportConsumerREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,consumerCert.consumerid,"/tmp/export.zip");
+		CandlepinTasks.exportConsumerUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,consumerCert.consumerid,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"EXPORT CREATED"};
 		
 		// assert the feed...
@@ -417,7 +419,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         
         // do something that will fire an import created event
-		CandlepinTasks.importConsumerREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,ownerKey,"/tmp/export.zip");
+		CandlepinTasks.importConsumerUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,ownerKey,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
 		
 		// assert the feed...
@@ -439,7 +441,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
  
 		// do something that will fire a delete owner event
-		servertasks.cpc_delete_owner(testOwnerKey);
+		servertasks.deleteOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER DELETED"};
 		
 		// assert the feed...

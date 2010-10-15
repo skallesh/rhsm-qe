@@ -66,9 +66,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/consumers/"+consumerId));	
+				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/consumers/"+consumerId));	
 				JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
-				jsonOwner = new JSONObject(CandlepinTasks.getResourceREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
+				jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

@@ -196,7 +196,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");
@@ -246,7 +246,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// loop through the subscriptions
 		JSONArray jsonSubscriptions = 
-			new JSONArray(CandlepinTasks.getResourceREST(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
+			new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");

@@ -304,7 +304,7 @@ public class SubscriptionManagerTasks {
 		String port = getConfigFileParameter("port");
 		String prefix = getConfigFileParameter("prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonPool = CandlepinTasks.getEntitlementREST(hostname,port,prefix,owner,password,entitlementCert.id);
+			JSONObject jsonPool = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
 			String poolId = jsonPool.getJSONObject("pool").getString("id");
 			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, new SubscriptionPool(entitlementCert.productId, poolId));
 		}
