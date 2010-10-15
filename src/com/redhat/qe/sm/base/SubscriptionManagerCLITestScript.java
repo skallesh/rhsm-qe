@@ -85,11 +85,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// setup the server
 		if (server!=null && isServerOnPremises) {
-			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");
-			servertasks.cleanOutCRL();
-			if (deployServerOnPremises)
-				servertasks.deploy(serverHostname, serverImportDir,serverBranch);
 			
+			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
+			//       I suggest manually setting this on hosted and asking calfanso to restart
+			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			servertasks.cleanOutCRL();
+			if (deployServerOnPremises) servertasks.deploy(serverHostname, serverImportDir,serverBranch);
+
 			// also connect to the candlepin server database
 			connectToDatabase();  // do this after the call to deploy since it will restart postgresql
 		}

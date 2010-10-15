@@ -119,9 +119,11 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
 
-		log.info("Finally, check the crl list on the server and verify the original entitlement cert serials are revoked...");
-//		sleep(1*60*1000);sleep(10000);	// give the CertificateRevocationListTask.schedule another minute to update the list
+		log.info("Finally, check the CRL list on the server and verify the original entitlement cert serials are revoked...");
+		log.info("Waiting 2 minutes...  (Assuming this is the candlepin.conf value set for pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule)");
+		sleep(2*60*1000);	// give the CertificateRevocationListTask.schedule 2 minutes to update the list since that is what was set in setupBeforeSuite()
 		// NOTE: The refresh schedule was set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
+		// NOTE: if not set, the default is  public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?" Fire at 12pm (noon) every day
 		for (ProductSubscription product : products) {
 			RevokedCert revokedCert = servertasks.findRevokedCertWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());
 			Assert.assertTrue(revokedCert!=null,"Original entitlement certificate serial number '"+product.serialNumber+"' for product '"+product.productName+"' has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
