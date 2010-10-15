@@ -155,8 +155,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-//		servertasks.refreshPoolsUsingCPC(ownerKey, true);
-//		clienttasks.restart_rhsmcertd(1, true);
+//		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, jobDetail, "FINISHED", 10*1000, 3);
 		clienttasks.refresh();
@@ -420,13 +419,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
         // do something that will fire an import created event
 		CandlepinTasks.importConsumerUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,ownerKey,"/tmp/export.zip");
-		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+//		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
 		
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
 		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
 	}
 	
 	

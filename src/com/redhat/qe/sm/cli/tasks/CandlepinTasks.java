@@ -44,6 +44,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.SSLCertificateTruster;
+import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.SyndFeedInput;
@@ -522,8 +523,13 @@ public class CandlepinTasks {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-		log.finer("SyndFeed from "+feedUrl+":\n"+feed);
-        
+			
+		// debug logging
+		log.finest("SyndFeed from "+feedUrl+":\n"+feed);
+		for (int i=0;  i<feed.getEntries().size(); i++) {
+			log.fine(feed.getTitle()+" entries["+i+"].title="+((SyndEntryImpl) feed.getEntries().get(i)).getTitle());
+		}
+
         return feed;
 	}
 		
