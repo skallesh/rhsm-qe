@@ -196,10 +196,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
 	// TODO
-	@Test(	description="subscription-manager-cli: register with force",
+	@Test(	description="subscription-manager-cli: register with --force",
 			enabled=false)
 	public void RegisterWithForce_Test() {
 		//https://bugzilla.redhat.com/show_bug.cgi?id=623264
+	}
+	
+	// TODO
+	@Test(	description="subscription-manager-cli: register with --name",
+			enabled=false)
+	@ImplementsTCMS(id="62352")
+	public void RegisterWithName_Test() {
+		
 	}
 	
 
