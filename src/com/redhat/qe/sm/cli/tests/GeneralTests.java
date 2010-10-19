@@ -29,7 +29,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")
-	@ImplementsTCMS(id="41697")
+	@ImplementsTCMS(id="41697, 46713")
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
