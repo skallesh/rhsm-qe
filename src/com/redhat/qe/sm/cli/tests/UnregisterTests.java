@@ -24,11 +24,11 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	@ImplementsTCMS(id="46714")
 	public void RegisterSubscribeAndUnregisterTest(){
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		for (SubscriptionPool afterPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			SubscriptionPool correspondingPool = availPoolsBeforeSubscribingToAllPools.get(availPoolsBeforeSubscribingToAllPools.indexOf(afterPool));
 			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,

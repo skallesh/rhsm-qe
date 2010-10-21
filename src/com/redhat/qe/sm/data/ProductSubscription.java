@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -15,7 +16,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String productName;
-	public Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
+	public BigInteger serialNumber;	// Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
 	public Integer contractNumber;
 	public Boolean isActive;
 	public Calendar startDate;

@@ -47,7 +47,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// start with fresh registrations using the same clientusername user
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
 		// list the system facts
 		clienttasks.facts(true, false);
@@ -82,8 +82,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// start with fresh registrations using the same clientusername user
 		workClientTasks.unregister();
 		servClientTasks.unregister();
-		workClientTasks.register(clientusername, clientpassword, null, null, null, null);
-		servClientTasks.register(clientusername, clientpassword, null, null, null, null);
+		workClientTasks.register(clientusername, clientpassword, null, null, null, null, null);
+		servClientTasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
 
 		// get all the pools available to each client
@@ -108,7 +108,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(client);
 	}
 	
@@ -120,7 +120,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
 		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(client);
 	}
 	
@@ -142,7 +142,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 
 		// on a RHEL workstation register to candlepin (as type system)
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this system consumer)
 		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -155,7 +155,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// now register to candlepin (as type candlepin)
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.candlepin, null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.candlepin, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();

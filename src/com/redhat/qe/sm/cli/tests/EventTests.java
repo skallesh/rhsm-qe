@@ -82,7 +82,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
  
         // fire a register event
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
@@ -112,9 +112,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
  
         // fire a subscribe event
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+//FIXME subscribing to RHEL for Physical Servers (MKT-rhel-server) instead of a random pool will cause the next testcase to fail
+//clienttasks.subscribe("ff8080812bd07e4f012bd07fbc2100cb", null, null, null, null);
 		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
 
 		// assert the feed...
@@ -378,7 +380,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null);
+		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(pool.poolId, null, null, null, null);

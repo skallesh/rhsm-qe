@@ -119,7 +119,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
-		List <EntitlementCert> entitlementCerts = clienttasks.getEntitlementCertsFromEntitlementCertFile(entitlementCertFile);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		List <EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+		entitlementCerts.add(entitlementCert);
 
 		// assert all of the entitlement certs are reported in the "yum repolist all"
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
@@ -168,7 +170,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
 //		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 

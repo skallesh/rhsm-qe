@@ -44,7 +44,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null));
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
 		
 		// take note of your identity cert before reregister
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -101,7 +101,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
 		
 		// take note of your identity cert
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -121,7 +121,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 		// reregister w/ username, password, and consumerid
 		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
-		clienttasks.register(clientusername,clientpassword,null,consumerCertBefore.consumerid,null,Boolean.TRUE);
+		clienttasks.register(clientusername,clientpassword,null,null,consumerCertBefore.consumerid,null, Boolean.TRUE);
 		
 		// assert that the identity cert has not changed
 		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();

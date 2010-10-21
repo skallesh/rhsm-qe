@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields
-	public Long serialNumber;	// this is the key
+	public BigInteger serialNumber;	// this is the key
 	public String rawCertificate;
 	public String id;			// entitlement uuid on the candlepin server
 	public String issuer;
@@ -25,7 +26,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public List<ContentNamespace> contentNamespaces;
 
 
-	public EntitlementCert(Long serialNumber, Map<String, String> certData){
+	public EntitlementCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
 		this.serialNumber = serialNumber;
 		contentNamespaces = ContentNamespace.parse(this.rawCertificate);
@@ -237,9 +238,10 @@ public class EntitlementCert extends AbstractCommandLineData {
 		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
 		for(String key : productMap.keySet()) {
 			
-			// convert the key inside the raw entitlement file (04:02:7b:dc:b7:fb:33) to a Long serialNumber (11286372344531148)
-			Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
-		
+			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
+			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
+			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
+			
 			entitlementCerts.add(new EntitlementCert(serialNumber, productMap.get(key)));
 		}
 		return entitlementCerts;

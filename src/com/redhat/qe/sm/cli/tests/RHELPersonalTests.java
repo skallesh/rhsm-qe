@@ -162,7 +162,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		log.info("Register client2 under username '"+consumerUsername+"' as a system and assert that '"+systemSubscriptionName+"' is NOT yet available...");
 		client2tasks.unregister();
 		client1tasks.unregister();	// just in case client1 is still registered as the person consumer
-		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null);
+		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null, null);
 		List<SubscriptionPool> client2BeforeSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		pool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2BeforeSubscriptionPools);
 		Assert.assertTrue(pool==null,systemSubscriptionName+" is NOT yet available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"'.");
@@ -170,7 +170,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
 		client1tasks.unregister();
-		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null);
+		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
 		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
@@ -268,7 +268,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			// simulate a clean system
 			client2tasks.removeAllCerts(true,true);
 			
-			String consumerId = client2tasks.getCurrentConsumerId(client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, Boolean.TRUE));
+			String consumerId = client2tasks.getCurrentConsumerId(client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null, Boolean.TRUE));
 			consumerIds.add(consumerId);
 			SubscriptionPool subPool = client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
 			log.info("Subscribing system '"+systemNum+"' ('"+consumerId+"' under username '"+consumerUsername+"') to product subscription '"+systemSubscriptionName+"'...");
@@ -380,7 +380,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	public void EnsureSystemAutosubscribeConsumesSubPool_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
 		client1tasks.unregister();
-		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null);
+		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
 		SubscriptionPool pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
@@ -399,7 +399,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now register client2 under username '"+consumerUsername+"' as a system with autosubscribe to assert that '"+systemConsumedProductName+"' gets consumed...");
 		client2tasks.unregister();
-		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, Boolean.TRUE, null);
+		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, Boolean.TRUE, null);
 		List<ProductSubscription> client2ConsumedProductSubscriptions = client2tasks.getCurrentlyConsumedProductSubscriptions();
 		
 		
@@ -418,7 +418,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		teardownAfterGroups();
 		
 		log.info("Register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
-		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null);
+		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
 		SubscriptionPool personSubscriptionPool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(personSubscriptionPool!=null,
@@ -427,13 +427,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Now register client2 under username '"+consumerUsername+"' as a system and assert the subpool '"+systemSubscriptionName+"' is available...");
 		client2tasks.unregister();
-		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null);
+		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null, null);
 		Assert.assertTrue(client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools())!=null,
 				systemSubscriptionName+" is available to user '"+consumerUsername+"' registered as a system.");
 
 		log.info("Now register client2 under username '"+anotherConsumerUsername+"' as a system and assert the subpool '"+systemSubscriptionName+"' is NOT available...");
 		client2tasks.unregister();
-		client2tasks.register(anotherConsumerUsername, anotherConsumerPassword, ConsumerType.system, null, null, null);
+		client2tasks.register(anotherConsumerUsername, anotherConsumerPassword, ConsumerType.system, null, null, null, null);
 		Assert.assertTrue(client2tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools())==null,
 				systemSubscriptionName+" is NOT available to user '"+anotherConsumerUsername+"' who is under the same owner as '"+consumerUsername+"'.");
 	}
@@ -453,7 +453,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			if (personConsumerId!=null) {
 				//client1tasks.reregister_(client1username, client1password, personConsumerId);
 				client1tasks.removeAllCerts(true, true);
-				client1tasks.register_(client1username,client1password,null,personConsumerId,null,null);
+				client1tasks.register_(client1username,client1password,null,null,personConsumerId,null,null);
 			}
 			client1tasks.unsubscribe_(Boolean.TRUE,null);
 			client1tasks.unregister_();

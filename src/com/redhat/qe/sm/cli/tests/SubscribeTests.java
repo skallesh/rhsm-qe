@@ -81,7 +81,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@ImplementsTCMS(id="41686")
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password){
 		clienttasks.unregister();
-		clienttasks.register(username, password, ConsumerType.system, null, Boolean.FALSE, Boolean.FALSE);
+		clienttasks.register(username, password, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 	}
 	
@@ -135,7 +135,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@ImplementsTCMS(id="41696")
 	public void EnableYumRepoAndVerifyContentAvailable_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
@@ -177,7 +177,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 //	    }
 // FIXME: Untested Alternative to above procedure is:
 		clienttasks.unregister();
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
@@ -244,7 +244,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		
 		
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
 		clienttasks.restart_rhsmcertd(minutes, false);
@@ -258,7 +258,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 
 		
 		log.info("Finally test with a registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
-	    clienttasks.register(clientusername, clientpassword, null, consumerid, null, Boolean.TRUE);
+	    clienttasks.register(clientusername, clientpassword, null, null, consumerid, null, Boolean.TRUE);
 		clienttasks.restart_rhsmcertd(minutes, false);
 		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
@@ -319,7 +319,7 @@ throw new SkipException("THIS TESTCASE IS UNDER CONSTRUCTION. IMPLEMENTATION OF 
 		clienttasks.unregister();
 		
 		// register a clean user
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null);
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 	    
 	    // subscribe to all the available pools
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);

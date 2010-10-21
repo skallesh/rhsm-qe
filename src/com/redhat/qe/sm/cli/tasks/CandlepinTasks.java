@@ -168,7 +168,7 @@ public class CandlepinTasks {
 	throws Exception {
 		HttpMethod m = doHTTPRequest(client, method, username, password);
 		String response = m.getResponseBodyAsString();
-		log.info("HTTP server returned content = " + response);
+		log.finer("HTTP server returned content: " + response);
 		m.releaseConnection();
 		return response;
 	}
@@ -187,10 +187,10 @@ public class CandlepinTasks {
 		int port = method.getURI().getPort();
 	
 		setCredentials(client, server, port, username, password);
-		log.info("Running HTTP request " + method.getName() + " on " + method.getURI() + " for '"+username+"' on server '"+server+"'...");
+		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " for '"+username+"' on server '"+server+"'...");
 	
 		int responseCode = client.executeMethod(method);
-		log.info("HTTP server returned " + responseCode) ;
+		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
 	}
 	
@@ -526,6 +526,7 @@ public class CandlepinTasks {
 			
 		// debug logging
 		log.finest("SyndFeed from "+feedUrl+":\n"+feed);
+//log.fine("SyndFeed from "+feedUrl+":\n"+feed);
 		for (int i=0;  i<feed.getEntries().size(); i++) {
 			log.fine(feed.getTitle()+" entries["+i+"].title="+((SyndEntryImpl) feed.getEntries().get(i)).getTitle());
 		}

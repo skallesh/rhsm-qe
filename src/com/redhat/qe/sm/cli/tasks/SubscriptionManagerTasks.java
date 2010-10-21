@@ -2,6 +2,7 @@ package com.redhat.qe.sm.cli.tasks;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +28,7 @@ import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 
@@ -108,7 +110,6 @@ public class SubscriptionManagerTasks {
 			sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option);
 		}
 		
-		log.info("Installed version of subscription-manager RPM...");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
 
 		initializeFieldsFromConfigFile();
@@ -249,6 +250,12 @@ public class SubscriptionManagerTasks {
 		return EntitlementCert.parse(certificates);
 	}
 	
+	public List<ProductCert> getCurrentProductCerts() {
+		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		String certificates = sshCommandRunner.getStdout();
+		return ProductCert.parse(certificates);
+	}
+	
 	/**
 	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
@@ -297,9 +304,9 @@ public class SubscriptionManagerTasks {
 //		String certificates = sshCommandRunner.getStdout();
 //		return SubscriptionPool.parseCerts(certificates);
 //	}
-	public Map<Long, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception {
+	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception {
 		
-		Map<Long, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<Long, SubscriptionPool>();
+		Map<BigInteger, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<BigInteger, SubscriptionPool>();
 		String hostname = getConfigFileParameter("hostname");
 		String port = getConfigFileParameter("port");
 		String prefix = getConfigFileParameter("prefix");
@@ -333,6 +340,22 @@ public class SubscriptionManagerTasks {
 				}
 				// END OF WORKAROUND
 				
+				files.add(new File(lsFile));
+			}
+		}
+		return files;
+	}
+	
+	/**
+	 * @return List of /etc/pki/product/*.pem files
+	 */
+	public List<File> getCurrentProductCertFiles() {
+		//sshCommandRunner.runCommandAndWait("find /etc/pki/product/ -name '*.pem'");
+		sshCommandRunner.runCommandAndWait("ls -1t "+productCertDir+"/*.pem");
+		String lsFiles = sshCommandRunner.getStdout().trim();
+		List<File> files = new ArrayList<File>();
+		if (!lsFiles.isEmpty()) {
+			for (String lsFile : Arrays.asList(lsFiles.split("\n"))) {
 				files.add(new File(lsFile));
 			}
 		}
@@ -489,21 +512,35 @@ public class SubscriptionManagerTasks {
 		return entitlementCerts;
 	}
 	
-	public List<EntitlementCert> getEntitlementCertsFromEntitlementCertFile(File serialPemFile) {
+	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
 		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+serialPemFile.getPath());
 		String certificates = sshCommandRunner.getStdout();
-		return EntitlementCert.parse(certificates);
-
+		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
+		
+		// assert that only one EntitlementCert was parsed and return it
+		Assert.assertEquals(entitlementCerts.size(), 1, "Entitlement Cert file '"+serialPemFile+"' parsed only one EntitlementCert.");
+		return entitlementCerts.get(0);
 	}
 	
-	public Long getSerialNumberFromEntitlementCertFile(File serialPemFile) {
+	public ProductCert getProductCertFromProductCertFile(File productPemFile) {
+		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+productPemFile.getPath());
+		String certificates = sshCommandRunner.getStdout();
+		List<ProductCert> productCerts = ProductCert.parse(certificates);
+		
+		// assert that only one ProductCert was parsed and return it
+		Assert.assertEquals(productCerts.size(), 1, "Product Cert file '"+productPemFile+"' parsed only one ProductCert.");
+		return productCerts.get(0);
+	}
+	
+	public BigInteger getSerialNumberFromEntitlementCertFile(File serialPemFile) {
 		// example serialPemFile: /etc/pki/entitlement/product/196.pem
 		// extract the serial number from the certFile name
 		// Note: probably a more robust way to do this is to get it from inside the file
 		//Integer serialNumber = Integer.valueOf(serialPemFile.getName().split("\\.")[0]);
 		String serialNumber = serialPemFile.getName().split("\\.")[0];
 		//return Long.parseLong(serialNumber, 10);
-		return new Long(serialNumber);
+		//return new Long(serialNumber);
+		return new BigInteger(serialNumber);
 	}
 	
 
@@ -513,13 +550,14 @@ public class SubscriptionManagerTasks {
 	/**
 	 * register without asserting results
 	 */
-	public SSHCommandResult register_(String username, String password, ConsumerType type, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force) {
 
 		// assemble the register command
 		String										command  = "subscription-manager-cli register";	
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
 		if (type!=null)								command += " --type="+type;
+		if (name!=null)								command += " --name="+name;
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
 		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
 		if (force!=null && force)					command += " --force";
@@ -536,18 +574,19 @@ public class SubscriptionManagerTasks {
 	 * <i>person</i>		Used for registering as a RH Personal<br>
 	 * <i>domain</i>		Used for IPA tests<br>
 	 * <i>candlepin</i>		Used for a connected Candlepin, export tests<br>
+	 * @param name TODO
 	 * @param consumerId
 	 * @param autosubscribe
 	 * @param force
 	 */
-	public SSHCommandResult register(String username, String password, ConsumerType type, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, type, consumerId, autosubscribe, force);
+		SSHCommandResult sshCommandResult = register_(username, password, type, name, consumerId, autosubscribe, force);
 
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:name));
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
@@ -644,7 +683,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean();
-		return register(username,password,null,consumerId,null,null);
+		return register(username,password,null,null,consumerId,null, null);
 	}
 	
 	
@@ -1131,7 +1170,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * unsubscribe without asserting results
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, Long serial) {
+	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial) {
 
 		// assemble the unsubscribe command
 		String					command  = "subscription-manager-cli unsubscribe";
@@ -1142,7 +1181,7 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult unsubscribe(Boolean all, Long serial) {
+	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial) {
 
 		SSHCommandResult sshCommandResult = unsubscribe_(all, serial);
 		
@@ -1156,7 +1195,7 @@ public class SubscriptionManagerTasks {
 	 * @param serialNumber
 	 * @return - false when no unsubscribe took place
 	 */
-	public boolean unsubscribeFromSerialNumber(Long serialNumber) {
+	public boolean unsubscribeFromSerialNumber(BigInteger serialNumber) {
 		String certFile = entitlementCertDir+"/product/"+serialNumber+".pem";
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		

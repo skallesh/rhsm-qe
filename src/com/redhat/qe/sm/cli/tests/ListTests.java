@@ -27,7 +27,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsTCMS(id="41678")
 	public void EnsureAvailableEntitlementsListed_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions");
@@ -47,7 +47,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsTCMS(id="41679")
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		String consumedProductSubscriptions = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscriptions, "Consumed Product Subscriptions");
@@ -69,7 +69,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null);
 		
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool rhelPersonalPool = null;
@@ -91,7 +91,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		rhelPersonalPool = null;

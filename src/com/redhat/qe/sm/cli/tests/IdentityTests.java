@@ -43,7 +43,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
 		
 		// get the current identity
 		SSHCommandResult result = clienttasks.identity(null, null, null);
@@ -61,7 +61,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
 		ConsumerCert origConsumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// regenerate the identity... and assert
@@ -90,7 +90,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		SSHCommandResult registerResult = clienttasks.register(client1username,client1password,null,null,null,null);
+		SSHCommandResult registerResult = clienttasks.register(client1username,client1password,null,null,null,null, null);
 		
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("regenerating identity with the same username and password as used during register...");
@@ -114,7 +114,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Calling subscription-manager-cli identity with an invalid username and password...");

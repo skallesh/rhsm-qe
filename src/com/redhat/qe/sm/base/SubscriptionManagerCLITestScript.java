@@ -12,14 +12,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -59,7 +63,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeSuite(groups={"setup"},description="subscription manager set up")
-	public void setupBeforeSuite() throws ParseException, IOException{
+	public void setupBeforeSuite() throws JSONException, Exception{
 	
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 		clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
@@ -117,17 +121,26 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
 		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
 		
-		// transfer a copy of the CA Cert from the candlepin server to the client
-		// TEMPORARY WORK AROUND TO AVOID ISSUES:
-		// https://bugzilla.redhat.com/show_bug.cgi?id=617703 
-		// https://bugzilla.redhat.com/show_bug.cgi?id=617303
-		/*
+		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
 		if (server!=null && isServerOnPremises) {
-			log.warning("TEMPORARY WORKAROUND...");
+			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
 			RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
-			RemoteFileTasks.putFile(commandRunner.getConnection(), "/tmp/candlepin-ca.crt", "/tmp/", "0644");
+			
+			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfigFileParameter("ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			client1tasks.updateConfigFileParameter("insecure", "0");
+			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfigFileParameter("ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			if (client2!=null) client2tasks.updateConfigFileParameter("insecure", "0");
 		}
-		*/
+		
+		
+		log.info("Installed version of candlepin...");
+		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));
+		log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
+		
+		log.info("Installed version of subscription-manager...");
+		log.info("Subscription manager client '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+		if (client2!=null) log.info("Subscription manager client '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+
 	}
 	
 	@AfterSuite(groups={"setup"},description="subscription manager tear down")
@@ -279,10 +292,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// assure we are registered
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister();
-			client2tasks.register(client2username, client2password, null, null, null, null);
+			client2tasks.register(client2username, client2password, null, null, null, null, null);
 		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools

@@ -204,5 +204,16 @@
 		</groups>
 	</test>
 	
+	<test name="Certificate Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="certificate" />
+			</run>
+		</groups>
+	</test>
 	
 </suite>
