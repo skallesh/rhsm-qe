@@ -117,6 +117,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 //FIXME subscribing to RHEL for Physical Servers (MKT-rhel-server) instead of a random pool will cause the next testcase to fail
 //clienttasks.subscribe("ff8080812bd07e4f012bd07fbc2100cb", null, null, null, null);
+//https://bugzilla.redhat.com/show_bug.cgi?id=645597
 		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
 
 		// assert the feed...
@@ -131,7 +132,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"PoolModifiedAndEntitlementModified_Test"}, dependsOnGroups={"EnititlementCreated_Test"},
+			groups={"PoolModifiedAndEntitlementModified_Test"/*,"blockedByBug-645597"*/}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
