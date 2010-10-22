@@ -55,7 +55,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String tcUnacceptedUsername	= getProperty("sm.client.username.tcunaccepted","");
 	protected String tcUnacceptedPassword	= getProperty("sm.client.password.tcunaccepted","");
 	protected String regtoken				= getProperty("sm.client.regtoken","");
-	protected String enablerepofordeps		= getProperty("sm.client.enableRepoForDeps","");
+	protected String enableRepoForDeps		= getProperty("sm.client.enableRepoForDeps","");
 
 	protected String prodCertLocation		= getProperty("sm.prodcert.url","");
 	protected String prodCertProduct		= getProperty("sm.prodcert.product","");
