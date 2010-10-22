@@ -12,6 +12,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import javax.jws.Oneway;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterSuite;
@@ -66,7 +68,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void setupBeforeSuite() throws JSONException, Exception{
 	
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-		clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
+		clienttasks = new SubscriptionManagerTasks(client);
+		client1 = client;
+		client1tasks = clienttasks;
 		
 		// will we be connecting to the candlepin server?
 		if (!(	serverHostname.equals("") || serverInstallDir.equals("") )) {
@@ -79,10 +83,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// will we be testing multiple clients?
 		if (!(	client2hostname.equals("") || client2username.equals("") || client2password.equals("") )) {
-			client1 = client;
-			client1tasks = clienttasks;
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			client2tasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client2);
+			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {
 			log.info("Multi-client testing will be skipped.");
 		}
@@ -104,22 +106,56 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
-		client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-		client1tasks.updateConfigFileParameter("hostname", serverHostname);
-		client1tasks.updateConfigFileParameter("port", serverPort);
-		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
-		client1tasks.updateConfigFileParameter("baseurl", serverBaseUrl);
-		client1tasks.updateConfigFileParameter("insecure", "1");
-//		client1tasks.restart_rhsmcertd(certFrequency,false);
-		client1tasks.removeAllCerts(true,true);
-		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
-		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
-		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
-		if (client2tasks!=null) client2tasks.updateConfigFileParameter("baseurl", serverBaseUrl);
-		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", "1");
-//		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
-		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
+		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
+			if (smt==null) continue;
+			smt.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+			
+			// rhsm.conf [server] configurations
+			if (!serverHostname.equals(""))				smt.updateConfigFileParameter("hostname", serverHostname);							else serverHostname = smt.getConfigFileParameter("hostname");
+			if (!serverPrefix.equals(""))				smt.updateConfigFileParameter("prefix", serverPrefix);								else serverPrefix = smt.getConfigFileParameter("prefix");
+			if (!serverPort.equals(""))					smt.updateConfigFileParameter("port", serverPort);									else serverPort = smt.getConfigFileParameter("port");
+			if (!serverInsecure.equals(""))				smt.updateConfigFileParameter("insecure", serverInsecure);							else serverInsecure = smt.getConfigFileParameter("insecure");
+			if (!serverCaCertDir.equals(""))			smt.updateConfigFileParameter("ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfigFileParameter("ca_cert_dir");
+
+			// rhsm.conf [rhsm] configurations
+			if (!rhsmBaseUrl.equals(""))				smt.updateConfigFileParameter("baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfigFileParameter("baseurl");
+			if (!rhsmRepoCaCert.equals(""))				smt.updateConfigFileParameter("repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfigFileParameter("repo_ca_cert");
+			if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfigFileParameter("showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfigFileParameter("showIncompatiblePools");
+			if (!rhsmProductCertDir.equals(""))			smt.updateConfigFileParameter("productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfigFileParameter("productCertDir");
+			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfigFileParameter("entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfigFileParameter("entitlementCertDir");
+			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfigFileParameter("consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfigFileParameter("consumerCertDir");
+
+			// rhsm.conf [rhsmcertd] configurations
+			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfigFileParameter("certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfigFileParameter("certFrequency");
+		
+			smt.initializeFieldsFromConfigFile();
+			
+			
+			// FIXME WORKAROUND FOR ALPHA TESTING  DELETEME AFTER ALPHA TESTING IS COMPLETE
+			if (!isServerOnPremises) {
+				log.warning("FIXME: Ignoring change from https://bugzilla.redhat.com/show_bug.cgi?id=645115 FOR ALPHA TESTING");
+				smt.entitlementCertDir += "/product";
+			}
+			
+			
+			smt.removeAllCerts(true,true);
+		}
+//		client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+//		client1tasks.updateConfigFileParameter("hostname", serverHostname);
+//		client1tasks.updateConfigFileParameter("port", serverPort);
+//		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
+//		client1tasks.updateConfigFileParameter("baseurl", rhsmBaseUrl);
+//		client1tasks.updateConfigFileParameter("insecure", serverInsecure);
+////		client1tasks.restart_rhsmcertd(certFrequency,false);
+//		client1tasks.removeAllCerts(true,true);
+//		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
+//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
+//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
+//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
+//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("baseurl", rhsmBaseUrl);
+//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", serverInsecure);
+////		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
+//		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
 		
 		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
 		if (server!=null && isServerOnPremises) {

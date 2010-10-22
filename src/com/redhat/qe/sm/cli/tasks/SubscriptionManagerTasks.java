@@ -13,6 +13,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.jws.Oneway;
+
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONObject;
 
@@ -58,7 +60,6 @@ public class SubscriptionManagerTasks {
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
-		initializeFieldsFromConfigFile();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -66,9 +67,9 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * should be called from constructor and after install
+	 * Must be called after installSubscriptionManagerRPMs(...)
 	 */
-	protected void initializeFieldsFromConfigFile() {
+	public void initializeFieldsFromConfigFile() {
 		if (RemoteFileTasks.testFileExists(sshCommandRunner, defaultConfigFile)==1) {
 			this.consumerCertDir	= getConfigFileParameter("consumerCertDir");
 			this.entitlementCertDir	= getConfigFileParameter("entitlementCertDir");
@@ -112,41 +113,42 @@ public class SubscriptionManagerTasks {
 		
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
 
-		initializeFieldsFromConfigFile();
 	}
 	
 	
 	public void removeAllCerts(boolean consumer, boolean entitlements/*, boolean product*/) {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
-		String value;
 		
 		if (consumer) {
-			value = getConfigFileParameter("consumerCertDir");
-			log.info("Cleaning out certs from consumerCertDir: "+value);
-			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
-			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+			//String consumerCertDir = getConfigFileParameter("consumerCertDir");
+			String consumerCertDir = this.consumerCertDir;
+			log.info("Cleaning out certs from consumerCertDir: "+consumerCertDir);
+			if (!consumerCertDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+consumerCertDir);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+consumerCertDir+"/*");
 		}
 		
 		if (entitlements) {
-			value = getConfigFileParameter("entitlementCertDir");
-			log.info("Cleaning out certs from entitlementCertDir: "+value);
-			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
-			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+			//String entitlementCertDir = getConfigFileParameter("entitlementCertDir");
+			String entitlementCertDir = this.entitlementCertDir;
+			log.info("Cleaning out certs from entitlementCertDir: "+entitlementCertDir);
+			if (!entitlementCertDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+entitlementCertDir);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+entitlementCertDir+"/*");
 		}
 		
-// NOT SURE THIS IS A GOOD IDEA - jsefler 10/7/2010
+// THIS IS PROBABLY NOT A GOOD IDEA - jsefler 10/7/2010
 //		if (product) {
-//			value = getConfigFileParameter("productCertDir");
-//			log.info("Cleaning out certs from productCertDir: "+value);
-//			if (!value.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+value);
-//			else sshCommandRunner.runCommandAndWait("rm -rf "+value+"/*");
+//			//String productCertDir = getConfigFileParameter("productCertDir");
+//			String productCertDir = this.productCertDir;
+//			log.info("Cleaning out certs from productCertDir: "+productCertDir);
+//			if (!productCertDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+productCertDir);
+//			else sshCommandRunner.runCommandAndWait("rm -rf "+productCertDir+"/*");
 //		}
 	}
 	
 	public void updateConfigFileParameter(String parameter, String value){
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
-				0,"Updated rhsm config parameter '"+parameter+"' to value: " + value);
+				0,"Updated "+defaultConfigFile+" parameter '"+parameter+"' to value: " + value);
 	}
 	
 	public String getConfigFileParameter(String parameter){
@@ -245,13 +247,13 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
-		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
-		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		sshCommandRunner.runCommandAndWait("find "+productCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return ProductCert.parse(certificates);
 	}
@@ -260,7 +262,7 @@ public class SubscriptionManagerTasks {
 	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
-		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+consumerCertFile);
+		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+this.consumerCertFile);
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
 	}
@@ -277,6 +279,12 @@ public class SubscriptionManagerTasks {
 	 * @return from the stdout of the register command
 	 */
 	public String getCurrentConsumerId(SSHCommandResult registerResult) {
+		
+		// FIXME  This algorithm is incorrect when stdout is:
+		// The system with UUID 4e3675b1-450a-4066-92da-392c204ca5c7 has been unregistered
+		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
+		
+		// this algorithm assumes the stdout format is: ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
 		return registerResult.getStdout().split(" ")[0];
 	}
 	
@@ -300,7 +308,7 @@ public class SubscriptionManagerTasks {
 	 * @throws Exception 
 	 */
 //	public Map<Long, SubscriptionPool> getCurrentSerialMapToSubscriptionPools() {
-//		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+//		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 //		String certificates = sshCommandRunner.getStdout();
 //		return SubscriptionPool.parseCerts(certificates);
 //	}
@@ -319,15 +327,18 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return List of /etc/pki/entitlement/product/*.pem files sorted newest first
+	 * @return List of /etc/pki/entitlement/*.pem files sorted newest first (excluding a key.pem file)
 	 */
 	public List<File> getCurrentEntitlementCertFiles() {
-		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/product/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1t "+entitlementCertDir+"/product/*.pem");
+		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/ -name '*.pem'");
+		sshCommandRunner.runCommandAndWait("ls -1t "+entitlementCertDir+"/*.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
 		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
 			for (String lsFile : Arrays.asList(lsFiles.split("\n"))) {
+				
+				// exclude the the key.pem file
+				if (lsFile.endsWith("key.pem")) continue;
 				
 				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=640338 - jsefler 10/7/2010
 				if (lsFile.matches(".*\\(\\d+\\)\\.pem")) {
@@ -505,7 +516,7 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {
-		String certFile = entitlementCertDir+"/product/"+productSubscription.serialNumber+".pem";
+		String certFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
 		sshCommandRunner.runCommandAndWait("openssl x509 -text -noout -in '"+certFile+"'");
 		String certificates = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
@@ -533,7 +544,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public BigInteger getSerialNumberFromEntitlementCertFile(File serialPemFile) {
-		// example serialPemFile: /etc/pki/entitlement/product/196.pem
+		// example serialPemFile: /etc/pki/entitlement/196.pem
 		// extract the serial number from the certFile name
 		// Note: probably a more robust way to do this is to get it from inside the file
 		//Integer serialNumber = Integer.valueOf(serialPemFile.getName().split("\\.")[0]);
@@ -594,8 +605,8 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert certificate files are dropped into /etc/pki/consumer
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" does exist after register.");
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" does exist after register.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -834,12 +845,13 @@ public class SubscriptionManagerTasks {
 		} 
 		
 		// assert that the consumer cert and key have been removed
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerKeyFile)==1, consumerKeyFile+" does NOT exist after unregister.");
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertFile)==1, consumerCertFile+" does NOT exist after unregister.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),0, "Consumer key file '"+this.consumerKeyFile+"' does NOT exist after unregister.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
 
-		// assert that all of the entitlement product certs have been removed
+		// assert that all of the entitlement product certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
-		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls "+entitlementCertDir+"/product | grep pem");
+		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"ls "+entitlementCertDir+" | grep pem");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, entitlementCertDir),0,"Entitlement Cert directory '"+entitlementCertDir+"' should not exist after unregister.");
 
 		return sshCommandResult; // from the unregister command
 	}
@@ -993,12 +1005,12 @@ public class SubscriptionManagerTasks {
 					"This remaining available pool "+afterSubscriptionPool+" does NOT contain the same productId ("+pool.productId+") after subscribing to pool: "+pool);
 		}
 
-		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement/product
+		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
 				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
 
-		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement/product
+		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
 		// https://bugzilla.redhat.com/show_bug.cgi?id=640338
 		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
 				"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after after subscribing to pool: "+pool);
@@ -1196,7 +1208,7 @@ public class SubscriptionManagerTasks {
 	 * @return - false when no unsubscribe took place
 	 */
 	public boolean unsubscribeFromSerialNumber(BigInteger serialNumber) {
-		String certFile = entitlementCertDir+"/product/"+serialNumber+".pem";
+		String certFile = entitlementCertDir+"/"+serialNumber+".pem";
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
@@ -1257,7 +1269,7 @@ public class SubscriptionManagerTasks {
 				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement product cert files
-		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+"/product/ -name '*.pem'").getStdout().equals(""),
+		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name *.pem | grep -v key.pem").getStdout().equals(""),
 				"No entitlement product cert files exist after unsubscribing from all subscription pools.");
 		
 		// assert that the yum redhat repo file is gone

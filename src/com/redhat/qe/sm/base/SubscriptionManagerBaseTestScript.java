@@ -10,61 +10,75 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class SubscriptionManagerBaseTestScript extends TestScript {
 
-	protected String serverHostname			= getProperty("rhsm.server.hostname","");
-	protected String serverPort 			= getProperty("rhsm.server.port","");
-	protected String serverPrefix 			= getProperty("rhsm.server.prefix","");
-	protected String serverBaseUrl			= getProperty("rhsm.server.baseurl","");
-	protected String serverInstallDir		= getProperty("rhsm.server.installdir","");
-	protected String serverImportDir		= getProperty("rhsm.server.importdir","");
-	protected String serverBranch			= getProperty("rhsm.server.branch","");
-	protected Boolean isServerOnPremises	= Boolean.valueOf(getProperty("rhsm.server.onpremises","false"));
-	protected Boolean deployServerOnPremises= Boolean.valueOf(getProperty("rhsm.server.deploy","true"));
+	// /etc/rhsm/rhsm.conf parameters
+	protected String serverHostname			= getProperty("sm.server.hostname","");
+	protected String serverPrefix 			= getProperty("sm.server.prefix","");
+	protected String serverPort 			= getProperty("sm.server.port","");
+	protected String serverInsecure			= getProperty("sm.server.insecure","");
+	protected String serverCaCertDir		= getProperty("sm.server.caCertDir","");
+	
+	protected String rhsmBaseUrl				= getProperty("sm.rhsm.baseUrl","");
+	protected String rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
+	protected String rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
+	protected String rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
+	protected String rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
+	protected String rhsmConsumerCertDir		= getProperty("sm.rhsm.consumerCertDir","");
+	
+	protected String rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
 
-	protected String client1hostname		= getProperty("rhsm.client1.hostname","");
-	protected String client1username		= getProperty("rhsm.client1.username","");
-	protected String client1password		= getProperty("rhsm.client1.password","");
+	
+	
+	
+	protected String serverInstallDir		= getProperty("sm.server.installdir","");
+	protected String serverImportDir		= getProperty("sm.server.importdir","");
+	protected String serverBranch			= getProperty("sm.server.branch","");
+	protected Boolean isServerOnPremises	= Boolean.valueOf(getProperty("sm.server.onpremises","false"));
+	protected Boolean deployServerOnPremises= Boolean.valueOf(getProperty("sm.server.deploy","true"));
 
-	protected String client2hostname		= getProperty("rhsm.client2.hostname","");
-	protected String client2username		= getProperty("rhsm.client2.username","");
-	protected String client2password		= getProperty("rhsm.client2.password","");
+	protected String client1hostname		= getProperty("sm.client1.hostname","");
+	protected String client1username		= getProperty("sm.client1.username","");
+	protected String client1password		= getProperty("sm.client1.password","");
+
+	protected String client2hostname		= getProperty("sm.client2.hostname","");
+	protected String client2username		= getProperty("sm.client2.username","");
+	protected String client2password		= getProperty("sm.client2.password","");
 
 	protected String clienthostname			= client1hostname;
 	protected String clientusername			= client1username;
 	protected String clientpassword			= client1password;
 	
-	protected String clientOwnerUsername	= getProperty("rhsm.client.owner.username","");
-	protected String clientOwnerPassword	= getProperty("rhsm.client.owner.password","");
-	protected String clientUsernames		= getProperty("rhsm.client.usernames","");
-	protected String clientPasswords		= getProperty("rhsm.client.passwords","");
+	protected String clientOwnerUsername	= getProperty("sm.client.owner.username","");
+	protected String clientOwnerPassword	= getProperty("sm.client.owner.password","");
+	protected String clientUsernames		= getProperty("sm.client.usernames","");
+	protected String clientPasswords		= getProperty("sm.client.passwords","");
 
-	protected String tcUnacceptedUsername	= getProperty("rhsm.client.username.tcunaccepted","");
-	protected String tcUnacceptedPassword	= getProperty("rhsm.client.password.tcunaccepted","");
-	protected String regtoken				= getProperty("rhsm.client.regtoken","");
-	protected int certFrequency				= Integer.valueOf(getProperty("rhsm.client.certfrequency", "240"));
-	protected String enablerepofordeps		= getProperty("rhsm.client.enablerepofordeps","");
+	protected String tcUnacceptedUsername	= getProperty("sm.client.username.tcunaccepted","");
+	protected String tcUnacceptedPassword	= getProperty("sm.client.password.tcunaccepted","");
+	protected String regtoken				= getProperty("sm.client.regtoken","");
+	protected String enablerepofordeps		= getProperty("sm.client.enablerepofordeps","");
 
-	protected String prodCertLocation		= getProperty("rhsm.prodcert.url","");
-	protected String prodCertProduct		= getProperty("rhsm.prodcert.product","");
+	protected String prodCertLocation		= getProperty("sm.prodcert.url","");
+	protected String prodCertProduct		= getProperty("sm.prodcert.product","");
 	
-	protected String sshUser				= getProperty("rhsm.ssh.user","root");
-	protected String sshKeyPrivate			= getProperty("rhsm.sshkey.private",".ssh/id_auto_dsa");
-	protected String sshkeyPassphrase		= getProperty("rhsm.sshkey.passphrase","");
+	protected String sshUser				= getProperty("sm.ssh.user","root");
+	protected String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
+	protected String sshkeyPassphrase		= getProperty("sm.sshkey.passphrase","");
 
-//	protected String itDBSQLDriver			= getProperty("rhsm.it.db.sqldriver", "oracle.jdbc.driver.OracleDriver");
-//	protected String itDBHostname			= getProperty("rhsm.it.db.hostname");
-//	protected String itDBDatabase			= getProperty("rhsm.it.db.database");
-//	protected String itDBPort				= getProperty("rhsm.it.db.port", "1521");
-//	protected String itDBUsername			= getProperty("rhsm.it.db.username");
-//	protected String itDBPassword			= getProperty("rhsm.it.db.password");
+//	protected String itDBSQLDriver			= getProperty("sm.it.db.sqldriver", "oracle.jdbc.driver.OracleDriver");
+//	protected String itDBHostname			= getProperty("sm.it.db.hostname");
+//	protected String itDBDatabase			= getProperty("sm.it.db.database");
+//	protected String itDBPort				= getProperty("sm.it.db.port", "1521");
+//	protected String itDBUsername			= getProperty("sm.it.db.username");
+//	protected String itDBPassword			= getProperty("sm.it.db.password");
 	
-	protected String dbHostname				= getProperty("rhsm.server.db.hostname","");
-	protected String dbSqlDriver			= getProperty("rhsm.server.db.sqldriver","");
-	protected String dbPort					= getProperty("rhsm.server.db.port","");
-	protected String dbName					= getProperty("rhsm.server.db.name","");
-	protected String dbUsername				= getProperty("rhsm.server.db.username","");
-	protected String dbPassword				= getProperty("rhsm.server.db.password","");
+	protected String dbHostname				= getProperty("sm.server.db.hostname","");
+	protected String dbSqlDriver			= getProperty("sm.server.db.sqldriver","");
+	protected String dbPort					= getProperty("sm.server.db.port","");
+	protected String dbName					= getProperty("sm.server.db.name","");
+	protected String dbUsername				= getProperty("sm.server.db.username","");
+	protected String dbPassword				= getProperty("sm.server.db.password","");
 
-	protected List<String> rpmUrls			= Arrays.asList(getProperty("rhsm.rpm.urls", "").trim().split(","));
+	protected List<String> rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(","));
 
 	public static SSHCommandRunner server	= null;
 	public static SSHCommandRunner client	= null;

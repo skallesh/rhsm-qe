@@ -42,15 +42,14 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getClientsData",
 			enabled=true)
 	@ImplementsTCMS(id="56386")
-	public void ConsumerFactsList_Test(SSHCommandRunner client) {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
+	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		smt.unregister();
+		smt.register(clientusername, clientpassword, null, null, null, null, null);
 		
 		// list the system facts
-		clienttasks.facts(true, false);
+		smt.facts(true, false);
 	}
 	
 	
@@ -105,11 +104,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
-		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(client);
+	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
+		smt.unregister();
+		smt.register(clientusername, clientpassword, null, null, null, null, null);
+		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(smt);
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: check arch",
@@ -117,11 +115,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getClientsData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
-		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(client);
+	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
+		smt.unregister();
+		smt.register(clientusername, clientpassword, null, null, null, null, null);
+		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(smt);
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
@@ -182,17 +179,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 //	}
 	
 	
-	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
+	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SubscriptionManagerTasks smt) throws Exception {
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
 		
 		// get all the pools available to each client
-		List<SubscriptionPool> clientPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> clientPools = smt.getCurrentlyAvailableSubscriptionPools();
 		
 		// get the number of cpu_sockets for this system consumer
 		String factName = "cpu.cpu_socket(s)";
-		int systemValue = Integer.valueOf(clienttasks.getFactValue(factName));
+		int systemValue = Integer.valueOf(smt.getFactValue(factName));
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
@@ -231,17 +227,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SSHCommandRunner client) throws Exception {
-		SubscriptionManagerTasks clienttasks = new com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks(client);
+	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SubscriptionManagerTasks smt) throws Exception {
 		boolean foundPoolWithArchAttributes = false;
 		boolean conclusiveTest = false;
 		
 		// get all the pools available to each client
-		List<SubscriptionPool> clientPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> clientPools = smt.getCurrentlyAvailableSubscriptionPools();
 		
 		// get the number of cpu_sockets for this system consumer
 		String factName = "cpu.architecture";
-		String systemValue = clienttasks.getFactValue(factName);
+		String systemValue = smt.getFactValue(factName);
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
@@ -291,8 +286,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
 		// SSHCommandRunner client
-		if (client1!= null)	ll.add(Arrays.asList(new Object[]{client1}));
-		if (client2!= null)	ll.add(Arrays.asList(new Object[]{client2}));
+		if (client1!= null)	ll.add(Arrays.asList(new Object[]{client1tasks}));
+		if (client2!= null)	ll.add(Arrays.asList(new Object[]{client2tasks}));
 
 		return ll;
 	}

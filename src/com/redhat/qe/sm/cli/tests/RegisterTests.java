@@ -205,7 +205,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister();
 		
 		// make sure you are first registered
-		String firstConsumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null,null));
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null);
+		String firstConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// subscribe to a random pool (so as to consume an entitlement)
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -213,14 +214,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null);
+		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null);
 		Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting: This system is already registered.");
 		
 		// register with force
-		String secondConsumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE));
+		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE);
+		String secondConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// assert the stdout reflects a new consumer
-		Assert.assertTrue(!secondConsumerId.equals(firstConsumerId), "After registering with force, a newly registered consumerid was returned.");
+		Assert.assertTrue(sshCommandResult.getStdout().startsWith("The system with UUID "+firstConsumerId+" has been unregistered"),
+				"The system with UUID "+firstConsumerId+" has been unregistered");
+		Assert.assertTrue(!secondConsumerId.equals(firstConsumerId),
+				"After registering with force, a newly registered consumerid was returned.");
 
 		// assert that the new consumer is not consuming any entitlements
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
