@@ -116,33 +116,25 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
-	public void removeAllCerts(boolean consumer, boolean entitlements/*, boolean product*/) {
+	public void removeAllCerts(boolean consumers, boolean entitlements/*, boolean products*/) {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		String certDir;
 		
-		if (consumer) {
-			//String consumerCertDir = getConfigFileParameter("consumerCertDir");
-			String consumerCertDir = this.consumerCertDir;
-			log.info("Cleaning out certs from consumerCertDir: "+consumerCertDir);
-			if (!consumerCertDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+consumerCertDir);
-			else sshCommandRunner.runCommandAndWait("rm -rf "+consumerCertDir+"/*");
+		if (consumers) {
+			//certDir = getConfigFileParameter("consumerCertDir");
+			certDir = this.consumerCertDir;
+			log.info("Cleaning out certs from consumerCertDir: "+certDir);
+			if (!certDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
 		}
 		
 		if (entitlements) {
-			//String entitlementCertDir = getConfigFileParameter("entitlementCertDir");
-			String entitlementCertDir = this.entitlementCertDir;
-			log.info("Cleaning out certs from entitlementCertDir: "+entitlementCertDir);
-			if (!entitlementCertDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+entitlementCertDir);
-			else sshCommandRunner.runCommandAndWait("rm -rf "+entitlementCertDir+"/*");
+			//certDir = getConfigFileParameter("entitlementCertDir");
+			certDir = this.entitlementCertDir;
+			log.info("Cleaning out certs from entitlementCertDir: "+certDir);
+			if (!certDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
 		}
-		
-// THIS IS PROBABLY NOT A GOOD IDEA - jsefler 10/7/2010
-//		if (product) {
-//			//String productCertDir = getConfigFileParameter("productCertDir");
-//			String productCertDir = this.productCertDir;
-//			log.info("Cleaning out certs from productCertDir: "+productCertDir);
-//			if (!productCertDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+productCertDir);
-//			else sshCommandRunner.runCommandAndWait("rm -rf "+productCertDir+"/*");
-//		}
 	}
 	
 	public void updateConfigFileParameter(String parameter, String value){

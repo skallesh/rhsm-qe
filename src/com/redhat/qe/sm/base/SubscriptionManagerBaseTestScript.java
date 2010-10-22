@@ -29,10 +29,10 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	
 	
-	protected String serverInstallDir		= getProperty("sm.server.installdir","");
-	protected String serverImportDir		= getProperty("sm.server.importdir","");
+	protected String serverInstallDir		= getProperty("sm.server.installDir","");
+	protected String serverImportDir		= getProperty("sm.server.importDir","");
 	protected String serverBranch			= getProperty("sm.server.branch","");
-	protected Boolean isServerOnPremises	= Boolean.valueOf(getProperty("sm.server.onpremises","false"));
+	protected Boolean isServerOnPremises	= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
 	protected Boolean deployServerOnPremises= Boolean.valueOf(getProperty("sm.server.deploy","true"));
 
 	protected String client1hostname		= getProperty("sm.client1.hostname","");
@@ -55,7 +55,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String tcUnacceptedUsername	= getProperty("sm.client.username.tcunaccepted","");
 	protected String tcUnacceptedPassword	= getProperty("sm.client.password.tcunaccepted","");
 	protected String regtoken				= getProperty("sm.client.regtoken","");
-	protected String enablerepofordeps		= getProperty("sm.client.enablerepofordeps","");
+	protected String enablerepofordeps		= getProperty("sm.client.enableRepoForDeps","");
 
 	protected String prodCertLocation		= getProperty("sm.prodcert.url","");
 	protected String prodCertProduct		= getProperty("sm.prodcert.product","");
@@ -72,7 +72,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 //	protected String itDBPassword			= getProperty("sm.it.db.password");
 	
 	protected String dbHostname				= getProperty("sm.server.db.hostname","");
-	protected String dbSqlDriver			= getProperty("sm.server.db.sqldriver","");
+	protected String dbSqlDriver			= getProperty("sm.server.db.sqlDriver","");
 	protected String dbPort					= getProperty("sm.server.db.port","");
 	protected String dbName					= getProperty("sm.server.db.name","");
 	protected String dbUsername				= getProperty("sm.server.db.username","");
