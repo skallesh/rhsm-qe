@@ -89,6 +89,13 @@ public class SubscriptionManagerTasks {
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
 
+		// yum clean all
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all");
+		if (sshCommandResult.getExitCode().equals(1)) {
+			sshCommandRunner.runCommandAndWait("rm -f "+redhatRepoFile);
+		}
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum clean all").getExitCode(),Integer.valueOf(0),"yum clean all was a success");
+
 		// only uninstall rpms when there are new rpms to install
 		if (rpmUrls.size() > 0) {
 			log.info("Uninstalling existing subscription-manager RPMs...");
@@ -190,7 +197,10 @@ public class SubscriptionManagerTasks {
 //
 //	}
 	
-	
+	/**
+	 * @return
+	 * @author ssalevan
+	 */
 	public void adjustRHSMYumRepo(boolean enabled){
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
@@ -365,6 +375,11 @@ public class SubscriptionManagerTasks {
 		return files;
 	}
 	
+	
+	/**
+	 * @return
+	 * @author ssalevan
+	 */
 	public HashMap<String,String[]> getPackagesCorrespondingToSubscribedRepos(){
 		int min = 3;
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
@@ -1263,10 +1278,12 @@ public class SubscriptionManagerTasks {
 		// assert that there are no entitlement product cert files
 		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name *.pem | grep -v key.pem").getStdout().equals(""),
 				"No entitlement product cert files exist after unsubscribing from all subscription pools.");
-		
+
 		// assert that the yum redhat repo file is gone
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner, redhatRepoFile)==1,
+		/* bad assert...  the repo file is present but empty
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner, redhatRepoFile)==0,
 				"The redhat repo file '"+redhatRepoFile+"' has been removed after unsubscribing from all subscription pools.");
+		*/
 	}
 	
 	/**
