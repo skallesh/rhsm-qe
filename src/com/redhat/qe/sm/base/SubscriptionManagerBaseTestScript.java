@@ -10,38 +10,49 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class SubscriptionManagerBaseTestScript extends TestScript {
 
-	// /etc/rhsm/rhsm.conf parameters
-	protected String serverHostname			= getProperty("sm.server.hostname","");
-	protected String serverPrefix 			= getProperty("sm.server.prefix","");
-	protected String serverPort 			= getProperty("sm.server.port","");
-	protected String serverInsecure			= getProperty("sm.server.insecure","");
-	protected String serverCaCertDir		= getProperty("sm.server.caCertDir","");
+	protected static CandlepinTasks servertasks	= null;
 	
-	protected String rhsmBaseUrl				= getProperty("sm.rhsm.baseUrl","");
-	protected String rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
-	protected String rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
-	protected String rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
-	protected String rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
-	protected String rhsmConsumerCertDir		= getProperty("sm.rhsm.consumerCertDir","");
+	public static SSHCommandRunner server	= null;
+	public static SSHCommandRunner client	= null;
+	public static SSHCommandRunner client1	= null;	// client1
+	public static SSHCommandRunner client2	= null;	// client2
 	
-	protected String rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
+	// /etc/rhsm/rhsm.conf parameters..................
+	
+	// rhsm.conf [server] configurations
+	protected static String serverHostname				= null;
+	protected static String serverPrefix 				= null;
+	protected static String serverPort 					= null;
+	protected static String serverInsecure				= null;
+	protected static String serverCaCertDir				= null;
+	
+	// rhsm.conf [rhsm] configurations
+	protected static String rhsmBaseUrl					= null;
+	protected static String rhsmRepoCaCert				= null;
+	protected static String rhsmShowIncompatiblePools	= null;
+	protected static String rhsmProductCertDir			= null;
+	protected static String rhsmEntitlementCertDir		= null;
+	protected static String rhsmConsumerCertDir			= null;
+	
+	// rhsm.conf [rhsmcertd] configurations
+	protected static String rhsmcertdCertFrequency		= null;
 
 	
 	
 	
-	protected String serverInstallDir		= getProperty("sm.server.installDir","");
-	protected String serverImportDir		= getProperty("sm.server.importDir","");
-	protected String serverBranch			= getProperty("sm.server.branch","");
-	protected Boolean isServerOnPremises	= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
-	protected Boolean deployServerOnPremises= Boolean.valueOf(getProperty("sm.server.deploy","true"));
+	protected String serverInstallDir			= getProperty("sm.server.installDir","");
+	protected String serverImportDir			= getProperty("sm.server.importDir","");
+	protected String serverBranch				= getProperty("sm.server.branch","");
+	protected Boolean isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
+	protected Boolean deployServerOnPremises	= Boolean.valueOf(getProperty("sm.server.deploy","true"));
 
-	protected String client1hostname		= getProperty("sm.client1.hostname","");
-	protected String client1username		= getProperty("sm.client1.username","");
-	protected String client1password		= getProperty("sm.client1.password","");
+	protected String client1hostname			= getProperty("sm.client1.hostname","");
+	protected String client1username			= getProperty("sm.client1.username","");
+	protected String client1password			= getProperty("sm.client1.password","");
 
-	protected String client2hostname		= getProperty("sm.client2.hostname","");
-	protected String client2username		= getProperty("sm.client2.username","");
-	protected String client2password		= getProperty("sm.client2.password","");
+	protected String client2hostname			= getProperty("sm.client2.hostname","");
+	protected String client2username			= getProperty("sm.client2.username","");
+	protected String client2password			= getProperty("sm.client2.password","");
 
 	protected String clienthostname			= client1hostname;
 	protected String clientusername			= client1username;
@@ -78,14 +89,9 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String dbUsername				= getProperty("sm.server.db.username","");
 	protected String dbPassword				= getProperty("sm.server.db.password","");
 
-	protected List<String> rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(","));
+	protected List<String> rpmUrls			= null;
 
-	public static SSHCommandRunner server	= null;
-	public static SSHCommandRunner client	= null;
-	public static SSHCommandRunner client1	= null;	// client1
-	public static SSHCommandRunner client2	= null;	// client2
-	
-	protected static CandlepinTasks servertasks	= null;
+
 	
 	
 	
@@ -93,9 +99,26 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	public SubscriptionManagerBaseTestScript() {
 		super();
-		// TODO Auto-generated constructor stub
 		
-		if (rpmUrls.contains("")) rpmUrls = new ArrayList<String>();	// rpmUrls list should be empty when rhsm.rpm.urls is ""
+		if (getProperty("sm.rpm.urls", "").equals("")) rpmUrls = new ArrayList<String>(); else rpmUrls = Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(","));
+		
+		// rhsm.conf [server] configurations
+		serverHostname				= getProperty("sm.server.hostname","");
+		serverPrefix 				= getProperty("sm.server.prefix","");
+		serverPort 					= getProperty("sm.server.port","");
+		serverInsecure				= getProperty("sm.server.insecure","");
+		serverCaCertDir				= getProperty("sm.server.caCertDir","");
+		
+		// rhsm.conf [rhsm] configurations
+		rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
+		rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
+		rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
+		rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
+		rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
+		rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");
+		
+		// rhsm.conf [rhsmcertd] configurations
+		rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
 	}
 	
 	/**
