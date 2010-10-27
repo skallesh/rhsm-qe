@@ -277,6 +277,16 @@ public class CandlepinTasks {
 		Assert.assertEquals(status, 204);
 	}
 	
+	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String owner, String password, String consumerId) throws JSONException, Exception {
+		// determine this consumerId's owner
+		JSONObject jsonOwner = null;
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, owner, password,"/consumers/"+consumerId));	
+		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
+		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, owner, password,jsonOwner_.getString("href")));	
+
+		return jsonOwner;
+	}
+	
 	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
 		JSONArray consumers = new JSONArray(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "consumers"));
 		List<String> refs = new ArrayList<String>();
