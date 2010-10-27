@@ -99,10 +99,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
 		// regenerate the identity using a different username and password as used during register... and assert
-		log.info("Calling subscription-manager-cli identity with the a different username and password used during register...");
+		log.info("Calling subscription-manager-cli identity with a different username and password (but belonging to the same owner) than used during register...");
 		result = clienttasks.identity(client2username,client2password,Boolean.TRUE);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
-			"The original registered result is returned from identity regenerate with a different but valid authenticator.");
+			"The original registered result is returned from identity regenerate using a different authenticator who belongs to the same owner/organization.");
 	}
 	
 	
