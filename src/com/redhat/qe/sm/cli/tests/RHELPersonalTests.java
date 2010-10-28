@@ -104,35 +104,36 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	protected String personConsumerId = null;
 	protected int multipleSystems = 4;	// multiple (unlimited)
 	
-	protected String consumerUsername;
-	protected String consumerPassword;
-	protected String anotherConsumerUsername;
-	protected String anotherConsumerPassword;
-	protected String personSubscriptionName;
-	protected String systemSubscriptionName;
-	protected String systemConsumedProductName;
+	protected String consumerUsername = getProperty("sm.rhpersonal.username1", "");
+	protected String consumerPassword = getProperty("sm.rhpersonal.password1", "");
+	protected String anotherConsumerUsername = getProperty("sm.rhpersonal.username2", "");
+	protected String anotherConsumerPassword = getProperty("sm.rhpersonal.password2", "");
+	protected String personSubscriptionName = getProperty("sm.rhpersonal.productName", "");
+	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
+	protected String systemConsumedProductName = getProperty("sm.rhpersonal.consumedSubproductNames", "");  //FIXME change to a List
 
 	@BeforeClass(groups={"setup"})
 	public void beforeClassSetup() {
-		if (isServerOnPremises) {
-			consumerUsername	= client1username;
-			consumerPassword	= client1password;
-			anotherConsumerUsername	= client2username;
-			anotherConsumerPassword	= client2password;
-			personSubscriptionName	= "RHEL Personal";
-			systemSubscriptionName	= "RHEL Personal Bits";
-			systemConsumedProductName	= "RHEL Personal Bits";
-		} else {
-			consumerUsername	= "test5";
-			consumerPassword	= "redhat";
-			anotherConsumerUsername	= "test6";
-			anotherConsumerPassword	= "redhat";
-			personSubscriptionName	= "Red Hat Personal Edition";
-			systemSubscriptionName	= "RHEL for Physical Servers";
-			systemConsumedProductName	= "Red Hat Enterprise Linux Server";
-
+//		if (isServerOnPremises) {
+//			consumerUsername	= client1username;
+//			consumerPassword	= client1password;
+//			anotherConsumerUsername	= client2username;
+//			anotherConsumerPassword	= client2password;
+//			personSubscriptionName	= "RHEL Personal";
+//			systemSubscriptionName	= "RHEL Personal Bits";
+//			systemConsumedProductName	= "RHEL Personal Bits";
+//		} else {
+//			consumerUsername	= "test5";
+//			consumerPassword	= "redhat";
+//			anotherConsumerUsername	= "test6";
+//			anotherConsumerPassword	= "redhat";
+//			personSubscriptionName	= "Red Hat Personal Edition";
+//			systemSubscriptionName	= "RHEL for Physical Servers";
+//			systemConsumedProductName	= "Red Hat Enterprise Linux Server";
+//		}
+		if (personSubscriptionName.equals("")) {
+			throw new SkipException("To enable the RHEL Personal Tests, we need to know the ProductName of a Subscription containing a subpool of personal products.");
 		}
-
 	}
 	
 	
@@ -145,7 +146,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@ImplementsTCMS(id="55702,55718")
 	public void EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 //		if (!isServerOnPremises) throw new SkipException("Currently this test is designed only for on-premises.");	//TODO Make this work for IT too.  jsefler 8/12/2010 
-		if (client2==null) throw new SkipException("This test requires a second consumer.");
+		if (client2==null) throw new SkipException("This test requires a second client.");
 		if (consumerUsername.equals("admin")) throw new SkipException("This test requires that the client user ("+consumerUsername+") is NOT admin.");
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=624423 - jsefler 8/16/2010
