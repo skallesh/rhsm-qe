@@ -2,6 +2,7 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
@@ -68,16 +69,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
+		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
+		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
+		
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null);
 		
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool rhelPersonalPool = null;
 		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-			if (subscriptionPool.subscriptionName.equals("RHEL Personal")) rhelPersonalPool = subscriptionPool;
+			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
 		}
-		Assert.assertTrue(rhelPersonalPool!=null,"RHEL Personal is available to this consumer registered as type person");
-		Assert.assertEquals(subscriptionPools.size(),1, "RHEL Personal is the ONLY subscription pool available to this consumer registered as type person");
+		Assert.assertTrue(rhelPersonalPool!=null,RHELPersonalSubscription+" is available to this consumer registered as type person");
+		Assert.assertEquals(subscriptionPools.size(),1, RHELPersonalSubscription+" is the ONLY subscription pool available to this consumer registered as type person");
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
@@ -90,22 +94,25 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
+		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
+		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
+
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		rhelPersonalPool = null;
 		for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (subscriptionPool.subscriptionName.equals("RHEL Personal")) rhelPersonalPool = subscriptionPool;
+			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
 		}
-		Assert.assertTrue(rhelPersonalPool==null,"RHEL Personal is NOT available to this consumer registered as type system");
+		Assert.assertTrue(rhelPersonalPool==null,RHELPersonalSubscription+" is NOT available to this consumer registered as type system");
 		
 		// also assert that RHEL Personal is included in --all --available subscription pools
 		rhelPersonalPool = null;
 		for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-			if (subscriptionPool.subscriptionName.equals("RHEL Personal")) rhelPersonalPool = subscriptionPool;
+			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
 		}
-		Assert.assertTrue(rhelPersonalPool!=null,"RHEL Personal is included in --all --available subscription pools");
+		Assert.assertTrue(rhelPersonalPool!=null,RHELPersonalSubscription+" is included in --all --available subscription pools");
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {

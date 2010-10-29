@@ -144,7 +144,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// move the copied entitlement certificate from /tmp to location /etc/pki/entitlement/product
 		// Note: this is malicious activity
-		client.runCommandAndWait("cp -f "+randDir+"/* "+clienttasks.entitlementCertDir+"/product");
+		client.runCommandAndWait("cp -f "+randDir+"/* "+clienttasks.entitlementCertDir);
 		
 		// assert all of the entitlement certs are reported in the "yum repolist all" again
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);

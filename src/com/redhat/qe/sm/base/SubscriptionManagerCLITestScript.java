@@ -82,7 +82,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// will we be testing multiple clients?
-		if (!(	client2hostname.equals("") || client2username.equals("") || client2password.equals("") )) {
+		if (!(	client2hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {

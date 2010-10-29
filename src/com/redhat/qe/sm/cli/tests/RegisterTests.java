@@ -66,13 +66,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/consumers/"+consumerId));	
-				JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
-				jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
-			} catch (Exception e) {
+				jsonOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, consumerId);
+			} catch (JSONException e1) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				e1.printStackTrace();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
+//			try {
+//				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/consumers/"+consumerId));	
+//				JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
+//				jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
+//			} catch (Exception e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		}
 		
 		RegistrationData userData = new RegistrationData(username,password,jsonOwner,registerResult,allAvailableSubscriptionPools);
@@ -177,13 +186,20 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={"ValidRegistrationAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137"},
 			enabled=true)
 	public void ValidRegistrationAutosubscribe_Test() {
-		if (isServerOnPremises) throw new SkipException("This testcase was designed for an IT candlepin server, not a standalone candlepin server.");
+		if (prodCertProduct.equals("")) throw new SkipException("This testcase requires that you specify a subscription product name for which you have a corresponding product cert installed to test autosubscribe.");
+
+		// before executing this test we need to make sure that subscription matching the product cert that we are about to test with autosubscribe is actually available
 		clienttasks.unregister();
-//		String autoProdCert = "/etc/pki/product/autoProdCert-"+getRandInt()+".pem";
+		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
+		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", prodCertProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertTrue(pool!=null,"Subscription '"+prodCertProduct+"' is available to user '"+clientusername+"' for testing autosubscribe.");
+
+		
+
 		String autoProdCert = autosubscribeProdCertFile;
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 		teardownAfterValidRegistrationAutosubscribe_Test(); 	// will remove the autosubscribeProdCertFile
 		client.runCommandAndWait("wget -O "+autoProdCert+" "+prodCertLocation);
+		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
 		// assert that the stdout from the registration includes: Bind Product  Red Hat Directory Server 75822
 		Assert.assertContainsMatch(client.getStdout(),
@@ -379,7 +395,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	String autosubscribeProdCertFile = null;
 	@BeforeGroups(value={"ValidRegistrationAutosubscribe_Test"},alwaysRun=true)
 	public void autosubscribeProdCertFileBeforeValidRegistrationAutosubscribe_Test() {
-		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert"+/*getRandInt()+*/".pem";
 	}
 
 	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)

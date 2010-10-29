@@ -222,7 +222,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 		}
-		if (!conclusiveTest) log.warning("The facts for this system did not allow us to perform a conclusive test.");
+		if (!conclusiveTest) {
+			//log.warning("The facts for this system did not allow us to perform a conclusive test.");
+			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
+		}
 		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
 	}
 	
@@ -271,7 +274,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 		}
-		if (!conclusiveTest) log.warning("The facts for this system did not allow us to perform a conclusive test.");
+		if (!conclusiveTest) {
+			log.warning("The facts for this system did not allow us to perform a conclusive test.");
+			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
+		}
 		Assert.assertTrue(foundPoolWithArchAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
 	}
 	
