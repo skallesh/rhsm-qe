@@ -194,8 +194,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", prodCertProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,"Subscription '"+prodCertProduct+"' is available to user '"+clientusername+"' for testing autosubscribe.");
 
-		
-
 		String autoProdCert = autosubscribeProdCertFile;
 		teardownAfterValidRegistrationAutosubscribe_Test(); 	// will remove the autosubscribeProdCertFile
 		client.runCommandAndWait("wget -O "+autoProdCert+" "+prodCertLocation);

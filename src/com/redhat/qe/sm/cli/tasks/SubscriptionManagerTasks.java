@@ -154,7 +154,7 @@ public class SubscriptionManagerTasks {
 	
 	public String getConfigFileParameter(String parameter){
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+defaultConfigFile, 0, "^"+parameter, null);
-		String value = result.getStdout().split("=|:")[1];
+		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
 	}
 	
@@ -1402,6 +1402,8 @@ red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms         R
 red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms-updates Red Hat Enterprise Linux 6 Entitlement Alpha - Supp disabled
 repolist: 3,394
 		*/
+		
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");
