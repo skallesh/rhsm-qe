@@ -148,6 +148,12 @@ public class CandlepinTasks {
 		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" --request PUT https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, put, owner, password);
 	}
+	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path, String postValue) throws Exception {
+//FIXME NOT TESTED  DON"T KNOW WHAT TO DO WITH POST DATA
+		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
+		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" --request POST https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, post, owner, password);
+	}
 	
 	static public JSONObject getEntitlementUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
 		return new JSONObject(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/entitlements/"+dbid));
@@ -426,6 +432,11 @@ public class CandlepinTasks {
 		// REMINDER: DateFormat used in JSON objects is...
 		// protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"
 
+	}
+	
+	static public JSONObject createOwnerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String owner_name) throws Exception {
+// NOT TESTED
+		return new JSONObject(postResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/owners", owner_name));
 	}
 	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
