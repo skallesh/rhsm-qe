@@ -284,9 +284,46 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
-	protected List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
+	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
+	/**
+	 * Useful when trying to find a username that belongs to a different owner/org than the current username you are testing with.
+	 * @param key
+	 * @return null when no match is found
+	 * @throws JSONException
+	 */
+	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		for (RegistrationData registration : registrationDataList) {
+			if (registration.jsonOwner!=null) {
+				if (!registration.jsonOwner.getString("key").equals(key)) {
+					return registration;
+				}
+			}
+		}
+		return null;
+	}
 	
+	/**
+	 * Useful when trying to find a username that belongs to the same owner/org as the current username you are testing with.
+	 * @param key
+	 * @param username
+	 * @return null when no match is found
+	 * @throws JSONException
+	 */
+	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		for (RegistrationData registration : registrationDataList) {
+			if (registration.jsonOwner!=null) {
+				if (registration.jsonOwner.getString("key").equals(key)) {
+					if (!registration.username.equals(username)) {
+						return registration;
+					}
+				}
+			}
+		}
+		return null;
+	}
 	
 	// Data Providers ***********************************************************************
 
