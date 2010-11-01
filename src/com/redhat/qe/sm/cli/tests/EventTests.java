@@ -71,14 +71,17 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// start fresh by unregistering
 		clienttasks.unregister();
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
-        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
  
         // fire a register event
@@ -101,11 +104,16 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsTCMS(id="50403")
-	public void EnititlementCreated_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void EnititlementCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
+		// test prerequisites
+
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,clientOwnerUsername, clientOwnerPassword);
@@ -141,8 +149,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
@@ -177,11 +188,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"EnititlementDeleted_Test"}, dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void EnititlementDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void EnititlementDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
@@ -205,11 +219,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerModified_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void ConsumerModified_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
@@ -235,11 +252,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
-        SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
+		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
  
         // fire an unregister event
@@ -388,8 +409,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
+		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
+		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.jsonOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);

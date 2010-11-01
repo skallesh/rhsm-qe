@@ -325,6 +325,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return null;
 	}
 	
+	/**
+	 * Useful when trying to find registration data results from a prior registration by a given username.
+	 * @param key
+	 * @param username
+	 * @return null when no match is found
+	 * @throws JSONException
+	 */
+	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		for (RegistrationData registration : registrationDataList) {
+			if (registration.username.equals(username)) {
+				return registration;
+			}
+		}
+		return null;
+	}
+	
 	// Data Providers ***********************************************************************
 
 	
