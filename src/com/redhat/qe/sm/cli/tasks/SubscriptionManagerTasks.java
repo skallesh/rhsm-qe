@@ -331,11 +331,17 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return List of /etc/pki/entitlement/*.pem files sorted newest first (excluding a key.pem file)
+	 * @param lsOptions - options used when calling ls to populate the order of the returned List (man ls for more info)
+	 * <br>Possibilities:
+	 * <br>"" no sort order preferred
+	 * <br>"-t" sort by modification time
+	 * <br>"-v" natural sort of (version) numbers within text
+	 * @return List of /etc/pki/entitlement/*.pem files sorted using lsOptions (excluding a key.pem file)
 	 */
-	public List<File> getCurrentEntitlementCertFiles() {
+	public List<File> getCurrentEntitlementCertFiles(String lsOptions) {
+		if (lsOptions==null) lsOptions = "";
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1t "+entitlementCertDir+"/*.pem");
+		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
 		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
@@ -360,13 +366,27 @@ public class SubscriptionManagerTasks {
 		}
 		return files;
 	}
-	
 	/**
-	 * @return List of /etc/pki/product/*.pem files
+	 * @return List of /etc/pki/entitlement/*.pem files (excluding a key.pem file)
 	 */
-	public List<File> getCurrentProductCertFiles() {
+	public List<File> getCurrentEntitlementCertFiles() {
+		return getCurrentEntitlementCertFiles("-v");
+	}
+
+	
+
+	/**
+	 * @param lsOptions - options used when calling ls to populate the order of the returned List (man ls for more info)
+	 * <br>Possibilities:
+	 * <br>"" no sort order preferred
+	 * <br>"-t" sort by modification time
+	 * <br>"-v" natural sort of (version) numbers within text
+	 * @return List of /etc/pki/product/*.pem files sorted using lsOptions
+	 */
+	public List<File> getCurrentProductCertFiles(String lsOptions) {
+		if (lsOptions==null) lsOptions = "";
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/product/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1t "+productCertDir+"/*.pem");
+		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+productCertDir+"/*.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
 		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
@@ -377,6 +397,12 @@ public class SubscriptionManagerTasks {
 		return files;
 	}
 	
+	/**
+	 * @return List of /etc/pki/product/*.pem files
+	 */
+	public List<File> getCurrentProductCertFiles() {
+		return getCurrentProductCertFiles("-v");
+	}
 	
 	/**
 	 * @return
@@ -1015,7 +1041,7 @@ public class SubscriptionManagerTasks {
 		}
 
 		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
-		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
 		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
 				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
 
