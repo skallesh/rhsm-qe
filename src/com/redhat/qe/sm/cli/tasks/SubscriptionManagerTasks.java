@@ -915,7 +915,18 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
-		return list_(null,null,null);
+		SSHCommandResult sshCommandResult = list_(null,null,null);
+		
+		List<File> productCertFiles = getCurrentProductCertFiles();
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
+
+		if (productCertFiles.isEmpty()) {
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
+		} /*else {
+			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status");
+		}*/
+
+		return sshCommandResult;
 	}
 	
 	/**
@@ -923,7 +934,12 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
-		return list_(null,Boolean.TRUE,null);
+		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null);
+		
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
+
+		return sshCommandResult;
 	}
 	
 	/**
@@ -941,7 +957,12 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-		return list_(Boolean.TRUE,Boolean.TRUE,null);
+		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null);
+		
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
+
+		return sshCommandResult;
 		
 	}
 	
@@ -950,7 +971,18 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
-		return list_(null,null,Boolean.TRUE);
+		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE);
+		
+		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed command indicates a success.");
+
+		if (entitlementCertFiles.isEmpty()) {
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No Consumed subscription pools to list"), "No Consumed subscription pools to list");
+		} /*else {
+			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Consumed Product Subscriptions");
+		}*/
+
+		return sshCommandResult;
 	}
 	
 	

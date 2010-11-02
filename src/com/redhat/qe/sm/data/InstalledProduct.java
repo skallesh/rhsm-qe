@@ -17,6 +17,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 	public String status;
 	public Calendar expires;
 	public Integer subscription;
+	public Integer contractNumber;
 	
 	public InstalledProduct(Map<String, String> productData) {
 		super(productData);
@@ -33,9 +34,10 @@ public class InstalledProduct extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
-		if (subscription != null)		string += String.format(" %s='%s'", "subscription",subscription);
 		if (status != null)				string += String.format(" %s='%s'", "status",status);
 		if (expires != null)			string += String.format(" %s='%s'", "expires",formatDateString(expires));
+		if (subscription != null)		string += String.format(" %s='%s'", "subscription",subscription);
+		if (contractNumber != null)		string += String.format(" %s='%s'", "contractNumber",contractNumber);
 
 		return string.trim();
 	}
@@ -66,6 +68,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		regexes.put("status",				"Status:\\s*(.*)");
 		regexes.put("expires",				"Expires:\\s*(.*)");
 		regexes.put("subscription",			"Subscription:\\s*(.*)");
+		regexes.put("contractNumber",		"ContractNumber:\\s*(.*)");
 		
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
