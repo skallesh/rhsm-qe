@@ -111,22 +111,22 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			smt.installSubscriptionManagerRPMs(rpmUrls,enableRepoForDeps);
 			
 			// rhsm.conf [server] configurations
-			if (!serverHostname.equals(""))				smt.updateConfigFileParameter("hostname", serverHostname);							else serverHostname = smt.getConfigFileParameter("hostname");
-			if (!serverPrefix.equals(""))				smt.updateConfigFileParameter("prefix", serverPrefix);								else serverPrefix = smt.getConfigFileParameter("prefix");
-			if (!serverPort.equals(""))					smt.updateConfigFileParameter("port", serverPort);									else serverPort = smt.getConfigFileParameter("port");
-			if (!serverInsecure.equals(""))				smt.updateConfigFileParameter("insecure", serverInsecure);							else serverInsecure = smt.getConfigFileParameter("insecure");
-			if (!serverCaCertDir.equals(""))			smt.updateConfigFileParameter("ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfigFileParameter("ca_cert_dir");
+			if (!serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", serverHostname);							else serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
+			if (!serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", serverPrefix);								else serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
+			if (!serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", serverPort);									else serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
+			if (!serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", serverInsecure);							else serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+			if (!serverCaCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
 
 			// rhsm.conf [rhsm] configurations
-			if (!rhsmBaseUrl.equals(""))				smt.updateConfigFileParameter("baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfigFileParameter("baseurl");
-			if (!rhsmRepoCaCert.equals(""))				smt.updateConfigFileParameter("repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfigFileParameter("repo_ca_cert");
-			if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfigFileParameter("showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfigFileParameter("showIncompatiblePools");
-			if (!rhsmProductCertDir.equals(""))			smt.updateConfigFileParameter("productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfigFileParameter("productCertDir");
-			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfigFileParameter("entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfigFileParameter("entitlementCertDir");
-			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfigFileParameter("consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfigFileParameter("consumerCertDir");
+			if (!rhsmBaseUrl.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
+			if (!rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
+			if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
+			if (!rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
+			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
+			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
 
 			// rhsm.conf [rhsmcertd] configurations
-			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfigFileParameter("certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfigFileParameter("certFrequency");
+			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
 		
 			smt.initializeFieldsFromConfigFile();
 			
@@ -162,10 +162,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
 			RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
 			
-			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfigFileParameter("ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			client1tasks.updateConfigFileParameter("insecure", "0");
-			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfigFileParameter("ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			if (client2!=null) client2tasks.updateConfigFileParameter("insecure", "0");
+			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
+			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			if (client2!=null) client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
 		}
 		
 		

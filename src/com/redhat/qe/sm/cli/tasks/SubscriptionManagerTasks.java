@@ -43,10 +43,10 @@ public class SubscriptionManagerTasks {
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
 	public static String redhatRepoFile			= "/etc/yum.repos.d/redhat.repo";
-	public static String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
+	public static String rhsmConfFile			= "/etc/rhsm/rhsm.conf";
 	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
 	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
-	public static String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
+	public static String rhsmPluginConfFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
 	public static String factsDir				= "/etc/rhsm/facts/";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
@@ -70,15 +70,15 @@ public class SubscriptionManagerTasks {
 	 * Must be called after installSubscriptionManagerRPMs(...)
 	 */
 	public void initializeFieldsFromConfigFile() {
-		if (RemoteFileTasks.testFileExists(sshCommandRunner, defaultConfigFile)==1) {
-			this.consumerCertDir	= getConfigFileParameter("consumerCertDir");
-			this.entitlementCertDir	= getConfigFileParameter("entitlementCertDir");
-			this.productCertDir		= getConfigFileParameter("productCertDir");
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, rhsmConfFile)==1) {
+			this.consumerCertDir	= getConfFileParameter(rhsmConfFile, "consumerCertDir");
+			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir");
+			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir");
 			this.consumerCertFile	= consumerCertDir+"/cert.pem";
 			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
 		} else {
-			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+defaultConfigFile);
+			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+rhsmConfFile);
 		}
 	}
 	
@@ -146,14 +146,14 @@ public class SubscriptionManagerTasks {
 		}
 	}
 	
-	public void updateConfigFileParameter(String parameter, String value){
+	public void updateConfFileParameter(String confFile, String parameter, String value){
 		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
-				0,"Updated "+defaultConfigFile+" parameter '"+parameter+"' to value: " + value);
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
+				0,"Updated "+confFile+" parameter '"+parameter+"' to value: " + value);
 	}
 	
-	public String getConfigFileParameter(String parameter){
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+defaultConfigFile, 0, "^"+parameter, null);
+	public String getConfFileParameter(String confFile, String parameter){
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+confFile, 0, "^"+parameter, null);
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
 	}
@@ -198,21 +198,22 @@ public class SubscriptionManagerTasks {
 //				0,"Updated rhsm config insecure to: 1");
 //
 //	}
-	
-	/**
-	 * @return
-	 * @author ssalevan
-	 */
-	public void adjustRHSMYumRepo(boolean enabled){
-		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
-						rhsmYumRepoFile, 
-						"^enabled=.*$", 
-						"enabled="+(enabled?'1':'0')),
-						0,
-						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
-				);
-	}
+
+	// replaced by updateConfFileParameter(...)
+//	/**
+//	 * @return
+//	 * @author ssalevan
+//	 */
+//	public void adjustRHSMYumRepo(boolean enabled){
+//		Assert.assertEquals(
+//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
+//						rhsmPluginConfFile, 
+//						"^enabled=.*$", 
+//						"enabled="+(enabled?'1':'0')),
+//						0,
+//						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
+//				);
+//	}
 	
 	
 
@@ -223,16 +224,21 @@ public class SubscriptionManagerTasks {
 	 * @param waitForMinutes - after restarting, should we wait for the next refresh?
 	 */
 	public void restart_rhsmcertd (int certFrequency, boolean waitForMinutes){
-		updateConfigFileParameter("certFrequency", String.valueOf(certFrequency));
+		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+certFrequency+" minutes",null);
 
 		if (waitForMinutes) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
-			SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd a chance check in with the candlepin server and update the certs
 		}
+		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd chance to make its initial check in with the candlepin server and update the certs
 	}
-	
+	public void stop_rhsmcertd (){
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
+	}
+
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAvailableSubscriptionPools().getStdout());
@@ -319,9 +325,9 @@ public class SubscriptionManagerTasks {
 	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception {
 		
 		Map<BigInteger, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<BigInteger, SubscriptionPool>();
-		String hostname = getConfigFileParameter("hostname");
-		String port = getConfigFileParameter("port");
-		String prefix = getConfigFileParameter("prefix");
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
 			JSONObject jsonPool = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
 			String poolId = jsonPool.getJSONObject("pool").getString("id");
@@ -648,7 +654,7 @@ public class SubscriptionManagerTasks {
 		String bugId="639417"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			restart_rhsmcertd(Integer.valueOf(getConfigFileParameter("certFrequency")), false);
+			restart_rhsmcertd(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), false);
 		}
 		// END OF WORKAROUND
 		
@@ -1464,7 +1470,7 @@ repolist: 3,394
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 
@@ -1480,6 +1486,32 @@ repolist: 3,394
 		// assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
 		// FIXME EVENTUALLY WE NEED TO UNCOMMENT THIS ASSERT
 		//Assert.assertContainsNoMatch(result.getStderr(), "HTTP Error \\d+", "HTTP Errors were encountered when runnning yum repolist all.");
+	}
+	
+	/**
+	 * @param option [all|enabled|disabled]
+	 * @return
+	 */
+	public ArrayList<String> getYumRepolist(String option){
+		ArrayList<String> repos = new ArrayList<String>();
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		
+		sshCommandRunner.runCommandAndWait("yum repolist "+option);
+		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
+		
+		int repolistStartLn = 0;
+		int repolistEndLn = 0;
+		
+		for(int i=0;i<availRepos.length;i++)
+			if (availRepos[i].contains("repo id"))
+				repolistStartLn = i + 1;
+			else if (availRepos[i].contains("repolist:"))
+				repolistEndLn = i;
+		
+		for(int i=repolistStartLn;i<repolistEndLn;i++)
+			repos.add(availRepos[i].split(" ")[0]);
+		
+		return repos;
 	}
 	
 	public String getRedhatRelease() {
