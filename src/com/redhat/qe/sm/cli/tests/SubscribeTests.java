@@ -23,6 +23,7 @@ import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author ssalevan
@@ -246,7 +247,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
 //	        dependsOnGroups={"sm_stage6"},
 //	        groups={"sm_stage7"},
-			groups={"myDevGroup"},
+			groups={},
 	        enabled=true)
 	@ImplementsTCMS(id="47578")
 	public void VerifyYumRepoListsEnabledContent(){
@@ -290,24 +291,51 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed",
+	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
 //			dependsOnGroups={"sm_stage6"},
 //			groups={"sm_stage7", "not_implemented"},
-			enabled=false)
+			dataProvider="getAvailableSubscriptionPoolsData",
+			enabled=true)
 	@ImplementsTCMS(id="41695")
-	public void InstallPackageFromRHSMYumRepo_Test(){
-		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
-		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()){
-			String pkg = pkgList.get(productSubscription.productName)[0];
-			log.info("Attempting to install first pkg '"+pkg+"' from product subscription: "+productSubscription);
-			log.info("timeout of two minutes for next three commands");
-			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-					"yum repolist");
-			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-					"yum install -y "+pkg);
-			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-					"rpm -q "+pkg);
+	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
+		// original implementation by ssalevan
+//		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
+//		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()){
+//			String pkg = pkgList.get(productSubscription.productName)[0];
+//			log.info("Attempting to install first pkg '"+pkg+"' from product subscription: "+productSubscription);
+//			log.info("timeout of two minutes for next three commands");
+//			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
+//					"yum repolist");
+//			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
+//					"yum install -y "+pkg);
+//			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
+//					"rpm -q "+pkg);
+//		}
+	
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		String pkg = null; // initialize to null
+		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (contentNamespace.enabled.equals("1")) {
+				String repoLabel = contentNamespace.label;
+				ArrayList<String> packages = clienttasks.getYumListOfAvailablePackagesFromRepo(repoLabel);
+				if (packages.size()==0) {
+					log.warning("No available packages were found from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
+					continue;
+				}
+				
+				// pick the first package for install/remove
+				pkg = packages.get(0);
+				log.info("Attempting to install first package '"+pkg+"' from repo '"+repoLabel+"'...");
+
+				// install the package and assert that it is successfully installed
+				clienttasks.installPackageUsingYumFromRepo(pkg, repoLabel);
+				
+				// now remove the package
+				clienttasks.removePackageUsingYum(pkg);
+			}
 		}
+		Assert.assertNotNull(pkg,"At least one package was found and installed after subscribing to SubscriptionPool: "+pool);
 	}
 	
 	
