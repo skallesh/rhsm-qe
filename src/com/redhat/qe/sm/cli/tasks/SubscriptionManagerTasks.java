@@ -410,41 +410,43 @@ public class SubscriptionManagerTasks {
 		return getCurrentProductCertFiles("-v");
 	}
 	
-	/**
-	 * @return
-	 * @author ssalevan
-	 */
-	public HashMap<String,String[]> getPackagesCorrespondingToSubscribedRepos(){
-		int min = 3;
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
-		log.info("timeout of "+min+" minutes for next command");
-		sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
-		HashMap<String,String[]> pkgMap = new HashMap<String,String[]>();
-		
-		String[] packageLines = sshCommandRunner.getStdout().split("\\n");
-		
-		int pkglistBegin = 0;
-		
-		for(int i=0;i<packageLines.length;i++){
-			pkglistBegin++;
-			if(packageLines[i].contains("Available Packages"))
-				break;
-		}
-		
-		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions()){
-			ArrayList<String> pkgList = new ArrayList<String>();
-			for(int i=pkglistBegin;i<packageLines.length;i++){
-				String[] splitLine = packageLines[i].split(" ");
-				String pkgName = splitLine[0];
-				String repoName = splitLine[splitLine.length - 1];
-				if(repoName.toLowerCase().contains(sub.productName.toLowerCase()))
-					pkgList.add(pkgName);
-			}
-			pkgMap.put(sub.productName, (String[])pkgList.toArray());
-		}
-		
-		return pkgMap;
-	}
+	
+// replaced by getYumListOfAvailablePackagesFromRepo(...)
+//	/**
+//	 * @return
+//	 * @author ssalevan
+//	 */
+//	public HashMap<String,String[]> getPackagesCorrespondingToSubscribedRepos(){
+//		int min = 3;
+//		sshCommandRunner.runCommandAndWait("killall -9 yum");
+//		log.info("timeout of "+min+" minutes for next command");
+//		sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
+//		HashMap<String,String[]> pkgMap = new HashMap<String,String[]>();
+//		
+//		String[] packageLines = sshCommandRunner.getStdout().split("\\n");
+//		
+//		int pkglistBegin = 0;
+//		
+//		for(int i=0;i<packageLines.length;i++){
+//			pkglistBegin++;
+//			if(packageLines[i].contains("Available Packages"))
+//				break;
+//		}
+//		
+//		for(ProductSubscription sub : getCurrentlyConsumedProductSubscriptions()){
+//			ArrayList<String> pkgList = new ArrayList<String>();
+//			for(int i=pkglistBegin;i<packageLines.length;i++){
+//				String[] splitLine = packageLines[i].split(" ");
+//				String pkgName = splitLine[0];
+//				String repoName = splitLine[splitLine.length - 1];
+//				if(repoName.toLowerCase().contains(sub.productName.toLowerCase()))
+//					pkgList.add(pkgName);
+//			}
+//			pkgMap.put(sub.productName, (String[])pkgList.toArray());
+//		}
+//		
+//		return pkgMap;
+//	}
 
 	/**
 	 * @param productSubscription
@@ -508,18 +510,6 @@ public class SubscriptionManagerTasks {
 		return subscriptionPoolWithMatchingField;
 	}
 	
-//	/**
-//	 * @param productName
-//	 * @param productSubscriptions - usually getCurrentlyConsumedProductSubscriptions()
-//	 * @return the ProductSubscription from productSubscriptions whose name is productName (if not found, null is returned)
-//	 */
-//	public ProductSubscription findProductSubscriptionWithNameFrom(String productName, List<ProductSubscription> productSubscriptions) {
-//		ProductSubscription productSubscriptionWithProductName = null;
-//		for (ProductSubscription productSubscription : productSubscriptions) {
-//			if (productSubscription.productName.equals(productName)) productSubscriptionWithProductName = productSubscription;
-//		}
-//		return productSubscriptionWithProductName;
-//	}
 	
 	/**
 	 * @param fieldName
@@ -551,17 +541,19 @@ public class SubscriptionManagerTasks {
 		return productSubscriptionWithMatchingField;
 	}
 	
+
 	/**
-	 * For the given consumed ProductSubscription, get the EntitlementCerts
+	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
 	 * @param productSubscription
 	 * @return
 	 */
-	public List<EntitlementCert> getEntitlementCertsFromProductSubscription(ProductSubscription productSubscription) {
+	public EntitlementCert getEntitlementCertCorrespondingToProductSubscription(ProductSubscription productSubscription) {
 		String certFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
 		sshCommandRunner.runCommandAndWait("openssl x509 -text -noout -in '"+certFile+"'");
-		String certificates = sshCommandRunner.getStdout();
-		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
-		return entitlementCerts;
+		String certificate = sshCommandRunner.getStdout();
+		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificate);
+		Assert.assertEquals(entitlementCerts.size(), 1,"Only one EntitlementCert corresponds to ProductSubscription: "+productSubscription);
+		return entitlementCerts.get(0);
 	}
 	
 	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
@@ -1091,6 +1083,10 @@ public class SubscriptionManagerTasks {
 		File newCertFile = afterEntitlementCertFiles.get(0);
 		log.info("The new entitlement certificate file is: "+newCertFile);
 		
+		// assert the productId from the pool matches the entitlement productId
+		EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+		Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+		
 		// assert that consumed ProductSubscriptions has NOT decreased
 		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
@@ -1513,6 +1509,47 @@ repolist: 3,394
 		
 		return repos;
 	}
+	
+
+	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
+		ArrayList<String> packages = new ArrayList<String>();
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
+
+		int min = 5;
+		log.fine("Using a timeout of "+min+" minutes for next command...");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
+
+		// Example result.getStdout()
+		//xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
+
+		String regex="(\\S+) +(\\S+) +"+repoLabel+"$";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.fine("Did NOT find any available packages from repoLabel: "+repoLabel);
+			return packages;
+		}
+
+		// assemble the list of packages and ryrn them
+		do {
+			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version
+		} while (matcher.find());
+		return packages;		
+	}
+	
+	public void installPackageUsingYumFromRepo (String pkg, String repoLabel) {
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg, 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg, 0, "^"+pkg+" .*"+repoLabel+"$",null);
+	}
+	
+	public void removePackageUsingYum (String pkg) {
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg, 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg, 1, null,"Error: No matching Packages to list");
+	}
+	
 	
 	public String getRedhatRelease() {
 //		// verify the grinder hostname is a rhel 5 machine
