@@ -141,13 +141,16 @@ Certificate:
         b3:67
 
 		 */
+		/*
+        Issuer: C=US, ST=North Carolina, O=Red Hat, Inc., OU=Red Hat Network, CN=Red Hat Candlepin Authority/emailAddress=ca-support@redhat.com
+        */
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("consumerid",			"Subject: CN=\\s*(.*)");
 		regexes.put("username",				"X509v3 Subject Alternative Name:[\\s\\cM]*DirName:/CN=\\s*(.*)");
-		regexes.put("issuer",				"Issuer: CN=([^,\\n]*)");
+		regexes.put("issuer",				"Issuer:\\s*(.*)");
 		regexes.put("serialNumber",			"Serial Number:\\s*([\\d\\w:]+)");
 		regexes.put("validityNotBefore",	"Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
