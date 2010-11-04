@@ -125,7 +125,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 
-// FIXME: THIS ORIGINAL TEST WAS NOT COMPLETE.  REPLACEMENT BELOW IS WORK IN PROGRESS
+
+	
+	
+// FIXME: THIS ORIGINAL ssalevan TEST WAS NOT COMPLETE.  REPLACEMENT IS BELOW
 //	@Test(description="subscription-manager Yum plugin: enable/disable",
 //			dependsOnGroups={"sm_stage5"},
 //			groups={"sm_stage6"})
@@ -288,6 +291,40 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 		}
+	}
+	
+	
+	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
+			groups={"blockedByBug-622851"},
+			enabled=true)
+	public void SubscribeToMultipleDuplicateAndBadPools_Test() {
+		
+		// begin the test with a cleanly registered system
+		clienttasks.unregister();
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+	    
+		// assemble a list of all the available SubscriptionPool ids with duplicates and bad ids
+		List <String> poolIds = new ArrayList<String>();
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			poolIds.add(pool.poolId);
+			poolIds.add(pool.poolId); // add a duplicate poolid
+		}
+		String badPoolId1 = "bad123", badPoolId2 = "bad_POOLID"; 
+		poolIds.add(0, badPoolId1); // insert a bad poolid
+		poolIds.add(badPoolId2); // append a bad poolid
+		
+		// subscribe to all pool ids
+		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
+		SSHCommandResult result = clienttasks.subscribe(poolIds, null, null, null, null);
+		
+		// assert the results
+		for (String poolId : poolIds) {
+			if (poolId.equals(badPoolId1)) continue; if (poolId.equals(badPoolId2)) continue;
+			Assert.assertContainsMatch(result.getStdout(),"^This consumer is already subscribed to the product matching pool with id '"+poolId+"'$","Asserting that already subscribed to pools is noted and skipped during a multiple pool binding.");
+		}
+		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId1+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
+		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId2+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
+		clienttasks.assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all including duplicates and bad pool ids.");
 	}
 	
 	

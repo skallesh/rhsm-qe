@@ -1212,7 +1212,7 @@ public class SubscriptionManagerTasks {
 //		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 //	}
 	
-	protected void assertNoAvailableSubscriptionPoolsToList(String assertMsg) {
+	public void assertNoAvailableSubscriptionPoolsToList(String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
