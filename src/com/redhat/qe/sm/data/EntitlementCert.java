@@ -218,12 +218,15 @@ public class EntitlementCert extends AbstractCommandLineData {
 		        bd:df:b1:f9:fe:3f:fa:9a:fc:0c:c7:91:99:5b:7b:2d:af:14:
 		        cf:1c
 		*/
+		/*
+		        Issuer: C=US, ST=North Carolina, O=Red Hat, Inc., OU=Red Hat Network, CN=Red Hat Entitlement Product Authority/emailAddress=ca-support@redhat.com
+		 */
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");
-		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer: CN=(.*?),");
+		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer: (.*)");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
 		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
