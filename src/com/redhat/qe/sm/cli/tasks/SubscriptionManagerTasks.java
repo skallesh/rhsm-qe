@@ -1083,9 +1083,18 @@ public class SubscriptionManagerTasks {
 		File newCertFile = afterEntitlementCertFiles.get(0);
 		log.info("The new entitlement certificate file is: "+newCertFile);
 		
-		// assert the productId from the pool matches the entitlement productId
-		EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-		Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+		// assert that the productId from the pool matches the entitlement productId
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/5/2010
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("skipping assert that the productId from the pool matches the entitlement productId");
+		// END OF WORKAROUND
+		} else {
+// FIXME UNCOMMENT AFTER QA/Stage TESTING IS COMPLETE			
+//			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+//			Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+		}
 		
 		// assert that consumed ProductSubscriptions has NOT decreased
 		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
@@ -1517,7 +1526,8 @@ repolist: 3,394
 
 		int min = 5;
 		log.fine("Using a timeout of "+min+" minutes for next command...");
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
+		//SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel,Long.valueOf(min*60000));
 
 		// Example result.getStdout()
 		//xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
@@ -1533,11 +1543,66 @@ repolist: 3,394
 			return packages;
 		}
 
-		// assemble the list of packages and ryrn them
+		// assemble the list of packages and return them
 		do {
 			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version
 		} while (matcher.find());
 		return packages;		
+	}
+	
+	public ArrayList<String> getAvailablePackages (String disablerepo, String enablerepo, String globExpression) {
+		ArrayList<String> packages = new ArrayList<String>();
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
+
+		String							command  = "yum list available";	
+		if (disablerepo!=null)			command += " --disablerepo="+disablerepo;
+		if (enablerepo!=null)			command += " --enablerepo="+enablerepo;
+		if (globExpression!=null)		command += " "+globExpression;
+		
+		// execute the yum command to list available packages
+		int min = 5;
+		log.fine("Using a timeout of "+min+" minutes for next command...");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
+		
+		// Example result.getStderr() 
+		//	INFO:repolib:repos updated: 0
+		//	This system is not registered with RHN.
+		//	RHN support will be disabled.
+		//	Error: No matching Packages to list
+		if (result.getStderr().contains("Error: No matching Packages to list")) {
+			log.info("No matching Packages to list from: "+command);
+			return packages;
+		}
+		
+		// Example result.getStdout()
+		//xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
+		String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.info("Did NOT find any available packages from: "+command);
+			return packages;
+		}
+
+		// assemble the list of packages and return them
+		do {
+			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version
+		} while (matcher.find());
+		return packages;		
+	}
+	
+	public String findUniqueAvailablePackageFromRepo (String repo) {
+		
+		for (String pkg : getAvailablePackages("*",repo,null)) {
+			if (!getAvailablePackages(repo,null,pkg).contains(pkg)) {
+				return pkg;
+			}
+		}
+		return null;
 	}
 	
 	public void installPackageUsingYumFromRepo (String pkg, String repoLabel) {

@@ -400,6 +400,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //ll.clear();
 			ll.add(Arrays.asList(new Object[]{pool}));		
 		}
+		
+		// manually reorder the pools so that the base "Red Hat Enterprise Linux*" pool is first in the list
+		// This is a workaround for InstallAndRemovePackageAfterSubscribingToPool_Test so as to avoid installing
+		// a package from a repo that has a package dependency from a repo that is not yet entitled.
+		int i=0;
+		for (List<Object> list : ll) {
+			if (((SubscriptionPool)(list.get(0))).subscriptionName.startsWith("Red Hat Enterprise Linux")) {
+				ll.remove(i);
+				ll.add(0, list);
+				break;
+			}
+			i++;
+		}
+		
+		
 		return ll;
 	}
 	

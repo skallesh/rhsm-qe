@@ -331,6 +331,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
 //			dependsOnGroups={"sm_stage6"},
 //			groups={"sm_stage7", "not_implemented"},
+			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsTCMS(id="41695")
@@ -351,32 +352,27 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		String pkg = null; // initialize to null
+		boolean pkgInstalled = false;
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (contentNamespace.enabled.equals("1")) {
 				String repoLabel = contentNamespace.label;
-				ArrayList<String> packages = clienttasks.getYumListOfAvailablePackagesFromRepo(repoLabel);
-				if (packages.size()==0) {
-					log.warning("No available packages were found from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
+
+				// find an available package that is uniquely provided by repo
+				String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
+				if (pkg==null) {
+					log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 					continue;
 				}
 				
-				// pick the first package for install/remove
-				pkg = packages.get(0);
-				log.info("Attempting to install first package '"+pkg+"' from repo '"+repoLabel+"'...");
-
 				// install the package and assert that it is successfully installed
-				clienttasks.installPackageUsingYumFromRepo(pkg, repoLabel);
+				clienttasks.installPackageUsingYumFromRepo(pkg, repoLabel); pkgInstalled = true;
 				
 				// now remove the package
 				clienttasks.removePackageUsingYum(pkg);
 			}
 		}
-		Assert.assertNotNull(pkg,"At least one package was found and installed after subscribing to SubscriptionPool: "+pool);
+		Assert.assertTrue(pkgInstalled,"At least one package was found and installed from entitled repos after subscribing to SubscriptionPool: "+pool);
 	}
-	
-	
-
 	
 	
 	@Test(	description="rhsmcertd: change certFrequency",
@@ -503,7 +499,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 	
-	
+
 	
 	// Data Providers ***********************************************************************
 
