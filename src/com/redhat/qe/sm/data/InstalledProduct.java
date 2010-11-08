@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,8 +17,8 @@ public class InstalledProduct extends AbstractCommandLineData {
 	public String productName;
 	public String status;
 	public Calendar expires;
-	public Integer subscription;
-	public Integer contractNumber;
+	public BigInteger subscription;
+	public Long contractNumber;
 	
 	public InstalledProduct(Map<String, String> productData) {
 		super(productData);

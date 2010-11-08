@@ -22,7 +22,7 @@ public class ProductCert extends AbstractCommandLineData {
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-	public String name;	// comes from the Product Namespace
+	public String productName;	// comes from the Product Namespace
 
 
 
@@ -37,7 +37,7 @@ public class ProductCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (name != null)				string += String.format(" %s='%s'", "name",name);
+		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (id != null)					string += String.format(" %s='%s'", "id",id);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
@@ -66,7 +66,7 @@ public class ProductCert extends AbstractCommandLineData {
 				((ProductCert)obj).issuer.equals(this.issuer) &&
 				((ProductCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
 				((ProductCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
-				((ProductCert)obj).name.equals(this.name);
+				((ProductCert)obj).productName.equals(this.productName);
 	}
 	
 	/**
@@ -179,7 +179,7 @@ Certificate:
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		regexes.put("name",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*).1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.4:");	// FIXME THIS IS ONLY PART OF THE CERT
 
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();

@@ -3,6 +3,7 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
@@ -19,6 +20,8 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -32,6 +35,67 @@ import com.redhat.qe.tools.SSHCommandRunner;
  */
 @Test(groups={"subscribe"})
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
+	
+	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
+			enabled=true,
+			groups={"myDevGroup"},
+			dataProvider="getExpectedSubscriptionPoolProductIdData")
+	//@ImplementsTCMS(id="")
+	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
+		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
+
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+
+		// assert the subscription pool with the matching productId is available
+		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertNotNull(pool,"Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
+
+		// assert the status of the installed products
+		for (String productName : entitledProductNames) {
+			// assert the status of the installed products
+			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+			if (productCert!=null) {
+				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+				Assert.assertNotNull(installedProduct,"The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
+				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Not Subscribed.");
+			}
+		}
+		
+		// subscribe to the pool
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		
+		
+		// assert the expected products are consumed
+		for (String productName : entitledProductNames) {
+			ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
+			Assert.assertNotNull(productSubscription,"Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
+
+			// assert the dates match
+			Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
+//			Calendar dayBeforeStartDate = (Calendar) entitlementCert.validityNotBefore.clone(); dayBeforeStartDate.add(Calendar.DATE, -1);
+			//Assert.assertEquals(productSubscription.endDate, entitlementCert.validityNotAfter, "Consumed ProductSubscription Expires on the same end date as the given entitlement: "+entitlementCert);
+			Assert.assertTrue(productSubscription.endDate.before(entitlementCert.validityNotAfter) && productSubscription.endDate.after(dayBeforeEndDate), "Consumed ProductSubscription Expires on the same end date as the new entitlement: "+entitlementCert);
+			Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
+
+			// assert whether or not the product is installed			
+			InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+			Assert.assertNotNull(installedProduct,"The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
+
+			// assert the status of the installed products
+			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+			if (productCert!=null) {
+				Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
+				Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
+				Assert.assertEquals(installedProduct.subscription, productSubscription.serialNumber, "Installed Product '"+productName+"' subscription matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
+			} else {
+				Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
+			}
+		}
+	}
+	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.

@@ -148,7 +148,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		for (InstalledProduct installedProduct : installedProducts) {
 			boolean foundInstalledProductMatchingProductCert=false;
 			for (ProductCert productCert : productCerts) {
-				if (installedProduct.productName.equals(productCert.name)) {
+				if (installedProduct.productName.equals(productCert.productName)) {
 					foundInstalledProductMatchingProductCert = true;
 					break;
 				}

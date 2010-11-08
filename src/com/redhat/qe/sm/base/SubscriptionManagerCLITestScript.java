@@ -14,6 +14,7 @@ import java.util.Random;
 
 import javax.jws.Oneway;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterSuite;
@@ -419,4 +420,32 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 
+	
+	
+	@DataProvider(name="getExpectedSubscriptionPoolProductIdData")
+	public Object[][] getExpectedSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getExpectedSubscriptionPoolProductIdDataAsListOfLists());
+	}
+	protected List<List<Object>> getExpectedSubscriptionPoolProductIdDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		String expectedSubscriptionPoolProductIdData = getProperty("sm.client.expectedSubscriptionPoolProductIdData", "");
+		if (expectedSubscriptionPoolProductIdData.equals("")) return ll;	// no data specified
+		
+		JSONArray expectedSubscriptionPoolProductIdDataAsJSONArray = new JSONArray(expectedSubscriptionPoolProductIdData);
+		
+		for (int j = 0; j < expectedSubscriptionPoolProductIdDataAsJSONArray.length(); j++) {
+			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) expectedSubscriptionPoolProductIdDataAsJSONArray.get(j);
+			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
+			JSONArray entitledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("entitledProductNames");
+			List<String> entitledProductNamesAsList = new ArrayList<String>();
+			for (int i = 0; i < entitledProductNamesAsJSONArray.length(); i++) {
+				String entitledProductName = (String) entitledProductNamesAsJSONArray.get(i);
+				entitledProductNamesAsList.add(entitledProductName);
+			}
+			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, entitledProductNamesAsList.toArray(new String[]{})}));
+		}
+		
+		return ll;
+	}
 }

@@ -541,6 +541,68 @@ public class SubscriptionManagerTasks {
 		return productSubscriptionWithMatchingField;
 	}
 	
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param installedProducts - usually getCurrentProductCerts()
+	 * @return - the InstalledProduct from installedProducts that has a matching field (if not found, null is returned)
+	 */
+	public InstalledProduct findInstalledProductWithMatchingFieldFromList(String fieldName, Object fieldValue, List<InstalledProduct> installedProducts) {
+		InstalledProduct installedProductWithMatchingField = null;
+		for (InstalledProduct installedProduct : installedProducts) {
+			try {
+				if (InstalledProduct.class.getField(fieldName).get(installedProduct).equals(fieldValue)) {
+					installedProductWithMatchingField = installedProduct;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return installedProductWithMatchingField;
+	}
+	
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param productCerts - usually getCurrentlyProductCerts()
+	 * @return - the ProductCert from productCerts that has a matching field (if not found, null is returned)
+	 */
+	public ProductCert findProductCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<ProductCert> productCerts) {
+		ProductCert productCertWithMatchingField = null;
+		for (ProductCert productCert : productCerts) {
+			try {
+				if (ProductCert.class.getField(fieldName).get(productCert).equals(fieldValue)) {
+					productCertWithMatchingField = productCert;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return productCertWithMatchingField;
+	}
+	
 
 	/**
 	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
