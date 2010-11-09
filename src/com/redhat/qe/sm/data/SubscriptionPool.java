@@ -136,17 +136,30 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		ProductId:         	MKT-simple-rhel-server-mkt
 		PoolId:            	2                        
 		quantity:          	10                       
-		Expires:           	2011-07-01     * 		/*
+		Expires:           	2011-07-01     
+		
+		ProductName:       	Scalable File System (1-2 sockets)
+		ProductId:         	RH1414165                
+		PoolId:            	8a8aa80d2be34ec0012be505f5a20600
+		Quantity:          	1                        
+		Expires:           	2011-10-24  
+		
+		ProductName:       	Red Hat Enterprise Linux Entitlement Alpha (1-2 Sockets)
+                        	(Unlimited Virtualization)
+		ProductId:         	RH1050830                
+		PoolId:            	8a8aa80d2be34ec0012be505f34d05f9
+		Quantity:          	1                        
+		Expires:           	2011-01-24   
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// SubscriptionPool abstractionField	pattern		(Note: the abstractionField must be defined in the SubscriptionPool class)
-		regexes.put("subscriptionName",			"ProductName:\\s*(.*)");
-		regexes.put("productId",				"ProductId:\\s*(.*)");
-		regexes.put("poolId",					"PoolId:\\s*(.*)");
-		regexes.put("quantity",					"Quantity:\\s*(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
-		regexes.put("endDate",					"Expires:\\s*(.*)");
+		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("subscriptionName",			"ProductName:(.*)");
+		regexes.put("productId",				"ProductId:(.*)");
+		regexes.put("poolId",					"PoolId:(.*)");
+		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
+		regexes.put("endDate",					"Expires:(.*)");
 		
 		List<Map<String,String>> entitlementList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

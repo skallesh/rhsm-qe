@@ -95,24 +95,26 @@ public class ProductSubscription extends AbstractCommandLineData {
 		Active:             	True                     
 		Begins:             	2010-07-01               
 		Expires:            	2011-07-01   
+		
+		ProductName:        	Red Hat Enterprise Linux 6 Entitlement Alpha
+		ContractNumber:     	1970595                  
+		SerialNumber:       	1151289234191548136      
+		Active:             	True                     
+		Begins:             	2010-10-25               
+		Expires:            	2011-01-24   
+		
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
-		
-//		regexes.put("productId",	"Name:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("serialNumber",	"SerialNumber:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("orderNumber",	"OrderNumber:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("isActive",		"Active:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("startDate",	"Begins:\\s*([a-zA-Z0-9 ,:()]*)");
-//		regexes.put("endDate",		"Expires:\\s*([a-zA-Z0-9 ,:()]*)");
 
-		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("productName",			"Name:\\s*(.*)");
-		regexes.put("serialNumber",			"SerialNumber:\\s*(.*)");
-		regexes.put("contractNumber",		"ContractNumber:\\s*(.*)");
-		regexes.put("isActive",				"Active:\\s*(.*)");
-		regexes.put("startDate",			"Begins:\\s*(.*)");
-		regexes.put("endDate",				"Expires:\\s*(.*)");
+
+		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("productName",			"Name:(.*)");
+		regexes.put("serialNumber",			"SerialNumber:(.*)");
+		regexes.put("contractNumber",		"ContractNumber:(.*)");
+		regexes.put("isActive",				"Active:(.*)");
+		regexes.put("startDate",			"Begins:(.*)");
+		regexes.put("endDate",				"Expires:(.*)");
 		
 		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

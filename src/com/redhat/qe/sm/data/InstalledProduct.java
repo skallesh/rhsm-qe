@@ -60,16 +60,28 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Expires:            	2011-07-01               
 		Subscription:       	17                       
 		ContractNumber:        	0   
+
+		ProductName:        	Red Hat Enterprise Linux High Availability (for RHEL 6 Entitlement)
+		Status:             	Not Subscribed           
+		Expires:            	                         
+		Subscription:       	                         
+		ContractNumber: 
+		
+		ProductName:        	Red Hat Enterprise Linux 6 Entitlement Alpha
+		Status:             	Subscribed               
+		Expires:            	2011-01-24               
+		Subscription:       	1151289234191548136      
+		ContractNumber:        	1970595  
 		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("productName",			"ProductName:\\s*(.*)");
-		regexes.put("status",				"Status:\\s*(.*)");
-		regexes.put("expires",				"Expires:\\s*(.*)");
-		regexes.put("subscription",			"Subscription:\\s*(.*)");
-		regexes.put("contractNumber",		"ContractNumber:\\s*(.*)");
+		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("productName",			"ProductName:(.*)");
+		regexes.put("status",				"Status:(.*)");
+		regexes.put("expires",				"Expires:(.*)");
+		regexes.put("subscription",			"Subscription:(.*)");
+		regexes.put("contractNumber",		"ContractNumber:(.*)");
 		
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
