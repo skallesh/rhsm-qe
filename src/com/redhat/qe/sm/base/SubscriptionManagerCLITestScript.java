@@ -422,20 +422,22 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 	
 	
-	@DataProvider(name="getExpectedSubscriptionPoolProductIdData")
-	public Object[][] getExpectedSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getExpectedSubscriptionPoolProductIdDataAsListOfLists());
+	@DataProvider(name="getSubscriptionPoolProductIdData")
+	public Object[][] getSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProductIdDataAsListOfLists());
 	}
-	protected List<List<Object>> getExpectedSubscriptionPoolProductIdDataAsListOfLists() throws JSONException {
+	protected List<List<Object>> getSubscriptionPoolProductIdDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		String expectedSubscriptionPoolProductIdData = getProperty("sm.client.expectedSubscriptionPoolProductIdData", "");
-		if (expectedSubscriptionPoolProductIdData.equals("")) return ll;	// no data specified
+		String subscriptionPoolProductIdData = getProperty("sm.client.subscriptionPoolProductIdData", "");
+		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll("<", "["); // hudson parameters use < instead of [
+		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll(">", "]"); // hudson parameters use > instead of ]
+		if (subscriptionPoolProductIdData.equals("")) return ll;	// no data specified
 		
-		JSONArray expectedSubscriptionPoolProductIdDataAsJSONArray = new JSONArray(expectedSubscriptionPoolProductIdData);
+		JSONArray subscriptionPoolProductIdDataAsJSONArray = new JSONArray(subscriptionPoolProductIdData);
 		
-		for (int j = 0; j < expectedSubscriptionPoolProductIdDataAsJSONArray.length(); j++) {
-			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) expectedSubscriptionPoolProductIdDataAsJSONArray.get(j);
+		for (int j = 0; j < subscriptionPoolProductIdDataAsJSONArray.length(); j++) {
+			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) subscriptionPoolProductIdDataAsJSONArray.get(j);
 			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
 			JSONArray entitledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("entitledProductNames");
 			List<String> entitledProductNamesAsList = new ArrayList<String>();

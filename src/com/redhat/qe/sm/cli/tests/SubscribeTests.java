@@ -39,7 +39,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			enabled=true,
 			groups={"myDevGroup"},
-			dataProvider="getExpectedSubscriptionPoolProductIdData")
+			dataProvider="getSubscriptionPoolProductIdData")
 	//@ImplementsTCMS(id="")
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
