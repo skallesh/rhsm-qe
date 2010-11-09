@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
@@ -37,19 +38,20 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
-			enabled=true,
-			groups={"myDevGroup"},
-			dataProvider="getSubscriptionPoolProductIdData")
+			dataProvider="getSubscriptionPoolProductIdData",
+			groups={},
+			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 
+		// begin test with a fresh register
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(pool,"Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
+		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		// assert the status of the installed products
 		for (String productName : entitledProductNames) {
@@ -57,7 +59,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
 				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
-				Assert.assertNotNull(installedProduct,"The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
+				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Not Subscribed.");
 			}
 		}
@@ -66,11 +68,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
-		
 		// assert the expected products are consumed
 		for (String productName : entitledProductNames) {
 			ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
-			Assert.assertNotNull(productSubscription,"Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
+			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
 
 			// assert the dates match
 			Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
@@ -82,7 +83,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 			// assert whether or not the product is installed			
 			InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
-			Assert.assertNotNull(installedProduct,"The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
+			Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 
 			// assert the status of the installed products
 			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
@@ -92,6 +93,61 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				Assert.assertEquals(installedProduct.subscription, productSubscription.serialNumber, "Installed Product '"+productName+"' subscription matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
 			} else {
 				Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
+			}
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
+			groups={},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void AutoSubscribeToExpectedSubscriptionPoolProductId_Test() throws JSONException {
+		
+		// begin test with a fresh autosubscribed register
+		clienttasks.unregister();
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
+
+		/* Example Stdout: 
+			e1aef738-5d03-4a8a-9c87-7a2652e110a8 rh-alpha-qa-105
+			Bind Product  Red Hat Enterprise Linux High Availability (for RHEL 6 Entitlement) 407
+			Bind Product  Red Hat Enterprise Linux Scalable File System (for RHEL 6 Entitlement) 410
+			Bind Product  Red Hat Enterprise Linux Resilient Storage (for RHEL 6 Entitlement) 409
+			Bind Product  Red Hat Enterprise Linux Load Balancer (for RHEL 6 Entitlement) 408
+			Bind Product  Red Hat Enterprise Linux 6 Entitlement Alpha 406
+		*/
+		
+		// get the expected subscriptionPoolProductIdData
+		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
+
+		// get the state of affairs after having registered with autosubscribe
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		
+		// loop through the subscriptionPoolProductIdData and verify...
+		for (List<Object> row : subscriptionPoolProductIdData) {
+			String subscriptionPoolProductId = (String)row.get(0);
+			String[] entitledProductNames = (String[])row.get(1);
+			
+			// assert that the subscriptionPoolProductId has been subscribed to...
+			
+			// assert that subscriptionPoolProductId is not available
+			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPools);
+			Assert.assertNull(subscriptionPool, "SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is not available after registering with autosubscribe.  Note: We are assuming it was available before the autosubscribe.");
+
+			for (String entitledProductName : entitledProductNames) {
+				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
+				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' is was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+
+				// assert that the entitledProductName is consumed
+				ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
+				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+entitledProductName+"' is consumed after registering with autosubscribe.");
+	
+				// assert that the entitledProductName is installed and subscribed
+				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
+				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+entitledProductName+"' is reported in the list of installed products.");
+				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+entitledProductName+"' is Subscribed.");
 			}
 		}
 	}
