@@ -103,8 +103,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AutoSubscribeToExpectedSubscriptionPoolProductId_Test() throws JSONException {
+		// get the expected subscriptionPoolProductIdData
+		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
+
+		// before testing, make sure all the expected subscriptionPoolProductId are available
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		for (List<Object> row : subscriptionPoolProductIdData) {
+			String subscriptionPoolProductId = (String)row.get(0);
+			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
+			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
+		}
 		
-		// begin test with a fresh autosubscribed register
+		// register with autosubscribe
 		clienttasks.unregister();
 		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
 
@@ -116,12 +128,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Bind Product  Red Hat Enterprise Linux Load Balancer (for RHEL 6 Entitlement) 408
 			Bind Product  Red Hat Enterprise Linux 6 Entitlement Alpha 406
 		*/
-		
-		// get the expected subscriptionPoolProductIdData
-		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
 
 		// get the state of affairs after having registered with autosubscribe
-		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> availableSubscriptionPoolsAfterAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		
@@ -133,12 +142,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// assert that the subscriptionPoolProductId has been subscribed to...
 			
 			// assert that subscriptionPoolProductId is not available
-			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPools);
-			Assert.assertNull(subscriptionPool, "SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is not available after registering with autosubscribe.  Note: We are assuming it was available before the autosubscribe.");
+			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
+			if (subscriptionPool!=null) {
+				String entitledProductNamesAsString = "";
+				for (String entitledProductName : entitledProductNames) entitledProductNamesAsString += entitledProductName+", ";entitledProductNamesAsString = entitledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
+				log.warning("SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is still available after registering with autosubscribe.");
+				log.warning("The probable cause is that the products we expected to be installed, '"+entitledProductNamesAsString+"', are probably not installed and therefore autosubscribing to '"+subscriptionPoolProductId+"' was not performed.");
+			}
+			Assert.assertNull(subscriptionPool, "SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is NOT available after registering with autosubscribe.");
 
 			for (String entitledProductName : entitledProductNames) {
 				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
-				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' is was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
 
 				// assert that the entitledProductName is consumed
 				ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
@@ -150,6 +165,22 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+entitledProductName+"' is Subscribed.");
 			}
 		}
+		
+		// finally assert that no extraneous subscription pools were subscribed to
+		for (SubscriptionPool subscriptionPoolBeforeAutosubscribe : availableSubscriptionPoolsBeforeAutosubscribe) {
+			if (!availableSubscriptionPoolsAfterAutosubscribe.contains(subscriptionPoolBeforeAutosubscribe)) {
+				boolean subscribedPoolWasExpected = false;
+				for (List<Object> row : subscriptionPoolProductIdData) {
+					String subscriptionPoolProductId = (String)row.get(0);
+					if (subscriptionPoolBeforeAutosubscribe.productId.equals(subscriptionPoolProductId)) {
+						subscribedPoolWasExpected = true;
+						break;
+					}
+				}
+				if (!subscribedPoolWasExpected) Assert.fail("Did NOT expect pool '"+subscriptionPoolBeforeAutosubscribe+"' to be removed from the available list following a register with autosubscribe.");
+			}
+		}
+		Assert.assertTrue(true,"No pools were unexpectedly subscribed to following a register with autosubscribe.");
 	}
 	
 	
