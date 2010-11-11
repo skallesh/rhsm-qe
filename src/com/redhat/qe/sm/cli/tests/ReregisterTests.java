@@ -137,7 +137,6 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	
 // TODO Automation Candidates for Reregister tests: 
 //		https://bugzilla.redhat.com/show_bug.cgi?id=627685
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627681
 //		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 
 	

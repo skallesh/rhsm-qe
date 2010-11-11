@@ -74,13 +74,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String sshUser				= getProperty("sm.ssh.user","root");
 	protected String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
 	protected String sshkeyPassphrase		= getProperty("sm.sshkey.passphrase","");
-
-//	protected String itDBSQLDriver			= getProperty("sm.it.db.sqldriver", "oracle.jdbc.driver.OracleDriver");
-//	protected String itDBHostname			= getProperty("sm.it.db.hostname");
-//	protected String itDBDatabase			= getProperty("sm.it.db.database");
-//	protected String itDBPort				= getProperty("sm.it.db.port", "1521");
-//	protected String itDBUsername			= getProperty("sm.it.db.username");
-//	protected String itDBPassword			= getProperty("sm.it.db.password");
 	
 	protected String dbHostname				= getProperty("sm.server.db.hostname","");
 	protected String dbSqlDriver			= getProperty("sm.server.db.sqlDriver","");
