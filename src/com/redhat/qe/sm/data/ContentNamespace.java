@@ -8,19 +8,6 @@ import java.util.regex.Pattern;
 
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
-/* https://docspace.corp.redhat.com/docs/DOC-30244
-  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (Supplementary))
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1 (Yum repo type))
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.1 (Name) : Red Hat Enterprise Linux (Supplementary)
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.2 (Label) : rhel-server-6-supplementary
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.3 (Physical Entitlements): 1
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.4 (Flex Guest Entitlements): 0
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.6 (Download URL): content/rhel-server-6-supplementary/$releasever/$basearch
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.7 (GPG Key URL): file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-  1.3.6.1.4.1.2312.9.2.<content_hash>.1.8 (Enabled): 1
-*/
-
 public class ContentNamespace extends AbstractCommandLineData {
 	
 	// abstraction fields
@@ -254,6 +241,18 @@ public class ContentNamespace extends AbstractCommandLineData {
 		        06:c4:a2:65:05:81:8c:d7:5b:e3:9f:4f:1f:6c:9b:3c:85:e5:
 		        30:28
 		*/
+		
+		// https://docspace.corp.redhat.com/docs/DOC-30244
+		//  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (Supplementary))
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1 (Yum repo type))
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.1 (Name) : Red Hat Enterprise Linux (Supplementary)
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.2 (Label) : rhel-server-6-supplementary
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.3 (Physical Entitlements): 1
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.4 (Flex Guest Entitlements): 0
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.6 (Download URL): content/rhel-server-6-supplementary/$releasever/$basearch
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.7 (GPG Key URL): file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.8 (Enabled): 1
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		

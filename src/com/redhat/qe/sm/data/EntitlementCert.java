@@ -13,18 +13,32 @@ import java.util.regex.Pattern;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 public class EntitlementCert extends AbstractCommandLineData {
-	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
+	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT   validityNotBefore
+//	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"   startDate
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
-	public String rawCertificate;
 	public String id;			// entitlement uuid on the candlepin server
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
+	
+	public String productName;
+	public String orderNumber;
 	public String productId;	// SKU
+	public String subscriptionNumber;
+	public String quantity;
+	public String startDate;
+	public String endDate;
+	public String virtualizationLimit;
+	public String socketLimit;
+	public String contractNumber;
+	public String quantityUsed;
+	public String warningPeriod;
+	public String accountNumber;
+	
 	public List<ContentNamespace> contentNamespaces;
-
+	public String rawCertificate;
 
 	public EntitlementCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
@@ -38,12 +52,23 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
-		if (id != null)					string += String.format(" %s='%s'", "id",id);
-		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
-		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
-		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
-		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
+		if (serialNumber != null)			string += String.format(" %s='%s'", "serialNumber",serialNumber);
+		if (id != null)						string += String.format(" %s='%s'", "id",id);
+		if (issuer != null)					string += String.format(" %s='%s'", "issuer",issuer);
+		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
+		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
+		
+		if (productName != null)			string += String.format(" %s='%s'", "productName",productName);
+		if (orderNumber != null)			string += String.format(" %s='%s'", "orderNumber",orderNumber);
+		if (subscriptionNumber != null)		string += String.format(" %s='%s'", "subscriptionNumber",subscriptionNumber);
+		if (startDate != null)				string += String.format(" %s='%s'", "startDate",startDate);
+		if (endDate != null)				string += String.format(" %s='%s'", "endDate",endDate);
+		if (virtualizationLimit != null)	string += String.format(" %s='%s'", "virtualizationLimit",virtualizationLimit);
+		if (socketLimit != null)			string += String.format(" %s='%s'", "socketLimit",socketLimit);
+		if (contractNumber != null)			string += String.format(" %s='%s'", "contractNumber",contractNumber);
+		if (quantityUsed != null)			string += String.format(" %s='%s'", "quantityUsed",quantityUsed);
+		if (warningPeriod != null)			string += String.format(" %s='%s'", "warningPeriod",warningPeriod);
+		if (accountNumber != null)			string += String.format(" %s='%s'", "accountNumber",accountNumber);
 	
 		return string.trim();
 	}
@@ -421,11 +446,27 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 
 		 */
 		
-		
-		
 		/*
 		        Issuer: C=US, ST=North Carolina, O=Red Hat, Inc., OU=Red Hat Network, CN=Red Hat Entitlement Product Authority/emailAddress=ca-support@redhat.com
 		 */
+		
+//		https://docspace.corp.redhat.com/docs/DOC-30244
+//			  1.3.6.1.4.1.2312.9.4.1 (Name): Red Hat Enterprise Linux Server
+//			  1.3.6.1.4.1.2312.9.4.2 (Order Number) : ff8080812c3a2ba8012c3a2cbe63005b  
+//			  1.3.6.1.4.1.2312.9.4.3 (SKU) : MCT0982
+//			  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678
+//			  1.3.6.1.4.1.2312.9.4.5 (Quantity) : 100
+//			  1.3.6.1.4.1.2312.9.4.6 (Entitlement Start Date) : 2010-10-25T04:00:00Z
+//			  1.3.6.1.4.1.2312.9.4.7 (Entitlement End Date) : 2011-11-05T00:00:00Z
+//			  1.3.6.1.4.1.2312.9.4.8 (Virtualization Limit) : 4
+//			  1.3.6.1.4.1.2312.9.4.9 (Socket Limit) : None
+//			  1.3.6.1.4.1.2312.9.4.10 (Contract Number): 152341643
+//			  1.3.6.1.4.1.2312.9.4.11 (Quantity Used): 4
+//			  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
+//			  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
+
+		// FIXME: Not sure how to handle the certificate dates Validity versus Entitlement Start Date
+		// I suspect that I am currently using the wrong dates.
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
@@ -434,10 +475,27 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*)");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//FIXME I BELIEVE THIS SHOULD BE UNCOMMENTED AND REPLACE PRIOR LINE AFTER RESOLUTION FROM https://bugzilla.redhat.com/show_bug.cgi?id=650278
-//		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
+		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("orderNumber",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("subscriptionNumber",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("quantity",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("startDate",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("endDate",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("virtualizationLimit",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("socketLimit",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("contractNumber",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("quantityUsed",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("warningPeriod",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("accountNumber",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*).1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");	// FIXME THIS IS ONLY PART OF THE CERT
+
+//FIXME WORKAROUND: DELETE THE FOLLOWING LINE AFTER RESOLUTION FROM https://bugzilla.redhat.com/show_bug.cgi?id=650278
+		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
+		
 
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

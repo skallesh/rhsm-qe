@@ -27,9 +27,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="subscription-manager-cli: list available entitlements",
-			groups={},
+//			groups={"myDevGroup"},
 			enabled=true)
 	@ImplementsTCMS(id="41678")
+//	@ImplementsTCMS(testcases={41678,41678}, version=4)
 	public void EnsureAvailableEntitlementsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
