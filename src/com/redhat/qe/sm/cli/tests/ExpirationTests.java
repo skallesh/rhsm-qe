@@ -14,7 +14,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
-	@BeforeClass(groups="setup")
+	@BeforeClass(groups="setup" enabled=false)
 	public void checkTime() throws Exception{
 		//make sure local clock and server clock are synced
 		Date localTime = Calendar.getInstance().getTime();
@@ -28,7 +28,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with candlepin server is less than 1 minute");
 	}
 	
-	@Test
+	@Test(enabled=false)
 	public void dummyTest(){
 		
 	}
