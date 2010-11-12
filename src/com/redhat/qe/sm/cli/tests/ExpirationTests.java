@@ -1,6 +1,5 @@
 package com.redhat.qe.sm.cli.tests;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -14,7 +13,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
-	@BeforeClass(groups="setup", enabled=false)
+	@BeforeClass(groups="setup")
 	public void checkTime() throws Exception{
 		//make sure local clock and server clock are synced
 		Date localTime = Calendar.getInstance().getTime();
@@ -28,7 +27,11 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with candlepin server is less than 1 minute");
 	}
 	
-	@Test(enabled=false)
+	protected void createTestPools(){
+		
+	}
+	
+	@Test
 	public void dummyTest(){
 		
 	}
