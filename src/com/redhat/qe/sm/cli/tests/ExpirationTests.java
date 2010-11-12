@@ -14,7 +14,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
-	@BeforeClass(groups="setup" enabled=false)
+	@BeforeClass(groups="setup", enabled=false)
 	public void checkTime() throws Exception{
 		//make sure local clock and server clock are synced
 		Date localTime = Calendar.getInstance().getTime();
