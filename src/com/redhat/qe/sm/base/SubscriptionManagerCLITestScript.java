@@ -66,7 +66,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeSuite(groups={"setup"},description="subscription manager set up")
-	public void setupBeforeSuite() throws JSONException, Exception{
+	public void setupBeforeSuite() throws IOException {
 	
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
@@ -171,8 +171,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		
 		log.info("Installed version of candlepin...");
-		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));
-		log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
+		try {
+			//FIXME: should change clientOwnerUsername,clientOwnerPassword to a candlepin superadmin/password
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));			
+			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
+		} catch (Exception e) {
+			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
+		}
 		
 		log.info("Installed version of subscription-manager...");
 		log.info("Subscription manager client '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686

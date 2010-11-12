@@ -138,21 +138,24 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+path);
-		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" --request GET https://"+server+":"+port+prefix+path);
-		return getHTTPResponseAsString(client, get, owner, password);
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
-	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+path);
-		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" --request PUT https://"+server+":"+port+prefix+path);
-		return getHTTPResponseAsString(client, put, owner, password);
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
-	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path, String postValue) throws Exception {
+	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String postValue) throws Exception {
 //FIXME NOT TESTED  DON"T KNOW WHAT TO DO WITH POST DATA
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
-		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" --request POST https://"+server+":"+port+prefix+path);
-		return getHTTPResponseAsString(client, post, owner, password);
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
 	static public JSONObject getEntitlementUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
@@ -193,15 +196,16 @@ public class CandlepinTasks {
 		int port = method.getURI().getPort();
 	
 		setCredentials(client, server, port, username, password);
-		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " for '"+username+"' on server '"+server+"'...");
-	
+		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " with credentials for '"+username+"' on server '"+server+"'...");
+		
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
 	}
 	
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
-		client.getState().setCredentials(
+		if (!username.equals(""))
+			client.getState().setCredentials(
 	            new AuthScope(server, port, null),
 	            new UsernamePasswordCredentials(username, password)
 	        );
