@@ -10,7 +10,7 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -33,7 +33,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsTCMS(id="56025")
+	@ImplementsNitrateTest(cases={56025})
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws Exception {
 //		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 //		Actions:

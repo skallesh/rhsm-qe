@@ -11,7 +11,7 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -103,7 +103,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
 			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
-	@ImplementsTCMS(id="50403")
+	@ImplementsNitrateTest(cases={50403})
 	public void EnititlementCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// test prerequisites
@@ -479,7 +479,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"NegativeSuperUserPassword_Test"}, dependsOnGroups={},
 			
 			enabled=true, alwaysRun=true)
-	@ImplementsTCMS(id="50404")
+	@ImplementsNitrateTest(cases={50404})
 	public void NegativeSuperUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
 		String authuser="",authpwd="";
 
@@ -516,7 +516,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: events: negative test for consumer user/password.",
 			groups={"NegativeConsumerUserPassword_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
-	@ImplementsTCMS(id="50404")
+	@ImplementsNitrateTest(cases={50404})
 	public void NegativeConsumerUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
 		String authuser="",authpwd="";
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();

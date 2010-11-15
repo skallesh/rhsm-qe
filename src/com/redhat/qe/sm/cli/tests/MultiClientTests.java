@@ -6,7 +6,7 @@ import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -25,7 +25,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="bind/unbind with two users/consumers",
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsTCMS(id="53217")
+	@ImplementsNitrateTest(cases={53217})
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");

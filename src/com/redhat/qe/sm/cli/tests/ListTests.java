@@ -6,7 +6,7 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -27,10 +27,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="subscription-manager-cli: list available entitlements",
-//			groups={"myDevGroup"},
+			groups={"myDevGroup"},
 			enabled=true)
-	@ImplementsTCMS(id="41678")
-//	@ImplementsTCMS(testcases={41678,41678}, version=4)
+	@ImplementsNitrateTest(cases={41678})
 	public void EnsureAvailableEntitlementsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -50,7 +49,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
-	@ImplementsTCMS(id="41678")
+	@ImplementsNitrateTest(cases={41678})
 	public void EnsureAvailableEntitlementsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -63,7 +62,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: list consumed entitlements",
 			groups={},
 			enabled=true)
-	@ImplementsTCMS(id="41679")
+	@ImplementsNitrateTest(cases={41679})
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -76,7 +75,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
-	@ImplementsTCMS(id="41679")
+	@ImplementsNitrateTest(cases={41679})
 	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
