@@ -27,7 +27,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="subscription-manager-cli: list available entitlements",
-			groups={"myDevGroup"},
+			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(cases={41678})
 	public void EnsureAvailableEntitlementsListed_Test() {
