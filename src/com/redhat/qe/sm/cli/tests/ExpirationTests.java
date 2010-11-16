@@ -3,13 +3,17 @@ package com.redhat.qe.sm.cli.tests;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 
+import org.json.JSONException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.InstalledProduct;
 
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
@@ -27,8 +31,17 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with candlepin server is less than 1 minute");
 	}
 	
-	protected void createTestPools(){
-		
+	protected void createTestPools() throws Exception{
+		Calendar cal = new GregorianCalendar();
+		cal.add(Calendar.MINUTE, 3);
+		Date _3min = cal.getTime();
+		cal.add(Calendar.DATE, -21);
+		Date _3weeksago = cal.getTime();
+		/*List<InstalledProduct> clientProds = clienttasks.getCurrentlyInstalledProducts();
+		String product = clientProds.get(0).productName;*/
+		String[] providedProducts = {"37068", "37069", "37060"};
+		String requestBody = CandlepinTasks.createPoolRequest(10, _3weeksago, _3min, "MKT-rhel-server", 123, providedProducts).toString();
+		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, "/owners/admin/subscriptions", requestBody);
 	}
 	
 	@Test
