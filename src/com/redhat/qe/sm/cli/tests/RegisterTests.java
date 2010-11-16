@@ -19,7 +19,7 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -48,7 +48,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getUsernameAndPasswordData")
-	@ImplementsTCMS(id="41677")
+	@ImplementsNitrateTest(cases={41677})
 	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
@@ -89,7 +89,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
 			dataProvider="getBogusRegistrationData")
-	@ImplementsTCMS(id="41691, 47918")
+	@ImplementsNitrateTest(cases={41691, 47918})
 	public void Registration_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
@@ -242,7 +242,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register with --name",
 			groups={},
 			enabled=true)
-	@ImplementsTCMS(id="62352")
+	@ImplementsNitrateTest(cases={62352})
 	public void RegisterWithName_Test() {
 		
 		// start fresh by unregistering
@@ -276,7 +276,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: reregister basic registration",
 			groups={"blockedByBug-636843"},
 			enabled=true)
-	@ImplementsTCMS(id="56327")
+	@ImplementsNitrateTest(cases={56327})
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
@@ -333,7 +333,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: bad identity cert",
 			groups={/*"blockedByBug-624106"*/},
 			enabled=true)
-	@ImplementsTCMS(id="56328")
+	@ImplementsNitrateTest(cases={56328})
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering

@@ -12,7 +12,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -143,7 +143,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			groups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-643405"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
-	@ImplementsTCMS(id="55702,55718")
+	@ImplementsNitrateTest(cases={55702,55718})
 	public void EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 //		if (!isServerOnPremises) throw new SkipException("Currently this test is designed only for on-premises.");	//TODO Make this work for IT too.  jsefler 8/12/2010 
 		if (client2tasks==null) throw new SkipException("These tests are designed to use a second client.");
@@ -209,7 +209,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
-	@ImplementsTCMS(id="55702,55718")
+	@ImplementsNitrateTest(cases={55702,55718})
 	public void EnsureSubPoolIsConsumableAfterRegisteredPersonSubscribesToRHELPersonal_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 				
 		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') can now consume '"+systemSubscriptionName+"'...");
@@ -303,7 +303,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 //			dataProvider="getRHELPersonalData",
 			alwaysRun=true,	// FIXME delete this line once blockedByBug-639434 is resolved
 			enabled=true)
-	@ImplementsTCMS(id="58898")
+	@ImplementsNitrateTest(cases={58898})
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
 	public void EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 		log.info("Assuming that multiple systems have subscribed to subpool '"+systemSubscriptionName+"' in prior testcase...");
@@ -329,7 +329,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
-	@ImplementsTCMS(id="58899")
+	@ImplementsNitrateTest(cases={58899})
 	// 2) unsubscribe system from subpool while other systems are subscribed to subpool, make sure the subpool doesn't go away (scenario from calfanso@redhat.com)
 	public void EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 		SubscribeMultipleSystemsToSubPool_Test(/*consumerUsername, consumerPassword, personSubscriptionName, systemSubscriptionName, systemConsumedProductName*/);
@@ -352,7 +352,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={"EnsureEntitlementCertForSubPoolIsNotRevokedOnceAnotherSystemUnsubscribesFromSubPool_Test"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
-	@ImplementsTCMS(id="58907")
+	@ImplementsNitrateTest(cases={58907})
 	// 3) unsubscribe system from subpool as the last system subscribed, make sure the subpool doesn't get deleted (scenario from calfanso@redhat.com)
 	public void EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 		log.info("After having unsubscribed all systems from product '"+systemConsumedProductName+"' in the prior testcase , we will now verify that the subpool '"+systemSubscriptionName+"' has not been deleted and that all systems can still subscribe to it ...");
@@ -414,7 +414,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 //			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
-	@ImplementsTCMS(id="61126")
+	@ImplementsNitrateTest(cases={61126})
 	public void EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsername_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
 		teardownAfterGroups();
 		

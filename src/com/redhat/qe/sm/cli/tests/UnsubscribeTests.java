@@ -9,7 +9,7 @@ import org.testng.SkipException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -32,7 +32,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
-	@ImplementsTCMS(id="41688")
+	@ImplementsNitrateTest(cases={41688})
 	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -45,7 +45,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
-	@ImplementsTCMS(id="41898")
+	@ImplementsNitrateTest(cases={41898})
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -113,7 +113,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsTCMS(id="41903")
+	@ImplementsNitrateTest(cases={41903})
 	public void EntitlementMaliciousNegative_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
 		

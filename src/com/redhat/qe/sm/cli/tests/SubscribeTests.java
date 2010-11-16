@@ -13,7 +13,7 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -190,7 +190,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsTCMS(id="41680")
+	@ImplementsNitrateTest(cases={41680})
 	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -222,7 +222,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-584137"},
 			enabled=true,
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsTCMS(id="41686")
+	@ImplementsNitrateTest(cases={41686})
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -234,7 +234,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
 			groups={"blockedByBug-584137"},
 			dataProvider="getGoodRegistrationData")
-	@ImplementsTCMS(id="41686")
+	@ImplementsNitrateTest(cases={41686})
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password){
 		clienttasks.unregister();
 		clienttasks.register(username, password, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE);
@@ -247,7 +247,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			enabled=false)
-	@ImplementsTCMS(id="41681")
+	@ImplementsNitrateTest(cases={41681})
 	public void SubscribeToRegToken_Test(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribeToRegToken(regtoken);
@@ -260,7 +260,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsTCMS(id="41897")
+	@ImplementsNitrateTest(cases={41897})
 	public void SubscribeAndSubscribeAgain_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -299,7 +299,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsTCMS(id="41696")
+	@ImplementsNitrateTest(cases={41696})
 	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) {
 
 		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test..");
@@ -403,7 +403,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //	        groups={"sm_stage7"},
 			groups={},
 	        enabled=true)
-	@ImplementsTCMS(id="47578")
+	@ImplementsNitrateTest(cases={47578})
 	public void VerifyYumRepoListsEnabledContent(){
 // Original code from ssalevan
 //	    ArrayList<String> repos = this.getYumRepolist();
@@ -485,7 +485,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsTCMS(id="41695")
+	@ImplementsNitrateTest(cases={41695})
 	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
 		// original implementation by ssalevan
 //		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
@@ -532,7 +532,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getCertFrequencyData",
 			groups={"blockedByBug-617703"},
 			enabled=true)
-	@ImplementsTCMS(id="41692")
+	@ImplementsNitrateTest(cases={41692})
 	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
 		String errorMsg = "Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.";
 		errorMsg = "Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.";
@@ -595,7 +595,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			groups={"sm_stage4"},
 			groups={"blockedByBug-617703"},
 			enabled=true)
-	@ImplementsTCMS(id="41694")
+	@ImplementsNitrateTest(cases={41694})
 	public void rhsmcertdEnsureCertificatesSynchronize_Test(){
 //FIXME Replacing ssalevan's original implementation of this test... 10/5/2010 jsefler
 //		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);

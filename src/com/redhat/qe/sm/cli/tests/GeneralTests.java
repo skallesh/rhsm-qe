@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
@@ -29,7 +29,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")
-	@ImplementsTCMS(id="41697, 46713")
+	@ImplementsNitrateTest(cases={41697, 46713})
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
@@ -64,7 +64,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
 //			groups={"sm_stage1"},
 			dataProvider="UnregisteredCommandData")
-	@ImplementsTCMS(id="41697")
+	@ImplementsNitrateTest(cases={41697})
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
 		clienttasks.unregister();

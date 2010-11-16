@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -39,7 +39,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: reregister basic registration",
 			groups={"blockedByBug-636843"},
 			enabled=true)
-	@ImplementsTCMS(id="56327")
+	@ImplementsNitrateTest(cases={56327})
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
@@ -96,7 +96,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: bad identity cert",
 			groups={/*"blockedByBug-624106"*/},
 			enabled=true)
-	@ImplementsTCMS(id="56328")
+	@ImplementsNitrateTest(cases={56328})
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering

@@ -11,7 +11,7 @@ import org.testng.SkipException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -41,7 +41,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
-	@ImplementsTCMS(id="56386")
+	@ImplementsNitrateTest(cases={56386})
 	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
@@ -56,7 +56,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
 			groups={}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsTCMS(id="56329")
+	@ImplementsNitrateTest(cases={56329})
 	public void FactCheckRhelDistribution_Test() {
 		
 		// skip if client1 and client2 are not a Server and Workstation distributions
@@ -124,7 +124,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
 			groups={"blockedByBug-641027"}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsTCMS(id="56331")
+	@ImplementsNitrateTest(cases={56331})
 	public void BypassRulesDueToType_Test() throws JSONException {
 		// determine which client is a RHEL Workstation
 		SSHCommandRunner client = null;

@@ -37,6 +37,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
@@ -182,6 +183,13 @@ public class CandlepinTasks {
 		String response = m.getResponseBodyAsString();
 		log.finer("HTTP server returned content: " + response);
 		m.releaseConnection();
+		
+		// When testing against a Stage or Production server where we are not granted enough authority to make HTTP Requests,
+		// our tests will fail.  This block of code is a short cut to simply skip those test. - jsefler 11/15/2010 
+		if (m.getStatusText().equalsIgnoreCase("Unauthorized")) {
+			throw new SkipException("Not authorized make HTTP request to '"+m.getURI()+"' with credentials: username='"+username+"' password='"+password+"'");
+		}
+		
 		return response;
 	}
 	
