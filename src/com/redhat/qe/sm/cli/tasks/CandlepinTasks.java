@@ -1,24 +1,25 @@
 package com.redhat.qe.sm.cli.tasks;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -29,6 +30,7 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
@@ -150,9 +152,10 @@ public class CandlepinTasks {
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
-	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String postValue) throws Exception {
+	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
 //FIXME NOT TESTED  DON"T KNOW WHAT TO DO WITH POST DATA
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
+		if (requestBody != null) post.setRequestEntity(new StringRequestEntity(requestBody, null, null));
 		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, post, authenticator, password);
@@ -565,7 +568,34 @@ public class CandlepinTasks {
 		//System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
 		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
 		//CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
-		CandlepinTasks.exportConsumerUsingRESTfulAPI("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
-
+		//CandlepinTasks.exportConsumerUsingRESTfulAPI("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
+		JSONObject sub = new JSONObject();
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		Calendar cal = new GregorianCalendar();
+		cal.add(Calendar.DATE, -1);
+		Date yday = cal.getTime();
+		cal.add(Calendar.DATE, 2);
+		Date trow = cal.getTime();
+		
+		String[] ids = {"37060"};
+		List<JSONObject> pprods = new ArrayList<JSONObject>();
+		for (String id: ids) {
+			JSONObject jo = new JSONObject();
+			jo.put("id", id);
+			pprods.add(jo);
+		}
+		
+		sub.put("quantity", 5);
+		sub.put("startDate", sdf.format(yday));
+		sub.put("product", null);
+		sub.put("contractNumber", "345345");
+		sub.put("providedProducts", null);
+		sub.put("endDate", trow);
+		
+		
+		JSONArray ja = new JSONArray(Arrays.asList(new String[] {"blah" }));
+		
+		jo.put("john", ja);
+		System.out.println(jo.toString());
 	}
 }
