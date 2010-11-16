@@ -156,7 +156,12 @@ public class CandlepinTasks {
 	}
 	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
-		if (requestBody != null) post.setRequestEntity(new StringRequestEntity(requestBody, null, null));
+		if (requestBody != null) {
+			post.setRequestEntity(new StringRequestEntity(requestBody, null, null));
+			post.addRequestHeader("accept", "application/json");
+			post.addRequestHeader("content-type", "application/json");
+		}
+		
 		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, post, authenticator, password);
@@ -575,7 +580,8 @@ public class CandlepinTasks {
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 		sub.put("startDate", sdf.format(startDate));
 		sub.put("contractNumber", contractNumber);
-		sub.put("endDate", endDate);
+		sub.put("endDate", sdf.format(endDate));
+		sub.put("quantity", quantity);
 
 		List<JSONObject> pprods = new ArrayList<JSONObject>();
 		for (String id: providedProducts) {

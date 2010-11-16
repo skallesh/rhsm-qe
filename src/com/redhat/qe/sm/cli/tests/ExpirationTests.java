@@ -31,7 +31,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with candlepin server is less than 1 minute");
 	}
 	
-	protected void createTestPools() throws Exception{
+	@BeforeClass(dependsOnMethods="checkTime")
+	public void createTestPools() throws Exception{
 		Calendar cal = new GregorianCalendar();
 		cal.add(Calendar.MINUTE, 3);
 		Date _3min = cal.getTime();
