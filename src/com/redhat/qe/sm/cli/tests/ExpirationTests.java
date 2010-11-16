@@ -18,9 +18,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		//make sure local clock and server clock are synced
 		Date localTime = Calendar.getInstance().getTime();
 		Date remoteTime; 
-		SSHCommandRunner runner = new SSHCommandRunner("jweiss-rhel6-1.usersys.redhat.com", sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-		runner.runCommandAndWait("date");
-		String serverDateStr = runner.getStdout();
+		//SSHCommandRunner runner = new SSHCommandRunner("jweiss-rhel6-1.usersys.redhat.com", sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+		server.runCommandAndWait("date");
+		String serverDateStr = server.getStdout();
 		SimpleDateFormat unixFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
 		remoteTime = unixFormat.parse(serverDateStr);
 		long timeDiffms = Math.abs(localTime.getTime() - remoteTime.getTime());

@@ -595,15 +595,15 @@ public class CandlepinTasks {
 		
 		sub.put("quantity", 5);
 		sub.put("startDate", sdf.format(yday));
-		sub.put("product", null);
+		//sub.put("product", null);
 		sub.put("contractNumber", "345345");
-		sub.put("providedProducts", null);
+		//sub.put("providedProducts", null);
 		sub.put("endDate", trow);
 		
 		
 		JSONArray ja = new JSONArray(Arrays.asList(new String[] {"blah" }));
 		
-		jo.put("john", ja);
-		System.out.println(jo.toString());
+		//jo.put("john", ja);
+		//System.out.println(jo.toString());
 	}
 }
