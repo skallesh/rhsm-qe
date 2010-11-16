@@ -2,18 +2,19 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
 
-import org.json.JSONException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.SubscriptionPool;
 
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
@@ -48,6 +49,30 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	@Test
 	public void dummyTest(){
 		
+	}
+	
+	@Test 
+	public void test_subscribe(){
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		
+		Collection<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		Predicate<SubscriptionPool> expToday = new Predicate<SubscriptionPool>(){
+			public boolean apply(SubscriptionPool pool){
+				Calendar cal = pool.endDate;
+				Calendar today = new GregorianCalendar();
+				//cal.getTime().
+				return (cal.get(Calendar.YEAR) == today.get(Calendar.YEAR)) && (cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)) ;
+			}
+		};
+		Collection<SubscriptionPool> expiresToday = Collections2.filter(pools, expToday);
+		
+		//choose first pool
+		SubscriptionPool testPool = expiresToday.iterator().next();
+		
+		//subscribe
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
+
 	}
 	
 	public static void main(String... args) throws Exception{
