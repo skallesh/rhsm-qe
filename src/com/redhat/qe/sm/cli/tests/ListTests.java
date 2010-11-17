@@ -94,7 +94,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases={})
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
 		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
@@ -119,7 +119,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: RHEL Personal should not be an available subscription to a consumer registered as type system",
 			groups={"EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test"},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases={})
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
 		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
@@ -147,10 +147,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager-cli: list installed products",
-//			dependsOnGroups={"sm_stage2"},
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases={})
 	public void EnsureInstalledProductsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
