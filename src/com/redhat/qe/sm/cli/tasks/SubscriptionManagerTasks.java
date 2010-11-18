@@ -1154,8 +1154,8 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		} else {
 // FIXME UNCOMMENT AFTER QA/Stage TESTING IS COMPLETE			
-//			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-//			Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+			Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
 		}
 		
 		// assert that consumed ProductSubscriptions has NOT decreased

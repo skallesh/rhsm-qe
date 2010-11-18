@@ -38,7 +38,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected static String rhsmcertdCertFrequency		= null;
 
 	
-	
+	protected String serverAdminUsername		= getProperty("sm.server.admin.username","");
+	protected String serverAdminPassword		= getProperty("sm.server.admin.password","");
 	
 	protected String serverInstallDir			= getProperty("sm.server.installDir","");
 	protected String serverImportDir			= getProperty("sm.server.importDir","");
@@ -62,14 +63,15 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String clientOwnerPassword	= getProperty("sm.client.owner.password","");
 	protected String clientUsernames		= getProperty("sm.client.usernames","");
 	protected String clientPasswords		= getProperty("sm.client.passwords","");
-
-	protected String tcUnacceptedUsername	= getProperty("sm.client.username.tcunaccepted","");
-	protected String tcUnacceptedPassword	= getProperty("sm.client.password.tcunaccepted","");
+	
+	protected String usernameWithUnacceptedTC = getProperty("sm.client.username.unacceptedTC","");
+	protected String passwordWithUnacceptedTC = getProperty("sm.client.password.unacceptedTC","");
+	
+	protected String disabledUsername		= getProperty("sm.client.username.disabled","");
+	protected String disabledPassword		= getProperty("sm.client.password.disabled","");
+	
 	protected String regtoken				= getProperty("sm.client.regtoken","");
 	protected String enableRepoForDeps		= getProperty("sm.client.enableRepoForDeps","");
-
-	protected String prodCertLocation		= getProperty("sm.prodcert.url","");
-	protected String prodCertProduct		= getProperty("sm.prodcert.product","");
 	
 	protected String sshUser				= getProperty("sm.ssh.user","root");
 	protected String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");

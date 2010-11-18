@@ -56,7 +56,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,clientOwnerUsername,clientOwnerPassword);
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,serverAdminUsername,serverAdminPassword);
 		if (clienttasks.unsubscribeFromProductSubscription(productSubscription))
 			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}

@@ -173,7 +173,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		log.info("Installed version of candlepin...");
 		try {
 			//FIXME: should change clientOwnerUsername,clientOwnerPassword to a candlepin superadmin/password
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));			
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status"));			
 			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");

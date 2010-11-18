@@ -153,7 +153,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 			for (String entitledProductName : entitledProductNames) {
 				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
-				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+//DELETEME ALPHA				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
+				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
 				// assert that the entitledProductName is consumed
 				ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);

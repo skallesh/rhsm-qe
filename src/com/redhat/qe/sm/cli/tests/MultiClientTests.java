@@ -29,8 +29,8 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
-		String client1Owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, client1tasks.getCurrentConsumerId()).getString("key");
-		String client2Owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, client2tasks.getCurrentConsumerId()).getString("key");
+		String client1Owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, client1tasks.getCurrentConsumerId()).getString("key");
+		String client2Owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, client2tasks.getCurrentConsumerId()).getString("key");
 		if (!client1Owner.equals(client2Owner)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+client1username+" ownerkey="+client1Owner+") (client2: username="+client2username+" ownerkey="+client2Owner+")");
 		
 		List<SubscriptionPool> cl2SubscriptionPools;
