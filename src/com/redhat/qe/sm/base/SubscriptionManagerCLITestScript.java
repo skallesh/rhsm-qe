@@ -185,13 +185,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 	}
 	
-	@AfterSuite(groups={"setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
 		if (client2tasks!=null) client2tasks.unregister_();	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_();	// release the entitlements consumed by the current registration
 	}
 	
-	@AfterSuite(groups={"setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void disconnectDatabaseAfterSuite() {
 		
 		// close the candlepin database connection

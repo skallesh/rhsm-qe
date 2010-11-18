@@ -17,8 +17,27 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
 
+@Test(groups="expiration")
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
+	protected Predicate<SubscriptionPool> expToday = new Predicate<SubscriptionPool>(){
+		public boolean apply(SubscriptionPool pool){
+			Calendar cal = pool.endDate;
+			Calendar today = new GregorianCalendar();
+			return (cal.get(Calendar.YEAR) == today.get(Calendar.YEAR)) && (cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)) ;
+		}
+	};
+	
+	class ByIdPredicate implements Predicate<SubscriptionPool> {
+		String id;
+		public ByIdPredicate(String id) {
+			this.id=id;
+		}
+		public boolean apply(SubscriptionPool pool) {
+			return pool.poolId.equals(this.id);
+		}
+	}
+	
 	@BeforeClass(groups="setup")
 	public void checkTime() throws Exception{
 		//make sure local clock and server clock are synced
@@ -36,9 +55,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	@BeforeMethod
 	public void createTestPools() throws Exception{
 		String owner = "donaldduck";
-		String ownerpw = "password";
 		Calendar cal = new GregorianCalendar();
-		cal.add(Calendar.DATE, 3); //FIXME = minutes
+		cal.add(Calendar.MINUTE, 2); 
 		Date _3min = cal.getTime();
 		cal.add(Calendar.DATE, -21);
 		Date _3weeksago = cal.getTime();
@@ -52,31 +70,31 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test 
-	public void SubscribeToAboutToExpirePool_Test(){
+	public void SubscribeToAboutToExpirePool_Test() throws Exception{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
 		Collection<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		Predicate<SubscriptionPool> expToday = new Predicate<SubscriptionPool>(){
-			public boolean apply(SubscriptionPool pool){
-				Calendar cal = pool.endDate;
-				Calendar today = new GregorianCalendar();
-				//cal.getTime().
-				return (cal.get(Calendar.YEAR) == today.get(Calendar.YEAR)) && (cal.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)) ;
-			}
-		};
+		
 		Collection<SubscriptionPool> expiresToday = Collections2.filter(pools, expToday);
 		
 		//choose first pool
 		SubscriptionPool testPool = expiresToday.iterator().next();
+		String poolid = testPool.poolId;
 		
 		//subscribe
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
 
+		//wait for pools to expire
+		Thread.sleep(120000);
+		
+		//verify that that the pool expired
+		Collection<SubscriptionPool> matchedId = Collections2.filter(clienttasks.getCurrentlyAllAvailableSubscriptionPools(), new ByIdPredicate(poolid));
+		Assert.assertEquals(matchedId.size(), 0, "Zero pools match id " + poolid);
+		
+		//verify that the subscription expired
+		
 	}
 	
-	public static void main(String... args) throws Exception{
-		ExpirationTests test = new ExpirationTests();
-		test.checkTime();
-	}
+	
 }
