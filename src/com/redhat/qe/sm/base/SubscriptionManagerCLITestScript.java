@@ -14,6 +14,7 @@ import java.util.Random;
 
 import javax.jws.Oneway;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.annotations.AfterSuite;
@@ -65,7 +66,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeSuite(groups={"setup"},description="subscription manager set up")
-	public void setupBeforeSuite() throws JSONException, Exception{
+	public void setupBeforeSuite() throws IOException {
 	
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
@@ -82,7 +83,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// will we be testing multiple clients?
-		if (!(	client2hostname.equals("") || client2username.equals("") || client2password.equals("") )) {
+		if (!(	client2hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {
@@ -111,22 +112,22 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			smt.installSubscriptionManagerRPMs(rpmUrls,enableRepoForDeps);
 			
 			// rhsm.conf [server] configurations
-			if (!serverHostname.equals(""))				smt.updateConfigFileParameter("hostname", serverHostname);							else serverHostname = smt.getConfigFileParameter("hostname");
-			if (!serverPrefix.equals(""))				smt.updateConfigFileParameter("prefix", serverPrefix);								else serverPrefix = smt.getConfigFileParameter("prefix");
-			if (!serverPort.equals(""))					smt.updateConfigFileParameter("port", serverPort);									else serverPort = smt.getConfigFileParameter("port");
-			if (!serverInsecure.equals(""))				smt.updateConfigFileParameter("insecure", serverInsecure);							else serverInsecure = smt.getConfigFileParameter("insecure");
-			if (!serverCaCertDir.equals(""))			smt.updateConfigFileParameter("ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfigFileParameter("ca_cert_dir");
+			if (!serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", serverHostname);							else serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
+			if (!serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", serverPrefix);								else serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
+			if (!serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", serverPort);									else serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
+			if (!serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", serverInsecure);							else serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+			if (!serverCaCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
 
 			// rhsm.conf [rhsm] configurations
-			if (!rhsmBaseUrl.equals(""))				smt.updateConfigFileParameter("baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfigFileParameter("baseurl");
-			if (!rhsmRepoCaCert.equals(""))				smt.updateConfigFileParameter("repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfigFileParameter("repo_ca_cert");
-			if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfigFileParameter("showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfigFileParameter("showIncompatiblePools");
-			if (!rhsmProductCertDir.equals(""))			smt.updateConfigFileParameter("productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfigFileParameter("productCertDir");
-			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfigFileParameter("entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfigFileParameter("entitlementCertDir");
-			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfigFileParameter("consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfigFileParameter("consumerCertDir");
+			if (!rhsmBaseUrl.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
+			if (!rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
+			if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
+			if (!rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
+			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
+			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
 
 			// rhsm.conf [rhsmcertd] configurations
-			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfigFileParameter("certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfigFileParameter("certFrequency");
+			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
 		
 			smt.initializeFieldsFromConfigFile();
 			
@@ -162,16 +163,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
 			RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
 			
-			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfigFileParameter("ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			client1tasks.updateConfigFileParameter("insecure", "0");
-			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfigFileParameter("ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			if (client2!=null) client2tasks.updateConfigFileParameter("insecure", "0");
+			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
+			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			if (client2!=null) client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
 		}
 		
 		
 		log.info("Installed version of candlepin...");
-		JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));
-		log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
+		try {
+			//FIXME: should change clientOwnerUsername,clientOwnerPassword to a candlepin superadmin/password
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));			
+			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
+		} catch (Exception e) {
+			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
+		}
 		
 		log.info("Installed version of subscription-manager...");
 		log.info("Subscription manager client '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
@@ -284,9 +290,63 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
-	protected List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
+	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
+	/**
+	 * Useful when trying to find a username that belongs to a different owner/org than the current username you are testing with.
+	 * @param key
+	 * @return null when no match is found
+	 * @throws JSONException
+	 */
+	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		for (RegistrationData registration : registrationDataList) {
+			if (registration.jsonOwner!=null) {
+				if (!registration.jsonOwner.getString("key").equals(key)) {
+					return registration;
+				}
+			}
+		}
+		return null;
+	}
 	
+	/**
+	 * Useful when trying to find a username that belongs to the same owner/org as the current username you are testing with.
+	 * @param key
+	 * @param username
+	 * @return null when no match is found
+	 * @throws JSONException
+	 */
+	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		for (RegistrationData registration : registrationDataList) {
+			if (registration.jsonOwner!=null) {
+				if (registration.jsonOwner.getString("key").equals(key)) {
+					if (!registration.username.equals(username)) {
+						return registration;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Useful when trying to find registration data results from a prior registration by a given username.
+	 * @param key
+	 * @param username
+	 * @return null when no match is found
+	 * @throws JSONException
+	 */
+	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		for (RegistrationData registration : registrationDataList) {
+			if (registration.username.equals(username)) {
+				return registration;
+			}
+		}
+		return null;
+	}
 	
 	// Data Providers ***********************************************************************
 
@@ -346,8 +406,53 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //ll.clear();
 			ll.add(Arrays.asList(new Object[]{pool}));		
 		}
+		
+		// manually reorder the pools so that the base "Red Hat Enterprise Linux*" pool is first in the list
+		// This is a workaround for InstallAndRemovePackageAfterSubscribingToPool_Test so as to avoid installing
+		// a package from a repo that has a package dependency from a repo that is not yet entitled.
+		int i=0;
+		for (List<Object> list : ll) {
+			if (((SubscriptionPool)(list.get(0))).subscriptionName.startsWith("Red Hat Enterprise Linux")) {
+				ll.remove(i);
+				ll.add(0, list);
+				break;
+			}
+			i++;
+		}
+		
+		
 		return ll;
 	}
 	
 
+	
+	
+	@DataProvider(name="getSubscriptionPoolProductIdData")
+	public Object[][] getSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProductIdDataAsListOfLists());
+	}
+	protected List<List<Object>> getSubscriptionPoolProductIdDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		String subscriptionPoolProductIdData = getProperty("sm.client.subscriptionPoolProductIdData", "");
+		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll("<", "["); // hudson parameters use < instead of [
+		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll(">", "]"); // hudson parameters use > instead of ]
+		if (subscriptionPoolProductIdData.equals("")) return ll;	// no data specified
+		
+		JSONArray subscriptionPoolProductIdDataAsJSONArray = new JSONArray(subscriptionPoolProductIdData);
+		
+		for (int j = 0; j < subscriptionPoolProductIdDataAsJSONArray.length(); j++) {
+			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) subscriptionPoolProductIdDataAsJSONArray.get(j);
+			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
+			JSONArray entitledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("entitledProductNames");
+			List<String> entitledProductNamesAsList = new ArrayList<String>();
+			for (int i = 0; i < entitledProductNamesAsJSONArray.length(); i++) {
+				String entitledProductName = (String) entitledProductNamesAsJSONArray.get(i);
+				entitledProductNamesAsList.add(entitledProductName);
+			}
+			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, entitledProductNamesAsList.toArray(new String[]{})}));
+		}
+		
+		return ll;
+	}
 }

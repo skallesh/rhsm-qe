@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -21,7 +21,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 //			groups={"sm_stage1", "blockedByBug-589626"},
 			groups={"blockedByBug-589626"},
 			enabled=true)
-	@ImplementsTCMS(id="46714")
+	@ImplementsNitrateTest(cases={46714})
 	public void RegisterSubscribeAndUnregisterTest(){
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);

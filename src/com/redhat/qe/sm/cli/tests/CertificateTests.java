@@ -9,7 +9,7 @@ import java.util.List;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -28,7 +28,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="candidate product cert validity dates",
 			dataProvider="getProductCertFilesData",
 			enabled=true)
-	@ImplementsTCMS(id="64656")
+	@ImplementsNitrateTest(cases={64656})
 	public void VerifyValidityPeriodInProductCerts_Test(File productCertFile) {
 		
 		ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);

@@ -19,7 +19,7 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -48,7 +48,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getUsernameAndPasswordData")
-	@ImplementsTCMS(id="41677")
+	@ImplementsNitrateTest(cases={41677})
 	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
@@ -66,9 +66,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/consumers/"+consumerId));	
-				JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
-				jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,jsonOwner_.getString("href")));	
+				jsonOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, consumerId);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -88,7 +89,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
 			dataProvider="getBogusRegistrationData")
-	@ImplementsTCMS(id="41691, 47918")
+	@ImplementsNitrateTest(cases={41691, 47918})
 	public void Registration_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
@@ -177,13 +178,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={"ValidRegistrationAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137"},
 			enabled=true)
 	public void ValidRegistrationAutosubscribe_Test() {
-		if (isServerOnPremises) throw new SkipException("This testcase was designed for an IT candlepin server, not a standalone candlepin server.");
+		if (prodCertProduct.equals("")) throw new SkipException("This testcase requires that you specify a subscription product name for which you have a corresponding product cert installed to test autosubscribe.");
+
+		// before executing this test we need to make sure that subscription matching the product cert that we are about to test with autosubscribe is actually available
 		clienttasks.unregister();
-//		String autoProdCert = "/etc/pki/product/autoProdCert-"+getRandInt()+".pem";
+		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
+		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", prodCertProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertTrue(pool!=null,"Subscription '"+prodCertProduct+"' is available to user '"+clientusername+"' for testing autosubscribe.");
+
 		String autoProdCert = autosubscribeProdCertFile;
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
 		teardownAfterValidRegistrationAutosubscribe_Test(); 	// will remove the autosubscribeProdCertFile
 		client.runCommandAndWait("wget -O "+autoProdCert+" "+prodCertLocation);
+		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
 		// assert that the stdout from the registration includes: Bind Product  Red Hat Directory Server 75822
 		Assert.assertContainsMatch(client.getStdout(),
@@ -236,7 +242,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register with --name",
 			groups={},
 			enabled=true)
-	@ImplementsTCMS(id="62352")
+	@ImplementsNitrateTest(cases={62352})
 	public void RegisterWithName_Test() {
 		
 		// start fresh by unregistering
@@ -270,7 +276,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: reregister basic registration",
 			groups={"blockedByBug-636843"},
 			enabled=true)
-	@ImplementsTCMS(id="56327")
+	@ImplementsNitrateTest(cases={56327})
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
@@ -327,7 +333,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: bad identity cert",
 			groups={/*"blockedByBug-624106"*/},
 			enabled=true)
-	@ImplementsTCMS(id="56328")
+	@ImplementsNitrateTest(cases={56328})
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering
@@ -368,7 +374,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 // TODO Automation Candidates for Reregister tests: 
 //		https://bugzilla.redhat.com/show_bug.cgi?id=627685
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627681
 //		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 	
 	
@@ -379,7 +384,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	String autosubscribeProdCertFile = null;
 	@BeforeGroups(value={"ValidRegistrationAutosubscribe_Test"},alwaysRun=true)
 	public void autosubscribeProdCertFileBeforeValidRegistrationAutosubscribe_Test() {
-		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert-"+/*getRandInt()+*/".pem";
+		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert"+/*getRandInt()+*/".pem";
 	}
 
 	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
@@ -577,16 +582,23 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// registration test for a user who is invalid
 		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Invalid username or password":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
-															// 642805
+		
+		// registration test for a user who is invalid (translated)
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+
 		// registration test for a user who has not accepted Red Hat's Terms and conditions
 		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc"}));
+
+		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
+		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
 
 		// registration test for a user who has been disabled
 		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "xeops-js", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
 		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "ssalevan", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362","de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
-																					// 642805
+
+
 		return ll;
 	}
 	

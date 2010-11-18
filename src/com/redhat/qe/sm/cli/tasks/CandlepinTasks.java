@@ -1,24 +1,25 @@
 package com.redhat.qe.sm.cli.tasks;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -29,12 +30,14 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
@@ -138,15 +141,25 @@ public class CandlepinTasks {
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+path);
-		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" --request GET https://"+server+":"+port+prefix+path);
-		return getHTTPResponseAsString(client, get, owner, password);
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
-	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String path) throws Exception {
+	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+path);
-		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" --request PUT https://"+server+":"+port+prefix+path);
-		return getHTTPResponseAsString(client, put, owner, password);
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, put, authenticator, password);
+	}
+	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
+//FIXME NOT TESTED  DON"T KNOW WHAT TO DO WITH POST DATA
+		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
+		if (requestBody != null) post.setRequestEntity(new StringRequestEntity(requestBody, null, null));
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
 	static public JSONObject getEntitlementUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
@@ -170,6 +183,13 @@ public class CandlepinTasks {
 		String response = m.getResponseBodyAsString();
 		log.finer("HTTP server returned content: " + response);
 		m.releaseConnection();
+		
+		// When testing against a Stage or Production server where we are not granted enough authority to make HTTP Requests,
+		// our tests will fail.  This block of code is a short cut to simply skip those test. - jsefler 11/15/2010 
+		if (m.getStatusText().equalsIgnoreCase("Unauthorized")) {
+			throw new SkipException("Not authorized make HTTP request to '"+m.getURI()+"' with credentials: username='"+username+"' password='"+password+"'");
+		}
+		
 		return response;
 	}
 	
@@ -187,15 +207,16 @@ public class CandlepinTasks {
 		int port = method.getURI().getPort();
 	
 		setCredentials(client, server, port, username, password);
-		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " for '"+username+"' on server '"+server+"'...");
-	
+		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " with credentials for '"+username+"' on server '"+server+"'...");
+		
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
 	}
 	
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
-		client.getState().setCredentials(
+		if (!username.equals(""))
+			client.getState().setCredentials(
 	            new AuthScope(server, port, null),
 	            new UsernamePasswordCredentials(username, password)
 	        );
@@ -229,7 +250,7 @@ public class CandlepinTasks {
 	
 	static public void exportConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
 		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
-		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export > "+intoExportZipFile);
+		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export > "+intoExportZipFile);
 		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
 	
 		boolean validzip = false;
@@ -263,7 +284,7 @@ public class CandlepinTasks {
 	
 	static public void importConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
-		log.info("Alternative curl command: /usr/bin/curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
+		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
 		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
@@ -275,6 +296,16 @@ public class CandlepinTasks {
 		int status = client.executeMethod(post);
 		
 		Assert.assertEquals(status, 204);
+	}
+	
+	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String owner, String password, String consumerId) throws JSONException, Exception {
+		// determine this consumerId's owner
+		JSONObject jsonOwner = null;
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, owner, password,"/consumers/"+consumerId));	
+		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
+		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, owner, password,jsonOwner_.getString("href")));	
+
+		return jsonOwner;
 	}
 	
 	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
@@ -418,6 +449,11 @@ public class CandlepinTasks {
 
 	}
 	
+	static public JSONObject createOwnerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String owner_name) throws Exception {
+// NOT TESTED
+		return new JSONObject(postResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/owners", owner_name));
+	}
+	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
 		log.info("Using the ruby client to delete_owner owner_name='"+owner_name+"'...");
 
@@ -540,7 +576,34 @@ public class CandlepinTasks {
 		//System.out.println(CandlepinTasks.getResourceREST("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat", ""));
 		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
 		//CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
-		CandlepinTasks.exportConsumerUsingRESTfulAPI("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
-
+		//CandlepinTasks.exportConsumerUsingRESTfulAPI("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
+		JSONObject sub = new JSONObject();
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		Calendar cal = new GregorianCalendar();
+		cal.add(Calendar.DATE, -1);
+		Date yday = cal.getTime();
+		cal.add(Calendar.DATE, 2);
+		Date trow = cal.getTime();
+		
+		String[] ids = {"37060"};
+		List<JSONObject> pprods = new ArrayList<JSONObject>();
+		for (String id: ids) {
+			JSONObject jo = new JSONObject();
+			jo.put("id", id);
+			pprods.add(jo);
+		}
+		
+		sub.put("quantity", 5);
+		sub.put("startDate", sdf.format(yday));
+		//sub.put("product", null);
+		sub.put("contractNumber", "345345");
+		//sub.put("providedProducts", null);
+		sub.put("endDate", trow);
+		
+		
+		JSONArray ja = new JSONArray(Arrays.asList(new String[] {"blah" }));
+		
+		//jo.put("john", ja);
+		//System.out.println(jo.toString());
 	}
 }

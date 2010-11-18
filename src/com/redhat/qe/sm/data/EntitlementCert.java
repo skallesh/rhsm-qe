@@ -13,18 +13,32 @@ import java.util.regex.Pattern;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 public class EntitlementCert extends AbstractCommandLineData {
-	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
+	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT   validityNotBefore
+//	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"   startDate
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
-	public String rawCertificate;
 	public String id;			// entitlement uuid on the candlepin server
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-	public String productId;	// comes from the Order Namespace
+	
+	public String productName;
+	public String orderNumber;
+	public String productId;	// SKU
+	public String subscriptionNumber;
+	public String quantity;
+	public String startDate;
+	public String endDate;
+	public String virtualizationLimit;
+	public String socketLimit;
+	public String contractNumber;
+	public String quantityUsed;
+	public String warningPeriod;
+	public String accountNumber;
+	
 	public List<ContentNamespace> contentNamespaces;
-
+	public String rawCertificate;
 
 	public EntitlementCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
@@ -38,12 +52,23 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
-		if (id != null)					string += String.format(" %s='%s'", "id",id);
-		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
-		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
-		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
-		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
+		if (serialNumber != null)			string += String.format(" %s='%s'", "serialNumber",serialNumber);
+		if (id != null)						string += String.format(" %s='%s'", "id",id);
+		if (issuer != null)					string += String.format(" %s='%s'", "issuer",issuer);
+		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
+		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
+		
+		if (productName != null)			string += String.format(" %s='%s'", "productName",productName);
+		if (orderNumber != null)			string += String.format(" %s='%s'", "orderNumber",orderNumber);
+		if (subscriptionNumber != null)		string += String.format(" %s='%s'", "subscriptionNumber",subscriptionNumber);
+		if (startDate != null)				string += String.format(" %s='%s'", "startDate",startDate);
+		if (endDate != null)				string += String.format(" %s='%s'", "endDate",endDate);
+		if (virtualizationLimit != null)	string += String.format(" %s='%s'", "virtualizationLimit",virtualizationLimit);
+		if (socketLimit != null)			string += String.format(" %s='%s'", "socketLimit",socketLimit);
+		if (contractNumber != null)			string += String.format(" %s='%s'", "contractNumber",contractNumber);
+		if (quantityUsed != null)			string += String.format(" %s='%s'", "quantityUsed",quantityUsed);
+		if (warningPeriod != null)			string += String.format(" %s='%s'", "warningPeriod",warningPeriod);
+		if (accountNumber != null)			string += String.format(" %s='%s'", "accountNumber",accountNumber);
 	
 		return string.trim();
 	}
@@ -218,16 +243,259 @@ public class EntitlementCert extends AbstractCommandLineData {
 		        bd:df:b1:f9:fe:3f:fa:9a:fc:0c:c7:91:99:5b:7b:2d:af:14:
 		        cf:1c
 		*/
+		/*
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            28:1b:42:f7:9d:bf:2d
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: CN=jsefler-f12-candlepin.usersys.redhat.com, C=US, L=Raleigh
+        Validity
+            Not Before: Nov  5 16:11:44 2010 GMT
+            Not After : Nov  5 23:59:59 2011 GMT
+        Subject: CN=ff8080812c1b0fa2012c1ccecff303ca
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:ce:97:4d:65:c0:2d:fa:20:98:18:dd:ed:97:76:
+                    d8:a1:4a:5b:ba:ea:f7:ea:3e:5c:c4:b6:7c:3f:de:
+                    1d:2f:06:fa:6c:8c:1e:2f:a0:78:57:4e:96:9f:32:
+                    4f:34:e8:c2:34:69:8f:8b:03:d9:b6:3e:02:23:9c:
+                    4b:5e:54:58:aa:bb:b7:04:c6:9f:d6:2f:2a:cb:61:
+                    a2:ea:d8:c5:72:8c:2d:19:19:aa:1b:a8:73:96:1e:
+                    23:21:a6:e9:74:3e:78:b3:46:4d:4f:e6:f1:e7:24:
+                    c8:b8:87:35:b0:08:6c:47:87:3b:3b:a6:1e:36:78:
+                    10:40:5e:be:96:64:e4:a8:9a:02:54:78:a6:b8:bc:
+                    2d:df:64:74:c3:02:4f:4a:81:88:6d:64:72:39:cb:
+                    7b:b0:77:5d:a6:30:78:18:40:81:42:94:3b:a1:dd:
+                    17:6b:6b:7b:e0:be:d3:29:02:d5:48:c6:c9:08:4a:
+                    bb:5c:19:e9:50:26:04:51:7f:fc:06:12:4f:5d:64:
+                    e2:69:e8:1d:15:92:ac:3d:18:98:16:c8:64:ac:27:
+                    cf:c7:6c:63:7a:42:b0:32:47:b6:31:8f:c9:38:70:
+                    b3:40:5f:64:da:bf:b0:be:d1:81:3d:11:76:50:b3:
+                    d2:96:84:ac:71:4e:c7:66:c2:a1:dc:c5:73:2e:f1:
+                    6f:c5
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            Netscape Cert Type: 
+                SSL Client, S/MIME
+            X509v3 Key Usage: 
+                Digital Signature, Key Encipherment, Data Encipherment
+            X509v3 Authority Key Identifier: 
+                keyid:B6:70:95:46:37:47:01:C8:2B:43:29:4F:82:EF:11:5C:5D:E4:70:6F
+                DirName:/CN=jsefler-f12-candlepin.usersys.redhat.com/C=US/L=Raleigh
+                serial:C6:E0:7B:6A:01:03:25:F7
+
+            X509v3 Subject Key Identifier: 
+                27:E0:57:92:B1:53:28:A0:EC:50:51:BC:29:DC:95:6A:D0:D3:7D:33
+            X509v3 Extended Key Usage: 
+                TLS Web Client Authentication
+            1.3.6.1.4.1.2312.9.1.37065.1: 
+                .!High availability (cluster suite)
+            1.3.6.1.4.1.2312.9.2.1.1: 
+                ..yum
+            1.3.6.1.4.1.2312.9.2.1.1.1: 
+                ..always-enabled-content
+            1.3.6.1.4.1.2312.9.2.1.1.2: 
+                ..always-enabled-content
+            1.3.6.1.4.1.2312.9.2.1.1.5: 
+                ..test-vendor
+            1.3.6.1.4.1.2312.9.2.1.1.6: 
+                ../foo/path/always
+            1.3.6.1.4.1.2312.9.2.1.1.7: 
+                ../foo/path/always/gpg
+            1.3.6.1.4.1.2312.9.2.1.1.4: 
+                ..0
+            1.3.6.1.4.1.2312.9.2.1.1.3: 
+                ..0
+            1.3.6.1.4.1.2312.9.2.1.1.8: 
+                ..1
+            1.3.6.1.4.1.2312.9.2.0.1: 
+                ..yum
+            1.3.6.1.4.1.2312.9.2.0.1.1: 
+                ..never-enabled-content
+            1.3.6.1.4.1.2312.9.2.0.1.2: 
+                ..never-enabled-content
+            1.3.6.1.4.1.2312.9.2.0.1.5: 
+                ..test-vendor
+            1.3.6.1.4.1.2312.9.2.0.1.6: 
+                ../foo/path/never
+            1.3.6.1.4.1.2312.9.2.0.1.7: 
+                ../foo/path/never/gpg
+            1.3.6.1.4.1.2312.9.2.0.1.4: 
+                ..0
+            1.3.6.1.4.1.2312.9.2.0.1.3: 
+                ..0
+            1.3.6.1.4.1.2312.9.2.0.1.8: 
+                ..0
+            1.3.6.1.4.1.2312.9.1.37060.1: 
+                ..RHEL for Physical Servers SVC
+            1.3.6.1.4.1.2312.9.2.1111.1: 
+                ..yum
+            1.3.6.1.4.1.2312.9.2.1111.1.1: 
+                ..content
+            1.3.6.1.4.1.2312.9.2.1111.1.2: 
+content-label   .
+            1.3.6.1.4.1.2312.9.2.1111.1.5: 
+                ..test-vendor
+            1.3.6.1.4.1.2312.9.2.1111.1.6: 
+                ../foo/path
+            1.3.6.1.4.1.2312.9.2.1111.1.7: 
+                ../foo/path/gpg/
+            1.3.6.1.4.1.2312.9.2.1111.1.4: 
+                ..0
+            1.3.6.1.4.1.2312.9.2.1111.1.3: 
+                ..0
+            1.3.6.1.4.1.2312.9.2.1111.1.8: 
+                ..1
+            1.3.6.1.4.1.2312.9.1.37070.1: 
+                ..Load Balancing
+            1.3.6.1.4.1.2312.9.1.37068.1: 
+                ..Large File Support (XFS)
+            1.3.6.1.4.1.2312.9.1.37067.1: 
+                ..Shared Storage (GFS)
+            1.3.6.1.4.1.2312.9.1.37069.1: 
+                .<Smart Management (RHN Management & Provisioing & Monitoring)
+            1.3.6.1.4.1.2312.9.4.1: 
+                ...RHEL for Physical Servers ,2 Sockets, Standard Support with High
+Availability,Load Balancing,Shared Storage,Large File Support,Smart
+Management, Flexible Hypervisor(Unlimited)
+            1.3.6.1.4.1.2312.9.4.2: 
+                . ff8080812c1b0fa2012c1b108b660086
+            1.3.6.1.4.1.2312.9.4.3: 
+                ..MKT-rhel-physical-2-socket
+            1.3.6.1.4.1.2312.9.4.5: 
+                ..10
+            1.3.6.1.4.1.2312.9.4.6: 
+                ..2010-11-05T00:00:00Z
+            1.3.6.1.4.1.2312.9.4.7: 
+                ..2011-11-05T00:00:00Z
+            1.3.6.1.4.1.2312.9.4.12: 
+                ..30
+            1.3.6.1.4.1.2312.9.4.10: 
+                ..4
+            1.3.6.1.4.1.2312.9.4.11: 
+                ..1
+            1.3.6.1.4.1.2312.9.5.1: 
+                .$0cd89d72-d7a9-4e3d-9eb0-599c4a0e2f8d
+    Signature Algorithm: sha1WithRSAEncryption
+        bd:94:86:5d:82:b8:99:81:35:89:b4:78:12:25:5c:ae:24:09:
+        46:ac:3d:54:8d:4a:56:05:4d:35:bc:66:01:b0:de:b7:56:1b:
+        29:ed:30:e3:aa:51:c9:c4:ef:3f:b9:2e:2f:ca:34:de:11:47:
+        58:7a:78:9a:8f:d0:31:9c:1f:ab:03:69:8f:dd:bf:82:26:0e:
+        fc:c7:12:a0:61:46:f3:cd:8c:1f:6e:0c:dd:88:b2:05:bc:e2:
+        5c:cd:44:d3:13:18:58:0c:02:60:18:50:d4:91:08:0f:f7:0f:
+        2b:1c:bf:a6:fb:30:d4:13:6b:e3:7e:13:71:49:9d:44:8a:8b:
+        18:cc
+-----BEGIN CERTIFICATE-----
+MIIJnDCCCQWgAwIBAgIHKBtC952/LTANBgkqhkiG9w0BAQUFADBSMTEwLwYDVQQD
+DChqc2VmbGVyLWYxMi1jYW5kbGVwaW4udXNlcnN5cy5yZWRoYXQuY29tMQswCQYD
+VQQGEwJVUzEQMA4GA1UEBwwHUmFsZWlnaDAeFw0xMDExMDUxNjExNDRaFw0xMTEx
+MDUyMzU5NTlaMCsxKTAnBgNVBAMMIGZmODA4MDgxMmMxYjBmYTIwMTJjMWNjZWNm
+ZjMwM2NhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzpdNZcAt+iCY
+GN3tl3bYoUpbuur36j5cxLZ8P94dLwb6bIweL6B4V06WnzJPNOjCNGmPiwPZtj4C
+I5xLXlRYqru3BMaf1i8qy2Gi6tjFcowtGRmqG6hzlh4jIabpdD54s0ZNT+bx5yTI
+uIc1sAhsR4c7O6YeNngQQF6+lmTkqJoCVHimuLwt32R0wwJPSoGIbWRyOct7sHdd
+pjB4GECBQpQ7od0Xa2t74L7TKQLVSMbJCEq7XBnpUCYEUX/8BhJPXWTiaegdFZKs
+PRiYFshkrCfPx2xjekKwMke2MY/JOHCzQF9k2r+wvtGBPRF2ULPSloSscU7HZsKh
+3MVzLvFvxQIDAQABo4IHHTCCBxkwEQYJYIZIAYb4QgEBBAQDAgWgMAsGA1UdDwQE
+AwIEsDCBggYDVR0jBHsweYAUtnCVRjdHAcgrQylPgu8RXF3kcG+hVqRUMFIxMTAv
+BgNVBAMMKGpzZWZsZXItZjEyLWNhbmRsZXBpbi51c2Vyc3lzLnJlZGhhdC5jb20x
+CzAJBgNVBAYTAlVTMRAwDgYDVQQHDAdSYWxlaWdoggkAxuB7agEDJfcwHQYDVR0O
+BBYEFCfgV5KxUyig7FBRvCnclWrQ030zMBMGA1UdJQQMMAoGCCsGAQUFBwMCMDQG
+DSsGAQQBkggJAYKhSQEEIwwhSGlnaCBhdmFpbGFiaWxpdHkgKGNsdXN0ZXIgc3Vp
+dGUpMBQGCysGAQQBkggJAgEBBAUMA3l1bTAoBgwrBgEEAZIICQIBAQEEGAwWYWx3
+YXlzLWVuYWJsZWQtY29udGVudDAoBgwrBgEEAZIICQIBAQIEGAwWYWx3YXlzLWVu
+YWJsZWQtY29udGVudDAdBgwrBgEEAZIICQIBAQUEDQwLdGVzdC12ZW5kb3IwIgYM
+KwYBBAGSCAkCAQEGBBIMEC9mb28vcGF0aC9hbHdheXMwJgYMKwYBBAGSCAkCAQEH
+BBYMFC9mb28vcGF0aC9hbHdheXMvZ3BnMBMGDCsGAQQBkggJAgEBBAQDDAEwMBMG
+DCsGAQQBkggJAgEBAwQDDAEwMBMGDCsGAQQBkggJAgEBCAQDDAExMBQGCysGAQQB
+kggJAgABBAUMA3l1bTAnBgwrBgEEAZIICQIAAQEEFwwVbmV2ZXItZW5hYmxlZC1j
+b250ZW50MCcGDCsGAQQBkggJAgABAgQXDBVuZXZlci1lbmFibGVkLWNvbnRlbnQw
+HQYMKwYBBAGSCAkCAAEFBA0MC3Rlc3QtdmVuZG9yMCEGDCsGAQQBkggJAgABBgQR
+DA8vZm9vL3BhdGgvbmV2ZXIwJQYMKwYBBAGSCAkCAAEHBBUMEy9mb28vcGF0aC9u
+ZXZlci9ncGcwEwYMKwYBBAGSCAkCAAEEBAMMATAwEwYMKwYBBAGSCAkCAAEDBAMM
+ATAwEwYMKwYBBAGSCAkCAAEIBAMMATAwMAYNKwYBBAGSCAkBgqFEAQQfDB1SSEVM
+IGZvciBQaHlzaWNhbCBTZXJ2ZXJzIFNWQzAVBgwrBgEEAZIICQKIVwEEBQwDeXVt
+MBoGDSsGAQQBkggJAohXAQEECQwHY29udGVudDAgBg0rBgEEAZIICQKIVwECBA8M
+DWNvbnRlbnQtbGFiZWwwHgYNKwYBBAGSCAkCiFcBBQQNDAt0ZXN0LXZlbmRvcjAc
+Bg0rBgEEAZIICQKIVwEGBAsMCS9mb28vcGF0aDAhBg0rBgEEAZIICQKIVwEHBBAM
+Di9mb28vcGF0aC9ncGcvMBQGDSsGAQQBkggJAohXAQQEAwwBMDAUBg0rBgEEAZII
+CQKIVwEDBAMMATAwFAYNKwYBBAGSCAkCiFcBCAQDDAExMCEGDSsGAQQBkggJAYKh
+TgEEEAwOTG9hZCBCYWxhbmNpbmcwKwYNKwYBBAGSCAkBgqFMAQQaDBhMYXJnZSBG
+aWxlIFN1cHBvcnQgKFhGUykwJwYNKwYBBAGSCAkBgqFLAQQWDBRTaGFyZWQgU3Rv
+cmFnZSAoR0ZTKTBPBg0rBgEEAZIICQGCoU0BBD4MPFNtYXJ0IE1hbmFnZW1lbnQg
+KFJITiBNYW5hZ2VtZW50ICYgUHJvdmlzaW9pbmcgJiBNb25pdG9yaW5nKTCBwQYK
+KwYBBAGSCAkEAQSBsgyBr1JIRUwgZm9yIFBoeXNpY2FsIFNlcnZlcnMgLDIgU29j
+a2V0cywgU3RhbmRhcmQgU3VwcG9ydCB3aXRoIEhpZ2gKQXZhaWxhYmlsaXR5LExv
+YWQgQmFsYW5jaW5nLFNoYXJlZCBTdG9yYWdlLExhcmdlIEZpbGUgU3VwcG9ydCxT
+bWFydApNYW5hZ2VtZW50LCBGbGV4aWJsZSBIeXBlcnZpc29yKFVubGltaXRlZCkw
+MAYKKwYBBAGSCAkEAgQiDCBmZjgwODA4MTJjMWIwZmEyMDEyYzFiMTA4YjY2MDA4
+NjAqBgorBgEEAZIICQQDBBwMGk1LVC1yaGVsLXBoeXNpY2FsLTItc29ja2V0MBIG
+CisGAQQBkggJBAUEBAwCMTAwJAYKKwYBBAGSCAkEBgQWDBQyMDEwLTExLTA1VDAw
+OjAwOjAwWjAkBgorBgEEAZIICQQHBBYMFDIwMTEtMTEtMDVUMDA6MDA6MDBaMBIG
+CisGAQQBkggJBAwEBAwCMzAwEQYKKwYBBAGSCAkECgQDDAE0MBEGCisGAQQBkggJ
+BAsEAwwBMTA0BgorBgEEAZIICQUBBCYMJDBjZDg5ZDcyLWQ3YTktNGUzZC05ZWIw
+LTU5OWM0YTBlMmY4ZDANBgkqhkiG9w0BAQUFAAOBgQC9lIZdgriZgTWJtHgSJVyu
+JAlGrD1UjUpWBU01vGYBsN63Vhsp7TDjqlHJxO8/uS4vyjTeEUdYeniaj9AxnB+r
+A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
++zDUE2vjfhNxSZ1EiosYzA==
+-----END CERTIFICATE-----
+
+		 */
+		
+		/*
+		        Issuer: C=US, ST=North Carolina, O=Red Hat, Inc., OU=Red Hat Network, CN=Red Hat Entitlement Product Authority/emailAddress=ca-support@redhat.com
+		 */
+		
+//		https://docspace.corp.redhat.com/docs/DOC-30244
+//			  1.3.6.1.4.1.2312.9.4.1 (Name): Red Hat Enterprise Linux Server
+//			  1.3.6.1.4.1.2312.9.4.2 (Order Number) : ff8080812c3a2ba8012c3a2cbe63005b  
+//			  1.3.6.1.4.1.2312.9.4.3 (SKU) : MCT0982
+//			  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678
+//			  1.3.6.1.4.1.2312.9.4.5 (Quantity) : 100
+//			  1.3.6.1.4.1.2312.9.4.6 (Entitlement Start Date) : 2010-10-25T04:00:00Z
+//			  1.3.6.1.4.1.2312.9.4.7 (Entitlement End Date) : 2011-11-05T00:00:00Z
+//			  1.3.6.1.4.1.2312.9.4.8 (Virtualization Limit) : 4
+//			  1.3.6.1.4.1.2312.9.4.9 (Socket Limit) : None
+//			  1.3.6.1.4.1.2312.9.4.10 (Contract Number): 152341643
+//			  1.3.6.1.4.1.2312.9.4.11 (Quantity Used): 4
+//			  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
+//			  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
+
+		// FIXME: Not sure how to handle the certificate dates Validity versus Entitlement Start Date
+		// I suspect that I am currently using the wrong dates.
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");
-		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer: CN=(.*?),");
+		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*)");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
+		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("orderNumber",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("subscriptionNumber",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("quantity",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("startDate",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("endDate",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("virtualizationLimit",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("socketLimit",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("contractNumber",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("quantityUsed",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("warningPeriod",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("accountNumber",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*).1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");	// FIXME THIS IS ONLY PART OF THE CERT
+
+//FIXME WORKAROUND: DELETE THE FOLLOWING LINE AFTER RESOLUTION FROM https://bugzilla.redhat.com/show_bug.cgi?id=650278
+		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
+		
 
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

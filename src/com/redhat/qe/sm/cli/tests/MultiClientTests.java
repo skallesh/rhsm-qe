@@ -2,12 +2,14 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.util.List;
 
+import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsTCMS;
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
 
 /**
@@ -18,13 +20,19 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	
 	
+	// FIXME Redesign this test to use only one client box and use clean and register --consumerid to switch users
 	
 	@Test(	description="bind/unbind with two users/consumers",
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsTCMS(id="53217")
-	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) {
-		if (client2==null) throw new SkipException("This test requires a second consumer.");
+	@ImplementsNitrateTest(cases={53217})
+	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
+		// test prerequisites
+		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
+		String client1Owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, client1tasks.getCurrentConsumerId()).getString("key");
+		String client2Owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, client2tasks.getCurrentConsumerId()).getString("key");
+		if (!client1Owner.equals(client2Owner)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+client1username+" ownerkey="+client1Owner+") (client2: username="+client2username+" ownerkey="+client2Owner+")");
+		
 		List<SubscriptionPool> cl2SubscriptionPools;
 		String client1RedhatRelease = client1tasks.getRedhatRelease();
 		String client2RedhatRelease = client2tasks.getRedhatRelease();
