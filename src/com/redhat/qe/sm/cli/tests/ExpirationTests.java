@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
@@ -32,10 +33,12 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with candlepin server is less than 1 minute");
 	}
 	
-	@BeforeClass(dependsOnMethods="checkTime")
+	@BeforeMethod
 	public void createTestPools() throws Exception{
+		String owner = "donaldduck";
+		String ownerpw = "password";
 		Calendar cal = new GregorianCalendar();
-		cal.add(Calendar.MINUTE, 3);
+		cal.add(Calendar.DATE, 3); //FIXME = minutes
 		Date _3min = cal.getTime();
 		cal.add(Calendar.DATE, -21);
 		Date _3weeksago = cal.getTime();
@@ -43,16 +46,13 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		String product = clientProds.get(0).productName;*/
 		String[] providedProducts = {"37068", "37069", "37060"};
 		String requestBody = CandlepinTasks.createPoolRequest(10, _3weeksago, _3min, "MKT-rhel-server", 123, providedProducts).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, "/owners/admin/subscriptions", requestBody);
+		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, "/owners/" + owner + "/subscriptions", requestBody);
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, owner);
 	}
 	
-	@Test
-	public void dummyTest(){
-		
-	}
 	
 	@Test 
-	public void test_subscribe(){
+	public void SubscribeToAboutToExpirePool_Test(){
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		

@@ -31,6 +31,7 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -40,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
+import com.redhat.qe.api.helper.TestHelper;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -157,9 +159,9 @@ public class CandlepinTasks {
 	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
 		if (requestBody != null) {
-			post.setRequestEntity(new StringRequestEntity(requestBody, null, null));
+			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));
 			post.addRequestHeader("accept", "application/json");
-			post.addRequestHeader("content-type", "application/json");
+			//post.addRequestHeader("content-type", "application/json");
 		}
 		
 		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
@@ -213,7 +215,11 @@ public class CandlepinTasks {
 	
 		setCredentials(client, server, port, username, password);
 		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " with credentials for '"+username+"' on server '"+server+"'...");
-		
+		if (method instanceof PostMethod){
+			RequestEntity entity =  ((PostMethod)method).getRequestEntity();
+			log.finer("HTTP Request entity: " + ((StringRequestEntity)entity).getContent());
+		}
+		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", method.getRequestHeaders()));
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
@@ -245,12 +251,12 @@ public class CandlepinTasks {
 	 * 	}
 	 * @throws Exception
 	 */
-	static public JSONObject refreshPoolsUsingRESTfulAPI(String server, String port, String prefix, String owner, String password) throws Exception {
+	static public JSONObject refreshPoolsUsingRESTfulAPI(String server, String port, String prefix, String user, String password, String owner) throws Exception {
 //		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
 //		String response = getHTTPResponseAsString(client, put, owner, password);
 //				
 //		return new JSONObject(response);
-		return new JSONObject(putResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/owners/"+owner+"/subscriptions"));
+		return new JSONObject(putResourceUsingRESTfulAPI(server, port, prefix, user, password, "/owners/"+owner+"/subscriptions"));
 	}
 	
 	static public void exportConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
