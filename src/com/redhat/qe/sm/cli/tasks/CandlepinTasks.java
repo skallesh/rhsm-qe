@@ -75,6 +75,7 @@ public class CandlepinTasks {
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
       	client = new HttpClient(connectionManager);
+      	client.getParams().setAuthenticationPreemptive(true);
 		//client = new HttpClient();
 		try {
 			SSLCertificateTruster.trustAllCertsForApacheHttp();
@@ -228,7 +229,7 @@ public class CandlepinTasks {
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
 		if (!username.equals(""))
 			client.getState().setCredentials(
-	            new AuthScope(server, port, null),
+	            new AuthScope(server, port, AuthScope.ANY_REALM),
 	            new UsernamePasswordCredentials(username, password)
 	        );
 	}
