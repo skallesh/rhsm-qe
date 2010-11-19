@@ -24,6 +24,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected static String serverPrefix 				= null;
 	protected static String serverPort 					= null;
 	protected static String serverInsecure				= null;
+	protected static String serverSslVerifyDepth		= null;
 	protected static String serverCaCertDir				= null;
 	
 	// rhsm.conf [rhsm] configurations
@@ -102,6 +103,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		serverPrefix 				= getProperty("sm.server.prefix","");
 		serverPort 					= getProperty("sm.server.port","");
 		serverInsecure				= getProperty("sm.server.insecure","");
+		serverSslVerifyDepth		= getProperty("sm.server.sslVerifyDepth","");
 		serverCaCertDir				= getProperty("sm.server.caCertDir","");
 		
 		// rhsm.conf [rhsm] configurations
