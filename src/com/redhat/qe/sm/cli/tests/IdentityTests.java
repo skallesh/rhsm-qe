@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -37,12 +38,12 @@ using the username/password as authentication
 @Test(groups={"identity"})
 public class IdentityTests extends SubscriptionManagerCLITestScript {
 
-	
+	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: identity",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases = {})
 	public void Identity_Test() {
 		
 		// start fresh by unregistering and registering
@@ -53,14 +54,34 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.identity(null, null, null);
 		
 		// assert the current identity matches what was returned from register
-		Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
+		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
+		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
+	}
+	
+	
+	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
+			groups={"blockedByBug-647891"},
+			enabled=true)
+	@ImplementsNitrateTest(cases = {})
+	public void IdentityWithName_Test() {
+		
+		// start fresh by unregistering and registering
+		clienttasks.unregister();
+		String nickname = "Mr_"+clientusername;
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,nickname,null,null, null));
+		
+		// get the current identity
+		SSHCommandResult result = clienttasks.identity(null, null, null);
+		
+		// assert the current identity matches what was returned from register
+		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);
 	}
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases = {})
 	public void IdentityRegenerate_Test() {
 		
 		// start fresh by unregistering and registering
@@ -87,9 +108,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from the same owner",
-			groups={},
+			groups={}, /*dependsOnGroups={"RegisterWithUsernameAndPassword_Test"},*/
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases = {})
 	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
@@ -116,9 +137,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from a different owner (negative test)",
-			groups={},
+			groups={}, /*dependsOnGroups={"RegisterWithUsernameAndPassword_Test"},*/
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases = {})
 	public void IdentityRegenerateWithUsernameAndPaswordFromADifferentOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
@@ -141,7 +162,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (negative test)",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases = {})
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
 		
 		// start fresh by unregistering and registering

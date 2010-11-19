@@ -873,6 +873,9 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = identity_(username,password,regenerate);
 		
 		// assert results for a successful identify
+		/* Example sshCommandResult.getStdout():
+		 * Current identity is: 8f4dd91a-2c41-4045-a937-e3c8554a5701 name: testuser1
+		 */
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the identity command indicates a success.");
 		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
