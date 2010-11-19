@@ -121,33 +121,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
 		
 			smt.initializeFieldsFromConfigFile();
-			
-			
-			// FIXME WORKAROUND FOR ALPHA TESTING  DELETEME AFTER ALPHA TESTING IS COMPLETE
-			if (!isServerOnPremises) {
-				log.warning("FIXME: Ignoring change from https://bugzilla.redhat.com/show_bug.cgi?id=645115 FOR ALPHA TESTING");
-				smt.entitlementCertDir += "/product";
-			}
-			
-			
 			smt.removeAllCerts(true,true);
 		}
-//		client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-//		client1tasks.updateConfigFileParameter("hostname", serverHostname);
-//		client1tasks.updateConfigFileParameter("port", serverPort);
-//		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
-//		client1tasks.updateConfigFileParameter("baseurl", rhsmBaseUrl);
-//		client1tasks.updateConfigFileParameter("insecure", serverInsecure);
-////		client1tasks.restart_rhsmcertd(certFrequency,false);
-//		client1tasks.removeAllCerts(true,true);
-//		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("baseurl", rhsmBaseUrl);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", serverInsecure);
-////		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
-//		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
 		
 		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
 		if (server!=null && isServerOnPremises) {
