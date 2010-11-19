@@ -62,7 +62,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
-//			groups={"sm_stage1"},
 			dataProvider="UnregisteredCommandData")
 	@ImplementsNitrateTest(cases={41697})
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
@@ -75,7 +74,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
-//			groups={"sm_stage1"},
 			dataProvider="NegativeFunctionalityData")
 	public void AttemptingCommandsThatDoNotExist_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
 		log.info("Testing subscription-manager-cli command that does not exist, expecting it to fail: "+ command);

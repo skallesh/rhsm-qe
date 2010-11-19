@@ -36,17 +36,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *
  */
 public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTestScript{
-//	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
-//	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
-	
 
-//DELETEME
-//MOVED TO TASKS CLASSES
-//	protected String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
-//	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
-//	protected String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	
-//	public static Connection itDBConnection = null;
 	public static Connection dbConnection = null;
 	
 	protected static SubscriptionManagerTasks clienttasks	= null;
@@ -349,9 +339,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return null;
 	}
 	
+	
+	
 	// Data Providers ***********************************************************************
 
-	
 	@DataProvider(name="getGoodRegistrationData")
 	public Object[][] getGoodRegistrationDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getGoodRegistrationDataAsListOfLists());

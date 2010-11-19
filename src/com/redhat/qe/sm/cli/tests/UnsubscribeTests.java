@@ -28,8 +28,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(description="subscription-manager-cli: unsubscribe consumer to an entitlement using product ID",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsNitrateTest(cases={41688})
@@ -41,8 +39,6 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsNitrateTest(cases={41898})
@@ -109,8 +105,6 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //	}
 	
 	@Test(description="Entitlement, malicious negative tests",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(cases={41903})

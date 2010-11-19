@@ -37,11 +37,13 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups={"subscribe"})
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
+	// Test methods ***********************************************************************
+	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSubscriptionPoolProductIdData",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases={})
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 
@@ -101,7 +103,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	@ImplementsNitrateTest(cases={})
 	public void AutoSubscribeToExpectedSubscriptionPoolProductId_Test() throws JSONException {
 		// get the expected subscriptionPoolProductIdData
 		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
@@ -188,8 +190,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(cases={41680})
@@ -201,8 +201,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			enabled=false)
 	public void SubscribeToASingleEntitlementByProductID_Test(){
@@ -219,8 +217,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
 			enabled=true,
 			dataProvider="getAvailableSubscriptionPoolsData")
@@ -245,8 +241,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
-//			dependsOnGroups={"sm_stage8"},
-//			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			enabled=false)
 	@ImplementsNitrateTest(cases={41681})
@@ -257,13 +251,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(cases={41897})
-	public void SubscribeAndSubscribeAgain_Test(SubscriptionPool pool){
+	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -276,28 +268,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
 	}
-	
 
 
-	
-	
-// FIXME: THIS ORIGINAL ssalevan TEST WAS NOT COMPLETE.  REPLACEMENT IS BELOW
-//	@Test(description="subscription-manager Yum plugin: enable/disable",
-//			dependsOnGroups={"sm_stage5"},
-//			groups={"sm_stage6"})
-//	@ImplementsTCMS(id="41696")
-//	public void EnableYumRepoAndVerifyContentAvailable_Test(){
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//		this.adjustRHSMYumRepo(true);
-//		/*for(ProductID sub:this.consumedProductIDs){
-//			ArrayList<String> repos = this.getYumRepolist();
-//			Assert.assertTrue(repos.contains(sub.productId),
-//					"Yum reports product subscribed to repo: " + sub.productId);
-//		}*/
-//	}
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-//			dependsOnGroups={"sm_stage5"},
-//			groups={"sm_stage6", "not_implemented"},
 			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -401,8 +374,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-//	        dependsOnGroups={"sm_stage6"},
-//	        groups={"sm_stage7"},
 			groups={},
 	        enabled=true)
 	@ImplementsNitrateTest(cases={47578})
@@ -482,8 +453,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-//			dependsOnGroups={"sm_stage6"},
-//			groups={"sm_stage7", "not_implemented"},
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
@@ -529,8 +498,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="rhsmcertd: change certFrequency",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4"},
 			dataProvider="getCertFrequencyData",
 			groups={"blockedByBug-617703"},
 			enabled=true)
@@ -593,8 +560,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4"},
 			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsNitrateTest(cases={41694})
@@ -649,6 +614,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	// Configuration Methods ***********************************************************************
+	
+	
 	
 	// Protected Methods ***********************************************************************
 	
@@ -656,9 +624,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 
-	
-
-	
 	@DataProvider(name="getCertFrequencyData")
 	public Object[][] getCertFrequencyDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getCertFrequencyDataAsListOfLists());

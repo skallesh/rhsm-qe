@@ -87,7 +87,8 @@ public class SubscriptionManagerTasks {
 
 		// verify the subscription-manager client is a rhel 6 machine
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
+				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
 
 		// yum clean all
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all");
@@ -117,10 +118,12 @@ public class SubscriptionManagerTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
 			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
-			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),"Yum installed local rpm: "+sm_rpm);
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),
+					"Yum installed local rpm: "+sm_rpm);
 		}
 		
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),
+				"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
 
 	}
 	
@@ -197,22 +200,6 @@ public class SubscriptionManagerTasks {
 //				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^insecure\\s*=.*$", "insecure=1"),
 //				0,"Updated rhsm config insecure to: 1");
 //
-//	}
-
-	// replaced by updateConfFileParameter(...)
-//	/**
-//	 * @return
-//	 * @author ssalevan
-//	 */
-//	public void adjustRHSMYumRepo(boolean enabled){
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
-//						rhsmPluginConfFile, 
-//						"^enabled=.*$", 
-//						"enabled="+(enabled?'1':'0')),
-//						0,
-//						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
-//				);
 //	}
 	
 	
@@ -1684,6 +1671,7 @@ repolist: 3,394
 //		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 5.*\"").getExitCode(),Integer.valueOf(0),"Grinder hostname must be RHEL 5.*");
 		return sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout();
 	}
+	
 	
 	// protected methods ************************************************************
 

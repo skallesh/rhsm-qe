@@ -18,7 +18,6 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(description="unregister the consumer",
-//			groups={"sm_stage1", "blockedByBug-589626"},
 			groups={"blockedByBug-589626"},
 			enabled=true)
 	@ImplementsNitrateTest(cases={46714})
