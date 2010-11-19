@@ -279,19 +279,24 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public List<List<Object>> getUnregisteredCommandDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" facts --update"}));
+		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" facts --update"}));  test moved to FactsTests.FactsWhenNotRegistered_Test()
+		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" identity"}));  test moved to IdentityTests.IdentityWhenNotRegistered_Test()
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --available --all"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --available"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --consumed"}));
-// functionality appears to have been removed: subscription-manager-0.71-1.el6.i686  - jsefler 7/21/2010
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" refresh"}));
+// this functionality appears to have been removed: subscription-manager-0.71-1.el6.i686  - jsefler 7/21/2010
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --product=FOO"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --regtoken=FOO"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=FOO"}));
-// functionality appears to have been removed: subscription-manager-0.68-1.el6.i686  - jsefler 7/12/2010
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --all"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --serial=FOO"}));
+// this functionality appears to have been removed: subscription-manager-0.68-1.el6.i686  - jsefler 7/12/2010
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO"}));
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO"}));
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --serial=FOO"}));
 
 		return ll;
 	}

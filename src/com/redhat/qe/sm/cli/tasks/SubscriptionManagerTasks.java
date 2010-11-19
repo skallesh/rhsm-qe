@@ -1107,7 +1107,7 @@ public class SubscriptionManagerTasks {
 		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
 		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
-				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
+				"A new entitlement certificate has been dropped after subscribing to pool: "+pool);
 
 		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
 		// https://bugzilla.redhat.com/show_bug.cgi?id=640338

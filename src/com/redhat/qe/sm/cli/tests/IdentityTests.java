@@ -40,6 +40,28 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
+	@Test(	description="subscription-manager-cli: identity (when not registered)",
+			groups={"blockedByBug-654429"},
+			enabled=true)
+	@ImplementsNitrateTest(cases = {})
+	public void IdentityWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister();
+		
+		log.info("Assert that one must be registered to query the identity...");
+		for (String username : new String[]{null,clientusername}) {
+			for (String password : new String[]{null,clientpassword}) {
+				for (Boolean regenerate : new Boolean[]{null,true,false}) {
+					SSHCommandResult result = clienttasks.identity_(username,password,regenerate);
+					Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
+						"One must be registered to have an identity.");
+				}
+			}
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: identity",
 			groups={},
 			enabled=true)

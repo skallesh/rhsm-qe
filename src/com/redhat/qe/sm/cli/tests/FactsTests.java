@@ -19,6 +19,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 
@@ -36,6 +37,26 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 
+	
+	@Test(	description="subscription-manager: facts (when not registered)",
+			groups={"blockedByBug-654429"},
+			enabled=true)
+	@ImplementsNitrateTest(cases = {})
+	public void FactsWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister();
+		
+		log.info("Assert that one must be registered to query the facts...");
+		for (Boolean list : new Boolean[]{true,false}) {
+			for (Boolean update : new Boolean[]{true,false}) {
+				SSHCommandResult result = clienttasks.facts_(list, update);
+				Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
+						"One must be registered to list/update the facts.");
+			}	
+		}
+	}
+	
 	
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
 			groups={}, dependsOnGroups={},
