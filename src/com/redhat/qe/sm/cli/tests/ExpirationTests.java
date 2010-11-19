@@ -16,6 +16,7 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 @Test(groups="expiration")
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
@@ -38,19 +39,26 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	@BeforeClass(groups="setup")
-	public void checkTime() throws Exception{
+	protected void checkTime(String host, SSHCommandRunner runner)throws Exception {
 		//make sure local clock and server clock are synced
 		Date localTime = Calendar.getInstance().getTime();
 		Date remoteTime; 
 		//SSHCommandRunner runner = new SSHCommandRunner("jweiss-rhel6-1.usersys.redhat.com", sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-		server.runCommandAndWait("date");
-		String serverDateStr = server.getStdout();
+		runner.runCommandAndWait("date");
+		String serverDateStr = runner.getStdout();
 		SimpleDateFormat unixFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy");
 		remoteTime = unixFormat.parse(serverDateStr);
 		long timeDiffms = Math.abs(localTime.getTime() - remoteTime.getTime());
-		Assert.assertLess(timeDiffms, 60000L, "Time difference with candlepin server is less than 1 minute");
+		Assert.assertLess(timeDiffms, 60000L, "Time difference with " + host + " is less than 1 minute");
 	}
+	
+	@BeforeClass(groups="setup")
+	public void checkTime() throws Exception{
+		checkTime("candlepin server", server);
+		checkTime("client", client);
+	}
+	
+	
 	
 	@BeforeMethod
 	public void createTestPools() throws Exception{
