@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
@@ -30,6 +31,7 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.PutMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
@@ -39,6 +41,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
+import com.redhat.qe.api.helper.TestHelper;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -72,6 +75,7 @@ public class CandlepinTasks {
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
       	client = new HttpClient(connectionManager);
+      	client.getParams().setAuthenticationPreemptive(true);
 		//client = new HttpClient();
 		try {
 			SSLCertificateTruster.trustAllCertsForApacheHttp();
@@ -154,9 +158,13 @@ public class CandlepinTasks {
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
 	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
-//FIXME NOT TESTED  DON"T KNOW WHAT TO DO WITH POST DATA
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
-		if (requestBody != null) post.setRequestEntity(new StringRequestEntity(requestBody, null, null));
+		if (requestBody != null) {
+			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));
+			post.addRequestHeader("accept", "application/json");
+			//post.addRequestHeader("content-type", "application/json");
+		}
+		
 		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, post, authenticator, password);
@@ -208,7 +216,11 @@ public class CandlepinTasks {
 	
 		setCredentials(client, server, port, username, password);
 		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " with credentials for '"+username+"' on server '"+server+"'...");
-		
+		if (method instanceof PostMethod){
+			RequestEntity entity =  ((PostMethod)method).getRequestEntity();
+			log.finer("HTTP Request entity: " + ((StringRequestEntity)entity).getContent());
+		}
+		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", method.getRequestHeaders()));
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
@@ -217,7 +229,7 @@ public class CandlepinTasks {
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
 		if (!username.equals(""))
 			client.getState().setCredentials(
-	            new AuthScope(server, port, null),
+	            new AuthScope(server, port, AuthScope.ANY_REALM),
 	            new UsernamePasswordCredentials(username, password)
 	        );
 	}
@@ -240,12 +252,12 @@ public class CandlepinTasks {
 	 * 	}
 	 * @throws Exception
 	 */
-	static public JSONObject refreshPoolsUsingRESTfulAPI(String server, String port, String prefix, String owner, String password) throws Exception {
+	static public JSONObject refreshPoolsUsingRESTfulAPI(String server, String port, String prefix, String user, String password, String owner) throws Exception {
 //		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
 //		String response = getHTTPResponseAsString(client, put, owner, password);
 //				
 //		return new JSONObject(response);
-		return new JSONObject(putResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/owners/"+owner+"/subscriptions"));
+		return new JSONObject(putResourceUsingRESTfulAPI(server, port, prefix, user, password, "/owners/"+owner+"/subscriptions"));
 	}
 	
 	static public void exportConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
@@ -570,6 +582,32 @@ public class CandlepinTasks {
         return feed;
 	}
 		
+	public static JSONObject createPoolRequest(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, String... providedProducts) throws JSONException{
+		JSONObject sub = new JSONObject();
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+		sub.put("startDate", sdf.format(startDate));
+		sub.put("contractNumber", contractNumber);
+		sub.put("endDate", sdf.format(endDate));
+		sub.put("quantity", quantity);
+
+		List<JSONObject> pprods = new ArrayList<JSONObject>();
+		for (String id: providedProducts) {
+			JSONObject jo = new JSONObject();
+			jo.put("id", id);
+			pprods.add(jo);
+		}
+		sub.put("providedProducts", pprods);
+
+		JSONObject prod = new JSONObject();
+		prod.put("id", product);
+		
+		sub.put("product", prod);
+
+		return sub;
+	}
+	
+	
+	
 	public static void main (String... args) throws Exception {
 		
 
@@ -577,28 +615,14 @@ public class CandlepinTasks {
 		//CandlepinTasks.dropAllConsumers("localhost", "8443", "admin", "admin");
 		//CandlepinTasks.dropAllConsumers("candlepin1.devlab.phx1.redhat.com", "443", "xeops", "redhat");
 		//CandlepinTasks.exportConsumerUsingRESTfulAPI("jweiss.usersys.redhat.com", "8443", "/candlepin", "admin", "admin", "78cf3c59-24ec-4228-a039-1b554ea21319", "/tmp/myfile.zip");
-		JSONObject sub = new JSONObject();
-		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 		Calendar cal = new GregorianCalendar();
 		cal.add(Calendar.DATE, -1);
 		Date yday = cal.getTime();
 		cal.add(Calendar.DATE, 2);
 		Date trow = cal.getTime();
 		
-		String[] ids = {"37060"};
-		List<JSONObject> pprods = new ArrayList<JSONObject>();
-		for (String id: ids) {
-			JSONObject jo = new JSONObject();
-			jo.put("id", id);
-			pprods.add(jo);
-		}
 		
-		sub.put("quantity", 5);
-		sub.put("startDate", sdf.format(yday));
-		//sub.put("product", null);
-		sub.put("contractNumber", "345345");
-		//sub.put("providedProducts", null);
-		sub.put("endDate", trow);
+		//sub.put("quantity", 5);
 		
 		
 		JSONArray ja = new JSONArray(Arrays.asList(new String[] {"blah" }));
