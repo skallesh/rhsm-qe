@@ -80,7 +80,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, clientOwnerUsername);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		log.info("Refresh to make sure the latest certs are on the client...");
 		clienttasks.refresh(); // make sure the new entitlements are downloaded

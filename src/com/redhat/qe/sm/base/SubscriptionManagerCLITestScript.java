@@ -64,7 +64,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1tasks = clienttasks;
 		
 		// will we be connecting to the candlepin server?
-		if (!(	serverHostname.equals("") || serverInstallDir.equals("") )) {
+		if (!serverHostname.equals("")) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
 
@@ -176,13 +176,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 	}
 	
-	@AfterSuite(groups={"setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
 		if (client2tasks!=null) client2tasks.unregister_();	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_();	// release the entitlements consumed by the current registration
 	}
 	
-	@AfterSuite(groups={"setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void disconnectDatabaseAfterSuite() {
 		
 		// close the candlepin database connection

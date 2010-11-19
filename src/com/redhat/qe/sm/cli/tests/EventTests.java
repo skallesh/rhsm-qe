@@ -170,7 +170,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Now let's refresh the subscription pools...");
 //		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, clientOwnerUsername);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		clienttasks.refresh();
 
