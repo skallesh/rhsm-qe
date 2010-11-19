@@ -117,7 +117,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister();
 		
 		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
-		String command = String.format("%s subscription-manager-cli register --username=%s --password=%s", lang==null?"":"LANG="+lang, username, password);
+		String command = String.format("%s %s register --username=%s --password=%s", lang==null?"":"LANG="+lang, clienttasks.command, username, password);
 		RemoteFileTasks.runCommandAndAssert(client, command, exitCode, stdoutRegex, stderrRegex);
 		
 		// assert that the consumer cert and key have NOT been dropped

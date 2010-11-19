@@ -14,6 +14,7 @@ import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -107,9 +108,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		modules.add("subscribe");
 		modules.add("unregister");
 		modules.add("unsubscribe");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h","subscription-manager-cli --help"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli [options] MODULENAME --help";
+			String usage = "Usage: "+clienttasks.command+" [options] MODULENAME --help";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, modulesRegex, modules}));
@@ -119,9 +120,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
 		cleanOptions.add("--debug=DEBUG");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h clean","subscription-manager-cli --help clean"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h clean",clienttasks.command+" --help clean"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli clean [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" clean [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, cleanOptions}));
@@ -134,9 +135,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //		factsOptions.add("-k, --insecure");
 		factsOptions.add("--list");
 		factsOptions.add("--update");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h facts","subscription-manager-cli --help facts"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h facts",clienttasks.command+" --help facts"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli facts [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" facts [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, factsOptions}));
@@ -149,9 +150,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		identityOptions.add("--username=USERNAME");
 		identityOptions.add("--password=PASSWORD");
 		identityOptions.add("--regenerate");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h identity","subscription-manager-cli --help identity"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h identity",clienttasks.command+" --help identity"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli identity [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" identity [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, identityOptions}));
@@ -165,9 +166,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		listOptions.add("--available");
 		listOptions.add("--consumed");
 		listOptions.add("--all");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h list","subscription-manager-cli --help list"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h list",clienttasks.command+" --help list"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli list [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" list [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, listOptions}));
@@ -177,9 +178,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> refreshOptions = new ArrayList<String>();
 		refreshOptions.add("-h, --help");
 		refreshOptions.add("--debug=DEBUG");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h refresh","subscription-manager-cli --help refresh"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h refresh",clienttasks.command+" --help refresh"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli refresh [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" refresh [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, refreshOptions}));
@@ -197,9 +198,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		registerOptions.add("--consumerid=CONSUMERID");
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h register","subscription-manager-cli --help register"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h register",clienttasks.command+" --help register"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli register [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" register [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ new BlockedByBzBug("628589", smHelpCommand, optionsRegex, registerOptions)}));
@@ -213,9 +214,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //		reregisterOptions.add("--username=USERNAME");
 //		reregisterOptions.add("--password=PASSWORD");
 //		reregisterOptions.add("--consumerid=CONSUMERID");
-//		for (String smHelpCommand : new String[]{"subscription-manager-cli -h reregister","subscription-manager-cli --help reregister"}) {
+//		for (String smHelpCommand : new String[]{clienttasks.command+" -h reregister",clienttasks.command+" --help reregister"}) {
 //			List <String> usages = new ArrayList<String>();
-//			String usage = "Usage: subscription-manager-cli reregister [OPTIONS]";
+//			String usage = "Usage: "+clienttasks.command+" reregister [OPTIONS]";
 //			usages.add(usage);
 //			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 //			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, reregisterOptions}));
@@ -230,9 +231,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		subscribeOptions.add("--pool=POOL");
 		subscribeOptions.add("--email=EMAIL");
 		subscribeOptions.add("--locale=LOCALE");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h subscribe","subscription-manager-cli --help subscribe"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h subscribe",clienttasks.command+" --help subscribe"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli subscribe [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" subscribe [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, subscribeOptions}));
@@ -243,9 +244,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		unregisterOptions.add("-h, --help");
 		unregisterOptions.add("--debug=DEBUG");
 //		unregisterOptions.add("-k, --insecure");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli unregister -h","subscription-manager-cli --help unregister"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" unregister -h",clienttasks.command+" --help unregister"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli unregister [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" unregister [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unregisterOptions}));
@@ -258,9 +259,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //		unsubscribeOptions.add("-k, --insecure");
 		unsubscribeOptions.add("--serial=SERIAL");
 		unsubscribeOptions.add("--all");
-		for (String smHelpCommand : new String[]{"subscription-manager-cli -h unsubscribe","subscription-manager-cli --help unsubscribe"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h unsubscribe",clienttasks.command+" --help unsubscribe"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: subscription-manager-cli unsubscribe [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" unsubscribe [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unsubscribeOptions}));
@@ -278,19 +279,19 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	public List<List<Object>> getUnregisteredCommandDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli facts --update"}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli list --available"}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli list --consumed"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" facts --update"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --available"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --consumed"}));
 // functionality appears to have been removed: subscription-manager-0.71-1.el6.i686  - jsefler 7/21/2010
-//		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli subscribe --product=FOO"}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli subscribe --regtoken=FOO"}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli subscribe --pool=FOO"}));
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --product=FOO"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --regtoken=FOO"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=FOO"}));
 // functionality appears to have been removed: subscription-manager-0.68-1.el6.i686  - jsefler 7/12/2010
-//		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --product=FOO"}));
-//		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --regtoken=FOO"}));
-//		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --pool=FOO"}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe"}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --serial=FOO"}));
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO"}));
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO"}));
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --serial=FOO"}));
 
 		return ll;
 	}
@@ -305,9 +306,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
 		// String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --product=FOO", 2, "subscription-manager-cli: error: no such option: --product",null}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --regtoken=FOO", 2, "subscription-manager-cli: error: no such option: --regtoken",null}));
-		ll.add(Arrays.asList(new Object[]{"subscription-manager-cli unsubscribe --pool=FOO", 2, "subscription-manager-cli: error: no such option: --pool",null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO", 2, clienttasks.command+": error: no such option: --product",null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO", 2, clienttasks.command+": error: no such option: --regtoken",null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO", 2, clienttasks.command+": error: no such option: --pool",null}));
 		
 		return ll;
 	}

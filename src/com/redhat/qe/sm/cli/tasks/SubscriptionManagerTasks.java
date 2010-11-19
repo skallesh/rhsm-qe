@@ -42,12 +42,13 @@ public class SubscriptionManagerTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
-	public static String redhatRepoFile			= "/etc/yum.repos.d/redhat.repo";
-	public static String rhsmConfFile			= "/etc/rhsm/rhsm.conf";
-	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
-	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
-	public static String rhsmPluginConfFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	public static String factsDir				= "/etc/rhsm/facts/";
+	public final String command				= "subscription-manager";
+	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
+	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
+	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
+	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
+	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/rhsmplugin.conf";
+	public final String factsDir			= "/etc/rhsm/facts/";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -646,7 +647,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force) {
 
 		// assemble the register command
-		String										command  = "subscription-manager-cli register";	
+		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
 		if (type!=null)								command += " --type="+type;
@@ -789,7 +790,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult clean_() {
 
 		// assemble the unregister command
-		String	command  = "subscription-manager-cli clean";	
+		String command = this.command;	command += " clean";
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -825,7 +826,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult refresh_() {
 
 		// assemble the unregister command
-		String	command  = "subscription-manager-cli refresh";	
+		String command = this.command;	command += " refresh";
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -855,7 +856,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult identity_(String username, String password, Boolean regenerate) {
 
 		// assemble the unregister command
-		String								command  = "subscription-manager-cli identity";	
+		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
 		if (password!=null)					command += " --password="+password;
 		if (regenerate!=null && regenerate)	command += " --regenerate";
@@ -870,24 +871,6 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult identity(String username, String password, Boolean regenerate) {
 		
 		SSHCommandResult sshCommandResult = identity_(username,password,regenerate);
-		
-//		String corruptIdentityMsg = "Consumer identity either does not exist or is corrupted.";
-//		
-//		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=640128 - jsefler 9/28/2010
-//		boolean invokeWorkaroundWhileBugIsOpen = true;
-//		String bugId="640128"; 
-//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-//		if (invokeWorkaroundWhileBugIsOpen) {
-//			corruptIdentityMsg = "Consumer identity either does not exists or is corrupted.";
-//		}
-//		// END OF WORKAROUND
-//		
-//		if (sshCommandResult.getStdout().startsWith(corruptIdentityMsg)) {
-//			return sshCommandResult;
-//		}
-		
-//		// get the current identity cert
-//		ConsumerCert consumerCert = getCurrentConsumerCert();
 		
 		// assert results for a successful identify
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the identity command indicates a success.");
@@ -905,7 +888,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult unregister_() {
 
 		// assemble the unregister command
-		String command  = "subscription-manager-cli unregister";	
+		String command = this.command;	command += " unregister";	
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -948,7 +931,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed) {
 
 		// assemble the register command
-		String								command  = "subscription-manager-cli list";	
+		String command = this.command;		command += " list";	
 		if (all!=null && all)				command += " --all";
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
@@ -961,7 +944,7 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list"
 	 */
 	public SSHCommandResult listInstalledProducts() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
+		
 		SSHCommandResult sshCommandResult = list_(null,null,null);
 		
 		List<File> productCertFiles = getCurrentProductCertFiles();
@@ -980,7 +963,7 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list --available"
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
+
 		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
@@ -993,7 +976,6 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list --all --available"
 	 */
 	public SSHCommandResult listAllAvailableSubscriptionPools() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --all --available");
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=638266 - jsefler 9/28/2010
 		boolean invokeWorkaroundWhileBugIsOpen = false;
@@ -1017,7 +999,7 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list --consumed"
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
+
 		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -1042,12 +1024,12 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale) {
 		
 		// assemble the subscribe command
-		String					command  = "subscription-manager-cli subscribe";	
-		if (poolId!=null)		command += " --pool="+poolId;
-		if (productId!=null)	command += " --product="+productId;
-		if (regtoken!=null)		command += " --regtoken="+regtoken;
-		if (email!=null)		command += " --email="+email;
-		if (locale!=null)		command += " --locale="+locale;
+		String command = this.command;	command += " subscribe";	
+		if (poolId!=null)				command += " --pool="+poolId;
+		if (productId!=null)			command += " --product="+productId;
+		if (regtoken!=null)				command += " --regtoken="+regtoken;
+		if (email!=null)				command += " --email="+email;
+		if (locale!=null)				command += " --locale="+locale;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1059,7 +1041,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		// assemble the subscribe command
-		String														command  = "subscription-manager-cli subscribe";	
+		String command = this.command;								command += " subscribe";	
 		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
@@ -1312,9 +1294,9 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial) {
 
 		// assemble the unsubscribe command
-		String					command  = "subscription-manager-cli unsubscribe";
-		if (all!=null && all)	command += " --all";
-		if (serial!=null)		command += " --serial="+serial;
+		String command = this.command;	command += " unsubscribe";
+		if (all!=null && all)			command += " --all";
+		if (serial!=null)				command += " --serial="+serial;
 
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1388,7 +1370,7 @@ public class SubscriptionManagerTasks {
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
-		//RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
+
 		unsubscribe(Boolean.TRUE, null);
 
 		// assert that there are no product subscriptions consumed
@@ -1429,7 +1411,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult facts_(Boolean list, Boolean update) {
 
 		// assemble the register command
-		String							command  = "subscription-manager-cli facts";	
+		String command = this.command;	command += " facts";	
 		if (list!=null && list)			command += " --list";
 		if (update!=null && update)		command += " --update";
 		
