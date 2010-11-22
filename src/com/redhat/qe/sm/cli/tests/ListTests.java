@@ -26,11 +26,11 @@ import com.redhat.qe.tools.RemoteFileTasks;
 public class ListTests extends SubscriptionManagerCLITestScript{
 	
 
-	@Test(	description="subscription-manager-cli: list available entitlements",
+	@Test(	description="subscription-manager-cli: list available subscriptions",
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(cases={41678})
-	public void EnsureAvailableEntitlementsListed_Test() {
+	public void EnsureAvailableSubscriptionsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
@@ -45,12 +45,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.warning(" * Match the marketing names w/ https://www.redhat.com/products/");
 	}
 	
-	@Test(	description="subscription-manager-cli: list available entitlements",
+	@Test(	description="subscription-manager-cli: list available subscriptions",
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
 	@ImplementsNitrateTest(cases={41678})
-	public void EnsureAvailableEntitlementsListed_Test(String productId, String[] entitledProductNames) {
+	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
@@ -102,13 +102,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null);
 		
+
+		// assert that RHEL Personal is available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
-		}
+		SubscriptionPool rhelPersonalPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", RHELPersonalSubscription, subscriptionPools);
 		Assert.assertTrue(rhelPersonalPool!=null,RHELPersonalSubscription+" is available to this consumer registered as type person");
-		Assert.assertEquals(subscriptionPools.size(),1, RHELPersonalSubscription+" is the ONLY subscription pool available to this consumer registered as type person");
+		
+		// assert that RHEL Personal is the only available pool to this person consumer
+		for (SubscriptionPool subscriptionPool : subscriptionPools) {
+			Assert.assertEquals(subscriptionPool.productId,rhelPersonalPool.productId, RHELPersonalSubscription+" is the ONLY subscription pool available to this consumer registered as type person");
+		}
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
