@@ -25,11 +25,13 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"list"})
 public class ListTests extends SubscriptionManagerCLITestScript{
 	
-
-	@Test(	description="subscription-manager-cli: list available subscriptions",
+	
+	// Test Methods ***********************************************************************
+	
+	@Test(	description="subscription-manager-cli: list available subscriptions (when not consuming)",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41678})
+	//@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -45,11 +47,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.warning(" * Match the marketing names w/ https://www.redhat.com/products/");
 	}
 	
+	
 	@Test(	description="subscription-manager-cli: list available subscriptions",
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41678})
+	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -59,10 +62,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: list consumed entitlements",
+	@Test(	description="subscription-manager-cli: list consumed entitlements (when not consuming)",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41679})
+	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -75,7 +78,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41679})
+	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -94,7 +97,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
 		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
@@ -122,7 +125,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: RHEL Personal should not be an available subscription to a consumer registered as type system",
 			groups={"EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
 		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
@@ -152,7 +155,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: list installed products",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);

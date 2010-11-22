@@ -22,6 +22,8 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 
 // FIXME DELETE THIS FILE   THIS MODULE IS DEAD	
 	
+	// Test Methods ***********************************************************************
+
 	/**
 	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
 		Actions:
@@ -39,7 +41,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: reregister basic registration",
 			groups={"blockedByBug-636843"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56327})
+	@ImplementsNitrateTest(caseId=56327)
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
@@ -96,7 +98,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: bad identity cert",
 			groups={/*"blockedByBug-624106"*/},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56328})
+	@ImplementsNitrateTest(caseId=56328)
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering

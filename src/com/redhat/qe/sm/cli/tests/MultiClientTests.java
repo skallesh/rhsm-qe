@@ -20,12 +20,13 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	
 	
+	// Test Methods ***********************************************************************
+
 	// FIXME Redesign this test to use only one client box and use clean and register --consumerid to switch users
-	
 	@Test(	description="bind/unbind with two users/consumers",
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsNitrateTest(cases={53217})
+	@ImplementsNitrateTest(caseId=53217)
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");

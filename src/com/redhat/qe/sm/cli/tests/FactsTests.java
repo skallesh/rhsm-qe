@@ -41,7 +41,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void FactsWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
@@ -62,7 +62,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={56386})
+	@ImplementsNitrateTest(caseId=56386)
 	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
@@ -77,7 +77,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
 			groups={}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56329})
+	@ImplementsNitrateTest(caseId=56329)
 	public void FactCheckRhelDistribution_Test() {
 		
 		// skip if client1 and client2 are not a Server and Workstation distributions
@@ -145,7 +145,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
 			groups={"blockedByBug-641027"}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56331})
+	@ImplementsNitrateTest(caseId=56331)
 	public void BypassRulesDueToType_Test() throws JSONException {
 		// determine which client is a RHEL Workstation
 		SSHCommandRunner client = null;
