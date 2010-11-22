@@ -335,7 +335,8 @@ public class SubscriptionManagerTasks {
 	public List<File> getCurrentEntitlementCertFiles(String lsOptions) {
 		if (lsOptions==null) lsOptions = "";
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem");
+		//sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem");
+		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem | grep -v key.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
 		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
@@ -591,7 +592,38 @@ public class SubscriptionManagerTasks {
 		return productCertWithMatchingField;
 	}
 	
-
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param entitlementCerts - usually getCurrentEntitlementCerts()
+	 * @return - the EntitlementCert from entitlementCerts that has a matching field (if not found, null is returned)
+	 */
+	public EntitlementCert findEntitlementCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<EntitlementCert> entitlementCerts) {
+		EntitlementCert entitlementCertWithMatchingField = null;
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			try {
+				if (EntitlementCert.class.getField(fieldName).get(entitlementCert).equals(fieldValue)) {
+					entitlementCertWithMatchingField = entitlementCert;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return entitlementCertWithMatchingField;
+	}
+	
+	
 	/**
 	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
 	 * @param productSubscription
@@ -637,7 +669,10 @@ public class SubscriptionManagerTasks {
 		return new BigInteger(serialNumber);
 	}
 	
-
+	public File getEntitlementCertFileFromEntitlementCert(EntitlementCert entitlementCert) {
+		File serialPemFile = new File(entitlementCertDir+File.separator+entitlementCert.serialNumber+".pem");
+		return serialPemFile;
+	}
 	
 	// register module tasks ************************************************************
 	
@@ -1062,7 +1097,8 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		
 		// if already subscribed, just return the result
-		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;	// This consumer is already subscribed to the product matching pool with id '8a878c912b8717f6012b872f17ea00b1'
+		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
 
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
@@ -1096,7 +1132,7 @@ public class SubscriptionManagerTasks {
 	 * @param pool
 	 * @return
 	 */
-	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
+	public File subscribeToSubscriptionPool(SubscriptionPool pool) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		File newCertFile = null;
@@ -1115,10 +1151,23 @@ public class SubscriptionManagerTasks {
 		}
 
 		// when the pool is already subscribe to...
-		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) {
-			// TODO find the existing entitlement cert file corresponding to the already subscribed pool
-			log.warning("TODO find the existing entitlement cert file corresponding to the already subscribed pool");
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
+			// find the existing entitlement cert file corresponding to the already subscribed pool
+			EntitlementCert entitlementCert = findEntitlementCertWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
+			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
+			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
+		
+			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
+			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
+			Assert.assertEquals(afterEntitlementCertFiles.size(),beforeEntitlementCertFiles.size(),
+					"The entitlement certificate file count has not changed (from "+beforeEntitlementCertFiles.size()+" to "+afterEntitlementCertFiles.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
+
+			// assert that consumed ProductSubscriptions has NOT changed
+			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
+			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
+					"The list of currently consumed product subscriptions has not changed (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
+
 		// otherwise, when the pool is NOT already subscribe to...
 		} else {
 	
@@ -1131,7 +1180,7 @@ public class SubscriptionManagerTasks {
 			// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
 			// https://bugzilla.redhat.com/show_bug.cgi?id=640338
 			Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
-					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after after subscribing to pool: "+pool);
+					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after subscribing to pool: "+pool);
 	
 			log.info("The new entitlement certificate file is: "+newCertFile);
 			
@@ -1146,19 +1195,20 @@ public class SubscriptionManagerTasks {
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
 				Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
 			}
+		
+			// assert that consumed ProductSubscriptions has NOT decreased
+			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
+			Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
+					"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 		}
 		
-		// assert that consumed ProductSubscriptions has NOT decreased
-		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
-
 		return newCertFile;
 	}
 	
-	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
+	//@Deprecated
+	public File subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
 		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
-		subscribeToSubscriptionPoolUsingPoolId(pool); return;
+		return subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		/* jsefler 7/22/2010
 		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
@@ -1179,20 +1229,23 @@ public class SubscriptionManagerTasks {
 		*/
 	}
 	
-	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool, boolean withPoolID){
-		log.info("Subscribing to subscription pool: "+ pool);
+	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/){
+		return subscribeToSubscriptionPool(pool);
+		
+		/* jsefler 11/22/2010
 		if(withPoolID){
-			log.info("Subscribing to pool with pool ID:"+ pool.subscriptionName);
+			log.info("Subscribing to pool with poolId: "+ pool.poolId);
 			sshCommandRunner.runCommandAndWait("subscription-manager-cli subscribe --pool="+pool.poolId);
 		}
 		else{
-			log.info("Subscribing to pool with pool name:"+ pool.subscriptionName);
+			log.info("Subscribing to pool with productId: "+ pool.productId);
 			sshCommandRunner.runCommandAndWait("subscription-manager-cli subscribe --product=\""+pool.productId+"\"");
 		}
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size() > 0,
 				"Successfully subscribed to pool with pool ID: "+ pool.poolId +" and pool name: "+ pool.subscriptionName);
 		//TODO: add in more thorough product subscription verification
 		// first improvement is to assert that the count of consumedProductIDs is at least one greater than the count of consumedProductIDs before the new pool was subscribed to.
+		*/
 	}
 	
 	public void subscribeToRegToken(String regtoken) {
