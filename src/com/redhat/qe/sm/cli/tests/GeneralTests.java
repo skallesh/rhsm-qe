@@ -27,10 +27,21 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
+	// Test Methods ***********************************************************************
+	
+	@Test(	description="subscription-manager-cli: man page",
+			groups={},
+			enabled=false)
+	@ImplementsNitrateTest(caseId=41697)
+	public void ManPage_Test() {
+		// TODO
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")
-	@ImplementsNitrateTest(cases={41697, 46713})
+	@ImplementsNitrateTest(caseId=46713)
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
@@ -64,7 +75,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
 			dataProvider="UnregisteredCommandData")
-	@ImplementsNitrateTest(cases={41697})
+	@ImplementsNitrateTest(caseId=41697)
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
 		clienttasks.unregister();

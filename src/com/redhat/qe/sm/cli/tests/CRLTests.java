@@ -33,7 +33,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={56025})
+	@ImplementsNitrateTest(caseId=56025)
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws Exception {
 //		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 //		Actions:

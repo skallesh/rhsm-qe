@@ -50,7 +50,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getUsernameAndPasswordData")
-	@ImplementsNitrateTest(cases={41677})
+	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
@@ -90,7 +90,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
 			dataProvider="getBogusRegistrationData")
-	@ImplementsNitrateTest(cases={41691, 47918})
+//	@ImplementsNitrateTest(caseId={41691, 47918})
+	@ImplementsNitrateTest(caseId=47918)
 	public void Registration_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
@@ -110,7 +111,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
 			groups={},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
-	@ImplementsNitrateTest(cases={41691})
+	@ImplementsNitrateTest(caseId=41691)
 	public void AttemptRegistrationWithInvalidCredentials_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 
 		// ensure we are unregistered
@@ -129,7 +130,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: attempt to register a user who has unaccepted Terms and Conditions",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={48502})
+	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
 		String username = usernameWithUnacceptedTC;
 		String password = passwordWithUnacceptedTC;
@@ -141,7 +142,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={50210})
+	@ImplementsNitrateTest(caseId=50210)
 	public void AttemptRegistrationWithDisabledUserCredentials_Test() {
 		String username = disabledUsername;
 		String password = disabledPassword;
@@ -239,7 +240,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register with --name",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={62352})
+	@ImplementsNitrateTest(caseId=62352)
 	public void RegisterWithName_Test() {
 		
 		// start fresh by unregistering
@@ -271,7 +272,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: reregister basic registration",
 			groups={"blockedByBug-636843"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56327})
+	@ImplementsNitrateTest(caseId=56327)
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
@@ -328,7 +329,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: bad identity cert",
 			groups={"blockedByBug-624106"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56328})
+	@ImplementsNitrateTest(caseId=56328)
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering

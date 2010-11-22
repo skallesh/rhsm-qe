@@ -43,7 +43,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscriptionPoolProductIdData",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 
@@ -103,7 +103,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeToExpectedSubscriptionPoolProductId_Test() throws JSONException {
 		// get the expected subscriptionPoolProductIdData
 		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
@@ -192,7 +192,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsNitrateTest(cases={41680})
+	@ImplementsNitrateTest(caseId=41680)
 	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -220,7 +220,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-584137"},
 			enabled=true,
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsNitrateTest(cases={41686})
+	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -232,7 +232,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
 			groups={"blockedByBug-584137"},
 			dataProvider="getGoodRegistrationData")
-	@ImplementsNitrateTest(cases={41686})
+	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password){
 		clienttasks.unregister();
 		clienttasks.register(username, password, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE);
@@ -243,7 +243,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
 			groups={"blockedByBug-584137"},
 			enabled=false)
-	@ImplementsNitrateTest(cases={41681})
+	@ImplementsNitrateTest(caseId=41681)
 	public void SubscribeToRegToken_Test(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribeToRegToken(regtoken);
@@ -254,7 +254,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41897})
+	@ImplementsNitrateTest(caseId=41897)
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -274,7 +274,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41696})
+	@ImplementsNitrateTest(caseId=41696)
 	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) {
 
 		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test..");
@@ -376,7 +376,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
 			groups={},
 	        enabled=true)
-	@ImplementsNitrateTest(cases={47578})
+	@ImplementsNitrateTest(caseId=47578)
 	public void VerifyYumRepoListsEnabledContent(){
 // Original code from ssalevan
 //	    ArrayList<String> repos = this.getYumRepolist();
@@ -456,7 +456,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41695})
+	@ImplementsNitrateTest(caseId=41695)
 	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
 		// original implementation by ssalevan
 //		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
@@ -501,7 +501,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getCertFrequencyData",
 			groups={"blockedByBug-617703"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41692})
+	@ImplementsNitrateTest(caseId=41692)
 	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
 		String errorMsg = "Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.";
 		errorMsg = "Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.";
@@ -562,7 +562,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
 			groups={"blockedByBug-617703"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41694})
+	@ImplementsNitrateTest(caseId=41694)
 	public void rhsmcertdEnsureCertificatesSynchronize_Test(){
 //FIXME Replacing ssalevan's original implementation of this test... 10/5/2010 jsefler
 //		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);

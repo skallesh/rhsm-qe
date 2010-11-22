@@ -38,12 +38,13 @@ using the username/password as authentication
 @Test(groups={"identity"})
 public class IdentityTests extends SubscriptionManagerCLITestScript {
 
+	
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: identity (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
@@ -65,7 +66,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void Identity_Test() {
 		
 		// start fresh by unregistering and registering
@@ -84,7 +85,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
 			groups={"blockedByBug-647891"},
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityWithName_Test() {
 		
 		// start fresh by unregistering and registering
@@ -103,7 +104,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerate_Test() {
 		
 		// start fresh by unregistering and registering
@@ -132,7 +133,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from the same owner",
 			groups={}, /*dependsOnGroups={"RegisterWithUsernameAndPassword_Test"},*/
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
@@ -161,7 +162,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from a different owner (negative test)",
 			groups={}, /*dependsOnGroups={"RegisterWithUsernameAndPassword_Test"},*/
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithUsernameAndPaswordFromADifferentOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
@@ -184,7 +185,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (negative test)",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases = {})
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
 		
 		// start fresh by unregistering and registering
