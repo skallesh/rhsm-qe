@@ -1059,11 +1059,20 @@ public class SubscriptionManagerTasks {
 
 		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
 		
-		// assert results
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
+		// assert results...
+		
+		// if already subscribed, just return the result
 		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;	// This consumer is already subscribed to the product matching pool with id '8a878c912b8717f6012b872f17ea00b1'
+
+		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
+		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
+
+		// assert that the entitlement pool was found for subscribing
 		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
+		
+		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
+		
 		return sshCommandResult;
 	}
 	
@@ -1090,8 +1099,9 @@ public class SubscriptionManagerTasks {
 	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		File newCertFile = null;
 		log.info("Subscribing to subscription pool: "+pool);
-		subscribe(pool.poolId, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null);
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
@@ -1104,30 +1114,38 @@ public class SubscriptionManagerTasks {
 					"This remaining available pool "+afterSubscriptionPool+" does NOT contain the same productId ("+pool.productId+") after subscribing to pool: "+pool);
 		}
 
-		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
-		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
-		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
-				"A new entitlement certificate has been dropped after subscribing to pool: "+pool);
-
-		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
-		// https://bugzilla.redhat.com/show_bug.cgi?id=640338
-		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
-				"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after after subscribing to pool: "+pool);
-
-		File newCertFile = afterEntitlementCertFiles.get(0);
-		log.info("The new entitlement certificate file is: "+newCertFile);
-		
-		// assert that the productId from the pool matches the entitlement productId
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/5/2010
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("skipping assert that the productId from the pool matches the entitlement productId");
-		// END OF WORKAROUND
+		// when the pool is already subscribe to...
+		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) {
+			// TODO find the existing entitlement cert file corresponding to the already subscribed pool
+			log.warning("TODO find the existing entitlement cert file corresponding to the already subscribed pool");
+			
+		// otherwise, when the pool is NOT already subscribe to...
 		} else {
-// FIXME UNCOMMENT AFTER QA/Stage TESTING IS COMPLETE			
-			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-			Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+	
+			// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
+			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
+			newCertFile = afterEntitlementCertFiles.get(0);
+			Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile),
+					"A new entitlement certificate has been dropped after subscribing to pool: "+pool);
+	
+			// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
+			// https://bugzilla.redhat.com/show_bug.cgi?id=640338
+			Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
+					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after after subscribing to pool: "+pool);
+	
+			log.info("The new entitlement certificate file is: "+newCertFile);
+			
+			// assert that the productId from the pool matches the entitlement productId
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/5/2010
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("skipping assert that the productId from the pool matches the entitlement productId");
+			// END OF WORKAROUND
+			} else {		
+				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+				Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+			}
 		}
 		
 		// assert that consumed ProductSubscriptions has NOT decreased
