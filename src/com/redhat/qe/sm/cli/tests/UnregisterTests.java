@@ -24,7 +24,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-589626"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=46714)
-	public void RegisterSubscribeAndUnregisterTest(){
+	public void RegisterSubscribeAndUnregisterTest() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
