@@ -140,7 +140,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: Ensure RHEL Personal Bits are available and unlimited after a person has subscribed to RHEL Personal",
-			groups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-643405"},
+			groups={"EnsureSubPoolIsAvailableAfterRegisteredPersonSubscribesToRHELPersonal_Test", "RHELPersonal", "blockedByBug-624816", "blockedByBug-641155", "blockedByBug-643405"},
 //			dataProvider="getRHELPersonalData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=55702)
@@ -177,16 +177,18 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
 		List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
-		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
-			client1tasks.subscribe(pool.poolId, null, null, null, null);
-			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
-				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
-			List<File> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
-			Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
-				"Subscribing to subscription pool '"+personSubscriptionName+"' does NOT drop a new entitlement certificate when registered as a person.");
-		} else {
-			client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		}
+// DELETEME - was old behavior pre fix for https://bugzilla.redhat.com/show_bug.cgi?id=641155
+//		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
+//			client1tasks.subscribe(pool.poolId, null, null, null, null);
+//			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
+//				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+//			List<File> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+//			Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
+//				"Subscribing to subscription pool '"+personSubscriptionName+"' does NOT drop a new entitlement certificate when registered as a person.");
+//		} else {
+//			client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+//		}
+		client1tasks.subscribeToSubscriptionPool(pool);
 		
 		
 		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') should now have '"+systemSubscriptionName+"' available with unlimited quantity...");
