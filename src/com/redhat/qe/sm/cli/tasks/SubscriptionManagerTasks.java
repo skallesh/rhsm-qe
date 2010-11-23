@@ -644,7 +644,7 @@ public class SubscriptionManagerTasks {
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		
 		// assert that only one EntitlementCert was parsed and return it
-		Assert.assertEquals(entitlementCerts.size(), 1, "Entitlement Cert file '"+serialPemFile+"' parsed only one EntitlementCert.");
+		Assert.assertEquals(entitlementCerts.size(), 1, "Entitlement cert file '"+serialPemFile+"' parsed only one EntitlementCert.");
 		return entitlementCerts.get(0);
 	}
 	
@@ -654,7 +654,7 @@ public class SubscriptionManagerTasks {
 		List<ProductCert> productCerts = ProductCert.parse(certificates);
 		
 		// assert that only one ProductCert was parsed and return it
-		Assert.assertEquals(productCerts.size(), 1, "Product Cert file '"+productPemFile+"' parsed only one ProductCert.");
+		Assert.assertEquals(productCerts.size(), 1, "Product cert file '"+productPemFile+"' parsed only one ProductCert.");
 		return productCerts.get(0);
 	}
 	
