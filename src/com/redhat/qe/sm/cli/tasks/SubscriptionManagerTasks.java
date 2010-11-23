@@ -243,11 +243,20 @@ public class SubscriptionManagerTasks {
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
 		return InstalledProduct.parse(listInstalledProducts().getStdout());
 	}
-	
+
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
+		/*
+		// THIS ORIGINAL IMPLEMENTATION HAS BEEN THROWING A	java.lang.StackOverflowError
+		// REIMPLEMENTING THIS METHOD TO HELP BREAK THE PROBLEM DOWN INTO SMALLER PIECES - jsefler 11/23/2010
 		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
+		 */
+		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+		for (File entitlementCertFile : getCurrentEntitlementCertFiles()) {
+			entitlementCerts.add(getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
+		}
+		return entitlementCerts;
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
@@ -1262,7 +1271,7 @@ public class SubscriptionManagerTasks {
 
 		// individually subscribe to each available subscription pool
 		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
-			subscribeToSubscriptionPoolUsingPoolId(pool);
+			subscribeToSubscriptionPool(pool);
 		}
 		
 		// assert
