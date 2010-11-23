@@ -179,16 +179,17 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 // DELETEME - was old behavior pre fix for https://bugzilla.redhat.com/show_bug.cgi?id=641155
 //		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
-//			client1tasks.subscribe(pool.poolId, null, null, null, null);
-//			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
-//				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+			client1tasks.subscribe(pool.poolId, null, null, null, null);
+			Assert.assertTrue(!client1tasks.getCurrentlyAvailableSubscriptionPools().contains(pool),
+				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
 //			List<File> afterEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 //			Assert.assertTrue(afterEntitlementCertFiles.equals(beforeEntitlementCertFiles),
 //				"Subscribing to subscription pool '"+personSubscriptionName+"' does NOT drop a new entitlement certificate when registered as a person.");
 //		} else {
 //			client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 //		}
-		client1tasks.subscribeToSubscriptionPool(pool);
+			//FIXME Prefer to use this syntax....
+//		client1tasks.subscribeToSubscriptionPool(pool);
 		
 		
 		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') should now have '"+systemSubscriptionName+"' available with unlimited quantity...");
