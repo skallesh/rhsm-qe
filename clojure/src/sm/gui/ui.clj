@@ -1,13 +1,12 @@
 (ns sm.gui.ui
   :use (clojure.contrib [string :only [join split capitalize]]))
 
+
 (defn same-name "takes a collection of keywords like :registration-settings
 and returns a mapping like :registration-settings -> 'Registration Settings'" 
   [coll]
   (zipmap coll
-	  (map (fn [keyword]
-		 (->> keyword name (split #"-") (map capitalize) (join " ")))
-	       coll)))
+	  (for [keyword coll] (->> keyword name (split #"-") (map capitalize) (join " ")))))
 
 ;;A map of keywords to the GNOME ui data
 (def windows {:mainWindow  {:id "manage_subscriptions_dialog"
@@ -30,6 +29,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 (def new-windows {:mainWindow {:id "Subscription Manager"
 			       :elements (same-name [:registration-settings
+						     :register-system
 						     :add-subscription
 						     :view-my-system-facts
 						     :glossary

@@ -1,5 +1,4 @@
 (ns sm.gui.ldtp
-  (:use 'clojure.contrib.pprint)
   (:import java.util.NoSuchElementException
 	   [org.apache.xmlrpc.client XmlRpcClient XmlRpcClientConfigImpl]))
 
