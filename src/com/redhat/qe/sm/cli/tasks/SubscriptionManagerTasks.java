@@ -47,7 +47,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
 	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
 	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
-	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/rhsmplugin.conf";
+	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String factsDir			= "/etc/rhsm/facts/";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
