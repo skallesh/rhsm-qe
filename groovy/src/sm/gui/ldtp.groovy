@@ -4,9 +4,9 @@ import org.apache.xmlrpc.client.XmlRpcClientConfigImpl
 import java.net.URL
 
 class ldtp {
-	def url
-	def client
-	public ldtp(String url) {
+	def static url
+	def static client
+	public static connect(String url) {
 		this.url = url 
 		this.client = new XmlRpcClient()
 		def config = new XmlRpcClientConfigImpl()

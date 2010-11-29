@@ -1,25 +1,22 @@
 package sm.gui
 import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript
 import sm.gui.ui
+import sm.gui.ldtp
 import org.testng.annotations.BeforeSuite 
 import org.testng.annotations.Test 
-
+//
 class testscript extends SubscriptionManagerBaseTestScript{
-
-	def static ldtp = null
+	
+	static { mixin ldtp }  
+	//def static ldtp = null
 	def static UI = new ui()
-	testscript() {
-		if (ldtp == null) {
-			
-		}
-	}
 	
 	@BeforeSuite
 	def startLDTP(){
-		ldtp= new ldtp("http://"  + clienthostname + ":4118/");
+		connect("http://"  + clienthostname + ":4118/");
 		String binary = System.getProperty("rhsm.gui.binary", "subscription-manager-gui");
-		ldtp.launchapp(binary, []);
-		ldtp.waittillguiexist(UI.mainWindow);
+		launchapp(binary, []);
+		waittillguiexist(UI.mainWindow);
 	}
 	
 	@Test(alwaysRun=true)
@@ -27,3 +24,4 @@ class testscript extends SubscriptionManagerBaseTestScript{
 		println("Oh boy!")
 	}
 }
+
