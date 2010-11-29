@@ -125,7 +125,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
 
-		/* Example Stdout: 
+		/* Example sshCommandResult.getStdout(): 
 			e1aef738-5d03-4a8a-9c87-7a2652e110a8 rh-alpha-qa-105
 			Bind Product  Red Hat Enterprise Linux High Availability (for RHEL 6 Entitlement) 407
 			Bind Product  Red Hat Enterprise Linux Scalable File System (for RHEL 6 Entitlement) 410
@@ -133,6 +133,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Bind Product  Red Hat Enterprise Linux Load Balancer (for RHEL 6 Entitlement) 408
 			Bind Product  Red Hat Enterprise Linux 6 Entitlement Alpha 406
 		*/
+		
+		/* Sample sshCommandResult.getStdout():
+			d67df9c8-f381-4449-9d17-56094ea58092 testuser1
+			Subscribed to Products:
+	    		RHEL for Physical Servers SVC(37060)
+		 */
 
 		// get the state of affairs after having registered with autosubscribe
 		List<SubscriptionPool> availableSubscriptionPoolsAfterAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();

@@ -30,7 +30,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * https://tcms.engineering.redhat.com/case/55702/
  * https://tcms.engineering.redhat.com/case/55718/
  * https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/RH-Personal_dev_testplan
- * 
+ * https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
 Data prep
 ==========================================================
 (in candlepin/client/ruby - assuming that the cp_product_utils product data has been imported)
@@ -108,7 +108,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	protected String consumerPassword = getProperty("sm.rhpersonal.password1", "");
 	protected String anotherConsumerUsername = getProperty("sm.rhpersonal.username2", "");
 	protected String anotherConsumerPassword = getProperty("sm.rhpersonal.password2", "");
-	protected String personSubscriptionName = getProperty("sm.rhpersonal.productName", "");
+	protected String personSubscriptionName = null;//getProperty("sm.rhpersonal.productName", "");
+	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
 	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
 	protected String systemConsumedProductName = getProperty("sm.rhpersonal.consumedSubproductNames", "");  //FIXME change to a List
 
@@ -131,8 +132,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 //			systemSubscriptionName	= "RHEL for Physical Servers";
 //			systemConsumedProductName	= "Red Hat Enterprise Linux Server";
 //		}
-		if (personSubscriptionName.equals("")) {
-			throw new SkipException("To enable the RHEL Personal Tests, we need to know the ProductName of a Subscription containing a subpool of personal products.");
+		if (rhpersonalProductId.equals("")) {
+			throw new SkipException("To enable the RHEL Personal Tests, we need to know the ProductId of a Subscription containing a subpool of personal products.");
 		}
 	}
 	
@@ -170,11 +171,14 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(pool==null,systemSubscriptionName+" is NOT yet available to client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+consumerUsername+"'.");
 
 		
-		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
+//		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
+		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the personal subscription pool with ProductId '"+rhpersonalProductId+"'...");
 		client1tasks.unregister();
 		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
-		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+//		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("productId",rhpersonalProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
+		personSubscriptionName = pool.subscriptionName;
 		Assert.assertTrue(pool!=null,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
 		List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 // DELETEME - was old behavior pre fix for https://bugzilla.redhat.com/show_bug.cgi?id=641155
@@ -285,6 +289,26 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
+			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"/*, "blockedByBug-658283"*/},
+			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
+//			dataProvider="getRHELPersonalData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=58898)
+	public void EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test(/*String consumerUsername,	String consumerPassword,	String personSubscriptionName,		String systemSubscriptionName,	String systemConsumedProductName*/) {
+		log.info("Assuming that multiple systems have subscribed to subpool '"+systemSubscriptionName+"' in prior testcase...");
+	
+		// REFERENCE FIX TO https://bugzilla.redhat.com/show_bug.cgi?id=624063
+
+		log.info("Now, attempt to unsubscribe the person on client 1 from the "+personSubscriptionName+" pool and assert the unregister is blocked.");
+		SSHCommandResult result = client1tasks.unsubscribe_(Boolean.TRUE,null);
+		//Assert.assertTrue(result.getStderr().startsWith("Cannot unbind due to outstanding entitlement:"),
+		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
+		Assert.assertContainsMatch(result.getStderr(),"Cannot unbind due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
+				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unbind due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
 			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
@@ -298,15 +322,17 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Now, attempt to unregister the person on client 1 from the "+personSubscriptionName+" pool and assert the unregister is blocked.");
 		SSHCommandResult result = client1tasks.unregister_();
-		Assert.assertTrue(result.getStderr().startsWith("Cannot unregister due to outstanding entitlement:"),"Attempting to unregister the person consumer is blocked when another system is register by the same consumer."); // stderr: Cannot unregister due to outstanding entitlement: 9
+		//Assert.assertTrue(result.getStderr().startsWith("Cannot unregister due to outstanding entitlement:"),
+		//		"Attempting to unregister the person consumer is blocked when another system is register by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
+		Assert.assertContainsMatch(result.getStdout(),"Cannot unregister due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
+				"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
 	}
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure that the entitlement certs for subscribed subpool is revoked once the person unsubscribes from RHEL Personal",
 			groups={"EnsureEntitlementCertForSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test","RHELPersonal","blockedByBug-639434"},
-			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
+			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test","EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test"},
 //			dataProvider="getRHELPersonalData",
-			alwaysRun=true,	// FIXME delete this line once blockedByBug-639434 is resolved
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58898)
 	// 1) unsubscribe person from personal pool while systems are subscribed to subpool (scenario from calfanso@redhat.com)
@@ -377,7 +403,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: verify system autosubscribe consumes subpool RHEL Personal Bits",
+	@Test(	description="subscription-manager-cli: Ensure system autosubscribe consumes subpool RHEL Personal Bits",
 			groups={"EnsureSystemAutosubscribeConsumesSubPool_Test","RHELPersonal", "blockedByBug-637937"},
 			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 //			dataProvider="getRHELPersonalData",
@@ -445,10 +471,18 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager-cli: Ensure a system cannot subscribe to a personal subscription pool",
+			groups={"EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsername_Test","RHELPersonal"},
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnsureSystemCannotSubscribeToPersonalPool_Test() {
+		//TODO
+	}
+	
 	// Configuration Methods ***********************************************************************
 	
 	
-	@AfterGroups(groups={}, value={"RHELPersonal"}, alwaysRun=true)
+	@AfterGroups(groups={"setup"}, value={"RHELPersonal"}, alwaysRun=true)
 	public void teardownAfterGroups() {
 		if (client2tasks!=null) {
 			client2tasks.unsubscribe_(Boolean.TRUE,null);
@@ -456,10 +490,17 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		}
 
 		if (client1tasks!=null) {
+			
+			for (String consumerId : consumerIds) {
+				client1tasks.register_(client1username,client1password,null,null,consumerId,null, Boolean.TRUE);
+				client1tasks.unsubscribe_(Boolean.TRUE, null);
+				client1tasks.unregister_();
+			}
+			
 			if (personConsumerId!=null) {
 				//client1tasks.reregister_(client1username, client1password, personConsumerId);
-				client1tasks.removeAllCerts(true, true);
-				client1tasks.register_(client1username,client1password,null,null,personConsumerId,null,null);
+				//client1tasks.removeAllCerts(true, true);
+				client1tasks.register_(client1username,client1password,null,null,personConsumerId,null,Boolean.TRUE);
 			}
 			client1tasks.unsubscribe_(Boolean.TRUE,null);
 			client1tasks.unregister_();
