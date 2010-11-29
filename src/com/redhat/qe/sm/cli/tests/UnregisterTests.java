@@ -17,12 +17,14 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 @Test(groups={"unregister"})
 public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
+	
+	// Test Methods ***********************************************************************
+
 	@Test(description="unregister the consumer",
-//			groups={"sm_stage1", "blockedByBug-589626"},
 			groups={"blockedByBug-589626"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={46714})
-	public void RegisterSubscribeAndUnregisterTest(){
+	@ImplementsNitrateTest(caseId=46714)
+	public void RegisterSubscribeAndUnregisterTest() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();

@@ -19,6 +19,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 
@@ -37,11 +38,31 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 
 	
+	@Test(	description="subscription-manager: facts (when not registered)",
+			groups={"blockedByBug-654429"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void FactsWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister();
+		
+		log.info("Assert that one must be registered to query the facts...");
+		for (Boolean list : new Boolean[]{true,false}) {
+			for (Boolean update : new Boolean[]{true,false}) {
+				SSHCommandResult result = clienttasks.facts_(list, update);
+				Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
+						"One must be registered to list/update the facts.");
+			}	
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
 			groups={}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={56386})
+	@ImplementsNitrateTest(caseId=56386)
 	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
@@ -56,7 +77,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
 			groups={}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56329})
+	@ImplementsNitrateTest(caseId=56329)
 	public void FactCheckRhelDistribution_Test() {
 		
 		// skip if client1 and client2 are not a Server and Workstation distributions
@@ -124,7 +145,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
 			groups={"blockedByBug-641027"}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56331})
+	@ImplementsNitrateTest(caseId=56331)
 	public void BypassRulesDueToType_Test() throws JSONException {
 		// determine which client is a RHEL Workstation
 		SSHCommandRunner client = null;
@@ -192,7 +213,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");
@@ -244,7 +265,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// loop through the subscriptions
 		JSONArray jsonSubscriptions = 
-			new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/subscriptions"));	
+			new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");

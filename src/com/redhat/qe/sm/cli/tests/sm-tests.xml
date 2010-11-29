@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="SMTestSuite">
-<!--
+<!-- DELETEME vestige from ssalevan
 	<test name="subscription-manager-cli Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />		

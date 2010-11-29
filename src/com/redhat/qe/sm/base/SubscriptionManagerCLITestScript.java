@@ -5,14 +5,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-
-import javax.jws.Oneway;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,17 +32,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *
  */
 public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTestScript{
-//	protected static final String defaultAutomationPropertiesFile=System.getenv("HOME")+"/sm-tests.properties";
-//	public static final String RHSM_LOC = "/usr/sbin/subscription-manager-cli ";
-	
 
-//DELETEME
-//MOVED TO TASKS CLASSES
-//	protected String defaultConfigFile		= "/etc/rhsm/rhsm.conf";
-//	protected String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
-//	protected String rhsmYumRepoFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	
-//	public static Connection itDBConnection = null;
 	public static Connection dbConnection = null;
 	
 	protected static SubscriptionManagerTasks clienttasks	= null;
@@ -74,7 +60,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1tasks = clienttasks;
 		
 		// will we be connecting to the candlepin server?
-		if (!(	serverHostname.equals("") || serverInstallDir.equals("") )) {
+		if (!serverHostname.equals("")) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
 
@@ -116,6 +102,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (!serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", serverPrefix);								else serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
 			if (!serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", serverPort);									else serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
 			if (!serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", serverInsecure);							else serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+			if (!serverSslVerifyDepth.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "ssl_verify_depth", serverSslVerifyDepth);							else serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
 			if (!serverCaCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
 
 			// rhsm.conf [rhsm] configurations
@@ -130,33 +117,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
 		
 			smt.initializeFieldsFromConfigFile();
-			
-			
-			// FIXME WORKAROUND FOR ALPHA TESTING  DELETEME AFTER ALPHA TESTING IS COMPLETE
-			if (!isServerOnPremises) {
-				log.warning("FIXME: Ignoring change from https://bugzilla.redhat.com/show_bug.cgi?id=645115 FOR ALPHA TESTING");
-				smt.entitlementCertDir += "/product";
-			}
-			
-			
 			smt.removeAllCerts(true,true);
 		}
-//		client1tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-//		client1tasks.updateConfigFileParameter("hostname", serverHostname);
-//		client1tasks.updateConfigFileParameter("port", serverPort);
-//		client1tasks.updateConfigFileParameter("prefix", serverPrefix);
-//		client1tasks.updateConfigFileParameter("baseurl", rhsmBaseUrl);
-//		client1tasks.updateConfigFileParameter("insecure", serverInsecure);
-////		client1tasks.restart_rhsmcertd(certFrequency,false);
-//		client1tasks.removeAllCerts(true,true);
-//		if (client2tasks!=null) client2tasks.installSubscriptionManagerRPMs(rpmUrls,enablerepofordeps);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("hostname", serverHostname);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("port", serverPort);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("prefix", serverPrefix);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("baseurl", rhsmBaseUrl);
-//		if (client2tasks!=null) client2tasks.updateConfigFileParameter("insecure", serverInsecure);
-////		if (client2tasks!=null) client2tasks.restart_rhsmcertd(certFrequency,false);
-//		if (client2tasks!=null) client2tasks.removeAllCerts(true,true);
 		
 		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
 		if (server!=null && isServerOnPremises) {
@@ -173,7 +135,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		log.info("Installed version of candlepin...");
 		try {
 			//FIXME: should change clientOwnerUsername,clientOwnerPassword to a candlepin superadmin/password
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword,"/status"));			
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status"));			
 			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
@@ -185,13 +147,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 	}
 	
-	@AfterSuite(groups={"setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
 		if (client2tasks!=null) client2tasks.unregister_();	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_();	// release the entitlements consumed by the current registration
 	}
 	
-	@AfterSuite(groups={"setup"},description="subscription manager tear down")
+	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void disconnectDatabaseAfterSuite() {
 		
 		// close the candlepin database connection
@@ -348,9 +310,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return null;
 	}
 	
+	
+	
 	// Data Providers ***********************************************************************
 
-	
 	@DataProvider(name="getGoodRegistrationData")
 	public Object[][] getGoodRegistrationDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getGoodRegistrationDataAsListOfLists());

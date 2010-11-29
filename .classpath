@@ -20,8 +20,7 @@
 	<classpathentry kind="lib" path="lib/ldtp-client.jar"/>
 	<classpathentry kind="lib" path="classes"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/ldtp-client"/>
-	<classpathentry kind="lib" path="lib/clojure-1.2.0.jar"/>
-	<classpathentry kind="lib" path="lib/clojure-contrib-1.2.0.jar"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
+	<classpathentry kind="lib" path="/webui-framework/lib/google-collect-1.0-rc3.jar" sourcepath="/webui-framework/lib-src/src-1.0-rc3.zip"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

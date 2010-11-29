@@ -33,7 +33,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={56025})
+	@ImplementsNitrateTest(caseId=56025)
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws Exception {
 //		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
 //		Actions:
@@ -63,7 +63,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
 		List<ProductSubscription> products = new ArrayList<ProductSubscription>();
 		for (ProductSubscription product : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			if (clienttasks.getSubscriptionPoolFromProductSubscription(product,clientOwnerUsername,clientOwnerPassword).equals(pool)) {
+			if (clienttasks.getSubscriptionPoolFromProductSubscription(product,serverAdminUsername,serverAdminPassword).equals(pool)) {
 //FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 				Assert.assertTrue(product.endDate.equals(pool.endDate), "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 				products.add(product);
@@ -80,8 +80,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, jobDetail, "FINISHED", 10*1000, 3);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, clientOwnerUsername);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		log.info("Refresh to make sure the latest certs are on the client...");
 		clienttasks.refresh(); // make sure the new entitlements are downloaded
 //		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");

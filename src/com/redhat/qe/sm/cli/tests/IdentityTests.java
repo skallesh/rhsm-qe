@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -38,11 +39,34 @@ using the username/password as authentication
 public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	
+	// Test methods ***********************************************************************
+	
+	@Test(	description="subscription-manager-cli: identity (when not registered)",
+			groups={"blockedByBug-654429"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void IdentityWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister();
+		
+		log.info("Assert that one must be registered to query the identity...");
+		for (String username : new String[]{null,clientusername}) {
+			for (String password : new String[]{null,clientpassword}) {
+				for (Boolean regenerate : new Boolean[]{null,true,false}) {
+					SSHCommandResult result = clienttasks.identity_(username,password,regenerate);
+					Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
+						"One must be registered to have an identity.");
+				}
+			}
+		}
+	}
+	
 	
 	@Test(	description="subscription-manager-cli: identity",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void Identity_Test() {
 		
 		// start fresh by unregistering and registering
@@ -53,14 +77,34 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.identity(null, null, null);
 		
 		// assert the current identity matches what was returned from register
-		Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
+		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
+		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
+	}
+	
+	
+	@Test(	description="subscription-manager-cli: identity (when the client registered with --name)",
+			groups={"blockedByBug-647891"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void IdentityWithName_Test() {
+		
+		// start fresh by unregistering and registering
+		clienttasks.unregister();
+		String nickname = "Mr_"+clientusername;
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,nickname,null,null, null));
+		
+		// get the current identity
+		SSHCommandResult result = clienttasks.identity(null, null, null);
+		
+		// assert the current identity matches what was returned from register
+		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);
 	}
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerate_Test() {
 		
 		// start fresh by unregistering and registering
@@ -87,15 +131,15 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from the same owner",
-			groups={},
+			groups={}, /*dependsOnGroups={"RegisterWithUsernameAndPassword_Test"},*/
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
 		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
-		String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
+		String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
@@ -116,15 +160,15 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate with username and password from a different owner (negative test)",
-			groups={},
+			groups={}, /*dependsOnGroups={"RegisterWithUsernameAndPassword_Test"},*/
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithUsernameAndPaswordFromADifferentOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister();
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
-		String consumerOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, consumerId).getString("key");
+		String consumerOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 
 		// find a username from the registrationDataList whose owner does not match the registerer of this client
 		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(consumerOwner);
@@ -141,7 +185,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (negative test)",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
 		
 		// start fresh by unregistering and registering

@@ -37,11 +37,13 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups={"subscribe"})
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
+	// Test methods ***********************************************************************
+	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSubscriptionPoolProductIdData",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 
@@ -101,7 +103,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={},
 			enabled=true)
-	//@ImplementsTCMS(id="")
+	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeToExpectedSubscriptionPoolProductId_Test() throws JSONException {
 		// get the expected subscriptionPoolProductIdData
 		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
@@ -153,7 +155,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 			for (String entitledProductName : entitledProductNames) {
 				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
-				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+//DELETEME ALPHA				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
+				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
 				// assert that the entitledProductName is consumed
 				ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
@@ -186,11 +190,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsNitrateTest(cases={41680})
+	@ImplementsNitrateTest(caseId=41680)
 	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
@@ -199,8 +201,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			enabled=false)
 	public void SubscribeToASingleEntitlementByProductID_Test(){
@@ -217,12 +217,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using pool ID",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137"},
 			groups={"blockedByBug-584137"},
 			enabled=true,
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsNitrateTest(cases={41686})
+	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeToValidSubscriptionsByPoolID_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -234,7 +232,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to each available subscription pool using pool ID",
 			groups={"blockedByBug-584137"},
 			dataProvider="getGoodRegistrationData")
-	@ImplementsNitrateTest(cases={41686})
+	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password){
 		clienttasks.unregister();
 		clienttasks.register(username, password, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE);
@@ -243,11 +241,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
-//			dependsOnGroups={"sm_stage8"},
-//			groups={"sm_stage9", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			enabled=false)
-	@ImplementsNitrateTest(cases={41681})
+	@ImplementsNitrateTest(caseId=41681)
 	public void SubscribeToRegToken_Test(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribeToRegToken(regtoken);
@@ -255,13 +251,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4", "blockedByBug-584137", "not_implemented"},
 			groups={"blockedByBug-584137"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41897})
-	public void SubscribeAndSubscribeAgain_Test(SubscriptionPool pool){
+	@ImplementsNitrateTest(caseId=41897)
+	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool){
 // non-dataProvided test procedure
 //		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -274,32 +268,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
 	}
-	
 
 
-	
-	
-// FIXME: THIS ORIGINAL ssalevan TEST WAS NOT COMPLETE.  REPLACEMENT IS BELOW
-//	@Test(description="subscription-manager Yum plugin: enable/disable",
-//			dependsOnGroups={"sm_stage5"},
-//			groups={"sm_stage6"})
-//	@ImplementsTCMS(id="41696")
-//	public void EnableYumRepoAndVerifyContentAvailable_Test(){
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//		this.adjustRHSMYumRepo(true);
-//		/*for(ProductID sub:this.consumedProductIDs){
-//			ArrayList<String> repos = this.getYumRepolist();
-//			Assert.assertTrue(repos.contains(sub.productId),
-//					"Yum reports product subscribed to repo: " + sub.productId);
-//		}*/
-//	}
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-//			dependsOnGroups={"sm_stage5"},
-//			groups={"sm_stage6", "not_implemented"},
 			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41696})
+	@ImplementsNitrateTest(caseId=41696)
 	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) {
 
 		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test..");
@@ -399,11 +374,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-//	        dependsOnGroups={"sm_stage6"},
-//	        groups={"sm_stage7"},
 			groups={},
 	        enabled=true)
-	@ImplementsNitrateTest(cases={47578})
+	@ImplementsNitrateTest(caseId=47578)
 	public void VerifyYumRepoListsEnabledContent(){
 // Original code from ssalevan
 //	    ArrayList<String> repos = this.getYumRepolist();
@@ -480,12 +453,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-//			dependsOnGroups={"sm_stage6"},
-//			groups={"sm_stage7", "not_implemented"},
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41695})
+	@ImplementsNitrateTest(caseId=41695)
 	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
 		// original implementation by ssalevan
 //		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
@@ -527,12 +498,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="rhsmcertd: change certFrequency",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4"},
 			dataProvider="getCertFrequencyData",
 			groups={"blockedByBug-617703"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41692})
+	@ImplementsNitrateTest(caseId=41692)
 	public void rhsmcertdChangeCertFrequency_Test(int minutes) {
 		String errorMsg = "Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.";
 		errorMsg = "Either the consumer is not registered or the certificates are corrupted. Certificate update using daemon failed.";
@@ -540,13 +509,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		log.info("First test with an unregistered user and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
 		clienttasks.unregister();
 		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
-		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
+		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		String marker = "Testing rhsm.conf certFrequency="+minutes+" when unregistered..."; // https://tcms.engineering.redhat.com/case/41692/
-		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);	// give the rhsmcertd a chance to check in with the candlepin server and update the certs
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmLogFile,Integer.valueOf(0),errorMsg,null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmLogFile,Integer.valueOf(0),errorMsg,null);
 		
 		
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
@@ -554,24 +523,24 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
 		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
-		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
+		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when identity is corrupted...";
-		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);	// give the rhsmcertd a chance to check in with the candlepin server and update the certs
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmLogFile,Integer.valueOf(0),errorMsg,null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmLogFile,Integer.valueOf(0),errorMsg,null);
 
 		
 		log.info("Finally test with a registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
 	    clienttasks.register(clientusername, clientpassword, null, null, consumerid, null, Boolean.TRUE);
 		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
-		log.info("Appending a marker in the '"+SubscriptionManagerTasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
+		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
-		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);	// give the rhsmcertd a chance to check in with the candlepin server and update the certs
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+SubscriptionManagerTasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
 
 		/* tail -f /var/log/rhsm/rhsm.log
 		 * 2010-09-10 12:05:06,338 [ERROR] main() @certmgr.py:75 - Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.
@@ -591,11 +560,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="rhsmcertd: ensure certificates synchronize",
-//			dependsOnGroups={"sm_stage3"},
-//			groups={"sm_stage4"},
 			groups={"blockedByBug-617703"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41694})
+	@ImplementsNitrateTest(caseId=41694)
 	public void rhsmcertdEnsureCertificatesSynchronize_Test(){
 //FIXME Replacing ssalevan's original implementation of this test... 10/5/2010 jsefler
 //		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
@@ -647,6 +614,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	// Configuration Methods ***********************************************************************
+	
+	
 	
 	// Protected Methods ***********************************************************************
 	
@@ -654,9 +624,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 
-	
-
-	
 	@DataProvider(name="getCertFrequencyData")
 	public Object[][] getCertFrequencyDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getCertFrequencyDataAsListOfLists());

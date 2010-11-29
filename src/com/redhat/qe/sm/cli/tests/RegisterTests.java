@@ -14,6 +14,7 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
@@ -27,6 +28,8 @@ import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -42,13 +45,12 @@ import com.redhat.qe.tools.SSHCommandRunner;
 public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
-	
-	
+	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getUsernameAndPasswordData")
-	@ImplementsNitrateTest(cases={41677})
+	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
@@ -66,7 +68,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				jsonOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname,serverPort,serverPrefix,clientOwnerUsername,clientOwnerPassword, consumerId);
+				jsonOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, consumerId);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -84,17 +86,17 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
 	}
 	
-
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
 			dataProvider="getBogusRegistrationData")
-	@ImplementsNitrateTest(cases={41691, 47918})
+//	@ImplementsNitrateTest(caseId={41691, 47918})
+	@ImplementsNitrateTest(caseId=47918)
 	public void Registration_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
-		// assure we are unregistered
-//		clienttasks.unregister();
+		// ensure we are unregistered
+//DO NOT		clienttasks.unregister();
 		
 		// attempt the registration
 		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, type, name, consumerId, autosubscribe, force);
@@ -104,107 +106,103 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex);
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex);
 	}
-
-	
-// FIXME DELETEME: Moved to Registration_Test
-//	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
-////			groups={"sm_stage1"},
-//			dataProvider="getInvalidRegistrationData")
-//	@ImplementsTCMS(id="41691, 47918")
-//	public void InvalidRegistration_Test(String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex) {
-//		log.info("Testing registration to a Candlepin server using bogus credentials.");
-//		SSHCommandResult sshCommandResult = clienttasks.register(username, password, type, consumerId, autosubscribe, force);
-//		if (stdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), stdoutRegex);
-//		if (stderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), stderrRegex);
-//	}
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
-//			groups={"sm_stage1", "sprint9-script"},
 			groups={},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
-	public void InvalidRegistrationWithLocalizedStrings_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
-//		sm.unregister();
-//		this.runRHSMCallAsLang(lang,"subscription-manager-cli register --force --username="+username+" --password="+password);
-//		String stdErr = sshCommandRunner.getStderr();
-//		Assert.assertTrue(stdErr.contains(expectedMessage),
-//				"Actual localized error message from failed registration: "+stdErr+" as language "+lang+" matches: "+expectedMessage);
+	@ImplementsNitrateTest(caseId=41691)
+	public void AttemptRegistrationWithInvalidCredentials_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
+
+		// ensure we are unregistered
+		clienttasks.unregister();
 		
-		log.info("Testing the registration to a candlepin server using invalid credentials and expecting results in language "+lang+". ");
-//		RemoteFileTasks.runCommandAndAssert(client, "export LANG="+lang+"; subscription-manager-cli register --force --username="+username+" --password="+password, exitCode, stdoutRegex, stderrRegex);
-		RemoteFileTasks.runCommandAndAssert(client, "LANG="+lang+"  subscription-manager-cli register --force --username="+username+" --password="+password, exitCode, stdoutRegex, stderrRegex);
-//		Assert.assertEquals(sshCommandRunner.getStderr().trim(),expectedMessage,
-//				"Testing the registration to a candlepin server using invalid credentials and expecting results in language "+lang+". ");
+		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
+		String command = String.format("%s %s register --username=%s --password=%s", lang==null?"":"LANG="+lang, clienttasks.command, username, password);
+		RemoteFileTasks.runCommandAndAssert(client, command, exitCode, stdoutRegex, stderrRegex);
+		
+		// assert that the consumer cert and key have NOT been dropped
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerKeyFile),0, "Consumer key file '"+clienttasks.consumerKeyFile+"' does NOT exist after an attempt to register with invalid credentials.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerCertFile),0, "Consumer cert file '"+clienttasks.consumerCertFile+" does NOT exist after an attempt to register with invalid credentials.");
 	}
 	
-// FIXME DELETEME
-//	@Test(	description="subscription-manager-cli: register to a Candlepin server using a user who hasn't accepted terms and conditions, check for localized strings",
-//			dataProvider="invalidRegistrationTermsAndConditionsLocalizedTest",
-//			groups={"sm_stage1", "sprint9-script", "only-IT"})
-//	public void InvalidRegistrationTermsAndConditionsLocalized_Test(String username, String password, String lang, Integer exitCode, String stdoutRegex, String stderrRegex) {
-//		sm.unregister();
-////		this.runRHSMCallAsLang(lang, "subscription-manager-cli register --force --username="+username+" --password="+password);
-////		String stdErr = sshCommandRunner.getStderr();
-////		Assert.assertTrue(stdErr.contains(expectedMessage),
-////				"Actual localized error message from unaccepted T&Cs registration: "+stdErr+" as language "+lang+" matches: "+expectedMessage);
-//		log.info("Testing the registration to a candlepin server using bogus credentials and expecting results in language "+lang+". ");
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export LANG="+lang+"; subscription-manager-cli register --force --username="+username+" --password="+password, exitCode, stdoutRegex, stderrRegex);
-////		Assert.assertEquals(sshCommandRunner.getStderr().trim(),expectedMessage,
-////				"Testing the registration to a candlepin server using bogus credentials and expecting results in language "+lang+". ");
-//	}
-	
 
-// FIXME DELETEME	Replaced by Registration_Test
-//	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-////			dependsOnGroups={"sm_stage1"},
-////			groups={"sm_stage2"},
-////			alwaysRun=true,
-//			enabled=true)
-//	@ImplementsTCMS(id="41677")
-//	public void ValidRegistration_Test() {
-//		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE);
-//		
-//		// assert certificate files are dropped into /etc/pki/consumer
-//		Assert.assertEquals(client.runCommandAndWait("stat /etc/pki/consumer/key.pem").intValue(), 0,
-//				"/etc/pki/consumer/key.pem is present after register");
-//		Assert.assertEquals(client.runCommandAndWait("stat /etc/pki/consumer/cert.pem").intValue(),0,
-//				"/etc/pki/consumer/cert.pem is present after register");
-//	}
+	@Test(	description="subscription-manager-cli: attempt to register a user who has unaccepted Terms and Conditions",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=48502)
+	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
+		String username = usernameWithUnacceptedTC;
+		String password = passwordWithUnacceptedTC;
+		if (username.equals("")) throw new SkipException("Must specify a username who has not accepted Terms & Conditions before attempting this test.");
+		AttemptRegistrationWithInvalidCredentials_Test(null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc");
+	}
+	
+	
+	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=50210)
+	public void AttemptRegistrationWithDisabledUserCredentials_Test() {
+		String username = disabledUsername;
+		String password = disabledPassword;
+		if (username.equals("")) throw new SkipException("Must specify a username who has been disabled before attempting this test.");
+		AttemptRegistrationWithInvalidCredentials_Test(null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.");
+	}
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-//			groups={"sm_stage1", "sprint9-script", "blockedByBug-602378", "blockedByBug-616137"},
-//			alwaysRun=true,
-			groups={"ValidRegistrationAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137"},
+			groups={"blockedByBug-602378", "blockedByBug-616137"},
 			enabled=true)
-	public void ValidRegistrationAutosubscribe_Test() {
-		if (prodCertProduct.equals("")) throw new SkipException("This testcase requires that you specify a subscription product name for which you have a corresponding product cert installed to test autosubscribe.");
+	public void RegisterWithAutosubscribe_Test() {
 
-		// before executing this test we need to make sure that subscription matching the product cert that we are about to test with autosubscribe is actually available
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
-		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", prodCertProduct, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertTrue(pool!=null,"Subscription '"+prodCertProduct+"' is available to user '"+clientusername+"' for testing autosubscribe.");
+		log.info("RegisterWithAutosubscribe_Test Strategy:");
+		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");
+		log.info(" 1. Register and subscribe to a randomly available pool");
+		log.info(" 2. copy the downloaded entitlement cert to the product cert directory (this will fake rhsm into believing that the same product is installed)");
+		log.info(" 3. reregister with autosubscribe and assert that the product is bound");
 
-		String autoProdCert = autosubscribeProdCertFile;
-		teardownAfterValidRegistrationAutosubscribe_Test(); 	// will remove the autosubscribeProdCertFile
-		client.runCommandAndWait("wget -O "+autoProdCert+" "+prodCertLocation);
+		// Register and subscribe to a randomly available pool
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
-		// assert that the stdout from the registration includes: Bind Product  Red Hat Directory Server 75822
-		Assert.assertContainsMatch(client.getStdout(),
-				"Bind Product  "+prodCertProduct, "Stdout from the register command contains binding to the expected product.");
-		// assert the bound product is reported in the consumed product listing
-		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().contains(new ProductSubscription(prodCertProduct, null)),
-				"Expected product "+this.prodCertProduct+" appears in list --consumed call after autosubscribe");
-//		sshCommandRunner.runCommandAndWait("rm -f /etc/pki/product/"+autoProdCert);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		fakeProductCertFile = new File(clienttasks.productCertDir+File.separator+"FAKE_"+entitlementCertFile.getName());
+		
+		// copy the downloaded entitlement cert to the product cert directory (this will fake rhsm into believing that the same product is installed)
+		cleaupAfterClass(); // removes the fake product cert file
+		RemoteFileTasks.runCommandAndAssert(client, "cp "+entitlementCertFile.getPath()+" "+fakeProductCertFile, Integer.valueOf(0));
+		ProductCert fakeProductCert = clienttasks.getProductCertFromProductCertFile(fakeProductCertFile);
+		
+		// reregister with autosubscribe and assert that the product is bound
+		clienttasks.unregister();
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
+		
+		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
+		/* Sample sshCommandResult.getStdout():
+		 * d67df9c8-f381-4449-9d17-56094ea58092 testuser1
+		 * Subscribed to Products:
+		 *      RHEL for Physical Servers SVC(37060)
+		 */
+		String productName = fakeProductCert.productName;
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+
+		// assert that the productName is consumed
+		ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after registering with autosubscribe.");
+
+		// assert that the productName is installed and subscribed
+		InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+productName+"' is reported in the list of installed products.");
+		Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+productName+"' is Subscribed.");
 	}
 
 	
 	@Test(	description="subscription-manager-cli: register with --force",
 			groups={"blockedByBug-623264"},
 			enabled=true)
-	//@ImplementsTCMS(id="")
 	public void RegisterWithForce_Test() {
 		
 		// start fresh by unregistering
@@ -242,7 +240,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register with --name",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={62352})
+	@ImplementsNitrateTest(caseId=62352)
 	public void RegisterWithName_Test() {
 		
 		// start fresh by unregistering
@@ -255,8 +253,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// assert the stdout reflects the register name
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name,"Stdout from register with --name value of "+name);
 	}
-	
-
 	
 	
 	/**
@@ -276,7 +272,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: reregister basic registration",
 			groups={"blockedByBug-636843"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56327})
+	@ImplementsNitrateTest(caseId=56327)
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
@@ -331,9 +327,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	 		* the entitlement serials should be the same as before the registration
 	 */
 	@Test(	description="subscription-manager-cli: bad identity cert",
-			groups={/*"blockedByBug-624106"*/},
+			groups={"blockedByBug-624106"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={56328})
+	@ImplementsNitrateTest(caseId=56328)
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering
@@ -381,15 +377,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	// Configuration methods ***********************************************************************
 	
-	String autosubscribeProdCertFile = null;
-	@BeforeGroups(value={"ValidRegistrationAutosubscribe_Test"},alwaysRun=true)
-	public void autosubscribeProdCertFileBeforeValidRegistrationAutosubscribe_Test() {
-		autosubscribeProdCertFile =  clienttasks.productCertDir+"/autosubscribeProdCert"+/*getRandInt()+*/".pem";
-	}
-
-	@AfterGroups (value={"ValidRegistrationAutosubscribe_Test"}, alwaysRun=true)
-	public void teardownAfterValidRegistrationAutosubscribe_Test() {
-		client.runCommandAndWait("rm -f "+autosubscribeProdCertFile);
+	File fakeProductCertFile = null;
+	@AfterClass (alwaysRun=true)
+	public void cleaupAfterClass() {
+		if (fakeProductCertFile!=null) {
+			client.runCommandAndWait("rm -f "+fakeProductCertFile);
+		}
 	}
 	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
@@ -450,8 +443,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	
 	// Protected methods ***********************************************************************
 
 	protected void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
@@ -459,6 +450,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
 				"Invalid username or password. To create a login, please visit https:\\/\\/www.redhat.com\\/wapps\\/ugc\\/register.html");
 	}
+	
+	
 	
 	// Data Providers ***********************************************************************
 
@@ -471,8 +464,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
 		// 									username,			password,						type,	name,	consumerId,	autosubscribe,	force,			debug,	exitCode,				stdoutRegex,																	stderrRegex
 		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: password not provided. Use --password <value>",							null}));
+		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username not provided. Use --username <name>",							null}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
 		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
@@ -484,92 +477,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// ... try to register again even though the system is already registered
 		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
 
-// DELETEME This data moved to a script arguments for clientUsernames and clientPasswords 
-//		if (isServerOnPremises) {
-//			ll.add(Arrays.asList(new Object[]{	"admin",					"admin",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"admin"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"testuser1",				"password",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"testuser1"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"testuser2",				"password",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"testuser2"+"$",					null}));
-//		}
-//		else {	// user data comes from https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/imanage_qe_IT_data_spec
-//			ll.add(Arrays.asList(new Object[]{	"ewayte",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"ewayte"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"sehuffman",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"epgyadmin",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"epgyadmin"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"onthebus",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"onthebus"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"epgy_bsears",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-//			ll.add(Arrays.asList(new Object[]{	"Dadaless",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"emmapease",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"aaronwen",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"davidmcmath",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"davidmcmath"+"$",				null}));
-//			ll.add(Arrays.asList(new Object[]{	"cfairman2",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"cfairman2"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"macfariman",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isu-ardwin",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isu-paras",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isuchaos",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isucnc",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isu-thewags",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isu-thewags"+"$",				null}));
-//			ll.add(Arrays.asList(new Object[]{	"isu-sukhoy",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isu-sukhoy"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"isu-debrm",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isu-acoster",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isunpappas",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-//			ll.add(Arrays.asList(new Object[]{	"isujdwarn",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"isujdwarn"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"pascal.catric@a-sis.com",	"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"pascal.catric@a-sis.com"+"$",	null}));
-//			ll.add(Arrays.asList(new Object[]{	"xeops",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"xeops"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"xeops-js",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"xeop-stenjoa",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"xeop-stenjoa"+"$",				null}));
-//			ll.add(Arrays.asList(new Object[]{	"tmgedp",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"tmgedp"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"jmarra",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"jmarra"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"nisadmin",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"nisadmin"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"darkrider1",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"darkrider1"+"$",					null}));
-//			ll.add(Arrays.asList(new Object[]{	"test5",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc$"}));
-//			ll.add(Arrays.asList(new Object[]{	"amy_redhat2",				"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,													"^The user has been disabled, if this is a mistake, please contact customer service.$"}));
-//			ll.add(Arrays.asList(new Object[]{	"test_1",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test_1"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"test2",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test2"+"$",						null}));
-//			ll.add(Arrays.asList(new Object[]{	"test3",					"redhat",			null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"^[a-f,0-9,\\-]{36} "+"test3"+"$",						null}));
-//
-//		}
 		return ll;
 	}
 	
-// FIXME DELETEME	
-//	@DataProvider(name="invalidRegistrationTermsAndConditionsLocalizedTest")
-//	public Object[][] getInvalidRegistrationTermsAndConditionsLocalizedDataAs2dArray() {
-//		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationTermsAndConditionsLocalizedDataAsListOfLists());
-//	}
-//	protected List<List<Object>> getInvalidRegistrationTermsAndConditionsLocalizedDataAsListOfLists(){
-//		List<List<Object>> ll = new ArrayList<List<Object>>();
-//		// String username, String password, String lang, String expectedMessage
-//		// String username, String password, String lang, Integer exitCode, String stdoutRegex, String stderrRegex
-//		ll.add(Arrays.asList(new Object[]{tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "en_US.UTF8","You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc"}));
-//		ll.add(Arrays.asList(new Object[]{"ssalevan", "redhat", "en_US.UTF8", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-//		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "de_DE.UTF8","Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
-//		return ll;
-//	}
-	
-
-// FIXME DELETEME Moved to getBogusRegistrationData
-//	@DataProvider(name="getInvalidRegistrationData")
-//	public Object[][] getInvalidRegistrationDataAs2dArray() {
-//		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
-//	}
-//	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
-//		List<List<Object>> ll = new ArrayList<List<Object>>();
-//		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, String stdoutRegex, String stderrRegex
-//		ll.add(Arrays.asList(new Object[]{"",					"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
-//		ll.add(Arrays.asList(new Object[]{clientusername,		"",								null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
-//		ll.add(Arrays.asList(new Object[]{"",					clientpassword,					null,	null,	null,	Boolean.TRUE,	null,	"Error: username and password are required to register, try register --help.",	null}));
-//		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
-//		ll.add(Arrays.asList(new Object[]{clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
-//		ll.add(Arrays.asList(new Object[]{clientusername,		String.valueOf(getRandInt()),	null,	null,	null,	Boolean.TRUE,	null,	null,																	"Invalid username or password"}));
-//
-//		// force a successful registration, and then...
-//		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
-//		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.TRUE,	null,	"[a-f,0-9,\\-]{36} "+clientusername,								null}));	// https://bugzilla.redhat.com/show_bug.cgi?id=616065
-//
-//		// ... try to register again even though the system is already registered
-//		ll.add(Arrays.asList(new Object[]{clientusername,		clientpassword,						null,	null,	null,	Boolean.FALSE,	null,	"This system is already registered. Use --force to override",		null}));
-//
-//		return ll;
-//	}
 	
 	@DataProvider(name="getInvalidRegistrationWithLocalizedStringsData")
 	public Object[][] getInvalidRegistrationWithLocalizedStringsDataAs2dArray() {
@@ -587,17 +497,16 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
 		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
 
-		// registration test for a user who has not accepted Red Hat's Terms and conditions
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc"}));
-
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
-		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", tcUnacceptedUsername, tcUnacceptedPassword, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
-
-		// registration test for a user who has been disabled
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "xeops-js", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"en_US.UTF8", "ssalevan", "redhat", 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-
+		if (!usernameWithUnacceptedTC.equals("")) {
+			if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
+			else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
+		}
+		
+		// registration test for a user who has been disabled (translated)
+		if (!disabledUsername.equals("")) {
+			ll.add(Arrays.asList(new Object[]{"en_US.UTF8", disabledUsername, disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
+		}
 
 		return ll;
 	}

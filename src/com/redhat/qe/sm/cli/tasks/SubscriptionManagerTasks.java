@@ -42,12 +42,13 @@ public class SubscriptionManagerTasks {
 
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
-	public static String redhatRepoFile			= "/etc/yum.repos.d/redhat.repo";
-	public static String rhsmConfFile			= "/etc/rhsm/rhsm.conf";
-	public static String rhsmcertdLogFile		= "/var/log/rhsm/rhsmcertd.log";
-	public static String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
-	public static String rhsmPluginConfFile		= "/etc/yum/pluginconf.d/rhsmplugin.conf";
-	public static String factsDir				= "/etc/rhsm/facts/";
+	public final String command				= "subscription-manager";
+	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
+	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
+	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
+	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
+	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
+	public final String factsDir			= "/etc/rhsm/facts/";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -87,7 +88,8 @@ public class SubscriptionManagerTasks {
 
 		// verify the subscription-manager client is a rhel 6 machine
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),"subscription-manager-cli hostname must be RHEL 6.*");
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
+				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
 
 		// yum clean all
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all");
@@ -117,10 +119,12 @@ public class SubscriptionManagerTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
 			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
-			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),"Yum installed local rpm: "+sm_rpm);
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),
+					"Yum installed local rpm: "+sm_rpm);
 		}
 		
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
+		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),
+				"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
 
 	}
 	
@@ -198,22 +202,6 @@ public class SubscriptionManagerTasks {
 //				0,"Updated rhsm config insecure to: 1");
 //
 //	}
-
-	// replaced by updateConfFileParameter(...)
-//	/**
-//	 * @return
-//	 * @author ssalevan
-//	 */
-//	public void adjustRHSMYumRepo(boolean enabled){
-//		Assert.assertEquals(
-//				RemoteFileTasks.searchReplaceFile(sshCommandRunner, 
-//						rhsmPluginConfFile, 
-//						"^enabled=.*$", 
-//						"enabled="+(enabled?'1':'0')),
-//						0,
-//						"Adjusted RHSM Yum Repo config file, enabled="+(enabled?'1':'0')
-//				);
-//	}
 	
 	
 
@@ -255,11 +243,20 @@ public class SubscriptionManagerTasks {
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
 		return InstalledProduct.parse(listInstalledProducts().getStdout());
 	}
-	
+
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
+		/*
+		// THIS ORIGINAL IMPLEMENTATION HAS BEEN THROWING A	java.lang.StackOverflowError
+		// REIMPLEMENTING THIS METHOD TO HELP BREAK THE PROBLEM DOWN INTO SMALLER PIECES - jsefler 11/23/2010
 		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
+		 */
+		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+		for (File entitlementCertFile : getCurrentEntitlementCertFiles()) {
+			entitlementCerts.add(getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
+		}
+		return entitlementCerts;
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
@@ -347,7 +344,8 @@ public class SubscriptionManagerTasks {
 	public List<File> getCurrentEntitlementCertFiles(String lsOptions) {
 		if (lsOptions==null) lsOptions = "";
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/entitlement/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem");
+		//sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem");
+		sshCommandRunner.runCommandAndWait("ls -1 "+lsOptions+" "+entitlementCertDir+"/*.pem | grep -v key.pem");
 		String lsFiles = sshCommandRunner.getStdout().trim();
 		List<File> files = new ArrayList<File>();
 		if (!lsFiles.isEmpty()) {
@@ -603,7 +601,38 @@ public class SubscriptionManagerTasks {
 		return productCertWithMatchingField;
 	}
 	
-
+	
+	/**
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param entitlementCerts - usually getCurrentEntitlementCerts()
+	 * @return - the EntitlementCert from entitlementCerts that has a matching field (if not found, null is returned)
+	 */
+	public EntitlementCert findEntitlementCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<EntitlementCert> entitlementCerts) {
+		EntitlementCert entitlementCertWithMatchingField = null;
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			try {
+				if (EntitlementCert.class.getField(fieldName).get(entitlementCert).equals(fieldValue)) {
+					entitlementCertWithMatchingField = entitlementCert;
+				}
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return entitlementCertWithMatchingField;
+	}
+	
+	
 	/**
 	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
 	 * @param productSubscription
@@ -624,7 +653,7 @@ public class SubscriptionManagerTasks {
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		
 		// assert that only one EntitlementCert was parsed and return it
-		Assert.assertEquals(entitlementCerts.size(), 1, "Entitlement Cert file '"+serialPemFile+"' parsed only one EntitlementCert.");
+		Assert.assertEquals(entitlementCerts.size(), 1, "Entitlement cert file '"+serialPemFile+"' parsed only one EntitlementCert.");
 		return entitlementCerts.get(0);
 	}
 	
@@ -634,7 +663,7 @@ public class SubscriptionManagerTasks {
 		List<ProductCert> productCerts = ProductCert.parse(certificates);
 		
 		// assert that only one ProductCert was parsed and return it
-		Assert.assertEquals(productCerts.size(), 1, "Product Cert file '"+productPemFile+"' parsed only one ProductCert.");
+		Assert.assertEquals(productCerts.size(), 1, "Product cert file '"+productPemFile+"' parsed only one ProductCert.");
 		return productCerts.get(0);
 	}
 	
@@ -649,7 +678,10 @@ public class SubscriptionManagerTasks {
 		return new BigInteger(serialNumber);
 	}
 	
-
+	public File getEntitlementCertFileFromEntitlementCert(EntitlementCert entitlementCert) {
+		File serialPemFile = new File(entitlementCertDir+File.separator+entitlementCert.serialNumber+".pem");
+		return serialPemFile;
+	}
 	
 	// register module tasks ************************************************************
 	
@@ -659,7 +691,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force) {
 
 		// assemble the register command
-		String										command  = "subscription-manager-cli register";	
+		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
 		if (type!=null)								command += " --type="+type;
@@ -802,7 +834,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult clean_() {
 
 		// assemble the unregister command
-		String	command  = "subscription-manager-cli clean";	
+		String command = this.command;	command += " clean";
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -838,7 +870,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult refresh_() {
 
 		// assemble the unregister command
-		String	command  = "subscription-manager-cli refresh";	
+		String command = this.command;	command += " refresh";
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -868,7 +900,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult identity_(String username, String password, Boolean regenerate) {
 
 		// assemble the unregister command
-		String								command  = "subscription-manager-cli identity";	
+		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
 		if (password!=null)					command += " --password="+password;
 		if (regenerate!=null && regenerate)	command += " --regenerate";
@@ -884,25 +916,10 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult sshCommandResult = identity_(username,password,regenerate);
 		
-//		String corruptIdentityMsg = "Consumer identity either does not exist or is corrupted.";
-//		
-//		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=640128 - jsefler 9/28/2010
-//		boolean invokeWorkaroundWhileBugIsOpen = true;
-//		String bugId="640128"; 
-//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-//		if (invokeWorkaroundWhileBugIsOpen) {
-//			corruptIdentityMsg = "Consumer identity either does not exists or is corrupted.";
-//		}
-//		// END OF WORKAROUND
-//		
-//		if (sshCommandResult.getStdout().startsWith(corruptIdentityMsg)) {
-//			return sshCommandResult;
-//		}
-		
-//		// get the current identity cert
-//		ConsumerCert consumerCert = getCurrentConsumerCert();
-		
 		// assert results for a successful identify
+		/* Example sshCommandResult.getStdout():
+		 * Current identity is: 8f4dd91a-2c41-4045-a937-e3c8554a5701 name: testuser1
+		 */
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the identity command indicates a success.");
 		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
@@ -918,7 +935,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult unregister_() {
 
 		// assemble the unregister command
-		String command  = "subscription-manager-cli unregister";	
+		String command = this.command;	command += " unregister";	
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -961,7 +978,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed) {
 
 		// assemble the register command
-		String								command  = "subscription-manager-cli list";	
+		String command = this.command;		command += " list";	
 		if (all!=null && all)				command += " --all";
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
@@ -974,7 +991,7 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list"
 	 */
 	public SSHCommandResult listInstalledProducts() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list");
+		
 		SSHCommandResult sshCommandResult = list_(null,null,null);
 		
 		List<File> productCertFiles = getCurrentProductCertFiles();
@@ -993,7 +1010,7 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list --available"
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --available");
+
 		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
@@ -1006,7 +1023,6 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list --all --available"
 	 */
 	public SSHCommandResult listAllAvailableSubscriptionPools() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --all --available");
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=638266 - jsefler 9/28/2010
 		boolean invokeWorkaroundWhileBugIsOpen = false;
@@ -1030,7 +1046,7 @@ public class SubscriptionManagerTasks {
 	 * @return SSHCommandResult from "subscription-manager-cli list --consumed"
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
-		//return RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli list --consumed");
+
 		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -1055,12 +1071,12 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale) {
 		
 		// assemble the subscribe command
-		String					command  = "subscription-manager-cli subscribe";	
-		if (poolId!=null)		command += " --pool="+poolId;
-		if (productId!=null)	command += " --product="+productId;
-		if (regtoken!=null)		command += " --regtoken="+regtoken;
-		if (email!=null)		command += " --email="+email;
-		if (locale!=null)		command += " --locale="+locale;
+		String command = this.command;	command += " subscribe";	
+		if (poolId!=null)				command += " --pool="+poolId;
+		if (productId!=null)			command += " --product="+productId;
+		if (regtoken!=null)				command += " --regtoken="+regtoken;
+		if (email!=null)				command += " --email="+email;
+		if (locale!=null)				command += " --locale="+locale;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1072,7 +1088,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
 
 		// assemble the subscribe command
-		String														command  = "subscription-manager-cli subscribe";	
+		String command = this.command;								command += " subscribe";	
 		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
@@ -1087,11 +1103,21 @@ public class SubscriptionManagerTasks {
 
 		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
 		
-		// assert results
+		// assert results...
+		
+		// if already subscribed, just return the result
+		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
+
+		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
-		if (sshCommandResult.getStderr().startsWith("This consumer is already subscribed")) return sshCommandResult;	// This consumer is already subscribed to the product matching pool with id '8a878c912b8717f6012b872f17ea00b1'
+
+		// assert that the entitlement pool was found for subscribing
 		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
+		
+		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
+		
 		return sshCommandResult;
 	}
 	
@@ -1115,11 +1141,12 @@ public class SubscriptionManagerTasks {
 	 * @param pool
 	 * @return
 	 */
-	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool) {
+	public File subscribeToSubscriptionPool(SubscriptionPool pool) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		File newCertFile = null;
 		log.info("Subscribing to subscription pool: "+pool);
-		subscribe(pool.poolId, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null);
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
@@ -1132,43 +1159,65 @@ public class SubscriptionManagerTasks {
 					"This remaining available pool "+afterSubscriptionPool+" does NOT contain the same productId ("+pool.productId+") after subscribing to pool: "+pool);
 		}
 
-		// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
-		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
-		Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(afterEntitlementCertFiles.get(0)),
-				"A new entitlement certificate has been dropped after after subscribing to pool: "+pool);
-
-		// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
-		// https://bugzilla.redhat.com/show_bug.cgi?id=640338
-		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
-				"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after after subscribing to pool: "+pool);
-
-		File newCertFile = afterEntitlementCertFiles.get(0);
-		log.info("The new entitlement certificate file is: "+newCertFile);
+		// when the pool is already subscribe to...
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
+			
+			// find the existing entitlement cert file corresponding to the already subscribed pool
+			EntitlementCert entitlementCert = findEntitlementCertWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
+			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
+			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
-		// assert that the productId from the pool matches the entitlement productId
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/5/2010
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("skipping assert that the productId from the pool matches the entitlement productId");
-		// END OF WORKAROUND
+			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
+			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
+			Assert.assertEquals(afterEntitlementCertFiles.size(),beforeEntitlementCertFiles.size(),
+					"The entitlement certificate file count has not changed (from "+beforeEntitlementCertFiles.size()+" to "+afterEntitlementCertFiles.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
+
+			// assert that consumed ProductSubscriptions has NOT changed
+			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
+			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
+					"The list of currently consumed product subscriptions has not changed (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
+
+		// otherwise, when the pool is NOT already subscribe to...
 		} else {
-// FIXME UNCOMMENT AFTER QA/Stage TESTING IS COMPLETE			
-//			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-//			Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+	
+			// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
+			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
+			newCertFile = afterEntitlementCertFiles.get(0);
+			Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile),
+					"A new entitlement certificate has been dropped after subscribing to pool: "+pool);
+	
+			// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
+			// https://bugzilla.redhat.com/show_bug.cgi?id=640338
+			Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
+					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after subscribing to pool: "+pool);
+	
+			log.info("The new entitlement certificate file is: "+newCertFile);
+			
+			// assert that the productId from the pool matches the entitlement productId
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/5/2010
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("skipping assert that the productId from the pool matches the entitlement productId");
+			// END OF WORKAROUND
+			} else {		
+				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+				Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+			}
+		
+			// assert that consumed ProductSubscriptions has NOT decreased
+			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
+			Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
+					"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
 		}
 		
-		// assert that consumed ProductSubscriptions has NOT decreased
-		List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
-				"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
-
 		return newCertFile;
 	}
 	
-	public void subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
+	//@Deprecated
+	public File subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
 		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
-		subscribeToSubscriptionPoolUsingPoolId(pool); return;
+		return subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		/* jsefler 7/22/2010
 		List<ProductSubscription> before = getCurrentlyConsumedProductSubscriptions();
@@ -1189,20 +1238,23 @@ public class SubscriptionManagerTasks {
 		*/
 	}
 	
-	public void subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool, boolean withPoolID){
-		log.info("Subscribing to subscription pool: "+ pool);
+	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/){
+		return subscribeToSubscriptionPool(pool);
+		
+		/* jsefler 11/22/2010
 		if(withPoolID){
-			log.info("Subscribing to pool with pool ID:"+ pool.subscriptionName);
+			log.info("Subscribing to pool with poolId: "+ pool.poolId);
 			sshCommandRunner.runCommandAndWait("subscription-manager-cli subscribe --pool="+pool.poolId);
 		}
 		else{
-			log.info("Subscribing to pool with pool name:"+ pool.subscriptionName);
+			log.info("Subscribing to pool with productId: "+ pool.productId);
 			sshCommandRunner.runCommandAndWait("subscription-manager-cli subscribe --product=\""+pool.productId+"\"");
 		}
 		Assert.assertTrue(getCurrentlyConsumedProductSubscriptions().size() > 0,
 				"Successfully subscribed to pool with pool ID: "+ pool.poolId +" and pool name: "+ pool.subscriptionName);
 		//TODO: add in more thorough product subscription verification
 		// first improvement is to assert that the count of consumedProductIDs is at least one greater than the count of consumedProductIDs before the new pool was subscribed to.
+		*/
 	}
 	
 	public void subscribeToRegToken(String regtoken) {
@@ -1219,7 +1271,7 @@ public class SubscriptionManagerTasks {
 
 		// individually subscribe to each available subscription pool
 		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
-			subscribeToSubscriptionPoolUsingPoolId(pool);
+			subscribeToSubscriptionPool(pool);
 		}
 		
 		// assert
@@ -1325,9 +1377,9 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial) {
 
 		// assemble the unsubscribe command
-		String					command  = "subscription-manager-cli unsubscribe";
-		if (all!=null && all)	command += " --all";
-		if (serial!=null)		command += " --serial="+serial;
+		String command = this.command;	command += " unsubscribe";
+		if (all!=null && all)			command += " --all";
+		if (serial!=null)				command += " --serial="+serial;
 
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1401,7 +1453,7 @@ public class SubscriptionManagerTasks {
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
-		//RemoteFileTasks.runCommandExpectingNoTracebacks(sshCommandRunner,"subscription-manager-cli unsubscribe");
+
 		unsubscribe(Boolean.TRUE, null);
 
 		// assert that there are no product subscriptions consumed
@@ -1442,7 +1494,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult facts_(Boolean list, Boolean update) {
 
 		// assemble the register command
-		String							command  = "subscription-manager-cli facts";	
+		String command = this.command;	command += " facts";	
 		if (list!=null && list)			command += " --list";
 		if (update!=null && update)		command += " --update";
 		
@@ -1684,6 +1736,7 @@ repolist: 3,394
 //		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 5.*\"").getExitCode(),Integer.valueOf(0),"Grinder hostname must be RHEL 5.*");
 		return sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout();
 	}
+	
 	
 	// protected methods ************************************************************
 

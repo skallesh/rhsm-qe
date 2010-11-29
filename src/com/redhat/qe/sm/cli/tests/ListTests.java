@@ -25,12 +25,14 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"list"})
 public class ListTests extends SubscriptionManagerCLITestScript{
 	
-
-	@Test(	description="subscription-manager-cli: list available entitlements",
+	
+	// Test Methods ***********************************************************************
+	
+	@Test(	description="subscription-manager-cli: list available subscriptions (when not consuming)",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41678})
-	public void EnsureAvailableEntitlementsListed_Test() {
+	//@ImplementsNitrateTest(caseId=41678)
+	public void EnsureAvailableSubscriptionsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
@@ -45,12 +47,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.warning(" * Match the marketing names w/ https://www.redhat.com/products/");
 	}
 	
-	@Test(	description="subscription-manager-cli: list available entitlements",
+	
+	@Test(	description="subscription-manager-cli: list available subscriptions",
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41678})
-	public void EnsureAvailableEntitlementsListed_Test(String productId, String[] entitledProductNames) {
+	@ImplementsNitrateTest(caseId=41678)
+	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
@@ -59,10 +62,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: list consumed entitlements",
+	@Test(	description="subscription-manager-cli: list consumed entitlements (when not consuming)",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={41679})
+	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -75,7 +78,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={41679})
+	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] entitledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
@@ -94,7 +97,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
 		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
@@ -102,13 +105,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null);
 		
+
+		// assert that RHEL Personal is available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
-		}
+		SubscriptionPool rhelPersonalPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", RHELPersonalSubscription, subscriptionPools);
 		Assert.assertTrue(rhelPersonalPool!=null,RHELPersonalSubscription+" is available to this consumer registered as type person");
-		Assert.assertEquals(subscriptionPools.size(),1, RHELPersonalSubscription+" is the ONLY subscription pool available to this consumer registered as type person");
+		
+		// assert that RHEL Personal is the only available pool to this person consumer
+		for (SubscriptionPool subscriptionPool : subscriptionPools) {
+			Assert.assertEquals(subscriptionPool.productId,rhelPersonalPool.productId, RHELPersonalSubscription+" is the ONLY subscription pool available to this consumer registered as type person");
+		}
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
@@ -119,7 +125,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: RHEL Personal should not be an available subscription to a consumer registered as type system",
 			groups={"EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test"},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
 		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
 		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
@@ -149,7 +155,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: list installed products",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(cases={})
+	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);

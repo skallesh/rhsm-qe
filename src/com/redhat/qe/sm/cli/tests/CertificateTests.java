@@ -28,7 +28,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="candidate product cert validity dates",
 			dataProvider="getProductCertFilesData",
 			enabled=true)
-	@ImplementsNitrateTest(cases={64656})
+	@ImplementsNitrateTest(caseId=64656)
 	public void VerifyValidityPeriodInProductCerts_Test(File productCertFile) {
 		
 		ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);

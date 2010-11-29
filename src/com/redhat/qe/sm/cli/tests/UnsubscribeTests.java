@@ -27,12 +27,13 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"unsubscribe"})
 public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
+	
+	// Test Methods ***********************************************************************
+
 	@Test(description="subscription-manager-cli: unsubscribe consumer to an entitlement using product ID",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
-	@ImplementsNitrateTest(cases={41688})
+	@ImplementsNitrateTest(caseId=41688)
 	public void UnsubscribeFromValidProductIDs_Test(ProductSubscription productSubscription){
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -41,11 +42,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Unsubscribe product entitlement and re-subscribe",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
-	@ImplementsNitrateTest(cases={41898})
+	@ImplementsNitrateTest(caseId=41898)
 	public void ResubscribeAfterUnsubscribe_Test(ProductSubscription productSubscription) throws Exception{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
@@ -56,7 +55,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,clientOwnerUsername,clientOwnerPassword);
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,serverAdminUsername,serverAdminPassword);
 		if (clienttasks.unsubscribeFromProductSubscription(productSubscription))
 			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}
@@ -109,11 +108,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //	}
 	
 	@Test(description="Entitlement, malicious negative tests",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"},
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAvailableSubscriptionPoolsData")
-	@ImplementsNitrateTest(cases={41903})
+	@ImplementsNitrateTest(caseId=41903)
 	public void EntitlementMaliciousNegative_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
 		

@@ -465,36 +465,33 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 //			  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
 //			  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
 
-		// FIXME: Not sure how to handle the certificate dates Validity versus Entitlement Start Date
+		// FIXME: Not sure how to handle the certificate dates Validity versus Entitlement Start/End Date
 		// I suspect that I am currently using the wrong dates.
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");
-		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*)");
-		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
-		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Subject: CN=(.+)");
+		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
+		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
+		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
 
-		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("orderNumber",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("subscriptionNumber",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("quantity",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("startDate",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("endDate",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("virtualizationLimit",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("socketLimit",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("contractNumber",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("quantityUsed",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("warningPeriod",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("accountNumber",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("orderNumber",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("subscriptionNumber",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("quantity",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("startDate",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("endDate",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("virtualizationLimit",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("socketLimit",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("contractNumber",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("quantityUsed",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("warningPeriod",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("accountNumber",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 
-		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*).1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");	// FIXME THIS IS ONLY PART OF THE CERT
-
-//FIXME WORKAROUND: DELETE THE FOLLOWING LINE AFTER RESOLUTION FROM https://bugzilla.redhat.com/show_bug.cgi?id=650278
-		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-
+		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
+		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
 		
 
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
