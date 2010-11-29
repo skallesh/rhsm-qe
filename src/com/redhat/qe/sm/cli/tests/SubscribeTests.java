@@ -118,6 +118,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
 		}
 		
+		// get a list of the product certs on the client 
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		
 		// register with autosubscribe
 		clienttasks.unregister();
 		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
@@ -140,11 +143,21 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
 			String[] entitledProductNames = (String[])row.get(1);
+			SubscriptionPool subscriptionPool;
+			
+			// assert that the subscriptionPoolProductIds that are not installed, do not get autosubscribed to
+			subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
+			if (clienttasks.findProductCertWithMatchingFieldFromList("productName", subscriptionPool.subscriptionName, productCerts)==null) {
+				log.warning("Note: No product cert with a name matching '"+subscriptionPool.subscriptionName+"' was found in '"+clienttasks.productCertDir+"'.  Therefore this expected product id cannot possibly be autosubscribed to.  Asserting this fact...");
+				Assert.assertNotNull(clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe),
+						"SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is STILL available after registering with autosubscribe because no corressponding product cert is installed and therefore cannot possibly be autosubscribed to.");
+				continue;
+			}
 			
 			// assert that the subscriptionPoolProductId has been subscribed to...
 			
 			// assert that subscriptionPoolProductId is not available
-			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
+			subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
 			if (subscriptionPool!=null) {
 				String entitledProductNamesAsString = "";
 				for (String entitledProductName : entitledProductNames) entitledProductNamesAsString += entitledProductName+", ";entitledProductNamesAsString = entitledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
