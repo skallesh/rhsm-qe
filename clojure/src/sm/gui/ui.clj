@@ -1,5 +1,6 @@
 (ns sm.gui.ui
-  :use (clojure.contrib [string :only [join split capitalize]]))
+  (:use  [clojure.contrib [string :only [join split capitalize]]])
+  (:require [sm.gui.ldtp :as ldtp]))
 
 
 (defn same-name "takes a collection of keywords like :registration-settings
@@ -38,4 +39,12 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		  
 		  })
 
-        
+(def elements (ldtp/element-getter new-windows))
+
+(defprotocol Locatable "A protocol for locatable UI elements"
+ (loc [this] "Returns locator information for various UI types (html, gnome, etc)"))
+
+(defrecord Element [window-name elem-name]
+  Locatable
+   (loc [this] [window-name elem-name]))
+

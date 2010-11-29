@@ -39,6 +39,7 @@ the window id and element id from the given element map, and return those 2 item
 
 (defxmlrpc "clojure/src/sm/gui/ldtp_api.txt")
 
+(defprotocol UI-Drivable "")
 
 (comment 
   "stuff i used to debug at the REPL"
@@ -59,4 +60,4 @@ the window id and element id from the given element map, and return those 2 item
     [obj name & args]
     (pprint args)
     (clojure.lang.Reflector/invokeInstanceMethod obj (str name)
-      (if args (to-array args) clojure.lang.RT/EMPTY_ARRAY)))
+      (if args (to-array args) clojure.lang.RT/EMPTY_ARRAY))))
