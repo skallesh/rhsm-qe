@@ -42,10 +42,16 @@ class ui {
   }
   
   def propertyMissing(String name) {
-    def elem = element(name)
+    //first try to get an element
+	def elem = element(name)
     if (elem) elem[1]
-    else throw new MissingPropertyException("No such property: $name for class ${this.class}")
-  }
+    else {
+		//if not found, maybe it's a window name
+		def window = windows[name].id
+		if (window) window 
+		else throw new MissingPropertyException("No such property: $name for class ${this.class}")
+       }
+	}
   
   /* def define_elements() {
 	  def allwin = windows.findAll { it.value instanceof java.util.Map }
