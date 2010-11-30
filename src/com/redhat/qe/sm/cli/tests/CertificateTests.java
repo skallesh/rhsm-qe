@@ -69,7 +69,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		if (clienttasks!=null) {
-			for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+			List<File> productCertFiles = clienttasks.getCurrentProductCertFiles();
+			if (productCertFiles.size()==0) log.info("No Product Cert files were found.");
+			for (File productCertFile : productCertFiles) {
 				ll.add(Arrays.asList(new Object[]{productCertFile}));
 			}
 		}
