@@ -1,10 +1,11 @@
 (ns sm.gui.tasks
-  (:use  [clojure.contrib.def :only (defnk)])
+  (:use [clojure.contrib.def :only (defnk)]
+	[sm.gui.test-config :only (config)])
   (:require [sm.gui.ldtp :as ldtp] 
             [sm.gui.ui :as ui]
             [clojure.contrib.error-kit :as handler]))
 
-(def element (ldtp/element-getter ui/windows))
+(def element (ui/element-getter ui/windows))
 
 ;;tasks
  (handler/deferror *error-dialog* [] [s]
@@ -12,26 +13,31 @@
     {:msg (str "Error dialog is present with message: " s)
      :unhandled (handler/throw-msg RuntimeException)})
  
- 
-(defnk register [username password :system-name-input nil :autosubscribe false ]
-  (ldtp/click (element :registration))
-  (ldtp/waittillguiexist (element :redhat-login))
-  (ldtp/settextvalue (element :redhat-login) username)
-  (ldtp/settextvalue (element :password) password)
-  (if system-name-input
-    (ldtp/settextvalue (element :system-name) system-name-input))
-  (ldtp/setchecked (element :automatically-subscribe) autosubscribe)
-  (ldtp/click (element :register))
-  (handler/with-handler
-    (checkforerror)
-    (handler/handle *error-dialog* [s] (clear-error-dialog))))
-
 (defn clear-error-dialog []
   (ldtp/click (element :ok-error)))
 
 (defn checkforerror []
   (if (= 1 (ldtp/waittillguiexist (element :error-dialog) 3)) 
     (handler/raise *error-dialog* "")))
+
+(defn start-app
+  ([path]
+     (ldtp/launchapp path [] 5 1))
+  ([]
+     (start-app (config :binary-path))))
+
+(defnk register [username password :system-name-input nil :autosubscribe false ]
+  (ldtp/click (element :registration))
+  (ldtp/waittillguiexist (element :redhat-login))
+  (ldtp/settextvalue (element :redhat-login) username)
+  (ldtp/settextvalue (element :password) password)
+  (when system-name-input
+    (ldtp/settextvalue (element :system-name) system-name-input))
+  ; (ldtp/setchecked (element :automatically-subscribe) autosubscribe) 
+  (ldtp/click (element :register))
+  (handler/with-handler
+    (checkforerror)
+    (handler/handle *error-dialog* [s] (clear-error-dialog))))
   
 (defn get-all-facts []
   (ldtp/click (element :system-facts))
@@ -42,6 +48,6 @@
                   (ldtp/getcellvalue table row col))
         facts (into {} (mapcat (fn [rowid] 
                                  [(getcell rowid 0) (getcell rowid 1)])
-                               rows))]
+                               rownums))]
     (ldtp/click (element :close-facts))
     facts))

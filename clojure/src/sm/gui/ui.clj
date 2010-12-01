@@ -1,6 +1,7 @@
 (ns sm.gui.ui
   (:use  [clojure.contrib [string :only [join split capitalize]]])
-  (:require [sm.gui.ldtp :as ldtp]))
+  (:require [sm.gui.ldtp :as ldtp])
+  (:import java.util.NoSuchElementException))
 
 
 (defn same-name "takes a collection of keywords like :registration-settings
@@ -13,7 +14,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def windows {:mainWindow  {:id "manage_subscriptions_dialog"
                             :elements {:close-main "button_close"
                                        :add "add_button"
-                                       :registration "account_settings"}} {:id "manage_subscriptions_dialog"
+                                       :registration "account_settings"}}
+	      :manageSubscriptionsDialog {:id "manage_subscriptions_dialog"
                             :elements {:close-main "button_close"
                                        :add "add_button"
                                        :registration "account_settings"}}
