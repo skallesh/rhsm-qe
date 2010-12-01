@@ -81,7 +81,25 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	
-	public SubscriptionPool(String productId, String poolId){
+	public SubscriptionPool(
+			String subscriptionName,
+			String productId,
+			String poolId,
+			String quantity,
+			String endDate) {
+		super(null);
+		
+		this.subscriptionName = subscriptionName;
+		this.productId = productId;
+		this.poolId = poolId;
+		this.quantity = quantity;
+		this.endDate = parseDateString(endDate);
+		associatedProductIDs = new ArrayList<ProductSubscription>();
+	}
+	
+	public SubscriptionPool(
+			String productId,
+			String poolId) {
 		super(null);
 		
 		this.productId = productId;

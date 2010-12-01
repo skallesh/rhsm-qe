@@ -326,9 +326,16 @@ public class SubscriptionManagerTasks {
 		String port = getConfFileParameter(rhsmConfFile, "port");
 		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonPool = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
-			String poolId = jsonPool.getJSONObject("pool").getString("id");
-			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, new SubscriptionPool(entitlementCert.productId, poolId));
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
+			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,owner,password,poolHref));
+			String subscriptionName = jsonPool.getString("productName");
+			String productId = jsonPool.getString("productId");
+			String poolId = jsonPool.getString("id");
+			String quantity = jsonPool.getString("quantity");
+			String endDate = jsonPool.getString("endDate");
+			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,endDate);
+			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, fromPool);
 		}
 		return serialMapToSubscriptionPools;
 	}
