@@ -99,8 +99,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
-		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
-		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
+		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
+		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 		
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null);
@@ -108,12 +108,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert that RHEL Personal is available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool rhelPersonalPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName", RHELPersonalSubscription, subscriptionPools);
-		Assert.assertTrue(rhelPersonalPool!=null,RHELPersonalSubscription+" is available to this consumer registered as type person");
+		SubscriptionPool rhelPersonalPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", rhelPersonalProductId, subscriptionPools);
+		Assert.assertNotNull(rhelPersonalPool,"RHEL Personal ProductId '"+rhelPersonalProductId+"' is available to this consumer registered as type person");
 		
 		// assert that RHEL Personal is the only available pool to this person consumer
 		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-			Assert.assertEquals(subscriptionPool.productId,rhelPersonalPool.productId, RHELPersonalSubscription+" is the ONLY subscription pool available to this consumer registered as type person");
+			Assert.assertEquals(subscriptionPool.productId,rhelPersonalPool.productId, "RHEL Personal ProductId '"+rhelPersonalProductId+"' is the ONLY product consumable from an available subscription pool to this consumer registered as type person");
 		}
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
@@ -127,25 +127,20 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
-		String RHELPersonalSubscription = getProperty("sm.rhpersonal.productName", "");
-		if (RHELPersonalSubscription.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTNAME.");
+		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
+		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
-		rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
-		}
-		Assert.assertTrue(rhelPersonalPool==null,RHELPersonalSubscription+" is NOT available to this consumer registered as type system");
+		// assert that RHEL Personal *is not* included in --available subscription pools
+		rhelPersonalPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNull(rhelPersonalPool,"RHEL ProductId '"+rhelPersonalProductId+"' is NOT available to this consumer from any available subscription pool when registered as type system");
 		
-		// also assert that RHEL Personal is included in --all --available subscription pools
-		rhelPersonalPool = null;
-		for (SubscriptionPool subscriptionPool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-			if (subscriptionPool.subscriptionName.equals(RHELPersonalSubscription)) rhelPersonalPool = subscriptionPool;
-		}
-		Assert.assertTrue(rhelPersonalPool!=null,RHELPersonalSubscription+" is included in --all --available subscription pools");
+		// also assert that RHEL Personal *is* included in --all --available subscription pools
+		rhelPersonalPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertNotNull(rhelPersonalPool,"RHEL ProductId '"+rhelPersonalProductId+"' is included in --all --available subscription pools when registered as type system");
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
