@@ -131,6 +131,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
 		cleanOptions.add("--debug=DEBUG");
+		cleanOptions.add("--proxy=PROXY_URL");
+		cleanOptions.add("--proxyuser=PROXY_USER");
+		cleanOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h clean",clienttasks.command+" --help clean"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" clean [OPTIONS]";
@@ -146,6 +149,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //		factsOptions.add("-k, --insecure");
 		factsOptions.add("--list");
 		factsOptions.add("--update");
+		factsOptions.add("--proxy=PROXY_URL");
+		factsOptions.add("--proxyuser=PROXY_USER");
+		factsOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h facts",clienttasks.command+" --help facts"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" facts [OPTIONS]";
@@ -161,6 +167,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		identityOptions.add("--username=USERNAME");
 		identityOptions.add("--password=PASSWORD");
 		identityOptions.add("--regenerate");
+		identityOptions.add("--proxy=PROXY_URL");
+		identityOptions.add("--proxyuser=PROXY_USER");
+		identityOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h identity",clienttasks.command+" --help identity"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" identity [OPTIONS]";
@@ -177,6 +186,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		listOptions.add("--available");
 		listOptions.add("--consumed");
 		listOptions.add("--all");
+		listOptions.add("--proxy=PROXY_URL");
+		listOptions.add("--proxyuser=PROXY_USER");
+		listOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h list",clienttasks.command+" --help list"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" list [OPTIONS]";
@@ -189,6 +201,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> refreshOptions = new ArrayList<String>();
 		refreshOptions.add("-h, --help");
 		refreshOptions.add("--debug=DEBUG");
+		refreshOptions.add("--proxy=PROXY_URL");
+		refreshOptions.add("--proxyuser=PROXY_USER");
+		refreshOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h refresh",clienttasks.command+" --help refresh"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" refresh [OPTIONS]";
@@ -209,6 +224,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		registerOptions.add("--consumerid=CONSUMERID");
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
+		registerOptions.add("--proxy=PROXY_URL");
+		registerOptions.add("--proxyuser=PROXY_USER");
+		registerOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h register",clienttasks.command+" --help register"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" register [OPTIONS]";
@@ -242,6 +260,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		subscribeOptions.add("--pool=POOL");
 		subscribeOptions.add("--email=EMAIL");
 		subscribeOptions.add("--locale=LOCALE");
+		subscribeOptions.add("--proxy=PROXY_URL");
+		subscribeOptions.add("--proxyuser=PROXY_USER");
+		subscribeOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h subscribe",clienttasks.command+" --help subscribe"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" subscribe [OPTIONS]";
@@ -255,6 +276,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		unregisterOptions.add("-h, --help");
 		unregisterOptions.add("--debug=DEBUG");
 //		unregisterOptions.add("-k, --insecure");
+		unregisterOptions.add("--proxy=PROXY_URL");
+		unregisterOptions.add("--proxyuser=PROXY_USER");
+		unregisterOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" unregister -h",clienttasks.command+" --help unregister"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" unregister [OPTIONS]";
@@ -270,6 +294,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //		unsubscribeOptions.add("-k, --insecure");
 		unsubscribeOptions.add("--serial=SERIAL");
 		unsubscribeOptions.add("--all");
+		unsubscribeOptions.add("--proxy=PROXY_URL");
+		unsubscribeOptions.add("--proxyuser=PROXY_USER");
+		unsubscribeOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h unsubscribe",clienttasks.command+" --help unsubscribe"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" unsubscribe [OPTIONS]";
