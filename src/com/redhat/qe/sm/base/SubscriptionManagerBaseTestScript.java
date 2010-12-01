@@ -10,7 +10,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 
 public class SubscriptionManagerBaseTestScript extends TestScript {
 
-	protected static CandlepinTasks servertasks	= null;
+	public static CandlepinTasks servertasks	= null;
 	
 	public static SSHCommandRunner server	= null;
 	public static SSHCommandRunner client	= null;
@@ -20,72 +20,72 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// /etc/rhsm/rhsm.conf parameters..................
 	
 	// rhsm.conf [server] configurations
-	protected static String serverHostname				= null;
-	protected static String serverPrefix 				= null;
-	protected static String serverPort 					= null;
-	protected static String serverInsecure				= null;
-	protected static String serverSslVerifyDepth		= null;
-	protected static String serverCaCertDir				= null;
+	public static String serverHostname				= null;
+	public static String serverPrefix 				= null;
+	public static String serverPort 					= null;
+	public static String serverInsecure				= null;
+	public static String serverSslVerifyDepth		= null;
+	public static String serverCaCertDir				= null;
 	
 	// rhsm.conf [rhsm] configurations
-	protected static String rhsmBaseUrl					= null;
-	protected static String rhsmRepoCaCert				= null;
-	protected static String rhsmShowIncompatiblePools	= null;
-	protected static String rhsmProductCertDir			= null;
-	protected static String rhsmEntitlementCertDir		= null;
-	protected static String rhsmConsumerCertDir			= null;
+	public static String rhsmBaseUrl					= null;
+	public static String rhsmRepoCaCert				= null;
+	public static String rhsmShowIncompatiblePools	= null;
+	public static String rhsmProductCertDir			= null;
+	public static String rhsmEntitlementCertDir		= null;
+	public static String rhsmConsumerCertDir			= null;
 	
 	// rhsm.conf [rhsmcertd] configurations
-	protected static String rhsmcertdCertFrequency		= null;
+	public static String rhsmcertdCertFrequency		= null;
 
 	
-	protected String serverAdminUsername		= getProperty("sm.server.admin.username","");
-	protected String serverAdminPassword		= getProperty("sm.server.admin.password","");
+	public String serverAdminUsername		= getProperty("sm.server.admin.username","");
+	public String serverAdminPassword		= getProperty("sm.server.admin.password","");
 	
-	protected String serverInstallDir			= getProperty("sm.server.installDir","");
-	protected String serverImportDir			= getProperty("sm.server.importDir","");
-	protected String serverBranch				= getProperty("sm.server.branch","");
-	protected Boolean isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
-	protected Boolean deployServerOnPremises	= Boolean.valueOf(getProperty("sm.server.deploy","true"));
+	public String serverInstallDir			= getProperty("sm.server.installDir","");
+	public String serverImportDir			= getProperty("sm.server.importDir","");
+	public String serverBranch				= getProperty("sm.server.branch","");
+	public Boolean isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
+	public Boolean deployServerOnPremises	= Boolean.valueOf(getProperty("sm.server.deploy","true"));
 
-	protected String client1hostname			= getProperty("sm.client1.hostname","");
-	protected String client1username			= getProperty("sm.client1.username","");
-	protected String client1password			= getProperty("sm.client1.password","");
+	public String client1hostname			= getProperty("sm.client1.hostname","");
+	public String client1username			= getProperty("sm.client1.username","");
+	public String client1password			= getProperty("sm.client1.password","");
 
-	protected String client2hostname			= getProperty("sm.client2.hostname","");
-	protected String client2username			= getProperty("sm.client2.username","");
-	protected String client2password			= getProperty("sm.client2.password","");
+	public String client2hostname			= getProperty("sm.client2.hostname","");
+	public String client2username			= getProperty("sm.client2.username","");
+	public String client2password			= getProperty("sm.client2.password","");
 
-	protected String clienthostname			= client1hostname;
-	protected String clientusername			= client1username;
-	protected String clientpassword			= client1password;
+	public String clienthostname			= client1hostname;
+	public String clientusername			= client1username;
+	public String clientpassword			= client1password;
 	
-	protected String clientOwnerUsername	= getProperty("sm.client.owner.username","");
-	protected String clientOwnerPassword	= getProperty("sm.client.owner.password","");
-	protected String clientUsernames		= getProperty("sm.client.usernames","");
-	protected String clientPasswords		= getProperty("sm.client.passwords","");
+	public String clientOwnerUsername	= getProperty("sm.client.owner.username","");
+	public String clientOwnerPassword	= getProperty("sm.client.owner.password","");
+	public String clientUsernames		= getProperty("sm.client.usernames","");
+	public String clientPasswords		= getProperty("sm.client.passwords","");
 	
-	protected String usernameWithUnacceptedTC = getProperty("sm.client.username.unacceptedTC","");
-	protected String passwordWithUnacceptedTC = getProperty("sm.client.password.unacceptedTC","");
+	public String usernameWithUnacceptedTC = getProperty("sm.client.username.unacceptedTC","");
+	public String passwordWithUnacceptedTC = getProperty("sm.client.password.unacceptedTC","");
 	
-	protected String disabledUsername		= getProperty("sm.client.username.disabled","");
-	protected String disabledPassword		= getProperty("sm.client.password.disabled","");
+	public String disabledUsername		= getProperty("sm.client.username.disabled","");
+	public String disabledPassword		= getProperty("sm.client.password.disabled","");
 	
-	protected String regtoken				= getProperty("sm.client.regtoken","");
-	protected String enableRepoForDeps		= getProperty("sm.client.enableRepoForDeps","");
+	public String regtoken				= getProperty("sm.client.regtoken","");
+	public String enableRepoForDeps		= getProperty("sm.client.enableRepoForDeps","");
 	
-	protected String sshUser				= getProperty("sm.ssh.user","root");
-	protected String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
-	protected String sshkeyPassphrase		= getProperty("sm.sshkey.passphrase","");
+	public String sshUser				= getProperty("sm.ssh.user","root");
+	public String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
+	public String sshkeyPassphrase		= getProperty("sm.sshkey.passphrase","");
 	
-	protected String dbHostname				= getProperty("sm.server.db.hostname","");
-	protected String dbSqlDriver			= getProperty("sm.server.db.sqlDriver","");
-	protected String dbPort					= getProperty("sm.server.db.port","");
-	protected String dbName					= getProperty("sm.server.db.name","");
-	protected String dbUsername				= getProperty("sm.server.db.username","");
-	protected String dbPassword				= getProperty("sm.server.db.password","");
+	public String dbHostname				= getProperty("sm.server.db.hostname","");
+	public String dbSqlDriver			= getProperty("sm.server.db.sqlDriver","");
+	public String dbPort					= getProperty("sm.server.db.port","");
+	public String dbName					= getProperty("sm.server.db.name","");
+	public String dbUsername				= getProperty("sm.server.db.username","");
+	public String dbPassword				= getProperty("sm.server.db.password","");
 
-	protected List<String> rpmUrls			= null;
+	public List<String> rpmUrls			= null;
 
 
 	
@@ -124,7 +124,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	 * @param def
 	 * @return
 	 */
-	protected String getProperty (String key, String def) {
+	public String getProperty (String key, String def) {
 		// Hudson parameters that are left blank will be passed in by the variable
 		// name of the parameter beginning with a $ sign, catch these and blank it
 		String property = System.getProperty(key,def);

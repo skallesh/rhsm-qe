@@ -2,11 +2,9 @@ package sm.gui
 import org.testng.annotations.Test 
 import sm.gui.Testscript
 
-class Blah {
-	
-}
 
-@Mixin(Testscript)
+
+@Mixin([Testscript, tasks])
 class registerTests {
 	
 	/*public registerTests(){

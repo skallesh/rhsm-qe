@@ -13,6 +13,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def windows {:mainWindow  {:id "manage_subscriptions_dialog"
                             :elements {:close-main "button_close"
                                        :add "add_button"
+                                       :registration "account_settings"}} {:id "manage_subscriptions_dialog"
+                            :elements {:close-main "button_close"
+                                       :add "add_button"
                                        :registration "account_settings"}}
               :registerDialog {:id "register_dialog"
                                :elements {:redhat-login "account_login"
@@ -27,24 +30,24 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
               :factsDialog "facts_dialog"
               :subscribeDialog "dialog_add"})
 
+(defn element-getter "Returns a function that, given a keyword, retrieves 
+the window id and element id from the given element map, and return those 2 items in a vector" 
+  [elem-map]
+  (fn [name-kw] 
+    (let [window (first (filter #(get-in % [:elements name-kw])
+				(vals elem-map)))
+	  elem (get-in window [:elements name-kw])]
+      (if elem [(:id window) elem]
+	  (throw (NoSuchElementException.
+		  (format "%s not found in ui mapping." name-kw)))))))
 
-(def new-windows {:mainWindow {:id "Subscription Manager"
-			       :elements (same-name [:registration-settings
-						     :register-system
-						     :add-subscription
-						     :view-my-system-facts
-						     :glossary
-						     :become-compliant])}
-		  :registerDialog (:registerDialog windows)
-		  
-		  })
 
-(def elements (ldtp/element-getter new-windows))
+(def elements (element-getter windows))
 
-(defprotocol Locatable "A protocol for locatable UI elements"
- (loc [this] "Returns locator information for various UI types (html, gnome, etc)"))
+(comment (defprotocol Locatable "A protocol for locatable UI elements"
+   (loc [this] "Returns locator information for various UI types (html, gnome, etc)"))
 
-(defrecord Element [window-name elem-name]
-  Locatable
-   (loc [this] [window-name elem-name]))
+	 (defrecord Element [window-name elem-name]
+	   Locatable
+	   (loc [this] [window-name elem-name])))
 

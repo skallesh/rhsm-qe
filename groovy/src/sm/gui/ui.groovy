@@ -1,16 +1,31 @@
 //comment
 package sm.gui
 class ui {
-  String capitalize(s) { s[0].toUpperCase() + s[1..-1]}
+  static {
+	ui.metaClass.'static'.propertyMissing << { String name -> 
+    //first try to get an element
+	//println("Finding UI element $name")
+	def elem = element(name)
+    if (elem) elem[1]
+    else {
+		//if not found, maybe it's a window name
+		def window = windows[name].id
+		if (window) window 
+		else throw new MissingPropertyException("No such property or UI element: $name for class ${this.class}")
+       }
+	}
+  }
+  
+  static String capitalize(s) { s[0].toUpperCase() + s[1..-1]}
 
-  def same_name = { 
+  def static same_name = { 
     Object[] element_list -> 
       def map = [:] //empty map
       element_list.collect { map.put(it, it.split("_").collect { capitalize(it) }.join(" ")) }
       map
   }
 
-  def windows = [mainWindow: [id: "Subscription Manager",
+  def static windows = [mainWindow: [id: "Subscription Manager",
                               elements: same_name('registration_settings',
                                                   'register_system',
                                                   'dd_subscription',
@@ -30,7 +45,7 @@ class ui {
                  factsDialog: "facts_dialog",
                  subscribeDialog: "dialog_add"]
 
-  def element(String elem) {
+  def static element(String elem) {
     def window = windows.find { 
       it.value instanceof java.util.Map && 
       it.value.elements.get(elem) 
@@ -41,17 +56,7 @@ class ui {
     else null
   }
   
-  def propertyMissing(String name) {
-    //first try to get an element
-	def elem = element(name)
-    if (elem) elem[1]
-    else {
-		//if not found, maybe it's a window name
-		def window = windows[name].id
-		if (window) window 
-		else throw new MissingPropertyException("No such property: $name for class ${this.class}")
-       }
-	}
+
   
   /* def define_elements() {
 	  def allwin = windows.findAll { it.value instanceof java.util.Map }
@@ -63,3 +68,4 @@ class ui {
 		}
   }*/
 }
+

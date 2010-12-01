@@ -16,7 +16,8 @@ class ldtp {
 	 
 	def methodMissing(String name, args) {
 		//apply arglist if necessary
-		return client.invokeMethod("execute", [name, args] )
+		println("Calling ldtp method $name with $args")
+		return client.invokeMethod("execute", [name, args[0]] )
 	}
  
 }
