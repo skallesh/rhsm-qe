@@ -9,14 +9,19 @@
     (.setConfig xclient config)
     xclient))
 
-(defn xmlrpcmethod-arity [fnname argsyms n]
+(defn- xmlrpcmethod-arity "Generate code for one arity of xmlrpc method."[fnname argsyms n]
   (let [theseargs (take n argsyms)]
     `(~(vec theseargs)
      (clojure.lang.Reflector/invokeInstanceMethod
       client "execute" (to-array (list ~fnname ~(concat '(list) theseargs)))))) )
 
 (defmacro defxmlrpc
-    [specfile]
+  "Generate functions corresponding to LDTP xmlrpc API. Generates
+    arities for xmlrpc methods that have optional arguments. Reads a
+    given spec file that lists the method, arguments, and number of
+    default args. See also
+    http://ldtp.freedesktop.org/user-doc/index.html"
+  [specfile]
     (let [methods (with-in-str (slurp specfile) (read))
           defs (map
 		(fn [[fnname [args num-optional-args]]]
@@ -37,30 +42,14 @@
 
 (defxmlrpc "clojure/src/sm/gui/ldtp_api.txt")
 
-
-(comment 
-  "stuff i used to debug at the REPL"
-  (.execute client "click" (to-array '("hi" "there")))
-  (javacall client "execute" "click"  (to-array '("hi" "there")))
-  (javacall client "execute" "click"  "hi" "there")
-  (let [config (XmlRpcClientConfigImpl.)]
-    (.setServerURL config (java.net.URL. "http://localhost:4118"))
-    (.setConfig client config))
-  (.printStackTrace *e)
-  (click "hi" "there")
-  (macroexpand-1 '(defxmlrpc "clojure/src/sm/gui/ldtp_api.txt"))
-  
-  (clojure.lang.Reflector/invokeInstanceMethod
-                              client "execute" (to-array (list "click" (list "blah" "blaH"))))
-
-  (defn javacall "call a method on a java object, given an arbitrary number of args" 
-    [obj name & args]
-    (pprint args)
-    (clojure.lang.Reflector/invokeInstanceMethod obj (str name)
-						 (if args (to-array args) clojure.lang.RT/EMPTY_ARRAY)))
-
-  (defn click
-    ([list] (apply click list))
-    ([window-name obj-name] )
-    )
-  )
+(defn action-with-uimap
+  "Take a getter function (which should take a keyword and return a
+  locator list), returns a function with the following properties:
+  Takes an action function, keyword, and args. When called, it
+  retrieves an element (via the getter), and calls the action function
+  with the element and args. Then it logs what it did."
+  [getter]
+ (fn [actionfn elemkw & args]
+   (let [locator (getter elemkw)]
+     (apply actionfn (concat locator args))
+     (println (str "Action: " (:name (meta actionfn)) locator " " args)))))

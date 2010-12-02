@@ -25,13 +25,13 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 						     :registration "account_settings"}}
               :registerDialog {:id "register_dialog"
                                :elements {:redhat-login "account_login"
-                                          :password "accound_password"
+                                          :password "account_password"
                                           :system-name "consumer-name"
                                           :automatically-subscribe "auto_bind"
                                           :register "register_button"}}
               :registrationSettingsDialog {:id "register_token_dialog"
                                            :elements {:registration-token "regtoken-entry"}}
-              :errorDialog "Error"
+              :error-dialog "Error"
               :questionDialog "Question"
               :factsDialog "facts_dialog"
               :subscribeDialog "dialog_add"})
@@ -48,7 +48,10 @@ the window id and element id from the given element map, and return those 2 item
 		  (format "%s not found in ui mapping." name-kw)))))))
 
 
-(def elements (element-getter windows))
+(def element (element-getter windows))
+
+(def action (ldtp/action-with-uimap element))
+
 
 (comment (defprotocol Locatable "A protocol for locatable UI elements"
    (loc [this] "Returns locator information for various UI types (html, gnome, etc)"))
