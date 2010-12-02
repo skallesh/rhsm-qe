@@ -41,10 +41,11 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	
 	@Override
 	public boolean equals(Object obj){
-		// return ((SubscriptionPool)obj).subscriptionName.contains(this.subscriptionName);		// this is not correct jsefler 7/13/2010 
+		// assumes productName is unique across all SubscriptionPools
+		// return ((SubscriptionPool)obj).subscriptionName.contains(this.subscriptionName);	// jsefler 7/13/2010: this is not correct  
 
-//		// assumes productId is unique across all SubscriptionPools
-//		return ((SubscriptionPool)obj).productId.equals(this.productId);
+		// assumes productId is unique across all SubscriptionPools
+		// return ((SubscriptionPool)obj).productId.equals(this.productId);	// jsefler 7/16/2010: this is not correct when is more than contract/serial has been issued for the same productId so as to increase the customers total quantity of available entitlements
 		
 		// assumes poolId is unique across all SubscriptionPools
 		return ((SubscriptionPool)obj).poolId.equals(this.poolId);
