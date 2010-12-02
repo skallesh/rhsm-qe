@@ -8,5 +8,4 @@
 		 [org.apache.xmlrpc/xmlrpc-client "3.1.3"]
 		 [webui-framework "1.0.0-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]
-		     [lein-javac "1.2.1-SNAPSHOT"] ]
-  :jvm-opts  ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=4999"] )
+		     [lein-javac "1.2.1-SNAPSHOT"] ])

@@ -1,6 +1,7 @@
 (ns sm.gui.tasks
   (:use [clojure.contrib.def :only (defnk)]
-	[sm.gui.test-config :only (config)])
+	[sm.gui.test-config :only (config)]
+	[test-clj.testng :only (gen-class-testng)])
   (:require [sm.gui.ldtp :as ldtp] 
             [sm.gui.ui :as ui]
             [clojure.contrib.error-kit :as handler]))
@@ -22,13 +23,11 @@
 
 (defn start-app
   ([path]
-     (ldtp/launchapp path [] 5 1))
-  ([]
-     (start-app (config :binary-path))))
+     (ldtp/launchapp path [] 10 1)))
 
 (defnk register [username password :system-name-input nil :autosubscribe false ]
-  (ldtp/click (element :registration))
-  (ldtp/waittillguiexist (element :redhat-login))
+  (ldtp/click (element :register-system))
+  (apply ldtp/waittillguiexist (conj (element :redhat-login) 5 "visible"))
   (ldtp/settextvalue (element :redhat-login) username)
   (ldtp/settextvalue (element :password) password)
   (when system-name-input
@@ -51,3 +50,13 @@
                                rownums))]
     (ldtp/click (element :close-facts))
     facts))
+
+(defn ^{:test {:configuration :beforeSuite}}
+  startup [_]
+  (ldtp/set-url (config :ldtp-url))
+  (start-app (config :binary-path)))
+
+(defn ^{:test {} } faketest [_]
+  (println "w00t"))
+
+(gen-class-testng)
