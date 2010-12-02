@@ -31,21 +31,23 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                           :register "register_button"}}
               :registrationSettingsDialog {:id "register_token_dialog"
                                            :elements {:registration-token "regtoken-entry"}}
-              :error-dialog "Error"
-              :questionDialog "Question"
-              :factsDialog "facts_dialog"
-              :subscribeDialog "dialog_add"})
+              :error-dialog {:id "Error"}
+              :questionDialog {:id "Question"} 
+              :factsDialog {:id "facts_dialog"}
+              :subscribeDialog {:id "dialog_add"}})
 
 (defn element-getter "Returns a function that, given a keyword, retrieves 
 the window id and element id from the given element map, and return those 2 items in a vector" 
   [elem-map]
   (fn [name-kw] 
-    (let [window (first (filter #(get-in % [:elements name-kw])
-				(vals elem-map)))
-	  elem (get-in window [:elements name-kw])]
-      (if elem [(:id window) elem]
-	  (throw (NoSuchElementException.
-		  (format "%s not found in ui mapping." name-kw)))))))
+    (let [containing-window (first (filter #(get-in % [:elements name-kw])
+					   (vals elem-map)))
+	  elem (get-in containing-window [:elements name-kw])
+	  window (get-in elem-map [name-kw :id])]
+      (cond elem [(:id containing-window) elem]
+	    window [window]
+	    :else (throw (NoSuchElementException.
+			  (format "%s was not found in ui mapping." name-kw)))))))
 
 
 (def element (element-getter windows))

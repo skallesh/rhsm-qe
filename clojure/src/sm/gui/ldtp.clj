@@ -1,4 +1,5 @@
 (ns sm.gui.ldtp
+  (:require [clojure.contrib.logging :as log])
   (:import [org.apache.xmlrpc.client XmlRpcClient XmlRpcClientConfigImpl]))
 
 
@@ -16,10 +17,10 @@
       client "execute" (to-array (list ~fnname ~(concat '(list) theseargs)))))) )
 
 (defmacro defxmlrpc
-  "Generate functions corresponding to LDTP xmlrpc API. Generates
-    arities for xmlrpc methods that have optional arguments. Reads a
-    given spec file that lists the method, arguments, and number of
-    default args. See also
+  "Generate functions corresponding to an xmlrpc API (in this case,
+    LDTP). Generates arities for xmlrpc methods that have optional
+    arguments. Reads a given spec file that lists the method name,
+    arguments, and number of default args. See also
     http://ldtp.freedesktop.org/user-doc/index.html"
   [specfile]
     (let [methods (with-in-str (slurp specfile) (read))
@@ -40,6 +41,9 @@
 (defn set-url [url]
   (.setServerURL (.getConfig client) (java.net.URL. url)))
 
+;;Generate all LDTP functions from the specfile.  Specfile is produced
+;;by this python script:
+;;https://github.com/weissjeffm/ldtp-server/blob/master/extract-api.py
 (defxmlrpc "clojure/src/sm/gui/ldtp_api.txt")
 
 (defn action-with-uimap
@@ -49,7 +53,8 @@
   retrieves an element (via the getter), and calls the action function
   with the element and args. Then it logs what it did."
   [getter]
- (fn [actionfn elemkw & args]
-   (let [locator (getter elemkw)]
-     (apply actionfn (concat locator args))
-     (println (str "Action: " (:name (meta actionfn)) locator " " args)))))
+ (fn [actionfn arg1 & args]
+   (let [locator (if (keyword? arg1) (getter arg1) [arg1])
+	 returnval (apply actionfn (concat locator args))]
+     (log/info (str "Action: " (:name (meta actionfn)) locator " " args))
+     returnval)))
