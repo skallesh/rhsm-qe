@@ -216,4 +216,16 @@
 		</groups>
 	</test>
 	
+	<test name="Content Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="content" />
+			</run>
+		</groups>
+	</test>
+	
 </suite>
