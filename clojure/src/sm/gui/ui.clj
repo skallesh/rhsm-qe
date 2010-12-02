@@ -15,6 +15,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def windows {:mainWindow  {:id "Subscription Manager"
 			    :elements (same-name [:registration-settings
 						  :register-system
+						  :unregister-system
 						  :add-subscription
 						  :view-my-system-facts
 						  :glossary
@@ -32,8 +33,11 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
               :registrationSettingsDialog {:id "register_token_dialog"
                                            :elements {:registration-token "regtoken-entry"}}
               :error-dialog {:id "Error"}
-              :questionDialog {:id "Question"} 
-              :factsDialog {:id "facts_dialog"}
+              :question-dialog {:id "Question"
+			       :elements (same-name [:yes :no])} 
+              :facts-dialog {:id "facts_dialog"
+			     :elements {:facts-view "facts_view"
+					:close-facts "close_button"}}
               :subscribeDialog {:id "dialog_add"}})
 
 (defn element-getter "Returns a function that, given a keyword, retrieves 

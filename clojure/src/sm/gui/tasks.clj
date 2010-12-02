@@ -39,10 +39,10 @@
     (handler/handle *error-dialog* [s] (clear-error-dialog))))
   
 (defn get-all-facts []
-  (action click :system-facts)
-  (action waittillguiexist :facts-dialog)
-  (let [table (element :facts-table)
-        rownums (range (action getrowcount table))
+  (action click :view-my-system-facts)
+  (action waittillguiexist :facts-view)
+  (let [table (element :facts-view)
+        rownums (range (action getrowcount :facts-view))
         getcell (fn [row col] 
                   (action getcellvalue table row col))
         facts (into {} (mapcat (fn [rowid] 
@@ -51,9 +51,17 @@
     (action click :close-facts)
     facts))
 
+(defn unregister []
+  (action click :unregister-system)
+  (action waittillguiexist :question-dialog)
+  (action click :yes))
+
+(defn connect []
+  (set-url (config :ldtp-url)))
+
 (defn ^{:test {:configuration :beforeSuite}}
   startup [_]
-  (set-url (config :ldtp-url))
+  (connect)
   (start-app (config :binary-path)))
 
 (defn ^{:test {} } faketest [_]

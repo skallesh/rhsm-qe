@@ -54,7 +54,6 @@
   with the element and args. Then it logs what it did."
   [getter]
  (fn [actionfn arg1 & args]
-   (let [locator (if (keyword? arg1) (getter arg1) [arg1])
-	 returnval (apply actionfn (concat locator args))]
+   (let [locator (if (keyword? arg1) (getter arg1) [arg1])]
      (log/info (str "Action: " (:name (meta actionfn)) locator " " args))
-     returnval)))
+     (apply actionfn (concat locator args)))))
