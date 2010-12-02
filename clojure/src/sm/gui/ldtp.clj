@@ -9,17 +9,22 @@
     (.setConfig xclient config)
     xclient))
 
+(defn xmlrpcmethod-arity [fnname argsyms n]
+  (let [theseargs (take n argsyms)]
+    `(~(vec theseargs)
+     (clojure.lang.Reflector/invokeInstanceMethod
+      client "execute" (to-array (list ~fnname ~(concat '(list) theseargs)))))) )
+
 (defmacro defxmlrpc
     [specfile]
     (let [methods (with-in-str (slurp specfile) (read))
           defs (map
-		(fn [[fnname args]]
+		(fn [[fnname [args num-optional-args]]]
 		  (let [argsyms (map symbol args)
-			arity1 `(~(vec argsyms)
-				   (clojure.lang.Reflector/invokeInstanceMethod
-				    client "execute" (to-array (list ~fnname ~(concat '(list) argsyms)))))
-			arity2+  `([list#] (apply ~(symbol fnname) list#)) 
-			arities  (if (> (count argsyms) 1) [arity2+ arity1] [arity1])]
+			num-required-args (- (count args) num-optional-args)
+			arity-arg-counts (range num-required-args (inc (count args)))
+			arities (for [arity arity-arg-counts] (xmlrpcmethod-arity fnname argsyms arity))]
+			
 		    `(defn ~(symbol fnname)
 		        ~@arities
 		       )))
