@@ -52,7 +52,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		// This will happen when more than one pool has been created under a different contract/serial so as to increase the
 		// total quantity of entitlements available to the consumers.
 		if (alreadySubscribedProductIdsInMultiClientSubscribeToSameSubscriptionPool_Test.contains(pool.productId)) {
-			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, this pool should no longer be available to consumer 1 ("+client1username+") but should still be available to consumer 2 ("+client2username+") with the same quantity...");
+			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, this pool should no longer be available to consumer 1 ("+client1username+") but should still be available to consumer 2 ("+client2username+") with the original quantity...");
 			Assert.assertFalse(cl1SubscriptionPools.contains(pool),"Subscription pool "+pool+" is NOT available to consumer1 ("+client1username+").");
 			Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool "+pool+" is still available to consumer2 ("+client2username+").");
 			cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
