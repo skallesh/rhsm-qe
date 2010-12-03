@@ -334,6 +334,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (RegistrationData registeredConsumer : registrationDataList) {
 			if (registeredConsumer.registerResult.getExitCode().intValue()==0) {
 				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password}));
+				//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
 			}
 		}
 		
@@ -365,9 +366,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// populate a list of all available SubscriptionPools
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-// FIXME CLEAR USED FOR FASTER TESTING
-//ll.clear();
-			ll.add(Arrays.asList(new Object[]{pool}));		
+			ll.add(Arrays.asList(new Object[]{pool}));
+			//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
 		}
 		
 		// manually reorder the pools so that the base "Red Hat Enterprise Linux*" pool is first in the list
@@ -382,7 +382,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 			i++;
 		}
-		
 		
 		return ll;
 	}
@@ -414,6 +413,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				entitledProductNamesAsList.add(entitledProductName);
 			}
 			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, entitledProductNamesAsList.toArray(new String[]{})}));
+			//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
 		}
 		
 		return ll;

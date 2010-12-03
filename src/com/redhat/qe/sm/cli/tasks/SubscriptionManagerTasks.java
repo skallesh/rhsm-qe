@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import javax.jws.Oneway;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONObject;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
@@ -639,6 +642,65 @@ public class SubscriptionManagerTasks {
 		return entitlementCertWithMatchingField;
 	}
 	
+
+	class ByValuePredicate implements Predicate<Object> {
+		Object value;
+		String fieldName;
+		public ByValuePredicate(String fieldName, Object value) {
+			this.value=value;
+			this.fieldName=fieldName;
+		}
+		public boolean apply(Object toTest) {
+			try {
+				return toTest.getClass().getField(fieldName).get(toTest).equals(value);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return false;
+		}
+	}
+	public <T> T findFirstInstanceWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
+		if (dataInstancesWithMatchingFieldFromList.isEmpty()) return null;
+		return (T) dataInstancesWithMatchingFieldFromList.toArray()[0];
+	}
+
+
+// ATTEMPT TO MAKE A GENERIC METHOD
+//	public <T> T findDataInstanceWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+//		T dataInstanceWithMatchingField = null;
+//		for (T dataInstance : dataInstances) {
+//			try {
+//				if (T.getClass().getField(fieldName).get(dataInstance).equals(fieldValue)) {
+//					dataInstanceWithMatchingField = dataInstance;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//		return dataInstanceWithMatchingField;
+//	}
+	
 	
 	/**
 	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
@@ -1001,14 +1063,14 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult sshCommandResult = list_(null,null,null);
 		
-		List<File> productCertFiles = getCurrentProductCertFiles();
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 
-		if (productCertFiles.isEmpty()) {
+
+		if (getCurrentEntitlementCertFiles().isEmpty() && getCurrentProductCertFiles().isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
-		} /*else {
+		} else {
 			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status");
-		}*/
+		}
 
 		return sshCommandResult;
 	}
