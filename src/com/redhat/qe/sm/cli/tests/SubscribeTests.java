@@ -49,15 +49,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
-		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		SubscriptionPool pool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		// assert the status of the installed products
 		for (String productName : entitledProductNames) {
 			// assert the status of the installed products
-			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+			ProductCert productCert = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
-				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+				InstalledProduct installedProduct = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
 				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Not Subscribed.");
 			}
@@ -93,11 +93,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 			
 			// assert whether or not the product is installed			
-			InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+			InstalledProduct installedProduct = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
 			Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 
 			// assert the status of the installed products
-			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+			ProductCert productCert = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
 				Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 				Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
@@ -123,7 +123,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
-			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
+			SubscriptionPool subscriptionPool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
 			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
 		}
 		
@@ -161,10 +161,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			SubscriptionPool subscriptionPool;
 			
 			// assert that the subscriptionPoolProductIds that are not installed, do not get autosubscribed to
-			subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
-			if (clienttasks.findProductCertWithMatchingFieldFromList("productName", subscriptionPool.subscriptionName, productCerts)==null) {
+			subscriptionPool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
+			if (clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", subscriptionPool.subscriptionName, productCerts)==null) {
 				log.warning("Note: No product cert with a name matching '"+subscriptionPool.subscriptionName+"' was found in '"+clienttasks.productCertDir+"'.  Therefore this expected product id cannot possibly be autosubscribed to.  Asserting this fact...");
-				Assert.assertNotNull(clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe),
+				Assert.assertNotNull(clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe),
 						"SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is STILL available after registering with autosubscribe because no corressponding product cert is installed and therefore cannot possibly be autosubscribed to.");
 				continue;
 			}
@@ -172,7 +172,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// assert that the subscriptionPoolProductId has been subscribed to...
 			
 			// assert that subscriptionPoolProductId is not available
-			subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
+			subscriptionPool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
 			if (subscriptionPool!=null) {
 				String entitledProductNamesAsString = "";
 				for (String entitledProductName : entitledProductNames) entitledProductNamesAsString += entitledProductName+", ";entitledProductNamesAsString = entitledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
@@ -188,11 +188,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
 				// assert that the entitledProductName is consumed
-				ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
+				ProductSubscription productSubscription = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
 				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+entitledProductName+"' is consumed after registering with autosubscribe.");
 	
 				// assert that the entitledProductName is installed and subscribed
-				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
+				InstalledProduct installedProduct = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
 				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+entitledProductName+"' is reported in the list of installed products.");
 				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+entitledProductName+"' is Subscribed.");
 			}

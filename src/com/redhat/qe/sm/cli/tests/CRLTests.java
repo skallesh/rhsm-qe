@@ -106,7 +106,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Third, let's assert that consumed product certs have been updated...");
 		String newCertFile = "";
 		for (ProductSubscription product : products) {
-			ProductSubscription newProduct = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
+			ProductSubscription newProduct = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.startDate), ProductSubscription.formatDateString(newStartDate),
 					"Rhsmcertd has updated the entitled startdate to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product: "+newProduct.productName);
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.endDate), ProductSubscription.formatDateString(newEndDate),
