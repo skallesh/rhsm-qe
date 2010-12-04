@@ -144,18 +144,6 @@
 		</groups>
 	</test>
 	
-	<test name="Certificate Revocation List (CRL) Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="crl" />
-			</run>
-		</groups>
-	</test>
-	
 	<test name="Event Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -224,6 +212,18 @@
 			<run>
 				<include name="setup" />
 				<include name="content" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Certificate Revocation List (CRL) Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="crl" />
 			</run>
 		</groups>
 	</test>
