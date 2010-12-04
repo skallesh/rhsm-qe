@@ -649,6 +649,13 @@ public class SubscriptionManagerTasks {
 		if (dataInstancesWithMatchingFieldFromList.isEmpty()) return null;
 		return (T) dataInstancesWithMatchingFieldFromList.toArray()[0];
 	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> List<T> findAllInstancesWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
+		return (List<T>) Arrays.asList(dataInstancesWithMatchingFieldFromList.toArray());
+	}
+	
 	class ByValuePredicate implements Predicate<Object> {
 		Object value;
 		String fieldName;
