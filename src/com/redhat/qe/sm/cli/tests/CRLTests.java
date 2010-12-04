@@ -1,23 +1,28 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -26,8 +31,13 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  */
 @Test(groups={"crl"})
 public class CRLTests extends SubscriptionManagerCLITestScript{
-	
-	
+	String consumerOwner = "";
+	@BeforeGroups(groups={"setup"},value="ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test")
+	protected void getClientOwner() throws JSONException, Exception {
+		String consumerId = clienttasks.getCurrentConsumerId();
+		consumerOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
+
+	}
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
 			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
 			dependsOnGroups={},
@@ -57,18 +67,42 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 
 		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
 		
+		
+		// Before proceeding with this test, determine if the productId provided by this subscription pool has already been entitled.
+		// This will happen when more than one pool has been created under a different contract/serial so as to increase the
+		// total quantity of entitlements available to the consumers.
+		if (alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.contains(pool.productId)) {
+			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, it only makes sense to skip this iteration of the test.");
+			log.info("However, for the sake of testing, let's attempt to subscribe to it anyway and assert that our subscribe request is blocked with an apprpriate message...");
+			SSHCommandResult sshCommandResult = clienttasks.subscribe(pool.poolId, null, null, null, null);
+			Assert.assertEquals(sshCommandResult.getStdout().trim(),"This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'");
+			throw new SkipException("Because this consumer is already subscribed to the product provided by this pool id '"+pool.poolId+"', this pool is unsubscribeable and therefore we must skip this test iteration.");
+		}
+		
+		
 		log.info("Subscribe client (already registered as a system under username '"+clientusername+"') to subscription pool "+pool+"...");
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		Assert.assertNotNull(entitlementCertFile, "Our attempt to subscribe resulted in a new entitlement cert on our system.");
+		alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.add(pool.productId);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
-		List<ProductSubscription> products = new ArrayList<ProductSubscription>();
-		for (ProductSubscription product : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			if (clienttasks.getSubscriptionPoolFromProductSubscription(product,serverAdminUsername,serverAdminPassword).equals(pool)) {
+//DELETEME NOT AN EFFICIENT ALGORITHM
+//		List<ProductSubscription> products = new ArrayList<ProductSubscription>();
+//		for (ProductSubscription product : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+//			if (clienttasks.getSubscriptionPoolFromProductSubscription(product,serverAdminUsername,serverAdminPassword).equals(pool)) {
+////FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+//				Assert.assertTrue(product.endDate.equals(pool.endDate), "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+//				products.add(product);
+//			}
+//		}
+		List<ProductSubscription> products = clienttasks.findAllInstancesWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		for (ProductSubscription product : products) {
 //FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-				Assert.assertTrue(product.endDate.equals(pool.endDate), "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-				products.add(product);
-			}
+			Assert.assertTrue(product.endDate.compareTo(pool.endDate)==0, "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 		}
+		Assert.assertFalse(products.isEmpty(),"After subscribing to a new pool, at least one consumed product subscription is expected.");
+		
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		Calendar originalEndDate = (Calendar) products.get(0).endDate.clone();
 		String originalCertFile = clienttasks.entitlementCertDir+"/"+products.get(0).serialNumber+".pem";
@@ -80,7 +114,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, clientOwnerUsername);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, consumerOwner);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		log.info("Refresh to make sure the latest certs are on the client...");
 		clienttasks.refresh(); // make sure the new entitlements are downloaded
@@ -130,6 +164,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","Expanding the certificate start and end dates should revoke the certificated with a reason code of Privilege Withdrawn");
 		}
 	}
+	protected List<String> alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test = new ArrayList<String>();
+
 	
 	
 	
