@@ -650,6 +650,16 @@ public class SubscriptionManagerTasks {
 		return (T) dataInstancesWithMatchingFieldFromList.toArray()[0];
 	}
 	
+	/**
+	 * Given a List of instances of some class (e.g. getAllAvailableSubscriptionPools()), this
+	 * method is useful for finding a subset of instances whose public field by the name "fieldName"
+	 * has a value of fieldValue.  If no match is found, an empty list is returned.
+	 * @param <T>
+	 * @param fieldName
+	 * @param fieldValue
+	 * @param dataInstances
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public <T> List<T> findAllInstancesWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
 		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
