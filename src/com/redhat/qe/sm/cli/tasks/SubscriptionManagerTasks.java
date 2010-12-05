@@ -473,7 +473,7 @@ public class SubscriptionManagerTasks {
 		return productSubscription.fromSubscriptionPool;
 	}
 	
-
+//DELETEME
 //	/**
 //	 * @param fieldName
 //	 * @param fieldValue
@@ -632,75 +632,50 @@ public class SubscriptionManagerTasks {
 
 
 	
-	
-	/**
-	 * Given a List of instances of some class (e.g. getCurrentEntitlementCerts()), this
-	 * method is useful for finding the first instance (e.g. an EntitlementCert) whose public
-	 * field by the name "fieldName" has a value of fieldValue.  If no match is found, null is returned.
-	 * @param <T>
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param dataInstances
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> T findFirstInstanceWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
-		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
-		if (dataInstancesWithMatchingFieldFromList.isEmpty()) return null;
-		return (T) dataInstancesWithMatchingFieldFromList.toArray()[0];
-	}
-	
-	/**
-	 * Given a List of instances of some class (e.g. getAllAvailableSubscriptionPools()), this
-	 * method is useful for finding a subset of instances whose public field by the name "fieldName"
-	 * has a value of fieldValue.  If no match is found, an empty list is returned.
-	 * @param <T>
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param dataInstances
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public <T> List<T> findAllInstancesWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
-		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
-		return (List<T>) Arrays.asList(dataInstancesWithMatchingFieldFromList.toArray());
-	}
-	
-	class ByValuePredicate implements Predicate<Object> {
-		Object value;
-		String fieldName;
-		public ByValuePredicate(String fieldName, Object value) {
-			this.value=value;
-			this.fieldName=fieldName;
-		}
-		public boolean apply(Object toTest) {
-			try {
-				return toTest.getClass().getField(fieldName).get(toTest).equals(value);
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return false;
-		}
-	}
-
-// ATTEMPT TO MAKE A GENERIC METHOD
-//	public <T> T findDataInstanceWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
-//		T dataInstanceWithMatchingField = null;
-//		for (T dataInstance : dataInstances) {
+//KEEPME FOR FUTURE USAGE SOMEWHERE ELSE	
+//	/**
+//	 * Given a List of instances of some class (e.g. getCurrentEntitlementCerts()), this
+//	 * method is useful for finding the first instance (e.g. an EntitlementCert) whose public
+//	 * field by the name "fieldName" has a value of fieldValue.  If no match is found, null is returned.
+//	 * @param <T>
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param dataInstances
+//	 * @return
+//	 */
+//	@SuppressWarnings("unchecked")
+//	public <T> T findFirstInstanceWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+//		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
+//		if (dataInstancesWithMatchingFieldFromList.isEmpty()) return null;
+//		return (T) dataInstancesWithMatchingFieldFromList.toArray()[0];
+//	}
+//	
+//	/**
+//	 * Given a List of instances of some class (e.g. getAllAvailableSubscriptionPools()), this
+//	 * method is useful for finding a subset of instances whose public field by the name "fieldName"
+//	 * has a value of fieldValue.  If no match is found, an empty list is returned.
+//	 * @param <T>
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param dataInstances
+//	 * @return
+//	 */
+//	@SuppressWarnings("unchecked")
+//	public <T> List<T> findAllInstancesWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+//		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
+//		return (List<T>) Arrays.asList(dataInstancesWithMatchingFieldFromList.toArray());
+//	}
+//	
+//	class ByValuePredicate implements Predicate<Object> {
+//		Object value;
+//		String fieldName;
+//		public ByValuePredicate(String fieldName, Object value) {
+//			this.value=value;
+//			this.fieldName=fieldName;
+//		}
+//		public boolean apply(Object toTest) {
 //			try {
-//				if (T.getClass().getField(fieldName).get(dataInstance).equals(fieldValue)) {
-//					dataInstanceWithMatchingField = dataInstance;
-//				}
+//				return toTest.getClass().getField(fieldName).get(toTest).equals(value);
 //			} catch (IllegalArgumentException e) {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
@@ -714,9 +689,10 @@ public class SubscriptionManagerTasks {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
+//			return false;
 //		}
-//		return dataInstanceWithMatchingField;
 //	}
+
 	
 	
 	/**
@@ -1249,7 +1225,7 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
 			// find the existing entitlement cert file corresponding to the already subscribed pool
-			EntitlementCert entitlementCert = findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
+			EntitlementCert entitlementCert = EntitlementCert.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
 			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		

@@ -57,7 +57,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
-		SubscriptionPool pool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing: "+pool);
 	}
 	
@@ -83,7 +83,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
-		SubscriptionPool pool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing: "+pool);
 		EntitlementCert  entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -108,7 +108,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert that RHEL Personal is available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool rhelPersonalPool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, subscriptionPools);
+		SubscriptionPool rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, subscriptionPools);
 		Assert.assertNotNull(rhelPersonalPool,"RHEL Personal ProductId '"+rhelPersonalProductId+"' is available to this consumer registered as type person");
 		
 		// assert that RHEL Personal is the only available pool to this person consumer
@@ -135,11 +135,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool rhelPersonalPool = null;
 		
 		// assert that RHEL Personal *is not* included in --available subscription pools
-		rhelPersonalPool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNull(rhelPersonalPool,"RHEL ProductId '"+rhelPersonalProductId+"' is NOT available to this consumer from any available subscription pool when registered as type system");
 		
 		// also assert that RHEL Personal *is* included in --all --available subscription pools
-		rhelPersonalPool = clienttasks.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(rhelPersonalPool,"RHEL ProductId '"+rhelPersonalProductId+"' is included in --all --available subscription pools when registered as type system");
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)

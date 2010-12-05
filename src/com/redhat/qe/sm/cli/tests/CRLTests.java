@@ -96,7 +96,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 //				products.add(product);
 //			}
 //		}
-		List<ProductSubscription> products = clienttasks.findAllInstancesWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		List<ProductSubscription> products = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		for (ProductSubscription product : products) {
 //FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
 			Assert.assertTrue(product.endDate.compareTo(pool.endDate)==0, "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
@@ -140,7 +140,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Third, let's assert that consumed product certs have been updated...");
 		String newCertFile = "";
 		for (ProductSubscription product : products) {
-			ProductSubscription newProduct = clienttasks.findFirstInstanceWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
+			ProductSubscription newProduct = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.startDate), ProductSubscription.formatDateString(newStartDate),
 					"Rhsmcertd has updated the entitled startdate to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product: "+newProduct.productName);
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.endDate), ProductSubscription.formatDateString(newEndDate),
@@ -159,7 +159,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		// NOTE: The refresh schedule was set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
 		// NOTE: if not set, the default is  public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?" Fire at 12pm (noon) every day
 		for (ProductSubscription product : products) {
-			RevokedCert revokedCert = servertasks.findRevokedCertWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());
+			RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());
 			Assert.assertTrue(revokedCert!=null,"Original entitlement certificate serial number '"+product.serialNumber+"' for product '"+product.productName+"' has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
 			Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","Expanding the certificate start and end dates should revoke the certificated with a reason code of Privilege Withdrawn");
 		}

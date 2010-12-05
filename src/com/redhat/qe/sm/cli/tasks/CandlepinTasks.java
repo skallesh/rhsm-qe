@@ -414,37 +414,38 @@ public class CandlepinTasks {
 		String crls = sshCommandRunner.getStdout();
 		return RevokedCert.parse(crls);
 	}
-	
-	/**
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param revokedCerts - usually getCurrentlyRevokedCerts()
-	 * @return - the RevokedCert from revokedCerts that has a matching field (if not found, null is returned)
-	 */
-	public RevokedCert findRevokedCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<RevokedCert> revokedCerts) {
-		
-		RevokedCert revokedCertWithMatchingField = null;
-		for (RevokedCert revokedCert : revokedCerts) {
-			try {
-				if (RevokedCert.class.getField(fieldName).get(revokedCert).equals(fieldValue)) {
-					revokedCertWithMatchingField = revokedCert;
-				}
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return revokedCertWithMatchingField;
-	}
+
+// DELETEME
+//	/**
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param revokedCerts - usually getCurrentlyRevokedCerts()
+//	 * @return - the RevokedCert from revokedCerts that has a matching field (if not found, null is returned)
+//	 */
+//	public RevokedCert findRevokedCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<RevokedCert> revokedCerts) {
+//		
+//		RevokedCert revokedCertWithMatchingField = null;
+//		for (RevokedCert revokedCert : revokedCerts) {
+//			try {
+//				if (RevokedCert.class.getField(fieldName).get(revokedCert).equals(fieldValue)) {
+//					revokedCertWithMatchingField = revokedCert;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//		return revokedCertWithMatchingField;
+//	}
 	
 	
 	public JSONObject createOwnerUsingCPC(String owner_name) throws JSONException {
