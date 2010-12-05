@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
@@ -145,14 +146,6 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 //	    				"Yum reports enabled content subscribed to repo: " + cert.label);
 //	    }
 		
-// DELETEME: Alternative to above procedure is:
-//		clienttasks.unregister();
-//	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
-//	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
-//	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-//	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
-//	    clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
-	    
 		clienttasks.unregister();
 	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
@@ -214,6 +207,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				clienttasks.removePackageUsingYum(pkg);
 			}
 		}
+		if (!pkgInstalled && isServerOnPremises) throw new SkipException("Because we are currently testing against an OnPremises candlepin server ("+serverHostname+") that has imported data from '"+serverImportDir+"', we don't actually expect that an entitlement from this subscription pool ("+pool.subscriptionName+") to provide real content from "+rhsmBaseUrl);
 		Assert.assertTrue(pkgInstalled,"At least one package was found and installed from entitled repos after subscribing to SubscriptionPool: "+pool);
 	}
 	
