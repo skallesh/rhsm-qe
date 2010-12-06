@@ -34,9 +34,9 @@
     (action settextvalue :system-name system-name-input))
   ; (setchecked (element :automatically-subscribe) autosubscribe) 
   (action click :register)
-  (handler/with-handler
-    (checkforerror)
-    (handler/handle *error-dialog* [s] (clear-error-dialog))))
+  (comment (handler/with-handler
+      (checkforerror)
+      (handler/handle *error-dialog* [s] (clear-error-dialog)))))
   
 (defn get-all-facts []
   (action click :view-my-system-facts)
