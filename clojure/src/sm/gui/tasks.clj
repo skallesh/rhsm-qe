@@ -7,19 +7,23 @@
   (:require [clojure.contrib.error-kit :as handler]))
 
 
+(defn get-error-msg []
+  (action getobjectproperty :error-dialog "lbl[A-Za-z]*" "label"))
 
-;;tasks
- (handler/deferror *error-dialog* [] [s]
-   "Indicates an error dialog has appeared in the application."
-    {:msg (str "Error dialog is present with message: " s)
-     :unhandled (handler/throw-msg RuntimeException)})
+(handler/deferror *error-dialog* [] [s]
+  "Indicates an error dialog has appeared in the application."
+  {:msg (str "Error dialog is present with message: " s)
+   :unhandled (handler/throw-msg RuntimeException)})
  
 (defn clear-error-dialog []
   (action click :ok-error))
 
+(defn waittillwindowexist [windowid seconds]
+  (apply waittillguiexist (conj (element windowid) "" seconds)))
+
 (defn checkforerror []
-  (if (= 1 (action waittillguiexist :error-dialog 3)) 
-    (handler/raise *error-dialog* "")))
+  (if (= 1 (waittillwindowexist :error-dialog 3)) 
+    (handler/raise *error-dialog* (get-error-msg))))
 
 (defn start-app
   ([path]
@@ -63,9 +67,6 @@
   startup [_]
   (connect)
   (start-app (config :binary-path)))
-
-(defn ^{:test {} } faketest [_]
-  (println "w00t"))
 
 (gen-class-testng)
 

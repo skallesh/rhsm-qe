@@ -25,7 +25,9 @@
 
 (def properties
      (let [m (property-map {:binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
-			    :client-hostname "sm.client1.hostname"})]
+			    :client-hostname "sm.client1.hostname"
+			    :username "sm.client1.username"
+			    :password "sm.client1.password" })]
        (merge m (property-map
 		 {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
 			      (str "http://" (m :client-hostname) ":4118"))}))))
