@@ -190,11 +190,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
 		// assert that the productName is consumed
-		ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after registering with autosubscribe.");
 
 		// assert that the productName is installed and subscribed
-		InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
 		Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+productName+"' is reported in the list of installed products.");
 		Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+productName+"' is Subscribed.");
 	}

@@ -111,8 +111,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> servClientPools = servClientTasks.getCurrentlyAvailableSubscriptionPools();
 		
 		log.info("Verifying that the pools available to the Workstation consumer are not identitcal to those available to the Server consumer...");
-		Assert.assertTrue(!(workClientPools.containsAll(servClientPools) && servClientPools.containsAll(workClientPools)),
-				"The subscription pools available to the Workstation and Server are NOT identical");
+		Assert.assertFalse(workClientPools.containsAll(servClientPools) && servClientPools.containsAll(workClientPools),
+				"Because the facts of a system client running RHEL Workstation versus RHEL Server should be different, the available subscription pools to these two systems should not be the same.");
 
 		// FIXME TODO Verify with development that these are valid asserts
 		//log.info("Verifying that the pools available to the Workstation consumer do not contain Server in the ProductName...");

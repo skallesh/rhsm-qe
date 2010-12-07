@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,8 @@ import javax.jws.Oneway;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONObject;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
@@ -326,9 +329,16 @@ public class SubscriptionManagerTasks {
 		String port = getConfFileParameter(rhsmConfFile, "port");
 		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonPool = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
-			String poolId = jsonPool.getJSONObject("pool").getString("id");
-			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, new SubscriptionPool(entitlementCert.productId, poolId));
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
+			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,owner,password,poolHref));
+			String subscriptionName = jsonPool.getString("productName");
+			String productId = jsonPool.getString("productId");
+			String poolId = jsonPool.getString("id");
+			String quantity = jsonPool.getString("quantity");
+			String endDate = jsonPool.getString("endDate");
+			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,endDate);
+			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, fromPool);
 		}
 		return serialMapToSubscriptionPools;
 	}
@@ -463,174 +473,226 @@ public class SubscriptionManagerTasks {
 		return productSubscription.fromSubscriptionPool;
 	}
 	
+//DELETEME
 //	/**
-//	 * @param subscriptionName
+//	 * @param fieldName
+//	 * @param fieldValue
 //	 * @param subscriptionPools - usually getCurrentlyAvailableSubscriptionPools()
-//	 * @return the SubscriptionPool from subscriptionPools whose name is subscriptionName (if not found, null is returned)
+//	 * @return - the SubscriptionPool from subscriptionPools that has a matching field (if not found, null is returned)
 //	 */
-//	public SubscriptionPool findSubscriptionPoolWithNameFrom(String subscriptionName, List<SubscriptionPool> subscriptionPools) {
+//	public SubscriptionPool findSubscriptionPoolWithMatchingFieldFromList(String fieldName, Object fieldValue, List<SubscriptionPool> subscriptionPools) {
 //		
-//		SubscriptionPool subscriptionPoolWithSubscriptionName = null;
+//		SubscriptionPool subscriptionPoolWithMatchingField = null;
 //		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-//			if (subscriptionPool.subscriptionName.equals(subscriptionName)) subscriptionPoolWithSubscriptionName = subscriptionPool;
+//			try {
+//				if (SubscriptionPool.class.getField(fieldName).get(subscriptionPool).equals(fieldValue)) {
+//					subscriptionPoolWithMatchingField = subscriptionPool;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 //		}
-//		return subscriptionPoolWithSubscriptionName;
+//		return subscriptionPoolWithMatchingField;
+//	}
+//	
+//	
+//	/**
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param productSubscriptions - usually getCurrentlyConsumedProductSubscriptions()
+//	 * @return - the ProductSubscription from productSubscriptions that has a matching field (if not found, null is returned)
+//	 */
+//	public ProductSubscription findProductSubscriptionWithMatchingFieldFromList(String fieldName, Object fieldValue, List<ProductSubscription> productSubscriptions) {
+//		ProductSubscription productSubscriptionWithMatchingField = null;
+//		for (ProductSubscription productSubscription : productSubscriptions) {
+//			try {
+//				if (ProductSubscription.class.getField(fieldName).get(productSubscription).equals(fieldValue)) {
+//					productSubscriptionWithMatchingField = productSubscription;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//		return productSubscriptionWithMatchingField;
+//	}
+//	
+//	
+//	/**
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param installedProducts - usually getCurrentProductCerts()
+//	 * @return - the InstalledProduct from installedProducts that has a matching field (if not found, null is returned)
+//	 */
+//	public InstalledProduct findInstalledProductWithMatchingFieldFromList(String fieldName, Object fieldValue, List<InstalledProduct> installedProducts) {
+//		InstalledProduct installedProductWithMatchingField = null;
+//		for (InstalledProduct installedProduct : installedProducts) {
+//			try {
+//				if (InstalledProduct.class.getField(fieldName).get(installedProduct).equals(fieldValue)) {
+//					installedProductWithMatchingField = installedProduct;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//		return installedProductWithMatchingField;
+//	}
+//	
+//	
+//	/**
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param productCerts - usually getCurrentlyProductCerts()
+//	 * @return - the ProductCert from productCerts that has a matching field (if not found, null is returned)
+//	 */
+//	public ProductCert findProductCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<ProductCert> productCerts) {
+//		ProductCert productCertWithMatchingField = null;
+//		for (ProductCert productCert : productCerts) {
+//			try {
+//				if (ProductCert.class.getField(fieldName).get(productCert).equals(fieldValue)) {
+//					productCertWithMatchingField = productCert;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//		return productCertWithMatchingField;
+//	}
+//	
+//	
+//	/**
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param entitlementCerts - usually getCurrentEntitlementCerts()
+//	 * @return - the EntitlementCert from entitlementCerts that has a matching field (if not found, null is returned)
+//	 */
+//	public EntitlementCert findEntitlementCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<EntitlementCert> entitlementCerts) {
+//		EntitlementCert entitlementCertWithMatchingField = null;
+//		for (EntitlementCert entitlementCert : entitlementCerts) {
+//			try {
+//				if (EntitlementCert.class.getField(fieldName).get(entitlementCert).equals(fieldValue)) {
+//					entitlementCertWithMatchingField = entitlementCert;
+//				}
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//		return entitlementCertWithMatchingField;
 //	}
 	
-	/**
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param subscriptionPools - usually getCurrentlyAvailableSubscriptionPools()
-	 * @return - the SubscriptionPool from subscriptionPools that has a matching field (if not found, null is returned)
-	 */
-	public SubscriptionPool findSubscriptionPoolWithMatchingFieldFromList(String fieldName, Object fieldValue, List<SubscriptionPool> subscriptionPools) {
-		
-		SubscriptionPool subscriptionPoolWithMatchingField = null;
-		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-			try {
-				if (SubscriptionPool.class.getField(fieldName).get(subscriptionPool).equals(fieldValue)) {
-					subscriptionPoolWithMatchingField = subscriptionPool;
-				}
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return subscriptionPoolWithMatchingField;
-	}
+
+
 	
-	
-	/**
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param productSubscriptions - usually getCurrentlyConsumedProductSubscriptions()
-	 * @return - the ProductSubscription from productSubscriptions that has a matching field (if not found, null is returned)
-	 */
-	public ProductSubscription findProductSubscriptionWithMatchingFieldFromList(String fieldName, Object fieldValue, List<ProductSubscription> productSubscriptions) {
-		ProductSubscription productSubscriptionWithMatchingField = null;
-		for (ProductSubscription productSubscription : productSubscriptions) {
-			try {
-				if (ProductSubscription.class.getField(fieldName).get(productSubscription).equals(fieldValue)) {
-					productSubscriptionWithMatchingField = productSubscription;
-				}
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return productSubscriptionWithMatchingField;
-	}
-	
-	
-	/**
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param installedProducts - usually getCurrentProductCerts()
-	 * @return - the InstalledProduct from installedProducts that has a matching field (if not found, null is returned)
-	 */
-	public InstalledProduct findInstalledProductWithMatchingFieldFromList(String fieldName, Object fieldValue, List<InstalledProduct> installedProducts) {
-		InstalledProduct installedProductWithMatchingField = null;
-		for (InstalledProduct installedProduct : installedProducts) {
-			try {
-				if (InstalledProduct.class.getField(fieldName).get(installedProduct).equals(fieldValue)) {
-					installedProductWithMatchingField = installedProduct;
-				}
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return installedProductWithMatchingField;
-	}
-	
-	
-	/**
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param productCerts - usually getCurrentlyProductCerts()
-	 * @return - the ProductCert from productCerts that has a matching field (if not found, null is returned)
-	 */
-	public ProductCert findProductCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<ProductCert> productCerts) {
-		ProductCert productCertWithMatchingField = null;
-		for (ProductCert productCert : productCerts) {
-			try {
-				if (ProductCert.class.getField(fieldName).get(productCert).equals(fieldValue)) {
-					productCertWithMatchingField = productCert;
-				}
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return productCertWithMatchingField;
-	}
-	
-	
-	/**
-	 * @param fieldName
-	 * @param fieldValue
-	 * @param entitlementCerts - usually getCurrentEntitlementCerts()
-	 * @return - the EntitlementCert from entitlementCerts that has a matching field (if not found, null is returned)
-	 */
-	public EntitlementCert findEntitlementCertWithMatchingFieldFromList(String fieldName, Object fieldValue, List<EntitlementCert> entitlementCerts) {
-		EntitlementCert entitlementCertWithMatchingField = null;
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			try {
-				if (EntitlementCert.class.getField(fieldName).get(entitlementCert).equals(fieldValue)) {
-					entitlementCertWithMatchingField = entitlementCert;
-				}
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchFieldException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return entitlementCertWithMatchingField;
-	}
+//KEEPME FOR FUTURE USAGE SOMEWHERE ELSE	
+//	/**
+//	 * Given a List of instances of some class (e.g. getCurrentEntitlementCerts()), this
+//	 * method is useful for finding the first instance (e.g. an EntitlementCert) whose public
+//	 * field by the name "fieldName" has a value of fieldValue.  If no match is found, null is returned.
+//	 * @param <T>
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param dataInstances
+//	 * @return
+//	 */
+//	@SuppressWarnings("unchecked")
+//	public <T> T findFirstInstanceWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+//		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
+//		if (dataInstancesWithMatchingFieldFromList.isEmpty()) return null;
+//		return (T) dataInstancesWithMatchingFieldFromList.toArray()[0];
+//	}
+//	
+//	/**
+//	 * Given a List of instances of some class (e.g. getAllAvailableSubscriptionPools()), this
+//	 * method is useful for finding a subset of instances whose public field by the name "fieldName"
+//	 * has a value of fieldValue.  If no match is found, an empty list is returned.
+//	 * @param <T>
+//	 * @param fieldName
+//	 * @param fieldValue
+//	 * @param dataInstances
+//	 * @return
+//	 */
+//	@SuppressWarnings("unchecked")
+//	public <T> List<T> findAllInstancesWithMatchingFieldFromList(String fieldName, Object fieldValue, List<T> dataInstances) {
+//		Collection<T> dataInstancesWithMatchingFieldFromList = Collections2.filter(dataInstances, new ByValuePredicate(fieldName,fieldValue));
+//		return (List<T>) Arrays.asList(dataInstancesWithMatchingFieldFromList.toArray());
+//	}
+//	
+//	class ByValuePredicate implements Predicate<Object> {
+//		Object value;
+//		String fieldName;
+//		public ByValuePredicate(String fieldName, Object value) {
+//			this.value=value;
+//			this.fieldName=fieldName;
+//		}
+//		public boolean apply(Object toTest) {
+//			try {
+//				return toTest.getClass().getField(fieldName).get(toTest).equals(value);
+//			} catch (IllegalArgumentException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SecurityException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IllegalAccessException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (NoSuchFieldException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//			return false;
+//		}
+//	}
+
 	
 	
 	/**
@@ -994,14 +1056,14 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult sshCommandResult = list_(null,null,null);
 		
-		List<File> productCertFiles = getCurrentProductCertFiles();
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 
-		if (productCertFiles.isEmpty()) {
+
+		if (getCurrentEntitlementCertFiles().isEmpty() && getCurrentProductCertFiles().isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
-		} /*else {
+		} else {
 			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status");
-		}*/
+		}
 
 		return sshCommandResult;
 	}
@@ -1163,7 +1225,7 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
 			// find the existing entitlement cert file corresponding to the already subscribed pool
-			EntitlementCert entitlementCert = findEntitlementCertWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
+			EntitlementCert entitlementCert = EntitlementCert.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
 			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
@@ -1202,7 +1264,10 @@ public class SubscriptionManagerTasks {
 			// END OF WORKAROUND
 			} else {		
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-				Assert.assertEquals(entitlementCert.productId, pool.productId,"New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+				if (pool.subscriptionName.equals(System.getProperty("sm.rhpersonal.subproductName", "Property 'sm.rhpersonal.subproductName' must be set."))) // special case when pool is really a subpool
+					Assert.assertEquals(entitlementCert.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
+				else
+					Assert.assertEquals(entitlementCert.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
 			}
 		
 			// assert that consumed ProductSubscriptions has NOT decreased

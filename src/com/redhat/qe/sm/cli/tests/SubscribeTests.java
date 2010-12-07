@@ -1,15 +1,14 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONException;
-import org.testng.SkipException;
-import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -18,7 +17,6 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
@@ -27,7 +25,6 @@ import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author ssalevan
@@ -52,15 +49,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
-		SubscriptionPool pool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		// assert the status of the installed products
 		for (String productName : entitledProductNames) {
 			// assert the status of the installed products
-			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
-				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
 				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Not Subscribed.");
 			}
@@ -72,23 +69,35 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the expected products are consumed
 		for (String productName : entitledProductNames) {
-			ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
+			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
 
-			// assert the dates match
-			Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
-//			Calendar dayBeforeStartDate = (Calendar) entitlementCert.validityNotBefore.clone(); dayBeforeStartDate.add(Calendar.DATE, -1);
-			//Assert.assertEquals(productSubscription.endDate, entitlementCert.validityNotAfter, "Consumed ProductSubscription Expires on the same end date as the given entitlement: "+entitlementCert);
-			Assert.assertTrue(productSubscription.endDate.before(entitlementCert.validityNotAfter) && productSubscription.endDate.after(dayBeforeEndDate), "Consumed ProductSubscription Expires on the same end date as the new entitlement: "+entitlementCert);
-			Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
-			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
+// OLD CODE THAT I THINK WAS WRONG  jsefler 12/2/2010
+//			// assert the dates match
+//			Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
+////			Calendar dayBeforeStartDate = (Calendar) entitlementCert.validityNotBefore.clone(); dayBeforeStartDate.add(Calendar.DATE, -1);
+//			//Assert.assertEquals(productSubscription.endDate, entitlementCert.validityNotAfter, "Consumed ProductSubscription Expires on the same end date as the given entitlement: "+entitlementCert);
+//			Assert.assertTrue(productSubscription.endDate.before(entitlementCert.validityNotAfter) && productSubscription.endDate.after(dayBeforeEndDate), "Consumed ProductSubscription Expires on the same end date as the new entitlement: "+entitlementCert);
+//			Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+//			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
 
+			// assert the dates match
+			//FIXME  UNCOMMENT WHEN YOU GET AN EXPLANATION FROM DEVELOPMENT
+//			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate),ProductSubscription.formatDateString(entitlementCert.startDate),
+//					"Consumed ProductSubscription Begins on the same DAY as the new entitlement.");
+//			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(entitlementCert.endDate),
+//					"Consumed ProductSubscription Expires on the same DAY as the new entitlement.");
+			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
+					"Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
+			//FIXME		Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+
+			
 			// assert whether or not the product is installed			
-			InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
 			Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 
 			// assert the status of the installed products
-			ProductCert productCert = clienttasks.findProductCertWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
 				Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 				Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
@@ -114,15 +123,18 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
-			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
+			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
 			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
 		}
+		
+		// get a list of the product certs on the client 
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		
 		// register with autosubscribe
 		clienttasks.unregister();
 		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
 
-		/* Example Stdout: 
+		/* Example sshCommandResult.getStdout(): 
 			e1aef738-5d03-4a8a-9c87-7a2652e110a8 rh-alpha-qa-105
 			Bind Product  Red Hat Enterprise Linux High Availability (for RHEL 6 Entitlement) 407
 			Bind Product  Red Hat Enterprise Linux Scalable File System (for RHEL 6 Entitlement) 410
@@ -130,6 +142,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Bind Product  Red Hat Enterprise Linux Load Balancer (for RHEL 6 Entitlement) 408
 			Bind Product  Red Hat Enterprise Linux 6 Entitlement Alpha 406
 		*/
+		
+		/* Sample sshCommandResult.getStdout():
+			d67df9c8-f381-4449-9d17-56094ea58092 testuser1
+			Subscribed to Products:
+	    		RHEL for Physical Servers SVC(37060)
+		 */
 
 		// get the state of affairs after having registered with autosubscribe
 		List<SubscriptionPool> availableSubscriptionPoolsAfterAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -140,11 +158,21 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
 			String[] entitledProductNames = (String[])row.get(1);
+			SubscriptionPool subscriptionPool;
+			
+			// assert that the subscriptionPoolProductIds that are not installed, do not get autosubscribed to
+			subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
+			if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", subscriptionPool.subscriptionName, productCerts)==null) {
+				log.warning("Note: No product cert with a name matching '"+subscriptionPool.subscriptionName+"' was found in '"+clienttasks.productCertDir+"'.  Therefore this expected product id cannot possibly be autosubscribed to.  Asserting this fact...");
+				Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe),
+						"SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is STILL available after registering with autosubscribe because no corressponding product cert is installed and therefore cannot possibly be autosubscribed to.");
+				continue;
+			}
 			
 			// assert that the subscriptionPoolProductId has been subscribed to...
 			
 			// assert that subscriptionPoolProductId is not available
-			SubscriptionPool subscriptionPool = clienttasks.findSubscriptionPoolWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
+			subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
 			if (subscriptionPool!=null) {
 				String entitledProductNamesAsString = "";
 				for (String entitledProductName : entitledProductNames) entitledProductNamesAsString += entitledProductName+", ";entitledProductNamesAsString = entitledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
@@ -155,16 +183,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 			for (String entitledProductName : entitledProductNames) {
 				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
-//DELETEME ALPHA				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+//DELETEME ALPHA ASSERT				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
 				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
 				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
 				// assert that the entitledProductName is consumed
-				ProductSubscription productSubscription = clienttasks.findProductSubscriptionWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
+				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
 				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+entitledProductName+"' is consumed after registering with autosubscribe.");
 	
 				// assert that the entitledProductName is installed and subscribed
-				InstalledProduct installedProduct = clienttasks.findInstalledProductWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
 				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+entitledProductName+"' is reported in the list of installed products.");
 				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+entitledProductName+"' is Subscribed.");
 			}
@@ -270,152 +298,153 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 
 
-	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
-			dataProvider="getAvailableSubscriptionPoolsData",
-			enabled=true)
-	@ImplementsNitrateTest(caseId=41696)
-	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) {
-
-		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test..");
-		clienttasks.stop_rhsmcertd();
-		
-		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
-		log.info("Making sure that the rhsm plugin conf file '"+clienttasks.rhsmPluginConfFile+"' is enabled with enabled=1..");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		
-		log.info("Subscribe to the pool and start testing that yum repolist reports the expected repo id/labels...");
-		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-		
-		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
-		// 1. Repolist contains repositories corresponding to your entitled products
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.getCurrentEntitlementCertFiles("-t").get(0)); // newest entitlement cert
-		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			if (contentNamespace.enabled.equals("1")) {
-				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-			} else {
-				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-			}
-		}
-		repolist = clienttasks.getYumRepolist("disabled");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			if (contentNamespace.enabled.equals("1")) {
-				Assert.assertFalse(repolist.contains(contentNamespace.label),
-					"Yum repolist disabled excludes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-			} else {
-				Assert.assertTrue(repolist.contains(contentNamespace.label),
-					"Yum repolist disabled includes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-			}
-		}
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			Assert.assertTrue(repolist.contains(contentNamespace.label),
-				"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-		}
-
-		log.info("Unsubscribe from the pool and verify that yum repolist no longer reports the expected repo id/labels...");
-		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-		
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-		}
+// DELETEME MOVED TO ContentTests.java
+//	@Test(	description="subscription-manager Yum plugin: enable/disable",
+//			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
+//			dataProvider="getAvailableSubscriptionPoolsData",
+//			enabled=true)
+//	@ImplementsNitrateTest(caseId=41696)
+//	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) {
+//
+//		log.info("Before beginning this test, we will stop the rhsmcertd so that it does not interfere with this test..");
+//		clienttasks.stop_rhsmcertd();
+//		
+//		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 1
+//		log.info("Making sure that the rhsm plugin conf file '"+clienttasks.rhsmPluginConfFile+"' is enabled with enabled=1..");
+//		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
+//		
+//		log.info("Subscribe to the pool and start testing that yum repolist reports the expected repo id/labels...");
+//		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+//		
+//		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
+//		// 1. Repolist contains repositories corresponding to your entitled products
+//		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.getCurrentEntitlementCertFiles("-t").get(0)); // newest entitlement cert
+//		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			if (contentNamespace.enabled.equals("1")) {
+//				Assert.assertTrue(repolist.contains(contentNamespace.label),
+//					"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//			} else {
+//				Assert.assertFalse(repolist.contains(contentNamespace.label),
+//					"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//			}
+//		}
+//		repolist = clienttasks.getYumRepolist("disabled");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			if (contentNamespace.enabled.equals("1")) {
+//				Assert.assertFalse(repolist.contains(contentNamespace.label),
+//					"Yum repolist disabled excludes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//			} else {
+//				Assert.assertTrue(repolist.contains(contentNamespace.label),
+//					"Yum repolist disabled includes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//			}
+//		}
+//		repolist = clienttasks.getYumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			Assert.assertTrue(repolist.contains(contentNamespace.label),
+//				"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//		}
+//
+//		log.info("Unsubscribe from the pool and verify that yum repolist no longer reports the expected repo id/labels...");
+//		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+//		
+//		repolist = clienttasks.getYumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			Assert.assertFalse(repolist.contains(contentNamespace.label),
+//				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//		}
+//	
+//		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 0
+//		log.info("Now we will disable the rhsm plugin conf file '"+clienttasks.rhsmPluginConfFile+"' with enabled=0..");
+//		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
+//		
+//		log.info("Again let's subscribe to the same pool and verify that yum repolist does NOT report any of the entitled repo id/labels since the plugin has been disabled...");
+//		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+//		
+//		// 2. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
+//		// 2. Repolist does not contain repositories corresponding to your entitled products
+//		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.getCurrentEntitlementCertFiles("-t").get(0));
+//		repolist = clienttasks.getYumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			Assert.assertFalse(repolist.contains(contentNamespace.label),
+//				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
+//		}
+//		
+//		log.info("Now we will restart the rhsmcertd and expect the repo list to be updated");
+//		int minutes = 2;
+//		clienttasks.restart_rhsmcertd(minutes, false);
+//		repolist = clienttasks.getYumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			Assert.assertTrue(repolist.contains(contentNamespace.label),
+//				"Yum repolist all now includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled and run an update with rhsmcertd.");
+//		}
+//		
+//		log.info("Now we will unsubscribe from the pool and verify that yum repolist continues to report the repo id/labels until the next refresh from the rhsmcertd runs...");
+//		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+//		repolist = clienttasks.getYumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			Assert.assertTrue(repolist.contains(contentNamespace.label),
+//				"Yum repolist all still includes repo id/label '"+contentNamespace.label+"' despite having unsubscribed from Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
+//		}
+//		log.info("Wait for the next refresh by rhsmcertd to remove the repos from the yum repo file '"+clienttasks.redhatRepoFile+"'...");
+//		sleep(minutes*60*1000);
+//		repolist = clienttasks.getYumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			Assert.assertFalse(repolist.contains(contentNamespace.label),
+//				"Yum repolist all finally excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled AND waiting for the next refresh by rhsmcertd.");
+//		}
+//	}
+//	@AfterGroups(value="EnableDisableYumRepoAndVerifyContentAvailable_Test", alwaysRun=true)
+//	protected void teardownAfterEnableDisableYumRepoAndVerifyContentAvailable_Test() {
+//		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
+//		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), false);
+//	}
 	
-		// Edit /etc/yum/pluginconf.d/rhsmplugin.conf and ensure that the enabled directive is set to 0
-		log.info("Now we will disable the rhsm plugin conf file '"+clienttasks.rhsmPluginConfFile+"' with enabled=0..");
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
-		
-		log.info("Again let's subscribe to the same pool and verify that yum repolist does NOT report any of the entitled repo id/labels since the plugin has been disabled...");
-		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-		
-		// 2. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
-		// 2. Repolist does not contain repositories corresponding to your entitled products
-		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.getCurrentEntitlementCertFiles("-t").get(0));
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
-		}
-		
-		log.info("Now we will restart the rhsmcertd and expect the repo list to be updated");
-		int minutes = 2;
-		clienttasks.restart_rhsmcertd(minutes, false);
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			Assert.assertTrue(repolist.contains(contentNamespace.label),
-				"Yum repolist all now includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled and run an update with rhsmcertd.");
-		}
-		
-		log.info("Now we will unsubscribe from the pool and verify that yum repolist continues to report the repo id/labels until the next refresh from the rhsmcertd runs...");
-		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			Assert.assertTrue(repolist.contains(contentNamespace.label),
-				"Yum repolist all still includes repo id/label '"+contentNamespace.label+"' despite having unsubscribed from Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
-		}
-		log.info("Wait for the next refresh by rhsmcertd to remove the repos from the yum repo file '"+clienttasks.redhatRepoFile+"'...");
-		sleep(minutes*60*1000);
-		repolist = clienttasks.getYumRepolist("all");
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist all finally excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled AND waiting for the next refresh by rhsmcertd.");
-		}
-	}
-	@AfterGroups(value="EnableDisableYumRepoAndVerifyContentAvailable_Test", alwaysRun=true)
-	protected void teardownAfterEnableDisableYumRepoAndVerifyContentAvailable_Test() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), false);
-	}
-	
 
-	
-	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={},
-	        enabled=true)
-	@ImplementsNitrateTest(caseId=47578)
-	public void VerifyYumRepoListsEnabledContent(){
-// Original code from ssalevan
-//	    ArrayList<String> repos = this.getYumRepolist();
+// DELETEME MOVED TO ContentTests.java
+//	@Test(	description="subscription-manager content flag : Default content flag should enable",
+//			groups={},
+//	        enabled=true)
+//	@ImplementsNitrateTest(caseId=47578)
+//	public void VerifyYumRepoListsEnabledContent(){
+//// Original code from ssalevan
+////	    ArrayList<String> repos = this.getYumRepolist();
+////	    
+////	    for (EntitlementCert cert:clienttasks.getCurrentEntitlementCerts()){
+////	    	if(cert.enabled.contains("1"))
+////	    		Assert.assertTrue(repos.contains(cert.label),
+////	    				"Yum reports enabled content subscribed to repo: " + cert.label);
+////	    	else
+////	    		Assert.assertFalse(repos.contains(cert.label),
+////	    				"Yum reports enabled content subscribed to repo: " + cert.label);
+////	    }
+//		
+//// DELETEME: Alternative to above procedure is:
+////		clienttasks.unregister();
+////	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+////	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+////	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+////	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
+////	    clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
 //	    
-//	    for (EntitlementCert cert:clienttasks.getCurrentEntitlementCerts()){
-//	    	if(cert.enabled.contains("1"))
-//	    		Assert.assertTrue(repos.contains(cert.label),
-//	    				"Yum reports enabled content subscribed to repo: " + cert.label);
-//	    	else
-//	    		Assert.assertFalse(repos.contains(cert.label),
-//	    				"Yum reports enabled content subscribed to repo: " + cert.label);
-//	    }
-		
-// DELETEME: Alternative to above procedure is:
 //		clienttasks.unregister();
 //	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 //	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 //	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 //	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
-//	    clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
-	    
-		clienttasks.unregister();
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
-	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
-		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-				if (contentNamespace.enabled.equals("1")) {
-					Assert.assertTrue(repolist.contains(contentNamespace.label),
-						"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"'.");
-				} else {
-					Assert.assertFalse(repolist.contains(contentNamespace.label),
-						"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"'.");
-				}
-			}
-		}
-	}
+//		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
+//		for (EntitlementCert entitlementCert : entitlementCerts) {
+//			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//				if (contentNamespace.enabled.equals("1")) {
+//					Assert.assertTrue(repolist.contains(contentNamespace.label),
+//						"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"'.");
+//				} else {
+//					Assert.assertFalse(repolist.contains(contentNamespace.label),
+//						"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.productId+"'.");
+//				}
+//			}
+//		}
+//	}
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
@@ -452,49 +481,50 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={},
-			dataProvider="getAvailableSubscriptionPoolsData",
-			enabled=true)
-	@ImplementsNitrateTest(caseId=41695)
-	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
-		// original implementation by ssalevan
-//		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
-//		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()){
-//			String pkg = pkgList.get(productSubscription.productName)[0];
-//			log.info("Attempting to install first pkg '"+pkg+"' from product subscription: "+productSubscription);
-//			log.info("timeout of two minutes for next three commands");
-//			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-//					"yum repolist");
-//			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-//					"yum install -y "+pkg);
-//			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-//					"rpm -q "+pkg);
+// DELETEME MOVED TO ContentTests.java
+//	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
+//			groups={},
+//			dataProvider="getAvailableSubscriptionPoolsData",
+//			enabled=true)
+//	@ImplementsNitrateTest(caseId=41695)
+//	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
+//		// original implementation by ssalevan
+////		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
+////		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()){
+////			String pkg = pkgList.get(productSubscription.productName)[0];
+////			log.info("Attempting to install first pkg '"+pkg+"' from product subscription: "+productSubscription);
+////			log.info("timeout of two minutes for next three commands");
+////			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
+////					"yum repolist");
+////			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
+////					"yum install -y "+pkg);
+////			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
+////					"rpm -q "+pkg);
+////		}
+//	
+//		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+//		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+//		boolean pkgInstalled = false;
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			if (contentNamespace.enabled.equals("1")) {
+//				String repoLabel = contentNamespace.label;
+//
+//				// find an available package that is uniquely provided by repo
+//				String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
+//				if (pkg==null) {
+//					log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
+//					continue;
+//				}
+//				
+//				// install the package and assert that it is successfully installed
+//				clienttasks.installPackageUsingYumFromRepo(pkg, repoLabel); pkgInstalled = true;
+//				
+//				// now remove the package
+//				clienttasks.removePackageUsingYum(pkg);
+//			}
 //		}
-	
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		boolean pkgInstalled = false;
-		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-			if (contentNamespace.enabled.equals("1")) {
-				String repoLabel = contentNamespace.label;
-
-				// find an available package that is uniquely provided by repo
-				String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
-				if (pkg==null) {
-					log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
-					continue;
-				}
-				
-				// install the package and assert that it is successfully installed
-				clienttasks.installPackageUsingYumFromRepo(pkg, repoLabel); pkgInstalled = true;
-				
-				// now remove the package
-				clienttasks.removePackageUsingYum(pkg);
-			}
-		}
-		Assert.assertTrue(pkgInstalled,"At least one package was found and installed from entitled repos after subscribing to SubscriptionPool: "+pool);
-	}
+//		Assert.assertTrue(pkgInstalled,"At least one package was found and installed from entitled repos after subscribing to SubscriptionPool: "+pool);
+//	}
 	
 	
 	@Test(	description="rhsmcertd: change certFrequency",

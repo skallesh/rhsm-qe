@@ -13,23 +13,24 @@ import java.util.regex.Pattern;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 public class EntitlementCert extends AbstractCommandLineData {
-	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT   validityNotBefore
+//	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";			// Aug 23 08:42:00 2010 GMT   validityNotBefore
 //	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"   startDate
+	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";		// "2011-12-02T00:00:00Z"   startDate
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
 	public String id;			// entitlement uuid on the candlepin server
 	public String issuer;
-	public Calendar validityNotBefore;
-	public Calendar validityNotAfter;
+//	public Calendar validityNotBefore;
+//	public Calendar validityNotAfter;
 	
 	public String productName;
 	public String orderNumber;
 	public String productId;	// SKU
 	public String subscriptionNumber;
 	public String quantity;
-	public String startDate;
-	public String endDate;
+	public Calendar startDate;
+	public Calendar endDate;
 	public String virtualizationLimit;
 	public String socketLimit;
 	public String contractNumber;
@@ -55,14 +56,14 @@ public class EntitlementCert extends AbstractCommandLineData {
 		if (serialNumber != null)			string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (id != null)						string += String.format(" %s='%s'", "id",id);
 		if (issuer != null)					string += String.format(" %s='%s'", "issuer",issuer);
-		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
-		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
+//		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
+//		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
 		
 		if (productName != null)			string += String.format(" %s='%s'", "productName",productName);
 		if (orderNumber != null)			string += String.format(" %s='%s'", "orderNumber",orderNumber);
 		if (subscriptionNumber != null)		string += String.format(" %s='%s'", "subscriptionNumber",subscriptionNumber);
-		if (startDate != null)				string += String.format(" %s='%s'", "startDate",startDate);
-		if (endDate != null)				string += String.format(" %s='%s'", "endDate",endDate);
+		if (startDate != null)				string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
+		if (endDate != null)				string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 		if (virtualizationLimit != null)	string += String.format(" %s='%s'", "virtualizationLimit",virtualizationLimit);
 		if (socketLimit != null)			string += String.format(" %s='%s'", "socketLimit",socketLimit);
 		if (contractNumber != null)			string += String.format(" %s='%s'", "contractNumber",contractNumber);
@@ -90,8 +91,8 @@ public class EntitlementCert extends AbstractCommandLineData {
 		return	((EntitlementCert)obj).serialNumber.equals(this.serialNumber) &&
 				((EntitlementCert)obj).id.equals(this.id) &&
 				((EntitlementCert)obj).issuer.equals(this.issuer) &&
-				((EntitlementCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
-				((EntitlementCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
+//				((EntitlementCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
+//				((EntitlementCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
 				((EntitlementCert)obj).productId.equals(this.productId);
 	}
 	
@@ -473,8 +474,8 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Subject: CN=(.+)");
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
-		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
-		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+//		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
+//		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
 
 		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("orderNumber",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
