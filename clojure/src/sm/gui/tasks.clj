@@ -28,7 +28,10 @@
   ([]
      (start-app (config :binary-path)))
   ([path]
-     (action launchapp path [] 10)))
+     (action launchapp path [] 10)
+     (waittillwindowexist :mainWindow 30)
+    (comment (try (action click :register-system) ;for some reason ldtp fails on the first call so get it over with
+	   (catch Exception e)))))
 
 (declare handler)
 (defnk register [username password :system-name-input nil :autosubscribe false ]
@@ -38,15 +41,13 @@
   (action settextvalue :password password)
   (when system-name-input
     (action settextvalue :system-name system-name-input))
-
-					; (setchecked (element :automatically-subscribe) autosubscribe) 
   (action click :register)
   (try (checkforerror)
        (catch RuntimeException e
 	 (if (bound? (var handler))
-	   (errors/handle e handler)
-	   (throw e)))
-       (finally (action click :register-cancel))))
+	   (do (errors/handle e handler)
+	       (action click :register-cancel))
+	   (throw e)))))
   
 (defn get-all-facts []
   (action click :view-my-system-facts)
