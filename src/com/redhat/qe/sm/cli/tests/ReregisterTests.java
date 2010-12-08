@@ -137,9 +137,9 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 				"The list of consumed products after reregistering is identical.");
 	}
 	
-// TODO Automation Candidates for Reregister tests: 
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
+	// TODO Bugzilla candidates for an automated Test:
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 
 	
 	
