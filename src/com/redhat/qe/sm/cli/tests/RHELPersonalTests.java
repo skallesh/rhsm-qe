@@ -278,7 +278,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
-			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"/*, "blockedByBug-658283"*/},
+			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"/*, "blockedByBug-658283"*/, "blockedByBug-658683"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58898)
@@ -298,7 +298,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
-			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"},
+			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -433,7 +433,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=61126)
 	public void EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsername_Test() {
-//		teardownAfterGroups();
+		teardownAfterGroups();
 		
 		log.info("Register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
 		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null);
@@ -462,9 +462,10 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureSystemCannotSubscribeToPersonalPool_Test() {
-
+		teardownAfterGroups();
+		
 		log.info("Register client1 under username '"+consumerUsername+"' as a system and assert that '"+rhpersonalProductId+"' can NOT be subscribed to...");
-		client1tasks.unregister();
+		//client1tasks.unregister();
 		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null, null);
 		
 		SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",rhpersonalProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -480,6 +481,11 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	// TODO Bugzilla candidates for an automated Test:
+	// https://bugzilla.redhat.com/show_bug.cgi?id=626509
+	
+	
+	
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeClass(groups={"setup"})
@@ -489,6 +495,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+	// FIXME: I don't believe that this methods is getting called after all tests tagged with "RHELPersonal" have run
 	@AfterGroups(groups={"setup"}, value={"RHELPersonal"}, alwaysRun=true)
 	public void teardownAfterGroups() {
 		if (client2tasks!=null) {
@@ -516,6 +523,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+
 	
 	
 	// Protected Methods ***********************************************************************
