@@ -660,6 +660,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getCertFrequencyDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
 		// int minutes
 		ll.add(Arrays.asList(new Object[]{2}));
 		ll.add(Arrays.asList(new Object[]{1}));

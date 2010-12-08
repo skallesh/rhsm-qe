@@ -67,6 +67,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getProductCertFilesDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
 		
 		if (clienttasks!=null) {
 			List<File> productCertFiles = clienttasks.getCurrentProductCertFiles();

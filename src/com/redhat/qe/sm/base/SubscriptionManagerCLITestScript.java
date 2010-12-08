@@ -145,7 +145,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		log.info("Subscription manager client '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 		if (client2!=null) log.info("Subscription manager client '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 
+		isSetupBeforeSuiteComplete = true;
 	}
+	protected boolean isSetupBeforeSuiteComplete = false;
 	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
@@ -351,6 +353,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// assure we are registered
