@@ -6,11 +6,11 @@
 	    [sm.gui.errors :as errors]))
 
 (defn ^{:test {:groups ["registration"]}}
-  simple-register [_]
+  simple_register [_]
   (tasks/register (config :username) (config :password)))
 
 (defn ^{:test {:groups [ "registration"]}}
-  register-bad-credentials [_]
+  register_bad_credentials [_]
   (with-handler (tasks/register "sdf" "sdf")
     (handle errors/*invalid-login* [s])) )
 
