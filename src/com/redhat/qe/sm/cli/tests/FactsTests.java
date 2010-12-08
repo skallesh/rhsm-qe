@@ -302,6 +302,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(foundPoolWithArchAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
 	}
 	
+	// TODO Automation Candidates for Facts tests: 
+	// https://bugzilla.redhat.com/show_bug.cgi?id=661329
+		
 	// Data Providers ***********************************************************************
 
 	
