@@ -181,7 +181,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					"jdbc:postgresql://" + dbHostname + ":" + dbPort + "/" + dbName :
 					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
 			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
-			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword); 
+			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword);
+			//log.finer("default dbConnection.getAutoCommit()= "+dbConnection.getAutoCommit());
+			dbConnection.setAutoCommit(true);
+			
 			DatabaseMetaData dbmd = dbConnection.getMetaData(); //get MetaData to confirm connection
 		    log.fine("Connection to "+dbmd.getDatabaseProductName()+" "+dbmd.getDatabaseProductVersion()+" successful.\n");
 

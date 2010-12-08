@@ -1,6 +1,9 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -73,10 +76,10 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		// total quantity of entitlements available to the consumers.
 		if (alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.contains(pool.productId)) {
 			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, it only makes sense to skip this iteration of the test.");
-			log.info("However, for the sake of testing, let's attempt to subscribe to it anyway and assert that our subscribe request is blocked with an apprpriate message...");
+			log.info("However, for the sake of testing, let's attempt to subscribe to it anyway and assert that our subscribe request is blocked with an appropriate message...");
 			SSHCommandResult sshCommandResult = clienttasks.subscribe(pool.poolId, null, null, null, null);
 			Assert.assertEquals(sshCommandResult.getStdout().trim(),"This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'");
-			throw new SkipException("Because this consumer is already subscribed to the product provided by this pool id '"+pool.poolId+"', this pool is unsubscribeable and therefore we must skip this test iteration.");
+			throw new SkipException("Because this consumer is already subscribed to the product ("+pool.productId+") provided by this pool id '"+pool.poolId+"', this pool is unsubscribeable and therefore we must skip this test iteration.");
 		}
 		
 		
@@ -87,15 +90,6 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
-//DELETEME NOT AN EFFICIENT ALGORITHM
-//		List<ProductSubscription> products = new ArrayList<ProductSubscription>();
-//		for (ProductSubscription product : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-//			if (clienttasks.getSubscriptionPoolFromProductSubscription(product,serverAdminUsername,serverAdminPassword).equals(pool)) {
-////FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-//				Assert.assertTrue(product.endDate.equals(pool.endDate), "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-//				products.add(product);
-//			}
-//		}
 		List<ProductSubscription> products = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		for (ProductSubscription product : products) {
 //FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
@@ -116,24 +110,20 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Now let's refresh the subscription pools...");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, consumerOwner);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
-		log.info("Refresh to make sure the latest certs are on the client...");
-		clienttasks.refresh(); // make sure the new entitlements are downloaded
 //		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
 //		clienttasks.restart_rhsmcertd(1, true);
+		log.info("Refresh to make sure the latest certs are on the client...");
+		clienttasks.refresh(); // make sure the new entitlements are downloaded
 
 		log.info("The updated certs should now be on the client...");
 
 		log.info("First, let's assert that subscription pool reflects the new end date...");
-		List<SubscriptionPool> allSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-		Assert.assertContains(allSubscriptionPools, pool);
-		for (SubscriptionPool newPool : allSubscriptionPools) {
-			if (newPool.equals(pool)) {
-				Assert.assertEquals(SubscriptionPool.formatDateString(newPool.endDate), SubscriptionPool.formatDateString(newEndDate),
-						"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
-				break;
-			}
-		}
+		SubscriptionPool newPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		Assert.assertNotNull(newPool,"Pool id '"+pool.poolId+"' is still available after changing its the start and end dates and refreshing pools.");
+		Assert.assertEquals(SubscriptionPool.formatDateString(newPool.endDate), SubscriptionPool.formatDateString(newEndDate),
+				"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
 
+//FIXME UNCOMMENT WHILE DEBUGGING WITH AJAY if (true)return;
 		log.info("Second, let's assert that the original cert file '"+originalCertFile+"' is gone...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),0,"Original certificate file '"+originalCertFile+"' has been removed.");
 
@@ -156,7 +146,9 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Finally, check the CRL list on the server and verify the original entitlement cert serials are revoked...");
 		log.info("Waiting 2 minutes...  (Assuming this is the candlepin.conf value set for pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule)");
 		sleep(2*60*1000);	// give the CertificateRevocationListTask.schedule 2 minutes to update the list since that is what was set in setupBeforeSuite()
-		// NOTE: The refresh schedule was set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
+		// NOTE: The refresh schedule should have been set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
+		//       Set inside /etc/candlepin/candlepin.conf
+		//       pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
 		// NOTE: if not set, the default is  public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?" Fire at 12pm (noon) every day
 		for (ProductSubscription product : products) {
 			RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());
@@ -200,13 +192,55 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
 		}
 		sql.close();
+		
+		if(endDate != null)
+			assertChangesToDb(pool, endDate, "enddate");
+		if(startDate != null)
+			assertChangesToDb(pool, startDate, "startdate");
 	}
 	
-
-	
-	
-	// Data Providers ***********************************************************************
-
-	
-
+	// FIXME Used while debugging with AJAY
+	private void assertChangesToDb(SubscriptionPool pool, Calendar cal, String field) throws SQLException {
+		Connection dbConnection1 = null;
+		Statement sql = null;
+		try {
+			
+			// Load the JDBC driver 
+			Class.forName(dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
+			
+			// Create a connection to the database
+			String url = dbSqlDriver.contains("postgres")? 
+					"jdbc:postgresql://" + dbHostname + ":" + dbPort + "/" + dbName :
+					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
+			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
+			dbConnection1 = DriverManager.getConnection(url, dbUsername, dbPassword);
+			sql = dbConnection1.createStatement();
+			String getSubscriptionPoolEndDateSql = String
+					.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool where id='%s');", field, pool.poolId);
+			sql.execute(getSubscriptionPoolEndDateSql);
+			ResultSet resultSet = sql.getResultSet();
+			if (resultSet.next()) {
+				System.out.printf("\nThe %s in database is = %s", field,
+						resultSet.getDate(1));
+				Assert.assertEquals(resultSet.getDate(1), cal.getTime());
+			} else {
+				Assert.assertTrue(false,
+						"Did not retrieve any value from the database");
+			}
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}finally{
+			try {
+				sql.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			try {
+				dbConnection1.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }
