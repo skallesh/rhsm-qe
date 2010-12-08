@@ -533,6 +533,10 @@ public class CandlepinTasks {
 		 * http://wiki.java.net/bin/view/Javawsxml/Rome
 		 */
 			
+		// Notes: Alternative curl approach to getting the atom feed:
+		// [ajay@garuda-rh proxy{pool_refresh}]$ curl -k -u admin:admin --request GET "https://localhost:8443/candlepin/owners/admin/atom" > /tmp/atom.xml; xmllint --format /tmp/atom.xml > /tmp/atom1.xml
+		// from https://bugzilla.redhat.com/show_bug.cgi?id=645597
+		
 		SSLCertificateTruster.trustAllCerts();
 		
 		// set the atom feed url for an owner, consumer, or null
