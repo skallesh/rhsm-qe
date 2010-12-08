@@ -1,6 +1,5 @@
 (ns sm.gui.tasks
   (:use [clojure.contrib.def :only (defnk)]
-	[clojure.contrib.error-kit :only (with-handler handle do-not-handle)]
 	[sm.gui.test-config :only (config)]
 	[sm.gui.ui :only (action element)]
 	sm.gui.ldtp)
@@ -23,7 +22,7 @@
   (if (= 1 (waittillwindowexist :error-dialog 3)) 
     (let [message (get-error-msg)]
       (clear-error-dialog)
-      (errors/raise-matching-error message))))
+      (throw (RuntimeException. message)))))
 
 (defn start-app
   ([]
@@ -31,6 +30,7 @@
   ([path]
      (action launchapp path [] 10)))
 
+(declare handler)
 (defnk register [username password :system-name-input nil :autosubscribe false ]
   (action click :register-system)
   (action waittillguiexist :redhat-login)
@@ -41,11 +41,12 @@
 
 					; (setchecked (element :automatically-subscribe) autosubscribe) 
   (action click :register)
- 
-  (with-handler (checkforerror)
-    (handle errors/*sm-error* [s]
-		    (action click :register-cancel)
-		    (do-not-handle))))
+  (try (checkforerror)
+       (catch RuntimeException e
+	 (if (bound? (var handler))
+	   (errors/handle e handler)
+	   (throw e)))
+       (finally (action click :register-cancel))))
   
 (defn get-all-facts []
   (action click :view-my-system-facts)

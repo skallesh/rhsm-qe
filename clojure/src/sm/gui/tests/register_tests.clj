@@ -11,7 +11,7 @@
 
 (defn ^{:test {:groups [ "registration"]}}
   register_bad_credentials [_]
-  (with-handler (tasks/register "sdf" "sdf")
-    (handle errors/*invalid-login* [s])) )
+  (binding [tasks/handler (fn [errtype] (= errtype :invalid-credentials))]
+    (tasks/register "sdf" "sdf")))
 
 (gen-class-testng)
