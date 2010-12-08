@@ -123,7 +123,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(SubscriptionPool.formatDateString(newPool.endDate), SubscriptionPool.formatDateString(newEndDate),
 				"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
 
-//FIXME UNCOMMENT WHILE DEBUGGING WITH AJAY if (true)return;
+//FIXME UNCOMMENT WHILE DEBUGGING WITH AJAY
+//if (true)return;
 		log.info("Second, let's assert that the original cert file '"+originalCertFile+"' is gone...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),0,"Original certificate file '"+originalCertFile+"' has been removed.");
 
@@ -220,12 +221,10 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			sql.execute(getSubscriptionPoolEndDateSql);
 			ResultSet resultSet = sql.getResultSet();
 			if (resultSet.next()) {
-				System.out.printf("\nThe %s in database is = %s", field,
-						resultSet.getDate(1));
-				Assert.assertEquals(resultSet.getDate(1), cal.getTime());
+				log.fine(String.format("The %s in database is = %s", field, resultSet.getDate(1)));
+				Assert.assertEquals(resultSet.getDate(1), cal.getTime(),"The '"+field+"' in the database is what we expect.");
 			} else {
-				Assert.assertTrue(false,
-						"Did not retrieve any value from the database");
+				Assert.fail("Did not retrieve any value for '"+field+"' from the database for pool: "+pool);
 			}
 			
 		} catch (Exception e) {
