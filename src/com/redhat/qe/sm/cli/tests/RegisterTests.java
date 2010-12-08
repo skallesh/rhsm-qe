@@ -441,7 +441,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+	// TODO Bugzilla candidates for an automated Test:
+	// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 	
 	// Protected methods ***********************************************************************
 
