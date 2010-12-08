@@ -32,7 +32,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                           :register "register_button"}}
               :registrationSettingsDialog {:id "register_token_dialog"
                                            :elements {:registration-token "regtoken-entry"}}
-              :error-dialog {:id "Error"}
+              :error-dialog {:id "Error"
+			     :elements {:ok-error "OK"}}
               :question-dialog {:id "Question"
 			       :elements (same-name [:yes :no])} 
               :facts-dialog {:id "facts_dialog"
