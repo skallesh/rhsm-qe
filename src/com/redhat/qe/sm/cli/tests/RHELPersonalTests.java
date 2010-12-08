@@ -481,7 +481,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	// TODO Bugzilla candidates for an automated Test:
+	// TODO Candidates for an automated Test:
 	// https://bugzilla.redhat.com/show_bug.cgi?id=626509
 	
 	
