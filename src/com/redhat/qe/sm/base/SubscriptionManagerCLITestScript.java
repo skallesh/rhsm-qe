@@ -83,10 +83,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//       I suggest manually setting this on hosted and asking calfanso to restart
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
-			if (deployServerOnPremises) servertasks.deploy(serverHostname, serverImportDir,serverBranch);
+			servertasks.deploy(serverHostname, serverImportDir,serverBranch);
 
 			// also connect to the candlepin server database
-			connectToDatabase();  // do this after the call to deploy since it will restart postgresql
+			dbConnection = connectToDatabase();  // do this after the call to deploy since it will restart postgresql
 		}
 		
 		// in the event that the clients are already registered from a prior run, unregister them
@@ -147,7 +147,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		isSetupBeforeSuiteComplete = true;
 	}
-	protected boolean isSetupBeforeSuiteComplete = false;
+	protected static boolean isSetupBeforeSuiteComplete = false;
 	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
@@ -173,7 +173,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	// Protected Methods ***********************************************************************
 	
-	protected void connectToDatabase() {
+	protected Connection connectToDatabase() {
+		Connection dbConnection = null;
 		try { 
 			// Load the JDBC driver 
 			Class.forName(dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
@@ -197,6 +198,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		catch (SQLException e) {
 			log.warning("Could not connect to backend database:\n" + e.getMessage());
 		}
+		return dbConnection;
 	}
 
 	/* DELETEME  OLD CODE FROM ssalevan

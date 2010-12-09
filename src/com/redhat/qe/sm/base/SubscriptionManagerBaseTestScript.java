@@ -46,7 +46,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String serverImportDir			= getProperty("sm.server.importDir","");
 	protected String serverBranch				= getProperty("sm.server.branch","");
 	protected Boolean isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
-	protected Boolean deployServerOnPremises	= Boolean.valueOf(getProperty("sm.server.deploy","true"));
 
 	protected String client1hostname			= getProperty("sm.client1.hostname","");
 	protected String client1username			= getProperty("sm.client1.username","");
