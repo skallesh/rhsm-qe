@@ -6,25 +6,33 @@
 
 (defn same-name "takes a collection of keywords like :registration-settings
 and returns a mapping like :registration-settings -> 'Registration Settings'" 
-  [coll]
-  (zipmap coll
-	  (for [keyword coll] (->> keyword name (split #"-") (map capitalize) (join " ")))))
+  ([coll]
+     (same-name identity coll))
+  ([word-fn coll]
+     (zipmap coll
+	     (for [keyword coll] (->> keyword name (split #"-") (map word-fn) (join " "))))))
 
 ;;A map of keywords to the GNOME ui data
 
 (def windows {:mainWindow  {:id "Subscription Manager"
-			    :elements (same-name [:registration-settings
-						  :register-system
-						  :unregister-system
-						  :add-subscription
-						  :view-my-system-facts
-						  :glossary
-						  :become-compliant])}
-	      :manageSubscriptionsDialog {:id "manage_subscriptions_dialog"
-					  :elements {:close-main "button_close"
-						     :add "add_button"
-						     :registration "account_settings"}}
-              :registerDialog {:id "register_dialog"
+			    :elements (merge
+				       (same-name capitalize [:registration-settings
+							      :register-system
+							      :unregister-system
+							      :add-subscription
+							      :view-my-system-facts
+							      :glossary
+							      :become-compliant
+							      :all-available-subscriptions
+							      :my-subscriptions
+							      :my-installed-software
+							      :search
+							      :subscribe])
+				       (same-name [:match-my-hardware
+						   :overlap-with-existing-subscriptions
+						   :provide-software-not-yet-installed
+						   :contain-the-text]))}
+             :registerDialog {:id "register_dialog"
                                :elements {:redhat-login "account_login"
                                           :password "account_password"
                                           :system-name "consumer-name"
@@ -40,7 +48,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
               :facts-dialog {:id "facts_dialog"
 			     :elements {:facts-view "facts_view"
 					:close-facts "close_button"}}
-              :subscribeDialog {:id "dialog_add"}})
+              :subscribeDialog {:id "dialog_add"}
+	      :progress-dialog {:id "Progress Dialog"}})
 
 (defn element-getter "Returns a function that, given a keyword, retrieves 
 the window id and element id from the given element map, and return those 2 items in a vector" 
@@ -60,11 +69,4 @@ the window id and element id from the given element map, and return those 2 item
 
 (def action (ldtp/action-with-uimap element))
 
-
-(comment (defprotocol Locatable "A protocol for locatable UI elements"
-   (loc [this] "Returns locator information for various UI types (html, gnome, etc)"))
-
-	 (defrecord Element [window-name elem-name]
-	   Locatable
-	   (loc [this] [window-name elem-name])))
 

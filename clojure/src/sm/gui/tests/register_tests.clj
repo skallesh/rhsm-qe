@@ -4,20 +4,20 @@
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test]))
 
-(defn ^{:test {:groups ["registration"]}}
+(defn ^{Test {:groups ["registration"]}}
   simple_register [_]
   (tasks/register (config :username) (config :password)))
 
-(defn ^{:test {:groups [ "registration"]}}
+(defn ^{Test {:groups [ "registration"]}}
   register_bad_credentials [_]
-  (binding [tasks/handler (fn [errtype] (= errtype :invalid-credentials))]
+  (binding [tasks/err-handler (fn [e] {:handled (= e :invalid-credentials)
+				   :recovery :cancel})]
     (tasks/register "sdf" "sdf")))
 
-(defn ^{:test {:groups #{"registration"}
+(defn ^{Test {:groups ["registration"]
 	       :dependsOnTests ["simple_register"]}}
   unregister [_]
   (tasks/unregister))
 
-(defn ^{Test {}} mytest [self] (println "hi"))
 (gen-class-testng)
 

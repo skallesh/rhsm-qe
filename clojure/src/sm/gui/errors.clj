@@ -16,6 +16,13 @@
     (or (some matches-message? (keys known-errors))
 	:sm-error)))
 
-(defn handle [e handler]
-  (if-not (handler (matching-error (.getMessage e)))
-    (throw e)))
+(defn handle [e handler recoveries]
+  (let [result (handler (matching-error (or (.getMessage e) "")))
+	rk (:recovery result)]
+    (println "recovery: " rk)
+    (if rk (let [recfn (recoveries rk)]
+	     (println (class recfn))
+		   (if recfn (recfn)
+		       (throw (IllegalStateException. (str "Unknown error recovery strategy: " rk) e)))))
+    (if-not (:handled result) 
+      (throw e))))

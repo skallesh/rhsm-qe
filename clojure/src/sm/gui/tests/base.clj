@@ -1,9 +1,10 @@
 (ns sm.gui.tests.base
   (:use [test-clj.testng :only (gen-class-testng)]
-	[sm.gui.tasks]))
+	[sm.gui.tasks])
+  (:import [org.testng.annotations BeforeSuite]))
 
 
-(defn ^{:test {:configuration :beforeSuite}}
+(defn ^{BeforeSuite {}}
   startup [_]
   (connect)
   (start-app))
