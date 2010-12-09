@@ -3,6 +3,7 @@
   :source-path "clojure/src"
   :java-source-path "src"
   :aot [#"^sm.gui.tests"]
+  :keep-non-project-classes true
   :dependencies [[org.clojure/clojure "1.2.0"]
                  [org.clojure/clojure-contrib "1.2.0"]
 		 [org.apache.xmlrpc/xmlrpc-client "3.1.3"]
