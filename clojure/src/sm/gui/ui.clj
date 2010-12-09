@@ -31,7 +31,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 				       (same-name [:match-my-hardware
 						   :overlap-with-existing-subscriptions
 						   :provide-software-not-yet-installed
-						   :contain-the-text]))}
+						   :contain-the-text])
+				       {:available-subscription-table "tbl3"})}
              :registerDialog {:id "register_dialog"
                                :elements {:redhat-login "account_login"
                                           :password "account_password"
@@ -49,7 +50,12 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 			     :elements {:facts-view "facts_view"
 					:close-facts "close_button"}}
               :subscribeDialog {:id "dialog_add"}
-	      :progress-dialog {:id "Progress Dialog"}})
+	      :progress-dialog {:id "Progress Dialog"}
+	      :contract-selection-dialog {:id "Contract Selection"
+					  :elements {:contract-selection-table "tbl0"
+						     :cancel-contract-selection "Cancel"
+						     :subscribe-contract-selection "Subscribe"}}
+	      })
 
 (defn element-getter "Returns a function that, given a keyword, retrieves 
 the window id and element id from the given element map, and return those 2 items in a vector" 

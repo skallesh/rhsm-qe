@@ -71,6 +71,10 @@ well)."
   (action click :register)
   (handle-error {:cancel #(action click :register-cancel)}))
 
+(defn wait-for-progress-bar []
+  (waittillwindowexist :progress-dialog 1)
+  (waittillwindownotexist :progress-dialog 30))
+
 (defn search [& {:keys [match-my-hardware, overlap-with-existing-subscriptions, provide-software-not-yet-installed, contain-the-text, active-on]
 		 :or {match-my-hardware false
 		      overlap-with-existing-subscriptions false
@@ -86,8 +90,18 @@ well)."
 			     (action settextvalue :as-yet-unnamed-textbox))))
   (if active-on (comment "Procedure to set date goes here "))
   (action click :search)
-  (waittillwindowexist :progress-dialog 1)
-  (waittillwindownotexist :progress-dialog 30))
+  (wait-for-progress-bar))
+
+(defn subscribe [s]
+  (search)
+  (action selectrow :available-subscription-table s)
+  (action click :subscribe)
+  (checkforerror)
+  (action selectrowindex :contract-selection-table 0)  ;;pick first contract for now
+  (action click :subscribe-contract-selection)
+  (handle-error {})
+  (wait-for-progress-bar))
+
 
 (defn get-all-facts []
   (action click :view-my-system-facts)

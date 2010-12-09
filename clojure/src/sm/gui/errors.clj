@@ -7,7 +7,8 @@
    :unhandled (errkit/throw-msg RuntimeException)})
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
-(def known-errors {:invalid-credentials #"Invalid username"})
+(def known-errors {:invalid-credentials #"Invalid username"
+		   :wrong-consumer-type #"Consumers of this type are not allowed" })
 
 (defn matching-error "Returns a keyword of known error, if the message matches any of them."
   [message]
@@ -19,10 +20,8 @@
 (defn handle [e handler recoveries]
   (let [result (handler (matching-error (or (.getMessage e) "")))
 	rk (:recovery result)]
-    (println "recovery: " rk)
     (if rk (let [recfn (recoveries rk)]
-	     (println (class recfn))
-		   (if recfn (recfn)
-		       (throw (IllegalStateException. (str "Unknown error recovery strategy: " rk) e)))))
+	     (if recfn (recfn)
+		 (throw (IllegalStateException. (str "Unknown error recovery strategy: " rk) e)))))
     (if-not (:handled result) 
       (throw e))))
