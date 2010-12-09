@@ -162,7 +162,8 @@ Certificate:
 		}
 		
 		// listMaps should only be one in size
-		if (listMaps.size()!=1) throw new RuntimeException("Expected to parse only one group of consumer certificate data.");
+		if (listMaps.size()> 1) throw new RuntimeException("Expected to parse only one group of consumer certificate data.");
+		if (listMaps.size()==0) throw new RuntimeException("Failed to parse a group of consumer certificate data.");
 	
 		return new ConsumerCert(listMaps.get(0));
 	}

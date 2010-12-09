@@ -317,6 +317,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return null;
 	}
 	
+	/**
+	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
+	 */
+	protected void RegisterWithUsernameAndPassword_Test() {
+		if (registrationDataList.isEmpty()) {
+			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
+				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
+				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1));
+			}
+		}
+	}
 	
 	
 	// Data Providers ***********************************************************************
@@ -395,8 +406,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 
-	
-	
 	@DataProvider(name="getSubscriptionPoolProductIdData")
 	public Object[][] getSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProductIdDataAsListOfLists());
@@ -426,4 +435,27 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
+	
+	
+	@DataProvider(name="getUsernameAndPasswordData")
+	public Object[][] getUsernameAndPasswordDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+	}
+	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		String[] usernames = clientUsernames.split(",");
+		String[] passwords = clientPasswords.split(",");
+		String password = passwords[0].trim();
+		for (int i = 0; i < usernames.length; i++) {
+			String username = usernames[i].trim();
+			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
+			// this allows one to specify only one password when all the usernames share the same password
+			if (i<passwords.length) password = passwords[i].trim();
+			ll.add(Arrays.asList(new Object[]{username,password}));
+		}
+		
+		return ll;
+	}
+
 }

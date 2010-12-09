@@ -9,6 +9,7 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -67,6 +68,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	protected JSONObject testPool;
 	
 
+	// Test methods ***********************************************************************
+	
 	@Test(	description="subscription-manager: events: Consumer Created is sent over an RSS atom feed.",
 			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
 			enabled=true)
@@ -140,7 +143,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"PoolModifiedAndEntitlementModified_Test"/*,"blockedByBug-645597"*/}, dependsOnGroups={"EnititlementCreated_Test"},
+			groups={"PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
@@ -154,11 +157,16 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
 		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
 		String ownerKey = registration.jsonOwner.getString("key");
+		
+//		log.info("First, let's refresh the subscription pools to get rid of any pending events...");
+//		JSONObject jobDetail1 = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
+//		jobDetail1 = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail1, "FINISHED", 10*1000, 3);
+
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         
-        // find the pool id of a currently consumed product
+        // find the first pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),serverAdminUsername,serverAdminPassword);
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
@@ -170,11 +178,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Now let's refresh the subscription pools...");
 //		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, clientOwnerUsername);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		clienttasks.refresh();
-
+		
 		// assert the feed...
+		//assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
 		
         // assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
@@ -562,6 +571,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 
 	
+	
+	// Configuration Methods ***********************************************************************
+	
+	@BeforeClass(groups="setup")
+	public void setupBeforeClass() {
+		// alternative to dependsOnGroups={"RegisterWithUsernameAndPassword_Test"}
+		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
+		// This also allows us to individually run this Test Class on Hudson.
+		RegisterWithUsernameAndPassword_Test(); // needed to populate registrationDataList
+	}
+	
+	
+	
 	// Protected Methods ***********************************************************************
 
 	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
@@ -570,21 +592,31 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
-		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed for owner id "+ownerKey+" has increased by "+newEventTitles.length+" entries.");
+		
+		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by ("+newEventTitles.length+") events:");
+		int e=0;
+		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
+		
+		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle();
-			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for owner id "+ownerKey+" is '"+newEventTitle+"'.");
+			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for owner '"+ownerKey+"' is '"+newEventTitle+"'.");
 			i++;
 		}
 	}
 	
 	protected void assertTheNewConsumerFeed(String consumerKey, SyndFeed oldConsumerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		// assert the consumer feed...
 		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
+		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerKey);
+
+		log.info("Expecting the new feed for consumer ("+consumerKey+") to have grown by ("+newEventTitles.length+") events:");
+		int e=0;
+		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
+
 		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerKey+" has increased by "+newEventTitles.length+" entries.");
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
@@ -595,11 +627,16 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		// assert the consumer feed...
 		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
+		// assert the feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);		
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
+
+		log.info("Expecting the new feed to have grown by ("+newEventTitles.length+") events:");
+		int e=0;
+		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
+
 		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
 		int i=0;
 		for (String newEventTitle : newEventTitles) {

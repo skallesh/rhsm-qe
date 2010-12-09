@@ -38,7 +38,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSubscriptionPoolProductIdData",
-			groups={},
+			groups={/*"blockedByBug-660713"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
@@ -82,7 +82,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
 
 			// assert the dates match
-			//FIXME  UNCOMMENT WHEN YOU GET AN EXPLANATION FROM DEVELOPMENT
+			//FIXME https://bugzilla.redhat.com/show_bug.cgi?id=660713 UNCOMMENT WHEN YOU GET AN EXPLANATION FROM DEVELOPMENT
 //			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate),ProductSubscription.formatDateString(entitlementCert.startDate),
 //					"Consumed ProductSubscription Begins on the same DAY as the new entitlement.");
 //			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(entitlementCert.endDate),
