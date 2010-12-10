@@ -1,7 +1,8 @@
 (ns sm.gui.tasks
   (:use [sm.gui.test-config :only (config)]
 	sm.gui.ldtp)
-  (:require [sm.gui.errors :as errors]))
+  (:require [sm.gui.errors :as errors]
+	    sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
 (defn get-error-msg "Retrieves the error string from the RHSM error dialog."

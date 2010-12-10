@@ -13,7 +13,7 @@
 (defn ^{Test {:groups [ "registration"]}}
   register_bad_credentials [_]
   (binding [tasks/err-handler (fn [e] {:handled (= e :invalid-credentials)
-				   :recovery :cancel})]
+				       :recovery :cancel})]
     (tasks/register "sdf" "sdf")))
 
 (defn ^{Test {:groups ["registration"]
