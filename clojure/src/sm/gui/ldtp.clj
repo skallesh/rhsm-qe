@@ -2,6 +2,20 @@
   (:require [clojure.contrib.logging :as log])
   (:import [org.apache.xmlrpc.client XmlRpcClient XmlRpcClientConfigImpl]))
 
+(defprotocol LDTPLocatable
+  (locator [x]))
+
+(defrecord Window [id] LDTPLocatable
+  (locator [this] [id]))
+
+(defrecord Element [window id] LDTPLocatable
+  (locator [this] (conj (locator window) id)))
+
+(defrecord TabGroup [window id] LDTPLocatable
+  (locator [this] (conj (locator window) id)))
+
+(defrecord Tab [tabgroup id] LDTPLocatable
+  (locator [this] (conj (locator tabgroup) id)))
 
 (def client 
   (let [config (XmlRpcClientConfigImpl.)
@@ -46,14 +60,22 @@
 ;;https://github.com/weissjeffm/ldtp-server/blob/master/extract-api.py
 (defxmlrpc "clojure/src/sm/gui/ldtp_api.txt")
 
-(defn action-with-uimap
-  "Take a getter function (which should take a keyword and return a
-  locator list), returns a function with the following properties:
-  Takes an action function, keyword, and args. When called, it
-  retrieves an element (via the getter), and calls the action function
-  with the element and args. Then it logs what it did."
-  [getter]
- (fn [actionfn arg1 & args]
-   (let [locator (if (keyword? arg1) (getter arg1) [arg1])]
-     (log/info (str "Action: " (:name (meta actionfn)) locator " " args))
-     (apply actionfn (concat locator args)))))
+(defn action [uifn arg1 & args]
+  (let [ids (if (satisfies? LDTPLocatable arg1) (locator arg1) (list arg1))]
+     (log/info (str "Action: " (:name (meta uifn)) ids " " args))
+     (apply uifn (concat ids args))))
+;; Some higher level convenience functions that aren't supplied directly by ldtp
+
+(defn- waittillwindow [windowid seconds exist?]
+  (apply (if exist? waittillguiexist waittillguinotexist) (list windowid "" seconds)))
+
+(defn waittillwindowexist [windowid seconds]
+  (waittillwindow windowid seconds true))
+
+(defn waittillwindownotexist [windowid seconds]
+  (waittillwindow windowid seconds false))
+
+(defn exists? [windowid objectid]
+  (= 1 (objectexist windowid objectid)))
+
+

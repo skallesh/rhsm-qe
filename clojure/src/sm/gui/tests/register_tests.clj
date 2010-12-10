@@ -1,7 +1,7 @@
 (ns sm.gui.tests.register-tests
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
-	[sm.gui.ui :only (action)])
+	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test]))
 

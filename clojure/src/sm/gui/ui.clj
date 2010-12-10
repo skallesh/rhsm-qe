@@ -1,19 +1,10 @@
 (ns sm.gui.ui
   (:use  [clojure.contrib [string :only [join split capitalize]]])
   (:require [sm.gui.ldtp :as ldtp])
-  (:import java.util.NoSuchElementException))
+  (:import java.util.NoSuchElementException
+	   [sm.gui.ldtp Element Tab Window TabGroup]))
 
-(defrecord SMWindow [id] ldtp/LDTPLocatable
-  (ldtp/locator [this] id))
 
-(defrecord SMElement [window id] ldtp/LDTPLocatable
-  (ldtp/locator [this] [(ldtp/locator window) id]))
-
-(defrecord SMTabGroup [window id] ldtp/LDTPLocatable
-  (ldtp/locator [this] [(ldtp/locator window) id]))
-
-(defrecord SMTab [tabgroup id] ldtp/LDTPLocatable
-  (ldtp/locator [this] (flatten [(ldtp/locator tabgroup) id])))
 
 (defn same-name "takes a collection of keywords like :registration-settings
 and returns a mapping like :registration-settings -> 'Registration Settings'" 
@@ -24,13 +15,13 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 	     (for [keyword coll] (->> keyword name (split #"-") (map word-fn) (join " "))))))
 
 (defn define-elements [window m]
-  (zipmap (keys m) (for [v (vals m)] (SMElement. window v))))
+  (zipmap (keys m) (for [v (vals m)] (Element. window v))))
 
 (defn define-tabs [tabgroup m]
-  (zipmap (keys m) (for [v (vals m)] (SMTab. tabgroup v))))
+  (zipmap (keys m) (for [v (vals m)] (Tab. tabgroup v))))
 
 (defn define-windows [m]
-  (zipmap (keys m) (for [v (vals m)] (SMWindow. v))))
+  (zipmap (keys m) (for [v (vals m)] (Window. v))))
 
 (def windows (define-windows
 	       {:main-window "Subscription Manager"
@@ -62,7 +53,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 				:provide-software-not-yet-installed
 				:contain-the-text])
 		    {:available-subscription-table "tbl3"}))
-		 {:main-tabgroup (SMTabGroup. (windows :main-window) "ptl0")}
+		 {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
 		 (define-elements (windows :register-dialog)
 		   {:redhat-login "account_login"
 		    :password "account_password"
@@ -92,20 +83,13 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 ;;A map of keywords to the GNOME ui data
 
+(extend-protocol ldtp/LDTPLocatable
+  clojure.lang.Keyword
+  (locator [this] (let [locatable (all-elements this)]
+		    (if-not locatable
+		      (throw (IllegalArgumentException. (str "Key not found in UI mapping: " this))))
+		    (ldtp/locator locatable))))
 
 
-(defn element-getter "Returns a function that, given a keyword,
-retrieves the relevant UI ids from the element map, and return those
-items in a vector"
-  [elem-map]
-  (fn [name-kw]
-    (let [elem (all-elements name-kw)]
-      (if-not elem (throw (IllegalArgumentException. (str "Key not found in UI mapping: " name-kw))))
-      (ldtp/locator elem))))
-
-
-(def element (element-getter all-elements))
-
-(def action (ldtp/action-with-uimap element))
 
 
