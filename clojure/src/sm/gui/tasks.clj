@@ -61,7 +61,7 @@ well)."
     (apply action args)))
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
-				     :or {system-name-input "", autosubscribe false}}]
+				     :or {system-name-input nil, autosubscribe false}}]
   (action click :register-system)
   (action waittillguiexist :redhat-login)
   (action settextvalue :redhat-login username)
@@ -75,17 +75,17 @@ well)."
   (waittillwindowexist :progress-dialog 1)
   (waittillwindownotexist :progress-dialog 30))
 
-(defn search [& {:keys [match-my-hardware, overlap-with-existing-subscriptions, provide-software-not-yet-installed, contain-the-text, active-on]
-		 :or {match-my-hardware false
-		      overlap-with-existing-subscriptions false
-		      provide-software-not-yet-installed true
+(defn search [& {:keys [match-my-hardware?, overlap-with-existing-subscriptions?, provide-software-not-yet-installed?, contain-the-text, active-on]
+		 :or {match-my-hardware? false
+		      overlap-with-existing-subscriptions? false
+		      provide-software-not-yet-installed? true
 		      contain-the-text nil
 		      active-on nil}}]
   (select-tab :all-available-subscriptions)
-  (let [checkuncheck (fn [check?] (if check? check uncheck))]
-    (action (checkuncheck match-my-hardware) :match-my-hardware)
-    (action (checkuncheck overlap-with-existing-subscriptions) :overlap-with-existing-subscriptions )
-    (action (checkuncheck provide-software-not-yet-installed) :provide-software-not-yet-installed)
+  (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
+    (action (setchecked match-my-hardware?) :match-my-hardware)
+    (action (setchecked overlap-with-existing-subscriptions?) :overlap-with-existing-subscriptions)
+    (action (setchecked provide-software-not-yet-installed?) :provide-software-not-yet-installed)
     (if contain-the-text (do (action check :contain-the-text)
 			     (action settextvalue :as-yet-unnamed-textbox))))
   (if active-on (comment "Procedure to set date goes here "))

@@ -36,7 +36,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
              :registerDialog {:id "register_dialog"
                                :elements {:redhat-login "account_login"
                                           :password "account_password"
-                                          :system-name "consumer-name"
+                                          :system-name "consumer_name"
                                           :automatically-subscribe "auto_bind"
                                           :register "register_button"
 					  :register-cancel "cancel_button"}}
