@@ -109,8 +109,9 @@ well)."
 
 (defn unregister []
   (action click :unregister-system)
-  (waittillwindowexist :question-dialog 5)
-  (action click :yes))
+  (action waittillwindowexist :question-dialog 5)
+  (action click :yes)
+  (checkforerror))
 
 (defn connect []
   (set-url (config :ldtp-url)))
