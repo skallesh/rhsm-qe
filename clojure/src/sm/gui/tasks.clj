@@ -14,14 +14,6 @@
 (defn clear-error-dialog []
   (action click :ok-error))
 
-(defn waittillwindow [windowid seconds exist?]
-  (apply action (flatten (list (if exist? waittillguiexist waittillguinotexist) (element windowid) "" seconds))))
-
-(defn waittillwindowexist [windowid seconds]
-  (waittillwindow windowid seconds true))
-
-(defn waittillwindownotexist [windowid seconds]
-  (waittillwindow windowid seconds false))
 
 (defn checkforerror []
   (if (= 1 (waittillwindowexist :error-dialog 3)) 

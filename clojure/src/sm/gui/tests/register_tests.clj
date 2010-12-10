@@ -1,12 +1,14 @@
 (ns sm.gui.tests.register-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-	[sm.gui.test-config :only (config)])
+	[sm.gui.test-config :only (config)]
+	[sm.gui.ui :only (action)])
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test]))
 
 (defn ^{Test {:groups ["registration"]}}
   simple_register [_]
-  (tasks/register (config :username) (config :password)))
+  (tasks/register (config :username) (config :password))
+  (assert (action exists? :unregister-system)))
 
 (defn ^{Test {:groups [ "registration"]}}
   register_bad_credentials [_]
