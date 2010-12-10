@@ -15,6 +15,7 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -122,6 +123,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
 	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
 	protected String systemConsumedProductName = getProperty("sm.rhpersonal.consumedSubproductNames", "");  //FIXME change to a List
+	protected EntitlementCert personalEntitlementCert = null;
 
 
 	
@@ -209,7 +211,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				
 		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') can now consume '"+systemSubscriptionName+"'...");
 		SubscriptionPool systemSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools());
-		client2tasks.subscribeToSubscriptionPoolUsingPoolId(systemSubscriptionPool);
+		client2tasks.subscribeToSubscriptionPool(systemSubscriptionPool);
 		
 		
 		log.info("Now client2 should be consuming the product '"+systemConsumedProductName+"'...");
@@ -241,7 +243,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager-cli: Ensure that multiple (unlimited) systems can subscribe to subpool",
-			groups={"SubscribeMultipleSystemsToSubPool_Test","RHELPersonal"},
+			groups={"SubscribeMultipleSystemsToSubPool_Test","RHELPersonal"/*, "blockedByBug-661130"*/},
 			dependsOnGroups={"EnsureAvailabilityOfSubPoolIsRevokedOncePersonUnsubscribesFromRHELPersonal_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -251,14 +253,15 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 //		client2tasks.unregister();
 //		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		teardownAfterGroups();
-		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null);
+		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, /*"blockedByBug-661130" "ME"*/null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
 
 		
 		log.info("Subscribe client1 (already registered as a person under username '"+consumerUsername+"') to subscription pool '"+personSubscriptionName+"'...");
 		SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(personSubscriptionPool,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
-		client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
+		//client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
+		personalEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool));
 
 		log.info("Register "+multipleSystems+" new systems under username '"+consumerUsername+"' and subscribe to product subscription '"+systemSubscriptionName+"'...");
 		consumerIds = new ArrayList<String>();
@@ -278,7 +281,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
-			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"/*, "blockedByBug-658283"*/, "blockedByBug-658683"},
+			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"/*, "blockedByBug-658283"*//*, "blockedByBug-658683"*/},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58898)
@@ -292,13 +295,21 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = client1tasks.unsubscribe_(Boolean.TRUE,null);
 		//Assert.assertTrue(result.getStderr().startsWith("Cannot unbind due to outstanding entitlement:"),
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
-		Assert.assertContainsMatch(result.getStderr(),"Cannot unbind due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
-				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stderr: Cannot unbind due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
+		//Assert.assertContainsMatch(result.getStderr(),"Cannot unbind due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
+		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stderr: Cannot unbind due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
+		Assert.assertEquals(result.getExitCode(),new Integer(255),
+				"Attempt to unsubscribe throws a failing exit code."); // exitCode: 255
+		Assert.assertContainsMatch(result.getStderr(),"-Cannot unsubscribe entitlement '"+/*"blockedByBug-661130" personalEntitlementCert.id*/"[a-f,0-9]{32}"+"' because:",
+				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
+		Assert.assertContainsMatch(result.getStderr(),"Please unsubscribe from the above entitlements first.",
+				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
+
+		// TODO include loop to assert all the system consumer information in the stderr message
 	}
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
-			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683"},
+			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434"/*, "blockedByBug-658683"*//*, "blockedByBug-661130"*/},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -311,8 +322,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = client1tasks.unregister_();
 		//Assert.assertTrue(result.getStderr().startsWith("Cannot unregister due to outstanding entitlement:"),
 		//		"Attempting to unregister the person consumer is blocked when another system is register by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
-		Assert.assertContainsMatch(result.getStdout(),"Cannot unregister due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
-				"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
+		//Assert.assertContainsMatch(result.getStdout(),"Cannot unregister due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
+		//		"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
+		Assert.assertEquals(result.getExitCode(),new Integer(255),
+				"Attempt to unregister throws a failing exit code."); // exitCode: 255
+		Assert.assertContainsMatch(result.getStdout(),"^Cannot unregister consumer '"+/*"blockedByBug-661130" "ME" */consumerUsername+"'",
+				"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
+
 	}
 	
 	
