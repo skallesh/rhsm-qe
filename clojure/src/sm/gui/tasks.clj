@@ -15,7 +15,7 @@
   (action click :ok-error))
 
 (defn waittillwindow [windowid seconds exist?]
-  (apply (if exist? waittillguiexist waittillguinotexist) (conj (element windowid) "" seconds)))
+  (apply action (flatten (list (if exist? waittillguiexist waittillguinotexist) (element windowid) "" seconds))))
 
 (defn waittillwindowexist [windowid seconds]
   (waittillwindow windowid seconds true))
@@ -118,7 +118,7 @@ well)."
 
 (defn unregister []
   (action click :unregister-system)
-  (action waittillguiexist :question-dialog)
+  (waittillwindowexist :question-dialog 5)
   (action click :yes))
 
 (defn connect []

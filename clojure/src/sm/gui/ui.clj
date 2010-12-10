@@ -45,7 +45,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
               :error-dialog {:id "Error"
 			     :elements {:ok-error "OK"}}
               :question-dialog {:id "Question"
-			       :elements (same-name [:yes :no])} 
+			       :elements (same-name capitalize [:yes :no])} 
               :facts-dialog {:id "facts_dialog"
 			     :elements {:facts-view "facts_view"
 					:close-facts "close_button"}}
