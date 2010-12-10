@@ -7,7 +7,7 @@
 
 (defn ^{Test {:groups ["registration"]}}
   simple_register [_]
-  (tasks/register (config :username) (config :password))
+  (tasks/register (@config :username) (@config :password))
   (assert (action exists? :unregister-system)))
 
 (defn ^{Test {:groups [ "registration"]}}

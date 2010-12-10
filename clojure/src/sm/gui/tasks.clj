@@ -22,7 +22,7 @@
 
 (defn start-app
   ([]
-     (start-app (config :binary-path)))
+     (start-app (@config :binary-path)))
   ([path]
      (action launchapp path [] 10)
      (action waittillwindowexist :main-window 30)))
@@ -114,6 +114,6 @@ well)."
   (checkforerror))
 
 (defn connect []
-  (set-url (config :ldtp-url)))
+  (set-url (@config :ldtp-url)))
 
 
