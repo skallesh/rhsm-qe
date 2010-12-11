@@ -184,6 +184,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		listOptions.add("-h, --help");
 		listOptions.add("--debug=DEBUG");
 //		listOptions.add("-k, --insecure");
+		listOptions.add("--installed");
 		listOptions.add("--available");
 		listOptions.add("--consumed");
 		listOptions.add("--all");
