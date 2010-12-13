@@ -43,7 +43,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={/*"blockedByBug-660713"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
+	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] bundledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 
 		// begin test with a fresh register
@@ -55,7 +55,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		// assert the status of the installed products
-		for (String productName : entitledProductNames) {
+		for (String productName : bundledProductNames) {
 			// assert the status of the installed products
 			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
@@ -70,7 +70,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		// assert the expected products are consumed
-		for (String productName : entitledProductNames) {
+		for (String productName : bundledProductNames) {
 			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
 
@@ -167,7 +167,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// loop through the subscriptionPoolProductIdData and verify...
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
-			String[] entitledProductNames = (String[])row.get(1);
+			String[] bundledProductNames = (String[])row.get(1);
 			SubscriptionPool subscriptionPool;
 			
 			// assert that the subscriptionPoolProductIds that are not installed, do not get autosubscribed to
@@ -184,27 +184,27 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// assert that subscriptionPoolProductId is not available
 			subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
 			if (subscriptionPool!=null) {
-				String entitledProductNamesAsString = "";
-				for (String entitledProductName : entitledProductNames) entitledProductNamesAsString += entitledProductName+", ";entitledProductNamesAsString = entitledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
+				String bundledProductNamesAsString = "";
+				for (String bundledProductName : bundledProductNames) bundledProductNamesAsString += bundledProductName+", ";bundledProductNamesAsString = bundledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
 				log.warning("SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is still available after registering with autosubscribe.");
-				log.warning("The probable cause is that the products we expected to be installed, '"+entitledProductNamesAsString+"', are probably not installed and therefore autosubscribing to '"+subscriptionPoolProductId+"' was not performed.");
+				log.warning("The probable cause is that the products we expected to be installed, '"+bundledProductNamesAsString+"', are probably not installed and therefore autosubscribing to '"+subscriptionPoolProductId+"' was not performed.");
 			}
 			Assert.assertNull(subscriptionPool, "SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is NOT available after registering with autosubscribe.");
 
-			for (String entitledProductName : entitledProductNames) {
-				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
-//DELETEME ALPHA ASSERT				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+			for (String bundledProductName : bundledProductNames) {
+				// assert that the sshCommandResult from register indicates the bundledProductName was subscribed
+//DELETEME ALPHA ASSERT				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+bundledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+bundledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
 				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
-				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+bundledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+bundledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
-				// assert that the entitledProductName is consumed
-				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
-				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+entitledProductName+"' is consumed after registering with autosubscribe.");
+				// assert that the bundledProductName is consumed
+				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, consumedProductSubscriptions);
+				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+bundledProductName+"' is consumed after registering with autosubscribe.");
 	
-				// assert that the entitledProductName is installed and subscribed
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
-				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+entitledProductName+"' is reported in the list of installed products.");
-				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+entitledProductName+"' is Subscribed.");
+				// assert that the bundledProductName is installed and subscribed
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, installedProducts);
+				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+bundledProductName+"' is reported in the list of installed products.");
+				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+bundledProductName+"' is Subscribed.");
 			}
 		}
 		

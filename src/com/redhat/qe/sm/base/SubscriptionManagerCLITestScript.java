@@ -423,13 +423,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (int j = 0; j < subscriptionPoolProductIdDataAsJSONArray.length(); j++) {
 			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) subscriptionPoolProductIdDataAsJSONArray.get(j);
 			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
-			JSONArray entitledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("entitledProductNames");
-			List<String> entitledProductNamesAsList = new ArrayList<String>();
-			for (int i = 0; i < entitledProductNamesAsJSONArray.length(); i++) {
-				String entitledProductName = (String) entitledProductNamesAsJSONArray.get(i);
-				entitledProductNamesAsList.add(entitledProductName);
+			JSONArray bundledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("bundledProductNames");
+			List<String> bundledProductNamesAsList = new ArrayList<String>();
+			for (int i = 0; i < bundledProductNamesAsJSONArray.length(); i++) {
+				String bundledProductName = (String) bundledProductNamesAsJSONArray.get(i);
+				bundledProductNamesAsList.add(bundledProductName);
 			}
-			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, entitledProductNamesAsList.toArray(new String[]{})}));
+			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, bundledProductNamesAsList.toArray(new String[]{})}));
 			//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
 		}
 		
