@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -18,6 +19,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -91,10 +93,21 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Verify that the currently consumed product subscriptions that came from this subscription pool have the same start and end date as the pool...");
 		List<ProductSubscription> products = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
-		for (ProductSubscription product : products) {
-//FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-			Assert.assertTrue(product.endDate.compareTo(pool.endDate)==0, "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
-		}
+
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
+		Boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("The workaround while this bug is open is to skip the assertion that: The original end date for the subscribed product matches the end date of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+		} else {
+		// END OF WORKAROUND
+		
+			for (ProductSubscription product : products) {
+				//FIXME Available Subscriptions	does not display start date			Assert.assertEquals(product.startDate, pool.startDate, "The original start date ("+product.startDate+") for the subscribed product '"+product.productName+"' matches the start date ("+pool.startDate+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+				Assert.assertTrue(product.endDate.compareTo(pool.endDate)==0, "The original end date ("+ProductSubscription.formatDateString(product.endDate)+") for the subscribed product '"+product.productName+"' matches the end date ("+SubscriptionPool.formatDateString(pool.endDate)+") of the subscription pool '"+pool.subscriptionName+"' from where it was entitled.");
+			}
+		}	
+				
 		Assert.assertFalse(products.isEmpty(),"After subscribing to a new pool, at least one consumed product subscription is expected.");
 		
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
