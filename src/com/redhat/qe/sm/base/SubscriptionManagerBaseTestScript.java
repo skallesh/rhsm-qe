@@ -30,7 +30,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// rhsm.conf [rhsm] configurations
 	protected static String rhsmBaseUrl					= null;
 	protected static String rhsmRepoCaCert				= null;
-	protected static String rhsmShowIncompatiblePools	= null;
+	//protected static String rhsmShowIncompatiblePools	= null;	// https://bugzilla.redhat.com/show_bug.cgi?id=662232
 	protected static String rhsmProductCertDir			= null;
 	protected static String rhsmEntitlementCertDir		= null;
 	protected static String rhsmConsumerCertDir			= null;
@@ -106,7 +106,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		// rhsm.conf [rhsm] configurations
 		rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
 		rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
-		rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
+		//rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
 		rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
 		rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
 		rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");
