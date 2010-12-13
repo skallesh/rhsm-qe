@@ -72,8 +72,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		String product = clientProds.get(0).productName;*/
 		String[] providedProducts = {"37068", "37069", "37060"};
 		String requestBody = CandlepinTasks.createPoolRequest(10, _3weeksago, _3min, "MKT-rhel-server", 123, providedProducts).toString();
-		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, "/owners/" + owner + "/subscriptions", requestBody);
-		CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, clientOwnerUsername, clientOwnerPassword, owner);
+		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, "/owners/" + owner + "/subscriptions", requestBody);
+		CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, owner);
 	}
 	
 	

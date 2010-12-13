@@ -59,8 +59,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String clientusername			= client1username;
 	protected String clientpassword			= client1password;
 	
-	protected String clientOwnerUsername	= getProperty("sm.client.owner.username","");
-	protected String clientOwnerPassword	= getProperty("sm.client.owner.password","");
 	protected String clientUsernames		= getProperty("sm.client.usernames","");
 	protected String clientPasswords		= getProperty("sm.client.passwords","");
 	
