@@ -7,7 +7,7 @@
 
 (defn get-error-msg "Retrieves the error string from the RHSM error dialog."
   []
-  (action getobjectproperty :error-dialog "lbl[A-Za-z]*" "label"))
+  (action getobjectproperty :error-msg "label"))
 
  
 (defn clear-error-dialog []
