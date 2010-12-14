@@ -10,16 +10,20 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandRunner;
 
 @Test(groups="expiration")
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
+
+	protected String owner = "donaldduck";
 
 	protected Predicate<SubscriptionPool> expToday = new Predicate<SubscriptionPool>(){
 		public boolean apply(SubscriptionPool pool){
@@ -62,7 +66,6 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeMethod
 	public void createTestPools() throws Exception{
-		String owner = "donaldduck";
 		Calendar cal = new GregorianCalendar();
 		cal.add(Calendar.MINUTE, 2); 
 		Date _3min = cal.getTime();
@@ -89,6 +92,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		//choose first pool
 		SubscriptionPool testPool = expiresToday.iterator().next();
 		String poolid = testPool.poolId;
+		//String contract = testPool.
 		
 		//subscribe
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
@@ -101,7 +105,18 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(matchedId.size(), 0, "Zero pools match id " + poolid);
 		
 		//verify that the subscription expired
-		
+		Collection<SubscriptionPool> matchedPools = Collections2.transform(clienttasks.getCurrentlyConsumedProductSubscriptions(),
+				new Function<ProductSubscription, SubscriptionPool>(){
+					public SubscriptionPool apply(ProductSubscription ps){	
+						try {
+							return clienttasks.getSubscriptionPoolFromProductSubscription(ps, owner, clientpassword);
+						}catch (Exception e) {
+							return null;
+						} 	
+					}});
+		matchedId = Collections2.filter(matchedPools, new ByIdPredicate(poolid));
+		Assert.assertEquals(matchedId.size(), 0, "Zero pools match id " + poolid);
+
 	}
 	
 	

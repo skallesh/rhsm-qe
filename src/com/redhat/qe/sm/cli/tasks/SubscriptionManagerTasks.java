@@ -1,12 +1,9 @@
 package com.redhat.qe.sm.cli.tasks;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,19 +11,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.jws.Oneway;
-
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONObject;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
-import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -36,6 +25,9 @@ import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
