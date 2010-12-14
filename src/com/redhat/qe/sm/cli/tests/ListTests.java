@@ -16,6 +16,7 @@ import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  *  @author ssalevan
@@ -74,6 +75,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				"No Consumed subscription pools listed for '"+clientusername+"' after registering (without autosubscribe).");
 	}
 	
+	
 	@Test(	description="subscription-manager-cli: list consumed entitlements",
 			groups={},
 			dataProvider="getSubscriptionPoolProductIdData",
@@ -93,6 +95,104 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					"SerialNumber of Consumed Product Subscription matches the serial number from the current entitlement certificate.");
 		}	
 	}
+	
+	
+	@Test(	description="subscription-manager-cli: list installed products",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnsureInstalledProductsListed_Test() {
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+
+		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		String installedProductsAsString = clienttasks.listInstalledProducts().getStdout();
+		//List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		List <InstalledProduct> installedProducts = InstalledProduct.parse(installedProductsAsString);
+
+		// assert some stdout
+		if (installedProducts.size()>0) {
+			Assert.assertContainsMatch(installedProductsAsString, "Installed Product Status");
+		}
+		
+		// assert the number of installed product matches the product certs installed
+		Assert.assertEquals(installedProducts.size(), productCerts.size(), "A single product is reported as installed for each product cert found in "+clienttasks.productCertDir);
+
+		// assert that each of the installed product certs are listed in installedProducts as "Not Subscribed"
+		for (InstalledProduct installedProduct : installedProducts) {
+			boolean foundInstalledProductMatchingProductCert=false;
+			for (ProductCert productCert : productCerts) {
+				if (installedProduct.productName.equals(productCert.productName)) {
+					foundInstalledProductMatchingProductCert = true;
+					break;
+				}
+			}
+			Assert.assertTrue(foundInstalledProductMatchingProductCert, "The installed product cert for '"+installedProduct.productName+"' is reported by subscription-manager as installed.");
+			Assert.assertEquals(installedProduct.status, "Not Subscribed", "A newly registered system should not be subscribed to installed product '"+installedProduct.productName+"'.");
+		}
+
+	}
+	
+	
+	@Test(	description="subscription-manager: ensure list [--installed] produce the same results",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnsureListAndListInstalledAreTheSame_Test() {
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+
+		// assert same results when no subscribed to anything...
+		log.info("assert list [--installed] produce same results when not subscribed to anything...");
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE);
+		
+		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
+		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
+		Assert.assertEquals(listResult.getExitCode(), listInstalledResult.getExitCode(), "'list' and 'list --installed' produce the same exitCode results.");
+		
+		
+		// assert same results when subscribed to something...
+		log.info("assert list [--installed] produce same results when subscribed to something...");
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribeToSubscriptionPool(pool);
+		listResult = clienttasks.list_(null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE);
+		
+		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
+		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
+		Assert.assertEquals(listResult.getExitCode(), listInstalledResult.getExitCode(), "'list' and 'list --installed' produce the same exitCode results.");
+	}
+	
+
+	@Test(	description="subscription-manager: list of consumed entitlements should display consumed product marketing name",
+			groups={},
+			enabled=false)
+	@ImplementsNitrateTest(caseId=48092, fromPlan=2481)
+	public void EnsureListConsumedMatchesProductsListedInTheEntitlementCerts_Test() {
+		/*
+		Actions:
+
+		Subscribe to an entitlement pool
+
+		Execute following command on console to obtain a list of your consumed entitlements
+
+		subscription-manager-cli list –consumed
+			
+		Expected Results:
+
+		    * List of consumed entitlements should contain Red Hat marketing names
+		    * No Error should record on console or rhsm.log
+		    * The list of consumed products matches the products listed in the entitlement cert
+
+		 */
+		
+		// TODO IMPLEMENTME
+		clienttasks.unregister();
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+	}
+	
 	
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
 			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
@@ -147,41 +247,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks!=null) clienttasks.unregister_();
 	}
 	
-	@Test(	description="subscription-manager-cli: list installed products",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void EnsureInstalledProductsListed_Test() {
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 
-		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
-		String installedProductsAsString = clienttasks.listInstalledProducts().getStdout();
-		//List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		List <InstalledProduct> installedProducts = InstalledProduct.parse(installedProductsAsString);
-
-		// assert some stdout
-		if (installedProducts.size()>0) {
-			Assert.assertContainsMatch(installedProductsAsString, "Installed Product Status");
-		}
-		
-		// assert the number of installed product matches the product certs installed
-		Assert.assertEquals(installedProducts.size(), productCerts.size(), "A single product is reported as installed for each product cert found in "+clienttasks.productCertDir);
-
-		// assert that each of the installed product certs are listed in installedProducts as "Not Subscribed"
-		for (InstalledProduct installedProduct : installedProducts) {
-			boolean foundInstalledProductMatchingProductCert=false;
-			for (ProductCert productCert : productCerts) {
-				if (installedProduct.productName.equals(productCert.productName)) {
-					foundInstalledProductMatchingProductCert = true;
-					break;
-				}
-			}
-			Assert.assertTrue(foundInstalledProductMatchingProductCert, "The installed product cert for '"+installedProduct.productName+"' is reported by subscription-manager as installed.");
-			Assert.assertEquals(installedProduct.status, "Not Subscribed", "A newly registered system should not be subscribed to installed product '"+installedProduct.productName+"'.");
-		}
-
-	}
 	
 	// Data Providers ***********************************************************************
 	

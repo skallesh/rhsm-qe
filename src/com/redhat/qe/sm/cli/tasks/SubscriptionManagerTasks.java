@@ -1044,14 +1044,13 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return SSHCommandResult from "subscription-manager-cli list"
+	 * @return SSHCommandResult from "subscription-manager-cli list --installed"
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
 		SSHCommandResult sshCommandResult = list_(null,null,null,Boolean.TRUE);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
-
 
 		if (getCurrentEntitlementCertFiles().isEmpty() && getCurrentProductCertFiles().isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
