@@ -122,6 +122,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	protected String personSubscriptionName = null;//getProperty("sm.rhpersonal.productName", "");
 	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
 	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
+	protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	protected String systemConsumedProductName = getProperty("sm.rhpersonal.consumedSubproductNames", "");  //FIXME change to a List
 	protected EntitlementCert personalEntitlementCert = null;
 
@@ -169,7 +170,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",rhpersonalProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
 		personSubscriptionName = pool.subscriptionName;
 		Assert.assertNotNull(pool,personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
-		List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+		//List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 // DELETEME - was old behavior pre fix for https://bugzilla.redhat.com/show_bug.cgi?id=641155
 //		if (isServerOnPremises) {	// needed this special case block to assert that that a new entitlement certificate is NOT dropped
 	//		client1tasks.subscribe(pool.poolId, null, null, null, null);
@@ -181,15 +182,14 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 //		} else {
 //			client1tasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 //		}
-			//FIXME Prefer to use this syntax....
 		client1tasks.subscribeToSubscriptionPool(pool);
 		
 		
-		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') should now have '"+systemSubscriptionName+"' available with unlimited quantity...");
+		log.info("Now client2 (already registered as a system under username '"+consumerUsername+"') should now have '"+systemSubscriptionName+"' available with a quantity if '"+systemSubscriptionQuantity+"'...");
 		List<SubscriptionPool> client2AfterSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool systemSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2AfterSubscriptionPools);
 		Assert.assertNotNull(systemSubscriptionPool,systemSubscriptionName+" is now available to client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+consumerUsername+"')");
-		Assert.assertEquals(systemSubscriptionPool.quantity.toLowerCase(),"unlimited","An unlimited quantity of entitlements is available to "+systemSubscriptionName+".");
+		Assert.assertEquals(systemSubscriptionPool.quantity.toLowerCase(),systemSubscriptionQuantity,"A quantity of '"+systemSubscriptionQuantity+"' entitlements is available to "+systemSubscriptionName+".");
 		
 		
 		log.info("Verifying that the available subscription pools available to client2 has increased by only the '"+systemSubscriptionName+"' pool...");
@@ -508,6 +508,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	public void beforeClassSetup() {
 		if (rhpersonalProductId.equals("")) {
 			throw new SkipException("To enable the RHEL Personal Tests, we need to know the ProductId of a Subscription containing a subpool of personal products.");
+		}
+		if (!systemSubscriptionQuantity.equalsIgnoreCase("unlimited")) {
+			int quantity = Integer.valueOf(systemSubscriptionQuantity);
+			Assert.assertTrue(quantity>0,"Expecting subpool '"+systemSubscriptionName+"' to be available with a positive quantity.");
+			if (multipleSystems>quantity) {
+				multipleSystems = quantity - 1;
+			}
 		}
 	}
 	
