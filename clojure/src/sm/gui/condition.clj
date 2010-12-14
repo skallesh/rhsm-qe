@@ -8,11 +8,11 @@
     e))
 
 (defprotocol Raisable
-  (raise [this])
-  (msg [this]))
+  (raise [this]))
 
 (defprotocol Condition
-  (data [this]))
+  (data [this])
+  (is-instance? [this otherclass]))
 
 (defrecord Err [msg data]
   Raisable
@@ -27,6 +27,7 @@
   java.lang.Throwable
   (raise [this] (throw (wrap this))))
 
+(extend-protocol Condition)
 
 
 (defn unwrap [e]
@@ -45,13 +46,17 @@
 			     (instance? type (unwrap throwable))
 			     (catch IllegalStateException ise false)))))
 
+(defrecord Error [type parent] Condition
+  )
 
 
 (defrecord NumberError [number]
   Condition 
   (data [this] number)
+  (is-instance? [this otherclass] ())
   Raisable
-  (raise [this] (throw (wrap this (msg this))))
+  (raise [this msg data] (throw (wrap this msg data))
+	 )
   (msg [this] (str "Number blah blah error! " number)))
 
 (defn myrun [handler myfn]
@@ -63,7 +68,8 @@
 
 (comment
 
-  
+  (with-handlers [( TypeHandler. MyType (fn [e] (println e)))
+		  (OtherHandler )])
   
   (defprotocol Handleable
    (handle [this]))
