@@ -1,4 +1,5 @@
-(ns sm.gui.errors)
+(ns sm.gui.errors
+  (:require [clojure.contrib.logging :as log]))
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid username"
@@ -27,17 +28,16 @@
     (zipmap (map (fn [sym] `(quote ~sym)) symbols) symbols)))
 
 
-(defmacro assert
-  "Evaluates expr and throws an exception if it does not evaluate to logical true."
-  {:added "1.0"}
+(defmacro verify
+  "Evaluates expr and either logs what was evaluated, or throws an exception if it does not evaluate to logical true."
   [x]
-  (when *assert*
-    (let [bindings (local-bindings &env)]
-      `(when-not ~x
-         (let [sep#  (System/getProperty "line.separator")
-               form# '~x]
-           (throw (AssertionError. (apply str "Assert failed: " (pr-str form#) sep#
-                                          (map (fn [[k# v#]] 
-                                                 (when (some #{k#} form#) 
-                                                   (str "\t" k# " : " v# sep#))) 
-                                               ~bindings)))))))))
+  (let [bindings (local-bindings &env)]
+    `(let [res# ~x
+           sep#  (System/getProperty "line.separator")
+           form# '~x
+           msg# (apply str (if res# "Verified: " "Verification failed: ") (pr-str form#) sep#
+                       (map (fn [[k# v#]] 
+                              (when (some #{k#} (flatten form#)) 
+                                (str "\t" k# " : " v# sep#))) 
+                            ~bindings))]
+       (if res# (log/info msg#) (throw (AssertionError. msg#))))))
