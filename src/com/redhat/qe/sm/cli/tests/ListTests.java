@@ -187,16 +187,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			List<ProductSubscription> matchingProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("productName", productNamespace.name, productSubscriptionsWithMatchingSerialNumber);
 			Assert.assertEquals(matchingProductSubscriptions.size(), 1, "Found one bundledProduct name '"+productNamespace.name+"' in the list of consumed product subscriptions whose SerialNumber matches this entitlement cert: "+entitlementCert);
 			ProductSubscription correspondingProductSubscription = matchingProductSubscriptions.get(0);
-			Assert.assertEquals(correspondingProductSubscription.productName, productNamespace.name, "productNames match.");
-			Assert.assertEquals(correspondingProductSubscription.contractNumber, entitlementCert.orderNamespace.contractNumber, "contractNumbers match.");
-			Assert.assertEquals(correspondingProductSubscription.accountNumber, entitlementCert.orderNamespace.accountNumber, "accountNumbers match.");
-			Assert.assertEquals(correspondingProductSubscription.serialNumber, entitlementCert.serialNumber, "serialNumbers match.");
+			Assert.assertEquals(correspondingProductSubscription.productName, productNamespace.name, "productName from ProductSubscription in list --consumed matches productName from ProductNamespace in EntitlementCert.");
+			Assert.assertEquals(correspondingProductSubscription.contractNumber, entitlementCert.orderNamespace.contractNumber, "contractNumber from ProductSubscription in list --consumed matches contractNumber from OrderNamespace in EntitlementCert.");
+			Assert.assertEquals(correspondingProductSubscription.accountNumber, entitlementCert.orderNamespace.accountNumber, "accountNumber from ProductSubscription in list --consumed matches accountNumber from OrderNamespace in EntitlementCert.");
+			Assert.assertEquals(correspondingProductSubscription.serialNumber, entitlementCert.serialNumber, "serialNumber from ProductSubscription in list --consumed matches serialNumber from EntitlementCert.");
 			
 			Calendar now = Calendar.getInstance();
 			if (now.after(entitlementCert.orderNamespace.startDate) && now.before(entitlementCert.orderNamespace.endDate)) {
-				Assert.assertTrue(correspondingProductSubscription.isActive, "isActive is True when the current time ("+EntitlementCert.formatDateString(now)+") is between the start/end dates in the entitlement cert: "+entitlementCert);
+				Assert.assertTrue(correspondingProductSubscription.isActive, "isActive is True when the current time ("+EntitlementCert.formatDateString(now)+") is between the start/end dates in the EntitlementCert: "+entitlementCert);
 			} else {
-				Assert.assertFalse(correspondingProductSubscription.isActive, "isActive is False when the current time ("+EntitlementCert.formatDateString(now)+") is NOT between the start/end dates in the entitlement cert: "+entitlementCert);
+				Assert.assertFalse(correspondingProductSubscription.isActive, "isActive is False when the current time ("+EntitlementCert.formatDateString(now)+") is NOT between the start/end dates in the EntitlementCert: "+entitlementCert);
 			}
 			
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
@@ -206,8 +206,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 				log.warning("The workaround while this bug is open is to skip the assertion that: startDates and endDates match");
 			} else {
 			// END OF WORKAROUND
-			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.startDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.startDate), "startDates match.");
-			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDates match.");
+			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.startDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.startDate), "startDate from ProductSubscription in list --consumed matches startDate from OrderNamespace in EntitlementCert.");
+			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDate from ProductSubscription in list --consumed matches endDate from OrderNamespace in EntitlementCert.");
 			}
 		}
 	}
