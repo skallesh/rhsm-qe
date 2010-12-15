@@ -1,18 +1,22 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.util.Calendar;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -168,29 +172,44 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager: list of consumed entitlements should display consumed product marketing name",
 			groups={},
-			enabled=false)
+			dataProvider="getAllEntitlementCertsData",
+			enabled=true)
 	@ImplementsNitrateTest(caseId=48092, fromPlan=2481)
-	public void EnsureListConsumedMatchesProductsListedInTheEntitlementCerts_Test() {
-		/*
-		Actions:
+	public void EnsureListConsumedMatchesProductsListedInTheEntitlementCerts_Test(EntitlementCert entitlementCert) {
 
-		Subscribe to an entitlement pool
+		// assert: The list of consumed products matches the products listed in the entitlement cert
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		List<ProductSubscription> productSubscriptionsWithMatchingSerialNumber = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", entitlementCert.serialNumber, productSubscriptions);
+		//Assert.assertTrue(productSubscriptionsWithMatchingSerialNumber.size()>0, "Found consumed product subscription(s) whose SerialNumber matches this entitlement cert: "+entitlementCert);
+		Assert.assertEquals(productSubscriptionsWithMatchingSerialNumber.size(),entitlementCert.productNamespaces.size(), "Found consumed product subscription(s) for each of the bundleProducts (total of '"+entitlementCert.productNamespaces.size()+"' expected) whose SerialNumber matches this entitlement cert: "+entitlementCert);
 
-		Execute following command on console to obtain a list of your consumed entitlements
-
-		subscription-manager-cli list –consumed
+		for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
+			List<ProductSubscription> matchingProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("productName", productNamespace.name, productSubscriptionsWithMatchingSerialNumber);
+			Assert.assertEquals(matchingProductSubscriptions.size(), 1, "Found one bundledProduct name '"+productNamespace.name+"' in the list of consumed product subscriptions whose SerialNumber matches this entitlement cert: "+entitlementCert);
+			ProductSubscription correspondingProductSubscription = matchingProductSubscriptions.get(0);
+			Assert.assertEquals(correspondingProductSubscription.productName, productNamespace.name, "productNames match.");
+			Assert.assertEquals(correspondingProductSubscription.contractNumber, entitlementCert.orderNamespace.contractNumber, "contractNumbers match.");
+			Assert.assertEquals(correspondingProductSubscription.accountNumber, entitlementCert.orderNamespace.accountNumber, "accountNumbers match.");
+			Assert.assertEquals(correspondingProductSubscription.serialNumber, entitlementCert.serialNumber, "serialNumbers match.");
 			
-		Expected Results:
-
-		    * List of consumed entitlements should contain Red Hat marketing names
-		    * No Error should record on console or rhsm.log
-		    * The list of consumed products matches the products listed in the entitlement cert
-
-		 */
-		
-		// TODO IMPLEMENTME
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+			Calendar now = Calendar.getInstance();
+			if (now.after(entitlementCert.orderNamespace.startDate) && now.before(entitlementCert.orderNamespace.endDate)) {
+				Assert.assertTrue(correspondingProductSubscription.isActive, "isActive is True when the current time ("+EntitlementCert.formatDateString(now)+") is between the start/end dates in the entitlement cert: "+entitlementCert);
+			} else {
+				Assert.assertFalse(correspondingProductSubscription.isActive, "isActive is False when the current time ("+EntitlementCert.formatDateString(now)+") is NOT between the start/end dates in the entitlement cert: "+entitlementCert);
+			}
+			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
+			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround while this bug is open is to skip the assertion that: startDates and endDates match");
+			} else {
+			// END OF WORKAROUND
+			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.startDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.startDate), "startDates match.");
+			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDates match.");
+			}
+		}
 	}
 	
 	

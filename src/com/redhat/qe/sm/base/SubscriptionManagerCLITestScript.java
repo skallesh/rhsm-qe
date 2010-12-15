@@ -21,6 +21,8 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
+import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -352,7 +354,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (RegistrationData registeredConsumer : registrationDataList) {
 			if (registeredConsumer.registerResult.getExitCode().intValue()==0) {
 				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password}));
-				//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
+				
+				// minimize the number of dataProvided rows (useful during automated testcase development)
+				if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 			}
 		}
 		
@@ -386,7 +390,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// populate a list of all available SubscriptionPools
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			ll.add(Arrays.asList(new Object[]{pool}));
-			//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
+			
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 		}
 		
 		// manually reorder the pools so that the base "Red Hat Enterprise Linux*" pool is first in the list
@@ -430,7 +436,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				bundledProductNamesAsList.add(bundledProductName);
 			}
 			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, bundledProductNamesAsList.toArray(new String[]{})}));
-			//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
+
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 		}
 		
 		return ll;
@@ -458,4 +466,56 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 
+	
+	@DataProvider(name="getAllConsumedProductSubscriptionsData")
+	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		
+		// first make sure we are subscribed to all pools
+		clienttasks.unregister();
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+		
+		// then assemble a list of all consumed ProductSubscriptions
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			ll.add(Arrays.asList(new Object[]{productSubscription}));
+			
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+		}
+		
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getAllEntitlementCertsData")
+	public Object[][] getAllEntitlementCertsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllEntitlementCertsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		
+		// first make sure we are subscribed to all pools
+		clienttasks.unregister();
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+
+		
+		// then assemble a list of all consumed ProductSubscriptions
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			ll.add(Arrays.asList(new Object[]{entitlementCert}));
+			
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+		}
+		
+		return ll;
+	}
 }
