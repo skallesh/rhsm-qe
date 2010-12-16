@@ -75,7 +75,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			dataProvider="getNegativeRegisterAttemptsUsingProxyServerData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)	
+	@ImplementsNitrateTest(caseId=70316)	
 	public void NegativeRegisterAttemptsUsingProxyServer_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		
 		// Start fresh by unregistering and registering...
