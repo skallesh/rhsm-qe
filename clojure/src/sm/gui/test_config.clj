@@ -1,6 +1,7 @@
 (ns sm.gui.test-config
   (:import [com.redhat.qe.auto.testng TestScript]
-	   [com.redhat.qe.tools SSHCommandRunner]))
+	   [com.redhat.qe.tools SSHCommandRunner]
+           [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]))
 
 
 
@@ -37,7 +38,7 @@
 			      (str "http://" (m :client-hostname) ":4118"))}))))
 (def config (atom {}))
 (def clientcmd (atom nil))
-
+(def cli-tasks (atom nil))
 (defn init []
   (TestScript.) ;;sets up logging, reads properties
   (swap! config merge (get-properties))
@@ -45,4 +46,5 @@
 				       (@config :ssh-user)
 				       (@config :ssh-key-private)
 				       (@config :ssh-key-passphrase)
-				       nil)))
+				       nil))
+  (reset! cli-tasks (SubscriptionManagerTasks. @clientcmd)))
