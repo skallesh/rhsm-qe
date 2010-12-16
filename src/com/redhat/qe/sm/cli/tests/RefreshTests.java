@@ -29,7 +29,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
 		clienttasks.unregister();
-		clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
+		clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// make sure the certFrequency will not affect the results of this test
 		log.info("Change the certFrequency to a large value to assure the rhsmcertd does not interfere with this test.");

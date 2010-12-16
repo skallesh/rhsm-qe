@@ -30,7 +30,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
 		clienttasks.unregister();
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
@@ -61,7 +61,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(value="Clean_Test", alwaysRun=true)
 	public void teardownAfterClass() {
 		if (consumerId!=null) {
-			clienttasks.register(clientusername, clientpassword, null, null, consumerId, null, Boolean.TRUE);
+			clienttasks.register(clientusername, clientpassword, null, null, consumerId, null, Boolean.TRUE, null, null, null);
 			clienttasks.unregister();
 		}
 		

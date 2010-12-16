@@ -48,7 +48,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// begin test with a fresh register
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -129,7 +129,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
@@ -142,7 +142,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// register with autosubscribe
 		clienttasks.unregister();
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null, null, null, null);
 
 		/* Example sshCommandResult.getStdout(): 
 			e1aef738-5d03-4a8a-9c87-7a2652e110a8 rh-alpha-qa-105
@@ -273,7 +273,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password){
 		clienttasks.unregister();
-		clienttasks.register(username, password, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE);
+		clienttasks.register(username, password, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 	}
 	
@@ -464,7 +464,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// begin the test with a cleanly registered system
 		clienttasks.unregister();
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	    
 		// assemble a list of all the available SubscriptionPool ids with duplicates and bad ids
 		List <String> poolIds = new ArrayList<String>();
@@ -559,7 +559,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
 		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
@@ -573,7 +573,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		
 		log.info("Finally test with a registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
-	    clienttasks.register(clientusername, clientpassword, null, null, consumerid, null, Boolean.TRUE);
+	    clienttasks.register(clientusername, clientpassword, null, null, consumerid, null, Boolean.TRUE, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
@@ -632,7 +632,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister();
 		
 		// register a clean user
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	    
 	    // subscribe to all the available pools
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);

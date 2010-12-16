@@ -83,7 +83,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	@Test 
 	public void SubscribeToAboutToExpirePool_Test() throws Exception{
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		Collection<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		

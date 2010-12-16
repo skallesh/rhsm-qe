@@ -39,7 +39,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions","" +
 				"Available Subscriptions are listed for '"+clientusername+"' to consume.");
@@ -60,7 +60,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] bundledProductNames) {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing: "+pool);
@@ -73,7 +73,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscription, "No Consumed subscription pools to list",
 				"No Consumed subscription pools listed for '"+clientusername+"' after registering (without autosubscribe).");
@@ -87,7 +87,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] bundledProductNames) {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing: "+pool);
@@ -107,7 +107,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		String installedProductsAsString = clienttasks.listInstalledProducts().getStdout();
@@ -144,7 +144,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureListAndListInstalledAreTheSame_Test() {
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
@@ -222,7 +222,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 		
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
 		
 
 		// assert that RHEL Personal is available to this person consumer
@@ -250,7 +250,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 
 		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		// assert that RHEL Personal *is not* included in --available subscription pools

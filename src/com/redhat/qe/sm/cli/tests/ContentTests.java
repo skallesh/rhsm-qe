@@ -147,7 +147,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 //	    }
 		
 		clienttasks.unregister();
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
