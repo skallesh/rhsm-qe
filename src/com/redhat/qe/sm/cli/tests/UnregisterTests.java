@@ -32,9 +32,9 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		for (SubscriptionPool afterPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			SubscriptionPool correspondingPool = availPoolsBeforeSubscribingToAllPools.get(availPoolsBeforeSubscribingToAllPools.indexOf(afterPool));
-			Assert.assertEquals(correspondingPool.quantity, afterPool.quantity,
-				"The subscription quantity count for Pool "+correspondingPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");
+			SubscriptionPool originalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", afterPool.poolId, availPoolsBeforeSubscribingToAllPools);
+			Assert.assertEquals(originalPool.quantity, afterPool.quantity,
+				"The subscription quantity count for Pool "+originalPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");
 		}
 	}
 }

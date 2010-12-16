@@ -1236,7 +1236,15 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
 			// find the existing entitlement cert file corresponding to the already subscribed pool
-			EntitlementCert entitlementCert = EntitlementCert.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
+			EntitlementCert entitlementCert = null;
+			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
+				EntitlementCert thisEntitlementCert = getEntitlementCertFromEntitlementCertFile(thisEntitlementCertFile);
+				if (thisEntitlementCert.orderNamespace.productId.equals(pool.productId)) {
+					entitlementCert = thisEntitlementCert;
+					break;
+				}
+			}
+			
 			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
