@@ -153,8 +153,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
-		if (client2tasks!=null) client2tasks.unregister_();	// release the entitlements consumed by the current registration
-		if (client1tasks!=null) client1tasks.unregister_();	// release the entitlements consumed by the current registration
+		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
+		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 	}
 	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
@@ -374,10 +374,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (clienttasks==null) return ll;
 		
 		// assure we are registered
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		if (client2tasks!=null)	{
-			client2tasks.unregister();
+			client2tasks.unregister(null, null, null);
 			client2tasks.register(client2username, client2password, null, null, null, null, null, null, null, null);
 		}
 		
@@ -477,7 +477,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 		
@@ -503,7 +503,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 

@@ -78,7 +78,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41697)
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
 		RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
 

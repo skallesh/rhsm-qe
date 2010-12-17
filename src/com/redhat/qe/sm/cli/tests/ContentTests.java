@@ -146,7 +146,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 //	    				"Yum reports enabled content subscribed to repo: " + cert.label);
 //	    }
 		
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();

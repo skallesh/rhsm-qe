@@ -45,7 +45,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// take note of your identity cert before reregister
@@ -102,7 +102,7 @@ public class ReregisterTests extends SubscriptionManagerCLITestScript {
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		
 		// take note of your identity cert

@@ -28,7 +28,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// make sure the certFrequency will not affect the results of this test
@@ -53,7 +53,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 
 		// refresh
 		log.info("Refresh...");
-		clienttasks.refresh();
+		clienttasks.refresh(null, null, null);
 		
 		// Assert the entitlement certs are restored after the refresh
 		log.info("After running refresh, assert that the entitlement certs are restored...");

@@ -153,8 +153,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 		
 		log.info("Register client2 under username '"+consumerUsername+"' as a system and assert that '"+systemSubscriptionName+"' is NOT yet available...");
-		client2tasks.unregister();
-		client1tasks.unregister();	// just in case client1 is still registered as the person consumer
+		client2tasks.unregister(null, null, null);
+		client1tasks.unregister(null, null, null);	// just in case client1 is still registered as the person consumer
 		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null, null, null, null, null);
 		List<SubscriptionPool> client2BeforeSubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2BeforeSubscriptionPools);
@@ -163,7 +163,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 //		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
 		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the personal subscription pool with ProductId '"+rhpersonalProductId+"'...");
-		client1tasks.unregister();
+		client1tasks.unregister(null, null, null);
 		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
 //		pool = client1tasks.findSubscriptionPoolWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -292,7 +292,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		// REFERENCE FIX TO https://bugzilla.redhat.com/show_bug.cgi?id=624063
 
 		log.info("Now, attempt to unsubscribe the person on client 1 from the "+personSubscriptionName+" pool and assert the unsubscribe is blocked.");
-		SSHCommandResult result = client1tasks.unsubscribe_(Boolean.TRUE,null);
+		SSHCommandResult result = client1tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
 		//Assert.assertTrue(result.getStderr().startsWith("Cannot unbind due to outstanding entitlement:"),
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
 		//Assert.assertContainsMatch(result.getStderr(),"Cannot unbind due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
@@ -319,7 +319,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		// REFERENCE FIX TO https://bugzilla.redhat.com/show_bug.cgi?id=624063
 
 		log.info("Now, attempt to unregister the person on client 1 from the "+personSubscriptionName+" pool and assert the unregister is blocked.");
-		SSHCommandResult result = client1tasks.unregister_();
+		SSHCommandResult result = client1tasks.unregister_(null, null, null);
 		//Assert.assertTrue(result.getStderr().startsWith("Cannot unregister due to outstanding entitlement:"),
 		//		"Attempting to unregister the person consumer is blocked when another system is register by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
 		//Assert.assertContainsMatch(result.getStdout(),"Cannot unregister due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
@@ -401,7 +401,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		log.info("Now that all the subscribers of '"+systemSubscriptionName+"' have unsubscribed from '"+systemConsumedProductName+"', the person consumer should be able to unregister without being blocked due to outstanding entitlements...");
-		client1tasks.unregister();		
+		client1tasks.unregister(null, null, null);		
 	}
 	
 	
@@ -412,7 +412,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void EnsureSystemAutosubscribeConsumesSubPool_Test() {
 		log.info("Now register client1 under username '"+consumerUsername+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
-		client1tasks.unregister();
+		client1tasks.unregister(null, null, null);
 		client1tasks.register(consumerUsername, consumerPassword, ConsumerType.person, null, null, null, null, null, null, null);
 		personConsumerId = client1tasks.getCurrentConsumerId();
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -433,7 +433,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		
 		
 		log.info("Now register client2 under username '"+consumerUsername+"' as a system with autosubscribe to assert that '"+systemConsumedProductName+"' gets consumed...");
-		client2tasks.unregister();
+		client2tasks.unregister(null, null, null);
 		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, Boolean.TRUE, null, null, null, null);
 		List<ProductSubscription> client2ConsumedProductSubscriptions = client2tasks.getCurrentlyConsumedProductSubscriptions();
 		
@@ -457,16 +457,16 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",personSubscriptionName,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(personSubscriptionPool,
 				personSubscriptionName+" is available to user '"+consumerUsername+"' registered as a person.");
-		client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
+		client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null, null, null, null);
 
 		log.info("Now register client2 under username '"+consumerUsername+"' as a system and assert the subpool '"+systemSubscriptionName+"' is available...");
-		client2tasks.unregister();
+		client2tasks.unregister(null, null, null);
 		client2tasks.register(consumerUsername, consumerPassword, ConsumerType.system, null, null, null, null, null, null, null);
 		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools()),
 				systemSubscriptionName+" is available to user '"+consumerUsername+"' registered as a system.");
 
 		log.info("Now register client2 under username '"+anotherConsumerUsername+"' as a system and assert the subpool '"+systemSubscriptionName+"' is NOT available...");
-		client2tasks.unregister();
+		client2tasks.unregister(null, null, null);
 		client2tasks.register(anotherConsumerUsername, anotherConsumerPassword, ConsumerType.system, null, null, null, null, null, null, null);
 		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client2tasks.getCurrentlyAvailableSubscriptionPools()),
 				systemSubscriptionName+" is NOT available to user '"+anotherConsumerUsername+"' who is under the same owner as '"+consumerUsername+"'.");
@@ -487,7 +487,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",rhpersonalProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNotNull(personSubscriptionPool,
 				"ProductId '"+rhpersonalProductId+"' is listed as all available to user '"+consumerUsername+"' registered as a system.");
-		SSHCommandResult sshComandResult = client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
+		SSHCommandResult sshComandResult = client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null, null, null, null);
 
 		// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'
 		Assert.assertContainsMatch(sshComandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personSubscriptionPool.poolId+"'",
@@ -522,16 +522,16 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(groups={"setup"}, value={"RHELPersonal"}, alwaysRun=true)
 	public void teardownAfterGroups() {
 		if (client2tasks!=null) {
-			client2tasks.unsubscribe_(Boolean.TRUE,null);
-			client2tasks.unregister_();
+			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+			client2tasks.unregister_(null, null, null);
 		}
 
 		if (client1tasks!=null) {
 			
 			for (String consumerId : consumerIds) {
 				client1tasks.register_(client1username,client1password,null,null,consumerId,null, Boolean.TRUE, null, null, null);
-				client1tasks.unsubscribe_(Boolean.TRUE, null);
-				client1tasks.unregister_();
+				client1tasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
+				client1tasks.unregister_(null, null, null);
 			}
 			consumerIds.clear();
 			
@@ -540,8 +540,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				//client1tasks.removeAllCerts(true, true);
 				client1tasks.register_(client1username,client1password,null,null,personConsumerId,null,Boolean.TRUE, null, null, null);
 			}
-			client1tasks.unsubscribe_(Boolean.TRUE,null);
-			client1tasks.unregister_();
+			client1tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+			client1tasks.unregister_(null, null, null);
 			personConsumerId=null;
 		}
 	}

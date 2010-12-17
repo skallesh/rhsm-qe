@@ -38,7 +38,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test() {
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions","" +
@@ -59,7 +59,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] bundledProductNames) {
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -72,7 +72,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscription, "No Consumed subscription pools to list",
@@ -86,7 +86,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] bundledProductNames) {
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
@@ -106,7 +106,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
@@ -143,13 +143,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureListAndListInstalledAreTheSame_Test() {
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
-		SSHCommandResult listResult = clienttasks.list_(null, null, null, null);
-		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE);
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -161,8 +161,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPool(pool);
-		listResult = clienttasks.list_(null, null, null, null);
-		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE);
+		listResult = clienttasks.list_(null, null, null, null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -221,7 +221,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
 		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 		
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
 		
 
@@ -237,7 +237,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	@AfterGroups(groups={}, value="EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test", alwaysRun=true)
 	public void teardownAfterEnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
-		if (clienttasks!=null) clienttasks.unregister_();
+		if (clienttasks!=null) clienttasks.unregister_(null, null, null);
 	}
 	
 	
@@ -249,7 +249,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
 		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
@@ -263,7 +263,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
 	public void teardownAfterEnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() {
-		if (clienttasks!=null) clienttasks.unregister_();
+		if (clienttasks!=null) clienttasks.unregister_(null, null, null);
 	}
 	
 
