@@ -45,22 +45,29 @@
 
 
 (def *handlers* [])
-(defn wrap [m]
+(defn- wrap [m]
   (let [e (NamingException. (or (:msg m) ""))]
     (.setResolvedObj e m)
     e))
 
-(defn rewrap [e addmap]
+(defn- rewrap [e addmap]
   (let [m (unwrap e)
         m (merge addmap m)]
     (.setResolvedObj e m)
     e))
 
-(defn unwrap [e]
+(defn- unwrap [e]
   (let [r (.getResolvedObj e)]
     (if (map? r) r (throw (IllegalStateException. "Wrapped object is not a map - must be a real NamingException?")))))
 
-(defn equal-or-more? [m1 m2]
+(defprotocol Raisable
+  (raise [this]))
+
+(extend-protocol Raisable
+  clojure.lang.IPersistentMap
+  (raise [this] (throw (wrap this))))
+
+(defn- equal-or-more? [m1 m2]
   (cond (= m1 m2) true
         (not (and (map? m1) (map? m2))) false
         (= m1 (select-keys m2 (keys m1))) true))
@@ -72,7 +79,7 @@
           (fn? recoveryfn) (recoveryfn err)
           :else (throw (IllegalArgumentException. (format "Recovery %s needs to a function with one argument, instead got: %s" recovery recoveryfn))))))
 
-(defn dispatch "Thread the map m through all the handler functions
+(defn- dispatch "Thread the map m through all the handler functions
 in hlist, until one of them returns something other than m.
 Return the first non-m value, or m if the end of
 the list is hit."
@@ -83,8 +90,20 @@ the list is hit."
     (if (> (count handled) 0)
       (first handled) m)))
 
-(defmacro with-handlers [hlist & body]
-  (println (coll? hlist) hlist)
+(defmacro with-handlers "Runs code in an error handling environment.
+
+  Executes body, if an error is raised, pass it to each of the
+handlers in hlist.  Each handler should be a function that should take
+an error as an argument, and returns one of the following:
+
+  1) A value which will be returned as the value of the whole form
+
+  2) The original error, if the handler doesn't handle this kind of
+  error.
+
+  3) Finally the handler can choose a pre-defined recovery by
+  returning a map with a single entry like {:recovery :abort} where
+  the value is the recovery name to invoke."  [hlist & body]
   (if-not (and (coll? hlist) (every? coll? hlist)) (throw (IllegalArgumentException. "First argument to with-handler must be a collection of handlers")))
   `(binding [*handlers* (concat ~hlist *handlers*) ] ;chain handlers together
      (try ~@body
@@ -93,7 +112,7 @@ the list is hit."
                   handler-result# (dispatch unwrapped# *handlers*)]
               (cond (equal-or-more? unwrapped# handler-result#) (throw ne#) ;returning the original map means unhandled
                     (and (map? handler-result#) (:recovery handler-result#))
-                     (recover (:recovery handler-result#) unwrapped#)
+                    (recover (:recovery handler-result#) unwrapped#)
                     :else handler-result#))))))
 
 (defmacro add-recoveries [m & body]
@@ -101,22 +120,26 @@ the list is hit."
         (catch NamingException ne#
           (throw (rewrap ne# ~m)))))
 
-(defmacro handle-type [type-kw & body]
+(defmacro handle-type "A convenience macro that creates an error
+handler by error type. It will match any error whose :type entry is
+type-kw. The rest of the error map entries are ignored.  If you need
+more access to the error map, you shouldn't use this."
+  [type-kw & body]
   `(fn [e#] (if (= (:type e#) ~type-kw)
             (do ~@body)
             e#)))
 
 (defn error-prone [n]
-  (if (> n 0) (inc n) (throw (wrap {:msg "Negative number!" :number n :type :NumberError}))))
+  (if (> n 0) (inc n) (raise {:msg "Negative number!" :number n :type :NumberError})))
 
 (comment (defn do-stuff [n]
            (add-recoveries {:zero (fn [e] 0)
                             :retry (fn [e] (error-prone (Math/abs (:number e))))}
-                            (error-prone n)))
+                           (error-prone n)))
 
          (with-handlers (fn [e] (if (= (:type e) :NumberError) {:recovery :retry} )) (do-stuff -5))
          (with-handlers
-           [ (handle-type :NumberError {:recovery :one})
+           [ (handle-type :NumberErrorBlah {:recovery :one})
              (handle-type :OtherError 0)]
            (add-recoveries {:one (fn [e] 1)} (do-stuff -5)))
          )
