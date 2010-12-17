@@ -45,7 +45,6 @@
 
 
 (def *handlers* [])
-(def *error* nil)
 (defn wrap [m]
   (let [e (NamingException. (or (:msg m) ""))]
     (.setResolvedObj e m)
@@ -68,39 +67,41 @@
 
 
 (defn recover [recovery err]
-  (let [recoveryval (recovery err)]
-    (cond (nil? recoveryval) (throw (IllegalStateException. (str "Recovery chosen that does not exist: " recovery)))
-          (fn? recoveryval) (recoveryval)
-          :else recoveryval)))
+  (let [recoveryfn (recovery err)]
+    (cond (nil? recoveryfn) (throw (IllegalStateException. (str "Recovery chosen that does not exist: " recovery)))
+          (fn? recoveryfn) (recoveryfn err)
+          :else (throw (IllegalArgumentException. (format "Recovery %s needs to a function with one argument, instead got: %s" recovery recoveryfn))))))
 
-(defn dispatch "Thread the map err through all the handler functions
-in hlist, until one of them returns something other than err (or a
-superset of err). Return the first non-err value, or err if the end of
+(defn dispatch "Thread the map m through all the handler functions
+in hlist, until one of them returns something other than m.
+Return the first non-m value, or m if the end of
 the list is hit."
-  [err hlist]
-  (let [handled (drop-while  #(equal-or-more? err %)
-                             (reductions #(%2 %1) err hlist ))]
-    (if (> (count handled) 0) (first handled) err)))
+  [m hlist]
+  (println hlist)
+  (let [handled (drop-while  #(= m %)
+                             (reductions #(%2 %1) m hlist))]
+    (if (> (count handled) 0)
+      (first handled) m)))
 
-(defmacro with-handler [hlist & body]
-  (if-not (coll? list) throw (IllegalArgumentException. "First argument to with-handler must be a collection of handlers"))
-  `(binding [*handler* (concat ~hlist *handler*) ] ;chain handlers together
+(defmacro with-handlers [hlist & body]
+  (println (coll? hlist) hlist)
+  (if-not (and (coll? hlist) (every? coll? hlist)) (throw (IllegalArgumentException. "First argument to with-handler must be a collection of handlers")))
+  `(binding [*handlers* (concat ~hlist *handlers*) ] ;chain handlers together
      (try ~@body
           (catch NamingException ne#
             (let [unwrapped# (unwrap ne#)
                   handler-result# (dispatch unwrapped# *handlers*)]
               (cond (equal-or-more? unwrapped# handler-result#) (throw ne#) ;returning the original map means unhandled
-                    (keyword? handler-result#) (binding [*error* unwrapped#]
-                                                 (recover handler-result# unwrapped#))
+                    (and (map? handler-result#) (:recovery handler-result#))
+                     (recover (:recovery handler-result#) unwrapped#)
                     :else handler-result#))))))
-
 
 (defmacro add-recoveries [m & body]
   `(try ~@body
         (catch NamingException ne#
           (throw (rewrap ne# ~m)))))
 
-(defmacro type-handler [type-kw & body]
+(defmacro handle-type [type-kw & body]
   `(fn [e#] (if (= (:type e#) ~type-kw)
             (do ~@body)
             e#)))
@@ -109,11 +110,14 @@ the list is hit."
   (if (> n 0) (inc n) (throw (wrap {:msg "Negative number!" :number n :type :NumberError}))))
 
 (comment (defn do-stuff [n]
-           (add-recoveries {:zero 0
-                            :retry (fn [] (error-prone (Math/abs (:number *error*))))}
+           (add-recoveries {:zero (fn [e] 0)
+                            :retry (fn [e] (error-prone (Math/abs (:number e))))}
                             (error-prone n)))
 
-         (with-handler (fn [e] (if (= (:type e) :NumberError) :retry)) (do-stuff -5))
-         
+         (with-handlers (fn [e] (if (= (:type e) :NumberError) {:recovery :retry} )) (do-stuff -5))
+         (with-handlers
+           [ (handle-type :NumberError {:recovery :one})
+             (handle-type :OtherError 0)]
+           (add-recoveries {:one (fn [e] 1)} (do-stuff -5)))
          )
 
