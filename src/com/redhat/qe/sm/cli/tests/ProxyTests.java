@@ -215,7 +215,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult result = clienttasks.identity_(username, password, null, proxy, proxyuser, proxypassword);
+		SSHCommandResult result = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -240,7 +240,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
 		
 		// attempt to unregister
-		SSHCommandResult attemptResult = clienttasks.identity_(username, password, null, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -318,7 +318,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult result = clienttasks.list_(null,null,null,null,proxy, proxyuser, proxypassword);
+		SSHCommandResult result = clienttasks.list_(null,Boolean.TRUE,null,null,proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -343,7 +343,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
 		
 		// attempt to unregister
-		SSHCommandResult attemptResult = clienttasks.list_(null,null,null,null,proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.list_(null,Boolean.TRUE,null,null,proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
