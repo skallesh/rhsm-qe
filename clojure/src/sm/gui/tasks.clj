@@ -1,24 +1,25 @@
 (ns sm.gui.tasks
   (:use [sm.gui.test-config :only (config)]
-	sm.gui.ldtp)
+        [com.redhat.qe.handler :only (add-recoveries raise handle-type)]
+        [com.redhat.qe.verify :only (verify)]
+        sm.gui.ldtp)
   (:require [sm.gui.errors :as errors]
 	    sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
-(defn get-error-msg "Retrieves the error string from the RHSM error dialog."
-  []
-  (action getobjectproperty :error-msg "label"))
+;; A mapping of RHSM error messages to regexs that will match that error.
+(def known-errors {:invalid-credentials #"Invalid username"
+		   :wrong-consumer-type #"Consumers of this type are not allowed" })
 
- 
-(defn clear-error-dialog []
-  (action click :ok-error))
+(defn matching-error "Returns a keyword of known error, if the message matches any of them."
+  [message]
+  (let [matches-message? (fn [key] (let [re (known-errors key)]
+				       (if (re-find re message) key false)))]
+    (or (some matches-message? (keys known-errors))
+	:sm-error)))
 
-
-(defn checkforerror []
-  (if (= 1 (action waittillwindowexist :error-dialog 3)) 
-    (let [message (get-error-msg)]
-      (clear-error-dialog)
-      (throw (RuntimeException. message)))))
+(defn connect []
+  (set-url (@config :ldtp-url)))
 
 (defn start-app
   ([]
@@ -27,29 +28,19 @@
      (action launchapp path [] 10)
      (action waittillwindowexist :main-window 30)))
 
-(declare err-handler)
-(defn handle-error
-  "Checks for an error dialog.  The caller can optionally pass in a
-map of keywords to functions.  The keys are names of ways to recover
-from an error, the functions actually perform the recovery.  If some
-caller way down the stack wants to handle the error, he can bind
-'err-handler' to a function that takes a keyword of a known error
-type, and returns a map with keys :handled (true or false, if he
-handled the error), and :recovery (keyword name of a recovery to
-choose.  He can leave this off and just perform his own recovery as
-well)."
-  ([] (handle-error {}))
-  ([recoveries]
-     (try (checkforerror)
-	  (catch RuntimeException e
-	    (if (bound? (var err-handler))
-	      (errors/handle e err-handler recoveries)
-	      (throw e))))))
+(defn get-error-msg "Retrieves the error string from the RHSM error dialog."
+  []
+  (action getobjectproperty :error-msg "label"))
+ 
+(defn clear-error-dialog []
+  (action click :ok-error))
 
-(comment (defn select-tab [tab]
-   (let [locator (element tab)
-	 args [selecttab (first locator) "ptl0" (second locator)]]
-     (apply action args))))
+(defn checkforerror []
+  (if (= 1 (action waittillwindowexist :error-dialog 3)) 
+    (let [message (get-error-msg)]
+      (clear-error-dialog)
+      (raise {:type (errors/matching-error message)
+              :msg message}))))
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
@@ -59,8 +50,9 @@ well)."
   (action settextvalue :password password)
   (when system-name-input
     (action settextvalue :system-name system-name-input))
-  (action click :register)
-  (handle-error {:cancel #(action click :register-cancel)}))
+  (add-recoveries {:cancel (fn [e] (action click :register-cancel))}
+    (action click :register)
+    (checkforerror)))
 
 (defn wait-for-progress-bar []
   (action waittillwindowexist :progress-dialog 1)
@@ -90,7 +82,7 @@ well)."
   (checkforerror)
   (action selectrowindex :contract-selection-table 0)  ;;pick first contract for now
   (action click :subscribe-contract-selection)
-  (handle-error {})
+  (checkforerror)
   (wait-for-progress-bar))
 
 
@@ -112,8 +104,5 @@ well)."
   (action waittillwindowexist :question-dialog 5)
   (action click :yes)
   (checkforerror))
-
-(defn connect []
-  (set-url (@config :ldtp-url)))
 
 

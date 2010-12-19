@@ -1,27 +1,25 @@
-(ns clojure.contrib.handler
+(ns com.redhat.qe.handler
   (:import [javax.naming NamingException]))
 
 (def *handlers* [])
-
-(defn- rewrap [e addmap]
-  (let [m (unwrap e)
-        m (merge addmap m)]
-    (.setResolvedObj e m)
-    e))
+(def *error* nil)
 
 (defn- e-to-map [e]
   {:msg (.getMessage e) :type (class e) :exception e})
 
-(defn- unwrap [e]
-  (if (instance? NamingException e)
+(defn- wrapped? [e]
+  (and (instance? NamingException e) (map? (.getResolvedObj e))))
+
+(defn unwrap [e]
+  (if (wrapped? e)
     (let [r (.getResolvedObj e)]
       (if (map? r) r
           (throw (IllegalStateException.
                   "Wrapped object is not a map - must be a real NamingException?"))))
     (e-to-map e)))
 
-(defn- is-type [m ptype]
-  (isa? (:type this) ptype))
+(defn is-type [m ptype]
+  (isa? (:type m) ptype))
   
 (defprotocol Raisable
   (raise [this])
@@ -32,29 +30,35 @@
   (raise [this] (throw (wrap this)))
   (wrap [this] (let [e (NamingException. (or (:msg this) ""))]
                (.setResolvedObj e this)
-               e)))
+               e))
 
   java.lang.Throwable
   (raise [this] (raise (e-to-map this)))
   (wrap [this] (wrap (e-to-map this))))
 
+(defn rewrap [e addmap]
+  (let [m (unwrap e)
+        m (merge addmap m)]
+    (if (wrapped? e) (do (.setResolvedObj e m)
+                         e)
+        (wrap m))))
 
-(defn- equal-or-more? [m1 m2]
+(defn equal-or-more? [m1 m2]
   (cond (= m1 m2) true
         (not (and (map? m1) (map? m2))) false
         (= m1 (select-keys m2 (keys m1))) true))
 
 
-(defn- recover [recovery err]
+(defn recover [recovery err]
   (let [recoveryfn (recovery err)]
     (cond (nil? recoveryfn) (throw (IllegalStateException.
                                     (str "Recovery chosen that does not exist: " recovery)))
-          (fn? recoveryfn) (recoveryfn err)
+          (fn? recoveryfn) (recoveryfn)
           :else (throw (IllegalArgumentException.
                         (format "Recovery %s needs to be a function with one argument, instead got: %s"
                                 recovery recoveryfn))))))
 
-(defn- dispatch "Thread the map m through all the handler functions
+(defn dispatch "Thread the map m through all the handler functions
 in hlist, until one of them returns something other than m.
 Return the first non-m value, or m if the end of
 the list is hit."
@@ -68,16 +72,20 @@ the list is hit."
 
   Executes body, if an error is raised, pass it to each of the
 handlers in hlist.  Each handler should be a function that should take
-an error as an argument, and returns one of the following:
+an error map as an argument, and returns one of the following:
 
   1) A value which will be returned as the value of the whole form
 
   2) The original error, if the handler doesn't handle this kind of
   error.
 
-  3) Finally the handler can choose a pre-defined recovery by
-  returning a map with a single entry like {:recovery :abort} where
-  the value is the recovery name to invoke."  [hlist & body]
+The error map will have whatever keys it was created with,
+typically :msg will be the text of the error, and :type will be the
+type.
+
+Within the handler, you can also choose a pre-defined recovery by
+calling the recover-by macro.  In most cases, that will be the entire
+body of the handler."  [hlist & body]
   (if-not (and (coll? hlist) (every? coll? hlist))
     (throw (IllegalArgumentException.
             "First argument to with-handler must be a collection of handlers")))
@@ -85,47 +93,62 @@ an error as an argument, and returns one of the following:
      (try ~@body
           (catch Throwable ne#
             (let [unwrapped# (unwrap ne#)
-                  handler-result# (dispatch unwrapped# *handlers*)
+                  handler-result# (binding [*error* unwrapped#]
+                                    (dispatch unwrapped# *handlers*))
                   unhandled# (or (:exception unwrapped#) ne#)]  ;if the original error was an exception, retrieve it to throw if it is not handled.
-              (cond (equal-or-more? unwrapped# handler-result#) (throw unhandled#) ;returning the original map means unhandled
-                    (and (map? handler-result#) (:recovery handler-result#))
-                    (recover (:recovery handler-result#) unwrapped#)
-                    :else handler-result#))))))
+              (if (equal-or-more? unwrapped# handler-result#)
+                (throw unhandled#) ;returning the original map means unhandled
+                handler-result#))))))
 
-(defmacro add-recoveries [m & body]
+(defmacro add-recoveries "Executes body and attaches some pre-defined
+recovery methods if an error occurs.  An error handler further down
+the call stack can select the recovery by name.  The recovery methods
+should be a map of keywords to functions.  Recovery functions should
+not take any arguments, but can access the error in the *error* var."
+[m & body]
   `(try ~@body
         (catch Throwable ne#
           (throw (rewrap ne# ~m)))))
 
 (defmacro handle-type "A convenience macro that creates an error
-handler by error type. It will match any error e where (isa? (:type e)
-type). The rest of the error map entries are ignored.  If you need
-more access to the error map, you shouldn't use this."
+handler by error type. It will be dispatched on any *error* where (isa? (:type *error*)
+type)."
   [type & body]
-  `(fn [e#] (if (isa? (:type e#) ~type)
+  `(fn [e#] (if (is-type e# ~type)
             (do ~@body)
             e#)))
 
+(defmacro recover-by [kw]
+  `(recover ~kw *error*))
 
+(defn expect [type]
+  (handle-type type (constantly nil)))
 
+(comment ;;examples of use
 
-(comment
-
+;; a low level fn that can cause errors
 (defn error-prone [n]
   (cond 
-        (> n 200) (raise (IllegalStateException. "Wayy Too big!"))
-        (> n 100) (throw (IllegalArgumentException. "Too big!"))
+        (> n 200) (raise (IllegalStateException. "Wayy Too big!"))  ;;java exceptions can participate normally
+        (> n 100) (throw (IllegalArgumentException. "Too big!"))  ;;java exceptions can participate normally
         (> n 0) (inc n)
-        :else (raise {:msg "Negative number!" :number n :type :NumberError})))
+        :else (raise {:msg "Negative number!" :number n :type :NumberError})))  ;;clojure errors are just maps
+
+;;a fn that adds recoveries in a middle layer
 (defn do-stuff [n]
-  (add-recoveries {:zero (fn [e] 0)
-                   :retry (fn [e] (error-prone (Math/abs (:number e))))}
+  (add-recoveries {:return-zero (fn [] 0)
+                   :retry #(error-prone (Math/abs (:number *error*)))}
                   (error-prone n)))
 
-(with-handlers (fn [e] (if (= (:type e) :NumberError) {:recovery :retry} )) (do-stuff -5))
+;;define handler fn yourself and call middle layer
+(with-handlers [ (fn [e] (if (is-type e :NumberError) (recover-by :retry) e))]
+  (do-stuff -5)) ; --> 6
 
+;;use macro to specify handlers, show that recoveries can be added at any level
 (with-handlers
-  [ (handle-type :NumberError {:recovery :one})
+  [ (handle-type :NumberError (recover-by :return-zero)) ;;choose a predefined recovery
     (handle-type :OtherError 0)
     (handle-type IllegalStateException 201)]
-  (add-recoveries {:one (fn [e] 1)} (do-stuff 205))))
+  
+  (do-stuff 105)))
+
