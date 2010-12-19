@@ -1,9 +1,10 @@
 (ns sm.gui.tasks
   (:use [sm.gui.test-config :only (config)]
-        [com.redhat.qe.handler :only (add-recoveries raise handle-type)]
+        [com.redhat.qe.handler :only (add-recoveries raise *error*)]
         [com.redhat.qe.verify :only (verify)]
         sm.gui.ldtp)
-  (:require sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+  (:require [clojure.contrib.logging :as log]
+            sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
@@ -38,12 +39,14 @@
   (action click :ok-error))
 
 (defn checkforerror []
-  (if (= 1 (action waittillwindowexist :error-dialog 3)) 
-    (let [message (get-error-msg)
-          type (matching-error message)]
-      (clear-error-dialog)
-      (raise {:type type 
-              :msg message}))))
+  (add-recoveries
+   {:log-warning (log/warn (format "Got error %s, message was: %s" (name (:type *error*)) (:msg *error*)))}
+   (if (= 1 (action waittillwindowexist :error-dialog 3)) 
+     (let [message (get-error-msg)
+           type (matching-error message)]
+       (clear-error-dialog)
+       (raise {:type type 
+               :msg message})))))
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
@@ -61,26 +64,26 @@
   (action waittillwindowexist :progress-dialog 1)
   (action waittillwindownotexist :progress-dialog 30))
 
-(defn search [& {:keys [match-my-hardware?, overlap-with-existing-subscriptions?, provide-software-not-yet-installed?, contain-the-text, active-on]
-		 :or {match-my-hardware? false
-		      overlap-with-existing-subscriptions? false
-		      provide-software-not-yet-installed? true
-		      contain-the-text nil
+(defn search [& {:keys [match-hardware?, overlap?, not-installed?, contain-text, active-on]
+		 :or {match-hardware? false
+		      overlap? false
+		      not-installed? true
+		      contain-text nil
 		      active-on nil}}]
   (action selecttab :all-available-subscriptions)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
-    (action (setchecked match-my-hardware?) :match-my-hardware)
-    (action (setchecked overlap-with-existing-subscriptions?) :overlap-with-existing-subscriptions)
-    (action (setchecked provide-software-not-yet-installed?) :provide-software-not-yet-installed)
-    (if contain-the-text (do (action check :contain-the-text)
+    (action (setchecked match-hardware?) :match-hardware-checkbox)
+    (action (setchecked overlap?) :overlap-checkbox)
+    (action (setchecked not-installed?) :not-installed-checkbox)
+    (if contain-text (do (action check :contain-text-checkbox)
 			     (action settextvalue :as-yet-unnamed-textbox))))
   (if active-on (comment "Procedure to set date goes here "))
-  (action click :search)
+  (action click :search-button)
   (wait-for-progress-bar))
 
 (defn subscribe [s]
   (search)
-  (action selectrow :available-subscription-table s)
+  (action selectrow :all-subscriptions-view s)
   (action click :subscribe)
   (checkforerror)
   (action selectrowindex :contract-selection-table 0)  ;;pick first contract for now

@@ -46,13 +46,17 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 					   :all-available-subscriptions
 					   :my-subscriptions
 					   :my-installed-software
-					   :search
-					   :subscribe])
+					   :search-button
+					   :subscribe
+                                           :all-subscriptions-view
+                                           :match-hardware-checkbox
+                                           :not-installed-checkbox
+                                           :overlap-checkbox
+                                           :contain-text-checkbox])
 		    (same-name [:match-my-hardware
 				:overlap-with-existing-subscriptions
 				:provide-software-not-yet-installed
-				:contain-the-text])
-		    {:available-subscription-table "tbl3"}))
+				:contain-the-text])))
 		 {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
 		 (define-elements (windows :register-dialog)
 		   {:redhat-login "account_login"
