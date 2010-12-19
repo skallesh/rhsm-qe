@@ -13,22 +13,24 @@
   (verify (action exists? :unregister-system)))
 
 
-
 (defn ^{Test {:groups [ "registration"]}}
   register_bad_credentials [_]
-  (let [testdata [["sdf" "sdf" :invalid-credentials]
-                  ["" "" :no-username]
-                  ["" "password" :no-username]
-                  ["sdf" "" :no-password]]
+  (let [alltestdata [["sdf" "sdf" :invalid-credentials]
+                     ["" "" :no-username]
+                     ["" "password" :no-username]
+                     ["sdf" "" :no-password]
+                     ["testuser1" "password" :no-password]]
         test-fn (fn [username password expected-error-type]
-                  (with-handlers [(handle-type expected-error-type (recover-by :cancel))]
+                  (with-handlers [(fn [e] (if (= (:type e) expected-error-type)
+                                           (do (recover-by :cancel)
+                                               (:type e))
+                                           e))]
                     (tasks/register username password)))]
-    (for [test testdata] (apply test-fn test))))
-
-(defn ^{Test {:groups [ "registration"]}}
-  register_no_username [_]
-  (with-handlers [(handle-type :no-username (recover-by :cancel))]
-    (tasks/register "" "password")))
+    (for [testargs alltestdata]
+      (let [thrown-error (apply test-fn testargs)
+            expected-error (last testargs)
+            register-button :register-system]
+        (verify (and (= thrown-error expected-error) (action exists? register-button)))))))
 
 (defn ^{Test {:groups ["registration"]
 	       :dependsOnTests ["simple_register"]}}
