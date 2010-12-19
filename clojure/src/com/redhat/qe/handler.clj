@@ -111,19 +111,23 @@ not take any arguments, but can access the error in the *error* var."
         (catch Throwable ne#
           (throw (rewrap ne# ~m)))))
 
+
 (defmacro handle-type "A convenience macro that creates an error
 handler by error type. It will be dispatched on any *error* where (isa? (:type *error*)
 type)."
-  [type & body]
-  `(fn [e#] (if (is-type e# ~type)
-            (do ~@body)
-            e#)))
+  [type arglist & body]
+  (if (not= (count arglist) 1) (throw (IllegalArgumentException.
+                                    (str "Type handlers can only take one argument, got " (count arglist)))))
+  (let [errname (first arglist)]
+    `(fn ~arglist (if (is-type ~errname ~type)
+                    (do ~@body)
+                    ~errname))))
 
 (defmacro recover-by [kw]
   `(recover ~kw *error*))
 
 (defn expect [type]
-  (handle-type type (constantly nil)))
+  (handle-type type [e] nil))
 (comment ;;examples of use
 
 ;; a low level fn that can cause errors
@@ -146,9 +150,9 @@ type)."
 
 ;;use macro to specify handlers, show that recoveries can be added at any level
 (with-handlers
-  [ (handle-type :NumberError (recover-by :return-zero)) ;;choose a predefined recovery
-    (handle-type :OtherError 0)
-    (handle-type IllegalStateException 201)]
+  [ (handle-type :NumberError [e] (recover-by :return-zero)) ;;choose a predefined recovery
+    (handle-type :OtherError [e] 0)
+    (handle-type IllegalStateException [e] 201)]
   
   (do-stuff 105)))
 

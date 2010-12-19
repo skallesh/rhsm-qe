@@ -21,10 +21,9 @@
                      ["sdf" "" :no-password]
                      ["testuser1" "password" :no-password]]
         test-fn (fn [username password expected-error-type]
-                  (with-handlers [(fn [e] (if (= (:type e) expected-error-type)
-                                           (do (recover-by :cancel)
-                                               (:type e))
-                                           e))]
+                  (with-handlers [(handle-type expected-error-type [e]
+                                               (recover-by :cancel)
+                                               (:type e))]
                     (tasks/register username password)))]
     (for [testargs alltestdata]
       (let [thrown-error (apply test-fn testargs)
