@@ -85,8 +85,9 @@ type.
 
 Within the handler, you can also choose a pre-defined recovery by
 calling the recover-by macro.  In most cases, that will be the entire
-body of the handler."  [hlist & body]
-  (if-not (and (coll? hlist) (every? coll? hlist))
+body of the handler."
+  [hlist & body]
+  (if-not (coll? hlist)
     (throw (IllegalArgumentException.
             "First argument to with-handler must be a collection of handlers")))
   `(binding [*handlers* (concat ~hlist *handlers*) ] ;chain handlers together
@@ -95,7 +96,7 @@ body of the handler."  [hlist & body]
             (let [unwrapped# (unwrap ne#)
                   handler-result# (binding [*error* unwrapped#]
                                     (dispatch unwrapped# *handlers*))
-                  unhandled# (or (:exception unwrapped#) ne#)]  ;if the original error was an exception, retrieve it to throw if it is not handled.
+                  unhandled# (or (:exception unwrapped#) ne#)] ;if the original error was an exception, retrieve it to throw if it is not handled.
               (if (equal-or-more? unwrapped# handler-result#)
                 (throw unhandled#) ;returning the original map means unhandled
                 handler-result#))))))
@@ -123,7 +124,6 @@ type)."
 
 (defn expect [type]
   (handle-type type (constantly nil)))
-
 (comment ;;examples of use
 
 ;; a low level fn that can cause errors

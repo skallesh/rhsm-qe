@@ -3,18 +3,20 @@
         [com.redhat.qe.handler :only (add-recoveries raise handle-type)]
         [com.redhat.qe.verify :only (verify)]
         sm.gui.ldtp)
-  (:require [sm.gui.errors :as errors]
-	    sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+  (:require sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid username"
-		   :wrong-consumer-type #"Consumers of this type are not allowed" })
+                   :no-username #"You must enter a login"
+                   :no-password #"You must enter a password"
+                   :wrong-consumer-type #"Consumers of this type are not allowed"
+                   })
 
 (defn matching-error "Returns a keyword of known error, if the message matches any of them."
   [message]
   (let [matches-message? (fn [key] (let [re (known-errors key)]
-				       (if (re-find re message) key false)))]
+                                    (if (re-find re message) key false)))]
     (or (some matches-message? (keys known-errors))
 	:sm-error)))
 
@@ -30,16 +32,17 @@
 
 (defn get-error-msg "Retrieves the error string from the RHSM error dialog."
   []
-  (action getobjectproperty :error-msg "label"))
+  (.trim (action getobjectproperty :error-msg "label")))
  
 (defn clear-error-dialog []
   (action click :ok-error))
 
 (defn checkforerror []
   (if (= 1 (action waittillwindowexist :error-dialog 3)) 
-    (let [message (get-error-msg)]
+    (let [message (get-error-msg)
+          type (matching-error message)]
       (clear-error-dialog)
-      (raise {:type (errors/matching-error message)
+      (raise {:type type 
               :msg message}))))
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
@@ -50,7 +53,7 @@
   (action settextvalue :password password)
   (when system-name-input
     (action settextvalue :system-name system-name-input))
-  (add-recoveries {:cancel (fn [e] (action click :register-cancel))}
+  (add-recoveries {:cancel #(action click :register-cancel)}
     (action click :register)
     (checkforerror)))
 
