@@ -18,8 +18,7 @@
   (let [alltestdata [["sdf" "sdf" :invalid-credentials]
                      ["" "" :no-username]
                      ["" "password" :no-username]
-                     ["sdf" "" :no-password]
-                     ["testuser1" "password" :no-password]]
+                     ["sdf" "" :no-password]]
         test-fn (fn [username password expected-error-type]
                   (with-handlers [(handle-type expected-error-type [e]
                                                (recover-by :cancel)
