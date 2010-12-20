@@ -1,12 +1,9 @@
 package com.redhat.qe.sm.cli.tasks;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,19 +11,11 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.jws.Oneway;
-
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONObject;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
-import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
-import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -36,6 +25,9 @@ import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
@@ -1036,14 +1028,16 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * list without asserting results
+	 * @param installed TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed) {
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed) {
 
 		// assemble the register command
 		String command = this.command;		command += " list";	
 		if (all!=null && all)				command += " --all";
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
+		if (installed!=null && installed)	command += " --installed";
 
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1054,7 +1048,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list_(null,null,null);
+		SSHCommandResult sshCommandResult = list_(null,null,null,Boolean.TRUE);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 
@@ -1073,7 +1067,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null);
+		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
@@ -1091,11 +1085,11 @@ public class SubscriptionManagerTasks {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null);
+		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
@@ -1109,7 +1103,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE);
+		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed command indicates a success.");

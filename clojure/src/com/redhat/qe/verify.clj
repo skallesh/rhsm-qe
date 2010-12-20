@@ -15,9 +15,8 @@
     `(let [res# ~x
            sep#  (System/getProperty "line.separator")
            form# '~x
+           used-bindings# (select-keys ~bindings (distinct (flatten form#)))
            msg# (apply str (if res# "Verified: " "Verification failed: ") (pr-str form#) sep#
-                       (map (fn [[k# v#]] 
-                              (when (some #{k#} (flatten form#)) 
-                                (str "\t" k# " : " v# sep#))) 
-                            ~bindings))]
+                       (map (fn [[k# v#]] (str "\t" k# " : " v# sep#)) 
+                            used-bindings#))]
        (if res# (log/info msg#) (throw (AssertionError. msg#))))))

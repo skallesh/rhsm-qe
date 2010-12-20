@@ -30,7 +30,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// rhsm.conf [rhsm] configurations
 	public static String rhsmBaseUrl					= null;
 	public static String rhsmRepoCaCert				= null;
-	public static String rhsmShowIncompatiblePools	= null;
+	//public static String rhsmShowIncompatiblePools	= null;
 	public static String rhsmProductCertDir			= null;
 	public static String rhsmEntitlementCertDir		= null;
 	public static String rhsmConsumerCertDir			= null;
@@ -46,7 +46,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String serverImportDir			= getProperty("sm.server.importDir","");
 	public String serverBranch				= getProperty("sm.server.branch","");
 	public Boolean isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
-	public Boolean deployServerOnPremises	= Boolean.valueOf(getProperty("sm.server.deploy","true"));
 
 	public String client1hostname			= getProperty("sm.client1.hostname","");
 	public String client1username			= getProperty("sm.client1.username","");
@@ -60,8 +59,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String clientusername			= client1username;
 	public String clientpassword			= client1password;
 	
-	public String clientOwnerUsername	= getProperty("sm.client.owner.username","");
-	public String clientOwnerPassword	= getProperty("sm.client.owner.password","");
 	public String clientUsernames		= getProperty("sm.client.usernames","");
 	public String clientPasswords		= getProperty("sm.client.passwords","");
 	
@@ -109,7 +106,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		// rhsm.conf [rhsm] configurations
 		rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
 		rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
-		rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
+		//rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
 		rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
 		rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
 		rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");

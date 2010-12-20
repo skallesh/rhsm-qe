@@ -102,8 +102,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getExpectedCommandLineOptionsDataAsListOfLists());
 	}
 	protected List<List<Object>> getExpectedCommandLineOptionsDataAsListOfLists() {
-		// String command, String stdoutRegex, List<String> expectedOptions
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// String command, String stdoutRegex, List<String> expectedOptions
 		String modulesRegex = "^	\\w+";
 		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
 		
@@ -183,6 +184,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		listOptions.add("-h, --help");
 		listOptions.add("--debug=DEBUG");
 //		listOptions.add("-k, --insecure");
+		listOptions.add("--installed");
 		listOptions.add("--available");
 		listOptions.add("--consumed");
 		listOptions.add("--all");

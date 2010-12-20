@@ -40,7 +40,7 @@
 
 (defn checkforerror []
   (add-recoveries
-   {:log-warning (log/warn (format "Got error %s, message was: %s" (name (:type *error*)) (:msg *error*)))}
+   {:log-warning #(log/warn (format "Got error %s, message was: '%s'" (name (:type *error*)) (:msg *error*)))}
    (if (= 1 (action waittillwindowexist :error-dialog 3)) 
      (let [message (get-error-msg)
            type (matching-error message)]

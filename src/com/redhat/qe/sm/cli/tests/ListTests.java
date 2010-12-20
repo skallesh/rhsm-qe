@@ -53,7 +53,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
-	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] entitledProductNames) {
+	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] bundledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		
@@ -79,7 +79,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscriptionPoolProductIdData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
-	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] entitledProductNames) {
+	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] bundledProductNames) {
 		clienttasks.unregister();
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
 		

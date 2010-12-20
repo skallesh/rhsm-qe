@@ -102,6 +102,11 @@ public class CandlepinTasks {
 	 */
 	public void deploy(String hostname, String serverImportDir, String branch) {
 
+		if (branch.equals("")) {
+			log.info("Skipping deploy of candlepin server since no branch was specified.");
+			return;
+		}
+		
 		log.info("Upgrading the server to the latest git tag...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serverInstallDir),1,"Found the server install directory "+serverInstallDir);
 
@@ -118,7 +123,7 @@ public class CandlepinTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+branch, Integer.valueOf(0), null, "(Already on|Switched to branch) '"+branch+"'");	// Switched to branch 'master' // Already on 'master'
 		}
 //		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+latestGitTag, Integer.valueOf(0), null, "HEAD is now at .* package \\[candlepin\\] release \\["+latestGitTag.substring(latestGitTag.indexOf("-")+1)+"\\]."); //HEAD is now at 560b098... Automatic commit of package [candlepin] release [0.0.26-1].
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", Integer.valueOf(0), "Starting postgresql service:\\s+\\[  OK  \\]", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql service:\\s+\\[  OK  \\]", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export FORCECERT=1; export GENDB=1; export HOSTNAME="+hostname+"; export IMPORTDIR="+serverImportDir+"; cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 		/* attempt to use live logging
@@ -533,6 +538,10 @@ public class CandlepinTasks {
 		 * http://wiki.java.net/bin/view/Javawsxml/Rome
 		 */
 			
+		// Notes: Alternative curl approach to getting the atom feed:
+		// [ajay@garuda-rh proxy{pool_refresh}]$ curl -k -u admin:admin --request GET "https://localhost:8443/candlepin/owners/admin/atom" > /tmp/atom.xml; xmllint --format /tmp/atom.xml > /tmp/atom1.xml
+		// from https://bugzilla.redhat.com/show_bug.cgi?id=645597
+		
 		SSLCertificateTruster.trustAllCerts();
 		
 		// set the atom feed url for an owner, consumer, or null
@@ -577,7 +586,7 @@ public class CandlepinTasks {
 		log.finest("SyndFeed from "+feedUrl+":\n"+feed);
 //log.fine("SyndFeed from "+feedUrl+":\n"+feed);
 		for (int i=0;  i<feed.getEntries().size(); i++) {
-			log.fine(feed.getTitle()+" entries["+i+"].title="+((SyndEntryImpl) feed.getEntries().get(i)).getTitle());
+			log.fine(String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue()));
 		}
 
         return feed;

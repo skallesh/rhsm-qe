@@ -101,20 +101,20 @@ body of the handler."
                 (throw unhandled#) ;returning the original map means unhandled
                 handler-result#))))))
 
-(defmacro add-recoveries "Executes body and attaches some pre-defined
-recovery methods if an error occurs.  An error handler further down
-the call stack can select the recovery by name.  The recovery methods
-should be a map of keywords to functions.  Recovery functions should
-not take any arguments, but can access the error in the *error* var."
-[m & body]
+(defmacro add-recoveries "Executes body and attaches all the key/value
+pairs in m to any error that occurs.  An error handler further down
+the call stack can examine the data in the map.  Recovery functions
+can be created by adding keys whose values are functions.  Recovery
+functions should not take any arguments, but within the function, it
+can access the error in the *error* var."  [m & body]
   `(try ~@body
         (catch Throwable ne#
           (throw (rewrap ne# ~m)))))
 
 
 (defmacro handle-type "A convenience macro that creates an error
-handler by error type. It will be dispatched on any *error* where (isa? (:type *error*)
-type)."
+handler by error type. It will be dispatched on any *error*
+where (isa? (:type *error*) type)."
   [type arglist & body]
   (if (not= (count arglist) 1) (throw (IllegalArgumentException.
                                     (str "Type handlers can only take one argument, got " (count arglist)))))
@@ -128,6 +128,8 @@ type)."
 
 (defn expect [type]
   (handle-type type [e] nil))
+
+
 (comment ;;examples of use
 
 ;; a low level fn that can cause errors

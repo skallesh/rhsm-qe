@@ -27,7 +27,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String productName;
 	public String orderNumber;
 	public String productId;	// SKU
-	public String subscriptionNumber;
+	public String subscriptionNumber;	// REGTOKEN
 	public String quantity;
 	public Calendar startDate;
 	public Calendar endDate;
@@ -37,6 +37,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String quantityUsed;
 	public String warningPeriod;
 	public String accountNumber;
+	public Boolean providesManagement;
 	
 	public List<ContentNamespace> contentNamespaces;
 	public String rawCertificate;
@@ -455,7 +456,7 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 //			  1.3.6.1.4.1.2312.9.4.1 (Name): Red Hat Enterprise Linux Server
 //			  1.3.6.1.4.1.2312.9.4.2 (Order Number) : ff8080812c3a2ba8012c3a2cbe63005b  
 //			  1.3.6.1.4.1.2312.9.4.3 (SKU) : MCT0982
-//			  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678
+//			  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678   <- SHOULD ONLY EXIST IF ORIGINATED FROM A REGTOKEN
 //			  1.3.6.1.4.1.2312.9.4.5 (Quantity) : 100
 //			  1.3.6.1.4.1.2312.9.4.6 (Entitlement Start Date) : 2010-10-25T04:00:00Z
 //			  1.3.6.1.4.1.2312.9.4.7 (Entitlement End Date) : 2011-11-05T00:00:00Z
@@ -465,6 +466,8 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 //			  1.3.6.1.4.1.2312.9.4.11 (Quantity Used): 4
 //			  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
 //			  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
+//			  1.3.6.1.4.1.2312.9.4.14 (Provides Management): 0 (boolean, 1 for true)
+		// refrence bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=640463
 
 		// FIXME: Not sure how to handle the certificate dates Validity versus Entitlement Start/End Date
 		// I suspect that I am currently using the wrong dates.
@@ -490,6 +493,7 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 		regexes.put("quantityUsed",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("warningPeriod",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("accountNumber",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("providesManagement",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.14:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
 
 		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
@@ -513,3 +517,9 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 		return entitlementCerts;
 	}
 }
+
+/* FIXME USING TIME ZOME NOTES FROM AJAY
+ * SimpleDateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        iso8601DateFormat.setTimeZone(TimeZone.getDefault());
+        System.out.println(iso8601DateFormat.format(new Date()));
+        */

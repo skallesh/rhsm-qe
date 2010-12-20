@@ -83,10 +83,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//       I suggest manually setting this on hosted and asking calfanso to restart
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
-			if (deployServerOnPremises) servertasks.deploy(serverHostname, serverImportDir,serverBranch);
+			servertasks.deploy(serverHostname, serverImportDir,serverBranch);
 
 			// also connect to the candlepin server database
-			connectToDatabase();  // do this after the call to deploy since it will restart postgresql
+			dbConnection = connectToDatabase();  // do this after the call to deploy since it will restart postgresql
 		}
 		
 		// in the event that the clients are already registered from a prior run, unregister them
@@ -108,7 +108,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			// rhsm.conf [rhsm] configurations
 			if (!rhsmBaseUrl.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
 			if (!rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
-			if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
+			//if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
 			if (!rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
 			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
 			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
@@ -145,7 +145,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		log.info("Subscription manager client '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 		if (client2!=null) log.info("Subscription manager client '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 
+		isSetupBeforeSuiteComplete = true;
 	}
+	protected static boolean isSetupBeforeSuiteComplete = false;
 	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
@@ -171,7 +173,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	// Protected Methods ***********************************************************************
 	
-	protected void connectToDatabase() {
+	protected Connection connectToDatabase() {
+		Connection dbConnection = null;
 		try { 
 			// Load the JDBC driver 
 			Class.forName(dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
@@ -181,7 +184,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					"jdbc:postgresql://" + dbHostname + ":" + dbPort + "/" + dbName :
 					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
 			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
-			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword); 
+			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword);
+			//log.finer("default dbConnection.getAutoCommit()= "+dbConnection.getAutoCommit());
+			dbConnection.setAutoCommit(true);
+			
 			DatabaseMetaData dbmd = dbConnection.getMetaData(); //get MetaData to confirm connection
 		    log.fine("Connection to "+dbmd.getDatabaseProductName()+" "+dbmd.getDatabaseProductVersion()+" successful.\n");
 
@@ -192,6 +198,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		catch (SQLException e) {
 			log.warning("Could not connect to backend database:\n" + e.getMessage());
 		}
+		return dbConnection;
 	}
 
 	/* DELETEME  OLD CODE FROM ssalevan
@@ -310,6 +317,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return null;
 	}
 	
+	/**
+	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
+	 */
+	protected void RegisterWithUsernameAndPassword_Test() {
+		if (registrationDataList.isEmpty()) {
+			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
+				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
+				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1));
+			}
+		}
+	}
 	
 	
 	// Data Providers ***********************************************************************
@@ -348,6 +366,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// assure we are registered
@@ -387,8 +406,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 
-	
-	
 	@DataProvider(name="getSubscriptionPoolProductIdData")
 	public Object[][] getSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProductIdDataAsListOfLists());
@@ -406,16 +423,39 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (int j = 0; j < subscriptionPoolProductIdDataAsJSONArray.length(); j++) {
 			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) subscriptionPoolProductIdDataAsJSONArray.get(j);
 			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
-			JSONArray entitledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("entitledProductNames");
-			List<String> entitledProductNamesAsList = new ArrayList<String>();
-			for (int i = 0; i < entitledProductNamesAsJSONArray.length(); i++) {
-				String entitledProductName = (String) entitledProductNamesAsJSONArray.get(i);
-				entitledProductNamesAsList.add(entitledProductName);
+			JSONArray bundledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("bundledProductNames");
+			List<String> bundledProductNamesAsList = new ArrayList<String>();
+			for (int i = 0; i < bundledProductNamesAsJSONArray.length(); i++) {
+				String bundledProductName = (String) bundledProductNamesAsJSONArray.get(i);
+				bundledProductNamesAsList.add(bundledProductName);
 			}
-			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, entitledProductNamesAsList.toArray(new String[]{})}));
+			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, bundledProductNamesAsList.toArray(new String[]{})}));
 			//break; // FIXME THIS LINE SHOULD BE COMMENTED OUT.  Only uncomment when debugging to minimize dataProvided rows
 		}
 		
 		return ll;
 	}
+	
+	
+	@DataProvider(name="getUsernameAndPasswordData")
+	public Object[][] getUsernameAndPasswordDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+	}
+	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		String[] usernames = clientUsernames.split(",");
+		String[] passwords = clientPasswords.split(",");
+		String password = passwords[0].trim();
+		for (int i = 0; i < usernames.length; i++) {
+			String username = usernames[i].trim();
+			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
+			// this allows one to specify only one password when all the usernames share the same password
+			if (i<passwords.length) password = passwords[i].trim();
+			ll.add(Arrays.asList(new Object[]{username,password}));
+		}
+		
+		return ll;
+	}
+
 }

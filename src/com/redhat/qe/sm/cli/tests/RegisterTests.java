@@ -368,11 +368,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"The list of consumed products after reregistering is identical.");
 	}
 	
-// TODO Automation Candidates for Reregister tests: 
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
-//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
-	
-	
+	// TODO Candidates for an automated Test:
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=661130
+
 	
 	
 	// Configuration methods ***********************************************************************
@@ -441,7 +441,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	
+
 	
 	// Protected methods ***********************************************************************
 
@@ -461,6 +461,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
 		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
 		// 									username,			password,						type,	name,	consumerId,	autosubscribe,	force,			debug,	exitCode,				stdoutRegex,																	stderrRegex
 		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
@@ -511,25 +512,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-	
-	@DataProvider(name="getUsernameAndPasswordData")
-	public Object[][] getUsernameAndPasswordDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
-	}
-	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		
-		String[] usernames = clientUsernames.split(",");
-		String[] passwords = clientPasswords.split(",");
-		String password = passwords[0].trim();
-		for (int i = 0; i < usernames.length; i++) {
-			String username = usernames[i].trim();
-			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
-			// this allows one to specify only one password when all the usernames share the same password
-			if (i<passwords.length) password = passwords[i].trim();
-			ll.add(Arrays.asList(new Object[]{username,password}));
-		}
-		
-		return ll;
-	}
+
+
 }

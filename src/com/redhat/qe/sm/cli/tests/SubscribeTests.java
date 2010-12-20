@@ -8,12 +8,14 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -38,10 +40,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSubscriptionPoolProductIdData",
-			groups={},
+			groups={/*"blockedByBug-660713"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] entitledProductNames) {
+	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] bundledProductNames) {
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
 
 		// begin test with a fresh register
@@ -53,7 +55,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		// assert the status of the installed products
-		for (String productName : entitledProductNames) {
+		for (String productName : bundledProductNames) {
 			// assert the status of the installed products
 			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
@@ -68,29 +70,37 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		// assert the expected products are consumed
-		for (String productName : entitledProductNames) {
+		for (String productName : bundledProductNames) {
 			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
 			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
 
-// OLD CODE THAT I THINK WAS WRONG  jsefler 12/2/2010
-//			// assert the dates match
-//			Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
-////			Calendar dayBeforeStartDate = (Calendar) entitlementCert.validityNotBefore.clone(); dayBeforeStartDate.add(Calendar.DATE, -1);
-//			//Assert.assertEquals(productSubscription.endDate, entitlementCert.validityNotAfter, "Consumed ProductSubscription Expires on the same end date as the given entitlement: "+entitlementCert);
-//			Assert.assertTrue(productSubscription.endDate.before(entitlementCert.validityNotAfter) && productSubscription.endDate.after(dayBeforeEndDate), "Consumed ProductSubscription Expires on the same end date as the new entitlement: "+entitlementCert);
-//			Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
-//			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
+			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround while this bug is open is to skip the assertion that: Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
+			} else {
+			// END OF WORKAROUND
+				
+				// OLD CODE THAT I THINK WAS WRONG  jsefler 12/2/2010
+//				// assert the dates match
+//				Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
+////				Calendar dayBeforeStartDate = (Calendar) entitlementCert.validityNotBefore.clone(); dayBeforeStartDate.add(Calendar.DATE, -1);
+//				//Assert.assertEquals(productSubscription.endDate, entitlementCert.validityNotAfter, "Consumed ProductSubscription Expires on the same end date as the given entitlement: "+entitlementCert);
+//				Assert.assertTrue(productSubscription.endDate.before(entitlementCert.validityNotAfter) && productSubscription.endDate.after(dayBeforeEndDate), "Consumed ProductSubscription Expires on the same end date as the new entitlement: "+entitlementCert);
+//				Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+//				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
 
-			// assert the dates match
-			//FIXME  UNCOMMENT WHEN YOU GET AN EXPLANATION FROM DEVELOPMENT
-//			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate),ProductSubscription.formatDateString(entitlementCert.startDate),
-//					"Consumed ProductSubscription Begins on the same DAY as the new entitlement.");
-//			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(entitlementCert.endDate),
-//					"Consumed ProductSubscription Expires on the same DAY as the new entitlement.");
-			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
-					"Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
-			//FIXME		Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
-
+				// assert the dates match
+				//FIXME https://bugzilla.redhat.com/show_bug.cgi?id=660713 UNCOMMENT WHEN YOU GET AN EXPLANATION FROM DEVELOPMENT
+//				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate),ProductSubscription.formatDateString(entitlementCert.startDate),
+//						"Consumed ProductSubscription Begins on the same DAY as the new entitlement.");
+//				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(entitlementCert.endDate),
+//						"Consumed ProductSubscription Expires on the same DAY as the new entitlement.");
+				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
+						"Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
+				//FIXME		Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+			}
 			
 			// assert whether or not the product is installed			
 			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
@@ -157,7 +167,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// loop through the subscriptionPoolProductIdData and verify...
 		for (List<Object> row : subscriptionPoolProductIdData) {
 			String subscriptionPoolProductId = (String)row.get(0);
-			String[] entitledProductNames = (String[])row.get(1);
+			String[] bundledProductNames = (String[])row.get(1);
 			SubscriptionPool subscriptionPool;
 			
 			// assert that the subscriptionPoolProductIds that are not installed, do not get autosubscribed to
@@ -174,27 +184,27 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// assert that subscriptionPoolProductId is not available
 			subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
 			if (subscriptionPool!=null) {
-				String entitledProductNamesAsString = "";
-				for (String entitledProductName : entitledProductNames) entitledProductNamesAsString += entitledProductName+", ";entitledProductNamesAsString = entitledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
+				String bundledProductNamesAsString = "";
+				for (String bundledProductName : bundledProductNames) bundledProductNamesAsString += bundledProductName+", ";bundledProductNamesAsString = bundledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
 				log.warning("SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is still available after registering with autosubscribe.");
-				log.warning("The probable cause is that the products we expected to be installed, '"+entitledProductNamesAsString+"', are probably not installed and therefore autosubscribing to '"+subscriptionPoolProductId+"' was not performed.");
+				log.warning("The probable cause is that the products we expected to be installed, '"+bundledProductNamesAsString+"', are probably not installed and therefore autosubscribing to '"+subscriptionPoolProductId+"' was not performed.");
 			}
 			Assert.assertNull(subscriptionPool, "SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is NOT available after registering with autosubscribe.");
 
-			for (String entitledProductName : entitledProductNames) {
-				// assert that the sshCommandResult from register indicates the entitledProductName was subscribed
-//DELETEME ALPHA ASSERT				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
+			for (String bundledProductName : bundledProductNames) {
+				// assert that the sshCommandResult from register indicates the bundledProductName was subscribed
+//DELETEME ALPHA ASSERT				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+bundledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+bundledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
 				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
-				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+entitledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+entitledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+bundledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+bundledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 
-				// assert that the entitledProductName is consumed
-				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, consumedProductSubscriptions);
-				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+entitledProductName+"' is consumed after registering with autosubscribe.");
+				// assert that the bundledProductName is consumed
+				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, consumedProductSubscriptions);
+				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+bundledProductName+"' is consumed after registering with autosubscribe.");
 	
-				// assert that the entitledProductName is installed and subscribed
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", entitledProductName, installedProducts);
-				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+entitledProductName+"' is reported in the list of installed products.");
-				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+entitledProductName+"' is Subscribed.");
+				// assert that the bundledProductName is installed and subscribed
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, installedProducts);
+				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+bundledProductName+"' is reported in the list of installed products.");
+				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+bundledProductName+"' is Subscribed.");
 			}
 		}
 		
@@ -660,6 +670,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getCertFrequencyDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
 		// int minutes
 		ll.add(Arrays.asList(new Object[]{2}));
 		ll.add(Arrays.asList(new Object[]{1}));
