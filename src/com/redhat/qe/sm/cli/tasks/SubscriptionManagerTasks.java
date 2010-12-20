@@ -110,7 +110,7 @@ public class SubscriptionManagerTasks {
 		for (String rpmUrl : rpmUrls) {
 			rpmUrl = rpmUrl.trim();
 			log.info("Installing RPM from "+rpmUrl+"...");
-			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/")).get(rpmUrl.split("/").length-1);
+			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
 			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
