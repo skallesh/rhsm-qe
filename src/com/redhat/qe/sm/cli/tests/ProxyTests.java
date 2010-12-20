@@ -14,8 +14,10 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -24,7 +26,16 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * @author jsefler
  *
  * http://gibson.usersys.redhat.com/agilo/ticket/4618
- * automate tests for subscription manager register_/subscribe/unsubscribe/unregister_/clean/facts/identity_/refresh_/list_ with basic and noauth proxy servers
+ * automate tests for subscription manager modules with basic and noauth proxy servers
+ * 		register
+ * 		subscribe
+ * 		unsubscribe
+ * 		unregister
+ * 		clean (https://bugzilla.redhat.com/show_bug.cgi?id=664581)
+ * 		facts
+ * 		identity
+ * 		refresh
+ * 		list
  */
 @Test(groups={"proxy"})
 public class ProxyTests extends SubscriptionManagerCLITestScript {
@@ -76,10 +87,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public void RegisterAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		String moduleTask = "register";
 		
-		SSHCommandResult result = clienttasks.register_(username, password, null, null, null, null, null, proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		SSHCommandResult attemptResult = clienttasks.register_(username, password, null, null, null, null, null, proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
 	
@@ -105,8 +116,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 //		// assert the tail of basicauthproxyLog shows the successful CONNECT
 //		// 1292545301.350    418 10.16.120.247 TCP_MISS/200 1438 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 redhat DIRECT/10.16.120.146 -
 //		// 1292551602.625      0 10.16.120.247 TCP_DENIED/407 3840 CONNECT jsefler-f12-candlepin.usersys.redhat.com:8443 - NONE/- text/html
-//		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(basicauthproxy,"tail -1 "+basicauthproxyLog, Integer.valueOf(0));
-//		Assert.assertContainsMatch(result.getStdout(), String.format("CONNECT %s:%s %s",serverHostname,serverPort,basicauthproxyUsername), "The '"+basicauthproxyHostname+"' proxy server appears to be passing the "+moduleTask+" connection through to the candlepin server.");
+//		SSHCommandResult attemptResult = RemoteFileTasks.runCommandAndAssert(basicauthproxy,"tail -1 "+basicauthproxyLog, Integer.valueOf(0));
+//		Assert.assertContainsMatch(attemptResult.getStdout(), String.format("CONNECT %s:%s %s",serverHostname,serverPort,basicauthproxyUsername), "The '"+basicauthproxyHostname+"' proxy server appears to be passing the "+moduleTask+" connection through to the candlepin server.");
 //	}
 	
 	@Test(	description="subscription-manager : register using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
@@ -122,7 +133,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
 		// attempt to register
 		SSHCommandResult attemptResult = clienttasks.register_(username, password, null, null, null, null, null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from a negative attempt to "+moduleTask+" using a proxy server.");
@@ -163,10 +175,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult result = clienttasks.unregister_(proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		SSHCommandResult attemptResult = clienttasks.unregister_(proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
 	
@@ -186,8 +198,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		
-		// attempt to unregister
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.unregister_(proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
@@ -215,10 +228,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		//if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult result = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
 	
@@ -238,60 +251,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		
-		// attempt to unregister
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
-
-		// assert the tail of proxyLog shows the proxyLogRegex
-		if (proxyLogRegex!=null) {
-			SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
-			Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
-		}
-	}
-	
-	
-	// REFRESH Test methods ***********************************************************************
-
-	@Test(	description="subscription-manager : refresh using a proxy server (Positive & Negative Variations)",
-			groups={},
-			dataProvider="getAttemptsUsingProxyServerData",
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)	
-	public void RefreshAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
-		// setup for test
-		String moduleTask = "refresh";
-		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-		
-		SSHCommandResult result = clienttasks.refresh_(proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
-	}
-
-	
-	@Test(	description="subscription-manager : refresh using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
-			groups={},
-			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)	
-	public void RefreshAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
-		// setup for test
-		String moduleTask = "refresh";
-		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-	
-		// pad the tail of basicauthproxyLog with a message
-		RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo 'Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test...'  >> "+proxyLog, Integer.valueOf(0));
-		
-		// set the config parameters
-		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		
-		// attempt to unregister
-		SSHCommandResult attemptResult = clienttasks.refresh_(proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -318,10 +281,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult result = clienttasks.list_(null,Boolean.TRUE,null,null,proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		SSHCommandResult attemptResult = clienttasks.list_(null,Boolean.TRUE,null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
 	
@@ -341,8 +304,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		
-		// attempt to unregister
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.list_(null,Boolean.TRUE,null,null,proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
@@ -370,10 +334,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult result = clienttasks.facts_(null,Boolean.TRUE,proxy, proxyuser, proxypassword);
-		if (exitCode!=null)		Assert.assertEquals(result.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
-		if (stdoutRegex!=null)	Assert.assertContainsMatch(result.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
-		if (stderrRegex!=null)	Assert.assertContainsMatch(result.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+		SSHCommandResult attemptResult = clienttasks.facts_(null,Boolean.TRUE,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
 
 	
@@ -393,8 +357,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		
-		// attempt to unregister
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.facts_(null,Boolean.TRUE,proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
@@ -406,6 +371,174 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
 		}
 	}
+	
+	
+	
+	// REFRESH Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : refresh using a proxy server (Positive & Negative Variations)",
+			groups={"blockedByBug-664548"},
+			dataProvider="getAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RefreshAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		// setup for test
+		String moduleTask = "refresh";
+		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		
+		SSHCommandResult attemptResult = clienttasks.refresh_(proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : refresh using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+			groups={"blockedByBug-664548"},
+			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RefreshAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "refresh";
+		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+	
+		// pad the tail of basicauthproxyLog with a message
+		RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo 'Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test...'  >> "+proxyLog, Integer.valueOf(0));
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.refresh_(proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
+	
+	
+	
+	// SUBSCRIBE Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : subscribe using a proxy server (Positive & Negative Variations)",
+			groups={/*"blockedByBug-664603"*/},
+			dataProvider="getAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void SubscribeAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		// setup for test
+		String moduleTask = "subscribe";
+		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+
+		SSHCommandResult attemptResult = clienttasks.subscribe_(pool.poolId,null,null,null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+			groups={/*"blockedByBug-664603"*/},
+			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void SubscribeAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "subscribe";
+		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		
+		// pad the tail of basicauthproxyLog with a message
+		RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo 'Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test...'  >> "+proxyLog, Integer.valueOf(0));
+
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.subscribe_(pool.poolId,null,null,null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
+	
+	
+	
+	// UNSUBSCRIBE Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : unsubscribe using a proxy server (Positive & Negative Variations)",
+			groups={/*"blockedByBug-664603"*/},
+			dataProvider="getAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void UnsubscribeAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		// setup for test
+		String moduleTask = "unsubscribe";
+		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		
+		SSHCommandResult attemptResult = clienttasks.unsubscribe_(Boolean.TRUE, null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+			groups={/*"blockedByBug-664603"*/},
+			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void UnsubscribeAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "unsubscribe";
+		if (!username.equals(clientusername) || !password.equals(clientpassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		
+		// pad the tail of basicauthproxyLog with a message
+		RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo 'Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test...'  >> "+proxyLog, Integer.valueOf(0));
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.unsubscribe_(Boolean.TRUE, null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
+	
+	
+	
+	
+	
 	
 	
 	// Configuration methods ***********************************************************************
