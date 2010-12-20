@@ -7,6 +7,8 @@
             sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
+(def ui action) ;;alias action in ldtp to ui here
+
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid username"
                    :no-username #"You must enter a login"
@@ -28,20 +30,20 @@
   ([]
      (start-app (@config :binary-path)))
   ([path]
-     (action launchapp path [] 10)
-     (action waittillwindowexist :main-window 30)))
+     (ui launchapp path [] 10)
+     (ui waittillwindowexist :main-window 30)))
 
 (defn get-error-msg "Retrieves the error string from the RHSM error dialog."
   []
-  (.trim (action getobjectproperty :error-msg "label")))
+  (.trim (ui getobjectproperty :error-msg "label")))
  
 (defn clear-error-dialog []
-  (action click :ok-error))
+  (ui click :ok-error))
 
 (defn checkforerror []
   (add-recoveries
    {:log-warning #(log/warn (format "Got error %s, message was: '%s'" (name (:type *error*)) (:msg *error*)))}
-   (if (= 1 (action waittillwindowexist :error-dialog 3)) 
+   (if (= 1 (ui waittillwindowexist :error-dialog 3)) 
      (let [message (get-error-msg)
            type (matching-error message)]
        (clear-error-dialog)
@@ -50,19 +52,25 @@
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
-  (action click :register-system)
-  (action waittillguiexist :redhat-login)
-  (action settextvalue :redhat-login username)
-  (action settextvalue :password password)
+  (if (ui exists? :unregister-system)
+    (raise {:type :already-registered
+            :username username
+            :password password
+            :unregister-first (fn [] (unregister)
+                                (register (:username *error*) (:password *error*)))}))
+  (ui click :register-system)
+  (ui waittillguiexist :redhat-login)
+  (ui settextvalue :redhat-login username)
+  (ui settextvalue :password password)
   (when system-name-input
-    (action settextvalue :system-name system-name-input))
-  (add-recoveries {:cancel #(action click :register-cancel)}
-    (action click :register)
+    (ui settextvalue :system-name system-name-input))
+  (add-recoveries {:cancel #(ui click :register-cancel)}
+    (ui click :register)
     (checkforerror)))
 
 (defn wait-for-progress-bar []
-  (action waittillwindowexist :progress-dialog 1)
-  (action waittillwindownotexist :progress-dialog 30))
+  (ui waittillwindowexist :progress-dialog 1)
+  (ui waittillwindownotexist :progress-dialog 30))
 
 (defn search [& {:keys [match-hardware?, overlap?, not-installed?, contain-text, active-on]
 		 :or {match-hardware? false
@@ -70,45 +78,50 @@
 		      not-installed? true
 		      contain-text nil
 		      active-on nil}}]
-  (action selecttab :all-available-subscriptions)
+  (ui selecttab :all-available-subscriptions)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
-    (action (setchecked match-hardware?) :match-hardware-checkbox)
-    (action (setchecked overlap?) :overlap-checkbox)
-    (action (setchecked not-installed?) :not-installed-checkbox)
-    (if contain-text (do (action check :contain-text-checkbox)
-			     (action settextvalue :as-yet-unnamed-textbox))))
+    (ui (setchecked match-hardware?) :match-hardware-checkbox)
+    (ui (setchecked overlap?) :overlap-checkbox)
+    (ui (setchecked not-installed?) :not-installed-checkbox)
+    (if contain-text (do (ui check :contain-text-checkbox)
+			     (ui settextvalue :as-yet-unnamed-textbox))))
   (if active-on (comment "Procedure to set date goes here "))
-  (action click :search-button)
+  (ui click :search-button)
   (wait-for-progress-bar))
 
 (defn subscribe [s]
   (search)
-  (action selectrow :all-subscriptions-view s)
-  (action click :subscribe)
+  (ui selectrow :all-subscriptions-view s)
+  (ui click :subscribe)
   (checkforerror)
-  (action selectrowindex :contract-selection-table 0)  ;;pick first contract for now
-  (action click :subscribe-contract-selection)
+  (ui selectrowindex :contract-selection-table 0)  ;;pick first contract for now
+  (ui click :subscribe-contract-selection)
   (checkforerror)
   (wait-for-progress-bar))
 
+(defn unsubscribe [s]
+  (ui selecttab :my-subscriptions)
+  (ui selectrow :my-subscriptions-view s)
+  (ui click :unsubscribe)
+  (checkforerror))
 
 (comment (defn get-all-facts []
-   (action click :view-my-system-facts)
-   (action waittillguiexist :facts-view)
+   (ui click :view-my-system-facts)
+   (ui waittillguiexist :facts-view)
    (let [table (element :facts-view)
-	 rownums (range (action getrowcount :facts-view))
+	 rownums (range (ui getrowcount :facts-view))
 	 getcell (fn [row col] 
-		   (action getcellvalue table row col))
+		   (ui getcellvalue table row col))
 	 facts (into {} (mapcat (fn [rowid] 
 				  [(getcell rowid 0) (getcell rowid 1)])
 				rownums))]
-     (action click :close-facts)
+     (ui click :close-facts)
      facts)))
 
 (defn unregister []
-  (action click :unregister-system)
-  (action waittillwindowexist :question-dialog 5)
-  (action click :yes)
+  (ui click :unregister-system)
+  (ui waittillwindowexist :question-dialog 5)
+  (ui click :yes)
   (checkforerror))
 
 

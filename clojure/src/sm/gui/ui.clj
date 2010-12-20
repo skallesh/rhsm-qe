@@ -49,6 +49,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 					   :search-button
 					   :subscribe
                                            :all-subscriptions-view
+                                           :my-subscriptions-view
                                            :match-hardware-checkbox
                                            :not-installed-checkbox
                                            :overlap-checkbox
@@ -56,7 +57,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		    (same-name [:match-my-hardware
 				:overlap-with-existing-subscriptions
 				:provide-software-not-yet-installed
-				:contain-the-text])))
+				:contain-the-text])
+                   { :unsubscribe "Unsubscribe Button" }))
 		 {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
 		 (define-elements (windows :register-dialog)
 		   {:redhat-login "account_login"
@@ -86,7 +88,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 (def all-elements (merge windows elements tabs))
 
-;;A map of keywords to the GNOME ui data
+
+;; let clojure keywords represent locators.  When you call locator on
+;; a keyword, it looks up that keyword in the all-elements map. 
 
 (extend-protocol ldtp/LDTPLocatable
   clojure.lang.Keyword
