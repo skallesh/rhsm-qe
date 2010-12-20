@@ -50,6 +50,12 @@
        (raise {:type type 
                :msg message})))))
 
+(defn unregister []
+  (ui click :unregister-system)
+  (ui waittillwindowexist :question-dialog 5)
+  (ui click :yes)
+  (checkforerror))
+
 (defn register [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
   (if (ui exists? :unregister-system)
@@ -118,10 +124,6 @@
      (ui click :close-facts)
      facts)))
 
-(defn unregister []
-  (ui click :unregister-system)
-  (ui waittillwindowexist :question-dialog 5)
-  (ui click :yes)
-  (checkforerror))
+
 
 
