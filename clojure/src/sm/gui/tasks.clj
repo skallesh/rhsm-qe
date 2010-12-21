@@ -96,7 +96,7 @@
   (wait-for-progress-bar))
 
 (defn subscribe [s]
-  (search)
+  (ui selecttab :all-available-subscriptions)
   (ui selectrow :all-subscriptions-view s)
   (ui click :subscribe)
   (checkforerror)

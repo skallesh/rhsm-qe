@@ -1,6 +1,6 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="MyDevTestSuite">
+<suite name="Subscription Manager GUI Test Suite">
 <!-- This suite file isn't used at all by the Hudson automation.  It was created
 to use during development, to test the automation without affecting the 
 configuration that's used by Hudson.
@@ -9,31 +9,36 @@ To run it in eclipse, open the run dialog, create a new TestNG test,
 choose "Suite" and point to this file.  Finally change myDevGroup below
 to the testng group name you are using to categorize your @Test -->
 
-	<test name="MyDevTest">
+	<test name="Registration">
 		<packages>
 			<package name="sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 			
 		</packages>
-		<!--<classes>
-			<class name="com.redhat.qe.sm.cli.tests.ExpirationTests"></class>
-		</classes>
-		-->
-		<!--<groups>
+		
+		<groups>
 			<run>
-				<include name="ldap-enable" />
-				<include name="ldap-enable-ssl" />
-				<include name="ldap-groups" />
-				<include name="ldap-login" />
-				
+				<include name="registration"/>
 				<include name="setup" />
-				<include name="expiration" />
 				<exclude name="knownBug"/>
-				<exclude name="cleanup"/>
 			</run>
-		</groups>-->
+		</groups>
 	</test>
-	
+	<test name="Subscribe/Unsubscribe">
+		<packages>
+			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+			
+		</packages>
+		
+		<groups>
+			<run>
+				<include name="subscribe"/>
+				<include name="setup" />
+				<exclude name="knownBug"/>
+			</run>
+		</groups>
+	</test>
  	<!--<listeners>
  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />				 will turn on all the detailed logging 
 		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />		 will cause @Tests containing a groups member by the name "blockedByBug-######" to be skipped. 

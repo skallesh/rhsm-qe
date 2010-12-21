@@ -4,13 +4,13 @@
   (:require [sm.gui.test-config :as config])
   (:import [org.testng.annotations BeforeSuite AfterSuite]))
 
-(defn ^{BeforeSuite {}}
+(defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (config/init)
   (connect)
   (start-app))
 
-(defn ^{AfterSuite {}}
+(defn ^{AfterSuite {:groups ["setup"]}}
   killGUI [_]
   (.runCommand @config/clientcmd "killall -9 subscription-manager-gui"))
 

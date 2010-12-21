@@ -4,7 +4,7 @@
         [com.redhat.qe.handler :only (handle-type with-handlers recover-by)]
 	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
-  (:import [org.testng.annotations BeforeClass Test]))
+  (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
 (defn- do-to-all-rows-in [view f]
   (let [subscription-list (for [row (range (- (action getrowcount view) 1))]
@@ -19,14 +19,17 @@
 
 (defn ^{Test {:groups ["subscribe"]}}
   subscribe_all [_]
+  (tasks/search)
   (do-to-all-rows-in :all-subscriptions-view
                   (fn [subscription]
                     (with-handlers [(handle-type :wrong-consumer-type [e]
                                                  (recover-by :log-warning))]
                       (tasks/subscribe subscription)))))
 
-(defn ^{Test {:dependsOnTests "subscribe_all"}}
+(defn ^{Test {:groups ["subscribe"]
+              :dependsOnMethods [ "subscribe_all"]}}
   unsubsubscribe_all [_]
+  (action selecttab :my-subscriptions)
   (do-to-all-rows-in :my-subscriptions-view (fn [subscription] (tasks/unsubscribe subscription))))
 
 (gen-class-testng)
