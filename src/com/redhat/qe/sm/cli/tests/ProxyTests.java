@@ -430,7 +430,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// SUBSCRIBE Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : subscribe using a proxy server (Positive & Negative Variations)",
-			groups={/*"blockedByBug-664603"*/},
+			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -450,7 +450,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
-			groups={/*"blockedByBug-664603"*/},
+			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -487,7 +487,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// UNSUBSCRIBE Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : unsubscribe using a proxy server (Positive & Negative Variations)",
-			groups={/*"blockedByBug-664603"*/},
+			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -505,7 +505,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
-			groups={/*"blockedByBug-664603"*/},
+			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
