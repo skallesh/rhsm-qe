@@ -79,7 +79,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 //	}
 	
 	
-	@Test(	description="subscription-manager : register using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : register using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -120,7 +120,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 //		Assert.assertContainsMatch(attemptResult.getStdout(), String.format("CONNECT %s:%s %s",serverHostname,serverPort,basicauthproxyUsername), "The '"+basicauthproxyHostname+"' proxy server appears to be passing the "+moduleTask+" connection through to the candlepin server.");
 //	}
 	
-	@Test(	description="subscription-manager : register using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : register using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -164,7 +164,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// UNREGISTER Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : unregister using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : unregister using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -182,7 +182,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : unregister using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : unregister using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -217,7 +217,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// IDENTITY Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : identity using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : identity using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -235,7 +235,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : identity using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : identity using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -270,7 +270,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// LIST Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : list using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : list using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -288,7 +288,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : list using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : list using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -323,7 +323,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// FACTS Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : facts using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : facts using a proxy server (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -341,7 +341,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : facts using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : facts using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -376,7 +376,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// REFRESH Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : refresh using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : refresh using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-664548"},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -394,7 +394,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : refresh using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : refresh using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-664548"},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -429,7 +429,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// SUBSCRIBE Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : subscribe using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : subscribe using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -449,7 +449,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
@@ -486,7 +486,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// UNSUBSCRIBE Test methods ***********************************************************************
 
-	@Test(	description="subscription-manager : unsubscribe using a proxy server (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : unsubscribe using a proxy server (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerData",
 			enabled=true)
@@ -504,7 +504,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive & Negative Variations)",
+	@Test(	description="subscription-manager : subscribe using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={"blockedByBug-664603"},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
