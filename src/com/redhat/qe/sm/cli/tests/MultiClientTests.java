@@ -95,7 +95,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify that only one person can be registered under username at a time",
-			groups={"MultiClientRegisterAsPerson_Test", "myDevGroup"},
+			groups={"MultiClientRegisterAsPerson_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MultiClientRegisterAsPerson_Test() throws JSONException, Exception {
