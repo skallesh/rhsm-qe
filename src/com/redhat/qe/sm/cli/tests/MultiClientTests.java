@@ -5,13 +5,16 @@ import java.util.List;
 
 import org.json.JSONException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -88,6 +91,42 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<String> alreadySubscribedProductIdsInMultiClientSubscribeToSameSubscriptionPool_Test = new ArrayList<String>();
 	
+	
+	
+	
+	@Test(	description="verify that only one person can be registered under username at a time",
+			groups={"MultiClientRegisterAsPerson_Test", "myDevGroup"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void MultiClientRegisterAsPerson_Test() throws JSONException, Exception {
+		// test prerequisites
+		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
+		unregisterMultiClientRegisterAsPersonAfterGroups();
+		
+		//personIdForMultiClientRegisterAsPerson_Test = client1tasks.getCurrentConsumerId(client1tasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null));
+		client1tasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
+		
+		// attempt to register a second person consumer using the same username
+		SSHCommandResult sshCommandResult = client2tasks.register_(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
+
+		// assert the sshCommandResult here
+		// User testuser1 has already registered a personal consumer
+		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User %s has already registered a personal consumer", clientusername),"stderr after attempt to register same person from a second different client:");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255),"exitCode after attempt to register same person from a second different client");
+
+	}
+	
+	
+	// Configuration Methods ***********************************************************************
+
+	//protected String personIdForMultiClientRegisterAsPerson_Test = null;
+	@AfterGroups(groups={"setup"},value="MultiClientRegisterAsPerson_Test", alwaysRun=true)
+	public void unregisterMultiClientRegisterAsPersonAfterGroups() {
+		//if (personIdForMultiClientRegisterAsPerson_Test!=null) {
+			client2tasks.unregister(null,null,null);
+			client1tasks.unregister(null,null,null);
+		//}
+	}
 	
 	
 	// Protected Methods ***********************************************************************
