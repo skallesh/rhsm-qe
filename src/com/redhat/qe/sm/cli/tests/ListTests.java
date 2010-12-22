@@ -182,6 +182,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> productSubscriptionsWithMatchingSerialNumber = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", entitlementCert.serialNumber, productSubscriptions);
 		//Assert.assertTrue(productSubscriptionsWithMatchingSerialNumber.size()>0, "Found consumed product subscription(s) whose SerialNumber matches this entitlement cert: "+entitlementCert);
 		Assert.assertEquals(productSubscriptionsWithMatchingSerialNumber.size(),entitlementCert.productNamespaces.size(), "Found consumed product subscription(s) for each of the bundleProducts (total of '"+entitlementCert.productNamespaces.size()+"' expected) whose SerialNumber matches this entitlement cert: "+entitlementCert);
+		int productSubscriptionsWithMatchingSerialNumberSizeExpected = entitlementCert.productNamespaces.size()==0?1:entitlementCert.productNamespaces.size(); // when there are 0 bundledProducts, we are still consuming 1 ProductSubscription
+		Assert.assertEquals(productSubscriptionsWithMatchingSerialNumber.size(),productSubscriptionsWithMatchingSerialNumberSizeExpected, "Found consumed product subscription(s) for each of the bundleProducts (total of '"+productSubscriptionsWithMatchingSerialNumberSizeExpected+"' expected) whose SerialNumber matches this entitlement cert: "+entitlementCert);
 
 		for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
 			List<ProductSubscription> matchingProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("productName", productNamespace.name, productSubscriptionsWithMatchingSerialNumber);
