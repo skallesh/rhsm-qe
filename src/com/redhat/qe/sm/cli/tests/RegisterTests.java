@@ -255,6 +255,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager-cli: register with --name and --type",
+			dataProvider="getRegisterWithNameAndTypeData",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithNameAndType_Test(String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		
+		// start fresh by unregistering
+		clienttasks.unregister(null, null, null);
+		
+		// register with a name
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,type,name,null,null, null, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+
+	}
+	
+	
 	/**
 	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
 		Actions:
@@ -371,7 +392,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=661130
+
 
 	
 	
@@ -513,5 +534,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 
+	@DataProvider(name="getRegisterWithNameAndTypeData")
+	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		// 									name,				type,					exitCode,			stdoutRegex,						stderrRegex
+		for (ConsumerType type : ConsumerType.values()) {
+			String name = type.toString()+"_NAME";
+			
+			// https://bugzilla.redhat.com/show_bug.cgi?id=661130
+			if (type.equals(ConsumerType.person)) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+clientusername,	null)}));			
+				continue;
+			}
+			
+			ll.add(Arrays.asList(new Object[]{  name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+		}
 
+		return ll;
+	}
 }
