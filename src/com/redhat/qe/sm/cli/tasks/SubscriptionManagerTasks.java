@@ -1826,11 +1826,12 @@ repolist: 3,394
 		return packages;		
 	}
 	
-	public ArrayList<String> getAvailablePackages (String disablerepo, String enablerepo, String globExpression) {
+	public ArrayList<String> getAvailablePackages (String disableplugin, String disablerepo, String enablerepo, String globExpression) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 
-		String							command  = "yum list available";	
+		String							command  = "yum list available";
+		if (disableplugin!=null)		command += " --disableplugin="+disableplugin;
 		if (disablerepo!=null)			command += " --disablerepo="+disablerepo;
 		if (enablerepo!=null)			command += " --enablerepo="+enablerepo;
 		if (globExpression!=null)		command += " "+globExpression;
@@ -1873,8 +1874,8 @@ repolist: 3,394
 	
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		
-		for (String pkg : getAvailablePackages("*",repo,null)) {
-			if (!getAvailablePackages(repo,null,pkg).contains(pkg)) {
+		for (String pkg : getAvailablePackages("rhnplugin","*",repo,null)) {
+			if (!getAvailablePackages("rhnplugin",repo,null,pkg).contains(pkg)) {
 				return pkg;
 			}
 		}
