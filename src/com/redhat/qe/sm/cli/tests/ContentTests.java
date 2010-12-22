@@ -2,14 +2,17 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ContentNamespace;
@@ -22,6 +25,17 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  */
 @Test(groups={"content"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
+	
+	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username1", "");
+	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password1", "");
+	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
+	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
+	//protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
+	//protected String systemConsumedProductNamesAsString = getProperty("sm.rhpersonal.consumedSubproductNames", "");
+	//protected List<String> systemConsumedProductNames = Arrays.asList(systemConsumedProductNamesAsString.trim().split(", *"));
+
+	protected String personalConsumerId = null;
+	
 	
 	
 	// Test methods ***********************************************************************
@@ -186,7 +200,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 //					"rpm -q "+pkg);
 //		}
 	
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		boolean pkgInstalled = false;
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
@@ -212,9 +226,26 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
+			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
+			dataProvider="getAvailablePersonalSubscriptionSubPoolsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(SubscriptionPool pool) {
+		InstallAndRemovePackageAfterSubscribingToPool_Test(pool);
+	}
+	
+	
 	
 	// Configuration Methods ***********************************************************************
 	
+	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
+	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
+		//if (personIdForMultiClientRegisterAsPerson_Test!=null) {
+			client1tasks.unregister(null,null,null);
+			client2tasks.unregister(null,null,null);
+		//}
+	}
 	
 	
 	// Protected Methods ***********************************************************************
@@ -223,5 +254,38 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 
+	@DataProvider(name="getAvailablePersonalSubscriptionSubPoolsData")
+	public Object[][] getAvailablePersonalSubscriptionSubPoolsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (client1tasks==null) return ll;
+		if (client2tasks==null) return ll;
+		
+		// assure we are registered (as a person on client2 and a system on client1)
+		
+		// register client1 as a system under rhpersonalUsername
+		client1tasks.register(rhpersonalUsername, rhpersonalPassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+		
+		// register client2 as a person under rhpersonalUsername
+		client2tasks.register(rhpersonalUsername, rhpersonalPassword, ConsumerType.person, null, null, null, Boolean.TRUE, null, null, null);
+		
+		// subscribe to the personal subscription pool to unlock the subpool
+		personalConsumerId = client2tasks.getCurrentConsumerId();
+		SubscriptionPool personPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",rhpersonalProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(personPool,"Personal productId '"+rhpersonalProductId+"' is available to user '"+rhpersonalUsername+"' registered as a person.");
+		client2tasks.subscribeToSubscriptionPool(personPool);
+		
+		// now the subpool is available to the system
+		SubscriptionPool systemPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client1tasks.getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(systemPool,"Personal subPool '"+systemSubscriptionName+"' is available to user '"+rhpersonalUsername+"' registered as a system.");
+		//client1tasks.subscribeToSubscriptionPool(systemPool);
+		
+		// return the available system subpool
+		ll.add(Arrays.asList(new Object[]{systemPool}));
+		return ll;
+	}
 
 }
