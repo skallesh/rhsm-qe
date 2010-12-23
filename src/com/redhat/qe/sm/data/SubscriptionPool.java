@@ -13,6 +13,12 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 public class SubscriptionPool extends AbstractCommandLineData {
 	
+	public SubscriptionPool() {
+		super(null);
+	}
+
+
+
 	// abstraction fields
 	public String subscriptionName;
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
