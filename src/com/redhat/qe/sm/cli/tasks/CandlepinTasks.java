@@ -171,7 +171,7 @@ public class CandlepinTasks {
 		}
 		
 		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path); // FIXME: this does not log sufficient info when requestBody!=null - jsefler
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	

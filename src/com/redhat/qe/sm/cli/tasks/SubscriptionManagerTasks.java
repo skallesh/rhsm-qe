@@ -1751,7 +1751,7 @@ repolist: 3,394
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 
@@ -1770,14 +1770,14 @@ repolist: 3,394
 	}
 	
 	/**
-	 * @param option [all|enabled|disabled]
+	 * @param options [all|enabled|disabled] [--option=...]
 	 * @return
 	 */
-	public ArrayList<String> getYumRepolist(String option){
+	public ArrayList<String> yumRepolist(String options){
 		ArrayList<String> repos = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
-		sshCommandRunner.runCommandAndWait("yum repolist "+option);
+		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		
 		int repolistStartLn = 0;
@@ -1795,7 +1795,7 @@ repolist: 3,394
 		return repos;
 	}
 	
-
+	@Deprecated
 	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
@@ -1803,7 +1803,7 @@ repolist: 3,394
 		int min = 5;
 		log.fine("Using a timeout of "+min+" minutes for next command...");
 		//SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel,Long.valueOf(min*60000));
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel+" --disableplugin=rhnplugin",Long.valueOf(min*60000));  // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 
 		// Example result.getStdout()
 		//xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
@@ -1826,15 +1826,17 @@ repolist: 3,394
 		return packages;		
 	}
 	
-	public ArrayList<String> getAvailablePackages (String disableplugin, String disablerepo, String enablerepo, String globExpression) {
+//	public ArrayList<String> yumListAvailable (String disableplugin, String disablerepo, String enablerepo, String globExpression) {
+	public ArrayList<String> yumListAvailable (String options) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 
-		String							command  = "yum list available";
-		if (disableplugin!=null)		command += " --disableplugin="+disableplugin;
-		if (disablerepo!=null)			command += " --disablerepo="+disablerepo;
-		if (enablerepo!=null)			command += " --enablerepo="+enablerepo;
-		if (globExpression!=null)		command += " "+globExpression;
+//		String							command  = "yum list available";
+//		if (disableplugin!=null)		command += " --disableplugin="+disableplugin;
+//		if (disablerepo!=null)			command += " --disablerepo="+disablerepo;
+//		if (enablerepo!=null)			command += " --enablerepo="+enablerepo;
+//		if (globExpression!=null)		command += " "+globExpression;
+		String							command  = "yum list available "+options+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		
 		// execute the yum command to list available packages
 		int min = 5;
@@ -1856,8 +1858,9 @@ repolist: 3,394
 		//xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
-		String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
+		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
+		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
+		String regex="^(\\S+) +(\\S+) +(\\S+)$";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		if (!matcher.find()) {
@@ -1867,29 +1870,37 @@ repolist: 3,394
 
 		// assemble the list of packages and return them
 		do {
-			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version
+			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version,  group(3) is the repo
 		} while (matcher.find());
 		return packages;		
 	}
 	
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		
-		for (String pkg : getAvailablePackages("rhnplugin","*",repo,null)) {
-			if (!getAvailablePackages("rhnplugin",repo,null,pkg).contains(pkg)) {
+//		for (String pkg : getAvailablePackages("rhnplugin","*",repo,null)) {
+//			if (!getAvailablePackages("rhnplugin",repo,null,pkg).contains(pkg)) {
+//				return pkg;
+//			}
+//		}
+
+		for (String pkg : yumListAvailable("--disablerepo=* --enablerepo="+repo)) {
+			if (!yumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
 				return pkg;
 			}
 		}
 		return null;
 	}
 	
-	public void installPackageUsingYumFromRepo (String pkg, String repoLabel) {
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg, 0, "^"+pkg+" .*"+repoLabel+"$",null);
+	public void yumInstallPackageFromRepo (String pkg, String repoLabel) {
+		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*"+repoLabel+"$",null);
 	}
 	
-	public void removePackageUsingYum (String pkg) {
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg, 1, null,"Error: No matching Packages to list");
+	public void yumRemovePackage (String pkg) {
+		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 1, null,"Error: No matching Packages to list");
 	}
 	
 	
