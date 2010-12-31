@@ -30,6 +30,9 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups={"facts"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
 	
+	protected String consumerNotRegisteredMsg = "Consumer not registered. Please register using --username and --password";
+	protected String neededOptionMsg = "Error: Need either --list or --update, Try facts --help";
+	
 	// Configuration Methods ***********************************************************************
 
 
@@ -37,26 +40,76 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 
+// DELETEME
+//	@Test(	description="subscription-manager: facts (when not registered)",
+//			groups={"myDevGroup","blockedByBug-654429"},
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)
+//	public void FactsWhenNotRegistered_Test() {
+//		
+//		// make sure we are not registered
+//		clienttasks.unregister(null, null, null);
+//		
+//		log.info("Assert that one must be registered to query the facts...");
+//		for (Boolean list : new Boolean[]{true,false}) {
+//			for (Boolean update : new Boolean[]{true,false}) {
+//				SSHCommandResult result = clienttasks.facts_(list, update, null, null, null);
+//				Assert.assertEquals(result.getStdout().trim(),consumerNotRegisteredMsg,
+//						"One must be registered to list/update the facts.");
+//			}	
+//		}
+//	}
 	
-	@Test(	description="subscription-manager: facts (when not registered)",
+	
+	@Test(	description="subscription-manager: facts --update (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void FactsWhenNotRegistered_Test() {
+	public void FactsUpdateWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null);
 		
-		log.info("Assert that one must be registered to query the facts...");
-		for (Boolean list : new Boolean[]{true,false}) {
-			for (Boolean update : new Boolean[]{true,false}) {
-				SSHCommandResult result = clienttasks.facts_(list, update, null, null, null);
-				Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
-						"One must be registered to list/update the facts.");
-			}	
+		log.info("Assert that one must be registered to update the facts...");
+		for (Boolean list : new Boolean[]{true,false}) {			
+			SSHCommandResult result = clienttasks.facts_(list, true, null, null, null);
+			Assert.assertEquals(result.getStdout().trim(),consumerNotRegisteredMsg,
+				"One must be registered to update the facts.");
 		}
 	}
 	
+	
+	@Test(	description="subscription-manager: facts --list (when not registered)",
+			groups={"blockedByBug-654429","blockedByBug-661329","blockedByBug-666544"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void FactsListWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister(null, null, null);
+		
+		log.info("Assert that one need not be registered to list the facts...");		
+		SSHCommandResult result = clienttasks.facts(true, false, null, null, null);
+		Assert.assertContainsNoMatch(result.getStderr(),consumerNotRegisteredMsg,
+				"One need not be registered to list the facts.");
+		Assert.assertContainsNoMatch(result.getStdout(),consumerNotRegisteredMsg,
+				"One need not be registered to list the facts.");
+	}
+	
+	
+	@Test(	description="subscription-manager: facts (without --list or --update)",
+			groups={"blockedByBug-654429"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void FactsWithoutListOrUpdate_Test() {
+		
+		log.info("Assert that one need one must specify --list or --update...");		
+		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),
+				"exitCode from the facts without --list or --update");
+		Assert.assertEquals(result.getStdout().trim(),neededOptionMsg,
+				"stdout from facts without --list or --update");
+	}
 	
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
 			groups={}, dependsOnGroups={},

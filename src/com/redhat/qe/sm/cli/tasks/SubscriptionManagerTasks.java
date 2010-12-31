@@ -1670,15 +1670,14 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public SSHCommandResult facts(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
-		ConsumerCert consumerCert = getCurrentConsumerCert();
 		
 		SSHCommandResult sshCommandResult = facts_(list, update, proxy, proxyuser, proxypassword);
 
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
-		if (list!=null && list)		regex=".*:.*";					// list
-		if (update!=null && update)	regex=consumerCert.consumerid;	// consumerid
+		if (list!=null && list)		regex=".*:.*";								// list
+		if (update!=null && update)	regex=getCurrentConsumerCert().consumerid;	// consumerid
 
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
