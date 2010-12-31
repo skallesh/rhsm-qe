@@ -75,7 +75,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: facts and rules: fact check RHEL distribution",
-			groups={}, dependsOnGroups={},
+			groups={"blockedByBug-666540"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56329)
 	public void FactCheckRhelDistribution_Test() {
@@ -111,7 +111,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> servClientPools = servClientTasks.getCurrentlyAvailableSubscriptionPools();
 		
 		log.info("Verifying that the pools available to the Workstation consumer are not identitcal to those available to the Server consumer...");
-		Assert.assertFalse(workClientPools.containsAll(servClientPools) && servClientPools.containsAll(workClientPools),
+		Assert.assertTrue(!workClientPools.containsAll(servClientPools) || !servClientPools.containsAll(workClientPools),
 				"Because the facts of a system client running RHEL Workstation versus RHEL Server should be different, the available subscription pools to these two systems should not be the same.");
 
 		// FIXME TODO Verify with development that these are valid asserts
