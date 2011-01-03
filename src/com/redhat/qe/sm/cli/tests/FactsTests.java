@@ -356,7 +356,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	// TODO Candidates for an automated Test:
-	// https://bugzilla.redhat.com/show_bug.cgi?id=661329
 	// https://tcms.engineering.redhat.com/case/70203/?from_plan=2681
 	// https://tcms.engineering.redhat.com/case/70202/?from_plan=2681
 		
