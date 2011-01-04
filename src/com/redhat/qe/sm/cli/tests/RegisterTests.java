@@ -392,6 +392,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
+	//		https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
 
 
 	
