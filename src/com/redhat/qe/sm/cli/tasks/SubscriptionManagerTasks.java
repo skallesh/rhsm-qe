@@ -98,12 +98,10 @@ public class SubscriptionManagerTasks {
 		// only uninstall rpms when there are new rpms to install
 		if (rpmUrls.size() > 0) {
 			log.info("Uninstalling existing subscription-manager RPMs...");
-			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
-			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
-			sshCommandRunner.runCommandAndWait("rpm -e python-rhsm");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q python-rhsm",Integer.valueOf(1),"package python-rhsm is not installed",null);
+			for (String pkg : new String[]{"subscription-manager-firstboot","subscription-manager-gnome","subscription-manager","python-rhsm"}) {
+				sshCommandRunner.runCommandAndWait("rpm -e "+pkg);
+				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+			}
 		}
 
 		// install new rpms
