@@ -132,9 +132,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
 		cleanOptions.add("--debug=DEBUG");
-		cleanOptions.add("--proxy=PROXY_URL");
-		cleanOptions.add("--proxyuser=PROXY_USER");
-		cleanOptions.add("--proxypassword=PROXY_PASSWORD");
+		// removed in https://bugzilla.redhat.com/show_bug.cgi?id=664581
+		//cleanOptions.add("--proxy=PROXY_URL");
+		//cleanOptions.add("--proxyuser=PROXY_USER");
+		//cleanOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h clean",clienttasks.command+" --help clean"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" clean [OPTIONS]";
