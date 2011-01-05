@@ -28,6 +28,7 @@ import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -389,10 +390,79 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"The list of consumed products after reregistering is identical.");
 	}
 	
+	
+	/**
+	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
+	 * 
+Actions:
+
+    * register with username and password and remember the consumerid
+    * subscribe to one or more subscriptions
+    * list the consumed subscriptions and remember them
+    * clean system
+    * assert that there are no entitlements on the system
+    * register with same username, password and existing consumerid
+    * assert that originally consumed subscriptions are once again being consumed
+
+	
+Expected Results:
+
+    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system
+
+	 */
+	@Test(	description="register with existing consumerid should automatically refresh entitlements",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=72845)
+	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() {
+		
+		// register with username and password and remember the consumerid
+		clienttasks.unregister(null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		
+		// subscribe to one or more subscriptions
+		//// subscribe to a random pool
+		//List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		//SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+
+		// list the consumed subscriptions and remember them
+		List <ProductSubscription> originalConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		// also remember the current entitlement certs
+		List <EntitlementCert> originalEntitlementCerts= clienttasks.getCurrentEntitlementCerts();
+		
+		// clean system
+		clienttasks.clean(null, null, null);
+		
+		// assert that there are no entitlements on the system
+		//Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"There are NO consumed Product Subscriptions on this system after running clean");
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(),"There are NO Entitlement Certs on this system after running clean");
+		
+		// register with same username, password and existing consumerid
+		// Note: no need to register with force as running clean wipes system of all local registration data
+		clienttasks.register(clientusername,clientpassword,null,null,consumerId,null, null, null, null, null);
+
+		// assert that originally consumed subscriptions are once again being consumed
+		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumedProductSubscriptions.size(),originalConsumedProductSubscriptions.size(), "The number of consumed Product Subscriptions after registering to an existing consumerid matches his original count.");
+		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+			Assert.assertContains(originalConsumedProductSubscriptions, productSubscription);
+		}
+		// assert that original entitlement certs are once on the system
+		List <EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertEquals(entitlementCerts.size(),originalEntitlementCerts.size(), "The number of Entitlement Certs on the system after registering to an existing consumerid matches his original count.");
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			Assert.assertContains(originalEntitlementCerts, entitlementCert);
+		}
+		
+	}
+	
+	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
-	//		https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
+
 
 
 	
