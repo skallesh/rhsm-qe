@@ -167,11 +167,15 @@ public class CandlepinTasks {
 		if (requestBody != null) {
 			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));
 			post.addRequestHeader("accept", "application/json");
-			//post.addRequestHeader("content-type", "application/json");
+			post.addRequestHeader("content-type", "application/json");
 		}
-		
-		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path); // FIXME: this does not log sufficient info when requestBody!=null - jsefler
+		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
+		String data = requestBody==null? "":"--data '"+requestBody+"'";
+		String headers = "";
+		for ( org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
+
+		log.info("SSH alternative to HTTP request: curl -k --request POST "+credentials+" "+data+" "+headers+" https://"+server+":"+port+prefix+path);
+
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
