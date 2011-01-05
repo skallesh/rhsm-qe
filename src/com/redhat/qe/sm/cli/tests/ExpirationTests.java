@@ -112,7 +112,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		return  expiresToday.iterator().next();
 	}
 	
-	@Test 
+	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
+			groups={"blockedByBug-660713"}, dependsOnGroups={},
+			enabled=true)
 	public void SubscribeToAboutToExpirePool_Test() throws Exception{
 
 		
