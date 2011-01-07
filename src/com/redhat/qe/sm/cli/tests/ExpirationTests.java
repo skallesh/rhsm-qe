@@ -185,4 +185,6 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	// TODO Candidates for an automated Test:
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=655835
 }
