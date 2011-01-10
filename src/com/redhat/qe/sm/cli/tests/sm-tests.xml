@@ -33,7 +33,18 @@
 			</run>
 		</groups>
 	</test>
-	
+		
+	<test name="Event Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="events" />
+			</run>
+		</groups>
+	</test>
 	
 	<test name="Identity Tests">
 		<packages>
@@ -131,18 +142,6 @@
 			<run>
 				<include name="setup" />
 				<include name="rhelPersonal" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="Event Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="events" />
 			</run>
 		</groups>
 	</test>
