@@ -148,7 +148,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		
 		// create a subscription pool that will start 2 minutes from now
 		int startingMinutesFromNow = 3;
-		String aboutToStartPoolId = createTestPool(startingMinutesFromNow,60*24);
+		String aboutToStartPoolId = createTestPool(startingMinutesFromNow,/*60*24*/startingMinutesFromNow+2);
 	
 		// assert the starting pool is NOT currently available
 		SubscriptionPool startingPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", aboutToStartPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());

@@ -122,18 +122,6 @@
 		</groups>
 	</test>
 	
-	<test name="Subscription Expiration Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="expiration" />
-			</run>
-		</groups>
-	</test>
-	
 	<test name="RHEL Personal Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -178,6 +166,18 @@
 			<run>
 				<include name="setup" />
 				<include name="refresh" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Subscription Expiration Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="expiration" />
 			</run>
 		</groups>
 	</test>
