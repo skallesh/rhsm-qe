@@ -268,34 +268,37 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.candlepin);
 	}
 	
-	@Test(	description="subscription-manager: facts list knows when the client is running on bare metal",
+	
+	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type",
 			groups={}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsNitrateTest(caseId=70203)
-	protected void FactsVirtWhatOnBareMetal_Test() {
+	//@ImplementsNitrateTest(caseId=)
+	protected void VirtualizationFactsReportedOnThisClient_Test() {
 		
-		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
+		// make sure the original virt-what is in place 
+		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
+		SSHCommandResult result = client.runCommandAndWait("virt-what");
 		
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile, LogMessageUtil.action());
-		log.info("Now let's run the subscription-manager facts --list and assert the results...");
+		log.info("Running virt-what version: "+client.runCommandAndWait("rpm -q virt-what").getStdout().trim());
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
-
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),result.getStdout().trim().equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-manager returns stdout.");
+		
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");
+		Assert.assertEquals(virtHostType,result.getStdout().trim(),"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
 	}
 	
 	
-	@Test(	description="subscription-manager: facts list knows the host hypervisor the guest client is running on",
-			dataProvider="getFactsVirtWhatData",
+	@Test(	description="subscription-manager: facts list reports the host hypervisor type on which the guest client is running",
+			dataProvider="getVirtWhatData",
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
-	protected void FactsVirtWhatOnVirtualMachine_Test(String host_type) {
+	protected void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
 		
+		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
 		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+host_type+"' >> "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
@@ -307,27 +310,50 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager: facts list should not crash when virt-what fails",
+	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
-	protected void FactsShouldNotCrashWhenVirtWhatFails_Test() {
+	protected void VirtualizationFactsWhenClientIsAHost_Test() {
 		
-		log.info("We will harm virt-what by making it return a non-zero value...");
+		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
 		
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is failing...\"; exit 255' >> "+virtWhatFile, LogMessageUtil.action());
+		// Note: client is a host, virt-what returns stdout="" and exitcode=0
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile, LogMessageUtil.action());
+		log.info("Now let's run the subscription-manager facts --list and assert the results...");
+		
+		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
+
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");
+	}
+	
+	
+	@Test(	description="subscription-manager: facts list should not crash when virt-what fails",
+			groups={"blockedByBug-668936"}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	protected void VirtualizationFactsWhenVirtWhatFails_Test() {
+		
+		log.info("We will fail virt-what by forcing it to return a non-zero value...");
+		
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
 		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager fails.");
+
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
 	}
 	
 	
 	@Test(	description="subscription-manager: facts list should report is_guest as Unknown when virt-what is not installed",
-			groups={"myDevGroup"}, dependsOnGroups={},
+			groups={}, dependsOnGroups={},
 			enabled=true)
-	@ImplementsNitrateTest(caseId=70203)
-	protected void FactsWhenVirtWhatIsNotInstalled_Test() {
+	//@ImplementsNitrateTest(caseId=)
+	protected void VirtualizationFactsWhenVirtWhatIsNotInstalled_Test() {
 		
 		log.info("We will remove virt-what for this test...");
 		
@@ -337,11 +363,12 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
 		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager in not installed.");
 		
-//		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-//		Assert.assertEquals(virtHostType,"","subscription-manager facts list should NOT report a virt.host_type when the hypervisor is unknown." );
-
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
 	}
 	
+	
+
 	
 	// TODO Candidates for an automated Test:
 
@@ -481,11 +508,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@DataProvider(name="getFactsVirtWhatData")
-	public Object[][] getFactsVirtWhatDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getFactsVirtWhatDataAsListOfLists());
+	@DataProvider(name="getVirtWhatData")
+	public Object[][] getVirtWhatDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getVirtWhatDataAsListOfLists());
 	}
-	protected List<List<Object>> getFactsVirtWhatDataAsListOfLists(){
+	protected List<List<Object>> getVirtWhatDataAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
 		// man virt-what  (virt-what-1.3) shows suppoirt for the following hypervisors

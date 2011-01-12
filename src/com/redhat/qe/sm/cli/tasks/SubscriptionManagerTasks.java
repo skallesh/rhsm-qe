@@ -289,13 +289,21 @@ public class SubscriptionManagerTasks {
 		return registerResult.getStdout().split(" ")[0];
 	}
 	
+	/**
+	 * @param factName
+	 * @return The fact value that subscription-manager lists for factName is returned.  If factName is not listed, null is returned.
+	 */
 	public String getFactValue(String factName) {
 		SSHCommandResult result = facts_(true, false, null, null, null);
 		
 		String regex=factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+":(.*)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
-		Assert.assertTrue(matcher.find(),"Found fact "+factName); 
+		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
+		if (!matcher.find()) {
+			log.warning("Did not find fact '"+factName+"'.");
+			return null;
+		}
 
 //		log.fine("Matches: ");
 //		do {
