@@ -273,7 +273,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	protected void VirtualizationFactsReportedOnThisClient_Test() {
+	public void VirtualizationFactsReportedOnThisClient_Test() {
 		
 		// make sure the original virt-what is in place 
 		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
@@ -294,7 +294,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
-	protected void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
+	public void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
 		
@@ -314,7 +314,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
-	protected void VirtualizationFactsWhenClientIsAHost_Test() {
+	public void VirtualizationFactsWhenClientIsAHost_Test() {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
 		
@@ -334,7 +334,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-668936"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	protected void VirtualizationFactsWhenVirtWhatFails_Test() {
+	public void VirtualizationFactsWhenVirtWhatFails_Test() {
 		
 		log.info("We will fail virt-what by forcing it to return a non-zero value...");
 		
@@ -353,7 +353,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	protected void VirtualizationFactsWhenVirtWhatIsNotInstalled_Test() {
+	public void VirtualizationFactsWhenVirtWhatIsNotInstalled_Test() {
 		
 		log.info("We will remove virt-what for this test...");
 		

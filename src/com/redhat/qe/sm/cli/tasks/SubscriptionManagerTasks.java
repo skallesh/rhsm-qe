@@ -145,10 +145,27 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void updateConfFileParameter(String confFile, String parameter, String value){
+		log.info("Updating config file '"+confFile+"' parameter '"+parameter+"' value to: "+value);
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
-				0,"Updated "+confFile+" parameter '"+parameter+"' to value: " + value);
+				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value: " + value);
 	}
+	
+	public void commentConfFileParameter(String confFile, String parameter){
+		log.info("Commenting out config file '"+confFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=", "#"+parameter+"="),
+				0,"Commented '"+confFile+"' parameter: "+parameter);
+	}
+	
+	public void uncommentConfFileParameter(String confFile, String parameter){
+		log.info("Uncommenting config file '"+confFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),
+				0,"Uncommented '"+confFile+"' parameter: "+parameter);
+	}
+	
+
 	
 	public String getConfFileParameter(String confFile, String parameter){
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+confFile, 0, "^"+parameter, null);
