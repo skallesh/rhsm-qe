@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -458,6 +459,38 @@ Expected Results:
 		
 	}
 	
+
+	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
+			groups={"blockedByBug-667953","blockedByBug-669208"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithAnEmptyRhsmFactsJsonFile_Test() {
+		
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		log.info("Emptying rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
+		client.runCommandAndWait("echo \"\" > "+clienttasks.rhsmFactsJsonFile, LogMessageUtil.action());
+		SSHCommandResult result = client.runCommandAndWait("cat "+clienttasks.rhsmFactsJsonFile, LogMessageUtil.action());
+		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
+		
+		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+	}
+	
+	
+	@Test(	description="register with a missing /var/lib/rhsm/facts/facts.json file",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithAnMissingRhsmFactsJsonFile_Test() {
+		
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		log.info("Deleting rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "rm -f "+clienttasks.rhsmFactsJsonFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
+		
+		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+	}
 	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
