@@ -299,7 +299,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
 		
 		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+host_type+"' >> "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+host_type+"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
@@ -319,7 +319,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
 		
 		// Note: client is a host, virt-what returns stdout="" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
@@ -338,7 +338,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("We will fail virt-what by forcing it to return a non-zero value...");
 		
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
