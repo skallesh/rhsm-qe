@@ -496,6 +496,7 @@ Expected Results:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=668814
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=669395
 
 
 
