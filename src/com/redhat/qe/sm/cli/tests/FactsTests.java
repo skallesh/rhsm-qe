@@ -371,6 +371,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 
 	
 	// TODO Candidates for an automated Test:
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=669513
 
 	
 	// Protected Methods ***********************************************************************
