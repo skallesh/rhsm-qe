@@ -51,6 +51,9 @@
                :msg message})))))
 
 (defn unregister []
+  (if (ui showing? :register-system)
+    (raise {:type :not-registered
+            :msg "Tried to unregister when already unregistered."}))
   (ui click :unregister-system)
   (ui waittillwindowexist :question-dialog 5)
   (ui click :yes)
@@ -58,7 +61,7 @@
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
-  (if (ui exists? :unregister-system)
+  (if (ui showing? :unregister-system)
     (raise {:type :already-registered
             :username username
             :password password

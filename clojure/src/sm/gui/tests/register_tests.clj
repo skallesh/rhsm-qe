@@ -5,7 +5,12 @@
         [com.redhat.qe.handler :only (with-handlers handle-type recover-by)]
 	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
-  (:import [org.testng.annotations Test]))
+  (:import [org.testng.annotations Test BeforeClass]))
+
+(defn ^{BeforeClass {}}
+  setup [_]
+  (with-handlers [(handle-type :not-registered [e] nil)]
+    (tasks/unregister)))
 
 (defn ^{Test {:groups ["registration"]}}
   simple_register [_]
