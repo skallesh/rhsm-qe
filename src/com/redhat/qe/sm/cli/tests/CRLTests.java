@@ -137,7 +137,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 				"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
 
 //FIXME UNCOMMENT WHILE DEBUGGING WITH AJAY
-if (true)return;
+//if (true)return;
 		log.info("Second, let's assert that the original cert file '"+originalCertFile+"' is gone...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),0,"Original certificate file '"+originalCertFile+"' has been removed.");
 

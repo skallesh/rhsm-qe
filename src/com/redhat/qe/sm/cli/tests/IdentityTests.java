@@ -125,9 +125,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(newConsumerCert.consumerid, origConsumerCert.consumerid, "The consumerids are a match.");
 		Assert.assertEquals(newConsumerCert.issuer, origConsumerCert.issuer, "The issuers are a match.");
 		Assert.assertEquals(newConsumerCert.username, origConsumerCert.username, "The usernames are a match.");
-		Assert.assertEquals(newConsumerCert.validityNotAfter, origConsumerCert.validityNotAfter, "The validity end dates are a match.");
+		//Assert.assertEquals(newConsumerCert.validityNotAfter, origConsumerCert.validityNotAfter, "The validity end dates are a match."); //Not After : Jan 6 23:59:59 2012 GMT
+		Assert.assertTrue(newConsumerCert.validityNotAfter.after(origConsumerCert.validityNotAfter), "The new validity end date is after the original."); // with fix from https://bugzilla.redhat.com/show_bug.cgi?id=660713#c10
 		Assert.assertTrue(newConsumerCert.validityNotBefore.after(origConsumerCert.validityNotBefore), "The new validity start date is after the original.");
-		Assert.assertNotSame(newConsumerCert.serialNumber, origConsumerCert.serialNumber, "The serial numbers should not match.");
+		Assert.assertNotSame(newConsumerCert.serialNumber, origConsumerCert.serialNumber, "The serial numbers should not match on a regenerated identity cert.");
 	}
 	
 	
@@ -197,8 +198,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		log.info("Attempting to regenerate identity with an invalid username and password...");
 		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-		//Assert.assertEquals(result.getStderr().trim(),"Invalid username or password");	// works against on-premises, not hosted
-		Assert.assertTrue(result.getStderr().trim().startsWith("Invalid username or password"),"Invalid username or password");
+		Assert.assertContainsMatch(result.getStderr().trim(),clienttasks.invalidCredentialsRegexMsg,"The stderr expresses a message such that authentication credentials are invalid.");
 	}
 	
 	

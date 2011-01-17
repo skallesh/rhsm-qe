@@ -23,11 +23,13 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -255,6 +257,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager-cli: register with --name and --type",
+			dataProvider="getRegisterWithNameAndTypeData",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithNameAndType_Test(String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		
+		// start fresh by unregistering
+		clienttasks.unregister(null, null, null);
+		
+		// register with a name
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,type,name,null,null, null, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+
+	}
+	
+	
 	/**
 	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
 		Actions:
@@ -368,10 +391,113 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"The list of consumed products after reregistering is identical.");
 	}
 	
+	
+	/**
+	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
+	 * 
+Actions:
+
+    * register with username and password and remember the consumerid
+    * subscribe to one or more subscriptions
+    * list the consumed subscriptions and remember them
+    * clean system
+    * assert that there are no entitlements on the system
+    * register with same username, password and existing consumerid
+    * assert that originally consumed subscriptions are once again being consumed
+
+	
+Expected Results:
+
+    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system
+
+	 */
+	@Test(	description="register with existing consumerid should automatically refresh entitlements",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=72845)
+	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() {
+		
+		// register with username and password and remember the consumerid
+		clienttasks.unregister(null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		
+		// subscribe to one or more subscriptions
+		//// subscribe to a random pool
+		//List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		//SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+
+		// list the consumed subscriptions and remember them
+		List <ProductSubscription> originalConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		// also remember the current entitlement certs
+		List <EntitlementCert> originalEntitlementCerts= clienttasks.getCurrentEntitlementCerts();
+		
+		// clean system
+		clienttasks.clean(null, null, null);
+		
+		// assert that there are no entitlements on the system
+		//Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"There are NO consumed Product Subscriptions on this system after running clean");
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(),"There are NO Entitlement Certs on this system after running clean");
+		
+		// register with same username, password and existing consumerid
+		// Note: no need to register with force as running clean wipes system of all local registration data
+		clienttasks.register(clientusername,clientpassword,null,null,consumerId,null, null, null, null, null);
+
+		// assert that originally consumed subscriptions are once again being consumed
+		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumedProductSubscriptions.size(),originalConsumedProductSubscriptions.size(), "The number of consumed Product Subscriptions after registering to an existing consumerid matches his original count.");
+		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+			Assert.assertContains(originalConsumedProductSubscriptions, productSubscription);
+		}
+		// assert that original entitlement certs are once on the system
+		List <EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertEquals(entitlementCerts.size(),originalEntitlementCerts.size(), "The number of Entitlement Certs on the system after registering to an existing consumerid matches his original count.");
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			Assert.assertContains(originalEntitlementCerts, entitlementCert);
+		}
+		
+	}
+	
+
+	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
+			groups={"blockedByBug-667953","blockedByBug-669208"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithAnEmptyRhsmFactsJsonFile_Test() {
+		
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		log.info("Emptying rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
+		client.runCommandAndWait("echo \"\" > "+clienttasks.rhsmFactsJsonFile, LogMessageUtil.action());
+		SSHCommandResult result = client.runCommandAndWait("cat "+clienttasks.rhsmFactsJsonFile, LogMessageUtil.action());
+		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
+		
+		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+	}
+	
+	
+	@Test(	description="register with a missing /var/lib/rhsm/facts/facts.json file",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithAnMissingRhsmFactsJsonFile_Test() {
+		
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		log.info("Deleting rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "rm -f "+clienttasks.rhsmFactsJsonFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
+		
+		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+	}
+	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=661130
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=668814
+
+
 
 	
 	
@@ -461,15 +587,17 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String uErrMsg = clienttasks.invalidCredentialsRegexMsg; //"Invalid username or password";
+
 		
 		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
 		// 									username,			password,						type,	name,	consumerId,	autosubscribe,	force,			debug,	exitCode,				stdoutRegex,																	stderrRegex
 		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: password not provided. Use --password <value>",							null}));
 		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username not provided. Use --username <name>",							null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			"Invalid username or password"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
 
 		// force a successful registration, and then...
 		// FIXME: https://bugzilla.redhat.com/show_bug.cgi?id=616065
@@ -492,11 +620,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
 		
 		// registration test for a user who is invalid
-		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Invalid username or password":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
+//		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Invalid username or password":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
+		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, clienttasks.invalidCredentialsRegexMsg}));
 		
 		// registration test for a user who is invalid (translated)
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
-		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültiger Benutzername oder Kennwort":"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
 
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!usernameWithUnacceptedTC.equals("")) {
@@ -513,5 +642,27 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 
+	@DataProvider(name="getRegisterWithNameAndTypeData")
+	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		// 									name,				type,					exitCode,			stdoutRegex,						stderrRegex
+		for (ConsumerType type : ConsumerType.values()) {
+			String name = type.toString()+"_NAME";
+			
+			// https://bugzilla.redhat.com/show_bug.cgi?id=661130
+			if (type.equals(ConsumerType.person)) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+clientusername,	null)}));			
+				continue;
+			}
+			
+			ll.add(Arrays.asList(new Object[]{  name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+		}
 
+		return ll;
+	}
 }

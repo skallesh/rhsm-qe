@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -536,9 +537,27 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager :  register with proxy configurations commented out of rhsm.conf",
+			groups={},
+			dataProvider="getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithProxyConfigurationsCommentedOutOfRhsmConfig_Test(String[] proxyConfigs) {
+		
+		// comment out each of the config proxy parameters
+		for (String proxyConfig : proxyConfigs) clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, proxyConfig);
+		
+		log.info("Following are the current proxy parameters configured in config file: "+clienttasks.rhsmConfFile);
+		RemoteFileTasks.runCommandAndWait(client, "grep proxy_ "+clienttasks.rhsmConfFile, LogMessageUtil.action());
+		
+		log.info("Attempt to register with the above proxy config parameters configured (expecting success)...");
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		
+	}
 	
 	
-	
+	// TODO Candidates for an automated Test:
+	//		
 	
 	
 	// Configuration methods ***********************************************************************
@@ -553,6 +572,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeMethod(groups={"setup"})
 	public void cleanRhsmConfigAndUnregisterBeforeMethod() {
+		uncommentConfFileProxyParameters();
 		updateConfFileProxyParameters("","","","");
 		clienttasks.unregister(null, null, null);
 	}
@@ -566,6 +586,12 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	// Protected methods ***********************************************************************
 	
+	protected void uncommentConfFileProxyParameters() {
+		clienttasks.uncommentConfFileParameter(clienttasks.rhsmConfFile, "proxy_hostname");
+		clienttasks.uncommentConfFileParameter(clienttasks.rhsmConfFile, "proxy_port");
+		clienttasks.uncommentConfFileParameter(clienttasks.rhsmConfFile, "proxy_user");
+		clienttasks.uncommentConfFileParameter(clienttasks.rhsmConfFile, "proxy_password");
+	}
 	protected void updateConfFileProxyParameters(String proxy_hostname, String proxy_port, String proxy_user, String proxy_password) {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "proxy_hostname", proxy_hostname);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "proxy_port", proxy_port);
@@ -585,7 +611,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", basicauthproxyHostname,basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", noauthproxyHostname,noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
-		String uErrMsg = "Invalid username or password";
+		String uErrMsg = clienttasks.invalidCredentialsRegexMsg; //"Invalid username or password";
 		
 		// String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex
 
@@ -611,6 +637,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+
 	@DataProvider(name="getAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
@@ -620,7 +647,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", basicauthproxyHostname,basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", noauthproxyHostname,noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
-		String uErrMsg = "Invalid username or password";
+		String uErrMsg = clienttasks.invalidCredentialsRegexMsg; //"Invalid username or password";
 
 		// String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
 		// basic auth proxy test data...
@@ -648,6 +675,30 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	noauthproxyUrl,		null,					null,					"bad-proxy",			noauthproxyPort+"0",	"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Closed connection"}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	noauthproxyUrl,		"ignored-username",		"ignored-password",		"bad-proxy",			noauthproxyPort+"0",	"bad-username",				"bad-password",			Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Closed connection"}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	"bad-proxy",		null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	noauthproxyLog,		null}));
+
+
+		return ll;
+	}
+	
+	
+	
+
+	@DataProvider(name="getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigData")
+	public Object[][] getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+
+		// String[] proxyConfigs
+
+		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_hostname"}  }));
+		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_port"}  }));
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("667829", (Object)new String[]{"proxy_hostname", "proxy_port"} ) }));
+		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_user"}  }));
+		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_password"}  }));
+		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_user", "proxy_password"}  }));
+		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_hostname", "proxy_port", "proxy_user", "proxy_password"}  }));
 
 
 		return ll;

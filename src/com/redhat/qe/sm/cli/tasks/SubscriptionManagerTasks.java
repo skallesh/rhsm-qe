@@ -43,6 +43,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
 	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
+	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String factsDir			= "/etc/rhsm/facts/";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
@@ -52,10 +53,13 @@ public class SubscriptionManagerTasks {
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
 	
+	public final String invalidCredentialsRegexMsg	= "^Invalid Credentials$";  // "^Invalid Credentials$|^Invalid username or password"; // "^Invalid username or password";
+	public String hostname			= null;
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
+		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -98,12 +102,10 @@ public class SubscriptionManagerTasks {
 		// only uninstall rpms when there are new rpms to install
 		if (rpmUrls.size() > 0) {
 			log.info("Uninstalling existing subscription-manager RPMs...");
-			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager-gnome");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager-gnome",Integer.valueOf(1),"package subscription-manager-gnome is not installed",null);
-			sshCommandRunner.runCommandAndWait("rpm -e subscription-manager");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q subscription-manager",Integer.valueOf(1),"package subscription-manager is not installed",null);
-			sshCommandRunner.runCommandAndWait("rpm -e python-rhsm");
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q python-rhsm",Integer.valueOf(1),"package python-rhsm is not installed",null);
+			for (String pkg : new String[]{"subscription-manager-firstboot","subscription-manager-gnome","subscription-manager","python-rhsm"}) {
+				sshCommandRunner.runCommandAndWait("rpm -e "+pkg);
+				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
+			}
 		}
 
 		// install new rpms
@@ -146,10 +148,27 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public void updateConfFileParameter(String confFile, String parameter, String value){
+		log.info("Updating config file '"+confFile+"' parameter '"+parameter+"' value to: "+value);
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
-				0,"Updated "+confFile+" parameter '"+parameter+"' to value: " + value);
+				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value: " + value);
 	}
+	
+	public void commentConfFileParameter(String confFile, String parameter){
+		log.info("Commenting out config file '"+confFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=", "#"+parameter+"="),
+				0,"Commented '"+confFile+"' parameter: "+parameter);
+	}
+	
+	public void uncommentConfFileParameter(String confFile, String parameter){
+		log.info("Uncommenting config file '"+confFile+"' parameter: "+parameter);
+		Assert.assertEquals(
+				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^#\\s*"+parameter+"\\s*=", parameter+"="),
+				0,"Uncommented '"+confFile+"' parameter: "+parameter);
+	}
+	
+
 	
 	public String getConfFileParameter(String confFile, String parameter){
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+confFile, 0, "^"+parameter, null);
@@ -290,13 +309,21 @@ public class SubscriptionManagerTasks {
 		return registerResult.getStdout().split(" ")[0];
 	}
 	
+	/**
+	 * @param factName
+	 * @return The fact value that subscription-manager lists for factName is returned.  If factName is not listed, null is returned.
+	 */
 	public String getFactValue(String factName) {
 		SSHCommandResult result = facts_(true, false, null, null, null);
 		
 		String regex=factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+":(.*)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
-		Assert.assertTrue(matcher.find(),"Found fact "+factName); 
+		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
+		if (!matcher.find()) {
+			log.warning("Did not find fact '"+factName+"'.");
+			return null;
+		}
 
 //		log.fine("Matches: ");
 //		do {
@@ -796,7 +823,9 @@ public class SubscriptionManagerTasks {
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:name));
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:name));
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:(type==ConsumerType.person?username:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?this.hostname:(type==ConsumerType.person?this.hostname:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130 https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
@@ -1669,15 +1698,14 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public SSHCommandResult facts(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
-		ConsumerCert consumerCert = getCurrentConsumerCert();
 		
 		SSHCommandResult sshCommandResult = facts_(list, update, proxy, proxyuser, proxypassword);
 
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
-		if (list!=null && list)		regex=".*:.*";					// list
-		if (update!=null && update)	regex=consumerCert.consumerid;	// consumerid
+		if (list!=null && list)		regex=".*:.*";								// list
+		if (update!=null && update)	regex=getCurrentConsumerCert().consumerid;	// consumerid
 
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
@@ -1750,7 +1778,7 @@ repolist: 3,394
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 
@@ -1769,14 +1797,14 @@ repolist: 3,394
 	}
 	
 	/**
-	 * @param option [all|enabled|disabled]
+	 * @param options [all|enabled|disabled] [--option=...]
 	 * @return
 	 */
-	public ArrayList<String> getYumRepolist(String option){
+	public ArrayList<String> yumRepolist(String options){
 		ArrayList<String> repos = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		
-		sshCommandRunner.runCommandAndWait("yum repolist "+option);
+		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		
 		int repolistStartLn = 0;
@@ -1794,7 +1822,7 @@ repolist: 3,394
 		return repos;
 	}
 	
-
+	@Deprecated
 	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
@@ -1802,7 +1830,7 @@ repolist: 3,394
 		int min = 5;
 		log.fine("Using a timeout of "+min+" minutes for next command...");
 		//SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available",Long.valueOf(min*60000));
-		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel,Long.valueOf(min*60000));
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum list available --disablerepo=* --enablerepo="+repoLabel+" --disableplugin=rhnplugin",Long.valueOf(min*60000));  // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 
 		// Example result.getStdout()
 		//xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
@@ -1825,14 +1853,17 @@ repolist: 3,394
 		return packages;		
 	}
 	
-	public ArrayList<String> getAvailablePackages (String disablerepo, String enablerepo, String globExpression) {
+//	public ArrayList<String> yumListAvailable (String disableplugin, String disablerepo, String enablerepo, String globExpression) {
+	public ArrayList<String> yumListAvailable (String options) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 
-		String							command  = "yum list available";	
-		if (disablerepo!=null)			command += " --disablerepo="+disablerepo;
-		if (enablerepo!=null)			command += " --enablerepo="+enablerepo;
-		if (globExpression!=null)		command += " "+globExpression;
+//		String							command  = "yum list available";
+//		if (disableplugin!=null)		command += " --disableplugin="+disableplugin;
+//		if (disablerepo!=null)			command += " --disablerepo="+disablerepo;
+//		if (enablerepo!=null)			command += " --enablerepo="+enablerepo;
+//		if (globExpression!=null)		command += " "+globExpression;
+		String							command  = "yum list available "+options+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		
 		// execute the yum command to list available packages
 		int min = 5;
@@ -1854,8 +1885,9 @@ repolist: 3,394
 		//xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
-		String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
+		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
+		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
+		String regex="^(\\S+) +(\\S+) +(\\S+)$";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		if (!matcher.find()) {
@@ -1865,29 +1897,37 @@ repolist: 3,394
 
 		// assemble the list of packages and return them
 		do {
-			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version
+			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version,  group(3) is the repo
 		} while (matcher.find());
 		return packages;		
 	}
 	
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		
-		for (String pkg : getAvailablePackages("*",repo,null)) {
-			if (!getAvailablePackages(repo,null,pkg).contains(pkg)) {
+//		for (String pkg : getAvailablePackages("rhnplugin","*",repo,null)) {
+//			if (!getAvailablePackages("rhnplugin",repo,null,pkg).contains(pkg)) {
+//				return pkg;
+//			}
+//		}
+
+		for (String pkg : yumListAvailable("--disablerepo=* --enablerepo="+repo)) {
+			if (!yumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
 				return pkg;
 			}
 		}
 		return null;
 	}
 	
-	public void installPackageUsingYumFromRepo (String pkg, String repoLabel) {
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg, 0, "^"+pkg+" .*"+repoLabel+"$",null);
+	public void yumInstallPackageFromRepo (String pkg, String repoLabel) {
+		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*"+repoLabel+"$",null);
 	}
 	
-	public void removePackageUsingYum (String pkg) {
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg, 1, null,"Error: No matching Packages to list");
+	public void yumRemovePackage (String pkg) {
+		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 1, null,"Error: No matching Packages to list");
 	}
 	
 	
