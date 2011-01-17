@@ -110,7 +110,7 @@ public class SubscriptionManagerTasks {
 		for (String rpmUrl : rpmUrls) {
 			rpmUrl = rpmUrl.trim();
 			log.info("Installing RPM from "+rpmUrl+"...");
-			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/")).get(rpmUrl.split("/").length-1);
+			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
 			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
@@ -291,7 +291,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public String getFactValue(String factName) {
-		SSHCommandResult result = facts_(true, false);
+		SSHCommandResult result = facts_(true, false, null, null, null);
 		
 		String regex=factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+":(.*)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
@@ -741,8 +741,19 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register without asserting results
+	 * @param username
+	 * @param password
+	 * @param type
+	 * @param name
+	 * @param consumerId
+	 * @param autosubscribe
+	 * @param force
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the register command
 		String command = this.command;				command += " register";
@@ -753,6 +764,10 @@ public class SubscriptionManagerTasks {
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
 		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
 		if (force!=null && force)					command += " --force";
+		if (proxy!=null)							command += " --proxy="+proxy;
+		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)					command += " --proxypassword="+proxypassword;
+
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -770,10 +785,13 @@ public class SubscriptionManagerTasks {
 	 * @param consumerId
 	 * @param autosubscribe
 	 * @param force
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult register(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force) {
+	public SSHCommandResult register(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, type, name, consumerId, autosubscribe, force);
+		SSHCommandResult sshCommandResult = register_(username, password, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
 
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -874,8 +892,8 @@ public class SubscriptionManagerTasks {
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (10/4/2010 git hash b3c728183c7259841100eeacb7754c727dc523cd)...");
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
-		clean();
-		return register(username,password,null,null,consumerId,null, null);
+		clean(null, null, null);
+		return register(username,password,null,null,consumerId,null, null, null, null, null);
 	}
 	
 	
@@ -884,11 +902,17 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * clean without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult clean_() {
+	public SSHCommandResult clean_(String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the unregister command
 		String command = this.command;	command += " clean";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -896,10 +920,13 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager-cli clean"
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult clean() {
+	public SSHCommandResult clean(String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = clean_();
+		SSHCommandResult sshCommandResult = clean_(proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful clean
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the clean command indicates a success.");
@@ -916,15 +943,21 @@ public class SubscriptionManagerTasks {
 	
 	
 	
-	// clean module tasks ************************************************************
+	// refresh module tasks ************************************************************
 
 	/**
 	 * refresh without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult refresh_() {
+	public SSHCommandResult refresh_(String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the unregister command
 		String command = this.command;	command += " refresh";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -932,10 +965,13 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager-cli refresh"
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult refresh() {
+	public SSHCommandResult refresh(String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = refresh_();
+		SSHCommandResult sshCommandResult = refresh_(proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful clean
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the refresh command indicates a success.");
@@ -950,14 +986,20 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * identity without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult identity_(String username, String password, Boolean regenerate) {
+	public SSHCommandResult identity_(String username, String password, Boolean regenerate, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the unregister command
 		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
 		if (password!=null)					command += " --password="+password;
 		if (regenerate!=null && regenerate)	command += " --regenerate";
+		if (proxy!=null)					command += " --proxy="+proxy;
+		if (proxyuser!=null)				command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -965,10 +1007,13 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager-cli identity"
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult identity(String username, String password, Boolean regenerate) {
+	public SSHCommandResult identity(String username, String password, Boolean regenerate, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = identity_(username,password,regenerate);
+		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful identify
 		/* Example sshCommandResult.getStdout():
@@ -985,11 +1030,17 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * unregister without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult unregister_() {
+	public SSHCommandResult unregister_(String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the unregister command
-		String command = this.command;	command += " unregister";	
+		String command = this.command;	command += " unregister";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -997,9 +1048,12 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager-cli unregister"
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult unregister() {
-		SSHCommandResult sshCommandResult = unregister_();
+	public SSHCommandResult unregister(String proxy, String proxyuser, String proxypassword) {
+		SSHCommandResult sshCommandResult = unregister_(proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
@@ -1028,9 +1082,15 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * list without asserting results
+	 * @param all TODO
+	 * @param available TODO
+	 * @param consumed TODO
 	 * @param installed TODO
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed) {
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the register command
 		String command = this.command;		command += " list";	
@@ -1038,20 +1098,22 @@ public class SubscriptionManagerTasks {
 		if (available!=null && available)	command += " --available";
 		if (consumed!=null && consumed)		command += " --consumed";
 		if (installed!=null && installed)	command += " --installed";
-
+		if (proxy!=null)					command += " --proxy="+proxy;
+		if (proxyuser!=null)				command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
+		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
 	/**
-	 * @return SSHCommandResult from "subscription-manager-cli list"
+	 * @return SSHCommandResult from "subscription-manager-cli list --installed"
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list_(null,null,null,Boolean.TRUE);
+		SSHCommandResult sshCommandResult = list_(null,null,null,Boolean.TRUE, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
-
 
 		if (getCurrentEntitlementCertFiles().isEmpty() && getCurrentProductCertFiles().isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
@@ -1067,7 +1129,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null);
+		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
@@ -1085,11 +1147,11 @@ public class SubscriptionManagerTasks {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null, null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null);
+		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
@@ -1103,7 +1165,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE, null);
+		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed command indicates a success.");
@@ -1123,8 +1185,16 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe without asserting results
+	 * @param poolId TODO
+	 * @param productId TODO
+	 * @param regtoken TODO
+	 * @param email TODO
+	 * @param locale TODO
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale) {
+	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the subscribe command
 		String command = this.command;	command += " subscribe";	
@@ -1133,6 +1203,9 @@ public class SubscriptionManagerTasks {
 		if (regtoken!=null)				command += " --regtoken="+regtoken;
 		if (email!=null)				command += " --email="+email;
 		if (locale!=null)				command += " --locale="+locale;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1140,8 +1213,11 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the subscribe command
 		String command = this.command;								command += " subscribe";	
@@ -1150,14 +1226,17 @@ public class SubscriptionManagerTasks {
 		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
 		if (email!=null)											command += " --email="+email;
 		if (locale!=null)											command += " --locale="+locale;
+		if (proxy!=null)											command += " --proxy="+proxy;
+		if (proxyuser!=null)										command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)									command += " --proxypassword="+proxypassword;
 
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale) {
+	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale);
+		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
@@ -1177,9 +1256,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult;
 	}
 	
-	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale) {
+	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale);
+		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale, proxy, proxyuser, proxypassword);
 		
 		// assert results
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
@@ -1202,7 +1281,7 @@ public class SubscriptionManagerTasks {
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		File newCertFile = null;
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null, null, null, null);
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
@@ -1219,7 +1298,15 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
 			// find the existing entitlement cert file corresponding to the already subscribed pool
-			EntitlementCert entitlementCert = EntitlementCert.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, getCurrentEntitlementCerts());
+			EntitlementCert entitlementCert = null;
+			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
+				EntitlementCert thisEntitlementCert = getEntitlementCertFromEntitlementCertFile(thisEntitlementCertFile);
+				if (thisEntitlementCert.orderNamespace.productId.equals(pool.productId)) {
+					entitlementCert = thisEntitlementCert;
+					break;
+				}
+			}
+			
 			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
@@ -1259,9 +1346,9 @@ public class SubscriptionManagerTasks {
 			} else {		
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
 				if (pool.subscriptionName.equals(System.getProperty("sm.rhpersonal.subproductName", "Property 'sm.rhpersonal.subproductName' must be set."))) // special case when pool is really a subpool
-					Assert.assertEquals(entitlementCert.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
+					Assert.assertEquals(entitlementCert.orderNamespace.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
 				else
-					Assert.assertEquals(entitlementCert.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+					Assert.assertEquals(entitlementCert.orderNamespace.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
 			}
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
@@ -1350,7 +1437,7 @@ public class SubscriptionManagerTasks {
 		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
 		}
-		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
+		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
 		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {
@@ -1432,21 +1519,27 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * unsubscribe without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial) {
+	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the unsubscribe command
 		String command = this.command;	command += " unsubscribe";
 		if (all!=null && all)			command += " --all";
 		if (serial!=null)				command += " --serial="+serial;
-
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial) {
+	public SSHCommandResult unsubscribe(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = unsubscribe_(all, serial);
+		SSHCommandResult sshCommandResult = unsubscribe_(all, serial, proxy, proxyuser, proxypassword);
 		
 		// assert results
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
@@ -1463,7 +1556,7 @@ public class SubscriptionManagerTasks {
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
 		
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
-		SSHCommandResult result = unsubscribe_(Boolean.FALSE, serialNumber);
+		SSHCommandResult result = unsubscribe_(Boolean.FALSE, serialNumber, null, null, null);
 		
 		// assert the results
 		if (!certFileExists) {
@@ -1513,7 +1606,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
 
-		unsubscribe(Boolean.TRUE, null);
+		unsubscribe(Boolean.TRUE, null, null, null, null);
 
 		// assert that there are no product subscriptions consumed
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
@@ -1549,13 +1642,19 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * facts without asserting results
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult facts_(Boolean list, Boolean update) {
+	public SSHCommandResult facts_(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the register command
 		String command = this.command;	command += " facts";	
 		if (list!=null && list)			command += " --list";
 		if (update!=null && update)		command += " --update";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1564,12 +1663,15 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @param list
 	 * @param update
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
 	 * @return
 	 */
-	public SSHCommandResult facts(Boolean list, Boolean update) {
+	public SSHCommandResult facts(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
 		ConsumerCert consumerCert = getCurrentConsumerCert();
 		
-		SSHCommandResult sshCommandResult = facts_(list, update);
+		SSHCommandResult sshCommandResult = facts_(list, update, proxy, proxyuser, proxypassword);
 
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");

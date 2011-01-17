@@ -55,7 +55,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
 		// determine this user's ability to register
-		SSHCommandResult registerResult = clienttasks.register_(username, password, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register_(username, password, null, null, null, null, null, null, null, null);
 			
 		// determine this user's available subscriptions
 		List<SubscriptionPool> allAvailableSubscriptionPools=null;
@@ -80,7 +80,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		RegistrationData userData = new RegistrationData(username,password,jsonOwner,registerResult,allAvailableSubscriptionPools);
 		registrationDataList.add(userData);
-		clienttasks.unregister_();
+		clienttasks.unregister_(null, null, null);
 		
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
 		Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+username);
@@ -99,7 +99,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 //DO NOT		clienttasks.unregister();
 		
 		// attempt the registration
-		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, type, name, consumerId, autosubscribe, force);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, type, name, consumerId, autosubscribe, force, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
@@ -115,7 +115,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void AttemptRegistrationWithInvalidCredentials_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 
 		// ensure we are unregistered
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
 		String command = String.format("%s %s register --username=%s --password=%s", lang==null?"":"LANG="+lang, clienttasks.command, username, password);
@@ -163,8 +163,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		log.info(" 3. reregister with autosubscribe and assert that the product is bound");
 
 		// Register and subscribe to a randomly available pool
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null);
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
@@ -176,8 +176,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		ProductCert fakeProductCert = clienttasks.getProductCertFromProductCertFile(fakeProductCertFile);
 		
 		// reregister with autosubscribe and assert that the product is bound
-		clienttasks.unregister();
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null);
+		clienttasks.unregister(null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
 		/* Sample sshCommandResult.getStdout():
@@ -206,10 +206,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithForce_Test() {
 		
 		// start fresh by unregistering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		// make sure you are first registered
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null);
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null, null, null, null);
 		String firstConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// subscribe to a random pool (so as to consume an entitlement)
@@ -218,11 +218,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
-		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null);
+		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null, null, null, null);
 		Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting: This system is already registered.");
 		
 		// register with force
-		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE);
+		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE, null, null, null);
 		String secondConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// assert the stdout reflects a new consumer
@@ -244,11 +244,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithName_Test() {
 		
 		// start fresh by unregistering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		// register with a name
 		String name = "RegisterWithName_Tester";
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,name,null,null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,name,null,null, null, null, null, null);
 		
 		// assert the stdout reflects the register name
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name,"Stdout from register with --name value of "+name);
@@ -276,8 +276,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void ReregisterBasicRegistration_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
+		clienttasks.unregister(null, null, null);
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// take note of your identity cert before reregister
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -333,8 +333,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void ReregisterWithBadIdentityCert_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		
 		// take note of your identity cert
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -354,7 +354,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// reregister w/ username, password, and consumerid
 		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
-		clienttasks.register(clientusername,clientpassword,null,null,consumerCertBefore.consumerid,null, Boolean.TRUE);
+		clienttasks.register(clientusername,clientpassword,null,null,consumerCertBefore.consumerid,null, Boolean.TRUE, null, null, null);
 		
 		// assert that the identity cert has not changed
 		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
@@ -387,7 +387,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
-		clienttasks.unregister_();
+		clienttasks.unregister_(null, null, null);
 	}
 	@AfterGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void generateRegistrationReportTableAfterRegisterWithUsernameAndPassword_Test() {

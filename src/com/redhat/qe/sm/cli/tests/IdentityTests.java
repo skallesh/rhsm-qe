@@ -49,13 +49,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		log.info("Assert that one must be registered to query the identity...");
 		for (String username : new String[]{null,clientusername}) {
 			for (String password : new String[]{null,clientpassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
-					SSHCommandResult result = clienttasks.identity_(username,password,regenerate);
+					SSHCommandResult result = clienttasks.identity_(username,password,regenerate, null, null, null);
 					Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
 						"One must be registered to have an identity.");
 				}
@@ -71,11 +71,11 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void Identity_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
+		clienttasks.unregister(null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// get the current identity
-		SSHCommandResult result = clienttasks.identity(null, null, null);
+		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
@@ -90,12 +90,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityWithName_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		String nickname = "Mr_"+clientusername;
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,nickname,null,null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,nickname,null,null, null, null, null, null));
 		
 		// get the current identity
-		SSHCommandResult result = clienttasks.identity(null, null, null);
+		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
 		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);
@@ -109,13 +109,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerate_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.unregister(null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		ConsumerCert origConsumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// regenerate the identity... and assert
 		log.info("Regenerating identity using the current cert for authentication...");
-		SSHCommandResult result = clienttasks.identity(null,null,Boolean.TRUE);
+		SSHCommandResult result = clienttasks.identity(null,null,Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
@@ -138,13 +138,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerateWithUsernameAndPaswordFromTheSameOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.unregister(null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
-		SSHCommandResult result = clienttasks.identity(clientusername,clientpassword,Boolean.TRUE);
+		SSHCommandResult result = clienttasks.identity(clientusername,clientpassword,Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
@@ -154,7 +154,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// regenerate the identity using a different username and password as used during register... and assert
 		log.info("Regenerating identity with a different username and password (but belonging to the same owner) than used during register...");
-		result = clienttasks.identity(registrationData.username,registrationData.password,Boolean.TRUE);
+		result = clienttasks.identity(registrationData.username,registrationData.password,Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 			"The original registered result is returned from identity regenerate using a different authenticator who belongs to the same owner/organization.");
 	}
@@ -167,8 +167,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerateWithUsernameAndPaswordFromADifferentOwner_Test() throws Exception {
 
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null));
+		clienttasks.unregister(null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		String consumerOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 
 		// find a username from the registrationDataList whose owner does not match the registerer of this client
@@ -177,7 +177,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
-		SSHCommandResult result = clienttasks.identity_(registrationData.username,registrationData.password,Boolean.TRUE);
+		SSHCommandResult result = clienttasks.identity_(registrationData.username,registrationData.password,Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 		Assert.assertEquals(result.getStderr().trim(),"access denied.");
 	}
@@ -190,12 +190,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
 		
 		// start fresh by unregistering and registering
-		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
-		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE);
+		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 		//Assert.assertEquals(result.getStderr().trim(),"Invalid username or password");	// works against on-premises, not hosted
 		Assert.assertTrue(result.getStderr().trim().startsWith("Invalid username or password"),"Invalid username or password");

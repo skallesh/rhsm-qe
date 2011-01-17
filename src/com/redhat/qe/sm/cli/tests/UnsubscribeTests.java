@@ -157,29 +157,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 	
-	@DataProvider(name="getAllConsumedProductSubscriptionsData")
-	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
-	}
-	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
-		if (clienttasks==null) return ll;
-		
-		// first make sure we are subscribed to all pools
-		clienttasks.unregister();
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
-//		c1sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 
-		
-		// then assemble a list of all consumed ProductSubscriptions
-		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			ll.add(Arrays.asList(new Object[]{productSubscription}));		
-		}
-		
-		return ll;
-	}
 	
 
 }

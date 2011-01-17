@@ -1,28 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="SMTestSuite">
-<!-- DELETEME vestige from ssalevan
-	<test name="subscription-manager-cli Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />		
-		</packages>
-		<groups>
-			<run>
-				<include name="sm_setup" />
-				<include name="sm_stage1" />
-				<include name="sm_stage2" />
-				<include name="sm_stage3" />
-				<include name="sm_stage4" />
-				<include name="sm_stage5" />
-				<include name="sm_stage6" />
-				<include name="sm_stage7" />
-				<include name="sm_stage8" />
-				<include name="sm_stage9" />
-				<exclude name="not_implemented" />
-			</run>
-		</groups>
-	</test>
--->
+
 	<!-- the hudson.groovy script already includes these listeners
 	<listeners>
   		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
@@ -200,6 +179,18 @@
 			<run>
 				<include name="setup" />
 				<include name="refresh" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Proxy Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="proxy" />
 			</run>
 		</groups>
 	</test>

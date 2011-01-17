@@ -77,7 +77,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// start fresh by unregistering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
@@ -88,7 +88,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
  
         // fire a register event
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
@@ -180,7 +180,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
-		clienttasks.refresh();
+		clienttasks.refresh(null, null, null);
 		
 		// assert the feed...
 		//assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
@@ -243,7 +243,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire an facts update event by overriding a fact in /etc/rhsm/facts/event_tests.facts
         String factsFile = clienttasks.factsDir+"eventTests.facts";
         client.runCommandAndWait("echo '{\"events.test.description\": \"Testing CONSUMER MODIFIED event fires on facts update.\", \"events.test.currentTimeMillis\": \""+System.currentTimeMillis()+"\"}' > "+factsFile);	// create an override for facts
-		clienttasks.facts(null,true);
+		clienttasks.facts(null,true, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 
 		// assert the feed...
@@ -273,7 +273,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
  
         // fire an unregister event
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
 		
 		// assert the feed...
@@ -407,14 +407,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void ExportCreated_Test() throws Exception {
 		
 		// start fresh by unregistering
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null, null);
+		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(pool.poolId, null, null, null, null);
+		clienttasks.subscribe(pool.poolId, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event

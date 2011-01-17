@@ -45,12 +45,12 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void FactsWhenNotRegistered_Test() {
 		
 		// make sure we are not registered
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		
 		log.info("Assert that one must be registered to query the facts...");
 		for (Boolean list : new Boolean[]{true,false}) {
 			for (Boolean update : new Boolean[]{true,false}) {
-				SSHCommandResult result = clienttasks.facts_(list, update);
+				SSHCommandResult result = clienttasks.facts_(list, update, null, null, null);
 				Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
 						"One must be registered to list/update the facts.");
 			}	
@@ -66,11 +66,11 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void ConsumerFactsList_Test(SubscriptionManagerTasks smt) {
 		
 		// start with fresh registrations using the same clientusername user
-		smt.unregister();
-		smt.register(clientusername, clientpassword, null, null, null, null, null);
+		smt.unregister(null, null, null);
+		smt.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		// list the system facts
-		smt.facts(true, false);
+		smt.facts(true, false, null, null, null);
 	}
 	
 	
@@ -100,10 +100,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// start with fresh registrations using the same clientusername user
-		workClientTasks.unregister();
-		servClientTasks.unregister();
-		workClientTasks.register(clientusername, clientpassword, null, null, null, null, null);
-		servClientTasks.register(clientusername, clientpassword, null, null, null, null, null);
+		workClientTasks.unregister(null, null, null);
+		servClientTasks.unregister(null, null, null);
+		workClientTasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		servClientTasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 
 		// get all the pools available to each client
@@ -126,8 +126,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
-		smt.unregister();
-		smt.register(clientusername, clientpassword, null, null, null, null, null);
+		smt.unregister(null, null, null);
+		smt.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(smt);
 	}
 	
@@ -137,8 +137,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
-		smt.unregister();
-		smt.register(clientusername, clientpassword, null, null, null, null, null);
+		smt.unregister(null, null, null);
+		smt.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(smt);
 	}
 	
@@ -159,8 +159,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// on a RHEL workstation register to candlepin (as type system)
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null);
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this system consumer)
 		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -172,8 +172,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				"The pools available to a type=system consumer is a subset of --all --available pools.");
 		
 		// now register to candlepin (as type candlepin)
-		clienttasks.unregister();
-		clienttasks.register(clientusername, clientpassword, ConsumerType.candlepin, null, null, null, null);
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(clientusername, clientpassword, ConsumerType.candlepin, null, null, null, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
