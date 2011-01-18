@@ -829,7 +829,8 @@ public class SubscriptionManagerTasks {
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
+			//Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		}
 		
 		// assert certificate files are dropped into /etc/pki/consumer

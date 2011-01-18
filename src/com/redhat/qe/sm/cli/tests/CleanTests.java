@@ -61,6 +61,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(value="Clean_Test", alwaysRun=true)
 	public void teardownAfterClass() {
 		if (consumerId!=null) {
+			clienttasks.clean(null, null, null);
 			clienttasks.register(clientusername, clientpassword, null, null, consumerId, null, Boolean.TRUE, null, null, null);
 			clienttasks.unregister(null, null, null);
 		}
