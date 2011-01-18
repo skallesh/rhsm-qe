@@ -2,14 +2,14 @@
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
         [com.redhat.qe.verify :only (verify)]
-        [com.redhat.qe.handler :only (with-handlers handle-type recover-by)]
+        [com.redhat.qe.handler :only (with-handlers handle-type ignore-type recover-by)]
 	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
 (defn ^{BeforeClass {}}
   setup [_]
-  (with-handlers [(handle-type :not-registered [e] nil)]
+  (with-handlers [(ignore-type :not-registered)]
     (tasks/unregister)))
 
 (defn ^{Test {:groups ["registration"]}}

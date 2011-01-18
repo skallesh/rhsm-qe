@@ -54,12 +54,12 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                            :not-installed
                                            :overlap
                                            :contain-text
-                                           :text-in-subscription])
+                                           :text-in-subscription
+                                           :unsubscribe])
 		    (same-name [:match-my-hardware
 				:overlap-with-existing-subscriptions
 				:provide-software-not-yet-installed
-				:contain-the-text])
-                   { :unsubscribe "Unsubscribe Button" }))
+				:contain-the-text])))
 		 {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
 		 (define-elements (windows :register-dialog)
 		   {:redhat-login "account_login"

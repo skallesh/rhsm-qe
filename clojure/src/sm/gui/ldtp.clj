@@ -75,8 +75,15 @@
 (defn waittillwindownotexist [windowid seconds]
   (waittillwindow windowid seconds false))
 
+(defn- bool [i]
+  (= 1 i))
+
 (defn exists? [windowid objectid]
-  (= 1 (objectexist windowid objectid)))
+  (bool (objectexist windowid objectid)))
 
 (defn showing? [windowid objectid]
-  (= 1 (hasstate windowid objectid "SHOWING")))
+  (bool (hasstate windowid objectid "SHOWING")))
+
+(defn rowexist? [windowid objectid row]
+  (bool (doesrowexist windowid objectid row)))
+

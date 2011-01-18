@@ -1,13 +1,13 @@
 (ns sm.gui.tests.subscribe-tests
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
-        [com.redhat.qe.handler :only (handle-type with-handlers recover-by)]
+        [com.redhat.qe.handler :only (handle-type with-handlers ignore-type recover-by)]
 	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
 (defn- do-to-all-rows-in [view f]
-  (let [subscription-list (for [row (range (dec (action getrowcount view)))]
+  (let [subscription-list (for [row (range (action getrowcount view))]
                             (action getcellvalue view row 0))]
     (doseq [item subscription-list]
       (f item))))
@@ -23,7 +23,8 @@
   (tasks/search)
   (do-to-all-rows-in :all-subscriptions-view
                   (fn [subscription]
-                    (with-handlers [(handle-type :wrong-consumer-type [e]
+                    (with-handlers [(ignore-type :subscription-not-available)
+                                    (handle-type :wrong-consumer-type [e]
                                                  (recover-by :log-warning))]
                       (tasks/subscribe subscription)))))
 
@@ -31,6 +32,8 @@
               :dependsOnMethods [ "subscribe_all"]}}
   unsubsubscribe_all [_]
   (action selecttab :my-subscriptions)
-  (do-to-all-rows-in :my-subscriptions-view (fn [subscription] (tasks/unsubscribe subscription))))
+  (do-to-all-rows-in :my-subscriptions-view
+                     (fn [subscription] (with-handlers [(ignore-type :not-subscribed)]
+                                         (tasks/unsubscribe subscription)))))
 
 (gen-class-testng)

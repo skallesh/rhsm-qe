@@ -123,6 +123,10 @@ where (isa? (:type *error*) type)."
                     (do ~@body)
                     ~errname))))
 
+(defmacro ignore-type "Handle an error of a given type with a no-op function."
+  [type]
+  `(handle-type ~type [e#] nil))
+
 (defmacro recover-by [kw]
   `(recover ~kw *error*))
 

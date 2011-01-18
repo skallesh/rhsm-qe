@@ -10,7 +10,7 @@
 (def ui sm.gui.ldtp/action) ;;alias action in ldtp to ui here
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
-(def known-errors {:invalid-credentials #"Invalid username"
+(def known-errors {:invalid-credentials #"Invalid Credentials"
                    :no-username #"You must enter a login"
                    :no-password #"You must enter a password"
                    :wrong-consumer-type #"Consumers of this type are not allowed"
@@ -100,6 +100,10 @@
 
 (defn subscribe [s]
   (ui selecttab :all-available-subscriptions)
+  (if-not (ui rowexist? :all-subscriptions-view s)
+    (raise {:type :subscription-not-available
+            :name s
+            :msg (str "Not found in 'All Available Subscriptions':" s)}))
   (ui selectrow :all-subscriptions-view s)
   (ui click :subscribe)
   (checkforerror)
@@ -110,6 +114,10 @@
 
 (defn unsubscribe [s]
   (ui selecttab :my-subscriptions)
+  (if-not (ui rowexist? :my-subscriptions s)
+    (raise {:type :not-subscribed
+            :name s
+            :msg (str "Not found in 'My Subscriptions': " s)}))
   (ui selectrow :my-subscriptions-view s)
   (ui click :unsubscribe)
   (checkforerror))
