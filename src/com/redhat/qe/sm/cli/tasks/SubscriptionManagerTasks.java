@@ -1319,10 +1319,13 @@ public class SubscriptionManagerTasks {
 				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
+		log.warning("No longer asserting that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed to.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
+		/*
 		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
 			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
 					"This remaining available pool "+afterSubscriptionPool+" does NOT contain the same productId ("+pool.productId+") after subscribing to pool: "+pool);
 		}
+		*/
 
 		// when the pool is already subscribe to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
