@@ -86,13 +86,13 @@
 		      active-on nil}}]
   (ui selecttab :all-available-subscriptions)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
-    (ui (setchecked match-hardware?) :match-hardware-checkbox)
-    (ui (setchecked overlap?) :overlap-checkbox)
-    (ui (setchecked not-installed?) :not-installed-checkbox)
-    (if contain-text (do (ui check :contain-text-checkbox)
+    (ui (setchecked match-hardware?) :match-hardware)
+    (ui (setchecked overlap?) :overlap)
+    (ui (setchecked not-installed?) :not-installed)
+    (if contain-text (do (ui check :contain-text)
 			     (ui settextvalue :as-yet-unnamed-textbox))))
   (if active-on (comment "Procedure to set date goes here "))
-  (ui click :search-button)
+  (ui click :search)
   (wait-for-progress-bar))
 
 (defn subscribe [s]

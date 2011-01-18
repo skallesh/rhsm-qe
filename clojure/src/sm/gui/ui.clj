@@ -46,14 +46,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 					   :all-available-subscriptions
 					   :my-subscriptions
 					   :my-installed-software
-					   :search-button
+					   :search
 					   :subscribe
                                            :all-subscriptions-view
                                            :my-subscriptions-view
-                                           :match-hardware-checkbox
-                                           :not-installed-checkbox
-                                           :overlap-checkbox
-                                           :contain-text-checkbox])
+                                           :match-hardware
+                                           :not-installed
+                                           :overlap
+                                           :contain-text
+                                           :text-in-subscription])
 		    (same-name [:match-my-hardware
 				:overlap-with-existing-subscriptions
 				:provide-software-not-yet-installed
