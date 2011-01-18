@@ -8,6 +8,10 @@ import java.util.regex.Pattern;
 
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
+/**
+ * @author jsefler
+ *
+ */
 public class ContentNamespace extends AbstractCommandLineData {
 	
 	// abstraction fields
@@ -61,11 +65,11 @@ public class ContentNamespace extends AbstractCommandLineData {
 	}
 	
 	/**
-	 * @param certificates - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/product/314.pem "
+	 * @param rawCertificate - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/1129238407379723.pem
 	 * @return
 	 */
-	static public List<ContentNamespace> parse(String certificate) {
-		/* # openssl x509 -in /etc/pki/entitlement/product/314.pem -noout -text
+	static public List<ContentNamespace> parse(String rawCertificate) {
+		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
 		Certificate:
 		    Data:
 		        Version: 3 (0x2)
@@ -81,20 +85,6 @@ public class ContentNamespace extends AbstractCommandLineData {
 		                Public-Key: (2048 bit)
 		                Modulus:
 		                    00:b8:4f:1f:23:98:08:a0:3f:82:c5:fe:af:13:38:
-		                    61:ad:42:1a:ee:64:89:e9:84:f6:b0:65:14:8c:8d:
-		                    48:fb:f6:9b:6c:d1:96:b8:e3:e4:85:39:00:59:b1:
-		                    26:6e:7d:ff:c5:ac:96:70:ab:7e:8f:7d:05:b7:b6:
-		                    f0:49:76:b3:65:56:29:9c:9c:5f:8c:d5:4b:32:73:
-		                    d4:05:bf:c5:55:4b:68:d8:1a:8a:0c:61:0e:3a:1c:
-		                    a2:fd:d4:c8:db:62:b5:a4:58:47:7b:13:e5:fd:27:
-		                    50:76:58:f1:0c:1b:58:57:73:33:fd:c9:d1:f9:32:
-		                    a0:0f:c7:f8:23:77:6c:85:5e:c1:92:f6:3a:81:65:
-		                    f8:8d:ab:ff:ed:d8:77:d7:a3:d2:ea:56:c6:0c:bb:
-		                    2a:3b:68:f3:be:18:9f:70:ed:97:01:36:4d:d6:8e:
-		                    e7:0f:cf:d8:f9:d0:70:60:07:d0:52:c8:a5:3b:7d:
-		                    d8:ca:54:1b:df:07:53:49:12:31:3f:0c:1b:57:c0:
-		                    ec:f0:28:eb:78:d2:23:f3:02:a0:35:51:c7:17:f8:
-		                    e8:66:6a:76:95:22:4b:b7:bb:49:df:dc:f0:82:5e:
 		                    8d:39:c7:8b:68:51:1a:bf:4e:5c:d5:75:3a:f4:12:
 		                    d7:57:01:be:08:af:fb:88:24:0c:b6:b4:0b:61:58:
 		                    6e:2d
@@ -233,10 +223,6 @@ public class ContentNamespace extends AbstractCommandLineData {
 		                .$28b1c0d1-f621-4a05-b94e-6b9f53230a3a
 		    Signature Algorithm: sha1WithRSAEncryption
 		        5f:24:18:39:f6:02:d6:35:c3:bd:5b:79:c0:6a:7a:d2:c6:5d:
-		        be:20:02:c2:e1:da:2f:21:fd:bd:e5:1e:44:15:c9:5a:dd:44:
-		        76:4f:02:51:3c:25:ad:d7:93:ed:65:6f:f9:46:19:ae:71:b6:
-		        63:39:b4:52:f1:d8:a1:ca:5f:a1:d7:36:4b:69:52:7e:55:77:
-		        0f:87:9f:68:53:81:77:32:49:b7:ac:e2:9c:b2:ed:6b:31:f6:
 		        52:60:65:11:0e:ac:ef:f8:10:fc:a8:a6:75:20:31:57:06:9c:
 		        06:c4:a2:65:05:81:8c:d7:5b:e3:9f:4f:1f:6c:9b:3c:85:e5:
 		        30:28
@@ -269,7 +255,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToMap(pat, certificate, productMap, field);
+			addRegexMatchesToMap(pat, rawCertificate, productMap, field);
 		}
 		
 		List<ContentNamespace> contentNamespaces = new ArrayList<ContentNamespace>();

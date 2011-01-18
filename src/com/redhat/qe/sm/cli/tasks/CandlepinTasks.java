@@ -167,11 +167,15 @@ public class CandlepinTasks {
 		if (requestBody != null) {
 			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));
 			post.addRequestHeader("accept", "application/json");
-			//post.addRequestHeader("content-type", "application/json");
+			post.addRequestHeader("content-type", "application/json");
 		}
-		
-		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST https://"+server+":"+port+prefix+path);
+		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
+		String data = requestBody==null? "":"--data '"+requestBody+"'";
+		String headers = "";
+		for ( org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
+
+		log.info("SSH alternative to HTTP request: curl -k --request POST "+credentials+" "+data+" "+headers+" https://"+server+":"+port+prefix+path);
+
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
@@ -315,12 +319,12 @@ public class CandlepinTasks {
 		Assert.assertEquals(status, 204);
 	}
 	
-	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String owner, String password, String consumerId) throws JSONException, Exception {
+	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String consumerId) throws JSONException, Exception {
 		// determine this consumerId's owner
 		JSONObject jsonOwner = null;
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, owner, password,"/consumers/"+consumerId));	
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/consumers/"+consumerId));	
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
-		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, owner, password,jsonOwner_.getString("href")));	
+		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,jsonOwner_.getString("href")));	
 
 		return jsonOwner;
 	}

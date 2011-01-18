@@ -39,7 +39,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
-			groups={},
+			groups={"blockedByBug-664581"},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
@@ -78,7 +78,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41697)
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
 		log.info("Testing subscription-manager-cli command without being registered, expecting it to fail: "+ command);
-		clienttasks.unregister();
+		clienttasks.unregister(null, null, null);
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
 		RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
 
@@ -132,9 +132,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
 		cleanOptions.add("--debug=DEBUG");
-		cleanOptions.add("--proxy=PROXY_URL");
-		cleanOptions.add("--proxyuser=PROXY_USER");
-		cleanOptions.add("--proxypassword=PROXY_PASSWORD");
+		// removed in https://bugzilla.redhat.com/show_bug.cgi?id=664581
+		//cleanOptions.add("--proxy=PROXY_URL");
+		//cleanOptions.add("--proxyuser=PROXY_USER");
+		//cleanOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h clean",clienttasks.command+" --help clean"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" clean [OPTIONS]";

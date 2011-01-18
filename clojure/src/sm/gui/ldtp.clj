@@ -78,4 +78,5 @@
 (defn exists? [windowid objectid]
   (= 1 (objectexist windowid objectid)))
 
-
+(defn showing? [windowid objectid]
+  (= 1 (hasstate windowid objectid "SHOWING")))

@@ -7,9 +7,10 @@
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
 (defn- do-to-all-rows-in [view f]
-  (let [subscription-list (for [row (range (- (action getrowcount view) 1))]
+  (let [subscription-list (for [row (range (dec (action getrowcount view)))]
                             (action getcellvalue view row 0))]
-    (doall (map f subscription-list))))
+    (doseq [item subscription-list]
+      (f item))))
 
 (defn ^{BeforeClass {}}
   register [_]

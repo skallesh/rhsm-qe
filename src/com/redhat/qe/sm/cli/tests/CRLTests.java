@@ -79,7 +79,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		if (alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.contains(pool.productId)) {
 			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, it only makes sense to skip this iteration of the test.");
 			log.info("However, for the sake of testing, let's attempt to subscribe to it anyway and assert that our subscribe request is blocked with an appropriate message...");
-			SSHCommandResult sshCommandResult = clienttasks.subscribe(pool.poolId, null, null, null, null);
+			SSHCommandResult sshCommandResult = clienttasks.subscribe(pool.poolId, null, null, null, null, null, null, null);
 			Assert.assertEquals(sshCommandResult.getStdout().trim(),"This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'");
 			throw new SkipException("Because this consumer is already subscribed to the product ("+pool.productId+") provided by this pool id '"+pool.poolId+"', this pool is unsubscribeable and therefore we must skip this test iteration.");
 		}
@@ -126,7 +126,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 //		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
 //		clienttasks.restart_rhsmcertd(1, true);
 		log.info("Refresh to make sure the latest certs are on the client...");
-		clienttasks.refresh(); // make sure the new entitlements are downloaded
+		clienttasks.refresh(null, null, null); // make sure the new entitlements are downloaded
 
 		log.info("The updated certs should now be on the client...");
 
@@ -137,7 +137,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 				"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
 
 //FIXME UNCOMMENT WHILE DEBUGGING WITH AJAY
-if (true)return;
+//if (true)return;
 		log.info("Second, let's assert that the original cert file '"+originalCertFile+"' is gone...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),0,"Original certificate file '"+originalCertFile+"' has been removed.");
 

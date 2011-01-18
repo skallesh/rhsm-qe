@@ -7,7 +7,7 @@
             sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
-(def ui action) ;;alias action in ldtp to ui here
+(def ui sm.gui.ldtp/action) ;;alias action in ldtp to ui here
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid username"
@@ -51,6 +51,9 @@
                :msg message})))))
 
 (defn unregister []
+  (if (ui showing? :register-system)
+    (raise {:type :not-registered
+            :msg "Tried to unregister when already unregistered."}))
   (ui click :unregister-system)
   (ui waittillwindowexist :question-dialog 5)
   (ui click :yes)
@@ -58,7 +61,7 @@
 
 (defn register [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
-  (if (ui exists? :unregister-system)
+  (if (ui showing? :unregister-system)
     (raise {:type :already-registered
             :username username
             :password password

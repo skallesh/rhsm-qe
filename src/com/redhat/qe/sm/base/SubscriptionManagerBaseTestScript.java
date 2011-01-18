@@ -93,7 +93,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public SubscriptionManagerBaseTestScript() {
 		super();
 		
-		if (getProperty("sm.rpm.urls", "").equals("")) rpmUrls = new ArrayList<String>(); else rpmUrls = Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(","));
+		if (getProperty("sm.rpm.urls", "").equals("")) rpmUrls = new ArrayList<String>(); else rpmUrls = Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(", *"));
 		
 		// rhsm.conf [server] configurations
 		serverHostname				= getProperty("sm.server.hostname","");

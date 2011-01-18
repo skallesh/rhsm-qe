@@ -18,6 +18,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public String productName;
 	public BigInteger serialNumber;	// Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
 	public Integer contractNumber;
+	public BigInteger accountNumber;
 	public Boolean isActive;
 	public Calendar startDate;
 	public Calendar endDate;
@@ -36,6 +37,11 @@ public class ProductSubscription extends AbstractCommandLineData {
 			this.productName = "";
 	}
 	
+	/**
+	 * UNTESTED/UNUSED METHOD FROM ssalevan
+	 * @param subscriptionLine
+	 * @throws ParseException
+	 */
 	public ProductSubscription(String subscriptionLine) throws ParseException{
 		super(null);
 		
@@ -46,6 +52,11 @@ public class ProductSubscription extends AbstractCommandLineData {
 		endDate = /*this.*/parseDateString(components[2].trim());
 	}
 	
+	/**
+	 * UNTESTED/UNUSED METHOD FROM ssalevan
+	 * @param productName
+	 * @param fromPool
+	 */
 	public ProductSubscription(String productName, SubscriptionPool fromPool){
 		super(null);
 		
@@ -103,6 +114,14 @@ public class ProductSubscription extends AbstractCommandLineData {
 		Begins:             	2010-10-25               
 		Expires:            	2011-01-24   
 		
+		ProductName:        	Smart Management (RHN Management & Provisioning)
+		ContractNumber:     	12                       
+		AccountNumber:      	12331131231              
+		SerialNumber:       	11292428201405242        
+		Active:             	True                     
+		Begins:             	2010-12-14               
+		Expires:            	2011-12-15   
+		
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -112,6 +131,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		regexes.put("productName",			"Name:(.*)");
 		regexes.put("serialNumber",			"SerialNumber:(.*)");
 		regexes.put("contractNumber",		"ContractNumber:(.*)");
+		regexes.put("accountNumber",		"AccountNumber:(.*)");
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("startDate",			"Begins:(.*)");
 		regexes.put("endDate",				"Expires:(.*)");
