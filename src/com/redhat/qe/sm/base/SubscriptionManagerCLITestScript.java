@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.base;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -125,12 +126,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
 		if (server!=null && isServerOnPremises) {
 			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
-			RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
-			
-			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
-			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			if (client2!=null) client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
+			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
+			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
+
+								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
+			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
 		}
 		
 		

@@ -70,6 +70,7 @@ public class CandlepinTasks {
 	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/client/ruby/";
+	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
 	public static HttpClient client;
 
 	static {
