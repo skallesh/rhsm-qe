@@ -72,6 +72,7 @@ public class CandlepinTasks {
 	public static String rubyClientDir	= "/client/ruby/";
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
 	public static HttpClient client;
+	public boolean isOnPremises = false;
 
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
@@ -90,10 +91,11 @@ public class CandlepinTasks {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir) {
+	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, boolean isOnPremises) {
 		super();
 		this.sshCommandRunner = sshCommandRunner;
 		this.serverInstallDir = serverInstallDir;
+		this.isOnPremises = isOnPremises;
 	}
 	
 	
@@ -621,7 +623,9 @@ public class CandlepinTasks {
 		return sub;
 	}
 	
-	
+	public String invalidCredentialsRegexMsg() {
+		return isOnPremises? "^Invalid Credentials$":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
+	}
 	
 	public static void main (String... args) throws Exception {
 		

@@ -588,7 +588,7 @@ Expected Results:
 	}
 	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		String uErrMsg = isServerOnPremises? clienttasks.invalidCredentialsRegexMsg:"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		
 		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
@@ -617,7 +617,7 @@ Expected Results:
 	}
 	protected List<List<Object>> getInvalidRegistrationWithLocalizedStringsAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		String uErrMsg = isServerOnPremises? clienttasks.invalidCredentialsRegexMsg:"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
 		

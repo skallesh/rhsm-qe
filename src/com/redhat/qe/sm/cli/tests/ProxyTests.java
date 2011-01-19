@@ -122,7 +122,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 //	}
 	
 	@Test(	description="subscription-manager : register using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={},
+			groups={"myDevGroup"},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -611,7 +611,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", basicauthproxyHostname,basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", noauthproxyHostname,noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
-		String uErrMsg = clienttasks.invalidCredentialsRegexMsg; //"Invalid username or password";
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg(); //"Invalid username or password";
 		
 		// String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex
 
@@ -647,7 +647,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", basicauthproxyHostname,basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", noauthproxyHostname,noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
-		String uErrMsg = clienttasks.invalidCredentialsRegexMsg; //"Invalid username or password";
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg(); //"Invalid username or password";
 
 		// String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
 		// basic auth proxy test data...

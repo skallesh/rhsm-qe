@@ -53,7 +53,6 @@ public class SubscriptionManagerTasks {
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
 	
-	public final String invalidCredentialsRegexMsg	= "^Invalid Credentials$";  // "^Invalid Credentials$|^Invalid username or password"; // "^Invalid username or password";
 	public String hostname			= null;
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {

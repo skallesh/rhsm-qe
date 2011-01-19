@@ -147,7 +147,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		//FIXME
 		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
 
@@ -289,7 +289,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -311,7 +311,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ProductCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -333,7 +333,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void PoolCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -357,7 +357,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void PoolDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -470,7 +470,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);

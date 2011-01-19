@@ -198,7 +198,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		log.info("Attempting to regenerate identity with an invalid username and password...");
 		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-		Assert.assertContainsMatch(result.getStderr().trim(),clienttasks.invalidCredentialsRegexMsg,"The stderr expresses a message such that authentication credentials are invalid.");
+		Assert.assertContainsMatch(result.getStderr().trim(),servertasks.invalidCredentialsRegexMsg(),"The stderr expresses a message such that authentication credentials are invalid.");
 	}
 	
 	

@@ -65,10 +65,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// will we be connecting to the candlepin server?
 		if (!serverHostname.equals("")) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
 
 		} else {
 			log.info("Assuming the server is already setup and running.");
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises);
+
 		}
 		
 		// will we be testing multiple clients?
@@ -80,7 +82,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// setup the server
-		if (server!=null && isServerOnPremises) {
+		if (server!=null && servertasks.isOnPremises) {
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
@@ -124,7 +126,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
-		if (server!=null && isServerOnPremises) {
+		if (server!=null && servertasks.isOnPremises) {
 			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
 			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
 			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
