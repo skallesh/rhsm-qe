@@ -1,7 +1,7 @@
 (ns sm.gui.tests.subscribe-tests
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
-        [com.redhat.qe.handler :only (handle-type with-handlers ignore-type recover-by)]
+        [error.handler :only (handle-type with-handlers expect recover-by)]
 	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
@@ -23,7 +23,7 @@
   (tasks/search)
   (do-to-all-rows-in :all-subscriptions-view
                   (fn [subscription]
-                    (with-handlers [(ignore-type :subscription-not-available)
+                    (with-handlers [(expect :subscription-not-available)
                                     (handle-type :wrong-consumer-type [e]
                                                  (recover-by :log-warning))]
                       (tasks/subscribe subscription)))))

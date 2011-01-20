@@ -1,6 +1,6 @@
 (ns sm.gui.tasks
   (:use [sm.gui.test-config :only (config)]
-        [com.redhat.qe.handler :only (add-recoveries raise *error*)]
+        [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
         sm.gui.ldtp)
   (:require [clojure.contrib.logging :as log]
@@ -42,7 +42,9 @@
 
 (defn checkforerror []
   (add-recoveries
-   {:log-warning #(log/warn (format "Got error %s, message was: '%s'" (name (:type *error*)) (:msg *error*)))}
+   {:log-warning (fn [e] (log/warn
+                         (format "Got error %s, message was: '%s'"
+                                 (name (:type e)) (:msg e))))}
    (if (= 1 (ui waittillwindowexist :error-dialog 3)) 
      (let [message (get-error-msg)
            type (matching-error message)]
@@ -65,8 +67,8 @@
     (raise {:type :already-registered
             :username username
             :password password
-            :unregister-first (fn [] (unregister)
-                                (register (:username *error*) (:password *error*)))}))
+            :unregister-first (fn [e] (unregister)
+                                (register (:username e) (:password e)))}))
   (ui click :register-system)
   (ui waittillguiexist :redhat-login)
   (ui settextvalue :redhat-login username)
