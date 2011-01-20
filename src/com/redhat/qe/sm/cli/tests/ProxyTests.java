@@ -122,7 +122,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 //	}
 	
 	@Test(	description="subscription-manager : register using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"myDevGroup"},
+			groups={},
 			dataProvider="getAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
