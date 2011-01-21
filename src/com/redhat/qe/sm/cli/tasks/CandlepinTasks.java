@@ -115,7 +115,7 @@ public class CandlepinTasks {
 
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
-		if (branch.equals("candlepin-latest-tag")) {
+		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.1 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 			branch = sshCommandRunner.getStdout().trim();
 		}
@@ -650,3 +650,61 @@ public class CandlepinTasks {
 		//System.out.println(jo.toString());
 	}
 }
+
+
+
+
+/* A PYTHON SCRIPT FROM jmolet TO HELP FIND THE candlepin-latest-tag
+#!/usr/bin/python
+
+class TreeNode:
+  def __init__(self, value, vertices=None):
+    self.value = value
+    if vertices:
+      self.vertices = vertices
+    else:
+      self.vertices = list()
+
+  def __eq__(self, other):
+    return self.value == other
+
+  def __gt__(self, other):
+    return self.value > other
+
+  def __lt__(self, other):
+    return self.value < other
+
+def paths(node, stack=[], pathlist=[]):
+  """Produces a list of all root-to-leaf paths in a tree."""
+
+  if node.vertices:
+    node.vertices.sort()
+    for new_node in node.vertices:
+      stack.append(new_node)
+      paths(new_node, stack, pathlist)
+      stack.pop()
+  else:
+    pathlist.append([node.value for node in stack])
+  return pathlist
+
+versions="0.0.1 0.0.10 0.0.11 0.0.12 0.0.13 0.0.14 0.0.15 0.0.16 0.0.17 0.0.18 0.0.19 0.0.2 0.0.21 0.0.22 0.0.23 0.0.24 0.0.25 0.0.26 0.0.27 0.0.28 0.0.29 0.0.3 0.0.30 0.0.31 0.0.32 0.0.33 0.0.34 0.0.35 0.0.36 0.0.37 0.0.38 0.0.39 0.0.4 0.0.40 0.0.41 0.0.42 0.0.43 0.0.5 0.0.6 0.0.7 0.0.8 0.0.9 0.1.1 0.1.10 0.1.11 0.1.12 0.1.13 0.1.14 0.1.15 0.1.16 0.1.17 0.1.18 0.1.19 0.1.2 0.1.20 0.1.21 0.1.22 0.1.23 0.1.24 0.1.25 0.1.26 0.1.27 0.1.28 0.1.29 0.1.3 0.1.4 0.1.5 0.1.6 0.1.7 0.1.8 0.1.9"
+
+versions = versions.split(" ")
+topnode = TreeNode(None)
+
+# build tree of version numbers
+for version in versions:
+  nums = [int(num) for num in version.split(".")]
+  cur_node = topnode
+  for num in nums:
+    if num in cur_node.vertices:
+      cur_node = cur_node.vertices[cur_node.vertices.index(num)]
+      continue
+    new_node = TreeNode(num)
+    cur_node.vertices.append(new_node)
+    cur_node = new_node
+
+# do DFS on version number tree
+for path in paths(topnode):
+  print ".".join([str(elem) for elem in path])
+*/
