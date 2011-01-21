@@ -49,7 +49,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
 		
-		owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
+		owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId).getString("key");
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
