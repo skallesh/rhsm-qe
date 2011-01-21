@@ -40,7 +40,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSubscriptionPoolProductIdData",
-			groups={/*"blockedByBug-660713"*/},
+			groups={"blockedByBug-660713"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] bundledProductNames) {
