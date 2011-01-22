@@ -18,9 +18,6 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  */
 public class EntitlementCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";			// Aug 23 08:42:00 2010 GMT   validityNotBefore
-//MOVED to OrderNamespace
-//	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"   startDate
-//	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";		// "2011-12-02T00:00:00Z"   startDate
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
@@ -28,22 +25,6 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-	
-//MOVED to OrderNamespace	
-//	public String productName;
-//	public String orderNumber;
-//	public String productId;	// SKU
-//	public String subscriptionNumber;	// REGTOKEN
-//	public String quantity;
-//	public Calendar startDate;
-//	public Calendar endDate;
-//	public String virtualizationLimit;
-//	public String socketLimit;
-//	public String contractNumber;
-//	public String quantityUsed;
-//	public String warningPeriod;
-//	public String accountNumber;
-//	public Boolean providesManagement;
 	
 	public OrderNamespace orderNamespace;
 	public List<ProductNamespace> productNamespaces;
@@ -69,18 +50,6 @@ public class EntitlementCert extends AbstractCommandLineData {
 		if (issuer != null)					string += String.format(" %s='%s'", "issuer",issuer);
 		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
-//MOVED to OrderNamespace		
-//		if (productName != null)			string += String.format(" %s='%s'", "productName",productName);
-//		if (orderNumber != null)			string += String.format(" %s='%s'", "orderNumber",orderNumber);
-//		if (subscriptionNumber != null)		string += String.format(" %s='%s'", "subscriptionNumber",subscriptionNumber);
-//		if (startDate != null)				string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
-//		if (endDate != null)				string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
-//		if (virtualizationLimit != null)	string += String.format(" %s='%s'", "virtualizationLimit",virtualizationLimit);
-//		if (socketLimit != null)			string += String.format(" %s='%s'", "socketLimit",socketLimit);
-//		if (contractNumber != null)			string += String.format(" %s='%s'", "contractNumber",contractNumber);
-//		if (quantityUsed != null)			string += String.format(" %s='%s'", "quantityUsed",quantityUsed);
-//		if (warningPeriod != null)			string += String.format(" %s='%s'", "warningPeriod",warningPeriod);
-//		if (accountNumber != null)			string += String.format(" %s='%s'", "accountNumber",accountNumber);
 	
 		return string.trim();
 	}
@@ -389,23 +358,7 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 		/*
 		        Issuer: C=US, ST=North Carolina, O=Red Hat, Inc., OU=Red Hat Network, CN=Red Hat Entitlement Product Authority/emailAddress=ca-support@redhat.com
 		 */
-//MOVED to OrderNamespace		
-//		https://docspace.corp.redhat.com/docs/DOC-30244
-//			  1.3.6.1.4.1.2312.9.4.1 (Name): Red Hat Enterprise Linux Server
-//			  1.3.6.1.4.1.2312.9.4.2 (Order Number) : ff8080812c3a2ba8012c3a2cbe63005b  
-//			  1.3.6.1.4.1.2312.9.4.3 (SKU) : MCT0982
-//			  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678   <- SHOULD ONLY EXIST IF ORIGINATED FROM A REGTOKEN
-//			  1.3.6.1.4.1.2312.9.4.5 (Quantity) : 100
-//			  1.3.6.1.4.1.2312.9.4.6 (Entitlement Start Date) : 2010-10-25T04:00:00Z
-//			  1.3.6.1.4.1.2312.9.4.7 (Entitlement End Date) : 2011-11-05T00:00:00Z
-//			  1.3.6.1.4.1.2312.9.4.8 (Virtualization Limit) : 4
-//			  1.3.6.1.4.1.2312.9.4.9 (Socket Limit) : None
-//			  1.3.6.1.4.1.2312.9.4.10 (Contract Number): 152341643
-//			  1.3.6.1.4.1.2312.9.4.11 (Quantity Used): 4
-//			  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
-//			  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
-//			  1.3.6.1.4.1.2312.9.4.14 (Provides Management): 0 (boolean, 1 for true)
-// reference bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=640463
+
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
@@ -414,23 +367,6 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-
-//MOVED to OrderNamespace
-//		// Order Namespace  // FIXME I believe this should be busted out into a single Order Namespace data object - WORK IN PROGRESS 12/14/2010
-//		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("orderNumber",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("productId",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("subscriptionNumber",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("quantity",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("startDate",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("endDate",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("virtualizationLimit",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("socketLimit",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("contractNumber",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("quantityUsed",			"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("warningPeriod",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("accountNumber",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-//		regexes.put("providesManagement",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.14:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
 
 		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
@@ -455,7 +391,7 @@ A2mP3b+CJg78xxKgYUbzzYwfbgzdiLIFvOJczUTTExhYDAJgGFDUkQgP9w8rHL+m
 	}
 }
 
-/* FIXME USING TIME ZOME NOTES FROM AJAY
+/* FIXME USING TIME ZONE NOTES FROM AJAY
  * SimpleDateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd");
         iso8601DateFormat.setTimeZone(TimeZone.getDefault());
         System.out.println(iso8601DateFormat.format(new Date()));

@@ -278,6 +278,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	// TODO DELETE TEST due to https://bugzilla.redhat.com/show_bug.cgi?id=670823
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
 			groups={"blockedByBug-584137"},
 			enabled=false)

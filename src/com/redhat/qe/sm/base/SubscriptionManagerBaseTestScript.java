@@ -68,7 +68,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected String disabledUsername		= getProperty("sm.client.username.disabled","");
 	protected String disabledPassword		= getProperty("sm.client.password.disabled","");
 	
-	protected String regtoken				= getProperty("sm.client.regtoken","");
+	protected String regtoken				= getProperty("sm.client.regtoken","");	//TODO DELETEME
 	protected String enableRepoForDeps		= getProperty("sm.client.enableRepoForDeps","");
 	
 	protected String sshUser				= getProperty("sm.ssh.user","root");
