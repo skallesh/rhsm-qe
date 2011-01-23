@@ -140,8 +140,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		log.info("Installed version of candlepin...");
 		try {
-			//FIXME: should change clientOwnerUsername,clientOwnerPassword to a candlepin superadmin/password
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status"));			
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status")); // seems to work no matter what credentials are passed		
 			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
@@ -248,17 +247,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected class RegistrationData {
 		public String username=null;
 		public String password=null;
-		public JSONObject jsonOwner=null;
+		public String ownerKey=null;
 		public SSHCommandResult registerResult=null;
 		public List<SubscriptionPool> allAvailableSubscriptionPools=null;/*new ArrayList<SubscriptionPool>();*/
 		public RegistrationData() {
 			super();
 		}
-		public RegistrationData(String username, String password, JSONObject jsonOwner,	SSHCommandResult registerResult, List<SubscriptionPool> allAvailableSubscriptionPools) {
+		public RegistrationData(String username, String password, String ownerKey,	SSHCommandResult registerResult, List<SubscriptionPool> allAvailableSubscriptionPools) {
 			super();
 			this.username = username;
 			this.password = password;
-			this.jsonOwner = jsonOwner;
+			this.ownerKey = ownerKey;
 			this.registerResult = registerResult;
 			this.allAvailableSubscriptionPools = allAvailableSubscriptionPools;
 		}
@@ -276,8 +275,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
 		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registration : registrationDataList) {
-			if (registration.jsonOwner!=null) {
-				if (!registration.jsonOwner.getString("key").equals(key)) {
+			if (registration.ownerKey!=null) {
+				if (!registration.ownerKey.equals(key)) {
 					return registration;
 				}
 			}
@@ -295,8 +294,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
 		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registration : registrationDataList) {
-			if (registration.jsonOwner!=null) {
-				if (registration.jsonOwner.getString("key").equals(key)) {
+			if (registration.ownerKey!=null) {
+				if (registration.ownerKey.equals(key)) {
 					if (!registration.username.equals(username)) {
 						return registration;
 					}
@@ -325,11 +324,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	/**
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
+	 * @throws IOException 
 	 */
-	protected void RegisterWithUsernameAndPassword_Test() {
+	protected void RegisterWithUsernameAndPassword_Test() throws IOException {
 		if (registrationDataList.isEmpty()) {
 			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
+				registerTests.setupBeforeSuite();
 				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1));
 			}
 		}

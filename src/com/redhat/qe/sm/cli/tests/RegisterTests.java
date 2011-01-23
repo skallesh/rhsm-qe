@@ -66,11 +66,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// determine this user's owner
-		JSONObject jsonOwner = null;
+		String ownerKey = null;
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				jsonOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname,serverPort,serverPrefix,username,password, consumerId);
+				ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname,serverPort,serverPrefix,username,password, consumerId);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -80,7 +80,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		RegistrationData userData = new RegistrationData(username,password,jsonOwner,registerResult,allAvailableSubscriptionPools);
+		RegistrationData userData = new RegistrationData(username,password,ownerKey,registerResult,allAvailableSubscriptionPools);
 		registrationDataList.add(userData);
 		clienttasks.unregister_(null, null, null);
 		
@@ -534,11 +534,11 @@ Expected Results:
 			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
 			output.write("<tr><th>Owner</th><th>Username/<BR>Password</th><th>Registration Output</th><th>All Available Subscriptions (to system consumers)</th></tr>\n");
 			for (RegistrationData registeredConsumer : registrationDataList) {
-				if (registeredConsumer.jsonOwner==null) {
+				if (registeredConsumer.ownerKey==null) {
 					output.write("<tr bgcolor=#F47777>");
 				} else {output.write("<tr>");}
-				if (registeredConsumer.jsonOwner!=null) {
-					output.write("<td valign=top>"+registeredConsumer.jsonOwner.getString("key")+"</td>");
+				if (registeredConsumer.ownerKey!=null) {
+					output.write("<td valign=top>"+registeredConsumer.ownerKey+"</td>");
 				} else {output.write("<td/>");};
 				if (registeredConsumer.username!=null) {
 					output.write("<td valign=top>"+registeredConsumer.username+"/<BR>"+registeredConsumer.password+"</td>");
@@ -560,9 +560,6 @@ Expected Results:
 		    output.close();
 		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

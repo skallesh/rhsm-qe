@@ -322,14 +322,35 @@ public class CandlepinTasks {
 		Assert.assertEquals(status, 204);
 	}
 	
+	/**
+	 * @param server
+	 * @param port
+	 * @param prefix
+	 * @param authenticator  - must have superAdmin privileges to get the jsonOwner; username:password for consumerid is not enough
+	 * @param authenticatorPassword
+	 * @param consumerId
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String consumerId) throws JSONException, Exception {
 		// determine this consumerId's owner
 		JSONObject jsonOwner = null;
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/consumers/"+consumerId));	
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
+		// Warning: this authenticator, authenticatorPassword needs to be superAdmin
 		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,jsonOwner_.getString("href")));	
 
 		return jsonOwner;
+	}
+	
+	public static String getOwnerKeyOfConsumerId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String consumerId) throws JSONException, Exception {
+		// determine this consumerId's owner
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/consumers/"+consumerId));	
+		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
+		// jsonOwner_.getString("href") takes the form /owners/6239231 where 6239231 is the key
+		File href = new File(jsonOwner_.getString("href")); // use a File to represent the path
+		return href.getName();
 	}
 	
 	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
