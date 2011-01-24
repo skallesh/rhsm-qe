@@ -2,14 +2,14 @@
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle-type expect recover-by)]
+        [error.handler :only (with-handlers handle ignore recover)]
 	 sm.gui.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
 (defn ^{BeforeClass {}}
   setup [_]
-  (with-handlers [(expect :not-registered)]
+  (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
 (defn ^{Test {:groups ["registration"]}}
@@ -25,8 +25,8 @@
                      ["" "password" :no-username]
                      ["sdf" "" :no-password]]
         test-fn (fn [username password expected-error-type]
-                  (with-handlers [(handle-type expected-error-type [e]
-                                               (recover-by :cancel)
+                  (with-handlers [(handle expected-error-type [e]
+                                               (recover e :cancel)
                                                (:type e))]
                     (tasks/register username password)))]
     (doall (for [testargs alltestdata]
