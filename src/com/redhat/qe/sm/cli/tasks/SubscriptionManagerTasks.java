@@ -239,6 +239,21 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
 	}
+	
+	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0));
+		int retryMilliseconds = Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency"))*60*1000;  // certFrequency is in minutes
+		int t = 0;
+		
+		while(!sshCommandRunner.runCommandAndWait("tail -1 "+rhsmcertdLogFile).getStdout().trim().matches(logRegex) && (t*retryMilliseconds < timeoutMinutes*60*1000)) {
+			// pause for the sleep interval
+			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
+		}
+		if (t*retryMilliseconds >= timeoutMinutes*60*1000) sshCommandRunner.runCommandAndWait("tail -24 "+rhsmLogFile);
+		
+		// assert that the state was achieved within the timeout
+		Assert.assertFalse((t*retryMilliseconds >= timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
+	}
 
 	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
