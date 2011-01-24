@@ -258,11 +258,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		List <String> subscribeOptions = new ArrayList<String>();
 		subscribeOptions.add("-h, --help");
 		subscribeOptions.add("--debug=DEBUG");
-//		subscribeOptions.add("-k, --insecure");
-		subscribeOptions.add("--regtoken=REGTOKEN");
 		subscribeOptions.add("--pool=POOL");
-		subscribeOptions.add("--email=EMAIL");
-		subscribeOptions.add("--locale=LOCALE");
+//		subscribeOptions.add("-k, --insecure");
+//		subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+//		subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+//		subscribeOptions.add("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 		subscribeOptions.add("--proxy=PROXY_URL");
 		subscribeOptions.add("--proxyuser=PROXY_USER");
 		subscribeOptions.add("--proxypassword=PROXY_PASSWORD");
@@ -329,7 +329,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" refresh"}));
 // this functionality appears to have been removed: subscription-manager-0.71-1.el6.i686  - jsefler 7/21/2010
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --product=FOO"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --regtoken=FOO"}));
+// this functionality appears to have been removed: subscription-manager-0.93.14-1.el6.x86_64 - jsefler 1/21/2011
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --regtoken=FOO"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=FOO"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --all"}));

@@ -6,9 +6,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
@@ -19,8 +22,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  */
 public class OrderNamespace extends AbstractCommandLineData {
 //	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"   startDate
-	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";		// "2011-12-02T00:00:00Z"   startDate
-
+	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";		// "2011-01-20T05:00:00Z" GMT startDate  // "2011-07-20T03:59:59Z" GMT endDate
 
 	// abstraction fields
 	public String productName;
@@ -69,12 +71,23 @@ public class OrderNamespace extends AbstractCommandLineData {
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
-		return parseDateString(dateString, simpleDateFormat);
+		try{
+			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			Calendar calendar = new GregorianCalendar();
+			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
+			return calendar;
+		}
+		catch (ParseException e){
+			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
+			return null;
+		}
 	}
 	
 	//@Override
 	public static String formatDateString(Calendar date){
 		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		return dateFormat.format(date.getTime());
 	}
 	

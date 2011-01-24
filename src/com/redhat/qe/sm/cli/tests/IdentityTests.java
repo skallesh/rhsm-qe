@@ -1,5 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.IOException;
+
 import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
@@ -79,7 +81,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the current identity matches what was returned from register
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
-		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
+		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
+		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clienttasks.hostname);
 	}
 	
 	
@@ -141,7 +144,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
 		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
-		String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
+		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, clienttasks.getCurrentConsumerId(registerResult));
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
@@ -170,11 +174,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
-		String consumerOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
+		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 
 		// find a username from the registrationDataList whose owner does not match the registerer of this client
-		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(consumerOwner);
-		if (registrationData==null) throw new SkipException("Could not find registration data for a user who does not belong to owner '"+consumerOwner+"'.");
+		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(ownerKey);
+		if (registrationData==null) throw new SkipException("Could not find registration data for a user who does not belong to owner '"+ownerKey+"'.");
 
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
@@ -198,7 +203,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		log.info("Attempting to regenerate identity with an invalid username and password...");
 		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-		Assert.assertContainsMatch(result.getStderr().trim(),clienttasks.invalidCredentialsRegexMsg,"The stderr expresses a message such that authentication credentials are invalid.");
+		Assert.assertContainsMatch(result.getStderr().trim(),servertasks.invalidCredentialsRegexMsg(),"The stderr expresses a message such that authentication credentials are invalid.");
 	}
 	
 	
@@ -207,7 +212,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	
 	@BeforeClass(groups="setup")
-	public void setupBeforeClass() {
+	public void setupBeforeClass() throws IOException {
 		// alternative to dependsOnGroups={"RegisterWithUsernameAndPassword_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.

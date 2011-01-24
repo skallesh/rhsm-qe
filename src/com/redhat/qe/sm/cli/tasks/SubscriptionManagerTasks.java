@@ -53,7 +53,6 @@ public class SubscriptionManagerTasks {
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
 	
-	public final String invalidCredentialsRegexMsg	= "^Invalid Credentials$";  // "^Invalid Credentials$|^Invalid username or password"; // "^Invalid username or password";
 	public String hostname			= null;
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
@@ -239,6 +238,21 @@ public class SubscriptionManagerTasks {
 	public void stop_rhsmcertd (){
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
+	}
+	
+	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -1 "+rhsmcertdLogFile,Integer.valueOf(0));
+		int retryMilliseconds = Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency"))*60*1000;  // certFrequency is in minutes
+		int t = 0;
+		
+		while(!sshCommandRunner.runCommandAndWait("tail -1 "+rhsmcertdLogFile).getStdout().trim().matches(logRegex) && (t*retryMilliseconds < timeoutMinutes*60*1000)) {
+			// pause for the sleep interval
+			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
+		}
+		if (t*retryMilliseconds >= timeoutMinutes*60*1000) sshCommandRunner.runCommandAndWait("tail -24 "+rhsmLogFile);
+		
+		// assert that the state was achieved within the timeout
+		Assert.assertFalse((t*retryMilliseconds >= timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
 
 	
@@ -825,11 +839,12 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:name));
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:(type==ConsumerType.person?username:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?this.hostname:(type==ConsumerType.person?this.hostname:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130 https://bugzilla.redhat.com/show_bug.cgi?id=669395
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?this.hostname:(type==ConsumerType.person?username:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130 https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
+			//Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		}
 		
 		// assert certificate files are dropped into /etc/pki/consumer
@@ -1318,10 +1333,13 @@ public class SubscriptionManagerTasks {
 				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
+		log.warning("No longer asserting that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed to.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
+		/*
 		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
 			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
 					"This remaining available pool "+afterSubscriptionPool+" does NOT contain the same productId ("+pool.productId+") after subscribing to pool: "+pool);
 		}
+		*/
 
 		// when the pool is already subscribe to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {

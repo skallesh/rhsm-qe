@@ -175,26 +175,43 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		PoolId:            	8a8aa80d2be34ec0012be505f34d05f9
 		Quantity:          	1                        
 		Expires:           	2011-01-24   
+		
+		ProductName:       	Red Hat Enterprise Linux Server Entitlement Beta for
+                        	Certified Engineers and System Administrators - NOT FOR SALE
+		ProductId:         	RH3036913                
+		PoolId:            	8a9b90882da9ac9f012da9e5e991000e
+		Quantity:          	9                        
+		Expires:           	2011-07-19   
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("subscriptionName",			"ProductName:(.*)");
+		//regexes.put("subscriptionName",			"ProductName:(.*)");	// FIXME: truncates subscriptionName value when it spans multiple lines
+		regexes.put("subscriptionName",			"ProductName:(.*(\\n.*?)+)^\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+: represents the start of the next property
 		regexes.put("productId",				"ProductId:(.*)");
 		regexes.put("poolId",					"PoolId:(.*)");
 		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
 		regexes.put("endDate",					"Expires:(.*)");
 		
-		List<Map<String,String>> entitlementList = new ArrayList<Map<String,String>>();
+		List<Map<String,String>> listOfAvailableSubscriptionMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, stdoutListingOfAvailableSubscriptions, entitlementList, field);
+			addRegexMatchesToList(pat, stdoutListingOfAvailableSubscriptions, listOfAvailableSubscriptionMaps, field);
 		}
 		
+		// assemble a new List of SubscriptionPool from the List of Available Subscription Maps
 		List<SubscriptionPool> subscriptionPools = new ArrayList<SubscriptionPool>();
-		for(Map<String,String> poolMap : entitlementList)
+		for(Map<String,String> poolMap : listOfAvailableSubscriptionMaps) {
+			// normalize newlines from subscriptionName when it spans multiple lines
+			String key = "subscriptionName", subscriptionName = poolMap.get(key);
+			if (subscriptionName!=null) {
+				poolMap.remove(key);
+				subscriptionName = subscriptionName.replaceAll("\\s*\\n\\s*", " ");
+				poolMap.put(key, subscriptionName);
+			}
 			subscriptionPools.add(new SubscriptionPool(poolMap));
+		}
 		return subscriptionPools;
 	}
 

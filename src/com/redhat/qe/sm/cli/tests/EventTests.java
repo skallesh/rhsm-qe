@@ -82,8 +82,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
+		String ownerKey = registration.ownerKey;
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
  
@@ -115,8 +115,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,serverAdminUsername, serverAdminPassword);
@@ -147,7 +147,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		//FIXME
 		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
 
@@ -155,8 +155,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.ownerKey;
 		
 //		log.info("First, let's refresh the subscription pools to get rid of any pending events...");
 //		JSONObject jobDetail1 = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
@@ -168,7 +168,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         
         // find the first pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),serverAdminUsername,serverAdminPassword);
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),clientusername,clientpassword);
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
@@ -203,8 +203,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -234,8 +234,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -267,8 +267,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.ownerKey;
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
  
@@ -289,7 +289,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -311,7 +311,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ProductCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -333,7 +333,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void PoolCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -357,7 +357,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void PoolDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -421,8 +421,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.username);
-		if (registration==null || registration.jsonOwner==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
-		String ownerKey = registration.jsonOwner.getString("key");
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.username+"'.");
+		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -470,7 +470,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
-		if (servertasks==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -575,7 +575,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeClass(groups="setup")
-	public void setupBeforeClass() {
+	public void setupBeforeClass() throws IOException {
 		// alternative to dependsOnGroups={"RegisterWithUsernameAndPassword_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.

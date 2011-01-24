@@ -14,6 +14,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -55,7 +56,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,serverAdminUsername,serverAdminPassword);
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,clientusername,clientpassword);
 		if (clienttasks.unsubscribeFromProductSubscription(productSubscription))
 			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}
@@ -107,11 +108,11 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //		 */
 //	}
 	
-	@Test(description="Entitlement, malicious negative tests",
-			groups={"blockedByBug-584137", "blockedByBug-602852"},
+	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
+			groups={"blockedByBug-584137", "blockedByBug-602852"/*, "blockedByBug-672122"*/},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=41903)
-	public void EntitlementMaliciousNegative_Test(SubscriptionPool subscriptionPool){
+	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
 		
 		// subscribe to a pool
@@ -124,6 +125,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
  
 		// copy entitlement certificate from location /etc/pki/entitlement/product/ to /tmp
+		log.info("Now let's copy the valid entitlement cert to the side so we can maliciously try to reuse it after its serial has been unsubscribed.");
 		String randDir = "/tmp/sm-certForSubscriptionPool-"+subscriptionPool.poolId;
 		client.runCommandAndWait("rm -rf "+randDir);
 		client.runCommandAndWait("mkdir -p "+randDir);
@@ -147,8 +149,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,true);
 		
 		// assert that the rhsmcertd will clean up the malicious activity
-		log.info("Now let's restart the rhsmcertd and assert that the deamon deletes the entitlement certificate since it was put on candlepins certificate revocation list during the unsubscribe.");
-		SubscriptionManagerCLITestScript.sleep((certFrequency*60+10)*1000);
+		log.info("Now let's wait for \"certificates updated\" by the rhsmcertd and assert that the deamon deletes the copied entitlement certificate since it was put on candlepins certificate revocation list during the unsubscribe.");
+		//sleep((certFrequency*60+10)*1000);
+		clienttasks.waitForRegexInRhsmcertdLog(".*certificates updated.*", 5);
+
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath())==0,"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
 	}

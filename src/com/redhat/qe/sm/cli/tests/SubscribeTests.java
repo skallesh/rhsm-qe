@@ -40,7 +40,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSubscriptionPoolProductIdData",
-			groups={/*"blockedByBug-660713"*/},
+			groups={"blockedByBug-660713"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, String[] bundledProductNames) {
@@ -278,6 +278,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	// TODO DELETE TEST due to https://bugzilla.redhat.com/show_bug.cgi?id=670823
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
 			groups={"blockedByBug-584137"},
 			enabled=false)
@@ -652,6 +653,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles(), entitlementCertFiles,
 	    		"All the deleted entitlement product certs have been re-synchronized by rhsm cert deamon.");
 	}
+	
+	
+	// TODO Candidates for an automated Test:
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=668032
 	
 	
 	// Configuration Methods ***********************************************************************

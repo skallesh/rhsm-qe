@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.base;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -64,10 +65,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// will we be connecting to the candlepin server?
 		if (!serverHostname.equals("")) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
 
 		} else {
 			log.info("Assuming the server is already setup and running.");
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises);
+
 		}
 		
 		// will we be testing multiple clients?
@@ -79,7 +82,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// setup the server
-		if (server!=null && isServerOnPremises) {
+		if (server!=null && servertasks.isOnPremises) {
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
@@ -123,21 +126,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
-		if (server!=null && isServerOnPremises) {
+		if (server!=null && servertasks.isOnPremises) {
 			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
-			RemoteFileTasks.getFile(server.getConnection(), "/tmp","/etc/candlepin/certs/candlepin-ca.crt");
-			
-			RemoteFileTasks.putFile(client1.getConnection(), "/tmp/candlepin-ca.crt", client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
-			if (client2!=null) RemoteFileTasks.putFile(client2.getConnection(), "/tmp/candlepin-ca.crt", client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			if (client2!=null) client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
+			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
+			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
+
+								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
+			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
 		}
 		
 		
 		log.info("Installed version of candlepin...");
 		try {
-			//FIXME: should change clientOwnerUsername,clientOwnerPassword to a candlepin superadmin/password
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status"));			
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status")); // seems to work no matter what credentials are passed		
 			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
@@ -244,17 +247,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected class RegistrationData {
 		public String username=null;
 		public String password=null;
-		public JSONObject jsonOwner=null;
+		public String ownerKey=null;
 		public SSHCommandResult registerResult=null;
 		public List<SubscriptionPool> allAvailableSubscriptionPools=null;/*new ArrayList<SubscriptionPool>();*/
 		public RegistrationData() {
 			super();
 		}
-		public RegistrationData(String username, String password, JSONObject jsonOwner,	SSHCommandResult registerResult, List<SubscriptionPool> allAvailableSubscriptionPools) {
+		public RegistrationData(String username, String password, String ownerKey,	SSHCommandResult registerResult, List<SubscriptionPool> allAvailableSubscriptionPools) {
 			super();
 			this.username = username;
 			this.password = password;
-			this.jsonOwner = jsonOwner;
+			this.ownerKey = ownerKey;
 			this.registerResult = registerResult;
 			this.allAvailableSubscriptionPools = allAvailableSubscriptionPools;
 		}
@@ -272,8 +275,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
 		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registration : registrationDataList) {
-			if (registration.jsonOwner!=null) {
-				if (!registration.jsonOwner.getString("key").equals(key)) {
+			if (registration.ownerKey!=null) {
+				if (!registration.ownerKey.equals(key)) {
 					return registration;
 				}
 			}
@@ -291,8 +294,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
 		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registration : registrationDataList) {
-			if (registration.jsonOwner!=null) {
-				if (registration.jsonOwner.getString("key").equals(key)) {
+			if (registration.ownerKey!=null) {
+				if (registration.ownerKey.equals(key)) {
 					if (!registration.username.equals(username)) {
 						return registration;
 					}
@@ -321,11 +324,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	/**
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
+	 * @throws IOException 
 	 */
-	protected void RegisterWithUsernameAndPassword_Test() {
+	protected void RegisterWithUsernameAndPassword_Test() throws IOException {
 		if (registrationDataList.isEmpty()) {
 			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
+				registerTests.setupBeforeSuite();
 				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1));
 			}
 		}

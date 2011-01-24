@@ -49,7 +49,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
 		
-		owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
+		owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId).getString("key");
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
@@ -83,7 +83,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
-			groups={/*"blockedByBug-660713"*/}, dependsOnGroups={},
+			groups={"blockedByBug-660713"}, dependsOnGroups={},
 			enabled=true)
 	public void VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test() throws Exception{
 
