@@ -31,7 +31,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups="expiration")
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
-	protected String owner = "";
+	protected String ownerKey = "";
 
 	
 	
@@ -41,7 +41,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup")
 	public void skipIfHosted() {
-		if (!isServerOnPremises) throw new SkipException("These tests are only valid for on-premises candlepin servers.");
+		if (!servertasks.isOnPremises) throw new SkipException("These tests are only valid for on-premises candlepin servers.");
 	}
 	
 	@BeforeClass(dependsOnMethods="skipIfHosted", groups="setup")
@@ -49,7 +49,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
 		
-		owner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId).getString("key");
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
@@ -231,15 +231,15 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createPoolRequest(3, startDate, endDate, productId, contractNumber, providedProducts).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, "/owners/" + owner + "/subscriptions", requestBody));
+		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		
 		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, owner);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 5*1000, 1);
 		
 		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription contract number
 		String poolId = null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/owners/"+owner+"/pools"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/owners/"+ownerKey+"/pools"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
