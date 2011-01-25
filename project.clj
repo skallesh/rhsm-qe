@@ -7,11 +7,11 @@
   :dependencies [[org.clojure/clojure "1.2.0"]
                  [org.clojure/clojure-contrib "1.2.0"]
                  [error.handler "1.0.0-SNAPSHOT"]
-		 [org.apache.xmlrpc/xmlrpc-client "3.1.3"]
 		 [net.java.dev.rome/rome "1.0.0"]
 		 [org.jdom/jdom "1.1"]
 		 [postgresql/postgresql "8.4-701.jdbc4"]
-		 [webui-framework "1.0.0-SNAPSHOT"]]
+		 [webui-framework "1.0.0-SNAPSHOT"]
+                 [gnome.ldtp "1.0.0-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]
 		     [lein-eclipse "1.0.0"]]
   :repositories ["hudson" "http://hudson.rhq.lab.eng.bos.redhat.com:8081/archiva/repository/hudson"])
