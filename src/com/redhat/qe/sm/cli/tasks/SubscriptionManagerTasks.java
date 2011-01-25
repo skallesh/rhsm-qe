@@ -837,9 +837,9 @@ public class SubscriptionManagerTasks {
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
-		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:name));
-		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?username:(type==ConsumerType.person?username:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+(name==null?this.hostname:(type==ConsumerType.person?username:name)));	// accounts for https://bugzilla.redhat.com/show_bug.cgi?id=661130 https://bugzilla.redhat.com/show_bug.cgi?id=669395
+		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
+		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
