@@ -1333,7 +1333,7 @@ public class SubscriptionManagerTasks {
 				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
-		log.warning("No longer asserting that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed to.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
+		log.warning("Due to subscription-manager design change, we will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
 		/*
 		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
 			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
