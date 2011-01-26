@@ -36,13 +36,10 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  */
 @Test(groups={"crl"})
 public class CRLTests extends SubscriptionManagerCLITestScript{
-	String consumerOwner = "";
-	@BeforeGroups(groups={"setup"},value="ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test")
-	protected void getClientOwner() throws JSONException, Exception {
-		String consumerId = clienttasks.getCurrentConsumerId();
-		consumerOwner = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
+	String ownerKey = null;
 
-	}
+	// Test Methods ***********************************************************************
+
 	@Test(	description="subscription-manager-cli: change subscription pool start/end dates and refresh subscription pools",
 			groups={"ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test"},
 			dependsOnGroups={},
@@ -50,25 +47,25 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56025)
 	public void ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test(SubscriptionPool pool) throws Exception {
-//		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
-//		Actions:
-//
-//		    * In the db list the subscription pools, find a unique pool to work with
-//		    * On a sm client register, subscribe to the pool
-//		    * In the db changed the start/end dates for the subscription pool (cp_subscription)
-//		    * using the server api, refresh the subscription pools
-//		    * on the client check the entitlement certificates ls /etc/pki/entitlement/product
-//		    * use openssl x509 to inspect the certs, notice the start / end dates 
-//		    * on the client restart the rhsmcertd service
-//		    * on the client check the entitlement certificates ls /etc/pki/entitlement/product
-//		    * use openssl x509 to inspect the certs, notice the start / end dates
-//		    * check the crl list on the server and verify the original entitlement cert serials are present 
-//
-//		Expected Results:
-//
-//			* the original entitlement certificates on the client should be removed
-//		   	* new certs should be dropped to the client
-//			* the crl list on the server should be poplulated w/ the old entitlement cert serials
+		//		https://tcms.engineering.redhat.com/case/56025/?from_plan=2634
+		//		Actions:
+		//
+		//		    * In the db list the subscription pools, find a unique pool to work with
+		//		    * On a sm client register, subscribe to the pool
+		//		    * In the db changed the start/end dates for the subscription pool (cp_subscription)
+		//		    * using the server api, refresh the subscription pools
+		//		    * on the client check the entitlement certificates ls /etc/pki/entitlement/product
+		//		    * use openssl x509 to inspect the certs, notice the start / end dates 
+		//		    * on the client restart the rhsmcertd service
+		//		    * on the client check the entitlement certificates ls /etc/pki/entitlement/product
+		//		    * use openssl x509 to inspect the certs, notice the start / end dates
+		//		    * check the crl list on the server and verify the original entitlement cert serials are present 
+		//
+		//		Expected Results:
+		//
+		//			* the original entitlement certificates on the client should be removed
+		//		   	* new certs should be dropped to the client
+		//			* the crl list on the server should be poplulated w/ the old entitlement cert serials
 
 		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
 		
@@ -121,7 +118,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, consumerOwner);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 //		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
 //		clienttasks.restart_rhsmcertd(1, true);
@@ -174,6 +171,16 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 
 	
 	
+	
+	// Configuration Methods ***********************************************************************
+
+	@BeforeGroups(groups={"setup"},value="ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test")
+	protected void getClientOwnerBeforeGroups() throws JSONException, Exception {
+		String consumerId = clienttasks.getCurrentConsumerId();
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+
+	}
+
 	
 	// Protected Methods ***********************************************************************
 
