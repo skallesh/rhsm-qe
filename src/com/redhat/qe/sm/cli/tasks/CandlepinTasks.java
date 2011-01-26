@@ -69,8 +69,9 @@ public class CandlepinTasks {
 	protected /*NOT static*/ String serverInstallDir = null;
 	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
-	public static String rubyClientDir	= "/client/ruby/";
+	public static String rubyClientDir	= "/client/ruby";
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
+	public static String generatedProductsDir	= "/proxy/generated_certs";
 	public static HttpClient client;
 	public boolean isOnPremises = false;
 

@@ -241,7 +241,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
  
         // fire an facts update event by overriding a fact in /etc/rhsm/facts/event_tests.facts
-        String factsFile = clienttasks.factsDir+"eventTests.facts";
+        String factsFile = clienttasks.factsDir+"/eventTests.facts";
         client.runCommandAndWait("echo '{\"events.test.description\": \"Testing CONSUMER MODIFIED event fires on facts update.\", \"events.test.currentTimeMillis\": \""+System.currentTimeMillis()+"\"}' > "+factsFile);	// create an override for facts
 		clienttasks.facts(null,true, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};

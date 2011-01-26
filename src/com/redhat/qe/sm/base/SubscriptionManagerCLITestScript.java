@@ -137,6 +137,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
 		}
 		
+		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
+		if (server!=null && servertasks.isOnPremises) {
+			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
+			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+				File remoteFile = new File(remoteFileAsString);
+				File localFile = new File("/tmp/"+remoteFile.getName());
+				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+				
+									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
+				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
+			}
+		}
+		
 		
 		log.info("Installed version of candlepin...");
 		try {
