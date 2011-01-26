@@ -209,8 +209,60 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null);
-		smt.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-		assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(smt);
+		String consumerId = smt.getCurrentConsumerId(smt.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		
+		boolean foundPoolWithSocketAttributes = false;
+		boolean conclusiveTest = false;
+		
+		// get all the pools available to each client
+		List<SubscriptionPool> clientPools = smt.getCurrentlyAvailableSubscriptionPools();
+		
+		// get the number of cpu_sockets for this system consumer
+		String factName = "cpu.cpu_socket(s)";
+		int systemValue = Integer.valueOf(smt.getFactValue(factName));
+		log.info(factName+" for this system consumer: "+systemValue);
+		
+		// loop through the owner's subscriptions
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			String poolId = jsonSubscription.getString("id");
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String subscriptionName = jsonProduct.getString("name");
+			String productId = jsonProduct.getString("id");
+			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
+			// loop through the attributes of this subscription looking for the "sockets" attribute
+			for (int j = 0; j < jsonAttributes.length(); j++) {
+				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+				String attributeName = jsonAttribute.getString("name");
+				if (attributeName.equals("sockets")) {
+					// found the sockets attribute - get its value
+					foundPoolWithSocketAttributes = true;
+					int poolValue = jsonAttribute.getInt("value");
+					
+					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
+					log.fine("Maximum sockets for this subscriptionPool name="+subscriptionName+": "+poolValue);
+					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
+					if (poolValue < systemValue) {
+						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") exceeds the maximum ("+poolValue+") for this pool to be a candidate for availability.");
+						conclusiveTest = true;
+					} else {
+						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
+					}
+					break;
+				}
+			}
+		}
+		if (jsonSubscriptions.length()==0) {
+			log.warning("No owner subscriptions were found for a system registered by '"+clientusername+"' and therefore we could not attempt this test.");
+			throw new SkipException("No owner subscriptions were found for a system registered by '"+clientusername+"' and therefore we could not attempt this test.");		
+		}
+		if (!conclusiveTest) {
+			//log.warning("The facts for this system did not allow us to perform a conclusive test.");
+			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
+		}
+		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: check arch",
@@ -220,8 +272,60 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null);
-		smt.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-		assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(smt);
+		String consumerId = smt.getCurrentConsumerId(smt.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+
+		boolean foundPoolWithArchAttributes = false;
+		boolean conclusiveTest = false;
+		
+		// get all the pools available to this client
+		List<SubscriptionPool> clientPools = smt.getCurrentlyAvailableSubscriptionPools();
+		
+		// get the number of cpu_sockets for this system consumer
+		String factName = "cpu.architecture";
+		String systemValue = smt.getFactValue(factName);
+		log.info(factName+" for this system consumer: "+systemValue);
+		
+		// loop through the owner's subscriptions
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			String poolId = jsonSubscription.getString("id");
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String subscriptionName = jsonProduct.getString("name");
+			String productId = jsonProduct.getString("id");
+			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
+			// loop through the attributes of this subscription looking for the "sockets" attribute
+			for (int j = 0; j < jsonAttributes.length(); j++) {
+				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+				String attributeName = jsonAttribute.getString("name");
+				if (attributeName.equals("arch")) {
+					// found the arch attribute - get its value
+					foundPoolWithArchAttributes = true;
+					String poolValue = jsonAttribute.getString("value");
+					
+					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
+					log.fine("Arch for this subscriptionPool name="+subscriptionName+": "+poolValue);
+					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
+					if (!poolValue.equalsIgnoreCase(systemValue) && !poolValue.equalsIgnoreCase("ALL")) {
+						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") does not match ("+poolValue+") for this pool to be a candidate for availability.");
+						conclusiveTest = true;
+					} else {
+						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
+					}
+					break;
+				}
+			}
+		}
+		if (jsonSubscriptions.length()==0) {
+			log.warning("No owner subscriptions were found for a system registered by '"+clientusername+"' and therefore we could not attempt this test.");
+			throw new SkipException("No owner subscriptions were found for a system registered by '"+clientusername+"' and therefore we could not attempt this test.");		
+		}
+		if (!conclusiveTest) {
+			log.warning("The facts for this system did not allow us to perform a conclusive test.");
+			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
+		}
+		Assert.assertTrue(foundPoolWithArchAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: bypass rules due to type",
@@ -386,108 +490,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 //		client2tasks.register(clientusername, clientpassword, type, null, null, null);
 //	}
 	
-	
-	protected void assertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailableOnClient(SubscriptionManagerTasks smt) throws Exception {
-		boolean foundPoolWithSocketAttributes = false;
-		boolean conclusiveTest = false;
-		
-		// get all the pools available to each client
-		List<SubscriptionPool> clientPools = smt.getCurrentlyAvailableSubscriptionPools();
-		
-		// get the number of cpu_sockets for this system consumer
-		String factName = "cpu.cpu_socket(s)";
-		int systemValue = Integer.valueOf(smt.getFactValue(factName));
-		log.info(factName+" for this system consumer: "+systemValue);
-		
-		// loop through the subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/subscriptions"));	
-		for (int i = 0; i < jsonSubscriptions.length(); i++) {
-			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
-			String poolId = jsonSubscription.getString("id");
-			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
-			String subscriptionName = jsonProduct.getString("name");
-			String productId = jsonProduct.getString("id");
-			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
-			// loop through the attributes of this subscription looking for the "sockets" attribute
-			for (int j = 0; j < jsonAttributes.length(); j++) {
-				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
-				String attributeName = jsonAttribute.getString("name");
-				if (attributeName.equals("sockets")) {
-					// found the sockets attribute - get its value
-					foundPoolWithSocketAttributes = true;
-					int poolValue = jsonAttribute.getInt("value");
-					
-					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
-					log.fine("Maximum sockets for this subscriptionPool name="+subscriptionName+": "+poolValue);
-					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
-					if (poolValue < systemValue) {
-						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") exceeds the maximum ("+poolValue+") for this pool to be a candidate for availability.");
-						conclusiveTest = true;
-					} else {
-						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
-					}
-					break;
-				}
-			}
-		}
-		if (!conclusiveTest) {
-			//log.warning("The facts for this system did not allow us to perform a conclusive test.");
-			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
-		}
-		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
-	}
-	
-	
-	protected void assertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailableOnClient(SubscriptionManagerTasks smt) throws Exception {
-		boolean foundPoolWithArchAttributes = false;
-		boolean conclusiveTest = false;
-		
-		// get all the pools available to each client
-		List<SubscriptionPool> clientPools = smt.getCurrentlyAvailableSubscriptionPools();
-		
-		// get the number of cpu_sockets for this system consumer
-		String factName = "cpu.architecture";
-		String systemValue = smt.getFactValue(factName);
-		log.info(factName+" for this system consumer: "+systemValue);
-		
-		// loop through the subscriptions
-		JSONArray jsonSubscriptions = 
-			new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/subscriptions"));	
-		for (int i = 0; i < jsonSubscriptions.length(); i++) {
-			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
-			String poolId = jsonSubscription.getString("id");
-			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
-			String subscriptionName = jsonProduct.getString("name");
-			String productId = jsonProduct.getString("id");
-			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
-			// loop through the attributes of this subscription looking for the "sockets" attribute
-			for (int j = 0; j < jsonAttributes.length(); j++) {
-				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
-				String attributeName = jsonAttribute.getString("name");
-				if (attributeName.equals("arch")) {
-					// found the arch attribute - get its value
-					foundPoolWithArchAttributes = true;
-					String poolValue = jsonAttribute.getString("value");
-					
-					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
-					log.fine("Arch for this subscriptionPool name="+subscriptionName+": "+poolValue);
-					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
-					if (!poolValue.equalsIgnoreCase(systemValue) && !poolValue.equalsIgnoreCase("ALL")) {
-						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") does not match ("+poolValue+") for this pool to be a candidate for availability.");
-						conclusiveTest = true;
-					} else {
-						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
-					}
-					break;
-				}
-			}
-		}
-		if (!conclusiveTest) {
-			log.warning("The facts for this system did not allow us to perform a conclusive test.");
-			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
-		}
-		Assert.assertTrue(foundPoolWithArchAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
-	}
 
 		
 	// Data Providers ***********************************************************************
