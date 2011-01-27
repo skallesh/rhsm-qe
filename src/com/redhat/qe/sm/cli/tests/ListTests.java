@@ -221,16 +221,24 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: RHEL Personal should be the only available subscription to a consumer registered as type person",
-			groups={"EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
+			groups={"myDevGroup","EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureOnlyRHELPersonalIsAvailableToRegisteredPerson_Test() {
 		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
 		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 		
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
+		// decide what username and password to test with
+		String username = clientusername;
+		String password = clientpassword;
+		if (!getProperty("sm.rhpersonal.username1", "").equals("")) {
+			username = getProperty("sm.rhpersonal.username1", "");
+			password = getProperty("sm.rhpersonal.password1", "");
+		}
 		
+		// register a person
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
 
 		// assert that RHEL Personal is available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();

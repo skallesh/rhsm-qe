@@ -262,21 +262,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithNameAndType_Test(String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void RegisterWithNameAndType_Test(String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
-		// decide what username and password to test with
-		String testWithUsername = clientusername;
-		String testWithPassword = clientpassword;
-		if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username1", "").equals("")) {
-			testWithUsername = getProperty("sm.rhpersonal.username1", "");
-			testWithPassword = getProperty("sm.rhpersonal.password1", "");
-		}
-		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register(testWithUsername,testWithPassword,type,name,null,null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(username,password,type,name,null,null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
@@ -654,19 +646,28 @@ Expected Results:
 	}
 	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String username=clientusername;
+		String password=clientpassword;
 		
-		// String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		// 									name,				type,					exitCode,			stdoutRegex,						stderrRegex
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
 			
-			// https://bugzilla.redhat.com/show_bug.cgi?id=661130
-			if (type.equals(ConsumerType.person)) {
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+clientusername,	null)}));			
-				continue;
+			// decide what username and password to test with
+			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username1", "").equals("")) {
+				username = getProperty("sm.rhpersonal.username1", "");
+				password = getProperty("sm.rhpersonal.password1", "");
+			} else {
+				username = clientusername;
+				password = clientpassword;
 			}
 			
-			ll.add(Arrays.asList(new Object[]{  name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+
+			// String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			if (type.equals(ConsumerType.person)) {
+				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null)}));
+			} else {
+				ll.add(Arrays.asList(new Object[]{  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+			}
 		}
 
 		return ll;

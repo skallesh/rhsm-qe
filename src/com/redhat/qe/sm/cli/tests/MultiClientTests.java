@@ -103,15 +103,23 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
 		unregisterMultiClientRegisterAsPersonAfterGroups();
 		
+		// decide what username and password to test with
+		String username = clientusername;
+		String password = clientpassword;
+		if (!getProperty("sm.rhpersonal.username1", "").equals("")) {
+			username = getProperty("sm.rhpersonal.username1", "");
+			password = getProperty("sm.rhpersonal.password1", "");
+		}
+		
 		//personIdForMultiClientRegisterAsPerson_Test = client1tasks.getCurrentConsumerId(client1tasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null));
-		client1tasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
+		client1tasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
 		
 		// attempt to register a second person consumer using the same username
-		SSHCommandResult sshCommandResult = client2tasks.register_(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = client2tasks.register_(username, password, ConsumerType.person, null, null, null, null, null, null, null);
 
 		// assert the sshCommandResult here
 		// User testuser1 has already registered a personal consumer
-		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User %s has already registered a personal consumer", clientusername),"stderr after attempt to register same person from a second different client:");
+		Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), String.format("User %s has already registered a personal consumer", username),"stderr after attempt to register same person from a second different client:");
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255),"exitCode after attempt to register same person from a second different client");
 
 	}
