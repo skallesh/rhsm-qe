@@ -1,6 +1,5 @@
 (defproject sm "1.0.0-SNAPSHOT"
   :description "Automated tests for Red Hat Subsciption Manager GUI"
-  :source-path "clojure/src"
   :java-source-path "src"
   :aot [#"^sm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true

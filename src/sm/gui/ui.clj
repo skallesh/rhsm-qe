@@ -30,7 +30,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		:question-dialog "Question"  
 		:facts-dialog "facts_dialog" 
 		:progress-dialog "Progress Dialog"
-		:contract-selection-dialog "Contract Selection"}))
+		:contract-selection-dialog "Contract Selection"
+                :proxy-config-dialog "Advanced Network Configuration"}))
 
 
 (def elements (merge
@@ -55,7 +56,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                            :overlap
                                            :contain-text
                                            :text-in-subscription
-                                           :unsubscribe])
+                                           :unsubscribe
+                                           :proxy-configuration])
 		    (same-name [:match-my-hardware
 				:overlap-with-existing-subscriptions
 				:provide-software-not-yet-installed
@@ -79,7 +81,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		  (define-elements (windows :contract-selection-dialog)
 		  {:contract-selection-table "tbl0"
 		   :cancel-contract-selection "Cancel"
-		   :subscribe-contract-selection "Subscribe"})))
+		   :subscribe-contract-selection "Subscribe"})
+                  (define-elements (windows :proxy-config-dialog)
+                   (merge (same-name capitalize [:proxy-checkbox
+                                      :authentication-checkbox
+                                      :proxy-text
+                                      :password-text
+                                      :username-text])
+                          {:close-proxy "Close Button"
+                           :proxy-location "Proxy Location:"}))))
 
 (def tabs (define-tabs (elements :main-tabgroup)
 	    (same-name capitalize [:all-available-subscriptions 

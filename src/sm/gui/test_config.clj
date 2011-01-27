@@ -32,7 +32,13 @@
 			    :password "sm.client1.password"
 			    :ssh-user (DefaultMapKey. "sm.ssh.user" "root")
 			    :ssh-key-private (DefaultMapKey."sm.sshkey.private" ".ssh/id_auto_dsa")
-			    :ssh-key-passphrase "sm.sshkey.passphrase"})]
+			    :ssh-key-passphrase "sm.sshkey.passphrase"
+                            :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
+                            :basicauth-proxy-port "sm.basicauthproxy.port"
+                            :basicauth-proxy-username "sm.basicauthproxy.username"
+                            :basicauth-proxy-password "sm.basicauthproxy.password"
+                            :noauth-proxy-hostname "sm.noauthproxy.hostname"
+                            :noauth-proxy-port "sm.noauthproxy.port"})]
        (merge m (property-map
 		 {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
 			      (str "http://" (m :client-hostname) ":4118"))}))))
