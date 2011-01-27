@@ -32,9 +32,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	public void VerifyValidityPeriodInProductCerts_Test(File productCertFile) {
 		
 		ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
+		long actualValidityDurationDays = (productCert.validityNotAfter.getTimeInMillis() - productCert.validityNotBefore.getTimeInMillis())/(24*60*60*1000);
 		
 		log.info("Verifying the validity period in product cert '"+productCertFile+"': "+productCert);
-		
+		log.info("The validity period for this product cert is (days): "+actualValidityDurationDays);
 		Calendar now = Calendar.getInstance();
 		
 		// verify that the validity period for this product cert has already begun.
@@ -43,9 +44,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// verify that the validity period for this product cert has not yet ended.
 		Assert.assertTrue(productCert.validityNotAfter.after(now),"This validity period for this product cert has not yet ended.");
 
-		// verify that the validity period for this product cert is 20 years.
-		int actualYears = productCert.validityNotAfter.get(Calendar.YEAR) - productCert.validityNotBefore.get(Calendar.YEAR);
-		Assert.assertEquals(actualYears,20,"This validity period for this product spans 20 years.");
+		// verify that the validity period for this product cert is expected.
+		long expectedValidityDurationDays = Long.valueOf(getProperty("sm.client.productCertValidityDuration", "0"));
+		Assert.assertEquals(actualValidityDurationDays,expectedValidityDurationDays,"This validity period for this product certificate spans the expected number of days.");
 
 	}
 	
