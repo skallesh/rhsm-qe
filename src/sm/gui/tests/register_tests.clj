@@ -3,7 +3,7 @@
 	[sm.gui.test-config :only (config)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-	 sm.gui.ldtp)
+	 gnome.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 

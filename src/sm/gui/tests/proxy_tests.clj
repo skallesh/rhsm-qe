@@ -4,7 +4,7 @@
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.str-utils :only (re-split)]
-	 sm.gui.ldtp)
+	 gnome.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
