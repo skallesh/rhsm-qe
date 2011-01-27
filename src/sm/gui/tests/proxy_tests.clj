@@ -20,7 +20,7 @@
   enable_proxy [_]
   (let [hostname (@config :basicauth-proxy-hostname)
         port (@config :basicauth-proxy-port)
-        username (@config :basicauth-proxy-port)
+        username (@config :basicauth-proxy-username)
         password (@config :basicauth-proxy-password)]
     (tasks/enableproxy hostname port username password)
     (println "finished ui")
@@ -32,6 +32,6 @@
       (verify (= config-file-hostname hostname))
       (verify (= config-file-port port))
       (verify (= config-file-user (username)))
-      (verivy (= config-file-password password)) )))
+      (verify (= config-file-password password)) )))
 
 
