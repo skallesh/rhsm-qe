@@ -124,6 +124,16 @@
   (ui click :unsubscribe)
   (checkforerror))
 
+(defn enableproxy [proxy port user pass]
+  (ui click :proxy-configuration)
+  (ui check :proxy-checkbox)
+  (ui settextvalue :proxy-location (str proxy ":" port))
+  (ui check :authentication-checkbox)
+  (ui settextvalue :username-text user)
+  (ui settextvalue :password-text pass)
+  (ui click :close-proxy)
+  (checkforerror))
+
 (comment (defn get-all-facts []
    (ui click :view-my-system-facts)
    (ui waittillguiexist :facts-view)
