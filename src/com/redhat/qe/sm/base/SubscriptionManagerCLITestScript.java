@@ -154,7 +154,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		log.info("Installed version of candlepin...");
 		try {
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status")); // seems to work no matter what credentials are passed		
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
 			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
