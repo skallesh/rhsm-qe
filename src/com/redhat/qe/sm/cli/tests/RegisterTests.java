@@ -267,8 +267,16 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
+		// decide what username and password to test with
+		String testWithUsername = clientusername;
+		String testWithPassword = clientpassword;
+		if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username1", "").equals("")) {
+			testWithUsername = getProperty("sm.rhpersonal.username1", "");
+			testWithPassword = getProperty("sm.rhpersonal.password1", "");
+		}
+		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,type,name,null,null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(testWithUsername,testWithPassword,type,name,null,null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
