@@ -51,7 +51,7 @@ B        10. Product Deleted
 A        11. Owner Created
 A        12. Owner Deleted
 A        13. Export Created
-A         14. Import Done 
+A        14. Import Done 
 A   2. Events should be consumable via RSS based on owner
 A   3. Events should be consumable via RSS based on consumer
    4. AMQP
@@ -75,7 +75,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
@@ -198,7 +199,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void EnititlementDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -289,7 +291,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void OwnerCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
+		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server.");
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -334,7 +337,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void PoolCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 
@@ -358,7 +362,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void PoolDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 
@@ -376,7 +381,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void ProductDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 //		IRC CHAT ON 9/3/2010
 //		<dgoodwin> that one is worse =]
 //		 products are detached in the db (as they can also live externally)
@@ -405,7 +411,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void ExportCreated_Test() throws Exception {
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
@@ -471,7 +478,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
-		
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
+
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
  
@@ -490,8 +498,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			enabled=true, alwaysRun=true)
 	@ImplementsNitrateTest(caseId=50404)
 	public void NegativeSuperUserPassword_Test() throws IllegalArgumentException, IOException, FeedException {
-		String authuser="",authpwd="";
+		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
+		String authuser="",authpwd="";
 		try {
 			// enter the wrong user, correct passwd
 			authuser = serverAdminUsername+getRandInt();

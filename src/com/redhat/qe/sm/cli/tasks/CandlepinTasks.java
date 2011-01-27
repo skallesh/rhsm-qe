@@ -614,9 +614,12 @@ public class CandlepinTasks {
 		// debug logging
 		log.finest("SyndFeed from "+feedUrl+":\n"+feed);
 //log.fine("SyndFeed from "+feedUrl+":\n"+feed);
-		for (int i=0;  i<feed.getEntries().size(); i++) {
+		if (feed.getEntries().size()==0) {
+			log.fine(String.format("%s entries[] is empty", feed.getTitle()));		
+		} else for (int i=0;  i<feed.getEntries().size(); i++) {
 			log.fine(String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue()));
 		}
+
 
         return feed;
 	}
