@@ -275,6 +275,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			this.registerResult = registerResult;
 			this.allAvailableSubscriptionPools = allAvailableSubscriptionPools;
 		}
+		
+		public String toString() {
+			String string = "";
+			if (username != null)		string += String.format(" %s='%s'", "username",username);
+			if (password != null)		string += String.format(" %s='%s'", "password",password);
+			if (ownerKey != null)		string += String.format(" %s='%s'", "ownerKey",ownerKey);
+			if (registerResult != null)	string += String.format(" %s=[%s]", "registerResult",registerResult);
+			for (SubscriptionPool subscriptionPool : allAvailableSubscriptionPools) {
+				string += String.format(" %s=[%s]", "availableSubscriptionPool",subscriptionPool);
+			}
+			return string.trim();
+		}
 	}
 	
 	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
@@ -350,6 +362,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
+
 	
 	// Data Providers ***********************************************************************
 

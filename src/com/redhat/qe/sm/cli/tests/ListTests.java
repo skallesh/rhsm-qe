@@ -231,9 +231,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// decide what username and password to test with
 		String username = clientusername;
 		String password = clientpassword;
-		if (!getProperty("sm.rhpersonal.username1", "").equals("")) {
-			username = getProperty("sm.rhpersonal.username1", "");
-			password = getProperty("sm.rhpersonal.password1", "");
+		if (!getProperty("sm.rhpersonal.username", "").equals("")) {
+			username = getProperty("sm.rhpersonal.username", "");
+			password = getProperty("sm.rhpersonal.password", "");
 		}
 		
 		// register a person

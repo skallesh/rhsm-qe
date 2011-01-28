@@ -653,9 +653,9 @@ Expected Results:
 			String name = type.toString()+"_NAME";
 			
 			// decide what username and password to test with
-			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username1", "").equals("")) {
-				username = getProperty("sm.rhpersonal.username1", "");
-				password = getProperty("sm.rhpersonal.password1", "");
+			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
+				username = getProperty("sm.rhpersonal.username", "");
+				password = getProperty("sm.rhpersonal.password", "");
 			} else {
 				username = clientusername;
 				password = clientpassword;

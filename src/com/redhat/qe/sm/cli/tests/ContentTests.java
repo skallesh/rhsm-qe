@@ -26,8 +26,8 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 @Test(groups={"content"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 	
-	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username1", "");
-	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password1", "");
+	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username", "");
+	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password", "");
 	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
 	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
 	//protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
