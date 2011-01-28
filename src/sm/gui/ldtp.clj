@@ -58,7 +58,7 @@
 ;;Generate all LDTP functions from the specfile.  Specfile is produced
 ;;by this python script:
 ;;https://github.com/weissjeffm/ldtp-server/blob/master/extract-api.py
-(defxmlrpc "clojure/src/sm/gui/ldtp_api.txt")
+(defxmlrpc "src/sm/gui/ldtp_api.txt")
 
 (defn action [uifn arg1 & args]
   (let [ids (if (satisfies? LDTPLocatable arg1) (locator arg1) (list arg1))]
