@@ -238,22 +238,24 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(productSubscriptions.size(),0,"After registering with force, no product subscriptions should be consumed.");
 	}
 	
-
+	
 	@Test(	description="subscription-manager-cli: register with --name",
+			dataProvider="getRegisterWithNameData",
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=62352)
-	public void RegisterWithName_Test() {
+	public void RegisterWithName_Test(String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		String name = "RegisterWithName_Tester";
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,name,null,null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(clientusername,clientpassword,null,name,null,null, null, null, null, null);
 		
-		// assert the stdout reflects the register name
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name,"Stdout from register with --name value of "+name);
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" option:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" option:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" option:");
 	}
 	
 	
@@ -669,6 +671,39 @@ Expected Results:
 				ll.add(Arrays.asList(new Object[]{  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
 			}
 		}
+
+		return ll;
+	}
+	
+	
+	
+	@DataProvider(name="getRegisterWithNameData")
+	public Object[][] getRegisterWithNameDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithNameDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String alphanumericOnlyStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";
+		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters.";
+		String name;
+
+		// valid names
+		name = "RegisterWithNameTest";								ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
+		name = "periods...dashes---underscores___alphanumerics123";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
+		name = "249chars__12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+																	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
+	
+		// invalid non-alphanumeric names
+		for (String nonAlphanumericName : new String[]{"pound#", "comma,", "\"space bar\"", "exclamationPoint!", "asterisk*"}) {
+			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr)}));
+			//ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr}));
+		}
+
+		// names that are too long (>=250 chars)
+		name = "250chars__123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	name,	Integer.valueOf(255),	null,	maxCharsStderr)}));
+		//ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
+
 
 		return ll;
 	}
