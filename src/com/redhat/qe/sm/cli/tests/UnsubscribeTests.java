@@ -109,7 +109,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 //	}
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"blockedByBug-584137", "blockedByBug-602852"/*, "blockedByBug-672122"*/},
+			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=41903)
 	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){
@@ -150,7 +150,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert that the rhsmcertd will clean up the malicious activity
 		log.info("Now let's wait for \"certificates updated\" by the rhsmcertd and assert that the deamon deletes the copied entitlement certificate since it was put on candlepins certificate revocation list during the unsubscribe.");
-		//sleep((certFrequency*60+10)*1000);
+		String marker = "Testing UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test..."; // https://tcms.engineering.redhat.com/case/41692/
+		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
 		clienttasks.waitForRegexInRhsmcertdLog(".*certificates updated.*", certFrequency);	// https://bugzilla.redhat.com/show_bug.cgi?id=672122
 
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath())==0,"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
