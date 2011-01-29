@@ -439,7 +439,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //		Assert.assertTrue(true,"No pools were unexpectedly subscribed to following a register with autosubscribe.");
 //	}
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"myDevGroup", "AutoSubscribeAndVerify"},
+			groups={"AutoSubscribeAndVerify"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void InititiateAutoSubscribe_Test() throws JSONException {
@@ -461,7 +461,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		sshCommandResultFromAutosubscribe = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
 	}
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"myDevGroup", "AutoSubscribeAndVerify"},
+			groups={"AutoSubscribeAndVerify"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
