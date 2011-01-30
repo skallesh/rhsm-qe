@@ -417,7 +417,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure system autosubscribe consumes subpool RHEL Personal Bits",
-			groups={"EnsureSystemAutosubscribeConsumesSubPool_Test"/*, "RHELPersonal"*/, "blockedByBug-637937"},
+			groups={"EnsureSystemAutosubscribeConsumesSubPool_Test", "blockedByBug-637937"},
 //			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -457,7 +457,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: No consumer created by any other user in the same owner can see the sub pool",
-			groups={"EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test"/*, "RHELPersonal"*/, "blockedByBug-643405"},
+			groups={"EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test", "blockedByBug-643405"},
 //			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=61126)
@@ -568,7 +568,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	//
 	//	The above entitlements were derived from the pool: '8a9b90882dce731d012dd25e1a7804be'.
 	//	Please unsubscribe from the above entitlements first.
-	@AfterGroups(groups={"setup"}, value={"RHELPersonal"}, alwaysRun=true)
+	@AfterGroups(groups={"setup"}, value={"RHELPersonal","EnsureSystemAutosubscribeConsumesSubPool_Test"}, alwaysRun=true)
 	public void unsubscribeAndUnregisterMultipleSystemsAfterGroups() {
 		if (client2tasks!=null) {
 			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
