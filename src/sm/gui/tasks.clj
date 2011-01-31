@@ -133,7 +133,7 @@
   (ui settextvalue :username-text user)
   (ui settextvalue :password-text pass)
   (ui click :close-proxy)
-  (checkforerror))
+  (checkforerror) )
 
 (defn enableproxy-noauth [proxy port]
   (ui selecttab :my-installed-software)
