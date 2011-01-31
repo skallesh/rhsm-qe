@@ -296,13 +296,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register(username,password,type,name,null,null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,type,name,null,null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
-
 	}
 	
 	
@@ -681,6 +680,7 @@ Expected Results:
 		
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
+			List <String> consumerTypes = Arrays.asList(getProperty("sm.consumerTypes", "").trim().split(" *, *")); // registerable consumer types
 			
 			// decide what username and password to test with
 			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
@@ -691,12 +691,16 @@ Expected Results:
 				password = clientpassword;
 			}
 			
-
 			// String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			if (type.equals(ConsumerType.person)) {
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null)}));
+			if (consumerTypes.contains(type.toString())) {
+				if (type.equals(ConsumerType.person)) {
+					ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null)}));
+				} else {
+					ll.add(Arrays.asList(new Object[]{  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+				}
 			} else {
-				ll.add(Arrays.asList(new Object[]{  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+				ll.add(Arrays.asList(new Object[]{  								username,	password,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type}));			
+	
 			}
 		}
 
