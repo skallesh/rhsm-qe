@@ -677,10 +677,16 @@ Expected Results:
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		String username=clientusername;
 		String password=clientpassword;
+
+		// flatten all the ConsumerType values into a comma separated list
+		String consumerTypesAsString = "";
+		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
+		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
+		// interate across all ConsumerType values and append rows to the dataProvider
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
-			List <String> consumerTypes = Arrays.asList(getProperty("sm.consumerTypes", "").trim().split(" *, *")); // registerable consumer types
+			List <String> registerableConsumerTypes = Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
 			
 			// decide what username and password to test with
 			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
@@ -692,7 +698,7 @@ Expected Results:
 			}
 			
 			// String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			if (consumerTypes.contains(type.toString())) {
+			if (registerableConsumerTypes.contains(type.toString())) {
 				if (type.equals(ConsumerType.person)) {
 					ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null)}));
 				} else {
