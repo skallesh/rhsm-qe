@@ -443,31 +443,34 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-
-	@DataProvider(name="getSubscriptionPoolProductIdData")
-	public Object[][] getSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProductIdDataAsListOfLists());
+	
+	@DataProvider(name="getSystemSubscriptionPoolProductData")
+	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists());
 	}
-	protected List<List<Object>> getSubscriptionPoolProductIdDataAsListOfLists() throws JSONException {
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		String subscriptionPoolProductIdData = getProperty("sm.client.subscriptionPoolProductIdData", "");
-		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll("<", "["); // hudson parameters use < instead of [
-		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll(">", "]"); // hudson parameters use > instead of ]
-		if (subscriptionPoolProductIdData.equals("")) return ll;	// no data specified
+		String subscriptionPoolProductData = getProperty("sm.system.subscriptionPoolProductData", "<>");
+		subscriptionPoolProductData = subscriptionPoolProductData.replaceAll("<", "["); // hudson parameters use < instead of [
+		subscriptionPoolProductData = subscriptionPoolProductData.replaceAll(">", "]"); // hudson parameters use > instead of ]
+
 		
-		JSONArray subscriptionPoolProductIdDataAsJSONArray = new JSONArray(subscriptionPoolProductIdData);
+		JSONArray subscriptionPoolProductDataAsJSONArray = new JSONArray(subscriptionPoolProductData);
 		
-		for (int j = 0; j < subscriptionPoolProductIdDataAsJSONArray.length(); j++) {
-			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) subscriptionPoolProductIdDataAsJSONArray.get(j);
-			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
-			JSONArray bundledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("bundledProductNames");
-			List<String> bundledProductNamesAsList = new ArrayList<String>();
-			for (int i = 0; i < bundledProductNamesAsJSONArray.length(); i++) {
-				String bundledProductName = (String) bundledProductNamesAsJSONArray.get(i);
-				bundledProductNamesAsList.add(bundledProductName);
-			}
-			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, bundledProductNamesAsList.toArray(new String[]{})}));
+		for (int j=0; j<subscriptionPoolProductDataAsJSONArray.length(); j++) {
+			JSONObject poolProductDataAsJSONObject = (JSONObject) subscriptionPoolProductDataAsJSONArray.get(j);
+			String systemProductId = poolProductDataAsJSONObject.getString("systemProductId");
+			JSONArray bundledProductDataAsJSONArray = poolProductDataAsJSONObject.getJSONArray("bundledProductData");
+//			List<String> bundledProductNamesAsList = new ArrayList<String>();
+//			for (int i = 0; i < bundledProductDataAsJSONArray.length(); i++) {
+//				String bundledProductName = (String) bundledProductDataAsJSONArray.get(i);
+//				bundledProductNamesAsList.add(bundledProductName);
+//			}
+//			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductNamesAsList.toArray(new String[]{})}));
+
+			// String systemProductId, JSONArray bundledProductDataAsJSONArray
+			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductDataAsJSONArray}));
 
 			// minimize the number of dataProvided rows (useful during automated testcase development)
 			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
@@ -475,7 +478,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
-	
 	
 	@DataProvider(name="getUsernameAndPasswordData")
 	public Object[][] getUsernameAndPasswordDataAs2dArray() {

@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
@@ -55,11 +56,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions",
-			groups={},
-			dataProvider="getSubscriptionPoolProductIdData",
+			groups={"myDevGroup"},
+			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
-	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] bundledProductNames) {
+	public void EnsureAvailableSubscriptionsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
@@ -82,11 +83,11 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list consumed entitlements",
-			groups={},
-			dataProvider="getSubscriptionPoolProductIdData",
+			groups={"myDevGroup"},
+			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
-	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] bundledProductNames) {
+	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
@@ -100,7 +101,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					"SerialNumber of Consumed Product Subscription matches the serial number from the current entitlement certificate.");
 		}	
 	}
-	
 	
 	@Test(	description="subscription-manager-cli: list installed products",
 			groups={},
