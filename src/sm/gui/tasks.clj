@@ -125,6 +125,7 @@
   (checkforerror))
 
 (defn enableproxy-auth [proxy port user pass]
+  (ui selecttab :my-installed-software)
   (ui click :proxy-configuration)
   (ui check :proxy-checkbox)
   (ui settextvalue :proxy-location (str proxy ":" port))
@@ -135,6 +136,7 @@
   (checkforerror))
 
 (defn enableproxy-noauth [proxy port]
+  (ui selecttab :my-installed-software)
   (ui click :proxy-configuration)
   (ui check :proxy-checkbox)
   (ui settextvalue :proxy-location (str proxy ":" port))
@@ -143,7 +145,7 @@
   (checkforerror) )
 
 (comment (defn get-all-facts []
-   (ui click :view-my-system-facts)
+   (ui click :view-system-facts)
    (ui waittillguiexist :facts-view)
    (let [table (element :facts-view)
 	 rownums (range (ui getrowcount :facts-view))

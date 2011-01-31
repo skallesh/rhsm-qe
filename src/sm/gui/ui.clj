@@ -41,7 +41,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 					   :register-system
 					   :unregister-system
 					   :add-subscription
-					   :view-my-system-facts
+					   :view-system-facts
 					   :glossary
 					   :become-compliant
 					   :all-available-subscriptions
