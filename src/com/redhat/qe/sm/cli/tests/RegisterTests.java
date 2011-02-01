@@ -722,7 +722,7 @@ Expected Results:
 	protected List<List<Object>> getRegisterWithNameDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		String alphanumericOnlyStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";
-		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters.";
+		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		String name;
 
 		// valid names
