@@ -23,8 +23,9 @@
     (or (some matches-message? (keys known-errors))
 	:sm-error)))
 
-(defn connect []
-  (set-url (@config :ldtp-url)))
+(defn connect
+  ([url] (set-url url))
+  ([] (connect (@config :ldtp-url))))
 
 (defn start-app
   ([]

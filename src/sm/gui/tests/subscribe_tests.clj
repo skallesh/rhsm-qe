@@ -12,7 +12,7 @@
     (doseq [item subscription-list]
       (f item))))
 
-(defn ^{BeforeClass {}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (with-handlers [(handle :already-registered [e]
                                (recover e :unregister-first))]
