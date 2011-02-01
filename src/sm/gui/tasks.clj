@@ -76,7 +76,7 @@
   (ui settextvalue :password password)
   (when system-name-input
     (ui settextvalue :system-name system-name-input))
-  (add-recoveries {:cancel #(ui click :register-cancel)}
+  (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
     (ui click :register)
     (checkforerror)))
 
