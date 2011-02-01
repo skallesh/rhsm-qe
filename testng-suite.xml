@@ -13,14 +13,12 @@ to the testng group name you are using to categorize your @Test -->
 		<packages>
 			<package name="sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
-			
 		</packages>
 		
 		<groups>
 			<run>
 				<include name="registration"/>
 				<include name="setup" />
-				<exclude name="knownBug"/>
 			</run>
 		</groups>
 	</test>
@@ -35,7 +33,19 @@ to the testng group name you are using to categorize your @Test -->
 			<run>
 				<include name="subscribe"/>
 				<include name="setup" />
-				<exclude name="knownBug"/>
+			</run>
+		</groups>
+	</test>
+	<test name="Proxy">
+		<packages>
+			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>
+		
+		<groups>
+			<run>
+				<include name="proxy"/>
+				<include name="setup" />
 			</run>
 		</groups>
 	</test>
