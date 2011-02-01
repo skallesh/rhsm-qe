@@ -1920,14 +1920,54 @@ repolist: 3,394
 		return packages;		
 	}
 	
+	public ArrayList<String> yumGroupList (String Installed_or_Available, String options) {
+		ArrayList<String> groups = new ArrayList<String>();
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
+
+		String command = "yum grouplist "+options+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		
+		// execute the yum command to list available packages
+		int min = 5;
+		log.fine("Using a timeout of "+min+" minutes for next command...");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
+		
+		// Example result.getStdout()
+//		[root@jsefler-betaqa-1 product]# yum grouplist --disablerepo=* --enablerepo=rhel-entitlement-beta
+//		Loaded plugins: product-id, refresh-packagekit, rhnplugin, subscription-manager
+//		Updating Red Hat repositories.
+//		INFO:rhsm-app.repolib:repos updated: 0
+//		This system is not registered with RHN.
+//		RHN support will be disabled.
+//		Setting up Group Process
+//		rhel-entitlement-beta                                                                                                                                 | 4.0 kB     00:00     
+//		rhel-entitlement-beta/group_gz                                                                                                                        | 190 kB     00:00     
+//		Installed Groups:
+//		   Additional Development
+//		   Assamese Support
+//		   Base
+//		Available Groups:
+//		   Afrikaans Support
+//		   Albanian Support
+//		   Amazigh Support
+//		Done
+
+		String regex = Installed_or_Available+" Groups:((\\n\\s{3}.*)+)";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.info("Did NOT find any "+Installed_or_Available+" Groups from: "+command);
+			return groups;
+		}
+
+		// assemble the list of groups and return them
+		for (String group : matcher.group(1).trim().split("\\n\\s{3}")) groups.add(group);
+
+		return groups;		
+	}
+	
+	
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		
-//		for (String pkg : getAvailablePackages("rhnplugin","*",repo,null)) {
-//			if (!getAvailablePackages("rhnplugin",repo,null,pkg).contains(pkg)) {
-//				return pkg;
-//			}
-//		}
-
 		for (String pkg : yumListAvailable("--disablerepo=* --enablerepo="+repo)) {
 			if (!yumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
 				return pkg;
@@ -1936,18 +1976,45 @@ repolist: 3,394
 		return null;
 	}
 	
-	public void yumInstallPackageFromRepo (String pkg, String repoLabel) {
-		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+	public String findFirstAvailableGroupFromRepo(String repo) {
+		List <String> groups = yumGroupList("Available", "--disablerepo=* --enablerepo="+repo);
+		if (!groups.isEmpty()) return groups.get(0);
+		return null;
+	}
+
+	public String findFirstInstalledGroupFromRepo(String repo) {
+		List <String> groups = yumGroupList("Installed", "--disablerepo=* --enablerepo="+repo);
+		if (!groups.isEmpty()) return groups.get(0);
+		return null;
+	}
+	
+	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel) {
+		String command = "yum -y install "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*"+repoLabel+"$",null);
+		return result;
 	}
 	
-	public void yumRemovePackage (String pkg) {
-		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+	public SSHCommandResult yumRemovePackage (String pkg) {
+		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 1, null,"Error: No matching Packages to list");
+		return result;
 	}
 	
+	public SSHCommandResult yumInstallGroup (String group) {
+		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		Assert.assertFalse(this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Available after calling '"+command+"'.");
+		return result;
+	}
+	
+	public SSHCommandResult yumRemoveGroup (String group) {
+		String command = "yum -y groupremove \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		Assert.assertFalse(this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Installed after calling '"+command+"'.");
+		return result;
+	}
 	
 	public String getRedhatRelease() {
 //		// verify the grinder hostname is a rhel 5 machine
