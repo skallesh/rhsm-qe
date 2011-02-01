@@ -13,4 +13,4 @@
                  [gnome.ldtp "1.0.0-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]
 		     [lein-eclipse "1.0.0"]]
-  :repositories ["hudson" "http://hudson.rhq.lab.eng.bos.redhat.com:8081/archiva/repository/hudson"])
+  :repositories ["hudson" "http://hudson.rhq.lab.eng.bos.redhat.com:8080/archiva/repository/hudson"])
