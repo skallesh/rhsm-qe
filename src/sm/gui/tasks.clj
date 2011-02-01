@@ -2,12 +2,12 @@
   (:use [sm.gui.test-config :only (config)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
-        sm.gui.ldtp)
+        gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
-(def ui sm.gui.ldtp/action) ;;alias action in ldtp to ui here
+(def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials"

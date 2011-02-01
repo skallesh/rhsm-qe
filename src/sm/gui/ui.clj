@@ -1,8 +1,8 @@
 (ns sm.gui.ui
   (:use  [clojure.contrib [string :only [join split capitalize]]])
-  (:require [sm.gui.ldtp :as ldtp])
+  (:require [gnome.ldtp :as ldtp])
   (:import java.util.NoSuchElementException
-	   [sm.gui.ldtp Element Tab Window TabGroup]))
+	   [gnome.ldtp Element Tab Window TabGroup]))
 
 
 

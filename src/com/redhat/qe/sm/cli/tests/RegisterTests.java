@@ -53,7 +53,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={"RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getUsernameAndPasswordData")
 	@ImplementsNitrateTest(caseId=41677)
-	public void RegisterWithUsernameAndPassword_Test(String username, String password) {
+	public void RegisterWithUsernameAndPassword_Test(String username, String password, Object metadata) {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
 		// determine this user's ability to register
@@ -94,7 +94,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getBogusRegistrationData")
 //	@ImplementsNitrateTest(caseId={41691, 47918})
 	@ImplementsNitrateTest(caseId=47918)
-	public void Registration_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void Registration_Test(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex, Object metadata) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
 		// ensure we are unregistered
@@ -114,7 +114,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	@ImplementsNitrateTest(caseId=41691)
-	public void AttemptRegistrationWithInvalidCredentials_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void AttemptRegistrationWithInvalidCredentials_Test(String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex, Object metadata) {
 
 		// ensure we are unregistered
 		clienttasks.unregister(null, null, null);
@@ -137,7 +137,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String username = usernameWithUnacceptedTC;
 		String password = passwordWithUnacceptedTC;
 		if (username.equals("")) throw new SkipException("Must specify a username who has not accepted Terms & Conditions before attempting this test.");
-		AttemptRegistrationWithInvalidCredentials_Test(null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc");
+		AttemptRegistrationWithInvalidCredentials_Test(null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc", null);
 	}
 	
 	
@@ -149,7 +149,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String username = disabledUsername;
 		String password = disabledPassword;
 		if (username.equals("")) throw new SkipException("Must specify a username who has been disabled before attempting this test.");
-		AttemptRegistrationWithInvalidCredentials_Test(null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.");
+		AttemptRegistrationWithInvalidCredentials_Test(null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.", null);
 	}
 	
 	
@@ -590,19 +590,18 @@ Expected Results:
 		
 		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
 		// 									username,			password,						type,	name,	consumerId,	autosubscribe,	force,			debug,	exitCode,				stdoutRegex,																	stderrRegex
-		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: password not provided. Use --password <value>",							null}));
-		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username not provided. Use --username <name>",							null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null,	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: password not provided. Use --password <value>",							null,	null}));
+		ll.add(Arrays.asList(new Object[]{	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username not provided. Use --username <name>",							null,	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg,	null}));
 
 		// force a successful registration, and then...
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"},
-											clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null)}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null, new BlockedByBzBug(new String[]{"616065","669395"})}));
 
 		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null,	null}));
 
 		return ll;
 	}
@@ -619,21 +618,21 @@ Expected Results:
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
 		
 		// registration test for a user who is invalid
-		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, uErrMsg, null}));
 		
 		// registration test for a user who is invalid (translated)
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
-		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc", new BlockedByBzBug(new String[]{"615362","642805"})}));
+		else                     ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc", new BlockedByBzBug("615362")}));
 
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!usernameWithUnacceptedTC.equals("")) {
-			if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
-			else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
+			if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!", new BlockedByBzBug(new String[]{"615362","642805"})}));
+			else                     ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!", new BlockedByBzBug("615362")}));
 		}
 		
 		// registration test for a user who has been disabled (translated)
 		if (!disabledUsername.equals("")) {
-			ll.add(Arrays.asList(new Object[]{"en_US.UTF8", disabledUsername, disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
+			ll.add(Arrays.asList(new Object[]{"en_US.UTF8", disabledUsername, disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service.", null}));
 		}
 
 		return ll;
@@ -654,7 +653,7 @@ Expected Results:
 			
 			// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 			if (type.equals(ConsumerType.person)) {
-				ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+clientusername,	null)}));			
+				ll.add(Arrays.asList(new Object[]{name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+clientusername,	null, new BlockedByBzBug("661130")}));			
 				continue;
 			}
 			

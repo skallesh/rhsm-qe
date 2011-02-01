@@ -2,7 +2,7 @@
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
         [error.handler :only (with-handlers handle ignore recover)]
-	 sm.gui.ldtp)
+	 gnome.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
