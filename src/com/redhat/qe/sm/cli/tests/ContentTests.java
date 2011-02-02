@@ -240,23 +240,24 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be downloaded/installed/removed",
 			groups={"myDevGroup"},
-			dataProvider="getYumGroupFromEnabledRepoAndSubscriptionPoolsData",
+			dataProvider="getYumGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool) {
-
 		if (availableGroup==null && installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
-		
-		// freshly register
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+				
+		// unsubscribe from this pool
+		if (pool.equals(lastSubscribedSubscriptionPool)) clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(lastSubscribedEntitlementCertFile));
 		
 		// before subscribing to the pool, assert that the yum groupinfo does not exist
 		for (String group : new String[]{availableGroup,installedGroup}) {
 			if (group!=null) RemoteFileTasks.runCommandAndAssert(client, "yum groupinfo \""+group+"\" --disableplugin=rhnplugin", Integer.valueOf(0), null, "Warning: Group "+group+" does not exist.");
 		}
-		
-		// subscribe to the pool
+
+		// subscribe to this pool (and remember it)
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		lastSubscribedEntitlementCertFile = entitlementCertFile;
+		lastSubscribedSubscriptionPool = pool;
 		
 		// install and remove availableGroup
 		if (availableGroup!=null) {
@@ -268,18 +269,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (installedGroup!=null) {
 			clienttasks.yumRemoveGroup(installedGroup);
 			clienttasks.yumInstallGroup(installedGroup);
-			
 		}
 
 		// TODO: add asserts for the products that get installed or deleted in stdout as a result of yum group install/remove: 
 		// deleting: /etc/pki/product/7.pem
 		// installing: 7.pem
 		// assert the list --installed "status" for the productNamespace name that corresponds to the ContentNamespace from where this repolabel came from.
-		
-		// unsubscribe (not really necessary)
-		//clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 	}
-	
+	protected SubscriptionPool lastSubscribedSubscriptionPool = null;
+	protected File lastSubscribedEntitlementCertFile = null;
 	
 	
 	
@@ -306,16 +304,15 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 
-	@DataProvider(name="getYumGroupFromEnabledRepoAndSubscriptionPoolsData")
-	public Object[][] getYumGroupFromEnabledRepoAndSubscriptionPoolsDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getYumGroupFromEnabledRepoAndSubscriptionPoolsDataAsListOfLists());
+	@DataProvider(name="getYumGroupFromEnabledRepoAndSubscriptionPoolData")
+	public Object[][] getYumGroupFromEnabledRepoAndSubscriptionPoolDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolsDataAsListOfLists() {
+	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
-
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
@@ -327,14 +324,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					String repoLabel = contentNamespace.label;
 
 					// find first available group provided by this repo
-					String availableGroup = clienttasks.findFirstAvailableGroupFromRepo(repoLabel);
+					String availableGroup = clienttasks.findAnAvailableGroupFromRepo(repoLabel);
 					// find first installed group provided by this repo
-					String installedGroup = clienttasks.findFirstInstalledGroupFromRepo(repoLabel);
+					String installedGroup = clienttasks.findAnInstalledGroupFromRepo(repoLabel);
 
 					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
 					ll.add(Arrays.asList(new Object[]{availableGroup, installedGroup, repoLabel, pool}));
 				}
-
 			}
 			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 

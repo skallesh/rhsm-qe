@@ -1976,15 +1976,29 @@ repolist: 3,394
 		return null;
 	}
 	
-	public String findFirstAvailableGroupFromRepo(String repo) {
+	public String findAnAvailableGroupFromRepo(String repo) {
 		List <String> groups = yumGroupList("Available", "--disablerepo=* --enablerepo="+repo);
-		if (!groups.isEmpty()) return groups.get(0);
+		for (int i=0; i<groups.size(); i++) {
+			String group = groups.get(i);
+
+			// choose a group that has "Mandatory Packages:"
+			String mandatoryPackages = "Mandatory Packages:";
+			if (sshCommandRunner.runCommandAndWait("yum groupinfo \""+groups.get(i)+"\" | grep \""+mandatoryPackages+"\"").getStdout().trim().equals(mandatoryPackages)) return group;
+		}
 		return null;
 	}
 
-	public String findFirstInstalledGroupFromRepo(String repo) {
+	public String findAnInstalledGroupFromRepo(String repo) {
 		List <String> groups = yumGroupList("Installed", "--disablerepo=* --enablerepo="+repo);
-		if (!groups.isEmpty()) return groups.get(0);
+		for (int i=0; i<groups.size(); i++) {
+			String group = groups.get(i);
+			// don't consider these very important groups
+			if (group.equals("Base")) continue;
+			if (group.equals("X Window System")) continue;
+			if (group.startsWith("Network")) continue;	// Network Infrastructure Server, Network file system client, Networking Tools
+			
+			return group;
+		}
 		return null;
 	}
 	
