@@ -570,7 +570,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_hostname"}  }));
 		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_port"}  }));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("667829", (Object)new String[]{"proxy_hostname", "proxy_port"} ) }));
+		ll.add(Arrays.asList(new Object[]{	(Object)new String[]{"proxy_hostname", "proxy_port"} , new BlockedByBzBug("667829") }));
 		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_user"}  }));
 		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_password"}  }));
 		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_user", "proxy_password"}  }));

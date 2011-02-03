@@ -627,8 +627,7 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[]{	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
 
 		// force a successful registration, and then...
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"},
-											clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null)}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null, new BlockedByBzBug(new String[]{"616065","669395"})}));
 
 		// ... try to register again even though the system is already registered
 		ll.add(Arrays.asList(new Object[]{	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
@@ -651,13 +650,13 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[]{"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, uErrMsg}));
 		
 		// registration test for a user who is invalid (translated)
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
-		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc")}));
+		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc", new BlockedByBzBug(new String[]{"615362","642805"})}));
+		else                     ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Mandate"/*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc",new BlockedByBzBug("615362")}));
 
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!usernameWithUnacceptedTC.equals("")) {
-			if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"},"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
-			else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362",                       "de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!")}));
+			if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!", new BlockedByBzBug(new String[]{"615362","642805"})}));
+			else                     ll.add(Arrays.asList(new Object[]{ "de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!",new BlockedByBzBug("615362")}));
 		}
 		
 		// registration test for a user who has been disabled (translated)
@@ -700,7 +699,7 @@ Expected Results:
 			// String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 			if (registerableConsumerTypes.contains(type.toString())) {
 				if (type.equals(ConsumerType.person)) {
-					ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null)}));
+					ll.add(Arrays.asList(new Object[]{ username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null, new BlockedByBzBug("661130")}));
 				} else {
 					ll.add(Arrays.asList(new Object[]{  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
 				}
@@ -733,13 +732,13 @@ Expected Results:
 	
 		// invalid non-alphanumeric names
 		for (String nonAlphanumericName : new String[]{"pound#", "comma,", "\"space bar\"", "exclamationPoint!", "asterisk*"}) {
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr)}));
+			ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr, new BlockedByBzBug("672233")}));
 			//ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr}));
 		}
 
 		// names that are too long (>=250 chars)
 		name = "250chars__123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	name,	Integer.valueOf(255),	null,	maxCharsStderr)}));
+		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr, new BlockedByBzBug("672233")}));
 		//ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
 
 
