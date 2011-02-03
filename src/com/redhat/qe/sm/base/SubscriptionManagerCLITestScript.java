@@ -137,10 +137,24 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
 		}
 		
+		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
+		if (server!=null && servertasks.isOnPremises) {
+			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
+			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+				File remoteFile = new File(remoteFileAsString);
+				File localFile = new File("/tmp/"+remoteFile.getName());
+				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+				
+									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
+				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
+			}
+		}
+		
 		
 		log.info("Installed version of candlepin...");
 		try {
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/status")); // seems to work no matter what credentials are passed		
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
 			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
@@ -261,6 +275,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			this.registerResult = registerResult;
 			this.allAvailableSubscriptionPools = allAvailableSubscriptionPools;
 		}
+		
+		public String toString() {
+			String string = "";
+			if (username != null)		string += String.format(" %s='%s'", "username",username);
+			if (password != null)		string += String.format(" %s='%s'", "password",password);
+			if (ownerKey != null)		string += String.format(" %s='%s'", "ownerKey",ownerKey);
+			if (registerResult != null)	string += String.format(" %s=[%s]", "registerResult",registerResult);
+			for (SubscriptionPool subscriptionPool : allAvailableSubscriptionPools) {
+				string += String.format(" %s=[%s]", "availableSubscriptionPool",subscriptionPool);
+			}
+			return string.trim();
+		}
 	}
 	
 	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
@@ -336,6 +362,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
+
 	
 	// Data Providers ***********************************************************************
 
@@ -416,31 +443,34 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-
-	@DataProvider(name="getSubscriptionPoolProductIdData")
-	public Object[][] getSubscriptionPoolProductIdDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionPoolProductIdDataAsListOfLists());
+	
+	@DataProvider(name="getSystemSubscriptionPoolProductData")
+	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists());
 	}
-	protected List<List<Object>> getSubscriptionPoolProductIdDataAsListOfLists() throws JSONException {
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		String subscriptionPoolProductIdData = getProperty("sm.client.subscriptionPoolProductIdData", "");
-		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll("<", "["); // hudson parameters use < instead of [
-		subscriptionPoolProductIdData = subscriptionPoolProductIdData.replaceAll(">", "]"); // hudson parameters use > instead of ]
-		if (subscriptionPoolProductIdData.equals("")) return ll;	// no data specified
+		String subscriptionPoolProductData = getProperty("sm.system.subscriptionPoolProductData", "<>");
+		subscriptionPoolProductData = subscriptionPoolProductData.replaceAll("<", "["); // hudson parameters use < instead of [
+		subscriptionPoolProductData = subscriptionPoolProductData.replaceAll(">", "]"); // hudson parameters use > instead of ]
+
 		
-		JSONArray subscriptionPoolProductIdDataAsJSONArray = new JSONArray(subscriptionPoolProductIdData);
+		JSONArray subscriptionPoolProductDataAsJSONArray = new JSONArray(subscriptionPoolProductData);
 		
-		for (int j = 0; j < subscriptionPoolProductIdDataAsJSONArray.length(); j++) {
-			JSONObject subscriptionPoolProductIdDataAsJSONObject = (JSONObject) subscriptionPoolProductIdDataAsJSONArray.get(j);
-			String subscriptionPoolProductId = subscriptionPoolProductIdDataAsJSONObject.getString("subscriptionPoolProductId");
-			JSONArray bundledProductNamesAsJSONArray = subscriptionPoolProductIdDataAsJSONObject.getJSONArray("bundledProductNames");
-			List<String> bundledProductNamesAsList = new ArrayList<String>();
-			for (int i = 0; i < bundledProductNamesAsJSONArray.length(); i++) {
-				String bundledProductName = (String) bundledProductNamesAsJSONArray.get(i);
-				bundledProductNamesAsList.add(bundledProductName);
-			}
-			ll.add(Arrays.asList(new Object[]{subscriptionPoolProductId, bundledProductNamesAsList.toArray(new String[]{})}));
+		for (int j=0; j<subscriptionPoolProductDataAsJSONArray.length(); j++) {
+			JSONObject poolProductDataAsJSONObject = (JSONObject) subscriptionPoolProductDataAsJSONArray.get(j);
+			String systemProductId = poolProductDataAsJSONObject.getString("systemProductId");
+			JSONArray bundledProductDataAsJSONArray = poolProductDataAsJSONObject.getJSONArray("bundledProductData");
+//			List<String> bundledProductNamesAsList = new ArrayList<String>();
+//			for (int i = 0; i < bundledProductDataAsJSONArray.length(); i++) {
+//				String bundledProductName = (String) bundledProductDataAsJSONArray.get(i);
+//				bundledProductNamesAsList.add(bundledProductName);
+//			}
+//			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductNamesAsList.toArray(new String[]{})}));
+
+			// String systemProductId, JSONArray bundledProductDataAsJSONArray
+			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductDataAsJSONArray}));
 
 			// minimize the number of dataProvided rows (useful during automated testcase development)
 			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
@@ -448,7 +478,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
-	
 	
 	@DataProvider(name="getUsernameAndPasswordData")
 	public Object[][] getUsernameAndPasswordDataAs2dArray() {

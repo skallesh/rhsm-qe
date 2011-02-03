@@ -209,7 +209,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	// Configuration methods ***********************************************************************
+	// Configuration Methods ***********************************************************************
 	
 	@BeforeClass(groups="setup")
 	public void setupBeforeClass() throws IOException {
@@ -221,7 +221,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	// Protected methods ***********************************************************************
+	// Protected Methods ***********************************************************************
 
 
 	

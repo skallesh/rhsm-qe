@@ -4,6 +4,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
@@ -56,10 +57,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions",
 			groups={},
-			dataProvider="getSubscriptionPoolProductIdData",
+			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
-	public void EnsureAvailableSubscriptionsListed_Test(String productId, String[] bundledProductNames) {
+	public void EnsureAvailableSubscriptionsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
@@ -83,10 +84,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: list consumed entitlements",
 			groups={},
-			dataProvider="getSubscriptionPoolProductIdData",
+			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
-	public void EnsureConsumedEntitlementsListed_Test(String productId, String[] bundledProductNames) {
+	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
@@ -100,7 +101,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 					"SerialNumber of Consumed Product Subscription matches the serial number from the current entitlement certificate.");
 		}	
 	}
-	
 	
 	@Test(	description="subscription-manager-cli: list installed products",
 			groups={},
@@ -228,9 +228,17 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
 		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
 		
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null);
+		// decide what username and password to test with
+		String username = clientusername;
+		String password = clientpassword;
+		if (!getProperty("sm.rhpersonal.username", "").equals("")) {
+			username = getProperty("sm.rhpersonal.username", "");
+			password = getProperty("sm.rhpersonal.password", "");
+		}
 		
+		// register a person
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
 
 		// assert that RHEL Personal is available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();

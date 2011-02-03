@@ -71,7 +71,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 
 // DELETEME
 //	@Test(	description="subscription-manager: facts (when not registered)",
-//			groups={"myDevGroup","blockedByBug-654429"},
+//			groups={"blockedByBug-654429"},
 //			enabled=true)
 //	//@ImplementsNitrateTest(caseId=)
 //	public void FactsWhenNotRegistered_Test() {
