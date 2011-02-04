@@ -51,9 +51,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 					   :subscribe
                                            :all-subscriptions-view
                                            :my-subscriptions-view
-                                           :match-hardware
-                                           :not-installed
-                                           :overlap
+                                           :match-system
+                                           :match-installed
+                                           :do-not-overlap
                                            :contain-text
                                            :text-in-subscription
                                            :unsubscribe
