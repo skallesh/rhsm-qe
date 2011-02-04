@@ -123,7 +123,8 @@
             :msg (str "Not found in 'My Subscriptions': " s)}))
   (ui selectrow :my-subscriptions-view s)
   (ui click :unsubscribe)
-  (checkforerror))
+  (checkforerror)
+  (ui click :yes) )
 
 (defn enableproxy-auth [proxy port user pass]
   (ui selecttab :my-installed-software)
