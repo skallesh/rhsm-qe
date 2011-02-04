@@ -12,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.redhat.qe.auto.testng.Assert;
@@ -1392,10 +1394,32 @@ public class SubscriptionManagerTasks {
 			// END OF WORKAROUND
 			} else {		
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-				if (pool.subscriptionName.equals(System.getProperty("sm.rhpersonal.subproductName", "Property 'sm.rhpersonal.subproductName' must be set."))) // special case when pool is really a subpool
-					Assert.assertEquals(entitlementCert.orderNamespace.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
-				else
-					Assert.assertEquals(entitlementCert.orderNamespace.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+//				if (pool.subscriptionName.equals(System.getProperty("sm.rhpersonal.subproductName", "Property 'sm.rhpersonal.subproductName' must be set."))) // special case when pool is really a subpool
+//					Assert.assertEquals(entitlementCert.orderNamespace.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
+//				else
+//					Assert.assertEquals(entitlementCert.orderNamespace.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+
+				// is this a personal productId?
+				try {
+					JSONArray personSubscriptionPoolProductData;
+					personSubscriptionPoolProductData = new JSONArray(System.getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+					boolean isSubpool = false;
+					for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
+						JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+						String personProductId = poolProductDataAsJSONObject.getString("personProductId");
+						JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
+						String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
+						if (pool.productId.equals(systemProductId)) { // special case when pool's productId is really a personal subpool
+							Assert.assertEquals(entitlementCert.orderNamespace.productId, personProductId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches personal SubscriptionPool productId '"+personProductId+"' after subscribing to the subpool: "+pool);
+							isSubpool = true;
+							break;
+						}
+					}
+					if (!isSubpool) Assert.assertEquals(entitlementCert.orderNamespace.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
 			}
 		
 			// assert that consumed ProductSubscriptions has NOT decreased

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
@@ -27,10 +29,14 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"content"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 	
+	public ContentTests() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
 	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username", "");
 	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password", "");
-	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
-	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
+//	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
+//	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
 	//protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	//protected String systemConsumedProductNamesAsString = getProperty("sm.rhpersonal.consumedSubproductNames", "");
 	//protected List<String> systemConsumedProductNames = Arrays.asList(systemConsumedProductNamesAsString.trim().split(", *"));
@@ -344,10 +350,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@DataProvider(name="getAvailablePersonalSubscriptionSubPoolsData")
-	public Object[][] getAvailablePersonalSubscriptionSubPoolsDataAs2dArray() {
+	public Object[][] getAvailablePersonalSubscriptionSubPoolsDataAs2dArray() throws JSONException {
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists());
 	}
-	protected List<List<Object>> getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists() {
+	protected List<List<Object>> getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
@@ -363,17 +369,24 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to the personal subscription pool to unlock the subpool
 		personalConsumerId = client2tasks.getCurrentConsumerId();
-		SubscriptionPool personPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",rhpersonalProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(personPool,"Personal productId '"+rhpersonalProductId+"' is available to user '"+rhpersonalUsername+"' registered as a person.");
-		client2tasks.subscribeToSubscriptionPool(personPool);
-		
-		// now the subpool is available to the system
-		SubscriptionPool systemPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("subscriptionName",systemSubscriptionName,client1tasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(systemPool,"Personal subPool '"+systemSubscriptionName+"' is available to user '"+rhpersonalUsername+"' registered as a system.");
-		//client1tasks.subscribeToSubscriptionPool(systemPool);
-		
-		// return the available system subpool
-		ll.add(Arrays.asList(new Object[]{systemPool}));
+		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
+			JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+			String personProductId = poolProductDataAsJSONObject.getString("personProductId");
+			JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
+			String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
+
+			SubscriptionPool personPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
+			Assert.assertNotNull(personPool,"Personal productId '"+personProductId+"' is available to user '"+rhpersonalUsername+"' registered as a person.");
+			client2tasks.subscribeToSubscriptionPool(personPool);
+			
+			// now the subpool is available to the system
+			SubscriptionPool systemPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
+			Assert.assertNotNull(systemPool,"Personal subPool productId'"+systemProductId+"' is available to user '"+rhpersonalUsername+"' registered as a system.");
+			//client1tasks.subscribeToSubscriptionPool(systemPool);
+			
+			// return the available system subpool
+			ll.add(Arrays.asList(new Object[]{systemPool}));
+		}
 		return ll;
 	}
 }

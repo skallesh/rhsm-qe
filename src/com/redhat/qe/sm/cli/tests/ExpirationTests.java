@@ -216,9 +216,12 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
 		//String  productId =  "MKT-rhel-server";
 		String productId = null;
-		do {	// pick a random productId (excluding sm.rhpersonal.productId)
+//		do {	// pick a random productId (excluding sm.rhpersonal.productId)
+//			productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
+//		} while (getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set.").equals(productId));
+		do {	// pick a random productId (excluding a personal productId)
 			productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		} while (getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set.").equals(productId));
+		} while (getPersonProductIds().contains(productId));
 		// choose providedProducts for the subscription
 		//String[] providedProducts = {"37068", "37069", "37060"};
 		/*List<InstalledProduct> clientProds = clienttasks.getCurrentlyInstalledProducts();
