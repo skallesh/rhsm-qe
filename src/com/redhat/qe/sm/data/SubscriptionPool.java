@@ -47,6 +47,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	
 	@Override
 	public boolean equals(Object obj){
+		if (obj==null) return false;
 		// assumes productName is unique across all SubscriptionPools
 		// return ((SubscriptionPool)obj).subscriptionName.contains(this.subscriptionName);	// jsefler 7/13/2010: this is not correct  
 

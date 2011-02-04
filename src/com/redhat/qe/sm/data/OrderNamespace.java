@@ -39,6 +39,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 	public String warningPeriod;
 	public BigInteger accountNumber;
 	public Boolean providesManagement;
+	public String supportLevel;
+	public String supportType;
 
 
 
@@ -251,6 +253,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 		//		  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
 		//		  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
 		//		  1.3.6.1.4.1.2312.9.4.14 (Provides Management): 0 (boolean, 1 for true)
+		//		  1.3.6.1.4.1.2312.9.4.15 (Support Level): Premium
+		//		  1.3.6.1.4.1.2312.9.4.16 (Support Type): Level 3
 		// reference bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=640463
 		
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -270,6 +274,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 		regexes.put("warningPeriod",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("accountNumber",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("providesManagement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.14:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
+		regexes.put("supportLevel",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.15:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
+		regexes.put("supportType",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.16:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
 		
 
 		List<Map<String,String>> listMaps = new ArrayList<Map<String,String>>();

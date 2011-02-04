@@ -18,6 +18,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
 
 /**
  * @author jsefler
@@ -26,8 +27,8 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 @Test(groups={"content"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 	
-	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username1", "");
-	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password1", "");
+	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username", "");
+	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password", "");
 	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
 	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
 	//protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
@@ -236,6 +237,53 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	
+	@Test(	description="subscription-manager Yum plugin: ensure yum groups can be downloaded/installed/removed",
+			groups={},
+			dataProvider="getYumGroupFromEnabledRepoAndSubscriptionPoolData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool) {
+		if (availableGroup==null && installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
+				
+		// unsubscribe from this pool
+		if (pool.equals(lastSubscribedSubscriptionPool)) clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(lastSubscribedEntitlementCertFile));
+		
+		// before subscribing to the pool, assert that the yum groupinfo does not exist
+		for (String group : new String[]{availableGroup,installedGroup}) {
+			if (group!=null) RemoteFileTasks.runCommandAndAssert(client, "yum groupinfo \""+group+"\" --disableplugin=rhnplugin", Integer.valueOf(0), null, "Warning: Group "+group+" does not exist.");
+		}
+
+		// subscribe to this pool (and remember it)
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		lastSubscribedEntitlementCertFile = entitlementCertFile;
+		lastSubscribedSubscriptionPool = pool;
+		
+		// install and remove availableGroup
+		if (availableGroup!=null) {
+			clienttasks.yumInstallGroup(availableGroup);
+			clienttasks.yumRemoveGroup(availableGroup);
+		}
+		
+		// remove and install installedGroup
+		if (installedGroup!=null) {
+			clienttasks.yumRemoveGroup(installedGroup);
+			clienttasks.yumInstallGroup(installedGroup);
+		}
+
+		// TODO: add asserts for the products that get installed or deleted in stdout as a result of yum group install/remove: 
+		// deleting: /etc/pki/product/7.pem
+		// installing: 7.pem
+		// assert the list --installed "status" for the productNamespace name that corresponds to the ContentNamespace from where this repolabel came from.
+	}
+	protected SubscriptionPool lastSubscribedSubscriptionPool = null;
+	protected File lastSubscribedEntitlementCertFile = null;
+	
+	
+	
+	
+	
+	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=654442
 	
@@ -256,6 +304,45 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 
+	@DataProvider(name="getYumGroupFromEnabledRepoAndSubscriptionPoolData")
+	public Object[][] getYumGroupFromEnabledRepoAndSubscriptionPoolDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
+	}
+	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		
+		// assure we are freshly registered and process all available subscription pools
+		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			
+			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (contentNamespace.enabled.equals("1")) {
+					String repoLabel = contentNamespace.label;
+
+					// find first available group provided by this repo
+					String availableGroup = clienttasks.findAnAvailableGroupFromRepo(repoLabel);
+					// find first installed group provided by this repo
+					String installedGroup = clienttasks.findAnInstalledGroupFromRepo(repoLabel);
+
+					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
+					ll.add(Arrays.asList(new Object[]{availableGroup, installedGroup, repoLabel, pool}));
+				}
+			}
+			clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
+
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+		}
+		
+		return ll;
+	}
+
+	
+	
 	@DataProvider(name="getAvailablePersonalSubscriptionSubPoolsData")
 	public Object[][] getAvailablePersonalSubscriptionSubPoolsDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists());
@@ -289,5 +376,4 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{systemPool}));
 		return ll;
 	}
-
 }

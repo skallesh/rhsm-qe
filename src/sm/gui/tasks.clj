@@ -117,7 +117,7 @@
 
 (defn unsubscribe [s]
   (ui selecttab :my-subscriptions)
-  (if-not (ui rowexist? :my-subscriptions s)
+  (if-not (ui rowexist? :my-subscriptions-view s)
     (raise {:type :not-subscribed
             :name s
             :msg (str "Not found in 'My Subscriptions': " s)}))
