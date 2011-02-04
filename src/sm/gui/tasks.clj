@@ -124,7 +124,8 @@
   (ui selectrow :my-subscriptions-view s)
   (ui click :unsubscribe)
   (checkforerror)
-  (ui click :yes) )
+  (ui click :yes)
+  (checkforerror ) )
 
 (defn enableproxy-auth [proxy port user pass]
   (ui selecttab :my-installed-software)
