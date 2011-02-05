@@ -100,6 +100,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// setup the client(s)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt==null) continue;
+			
 			smt.installSubscriptionManagerRPMs(rpmUrls,enableRepoForDeps);
 			
 			// rhsm.conf [server] configurations

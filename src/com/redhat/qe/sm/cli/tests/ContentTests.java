@@ -263,10 +263,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
 			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
 			dataProvider="getAvailablePersonalSubscriptionSubPoolsData",
-			enabled=false)
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(SubscriptionPool pool) {
-		//InstallAndRemovePackageAfterSubscribingToPool_Test(pool);
+	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) {
+		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool);
 	}
 	
 	
