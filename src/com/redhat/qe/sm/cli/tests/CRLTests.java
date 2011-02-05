@@ -69,7 +69,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 
 		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database.");
 		
-		
+		/* https://bugzilla.redhat.com/show_bug.cgi?id=663455#c1 < DUE TO THESE IMPLEMENTED CHANGES, THE FOLLOWING IS NO LONGER APPROPRIATE...
 		// Before proceeding with this test, determine if the productId provided by this subscription pool has already been entitled.
 		// This will happen when more than one pool has been created under a different contract/serial so as to increase the
 		// total quantity of entitlements available to the consumers.
@@ -80,7 +80,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(sshCommandResult.getStdout().trim(),"This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'");
 			throw new SkipException("Because this consumer is already subscribed to the product ("+pool.productId+") provided by this pool id '"+pool.poolId+"', this pool is unsubscribeable and therefore we must skip this test iteration.");
 		}
-		
+		*/
 		
 		log.info("Subscribe client (already registered as a system under username '"+clientusername+"') to subscription pool "+pool+"...");
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
