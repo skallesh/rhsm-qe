@@ -241,10 +241,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
 
-//		// assert that RHEL Personal is available to this person consumer
-//		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-//		SubscriptionPool rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, subscriptionPools);
-//		Assert.assertNotNull(rhelPersonalPool,"RHEL Personal ProductId '"+rhelPersonalProductId+"' is available to this consumer registered as type person");
 		// assert that subscriptions with personal productIds are available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (String personProductId : getPersonProductIds()) {
@@ -252,10 +248,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(rhelPersonalPool,"Personal ProductId '"+personProductId+"' is available to this consumer registered as type person");
 		}
 	
-//		// assert that RHEL Personal is the only available pools to this person consumer
-//		for (SubscriptionPool subscriptionPool : subscriptionPools) {
-//			Assert.assertEquals(subscriptionPool.productId,rhelPersonalPool.productId, "RHEL Personal ProductId '"+rhelPersonalProductId+"' is the ONLY product consumable from an available subscription pool to this consumer registered as type person");
-//		}
 		// assert that personal subscriptions are the only available pools to this person consumer
 		for (SubscriptionPool subscriptionPool : subscriptionPools) {
 			Assert.assertTrue(getPersonProductIds().contains(subscriptionPool.productId), "This available ProductId '"+subscriptionPool.productId+"' available to the registered person is among the expected list of personal products that we expect to be consumable by this person.");
@@ -272,21 +264,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() throws JSONException {
-//		String rhelPersonalProductId = getProperty("sm.rhpersonal.productId", "");
-//		if (rhelPersonalProductId.equals("")) throw new SkipException("This testcase requires specification of a RHPERSONAL_PRODUCTID.");
-
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
-//		// assert that RHEL Personal *is not* included in --available subscription pools
-//		rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-//		Assert.assertNull(rhelPersonalPool,"RHEL ProductId '"+rhelPersonalProductId+"' is NOT available to this consumer from any available subscription pool when registered as type system");
-//		
-//		// also assert that RHEL Personal *is* included in --all --available subscription pools
-//		rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", rhelPersonalProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-//		Assert.assertNotNull(rhelPersonalPool,"RHEL ProductId '"+rhelPersonalProductId+"' is included in --all --available subscription pools when registered as type system");
-
 		for (String personProductId : getPersonProductIds()) {
 			// assert that RHEL Personal *is not* included in --available subscription pools
 			rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", personProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());

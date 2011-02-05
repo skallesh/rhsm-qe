@@ -119,21 +119,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	protected List<String> systemConsumerIds = new ArrayList<String>();
 	protected String personConsumerId = null;
 	protected int multipleSystems = 4;	// multiple (unlimited)  // multipleSystems is a count of systems that will be used to subscribe to the sub-pool.  Theoretically this number should be very very large to test the unlimited quantity
-//	protected EntitlementCert personalEntitlementCert = null;
 	
 	protected String username = getProperty("sm.rhpersonal.username", "");
 	protected String password = getProperty("sm.rhpersonal.password", "");
 	protected String anotherUsername = null;	// under the same ownerkey as username
 	protected String anotherPassword = null;
 	protected String personSubscriptionName = null;
-//	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
-//	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
 	protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
-
-	//protected String systemConsumedProductName = getProperty("sm.rhpersonal.consumedSubproductNames", "");  //FIXME change to a List
-//	protected String systemConsumedProductNamesAsString = getProperty("sm.rhpersonal.consumedSubproductNames", "");
-//	protected List<String> systemConsumedProductNames = Arrays.asList(systemConsumedProductNamesAsString.trim().split(", *"));
-
 
 
 	

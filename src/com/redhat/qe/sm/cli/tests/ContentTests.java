@@ -28,19 +28,9 @@ import com.redhat.qe.tools.RemoteFileTasks;
  */
 @Test(groups={"content"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
-	
-	public ContentTests() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+
 	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username", "");
 	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password", "");
-//	protected String rhpersonalProductId = getProperty("sm.rhpersonal.productId", "");
-//	protected String systemSubscriptionName = getProperty("sm.rhpersonal.subproductName", "");
-	//protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
-	//protected String systemConsumedProductNamesAsString = getProperty("sm.rhpersonal.consumedSubproductNames", "");
-	//protected List<String> systemConsumedProductNames = Arrays.asList(systemConsumedProductNamesAsString.trim().split(", *"));
-
 	protected String personalConsumerId = null;
 	
 	
@@ -187,82 +177,28 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-//	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-//			groups={},
-//			dataProvider="getAvailableSubscriptionPoolsData",
-//			enabled=true)
-//	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-//	public void InstallAndRemovePackageAfterSubscribingToPool_Test(SubscriptionPool pool) {
-//		// original implementation by ssalevan
-////		HashMap<String, String[]> pkgList = clienttasks.getPackagesCorrespondingToSubscribedRepos();
-////		for(ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()){
-////			String pkg = pkgList.get(productSubscription.productName)[0];
-////			log.info("Attempting to install first pkg '"+pkg+"' from product subscription: "+productSubscription);
-////			log.info("timeout of two minutes for next three commands");
-////			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-////					"yum repolist");
-////			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-////					"yum install -y "+pkg);
-////			RemoteFileTasks.runCommandExpectingNoTracebacks(client,
-////					"rpm -q "+pkg);
-////		}
-//	
-//		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
-//		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-//		boolean pkgInstalled = false;
-//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-//			if (contentNamespace.enabled.equals("1")) {
-//				String repoLabel = contentNamespace.label;
-//
-//				// find an available package that is uniquely provided by repo
-//				String pkg = clienttasks.findUniqueAvailablePackageFromRepo(repoLabel);
-//				if (pkg==null) {
-//					log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
-//					continue;
-//				}
-//				
-//				// install the package and assert that it is successfully installed
-//				clienttasks.yumInstallPackageFromRepo(pkg, repoLabel); pkgInstalled = true;
-//				
-//				// now remove the package
-//				clienttasks.yumRemovePackage(pkg);
-//			}
-//		}
-//		if (!pkgInstalled && isServerOnPremises) throw new SkipException("Because we are currently testing against an OnPremises candlepin server ("+serverHostname+") that has imported data from '"+serverImportDir+"', we don't actually expect that an entitlement from this subscription pool ("+pool.subscriptionName+") to provide real content from "+rhsmBaseUrl);
-//		Assert.assertTrue(pkgInstalled,"At least one package was found and installed from entitled repos after subscribing to SubscriptionPool: "+pool);
-//	}
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={"myDevGroup"},
+			groups={},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
 	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool) {
 		if (pkg==null) throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
-
-		// subscribe to this pool (and remember it)
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		
-				// install the package and assert that it is successfully installed
-				clienttasks.yumInstallPackageFromRepo(pkg, repoLabel); //pkgInstalled = true;
-				
-				// now remove the package
-				clienttasks.yumRemovePackage(pkg);
-
-		//if (!pkgInstalled && isServerOnPremises) throw new SkipException("Because we are currently testing against an OnPremises candlepin server ("+serverHostname+") that has imported data from '"+serverImportDir+"', we don't actually expect that an entitlement from this subscription pool ("+pool.subscriptionName+") to provide real content from "+rhsmBaseUrl);
-		//Assert.assertTrue(pkgInstalled,"At least one package was found and installed from entitled repos after subscribing to SubscriptionPool: "+pool);
+		// subscribe to this pool
+		clienttasks.subscribeToSubscriptionPool(pool);
+		
+		// install the package and assert that it is successfully installed
+		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel); //pkgInstalled = true;
+		
+		// now remove the package
+		clienttasks.yumRemovePackage(pkg);
 	}
 	
-//	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
-//			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
-//			dataProvider="getAvailablePersonalSubscriptionSubPoolsData",
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-//	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(SubscriptionPool pool) {
-//		InstallAndRemovePackageAfterSubscribingToPool_Test(pool);
-//	}
+	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed after subscribing to a personal subpool",
 			groups={"InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test"},
-			dataProvider="getAvailablePersonalSubscriptionSubPoolsData",
+			dataProvider="getPackageFromEnabledRepoAndSubscriptionSubPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) {
@@ -323,10 +259,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
 	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
-		//if (personIdForMultiClientRegisterAsPerson_Test!=null) {
-			client1tasks.unregister(null,null,null);
-			client2tasks.unregister(null,null,null);
-		//}
+		client1tasks.unregister(null,null,null);
+		client2tasks.unregister(null,null,null);
 	}
 	
 	
@@ -374,7 +308,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
-
+	
 	
 	
 	@DataProvider(name="getYumGroupFromEnabledRepoAndSubscriptionPoolData")
@@ -413,14 +347,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
-
 	
 	
-	@DataProvider(name="getAvailablePersonalSubscriptionSubPoolsData")
-	public Object[][] getAvailablePersonalSubscriptionSubPoolsDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists());
+	@DataProvider(name="getPackageFromEnabledRepoAndSubscriptionSubPoolData")
+	public Object[][] getPackageFromEnabledRepoAndSubscriptionSubPoolDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getAvailablePersonalSubscriptionSubPoolsDataAsListOfLists() throws JSONException {
+	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
@@ -451,9 +384,25 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(systemPool,"Personal subPool productId'"+systemProductId+"' is available to user '"+rhpersonalUsername+"' registered as a system.");
 			//client1tasks.subscribeToSubscriptionPool(systemPool);
 			
-			// return the available system subpool
-			ll.add(Arrays.asList(new Object[]{systemPool}));
+			File entitlementCertFile = client1tasks.subscribeToSubscriptionPool(systemPool);
+			EntitlementCert entitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (contentNamespace.enabled.equals("1")) {
+					String repoLabel = contentNamespace.label;
+					
+					// find an available package that is uniquely provided by repo
+					String pkg = client1tasks.findUniqueAvailablePackageFromRepo(repoLabel);
+					if (pkg==null) {
+						log.warning("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionSubPool: "+systemPool);
+					}
+
+					// String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool
+					ll.add(Arrays.asList(new Object[]{pkg, repoLabel, systemPool}));
+				}
+			}
+			client1tasks.unsubscribeFromSerialNumber(client1tasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
 		}
 		return ll;
 	}
+
 }
