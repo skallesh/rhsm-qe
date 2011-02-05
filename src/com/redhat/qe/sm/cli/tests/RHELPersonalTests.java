@@ -321,16 +321,40 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Now, attempt to unsubscribe the person on client 1 from the "+personSubscriptionName+" pool and assert the unsubscribe is blocked.");
 		SSHCommandResult result = client1tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+
+		/*
+		-Cannot unsubscribe entitlement {0} because:
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+
+			The above entitlements were derived from the pool: {0}.
+			Please unsubscribe from the above entitlements first.
+		*/
+		
+		Assert.assertEquals(result.getExitCode(),new Integer(255),
+				"Attempt to unsubscribe throws a failing exit code."); // exitCode: 255
 		//Assert.assertTrue(result.getStderr().startsWith("Cannot unbind due to outstanding entitlement:"),
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
 		//Assert.assertContainsMatch(result.getStderr(),"Cannot unbind due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stderr: Cannot unbind due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
-		Assert.assertEquals(result.getExitCode(),new Integer(255),
-				"Attempt to unsubscribe throws a failing exit code."); // exitCode: 255
 		Assert.assertContainsMatch(result.getStderr(),"-Cannot unsubscribe entitlement '"+/*"blockedByBug-661130" personalEntitlementCert.id*/"[a-f,0-9]{32}"+"' because:",
-				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
+				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: -Cannot unsubscribe entitlement ff8080812c9942fa012c994cf1da02a1 because:
 		Assert.assertContainsMatch(result.getStderr(),"Please unsubscribe from the above entitlements first.",
-				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
+				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool.");
 
 		// TODO include loop to assert all the system consumer information in the stderr message
 	}
@@ -348,15 +372,41 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 		log.info("Now, attempt to unregister the person on client 1 from the "+personSubscriptionName+" pool and assert the unregister is blocked.");
 		SSHCommandResult result = client1tasks.unregister_(null, null, null);
+
+		/*
+		Cannot unregister person consumer jsefler-qabetaperson-2 because:
+			-Cannot unsubscribe entitlement {0} because:
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+			  system consumer {1} with id {2} has he following entitlements:
+			    Entitlement {0}:
+			        account number: {0}
+			        serial number: {0}
+
+			The above entitlements were derived from the pool: {0}.
+			Please unsubscribe from the above entitlements first.
+		*/
+		
+		Assert.assertEquals(result.getExitCode(),new Integer(255),
+				"Attempt to unregister throws a failing exit code."); // exitCode: 255
 		//Assert.assertTrue(result.getStderr().startsWith("Cannot unregister due to outstanding entitlement:"),
 		//		"Attempting to unregister the person consumer is blocked when another system is register by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
 		//Assert.assertContainsMatch(result.getStdout(),"Cannot unregister due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
 		//		"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
-		Assert.assertEquals(result.getExitCode(),new Integer(255),
-				"Attempt to unregister throws a failing exit code."); // exitCode: 255
-		Assert.assertContainsMatch(result.getStdout(),"^Cannot unregister consumer '"+/*"blockedByBug-661130" "ME" */username+"'",
-				"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
-
+		//Assert.assertContainsMatch(result.getStdout(),"^Cannot unregister consumer '"+/*"blockedByBug-661130" "ME" */username+"'",
+		//		"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
+		Assert.assertContainsMatch(result.getStdout(),"^Cannot unregister person consumer "+username+" because:",
+				"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister person consumer jsefler-qabetaperson-2 because:
 	}
 	
 	
