@@ -131,7 +131,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	}
 	
 	/**
-	 * Wraps a call to System.getProperty (String key, String def) returning "" when the System value startsWith("$")
+	 * Wraps a call to System.getProperty (String key, String def) returning def when the System value is undefined or startsWith("$")
 	 * @param key
 	 * @param def
 	 * @return
@@ -140,7 +140,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		// Hudson parameters that are left blank will be passed in by the variable
 		// name of the parameter beginning with a $ sign, catch these and blank it
 		String property = System.getProperty(key,def);
-		return property.startsWith("$")? "":property;
+		return property.startsWith("$")? def:property;
 	}
 
 	
