@@ -699,12 +699,12 @@ Expected Results:
 			// String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
 			if (registerableConsumerTypes.contains(type.toString())) {
 				if (type.equals(ConsumerType.person)) {
-					ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("661130",	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null)}));
+					ll.add(Arrays.asList(new Object[]{	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null, new BlockedByBzBug("661130")}));
 				} else {
-					ll.add(Arrays.asList(new Object[]{  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+					ll.add(Arrays.asList(new Object[]{ 	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null, null}));			
 				}
 			} else {
-				ll.add(Arrays.asList(new Object[]{  								username,	password,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type}));			
+				ll.add(Arrays.asList(new Object[]{ 	username,	password,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type, null}));			
 	
 			}
 		}
@@ -732,13 +732,13 @@ Expected Results:
 	
 		// invalid non-alphanumeric names
 		for (String nonAlphanumericName : new String[]{"pound#", "comma,", "\"space bar\"", "exclamationPoint!", "asterisk*"}) {
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr)}));
+			ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr, new BlockedByBzBug("672233")}));
 			//ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr}));
 		}
 
 		// names that are too long (>=250 chars)
 		name = "250chars__123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	name,	Integer.valueOf(255),	null,	maxCharsStderr)}));
+		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr, new BlockedByBzBug("672233")}));
 		//ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
 
 
