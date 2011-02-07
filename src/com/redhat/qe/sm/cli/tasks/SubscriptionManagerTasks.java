@@ -12,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.redhat.qe.auto.testng.Assert;
@@ -44,7 +46,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
-	public final String factsDir			= "/etc/rhsm/facts/";
+	public final String factsDir			= "/etc/rhsm/facts";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -88,6 +90,9 @@ public class SubscriptionManagerTasks {
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
 				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
+
+		// make sure the client's time is accurate
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 
 		// yum clean all
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all");
@@ -249,10 +254,10 @@ public class SubscriptionManagerTasks {
 			// pause for the sleep interval
 			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
 		}
-		if (t*retryMilliseconds >= timeoutMinutes*60*1000) sshCommandRunner.runCommandAndWait("tail -24 "+rhsmLogFile);
+		if (t*retryMilliseconds > timeoutMinutes*60*1000) sshCommandRunner.runCommandAndWait("tail -24 "+rhsmLogFile);
 		
 		// assert that the state was achieved within the timeout
-		Assert.assertFalse((t*retryMilliseconds >= timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
+		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
 
 	
@@ -1341,6 +1346,28 @@ public class SubscriptionManagerTasks {
 		}
 		*/
 
+		// is this a personal subpool?
+		String poolProductId = pool.productId;
+		boolean isSubpool = false; 
+		try {
+			JSONArray personSubscriptionPoolProductData;
+			personSubscriptionPoolProductData = new JSONArray(System.getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+			for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
+				JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+				String personProductId = poolProductDataAsJSONObject.getString("personProductId");
+				JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
+				String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
+				if (poolProductId.equals(systemProductId)) { // special case when pool's productId is really a personal subpool
+					poolProductId = personProductId;
+					isSubpool = true;
+					break;
+				}
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 		// when the pool is already subscribe to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
@@ -1348,13 +1375,15 @@ public class SubscriptionManagerTasks {
 			EntitlementCert entitlementCert = null;
 			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
 				EntitlementCert thisEntitlementCert = getEntitlementCertFromEntitlementCertFile(thisEntitlementCertFile);
-				if (thisEntitlementCert.orderNamespace.productId.equals(pool.productId)) {
+				if (thisEntitlementCert.orderNamespace.productId.equals(poolProductId)) {
 					entitlementCert = thisEntitlementCert;
 					break;
 				}
 			}
 			
-			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
+			Assert.assertNotNull(entitlementCert, isSubpool?
+					"Found an already existing Entitlement Cert whose personal productId matches the system productId from the subscription pool: "+pool:
+					"Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
 			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
@@ -1392,10 +1421,9 @@ public class SubscriptionManagerTasks {
 			// END OF WORKAROUND
 			} else {		
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-				if (pool.subscriptionName.equals(System.getProperty("sm.rhpersonal.subproductName", "Property 'sm.rhpersonal.subproductName' must be set."))) // special case when pool is really a subpool
-					Assert.assertEquals(entitlementCert.orderNamespace.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
-				else
-					Assert.assertEquals(entitlementCert.orderNamespace.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+				Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
 			}
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
@@ -1920,14 +1948,54 @@ repolist: 3,394
 		return packages;		
 	}
 	
+	public ArrayList<String> yumGroupList (String Installed_or_Available, String options) {
+		ArrayList<String> groups = new ArrayList<String>();
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
+
+		String command = "yum grouplist "+options+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		
+		// execute the yum command to list available packages
+		int min = 5;
+		log.fine("Using a timeout of "+min+" minutes for next command...");
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
+		
+		// Example result.getStdout()
+//		[root@jsefler-betaqa-1 product]# yum grouplist --disablerepo=* --enablerepo=rhel-entitlement-beta
+//		Loaded plugins: product-id, refresh-packagekit, rhnplugin, subscription-manager
+//		Updating Red Hat repositories.
+//		INFO:rhsm-app.repolib:repos updated: 0
+//		This system is not registered with RHN.
+//		RHN support will be disabled.
+//		Setting up Group Process
+//		rhel-entitlement-beta                                                                                                                                 | 4.0 kB     00:00     
+//		rhel-entitlement-beta/group_gz                                                                                                                        | 190 kB     00:00     
+//		Installed Groups:
+//		   Additional Development
+//		   Assamese Support
+//		   Base
+//		Available Groups:
+//		   Afrikaans Support
+//		   Albanian Support
+//		   Amazigh Support
+//		Done
+
+		String regex = Installed_or_Available+" Groups:((\\n\\s{3}.*)+)";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.info("Did NOT find any "+Installed_or_Available+" Groups from: "+command);
+			return groups;
+		}
+
+		// assemble the list of groups and return them
+		for (String group : matcher.group(1).trim().split("\\n\\s{3}")) groups.add(group);
+
+		return groups;		
+	}
+	
+	
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		
-//		for (String pkg : getAvailablePackages("rhnplugin","*",repo,null)) {
-//			if (!getAvailablePackages("rhnplugin",repo,null,pkg).contains(pkg)) {
-//				return pkg;
-//			}
-//		}
-
 		for (String pkg : yumListAvailable("--disablerepo=* --enablerepo="+repo)) {
 			if (!yumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
 				return pkg;
@@ -1936,18 +2004,59 @@ repolist: 3,394
 		return null;
 	}
 	
-	public void yumInstallPackageFromRepo (String pkg, String repoLabel) {
-		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y install "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+	public String findAnAvailableGroupFromRepo(String repo) {
+		List <String> groups = yumGroupList("Available", "--disablerepo=* --enablerepo="+repo);
+		for (int i=0; i<groups.size(); i++) {
+			String group = groups.get(i);
+
+			// choose a group that has "Mandatory Packages:"
+			String mandatoryPackages = "Mandatory Packages:";
+			if (sshCommandRunner.runCommandAndWait("yum groupinfo \""+groups.get(i)+"\" | grep \""+mandatoryPackages+"\"").getStdout().trim().equals(mandatoryPackages)) return group;
+		}
+		return null;
+	}
+
+	public String findAnInstalledGroupFromRepo(String repo) {
+		List <String> groups = yumGroupList("Installed", "--disablerepo=* --enablerepo="+repo);
+		for (int i=0; i<groups.size(); i++) {
+			String group = groups.get(i);
+			// don't consider these very important groups
+			if (group.equals("Base")) continue;
+			if (group.equals("X Window System")) continue;
+			if (group.startsWith("Network")) continue;	// Network Infrastructure Server, Network file system client, Networking Tools
+			
+			return group;
+		}
+		return null;
+	}
+	
+	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel) {
+		String command = "yum -y install "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*"+repoLabel+"$",null);
+		return result;
 	}
 	
-	public void yumRemovePackage (String pkg) {
-		// --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum -y remove "+pkg+" --disableplugin=rhnplugin", 0, "^Complete!$",null);
+	public SSHCommandResult yumRemovePackage (String pkg) {
+		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 1, null,"Error: No matching Packages to list");
+		return result;
 	}
 	
+	public SSHCommandResult yumInstallGroup (String group) {
+		String command = "yum -y groupinstall \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		Assert.assertFalse(this.yumGroupList("Available", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Available after calling '"+command+"'.");
+		return result;
+	}
+	
+	public SSHCommandResult yumRemoveGroup (String group) {
+		String command = "yum -y groupremove \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		Assert.assertFalse(this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Installed after calling '"+command+"'.");
+		return result;
+	}
 	
 	public String getRedhatRelease() {
 //		// verify the grinder hostname is a rhel 5 machine
