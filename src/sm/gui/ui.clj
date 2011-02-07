@@ -58,10 +58,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                            :text-in-subscription
                                            :unsubscribe
                                            :proxy-configuration])
-		    (same-name [:match-my-hardware
-				:overlap-with-existing-subscriptions
-				:provide-software-not-yet-installed
-				:contain-the-text])))
+		    {:more-search-options "More search options"
+                     :contains-the-text "Text in Subscription"}))
 		 {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
 		 (define-elements (windows :register-dialog)
 		   {:redhat-login "account_login"
