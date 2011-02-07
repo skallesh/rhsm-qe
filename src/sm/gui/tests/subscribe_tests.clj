@@ -22,7 +22,7 @@
 
 (defn ^{Test {:groups ["subscribe"]}}
   subscribe_all [_]
-  (tasks/search)
+  (tasks/search {})
   (do-to-all-rows-in :all-subscriptions-view
                   (fn [subscription]
                     (with-handlers [(ignore :subscription-not-available)

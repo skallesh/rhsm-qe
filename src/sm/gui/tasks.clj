@@ -84,20 +84,22 @@
   (ui waittillwindowexist :progress-dialog 1)
   (ui waittillwindownotexist :progress-dialog 30))
 
-(defn search [& {:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
+(defn search [{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
 		 :or {match-system? true
 		      do-not-overlap? true
 		      match-installed? false
 		      contain-text nil
 		      active-on nil}}]
   (ui selecttab :all-available-subscriptions)
+  (ui check :more-search-options)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
     (ui (setchecked match-system?) :match-system)
     (ui (setchecked do-not-overlap?) :do-not-overlap)
-    (ui (setchecked match-installed?) :match-installed)
-    (if contain-text (do (ui check :contain-text)
-			     (ui settextvalue :as-yet-unnamed-textbox))))
-  (if active-on (comment "Procedure to set date goes here "))
+    (ui (setchecked match-installed?) :match-installed))
+  (if active-on (comment "Procedure to set date goes here, BZ#675777 "))
+  (if contain-text
+    (ui settextvalue :contains-the-text contain-text)
+    (ui settextvalue :contains-the-text ""))
   (ui click :search)
   (wait-for-progress-bar))
 
