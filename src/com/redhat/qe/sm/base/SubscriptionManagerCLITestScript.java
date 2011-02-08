@@ -63,7 +63,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1tasks = clienttasks;
 		
 		// will we be connecting to the candlepin server?
-		if (!serverHostname.equals("")) {
+		if (!serverHostname.equals("") && isServerOnPremises) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
 
