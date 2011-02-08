@@ -84,12 +84,7 @@
   (ui waittillwindowexist :progress-dialog 1)
   (ui waittillwindownotexist :progress-dialog 30))
 
-(defn search [{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
-		 :or {match-system? true
-		      do-not-overlap? true
-		      match-installed? false
-		      contain-text nil
-		      active-on nil}}]
+(defn search ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
   (ui selecttab :all-available-subscriptions)
   (ui check :more-search-options)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
@@ -101,7 +96,15 @@
     (ui settextvalue :contains-the-text contain-text)
     (ui settextvalue :contains-the-text ""))
   (ui click :search)
-  (wait-for-progress-bar))
+  (wait-for-progress-bar)) 
+  ([{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
+     :or {match-system? true
+          do-not-overlap? true
+          match-installed? false
+          contain-text nil
+          active-on nil}}]
+     (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
+  ([] (search {})))
 
 (defn subscribe [s]
   (ui selecttab :all-available-subscriptions)
