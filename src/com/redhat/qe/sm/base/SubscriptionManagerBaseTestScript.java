@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.redhat.qe.auto.testng.TestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -84,7 +88,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 
 	public List<String> rpmUrls			= null;
 
-
+	protected JSONArray systemSubscriptionPoolProductData = null;
+	protected JSONArray personSubscriptionPoolProductData = null;
 	
 	
 	
@@ -113,10 +118,20 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		
 		// rhsm.conf [rhsmcertd] configurations
 		rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
+
+	
+		try {
+			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+
 	}
 	
 	/**
-	 * Wraps a call to System.getProperty (String key, String def) returning "" when the System value startsWith("$")
+	 * Wraps a call to System.getProperty (String key, String def) returning def when the System value is undefined or startsWith("$")
 	 * @param key
 	 * @param def
 	 * @return
@@ -125,7 +140,24 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		// Hudson parameters that are left blank will be passed in by the variable
 		// name of the parameter beginning with a $ sign, catch these and blank it
 		String property = System.getProperty(key,def);
-		return property.startsWith("$")? "":property;
+		return property.startsWith("$")? def:property;
 	}
 
+	
+	
+	public List<String> getPersonProductIds() throws JSONException {
+		List<String> personProductIds = new ArrayList<String>();
+		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
+//			try {
+				JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+				String personProductId;
+				personProductId = poolProductDataAsJSONObject.getString("personProductId");
+				personProductIds.add(personProductId);
+//			} catch (JSONException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+		}
+		return personProductIds;
+	}
 }

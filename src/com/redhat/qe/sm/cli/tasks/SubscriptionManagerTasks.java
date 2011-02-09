@@ -12,6 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.redhat.qe.auto.testng.Assert;
@@ -88,6 +90,9 @@ public class SubscriptionManagerTasks {
 		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
 		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
 				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
+
+		// make sure the client's time is accurate
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 
 		// yum clean all
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait("yum clean all");
@@ -1341,6 +1346,28 @@ public class SubscriptionManagerTasks {
 		}
 		*/
 
+		// is this a personal subpool?
+		String poolProductId = pool.productId;
+		boolean isSubpool = false; 
+		try {
+			JSONArray personSubscriptionPoolProductData;
+			personSubscriptionPoolProductData = new JSONArray(System.getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+			for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
+				JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+				String personProductId = poolProductDataAsJSONObject.getString("personProductId");
+				JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
+				String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
+				if (poolProductId.equals(systemProductId)) { // special case when pool's productId is really a personal subpool
+					poolProductId = personProductId;
+					isSubpool = true;
+					break;
+				}
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
 		// when the pool is already subscribe to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
@@ -1348,13 +1375,15 @@ public class SubscriptionManagerTasks {
 			EntitlementCert entitlementCert = null;
 			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
 				EntitlementCert thisEntitlementCert = getEntitlementCertFromEntitlementCertFile(thisEntitlementCertFile);
-				if (thisEntitlementCert.orderNamespace.productId.equals(pool.productId)) {
+				if (thisEntitlementCert.orderNamespace.productId.equals(poolProductId)) {
 					entitlementCert = thisEntitlementCert;
 					break;
 				}
 			}
 			
-			Assert.assertNotNull(entitlementCert, "Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
+			Assert.assertNotNull(entitlementCert, isSubpool?
+					"Found an already existing Entitlement Cert whose personal productId matches the system productId from the subscription pool: "+pool:
+					"Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
 			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
@@ -1392,10 +1421,9 @@ public class SubscriptionManagerTasks {
 			// END OF WORKAROUND
 			} else {		
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-				if (pool.subscriptionName.equals(System.getProperty("sm.rhpersonal.subproductName", "Property 'sm.rhpersonal.subproductName' must be set."))) // special case when pool is really a subpool
-					Assert.assertEquals(entitlementCert.orderNamespace.productId, System.getProperty("sm.rhpersonal.productId", "Property 'sm.rhpersonal.productId' must be set."), "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches personal SubscriptionPool productId '"+System.getProperty("sm.rhpersonal.productId")+"' after subscribing to the subpool: "+pool);					
-				else
-					Assert.assertEquals(entitlementCert.orderNamespace.productId, pool.productId, "New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+pool.productId+"' after subscribing to the pool.");
+				Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
+						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
 			}
 		
 			// assert that consumed ProductSubscriptions has NOT decreased

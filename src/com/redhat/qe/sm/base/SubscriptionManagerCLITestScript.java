@@ -63,7 +63,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1tasks = clienttasks;
 		
 		// will we be connecting to the candlepin server?
-		if (!serverHostname.equals("")) {
+		if (!serverHostname.equals("") && isServerOnPremises) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
 
@@ -100,6 +100,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// setup the client(s)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt==null) continue;
+			
 			smt.installSubscriptionManagerRPMs(rpmUrls,enableRepoForDeps);
 			
 			// rhsm.conf [server] configurations
@@ -450,24 +451,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		
-		String subscriptionPoolProductData = getProperty("sm.system.subscriptionPoolProductData", "<>");
-		subscriptionPoolProductData = subscriptionPoolProductData.replaceAll("<", "["); // hudson parameters use < instead of [
-		subscriptionPoolProductData = subscriptionPoolProductData.replaceAll(">", "]"); // hudson parameters use > instead of ]
-
-		
-		JSONArray subscriptionPoolProductDataAsJSONArray = new JSONArray(subscriptionPoolProductData);
-		
-		for (int j=0; j<subscriptionPoolProductDataAsJSONArray.length(); j++) {
-			JSONObject poolProductDataAsJSONObject = (JSONObject) subscriptionPoolProductDataAsJSONArray.get(j);
+				
+		for (int j=0; j<systemSubscriptionPoolProductData.length(); j++) {
+			JSONObject poolProductDataAsJSONObject = (JSONObject) systemSubscriptionPoolProductData.get(j);
 			String systemProductId = poolProductDataAsJSONObject.getString("systemProductId");
 			JSONArray bundledProductDataAsJSONArray = poolProductDataAsJSONObject.getJSONArray("bundledProductData");
-//			List<String> bundledProductNamesAsList = new ArrayList<String>();
-//			for (int i = 0; i < bundledProductDataAsJSONArray.length(); i++) {
-//				String bundledProductName = (String) bundledProductDataAsJSONArray.get(i);
-//				bundledProductNamesAsList.add(bundledProductName);
-//			}
-//			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductNamesAsList.toArray(new String[]{})}));
 
 			// String systemProductId, JSONArray bundledProductDataAsJSONArray
 			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductDataAsJSONArray}));
