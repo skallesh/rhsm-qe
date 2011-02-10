@@ -115,8 +115,10 @@
   (ui selectrow :all-subscriptions-view s)
   (ui click :subscribe)
   (checkforerror)
-  (ui selectrowindex :contract-selection-table 0)  ;;pick first contract for now
-  (ui click :subscribe-contract-selection)
+  (ui waittillwindowexist :contract-selection-dialog 5)
+  (if (= 1 (ui guiexist :contract-selection-dialog))
+    (do (ui selectrowindex :contract-selection-table 0)  ;;pick first contract for now
+        (ui click :subscribe-contract-selection)))
   (checkforerror)
   (wait-for-progress-bar))
 
@@ -128,7 +130,7 @@
             :msg (str "Not found in 'My Subscriptions': " s)}))
   (ui selectrow :my-subscriptions-view s)
   (ui click :unsubscribe)
-  (checkforerror)
+  (ui waittillwindowexist :question-dialog 60)
   (ui click :yes)
   (checkforerror ) )
 
