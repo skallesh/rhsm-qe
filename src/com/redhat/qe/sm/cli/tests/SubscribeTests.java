@@ -323,20 +323,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    // subscribe to all the available pools
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    
-	    // get all of the current entitlement product certs and remember them
+	    // get all of the current entitlement certs and remember them
 	    List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
 	    
 	    // delete all of the entitlement cert files
 	    client.runCommandAndWait("rm -rf "+clienttasks.entitlementCertDir+"/*");
 	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), 0,
-	    		"All the entitlement product certs have been deleted.");
+	    		"All the entitlement certs have been deleted.");
 		
 	    // restart the rhsmcertd to run every 1 minute and wait for a refresh
 		clienttasks.restart_rhsmcertd(1, true);
 		
-		// assert that rhsmcertd has refreshed the entitled product certs back to the original
+		// assert that rhsmcertd has refreshed the entitlement certs back to the original
 	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles(), entitlementCertFiles,
-	    		"All the deleted entitlement product certs have been re-synchronized by rhsm cert deamon.");
+	    		"All the deleted entitlement certs have been re-synchronized by rhsm cert deamon.");
 	}
 	
 	

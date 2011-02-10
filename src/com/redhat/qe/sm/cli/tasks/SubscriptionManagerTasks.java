@@ -1117,8 +1117,8 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),0, "Consumer key file '"+this.consumerKeyFile+"' does NOT exist after unregister.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
 
-		// assert that all of the entitlement product certs have been removed (Actually, the entitlementCertDir should get removed)
-		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
+		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
 // FIXME UNCOMMENT SOMETIME IN THE FUTURE.  DOES NOT SEEM TO BE ACCURATE AT THIS TIME 10/25/2010
 //		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, entitlementCertDir),0,"Entitlement Cert directory '"+entitlementCertDir+"' should not exist after unregister.");
 
@@ -1622,7 +1622,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * unsubscribe from entitlement product certificate serial and assert results
+	 * unsubscribe from entitlement certificate serial and assert results
 	 * @param serialNumber
 	 * @return - false when no unsubscribe took place
 	 */
@@ -1687,9 +1687,9 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
 				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
-		// assert that there are no entitlement product cert files
+		// assert that there are no entitlement cert files
 		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name *.pem | grep -v key.pem").getStdout().equals(""),
-				"No entitlement product cert files exist after unsubscribing from all subscription pools.");
+				"No entitlement cert files exist after unsubscribing from all subscription pools.");
 
 		// assert that the yum redhat repo file is gone
 		/* bad assert...  the repo file is present but empty
