@@ -103,6 +103,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getExpectedCommandLineOptionsDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		// String command, String stdoutRegex, List<String> expectedOptions
 		String modulesRegex = "^	\\w+";
@@ -319,6 +320,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	public List<List<Object>> getUnregisteredCommandDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" facts --update"}));  test moved to FactsTests.FactsWhenNotRegistered_Test()
 		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" identity"}));  test moved to IdentityTests.IdentityWhenNotRegistered_Test()
@@ -349,6 +351,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getNegativeFunctionalityDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 		
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
