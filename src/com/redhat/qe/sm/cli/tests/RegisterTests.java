@@ -535,6 +535,7 @@ Expected Results:
 	@AfterClass (alwaysRun=true)
 	@AfterGroups(value={"RegisterWithAutosubscribe_Test"},alwaysRun=true)
 	public void cleaupAfterClass() {
+		if (clienttasks==null) return;
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
 	}
@@ -543,6 +544,7 @@ Expected Results:
 	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
+		if (clienttasks==null) return;
 		clienttasks.unregister_(null, null, null);
 	}
 	@AfterGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
@@ -614,6 +616,10 @@ Expected Results:
 	}
 	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		
@@ -643,6 +649,10 @@ Expected Results:
 	}
 	protected List<List<Object>> getInvalidRegistrationWithLocalizedStringsAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
