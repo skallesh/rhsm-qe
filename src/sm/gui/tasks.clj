@@ -10,7 +10,7 @@
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
-(def known-errors {:invalid-credentials #"Invalid Credentials"
+(def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
                    :no-username #"You must enter a login"
                    :no-password #"You must enter a password"
                    :wrong-consumer-type #"Consumers of this type are not allowed"
