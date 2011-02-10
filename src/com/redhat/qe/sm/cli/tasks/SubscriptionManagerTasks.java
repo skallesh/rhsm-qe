@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tasks;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +55,7 @@ public class SubscriptionManagerTasks {
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
+	public String caCertDir						= null; // "/etc/rhsm/ca";
 	
 	public String hostname			= null;
 	
@@ -72,9 +74,10 @@ public class SubscriptionManagerTasks {
 	 */
 	public void initializeFieldsFromConfigFile() {
 		if (RemoteFileTasks.testFileExists(sshCommandRunner, rhsmConfFile)==1) {
-			this.consumerCertDir	= getConfFileParameter(rhsmConfFile, "consumerCertDir");
-			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir");
-			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir");
+			this.consumerCertDir	= getConfFileParameter(rhsmConfFile, "consumerCertDir").replaceFirst("/$", "");
+			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir").replaceFirst("/$", "");
+			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
+			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
 			this.consumerCertFile	= consumerCertDir+"/cert.pem";
 			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
@@ -84,6 +87,47 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * Must be called after initializeFieldsFromConfigFile(...)
+	 * @param repoCaCertUrls
+	 */
+	public void installRepoCaCerts(List<String> repoCaCertUrls) {
+		// transfer copies of CA certs that cane be used when generating yum repo configs 
+		for (String repoCaCertUrl : repoCaCertUrls) {
+			String repoCaCert = Arrays.asList(repoCaCertUrl.split("/")).get(repoCaCertUrl.split("/").length-1);
+			log.info("Copying repo CA cert '"+repoCaCert+"' from "+repoCaCertUrl+"...");
+			//File repoCaCertFile = new File(serverCaCertDir.replaceFirst("/$","/")+Arrays.asList(repoCaCertUrl.split("/|=")).get(repoCaCertUrl.split("/|=").length-1));
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"cd "+caCertDir+"; wget --no-clobber --no-check-certificate \""+repoCaCertUrl+"\"",Integer.valueOf(0),null,"“"+repoCaCert+"” saved|File “"+repoCaCert+"” already there");
+		}
+	}
+	
+	
+	/**
+	 * Must be called after initializeFieldsFromConfigFile(...)
+	 * @param repoCaCertFile
+	 * @param toCaCertFileName
+	 * @throws IOException
+	 */
+	public void installRepoCaCert(File repoCaCertFile, String toCaCertFileName) throws IOException {
+		if (repoCaCertFile==null) return;
+		
+		// transfer the CA Cert File from the candlepin server to the clients so we can test in secure mode
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), repoCaCertFile.getPath(), caCertDir+"/"+toCaCertFileName, "0644");
+		updateConfFileParameter(rhsmConfFile, "insecure", "0");
+	}
+	
+	
+	/**
+	 * Must be called after installProductCerts(...)
+	 * @param productCerts
+	 * @throws IOException
+	 */
+	public void installProductCerts(List <File> productCerts) throws IOException {
+		for (File file : productCerts) {
+			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
+		}
+	}
+
 	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine

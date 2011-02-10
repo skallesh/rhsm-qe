@@ -61,16 +61,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
 		client1tasks = clienttasks;
+		File serverCaCertFile = null;
+		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
 		// will we be connecting to the candlepin server?
 		if (!serverHostname.equals("") && isServerOnPremises) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
-
 		} else {
 			log.info("Assuming the server is already setup and running.");
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises);
-
 		}
 		
 		// will we be testing multiple clients?
@@ -92,9 +92,25 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since it will restart postgresql
+			
+			// fetch the candlepin CA Cert
+			log.info("Fetching Candlepin CA cert...");
+			serverCaCertFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
+			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(),servertasks.candlepinCACertFile.getPath());
+			
+			// fetch the generated Product Certs
+			log.info("Fetching the generated product certs...");
+			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+				File remoteFile = new File(remoteFileAsString);
+				File localFile = new File("/tmp/"+remoteFile.getName());
+				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+				generatedProductCertFiles.add(localFile);
+			}
+
 		}
 		
-		// in the event that the clients are already registered from a prior run, unregister them
+		// if clients are already registered from a prior run, unregister them
 		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
@@ -124,33 +140,47 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 			smt.initializeFieldsFromConfigFile();
 			smt.removeAllCerts(true,true);
+			smt.installRepoCaCerts(repoCaCertUrls);
+			
+			// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
+			log.info("Copying Candlepin cert onto client to enable certificate validation...");
+			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+"-"+servertasks.candlepinCACertFile.getName());
+			
+			// transfer copies of all the generated product certs from the candlepin server to the clients
+			log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
+			smt.installProductCerts(generatedProductCertFiles);
 		}
 		
-		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
-		if (server!=null && servertasks.isOnPremises) {
-			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
-			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
-			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
-
-								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
-			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
-		}
+//		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
+//		if (server!=null && servertasks.isOnPremises) {
+//			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
+//			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
+//			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
+//			
+//			for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
+//				if (smt==null) continue;
+//				smt.installRepoCaCert(localFile, serverHostname);
+//			}
+//
+//								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+//								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
+//			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+//			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
+//		}
 		
-		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
-		if (server!=null && servertasks.isOnPremises) {
-			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
-			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
-				File remoteFile = new File(remoteFileAsString);
-				File localFile = new File("/tmp/"+remoteFile.getName());
-				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
-				
-									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
-				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
-			}
-		}
+//		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
+//		if (server!=null && servertasks.isOnPremises) {
+//			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
+//			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+//			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+//				File remoteFile = new File(remoteFileAsString);
+//				File localFile = new File("/tmp/"+remoteFile.getName());
+//				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+//				
+//									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
+//				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
+//			}
+//		}
 		
 		
 		log.info("Installed version of candlepin...");
