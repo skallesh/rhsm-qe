@@ -45,3 +45,5 @@
           config-file-port (conf-file-value "proxy_port")]
       (verify (= config-file-hostname hostname))
       (verify (= config-file-port port)) )))
+      
+(gen-class-testng)
