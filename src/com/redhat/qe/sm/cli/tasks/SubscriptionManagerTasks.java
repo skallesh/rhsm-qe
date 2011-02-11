@@ -1337,6 +1337,10 @@ public class SubscriptionManagerTasks {
 		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
 
+		// if no free entitlements, just return the result
+		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'
+		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
+		
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
 
@@ -1440,6 +1444,13 @@ public class SubscriptionManagerTasks {
 			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
 					"The list of currently consumed product subscriptions has not changed (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
 
+		// otherwise, no free entitlements exist...
+		} else if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) {
+			
+			// assert that no entitlements have been dropped
+			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
+			Assert.assertEquals(afterEntitlementCertFiles, beforeEntitlementCertFiles,"The current entitlements have not changed upon attempting to subscribe to an exhausted pool.");
+			
 		// otherwise, when the pool is NOT already subscribe to...
 		} else {
 	

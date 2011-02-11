@@ -548,7 +548,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=668032
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=671195
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=670831
 	
 	
