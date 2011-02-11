@@ -76,6 +76,9 @@
   (ui settextvalue :password password)
   (when system-name-input
     (ui settextvalue :system-name system-name-input))
+  (if autosubscribe 
+   (ui check :automatically-subscribe)
+   (ui uncheck :automatically-subscribe))  
   (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
     (ui click :register)
     (checkforerror)))
@@ -150,6 +153,14 @@
   (ui click :proxy-configuration)
   (ui check :proxy-checkbox)
   (ui settextvalue :proxy-location (str proxy ":" port))
+  (ui uncheck :authentication-checkbox)
+  (ui click :close-proxy)
+  (checkforerror) )
+  
+(defn disableproxy []
+  (ui selecttab :my-installed-software)
+  (ui click :proxy-configuration)
+  (ui uncheck :proxy-checkbox)
   (ui uncheck :authentication-checkbox)
   (ui click :close-proxy)
   (checkforerror) )
