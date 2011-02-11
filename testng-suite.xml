@@ -49,6 +49,19 @@ to the testng group name you are using to categorize your @Test -->
 			</run>
 		</groups>
 	</test>
+		<test name="Autosubscribe">
+		<packages>
+			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>
+		
+		<groups>
+			<run>
+				<include name="autosubscribe"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
  	<!--<listeners>
  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />				 will turn on all the detailed logging 
 		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />		 will cause @Tests containing a groups member by the name "blockedByBug-######" to be skipped. 
