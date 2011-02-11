@@ -17,7 +17,7 @@
 (defn compliance? []
   (= 1 (tasks/ui guiexist :main-window "All products are in compliance*")))
   
-(defn ^{BeforeClass {}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
