@@ -9,6 +9,18 @@
 	</listeners>
 	-->
 	
+	<test name="Help Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="help" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="General Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -20,7 +32,6 @@
 			</run>
 		</groups>
 	</test>
-	
 	
 	<test name="Register Tests">
 		<packages>
