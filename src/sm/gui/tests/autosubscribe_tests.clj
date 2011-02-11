@@ -25,7 +25,6 @@
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
     (let [beforesubs (warn-count)]
-      (println beforesubs)
       (if (= 0 beforesubs)
         (verify (compliance?))
         (do 
