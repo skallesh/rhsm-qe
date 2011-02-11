@@ -140,6 +140,7 @@
 (defn enableproxy-auth [proxy port user pass]
   (ui selecttab :my-installed-software)
   (ui click :proxy-configuration)
+  (ui waittillwindowexist :proxy-config-dialog 60)
   (ui check :proxy-checkbox)
   (ui settextvalue :proxy-location (str proxy ":" port))
   (ui check :authentication-checkbox)
@@ -151,6 +152,7 @@
 (defn enableproxy-noauth [proxy port]
   (ui selecttab :my-installed-software)
   (ui click :proxy-configuration)
+  (ui waittillwindowexist :proxy-config-dialog 60)
   (ui check :proxy-checkbox)
   (ui settextvalue :proxy-location (str proxy ":" port))
   (ui uncheck :authentication-checkbox)
@@ -160,6 +162,7 @@
 (defn disableproxy []
   (ui selecttab :my-installed-software)
   (ui click :proxy-configuration)
+  (ui waittillwindowexist :proxy-config-dialog 60)
   (ui uncheck :proxy-checkbox)
   (ui uncheck :authentication-checkbox)
   (ui click :close-proxy)
