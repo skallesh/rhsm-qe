@@ -144,7 +144,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
 			log.info("Copying Candlepin cert onto client to enable certificate validation...");
-			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+"-"+servertasks.candlepinCACertFile.getName());
+			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+"-"+servertasks.candlepinCACertFile.getName().split("\\.")[0]+".pem");
 			
 			// transfer copies of all the generated product certs from the candlepin server to the clients
 			log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
