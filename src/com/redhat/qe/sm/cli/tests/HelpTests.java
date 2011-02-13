@@ -20,7 +20,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
- * @author ssalevan
  * @author jsefler
  *
  */
@@ -46,6 +45,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-664581"},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
+	//@ImplementsNitrateTest(caseId=46707)
 	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
