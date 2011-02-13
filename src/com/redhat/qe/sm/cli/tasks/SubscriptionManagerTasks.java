@@ -1444,14 +1444,14 @@ public class SubscriptionManagerTasks {
 			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
 					"The list of currently consumed product subscriptions has not changed (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
 
-		// otherwise, no free entitlements exist...
+		// when no free entitlements exist...
 		} else if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) {
 			
 			// assert that no entitlements have been dropped
 			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
 			Assert.assertEquals(afterEntitlementCertFiles, beforeEntitlementCertFiles,"The current entitlements have not changed upon attempting to subscribe to an exhausted pool.");
 			
-		// otherwise, when the pool is NOT already subscribe to...
+		// otherwise, the pool is NOT already subscribe to...
 		} else {
 	
 			// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
