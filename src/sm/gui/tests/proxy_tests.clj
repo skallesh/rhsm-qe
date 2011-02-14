@@ -44,9 +44,12 @@
     (let [config-file-hostname (conf-file-value "proxy_hostname")
           config-file-port (conf-file-value "proxy_port")]
       (verify (= config-file-hostname hostname))
-      (verify (= config-file-port port)) )))
+      (verify (= config-file-port port)) 
+      (verify (= config-file-user ""))
+      (verify (= config-file-password "")) )))))
       
-(defn ^{Test {:groups ["proxy"]}}
+(defn ^{Test {:groups ["proxy"]
+              :dependsOnMethods ["enable_proxy_auth" "enable_proxy_noauth"]}}
   disable_proxy [_]
   (tasks/disableproxy)
   (let [config-file-hostname (conf-file-value "proxy_hostname")

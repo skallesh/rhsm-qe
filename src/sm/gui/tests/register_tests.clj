@@ -36,7 +36,7 @@
                (verify (and (= thrown-error expected-error) (action exists? register-button))))))))
 
 (defn ^{Test {:groups ["registration"]
-	       :dependsOnTests ["simple_register"]}}
+	       :dependsOnMethods ["simple_register"]}}
   unregister [_]
   (tasks/unregister))
 
