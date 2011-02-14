@@ -48,7 +48,7 @@
       (verify (= config-file-hostname hostname))
       (verify (= config-file-port port)) 
       (verify (= config-file-user ""))
-      (verify (= config-file-password "")) )))))
+      (verify (= config-file-password "")) )))
       
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth" "enable_proxy_noauth"]}}
