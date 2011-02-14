@@ -1449,7 +1449,13 @@ public class SubscriptionManagerTasks {
 			
 			// assert that no entitlements have been dropped
 			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
-			Assert.assertEquals(afterEntitlementCertFiles, beforeEntitlementCertFiles,"The current entitlements have not changed upon attempting to subscribe to an exhausted pool.");
+			Assert.assertEquals(afterEntitlementCertFiles, beforeEntitlementCertFiles,"The current entitlements have not changed upon attempting to subscribe to a pool with no free entitlements.");
+			
+			// assert that the Quantity is zero
+			SubscriptionPool currentPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, getCurrentlyAllAvailableSubscriptionPools());
+			Assert.assertNotNull(currentPool, "Found the pool amongst --all --available after having consumed all of its available entitlements: "+currentPool);
+			Assert.assertEquals(currentPool.quantity, "0", "Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
+
 			
 		// otherwise, the pool is NOT already subscribe to...
 		} else {
