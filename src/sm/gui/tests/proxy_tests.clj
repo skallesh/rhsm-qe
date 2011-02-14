@@ -42,7 +42,9 @@
         port (@config :noauth-proxy-port)]
     (tasks/enableproxy-noauth hostname port)
     (let [config-file-hostname (conf-file-value "proxy_hostname")
-          config-file-port (conf-file-value "proxy_port")]
+          config-file-port (conf-file-value "proxy_port")
+          config-file-user (conf-file-value "proxy_user")
+          config-file-password (conf-file-value "proxy_password")]
       (verify (= config-file-hostname hostname))
       (verify (= config-file-port port)) 
       (verify (= config-file-user ""))
