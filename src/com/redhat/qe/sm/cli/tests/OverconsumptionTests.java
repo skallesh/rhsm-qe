@@ -1,6 +1,5 @@
 package com.redhat.qe.sm.cli.tests;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,6 +9,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -23,10 +23,6 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 @Test(groups={"overconsumption"})
 public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
-	protected List<String> systemConsumerIds = new ArrayList<String>();
-	protected SubscriptionPool testPool = null;
-	protected final String registereeName = "Overconsumer";
-
 	
 	
 	// Test Methods ***********************************************************************
@@ -175,24 +171,30 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity does not fall below zero after attempting a concurrent subscribe.");
 		
 		// one of these command should have succeeded and one should have failed with "No free entitlements..."
-		if (result1.getExitCode().intValue()==0) {
-			// assert client1 successfully subscribed and client2 was blocked
-			Assert.assertEquals(result1.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client1tasks.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
-			Assert.assertEquals(result1.getStdout(), "","Stdout is blank on a successful subscribe.");
-			Assert.assertTrue(result2.getExitCode().intValue() != 0,"The exit code from the subscribe command on '"+client2tasks.hostname+"' must indicate that it lost the subscribe race to the subscription pool's final entitlement.");
-			Assert.assertEquals(result2.getStdout(), "No free entitlements are available for the pool with id '"+pool.poolId+"'", "Stdout must indicate to system '"+client2tasks.hostname+"' that there are no free entitlements left for pool '"+pool.poolId+"'.");
-		} else {
-			// assert client2 successfully subscribed and client1 was blocked
-			Assert.assertEquals(result2.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client2tasks.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
-			Assert.assertEquals(result2.getStdout(), "","Stdout is blank on a successful subscribe.");
-			Assert.assertTrue(result1.getExitCode().intValue() != 0,"The exit code from the subscribe command on '"+client1tasks.hostname+"' must indicate that it lost the subscribe race to the subscription pool's final entitlement.");
-			Assert.assertEquals(result1.getStdout(), "No free entitlements are available for the pool with id '"+pool.poolId+"'", "Stdout must indicate to system '"+client1tasks.hostname+"' that there are no free entitlements left for pool '"+pool.poolId+"'.");
+		// decide who was the winner and who must have been the loser
+		SSHCommandResult sshWinner, sshLoser;
+		SubscriptionManagerTasks smtWinner, smtLoser;
+		if (result1.getStdout().equals("")) {	// client1 appears to be the winner, therefore client2 must be the loser
+			sshWinner =	result1;
+			smtWinner = client1tasks;
+			sshLoser =	result2;
+			smtLoser =	client2tasks;
+		} else {	// client2 must be the winner and client1 is the loser
+			sshWinner =	result2;
+			smtWinner = client2tasks;
+			sshLoser =	result1;
+			smtLoser =	client1tasks;
 		}
+		
+		// assert the Winner and Loser
+		Assert.assertEquals(sshWinner.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+smtWinner.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
+		Assert.assertEquals(sshWinner.getStderr().trim(), "","No stderr information is expected on '"+smtWinner.hostname+"'.");
+		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");
+		Assert.assertEquals(sshLoser.getStdout().trim(), "No free entitlements are available for the pool with id '"+pool.poolId+"'", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left for pool '"+pool.poolId+"'.");
+		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
+		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");
 	}
 
-	
-	
-	
 	
 	
 	
@@ -200,9 +202,26 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
+	
+	
+	
+	
+	// Protected Class Variables ***********************************************************************
+	
+	protected List<String> systemConsumerIds = new ArrayList<String>();
+	protected SubscriptionPool testPool = null;
+	protected final String registereeName = "Overconsumer";
+	
+	
+	
+	// Protected Methods ***********************************************************************
+
+	
+	
+
+	
 	// Configuration Methods ***********************************************************************
-	
-	
+
 	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void unsubscribeAndUnregisterMultipleSystemsAfterClass() {
 		if (client2tasks!=null) {
@@ -221,12 +240,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-
-
 	
-	// Protected Methods ***********************************************************************
-
-
 	
 	// Data Providers ***********************************************************************
 
