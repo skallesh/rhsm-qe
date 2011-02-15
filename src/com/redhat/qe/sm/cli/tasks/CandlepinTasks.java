@@ -117,7 +117,7 @@ public class CandlepinTasks {
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull origin master", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
 		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.1 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.2 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 			branch = sshCommandRunner.getStdout().trim();
 		}
 		if (branch.startsWith("candlepin-")) {
@@ -126,9 +126,11 @@ public class CandlepinTasks {
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+branch+"; git pull origin "+branch, Integer.valueOf(0), null, "(Already on|Switched to branch|Switched to a new branch) '"+branch+"'");	// Switched to branch 'master' // Already on 'master' // Switched to a new branch 'BETA'
 		}
+		if (!serverImportDir.equals("")) {
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
+		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql service:\\s+\\[  OK  \\]", null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1; export FORCECERT=1; export GENDB=1; export HOSTNAME="+hostname+"; export IMPORTDIR="+serverImportDir+"; cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 		// Update 1/21/2011                                    ^^^^^^ TESTDATA is new for master branch                                             ^^^^^^ IMPORTDIR applies to branches <= BETA
 
