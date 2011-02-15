@@ -8,14 +8,6 @@
              sm.gui.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
-(defn warn-count []
-  (if (= 1 (tasks/ui guiexist :main-window "You have*"))
-    (let [countlabel (tasks/ui getobjectproperty :main-window "You have*" "label")]
-      (Integer/parseInt (first (re-seq #"\w+" (.substring countlabel 9)))))
-    0))
-
-(defn compliance? []
-  (= 1 (tasks/ui guiexist :main-window "All products are in compliance*")))
   
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -24,12 +16,12 @@
 
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
-    (let [beforesubs (warn-count)]
+    (let [beforesubs (tasks/warn-count)]
       (if (= 0 beforesubs)
-        (verify (compliance?))
+        (verify (tasks/compliance?))
         (do 
           (tasks/register (@config :username) (@config :password) :autosubscribe true)
-          (verify (<= (warn-count) beforesubs))
+          (verify (<= (tasks/warn-count) beforesubs))
           ))))
    
 (gen-class-testng)

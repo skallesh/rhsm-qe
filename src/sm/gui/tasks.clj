@@ -168,6 +168,15 @@
   (ui click :close-proxy)
   (checkforerror) )
 
+(defn warn-count []
+  (if (= 1 (ui guiexist :main-window "You have*"))
+    (let [countlabel (ui getobjectproperty :main-window "You have*" "label")]
+      (Integer/parseInt (first (re-seq #"\w+" (.substring countlabel 9)))))
+    0))
+
+(defn compliance? []
+  (= 1 (ui guiexist :main-window "All products are in compliance*")))  
+
 (comment (defn get-all-facts []
    (ui click :view-system-facts)
    (ui waittillguiexist :facts-view)
