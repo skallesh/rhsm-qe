@@ -519,6 +519,36 @@ Expected Results:
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
+	
+	@Test(	description="User is warned when already registered using RHN Classic",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=75972)	
+	public void InteroperabilityRegister_Test() {
+
+		final String interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
+			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
+			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+
+		log.info("Simulating registration by RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+		
+		log.info("Attempt to register while already registered via RHN Classic...");
+		SSHCommandResult result = clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
+		Assert.assertContainsMatch(result.getStdout(),"^"+interoperabilityWarningMessage, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
+
+		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
+		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==0, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
+		result = clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
+		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessage, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
+	}
+	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
@@ -539,6 +569,7 @@ Expected Results:
 		if (clienttasks==null) return;
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
+		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
 	}
 	final String tmpProductCertDir = "/tmp/productCertDir";
 
