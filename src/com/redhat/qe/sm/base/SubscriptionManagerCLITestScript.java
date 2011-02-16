@@ -95,15 +95,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// fetch the candlepin CA Cert
 			log.info("Fetching Candlepin CA cert...");
-			serverCaCertFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
-			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(),servertasks.candlepinCACertFile.getPath());
+			serverCaCertFile = new File(getProperty("automation.dir", "/tmp")+"/"+servertasks.candlepinCACertFile.getName());
+			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 			
 			// fetch the generated Product Certs
 			log.info("Fetching the generated product certs...");
 			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
 			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
 				File remoteFile = new File(remoteFileAsString);
-				File localFile = new File("/tmp/"+remoteFile.getName());
+				File localFile = new File(getProperty("automation.dir", "/tmp")+"/"+remoteFile.getName());
 				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
 				generatedProductCertFiles.add(localFile);
 			}
@@ -144,7 +144,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
 			log.info("Copying Candlepin cert onto client to enable certificate validation...");
-			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+"-"+servertasks.candlepinCACertFile.getName().split("\\.")[0]+".pem");
+			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+".pem");
 			
 			// transfer copies of all the generated product certs from the candlepin server to the clients
 			log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
