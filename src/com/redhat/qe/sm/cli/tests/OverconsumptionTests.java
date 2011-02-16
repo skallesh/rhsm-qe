@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,6 +94,12 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		client2tasks.register(clientusername,clientpassword,null,registereeName,systemConsumerIds.get(1),null, null, null, null, null);
 		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
+		// assert that each client has no entitlements
+		List<File> client1EntitlementCerts = client1tasks.getCurrentEntitlementCertFiles();
+		Assert.assertEquals(client1EntitlementCerts.size(), 0, "Registered client on '"+client1tasks.hostname+"' should have NO entitlements.");
+		List<File> client2EntitlementCerts = client2tasks.getCurrentEntitlementCertFiles();
+		Assert.assertEquals(client2EntitlementCerts.size(), 0, "Registered client on '"+client2tasks.hostname+"' should have NO entitlements.");
+		
 		// assert that the test pool now has a quantity of 2 available
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Found the test pool after having consumed available subscriptions.");
@@ -107,10 +114,20 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		String client2command = String.format("%s subscribe --pool=%s", client2tasks.command, pool.poolId);
 		client1.runCommand(client1command, LogMessageUtil.action());
 		client2.runCommand(client2command, LogMessageUtil.action());
-		client1.waitForWithTimeout(new Long(5*60*1000)); // timeout after 5 min
-		client2.waitForWithTimeout(new Long(5*60*1000)); // timeout after 5 min
+		client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
+		client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 		SSHCommandResult result1 = client1.getSSHCommandResult();
 		SSHCommandResult result2 = client2.getSSHCommandResult();
+		
+		// assert the results
+		log.info("SSHCommandResult from '"+client1tasks.hostname+"': "+result1);
+		Assert.assertEquals(result1.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client1tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
+		Assert.assertEquals(result1.getStderr().trim(), "","No stderr information is expected on '"+client1tasks.hostname+"'.");
+		Assert.assertEquals(result1.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client1tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
+		log.info("SSHCommandResult from '"+client2tasks.hostname+"': "+result2);
+		Assert.assertEquals(result2.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client2tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
+		Assert.assertEquals(result2.getStderr().trim(), "","No stderr information is expected on '"+client2tasks.hostname+"'.");
+		Assert.assertEquals(result2.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client2tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		
 		// assert that the test pool has dropped by 2
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -121,8 +138,12 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity has dropped by 2 due to the concurrent call to subscribe.");
 		
 		// make sure both clients got individualized entitlement certs
-		EntitlementCert client1EntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.getCurrentEntitlementCertFiles().get(0));
-		EntitlementCert client2EntitlementCert = client2tasks.getEntitlementCertFromEntitlementCertFile(client2tasks.getCurrentEntitlementCertFiles().get(0));
+		client1EntitlementCerts = client1tasks.getCurrentEntitlementCertFiles();
+		Assert.assertEquals(client1EntitlementCerts.size(), 1, "Registered client on '"+client1tasks.hostname+"' should have 1 entitlement from the attempt to subscribe to poolid: "+testPool.poolId);
+		client2EntitlementCerts = client2tasks.getCurrentEntitlementCertFiles();
+		Assert.assertEquals(client2EntitlementCerts.size(), 1, "Registered client on '"+client2tasks.hostname+"' should have 1 entitlement from the attempt to subscribe to poolid: "+testPool.poolId);
+		EntitlementCert client1EntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1EntitlementCerts.get(0));
+		EntitlementCert client2EntitlementCert = client2tasks.getEntitlementCertFromEntitlementCertFile(client2EntitlementCerts.get(0));
 		Assert.assertFalse(client1EntitlementCert.serialNumber.equals(client2EntitlementCert.serialNumber), "Asserting that the entitlement serials granted to each of the concurent subscribers are unique to each other.");
 	}
 	
@@ -157,8 +178,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		String client2command = String.format("%s subscribe --pool=%s", client2tasks.command, pool.poolId);
 		client1.runCommand(client1command, LogMessageUtil.action());
 		client2.runCommand(client2command, LogMessageUtil.action());
-		client1.waitForWithTimeout(new Long(5*60*1000)); // timeout after 5 min
-		client2.waitForWithTimeout(new Long(5*60*1000)); // timeout after 5 min
+		client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
+		client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 		SSHCommandResult result1 = client1.getSSHCommandResult();
 		SSHCommandResult result2 = client2.getSSHCommandResult();
 		
@@ -187,9 +208,11 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// assert the Winner and Loser
+		log.info("SSHCommandResult from '"+smtWinner.hostname+"': "+sshWinner);
 		Assert.assertEquals(sshWinner.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+smtWinner.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
 		Assert.assertEquals(sshWinner.getStderr().trim(), "","No stderr information is expected on '"+smtWinner.hostname+"'.");
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");
+		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
 		Assert.assertEquals(sshLoser.getStdout().trim(), "No free entitlements are available for the pool with id '"+pool.poolId+"'", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left for pool '"+pool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
 		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");
