@@ -105,14 +105,13 @@ public class SubscriptionManagerTasks {
 	/**
 	 * Must be called after initializeFieldsFromConfigFile(...)
 	 * @param repoCaCertFile
-	 * @param toCaCertFileName
 	 * @throws IOException
 	 */
-	public void installRepoCaCert(File repoCaCertFile, String toCaCertFileName) throws IOException {
+	public void installRepoCaCert(File repoCaCertFile) throws IOException {
 		if (repoCaCertFile==null) return;
 		
 		// transfer the CA Cert File from the candlepin server to the clients so we can test in secure mode
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), repoCaCertFile.getPath(), caCertDir+"/"+toCaCertFileName, "0644");
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), repoCaCertFile.getPath(), caCertDir+"/"+repoCaCertFile.getName(), "0644");
 		updateConfFileParameter(rhsmConfFile, "insecure", "0");
 	}
 	
