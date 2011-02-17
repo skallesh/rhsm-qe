@@ -73,6 +73,19 @@ to the testng group name you are using to categorize your @Test -->
 			</run>
 		</groups>
 	</test>
+	
+	<test name="Interop">
+		<packages>
+			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="interop"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
 
  	<!--<listeners>
  		<listener class-name="com.redhat.qe.auto.selenium.TestNGListener" />				 will turn on all the detailed logging 
