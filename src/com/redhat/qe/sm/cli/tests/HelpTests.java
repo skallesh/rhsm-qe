@@ -33,13 +33,23 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41697)
-	public void ManPage_Test() {
+	public void ManPageForCLI_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
-		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+clienttasks.command,0);
-		RemoteFileTasks.runCommandAndAssert(client,"man -k "+clienttasks.command,0,"^subscription-manager ",null);
-		RemoteFileTasks.runCommandAndAssert(client,"man -k "+clienttasks.command,0,"^subscription-manager-gui ",null);
+		String cliCommand = clienttasks.command;
+		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
+		RemoteFileTasks.runCommandAndAssert(client,"man -k "+cliCommand,0,"^"+cliCommand+" ",null);
 	}
 	
+	@Test(	description="subscription-manager-gui: man page",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForGUI_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String guiCommand = clienttasks.command+"-gui";
+		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
+		RemoteFileTasks.runCommandAndAssert(client,"man -k "+guiCommand,0,"^"+guiCommand+" ",null);
+	}
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={"blockedByBug-664581"},
@@ -92,11 +102,13 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return ll;
 		
 		// String command, String stdoutRegex, List<String> expectedOptions
+		String module;
 		String modulesRegex = "^	\\w+";
 		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
 		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
+		modules.add("activate");
 		modules.add("clean");
 		modules.add("facts");
 		modules.add("identity");
@@ -115,7 +127,27 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, modulesRegex, modules}));
 		}
 		
+		// MODULE: activate
+		module = "activate";
+		List <String> activateOptions = new ArrayList<String>();
+		activateOptions.add("-h, --help");
+		activateOptions.add("--debug=DEBUG");
+//		activateOptions.add("-k, --insecure");
+		activateOptions.add("--email=EMAIL");
+		activateOptions.add("--locale=LOCALE");
+		activateOptions.add("--proxy=PROXY_URL");
+		activateOptions.add("--proxyuser=PROXY_USER");
+		activateOptions.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, activateOptions}));
+		}
+		
 		// MODULE: clean
+		module = "clean";
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
 		cleanOptions.add("--debug=DEBUG");
@@ -123,15 +155,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//cleanOptions.add("--proxy=PROXY_URL");
 		//cleanOptions.add("--proxyuser=PROXY_USER");
 		//cleanOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h clean",clienttasks.command+" --help clean"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" clean [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, cleanOptions}));
 		}
 		
 		// MODULE: facts
+		module = "facts";
 		List <String> factsOptions = new ArrayList<String>();
 		factsOptions.add("-h, --help");
 		factsOptions.add("--debug=DEBUG");
@@ -141,15 +174,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		factsOptions.add("--proxy=PROXY_URL");
 		factsOptions.add("--proxyuser=PROXY_USER");
 		factsOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h facts",clienttasks.command+" --help facts"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" facts [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, factsOptions}));
 		}
 		
 		// MODULE: identity
+		module = "identity";
 		List <String> identityOptions = new ArrayList<String>();
 		identityOptions.add("-h, --help");
 		identityOptions.add("--debug=DEBUG");
@@ -159,50 +193,54 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		identityOptions.add("--proxy=PROXY_URL");
 		identityOptions.add("--proxyuser=PROXY_USER");
 		identityOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h identity",clienttasks.command+" --help identity"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" identity [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, identityOptions}));
 		}
 		
 		// MODULE: list
+		module = "list";
 		List <String> listOptions = new ArrayList<String>();
 		listOptions.add("-h, --help");
 		listOptions.add("--debug=DEBUG");
 //		listOptions.add("-k, --insecure");
 		listOptions.add("--installed");
-		listOptions.add("--available");
 		listOptions.add("--consumed");
+		listOptions.add("--available");
 		listOptions.add("--all");
+		listOptions.add("--ondate=ON_DATE");
 		listOptions.add("--proxy=PROXY_URL");
 		listOptions.add("--proxyuser=PROXY_USER");
 		listOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h list",clienttasks.command+" --help list"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" list [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, listOptions}));
 		}
 		
 		// MODULE: refresh
+		module = "refresh";
 		List <String> refreshOptions = new ArrayList<String>();
 		refreshOptions.add("-h, --help");
 		refreshOptions.add("--debug=DEBUG");
 		refreshOptions.add("--proxy=PROXY_URL");
 		refreshOptions.add("--proxyuser=PROXY_USER");
 		refreshOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h refresh",clienttasks.command+" --help refresh"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" refresh [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, refreshOptions}));
 		}
 		
 		// MODULE: register
+		module = "register";
 		List <String> registerOptions = new ArrayList<String>();
 		registerOptions.add("-h, --help");
 		registerOptions.add("--debug=DEBUG");
@@ -217,9 +255,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		registerOptions.add("--proxy=PROXY_URL");
 		registerOptions.add("--proxyuser=PROXY_USER");
 		registerOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h register",clienttasks.command+" --help register"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" register [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ new BlockedByBzBug("628589", smHelpCommand, optionsRegex, registerOptions)}));
@@ -242,6 +280,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 //		}
 		
 		// MODULE: subscribe
+		module = "subscribe";
 		List <String> subscribeOptions = new ArrayList<String>();
 		subscribeOptions.add("-h, --help");
 		subscribeOptions.add("--debug=DEBUG");
@@ -253,15 +292,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		subscribeOptions.add("--proxy=PROXY_URL");
 		subscribeOptions.add("--proxyuser=PROXY_USER");
 		subscribeOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h subscribe",clienttasks.command+" --help subscribe"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" subscribe [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, subscribeOptions}));
 		}
 		
 		// MODULE: unregister
+		module = "unregister";
 		List <String> unregisterOptions = new ArrayList<String>();
 		unregisterOptions.add("-h, --help");
 		unregisterOptions.add("--debug=DEBUG");
@@ -269,15 +309,16 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		unregisterOptions.add("--proxy=PROXY_URL");
 		unregisterOptions.add("--proxyuser=PROXY_USER");
 		unregisterOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" unregister -h",clienttasks.command+" --help unregister"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" unregister [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unregisterOptions}));
 		}
 		
 		// MODULE: unsubscribe
+		module = "unsubscribe";
 		List <String> unsubscribeOptions = new ArrayList<String>();
 		unsubscribeOptions.add("-h, --help");
 		unsubscribeOptions.add("--debug=DEBUG");
@@ -287,13 +328,14 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		unsubscribeOptions.add("--proxy=PROXY_URL");
 		unsubscribeOptions.add("--proxyuser=PROXY_USER");
 		unsubscribeOptions.add("--proxypassword=PROXY_PASSWORD");
-		for (String smHelpCommand : new String[]{clienttasks.command+" -h unsubscribe",clienttasks.command+" --help unsubscribe"}) {
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = "Usage: "+clienttasks.command+" unsubscribe [OPTIONS]";
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unsubscribeOptions}));
 		}
+		
 		
 		return ll;
 	}
