@@ -12,6 +12,11 @@
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
+(defn ^{Test {:groups []}}
+  register [username password]
+  (tasks/register username password)
+)
+
 (defn ^{Test {:groups ["registration"]}}
   simple_register [_]
   (tasks/register (@config :username) (@config :password))
