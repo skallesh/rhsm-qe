@@ -9,6 +9,8 @@
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 
+(defn sleep [ms] (. Thread (sleep ms)))
+
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
                    :no-username #"You must enter a login"
@@ -127,6 +129,7 @@
 
 (defn unsubscribe [s]
   (ui selecttab :my-subscriptions)
+  (sleep 5000)
   (if-not (ui rowexist? :my-subscriptions-view s)
     (raise {:type :not-subscribed
             :name s
@@ -135,7 +138,7 @@
   (ui click :unsubscribe)
   (ui waittillwindowexist :question-dialog 60)
   (ui click :yes)
-  (checkforerror ) )
+  (checkforerror) )
 
 (defn enableproxy-auth [proxy port user pass]
   (ui selecttab :my-installed-software)
