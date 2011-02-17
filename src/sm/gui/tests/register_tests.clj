@@ -12,14 +12,9 @@
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
-(defn ^{Test {:groups []}}
-  register [username password]
-  (tasks/register username password)
-)
-
 (defn ^{Test {:groups ["registration"]}}
   simple_register [_]
-  (register (@config :username) (@config :password))
+  (tasks/register (@config :username) (@config :password))
   (verify (action exists? :unregister-system)))
 
 
@@ -33,7 +28,7 @@
                   (with-handlers [(handle expected-error-type [e]
                                           (recover e :cancel)
                                           (:type e))]
-                    (register username password)))]
+                    (tasks/register username password)))]
     (doall (for [testargs alltestdata]
              (let [thrown-error (apply test-fn testargs)
                    expected-error (last testargs)
