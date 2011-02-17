@@ -66,3 +66,5 @@
   (verify (not (tasks/ui exists? :warning-dialog "")))
 )
 
+(gen-class-testng)
+
