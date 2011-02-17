@@ -91,7 +91,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.deploy(serverHostname, serverImportDir,serverBranch);
 
 			// also connect to the candlepin server database
-			dbConnection = connectToDatabase();  // do this after the call to deploy since it will restart postgresql
+			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
 			
 			// fetch the candlepin CA Cert
 			log.info("Fetching Candlepin CA cert...");
@@ -224,6 +224,33 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// Protected Methods ***********************************************************************
 	
 	protected Connection connectToDatabase() {
+		/* Notes on setting up the db for a connection:
+		 * # yum install postgresql-server
+		 * 
+		 * # service postgresql initdb 
+		 * 
+		 * # su - postgres
+		 * $ psql
+		 * # CREATE USER candlepin WITH PASSWORD 'candlepin';
+		 * # ALTER user candlepin CREATEDB;
+		 * [Ctrl-D]
+		 * $ createdb -O candlepin candlepin
+		 * $ exit
+		 * 
+		 * # vi /var/lib/pgsql/data/pg_hba.conf
+		 * # TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+		 * local   all         all                               trust
+		 * host    all         all         127.0.0.1/32          trust
+		 *
+		 * # vi /var/lib/pgsql/data/postgresql.conf
+		 * listen_addresses = '*'
+		 * 
+		 * # netstat -lpn | grep 5432
+		 * tcp        0      0 0.0.0.0:5432                0.0.0.0:*                   LISTEN      24935/postmaster    
+		 * tcp        0      0 :::5432                     :::*                        LISTEN      24935/postmaster    
+		 * unix  2      [ ACC ]     STREAM     LISTENING     1717127 24935/postmaster    /tmp/.s.PGSQL.5432
+		 * 
+		 */
 		Connection dbConnection = null;
 		try { 
 			// Load the JDBC driver 
