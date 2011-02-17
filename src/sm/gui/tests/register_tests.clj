@@ -7,7 +7,7 @@
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
-(defn ^{BeforeClass {}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))

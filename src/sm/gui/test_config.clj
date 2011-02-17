@@ -1,6 +1,6 @@
 (ns sm.gui.test-config
   (:import [com.redhat.qe.auto.testng TestScript]
-	   [com.redhat.qe.tools SSHCommandRunner]
+	         [com.redhat.qe.tools SSHCommandRunner]
            [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]))
 
 

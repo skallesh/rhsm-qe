@@ -33,7 +33,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		      :contract-selection-dialog "Contract Selection"
           :proxy-config-dialog "Advanced Network Configuration"
           :compliance-assistant-dialog "Subscription Manager - Compliance Assistant"
-          :information-dialog "Information"}))
+          :information-dialog "Information"
+          :warning-dialog "Warning"}))
 
 
 (def elements (merge
@@ -94,6 +95,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
               :proxy-location "Proxy Location:"}))
       (define-elements (windows :information-dialog)
         {:info-ok "OK"})
+      (define-elements (windows :warning-dialog)
+        {:warn-ok "OK"
+         :warn-cancel "Cancel"})
       (define-elements (windows :compliance-assistant-dialog)
         {:date-entry "date-entry"
          :update "Update"}) ))
