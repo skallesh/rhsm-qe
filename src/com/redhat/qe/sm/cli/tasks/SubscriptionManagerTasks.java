@@ -1378,7 +1378,6 @@ public class SubscriptionManagerTasks {
 	public File subscribeToSubscriptionPool(SubscriptionPool pool) {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
-		File newCertFile = null;
 		log.info("Subscribing to subscription pool: "+pool);
 		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null, null, null, null);
 
@@ -1418,9 +1417,24 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 		} 
 		
+		// figure out which entitlement cert file has been newly dropped into /etc/pki/entitlement after attempting to subscribe to pool
+		File newCertFile = null;
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		for (File file : afterEntitlementCertFiles) {
+			if (!beforeEntitlementCertFiles.contains(file)) {
+				newCertFile = file; break;
+			}
+		}
+		
 		// when the pool is already subscribe to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
+			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
+			Assert.assertNull(newCertFile,
+					"A new entitlement certificate has NOT been dropped after attempting to subscribe to an already subscribed to pool: "+pool);
+			Assert.assertEquals(beforeEntitlementCertFiles.size(), afterEntitlementCertFiles.size(),
+					"The existing entitlement certificate count remains unchanged after attempting to subscribe to an already subscribed to pool: "+pool);
+
 			// find the existing entitlement cert file corresponding to the already subscribed pool
 			EntitlementCert entitlementCert = null;
 			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
@@ -1430,17 +1444,11 @@ public class SubscriptionManagerTasks {
 					break;
 				}
 			}
-			
 			Assert.assertNotNull(entitlementCert, isSubpool?
 					"Found an already existing Entitlement Cert whose personal productId matches the system productId from the subscription pool: "+pool:
 					"Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
 		
-			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
-			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
-			Assert.assertEquals(afterEntitlementCertFiles.size(),beforeEntitlementCertFiles.size(),
-					"The entitlement certificate file count has not changed (from "+beforeEntitlementCertFiles.size()+" to "+afterEntitlementCertFiles.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
-
 			// assert that consumed ProductSubscriptions has NOT changed
 			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
@@ -1449,30 +1457,30 @@ public class SubscriptionManagerTasks {
 		// when no free entitlements exist...
 		} else if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) {
 			
-			// assert that no entitlements have been dropped
-			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
-			Assert.assertEquals(afterEntitlementCertFiles, beforeEntitlementCertFiles,"The current entitlements have not changed upon attempting to subscribe to a pool with no free entitlements.");
-			
-			// assert that the Quantity is zero
-			SubscriptionPool currentPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, getCurrentlyAllAvailableSubscriptionPools());
-			Assert.assertNotNull(currentPool, "Found the pool amongst --all --available after having consumed all of its available entitlements: "+currentPool);
-			Assert.assertEquals(currentPool.quantity, "0", "Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
+			// assert that the depleted pool Quantity is zero
+			SubscriptionPool depletedPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, getCurrentlyAllAvailableSubscriptionPools());
+			Assert.assertNotNull(depletedPool,
+					"Found the depleted pool amongst --all --available after having consumed all of its available entitlements: ");
+			Assert.assertEquals(depletedPool.quantity, "0",
+					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
+
+			//  assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
+			Assert.assertNull(newCertFile,
+					"A new entitlement certificate has NOT been dropped after attempting to subscribe to depleted pool: "+depletedPool);
+			Assert.assertEquals(beforeEntitlementCertFiles.size(), afterEntitlementCertFiles.size(),
+					"The existing entitlement certificate count remains unchanged after attempting to subscribe to depleted pool: "+depletedPool);
 
 			
 		// otherwise, the pool is NOT already subscribe to...
 		} else {
 	
-			// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
-			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
-			newCertFile = afterEntitlementCertFiles.get(0);
-			Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile),
-					"A new entitlement certificate has been dropped after subscribing to pool: "+pool);
-	
 			// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
 			// https://bugzilla.redhat.com/show_bug.cgi?id=640338
 			Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
 					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after subscribing to pool: "+pool);
-	
+
+			// assert the new entitlement cert file has been dropped in /etc/pki/entitlement
+			Assert.assertNotNull(newCertFile, "A new entitlement certificate has been dropped after subscribing to pool: "+pool);
 			log.info("The new entitlement certificate file is: "+newCertFile);
 			
 			// assert that the productId from the pool matches the entitlement productId

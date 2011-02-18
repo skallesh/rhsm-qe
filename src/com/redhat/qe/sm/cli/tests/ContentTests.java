@@ -52,11 +52,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
 		
 		log.info("Subscribe to the pool and start testing that yum repolist reports the expected repo id/labels...");
-		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingProductId(pool));
 		
 		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 1. Repolist contains repositories corresponding to your entitled products
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.getCurrentEntitlementCertFiles("-t").get(0)); // newest entitlement cert
 		ArrayList<String> repolist = clienttasks.yumRepolist("enabled");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (contentNamespace.enabled.equals("1")) {
@@ -97,11 +96,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
 		
 		log.info("Again let's subscribe to the same pool and verify that yum repolist does NOT report any of the entitled repo id/labels since the plugin has been disabled...");
-		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingProductId(pool));
 		
 		// 2. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 2. Repolist does not contain repositories corresponding to your entitled products
-		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.getCurrentEntitlementCertFiles("-t").get(0));
 		repolist = clienttasks.yumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
