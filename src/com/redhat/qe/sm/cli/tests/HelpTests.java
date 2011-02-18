@@ -38,6 +38,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String cliCommand = clienttasks.command;
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
 		RemoteFileTasks.runCommandAndAssert(client,"man -k "+cliCommand,0,"^"+cliCommand+" ",null);
+		log.warning("In this test we tested only the existence of the man page; NOT the content.");
 	}
 	
 	@Test(	description="subscription-manager-gui: man page",
@@ -49,6 +50,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String guiCommand = clienttasks.command+"-gui";
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
 		RemoteFileTasks.runCommandAndAssert(client,"man -k "+guiCommand,0,"^"+guiCommand+" ",null);
+		log.warning("In this test we tested only the existence of the man page; NOT the content.");
 	}
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
