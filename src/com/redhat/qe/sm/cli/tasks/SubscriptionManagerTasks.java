@@ -898,7 +898,7 @@ public class SubscriptionManagerTasks {
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		}
 		
-		// assert certificate files are dropped into /etc/pki/consumer
+		// assert certificate files are installed into /etc/pki/consumer
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
 		
@@ -1371,7 +1371,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * subscribe to the given SubscriptionPool and return the newly dropped EntitlementCert file to the newly consumed ProductSubscriptions 
+	 * subscribe to the given SubscriptionPool and return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 * @param pool
 	 * @return
 	 */
@@ -1417,7 +1417,7 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 		} 
 		
-		// figure out which entitlement cert file has been newly dropped into /etc/pki/entitlement after attempting to subscribe to pool
+		// figure out which entitlement cert file has been newly installed into /etc/pki/entitlement after attempting to subscribe to pool
 		File newCertFile = null;
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		for (File file : afterEntitlementCertFiles) {
@@ -1429,9 +1429,9 @@ public class SubscriptionManagerTasks {
 		// when the pool is already subscribe to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
-			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
+			// assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
 			Assert.assertNull(newCertFile,
-					"A new entitlement certificate has NOT been dropped after attempting to subscribe to an already subscribed to pool: "+pool);
+					"A new entitlement certificate has NOT been installed after attempting to subscribe to an already subscribed to pool: "+pool);
 			Assert.assertEquals(beforeEntitlementCertFiles.size(), afterEntitlementCertFiles.size(),
 					"The existing entitlement certificate count remains unchanged after attempting to subscribe to an already subscribed to pool: "+pool);
 
@@ -1464,9 +1464,9 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(depletedPool.quantity, "0",
 					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
 
-			//  assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
+			//  assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
 			Assert.assertNull(newCertFile,
-					"A new entitlement certificate has NOT been dropped after attempting to subscribe to depleted pool: "+depletedPool);
+					"A new entitlement certificate has NOT been installed after attempting to subscribe to depleted pool: "+depletedPool);
 			Assert.assertEquals(beforeEntitlementCertFiles.size(), afterEntitlementCertFiles.size(),
 					"The existing entitlement certificate count remains unchanged after attempting to subscribe to depleted pool: "+depletedPool);
 
@@ -1474,13 +1474,17 @@ public class SubscriptionManagerTasks {
 		// otherwise, the pool is NOT already subscribe to...
 		} else {
 	
-			// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
+			// assert that only ONE new entitlement cert file has been installed in /etc/pki/entitlement
 			// https://bugzilla.redhat.com/show_bug.cgi?id=640338
 			Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
-					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after subscribing to pool: "+pool);
+					"Only ONE new entitlement certificate has been installed (count was '"+beforeEntitlementCertFiles.size()+"'; is now '"+afterEntitlementCertFiles.size()+"') after subscribing to pool: "+pool);
 
-			// assert the new entitlement cert file has been dropped in /etc/pki/entitlement
-			Assert.assertNotNull(newCertFile, "A new entitlement certificate has been dropped after subscribing to pool: "+pool);
+			// assert that the other cert files remain unchanged
+			if (!afterEntitlementCertFiles.remove(newCertFile)) Assert.fail("Failed to remove certFile '"+newCertFile+"' from list.  This could be an automation logic error.");
+			Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After subscribing to pool id '"+pool+"', the other entitlement cert serials remain unchanged");
+
+			// assert the new entitlement cert file has been installed in /etc/pki/entitlement
+			Assert.assertNotNull(newCertFile, "A new entitlement certificate has been installed after subscribing to pool: "+pool);
 			log.info("The new entitlement certificate file is: "+newCertFile);
 			
 			// assert that the productId from the pool matches the entitlement productId
@@ -1698,9 +1702,11 @@ public class SubscriptionManagerTasks {
 	 * @return - false when no unsubscribe took place
 	 */
 	public boolean unsubscribeFromSerialNumber(BigInteger serialNumber) {
-		String certFile = entitlementCertDir+"/"+serialNumber+".pem";
-		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
-		
+		String certFilePath = entitlementCertDir+"/"+serialNumber+".pem";
+		File certFile = new File(certFilePath);
+		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==1? true:false;
+		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
+
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
 		SSHCommandResult result = unsubscribe_(Boolean.FALSE, serialNumber, null, null, null);
 		
@@ -1719,14 +1725,22 @@ public class SubscriptionManagerTasks {
 						
 			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
 				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFile+") does not exist.");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFilePath+") does not exist.");
 			return false;
 		}
 		
 		// assert the certFileExists is removed
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==0,
-				"Entitlement Certificate with serial "+serialNumber+" ("+certFile+") has been removed.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
+				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
 
+		// assert that only ONE entitlement cert file was removed
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()-1,
+				"Only ONE entitlement certificate has been removed (count was '"+beforeEntitlementCertFiles.size()+"'; is now '"+afterEntitlementCertFiles.size()+"') after unsubscribing from serial: "+serialNumber);
+
+		// assert that the other cert files remain unchanged
+		if (!beforeEntitlementCertFiles.remove(certFile)) Assert.fail("Failed to remove certFile '"+certFile+"' from list.  This could be an automation logic error.");
+		Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After unsubscribing from serial '"+serialNumber+"', the other entitlement cert serials remain unchanged");
 		return true;
 	}
 	
