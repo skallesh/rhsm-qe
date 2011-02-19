@@ -385,6 +385,92 @@ public class CandlepinTasks {
 	}
 	
 	
+	public static List<String> findPoolIdsFromSubscriptionId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String ownerKey, String fromSubscriptionId) throws JSONException, Exception{
+		List<String> poolIds = new ArrayList<String>();
+		/* Example jsonPool:
+		  		{
+			    "id": "8a90f8b42e398f7a012e399000780147",
+			    "attributes": [
+			      {
+			        "name": "requires_consumer_type",
+			        "value": "system",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_limit",
+			        "value": "0",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_only",
+			        "value": "true",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "owner": {
+			      "href": "/owners/admin",
+			      "id": "8a90f8b42e398f7a012e398f8d310005"
+			    },
+			    "providedProducts": [
+			      {
+			        "id": "8a90f8b42e398f7a012e39900079014b",
+			        "productName": "Awesome OS Server Bits",
+			        "productId": "37060",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "endDate": "2012-02-18T00:00:00.000+0000",
+			    "startDate": "2011-02-18T00:00:00.000+0000",
+			    "productName": "Awesome OS with up to 4 virtual guests",
+			    "quantity": 20,
+			    "contractNumber": "39",
+			    "accountNumber": "12331131231",
+			    "consumed": 0,
+			    "subscriptionId": "8a90f8b42e398f7a012e398ff0ef0104",
+			    "productId": "awesomeos-virt-4",
+			    "sourceEntitlement": null,
+			    "href": "/pools/8a90f8b42e398f7a012e399000780147",
+			    "activeSubscription": true,
+			    "restrictedToUsername": null,
+			    "updated": "2011-02-18T16:17:42.008+0000",
+			    "created": "2011-02-18T16:17:42.008+0000"
+			  }
+		*/
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/owners/"+ownerKey+"/pools"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String poolId = jsonPool.getString("id");
+			String subscriptionId = jsonPool.getString("subscriptionId");
+			if (fromSubscriptionId.equals(subscriptionId)) {
+				poolIds.add(poolId);
+			}
+		}
+		return poolIds;
+	}
+	
+	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception {
+		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
+		
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/pools/"+poolId));	
+		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
+		// loop through the attributes of this pool looking for the "virt_only" attribute
+		for (int j = 0; j < jsonAttributes.length(); j++) {
+			JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+			String attributeName = jsonAttribute.getString("name");
+			if (attributeName.equals("virt_only")) {
+				virt_only = jsonAttribute.getBoolean("value");
+				break;
+			}
+		}
+		return virt_only;
+	}
+
+	
+	
 	/**
 	 * @param server
 	 * @param port
