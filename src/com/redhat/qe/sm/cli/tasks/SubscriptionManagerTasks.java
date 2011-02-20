@@ -1343,6 +1343,10 @@ public class SubscriptionManagerTasks {
 		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'
 		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
 		
+		// if rule failed, just return the result
+		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
+		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
+		
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
 

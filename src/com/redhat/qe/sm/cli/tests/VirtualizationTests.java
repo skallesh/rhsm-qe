@@ -31,42 +31,36 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
+//Notes from the developer Justin Harris:
+//<jsefler> I'm trying to strategize an automated test for the virt entitlements stuff you demo'ed on Wednesday.  I got a few questions to start with...
+//<jharris> sure
+// shoot
+//<jsefler> using the RESTapi, if I search through all the owners subscriptions and find one with a virt_limit attribute, then that means that two pools should get created corresponding to it.  correct?
+// one pool for the host and one pool fir the guests
+//<jharris> yes
+// specifically the attribute is on either the product or the pool
+//<jsefler> what does that mean?
+// the virt_limit is an attribute of the product - that I know
+// next I need to figure out what the relevant attributes are on the pool
+//<jharris> pools have attributes
+// products have attributes
+// the two pools are created, as you said
+// the physical (host) pool will have no additional attributes
+// the virt (guest) pool will have an attribute of "virt_only" set to true
+// the candlepin logic should only let virtual machines subscribe to that second pool
+// this is done by checking the virt.is_guest fact
+// that is set in subscription manager
+//<jsefler> yup - that sounds good - that's what I need to get started
+//<jharris> excellent
+// but the virt_only attribute can also just be used on a product, for example
+// so that maybe we want to start selling a product that is like RHEL for virtual machines
+// IT can just stick that virt_only attribute on the product directly
+// and it should do the same filtering
+
+
 @Test(groups="virtualization")
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
-
-
-//	<jsefler> I'm trying to strategize an automated test for the virt entitlements stuff you demo'ed on Wednesday.  I got a few questions to start with...
-//	<jharris> sure
-//	 shoot
-//	<jsefler> using the RESTapi, if I search through all the owners subscriptions and find one with a virt_limit attribute, then that means that two pools should get created corresponding to it.  correct?
-//	 one pool for the host and one pool fir the guests
-//	<jharris> yes
-//	 specifically the attribute is on either the product or the pool
-//	<jsefler> what does that mean?
-//	 the virt_limit is an attribute of the subscription - that I know
-//	 next I need to figure out what the relevant attributes are on the pool
-//	<jharris> uhhh
-//	 afaik subscriptions do not have attributes
-//	<jsefler> am i asking the wrong question?
-//	<jharris> pools have attributes
-//	 products have attributes
-//	 the two pools are created, as you said
-//	 the physical pool will have no additional attributes
-//	 the virt pool will have an attribute of "virt_only" set to true
-//	 the candlepin logic should only let virtual machines subscribe to that second pool
-//	 this is done by checking the virt.is_guest fact
-//	 that is set in subscription manager
-//	<jsefler> yup - that sounds good - that's what I need to get started
-//	<jharris> excellent
-//	 but the virt_only attribute can also just be used on a product, for example
-//	 so that maybe we want to start selling a product that is like RHEL for virtual machines
-//	 IT can just stick that virt_only attribute on the product directly
-//	 and it should do the same filtering
-	
-
-	
-	
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type",
@@ -215,19 +209,23 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// assert that the hostPoolId is available
 		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, availablePools);
-		Assert.assertNotNull(hostPool,"A pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest: "+hostPool);
+		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system: "+hostPool);
 
 		// assert hostPoolId quantity
+		Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity), "Assuming that nobody else is consuming from this host pool '"+hostPool.poolId+"', the maximum quantity of available entitlements should be "+quantity+".");
 		
 		// attempt to subscribe to the hostPoolId
-		
+		clienttasks.subscribeToSubscriptionPool(hostPool);
 		
 		// assert that the guestPoolId is available
-		
+		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, availablePools);
+		Assert.assertNotNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system: "+guestPool);
+
 		// assert guestPoolId quantity
-		
+		Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf(quantity*Integer.valueOf(virtLimit)), "Assuming that nobody else is consuming from this guest pool '"+guestPool.poolId+"', the maximum quantity of available entitlements should be the virt_limit of '"+virtLimit+"' times the host quantity '"+quantity+"'.");
+
 		// attempt to subscribe to the guestPoolId
-		
+		clienttasks.subscribeToSubscriptionPool(guestPool);
 	}
 	
 	
@@ -243,14 +241,21 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// assert that the hostPoolId is available
+		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, availablePools);
+		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a host system: "+hostPool);
 
 		// assert that the guestPoolId is NOT available
-		
+		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, availablePools);
+		Assert.assertNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' should NOT be available on a host system: "+guestPool);
+
 		// attempt to subscribe to the hostPoolId
-		
-		// attempt to subscribe to the guestPoolId
-		
-		
+		clienttasks.subscribeToSubscriptionPool(hostPool);
+
+		// attempt to subscribe to the guestPoolId (should be blocked)
+		SSHCommandResult result = clienttasks.subscribe(guestPoolId,null,null,null,null,null,null,null);
+		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
+		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"':");
 	}
 	
 
@@ -336,6 +341,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
 	}
 	
+	
+	
 	// Data Providers ***********************************************************************
 	
 	@DataProvider(name="getVirtWhatData")
@@ -383,7 +390,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			String productName = jsonProduct.getString("name");
 			String productId = jsonProduct.getString("id");
 			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
-			// loop through the attributes of this subscription looking for the "virt_limit" attribute
+			// loop through the attributes of this jsonProduct looking for the "virt_limit" attribute
 			for (int j = 0; j < jsonAttributes.length(); j++) {
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
 				String attributeName = jsonAttribute.getString("name");
@@ -391,10 +398,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 					// found the virt_limit attribute - get its value
 					String virt_limit = jsonAttribute.getString("value");
 					
-					// only retrieve data that is valid at this time
+					// only retrieve data that is valid today (at this time)
 					if (startDate.before(now) && endDate.after(now)) {
 
-						// save some time in the testcases and get the hostPoolId and guestPoolId (set to null if there is a problem)
+						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
 						List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(serverHostname,serverPort,serverPrefix,clientusername,clientpassword, ownerKey, subscriptionId);
 
 						// determine which pool is for the guest, the other must be for the host

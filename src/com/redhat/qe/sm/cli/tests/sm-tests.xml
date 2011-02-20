@@ -229,6 +229,18 @@
 		</groups>
 	</test>
 	
+	<test name="Virtualization Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="virtualization" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="Overconsumption Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
