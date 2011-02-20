@@ -97,9 +97,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	public void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
-		
-		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+host_type+"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		forceVirtWhatToReturnGuest(host_type);
+
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
@@ -117,9 +116,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	public void VirtualizationFactsWhenClientIsAHost_Test() {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
-		
-		// Note: client is a host, virt-what returns stdout="" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		forceVirtWhatToReturnHost();
+
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
@@ -137,8 +135,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	public void VirtualizationFactsWhenVirtWhatFails_Test() {
 		
 		log.info("We will fail virt-what by forcing it to return a non-zero value...");
+		forceVirtWhatToFail();
 		
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
@@ -211,8 +209,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
-		// TODO
 		// trick this system into believing it is a virt guest
+		forceVirtWhatToReturnGuest("kvm");
 		
 		// assert that the hostPoolId is available
 		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -241,8 +239,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
-		// TODO
 		// trick this system into believing it is a host
+		forceVirtWhatToReturnHost();
 		
 		// assert that the hostPoolId is available
 
@@ -321,7 +319,22 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			return null;
 		}
 	}
+
 	
+	protected void forceVirtWhatToReturnGuest(String hypervisorType) {
+		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+hypervisorType+"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+	}
+	
+	protected void forceVirtWhatToReturnHost() {
+		// Note: when client is a host, virt-what returns stdout="" and exitcode=0
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+	}
+	
+	protected void forceVirtWhatToFail() {
+		// Note: when virt-what does not know if the system is on bare metal or on a guest, it returns a non-zero value
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+	}
 	
 	// Data Providers ***********************************************************************
 	
@@ -332,7 +345,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getVirtWhatDataAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
-		// man virt-what  (virt-what-1.3) shows suppoirt for the following hypervisors
+		// man virt-what  (virt-what-1.3) shows support for the following hypervisors
 		ll.add(Arrays.asList(new Object[]{"openvz"}));
 		ll.add(Arrays.asList(new Object[]{"kvm"}));
 		ll.add(Arrays.asList(new Object[]{"qemu"}));
