@@ -35,61 +35,9 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups={"facts"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
 	
-	protected String consumerNotRegisteredMsg = "Consumer not registered. Please register using --username and --password";
-	protected String neededOptionMsg = "Error: Need either --list or --update, Try facts --help";
-	
-	protected File virtWhatFile = null;
-	protected File virtWhatFileBackup = null;
-	
-	
-	// Configuration Methods ***********************************************************************
-
-	@BeforeClass(groups="setup")
-	public void backupVirtWhatBeforeClass() {
-		// finding location of virt-what...
-		SSHCommandResult result = client.runCommandAndWait("which virt-what");
-		virtWhatFile = new File(result.getStdout().trim());
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFile.getPath())==1,"virt-what is in the client's path");
-		
-		// making a backup of virt-what...
-		virtWhatFileBackup = new File(virtWhatFile.getPath()+".bak");
-		RemoteFileTasks.runCommandAndAssert(client, "cp -n "+virtWhatFile+" "+virtWhatFileBackup, 0);
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1,"successfully made a backup of virt-what to: "+virtWhatFileBackup);
-
-	}
-	
-	@AfterClass(groups="setup")
-	public void restoreVirtWhatAfterClass() {
-		// restoring backup of virt-what
-		if (virtWhatFileBackup!=null && RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1) {
-			RemoteFileTasks.runCommandAndAssert(client, "mv -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
-		}
-	}
-	
 	
 	// Test Methods ***********************************************************************
 
-// DELETEME
-//	@Test(	description="subscription-manager: facts (when not registered)",
-//			groups={"blockedByBug-654429"},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void FactsWhenNotRegistered_Test() {
-//		
-//		// make sure we are not registered
-//		clienttasks.unregister(null, null, null);
-//		
-//		log.info("Assert that one must be registered to query the facts...");
-//		for (Boolean list : new Boolean[]{true,false}) {
-//			for (Boolean update : new Boolean[]{true,false}) {
-//				SSHCommandResult result = clienttasks.facts_(list, update, null, null, null);
-//				Assert.assertEquals(result.getStdout().trim(),consumerNotRegisteredMsg,
-//						"One must be registered to list/update the facts.");
-//			}	
-//		}
-//	}
-	
-	
 	@Test(	description="subscription-manager: facts --update (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)
@@ -373,103 +321,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type",
-			groups={}, dependsOnGroups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VirtualizationFactsReportedOnThisClient_Test() {
-		
-		// make sure the original virt-what is in place 
-		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
-		SSHCommandResult result = client.runCommandAndWait("virt-what");
-		
-		log.info("Running virt-what version: "+client.runCommandAndWait("rpm -q virt-what").getStdout().trim());
-		
-		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),result.getStdout().trim().equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-manager returns stdout.");
-		
-		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,result.getStdout().trim(),"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
-	}
-	
-	
-	@Test(	description="subscription-manager: facts list reports the host hypervisor type on which the guest client is running",
-			dataProvider="getVirtWhatData",
-			groups={}, dependsOnGroups={},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=70202)
-	public void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
-		
-		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
-		
-		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+host_type+"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
-		log.info("Now let's run the subscription-manager facts --list and assert the results...");
-		
-		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when the client is running on a '"+host_type+"' hypervisor.");
 
-		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,host_type,"subscription-manager facts list reports the same virt.host_type value of as returned by "+virtWhatFile);
-	}
-	
-	
-	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={}, dependsOnGroups={},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=70203)
-	public void VirtualizationFactsWhenClientIsAHost_Test() {
-		
-		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
-		
-		// Note: client is a host, virt-what returns stdout="" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
-		log.info("Now let's run the subscription-manager facts --list and assert the results...");
-		
-		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
-
-		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");
-	}
-	
-	
-	@Test(	description="subscription-manager: facts list should not crash when virt-what fails",
-			groups={"blockedByBug-668936"}, dependsOnGroups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VirtualizationFactsWhenVirtWhatFails_Test() {
-		
-		log.info("We will fail virt-what by forcing it to return a non-zero value...");
-		
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
-		log.info("Now let's run the subscription-manager facts --list and assert the results...");
-		
-		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager fails.");
-
-		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
-	}
-	
-	
-	@Test(	description="subscription-manager: facts list should report is_guest as Unknown when virt-what is not installed",
-			groups={}, dependsOnGroups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VirtualizationFactsWhenVirtWhatIsNotInstalled_Test() {
-		
-		log.info("We will remove virt-what for this test...");
-		
-		RemoteFileTasks.runCommandAndWait(client,"rm -f "+virtWhatFile, LogMessageUtil.action());
-		log.info("Now let's run the subscription-manager facts --list and assert the results...");
-		
-		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager in not installed.");
-		
-		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
-	}
 	
 	
 
@@ -479,22 +331,22 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=664847#2
 
 	
+	
+	
+	// Configuration Methods ***********************************************************************
+
+	
+	
+	
 	// Protected Methods ***********************************************************************
 
-	
-//	protected void registerClients(ConsumerType type) {
-//
-//		// start with fresh registrations using the same clientusername user
-//		client1tasks.unregister();
-//		client2tasks.unregister();
-//		client1tasks.register(clientusername, clientpassword, type, null, null, null);
-//		client2tasks.register(clientusername, clientpassword, type, null, null, null);
-//	}
+	protected String consumerNotRegisteredMsg = "Consumer not registered. Please register using --username and --password";
+	protected String neededOptionMsg = "Error: Need either --list or --update, Try facts --help";
 	
 
-		
+	
+	
 	// Data Providers ***********************************************************************
-
 	
 	@DataProvider(name="getClientsData")
 	public Object[][] getClientsDataAs2dArray() {
@@ -510,29 +362,5 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		return ll;
 	}
 	
-	
-	
-	@DataProvider(name="getVirtWhatData")
-	public Object[][] getVirtWhatDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getVirtWhatDataAsListOfLists());
-	}
-	protected List<List<Object>> getVirtWhatDataAsListOfLists(){
-		List<List<Object>> ll = new ArrayList<List<Object>>();
 
-		// man virt-what  (virt-what-1.3) shows suppoirt for the following hypervisors
-		ll.add(Arrays.asList(new Object[]{"openvz"}));
-		ll.add(Arrays.asList(new Object[]{"kvm"}));
-		ll.add(Arrays.asList(new Object[]{"qemu"}));
-		ll.add(Arrays.asList(new Object[]{"uml"}));
-		ll.add(Arrays.asList(new Object[]{"virtualbox"}));
-		ll.add(Arrays.asList(new Object[]{"virtualpc"}));
-		ll.add(Arrays.asList(new Object[]{"vmware"}));
-		ll.add(Arrays.asList(new Object[]{"xen"}));
-		ll.add(Arrays.asList(new Object[]{"xen-dom0"}));
-		ll.add(Arrays.asList(new Object[]{"xen-domU"}));
-		ll.add(Arrays.asList(new Object[]{"xen-hvm"}));
-
-		return ll;
-	}
-	
 }

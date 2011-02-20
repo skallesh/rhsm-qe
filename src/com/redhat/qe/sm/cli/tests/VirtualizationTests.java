@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,16 +15,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 @Test(groups="virtualization")
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
@@ -62,6 +68,110 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test methods ***********************************************************************
+	
+	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type",
+			groups={}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VirtualizationFactsReportedOnThisClient_Test() {
+		
+		// make sure the original virt-what is in place 
+		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
+		SSHCommandResult result = client.runCommandAndWait("virt-what");
+		
+		log.info("Running virt-what version: "+client.runCommandAndWait("rpm -q virt-what").getStdout().trim());
+		
+		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),result.getStdout().trim().equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-manager returns stdout.");
+		
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertEquals(virtHostType,result.getStdout().trim(),"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
+	}
+	
+	
+	@Test(	description="subscription-manager: facts list reports the host hypervisor type on which the guest client is running",
+			dataProvider="getVirtWhatData",
+			groups={}, dependsOnGroups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=70202)
+	public void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
+		
+		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
+		
+		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+host_type+"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		log.info("Now let's run the subscription-manager facts --list and assert the results...");
+		
+		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when the client is running on a '"+host_type+"' hypervisor.");
+
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertEquals(virtHostType,host_type,"subscription-manager facts list reports the same virt.host_type value of as returned by "+virtWhatFile);
+	}
+	
+	
+	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
+			groups={}, dependsOnGroups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=70203)
+	public void VirtualizationFactsWhenClientIsAHost_Test() {
+		
+		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
+		
+		// Note: client is a host, virt-what returns stdout="" and exitcode=0
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		log.info("Now let's run the subscription-manager facts --list and assert the results...");
+		
+		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
+
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");
+	}
+	
+	
+	@Test(	description="subscription-manager: facts list should not crash when virt-what fails",
+			groups={"blockedByBug-668936"}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VirtualizationFactsWhenVirtWhatFails_Test() {
+		
+		log.info("We will fail virt-what by forcing it to return a non-zero value...");
+		
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		log.info("Now let's run the subscription-manager facts --list and assert the results...");
+		
+		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
+		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager fails.");
+
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
+	}
+	
+	
+	@Test(	description="subscription-manager: facts list should report is_guest as Unknown when virt-what is not installed",
+			groups={}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VirtualizationFactsWhenVirtWhatIsNotInstalled_Test() {
+		
+		log.info("We will remove virt-what for this test...");
+		
+		RemoteFileTasks.runCommandAndWait(client,"rm -f "+virtWhatFile, LogMessageUtil.action());
+		log.info("Now let's run the subscription-manager facts --list and assert the results...");
+		
+		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
+		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager in not installed.");
+		
+		String virtHostType = clienttasks.getFactValue("virt.host_type");	
+		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
+	}
+	
+	
+	
+	
+	
+	
 	
 	@Test(	description="Verify host and guest pools are generated from a virtualization-aware subscription.",
 			groups={},
@@ -155,9 +265,29 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
-	
-	
+		
+	@BeforeClass(groups="setup")
+	public void backupVirtWhatBeforeClass() {
+		// finding location of virt-what...
+		SSHCommandResult result = client.runCommandAndWait("which virt-what");
+		virtWhatFile = new File(result.getStdout().trim());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFile.getPath())==1,"virt-what is in the client's path");
+		
+		// making a backup of virt-what...
+		virtWhatFileBackup = new File(virtWhatFile.getPath()+".bak");
+		RemoteFileTasks.runCommandAndAssert(client, "cp -n "+virtWhatFile+" "+virtWhatFileBackup, 0);
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1,"successfully made a backup of virt-what to: "+virtWhatFileBackup);
 
+	}
+	
+	@AfterClass(groups="setup")
+	public void restoreVirtWhatAfterClass() {
+		// restoring backup of virt-what
+		if (virtWhatFileBackup!=null && RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1) {
+			RemoteFileTasks.runCommandAndAssert(client, "mv -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
+		}
+	}
+	
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
@@ -174,7 +304,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// protected methods ***********************************************************************
 	
 	protected String ownerKey = "";
-
+	protected File virtWhatFile = null;
+	protected File virtWhatFileBackup = null;
 	
 	protected Calendar parseDateString(String dateString){
 		String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"2012-02-08T00:00:00.000+0000"
@@ -193,7 +324,31 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Data Providers ***********************************************************************
+	
+	@DataProvider(name="getVirtWhatData")
+	public Object[][] getVirtWhatDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getVirtWhatDataAsListOfLists());
+	}
+	protected List<List<Object>> getVirtWhatDataAsListOfLists(){
+		List<List<Object>> ll = new ArrayList<List<Object>>();
 
+		// man virt-what  (virt-what-1.3) shows suppoirt for the following hypervisors
+		ll.add(Arrays.asList(new Object[]{"openvz"}));
+		ll.add(Arrays.asList(new Object[]{"kvm"}));
+		ll.add(Arrays.asList(new Object[]{"qemu"}));
+		ll.add(Arrays.asList(new Object[]{"uml"}));
+		ll.add(Arrays.asList(new Object[]{"virtualbox"}));
+		ll.add(Arrays.asList(new Object[]{"virtualpc"}));
+		ll.add(Arrays.asList(new Object[]{"vmware"}));
+		ll.add(Arrays.asList(new Object[]{"xen"}));
+		ll.add(Arrays.asList(new Object[]{"xen-dom0"}));
+		ll.add(Arrays.asList(new Object[]{"xen-domU"}));
+		ll.add(Arrays.asList(new Object[]{"xen-hvm"}));
+
+		return ll;
+	}
+	
+	
 	@DataProvider(name="getVirtSubscriptionData")
 	public Object[][] getVirtSubscriptionDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getVirtSubscriptionDataAsListOfLists());
