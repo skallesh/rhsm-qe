@@ -491,7 +491,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		sshCommandResultFromAutosubscribe = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
 	}
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AutoSubscribeAndVerify","blockedByBug-672438"/*,"blockedByBug-678049"*/},
+			groups={"AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
