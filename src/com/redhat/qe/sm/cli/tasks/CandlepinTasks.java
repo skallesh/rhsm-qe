@@ -452,6 +452,11 @@ public class CandlepinTasks {
 		return poolIds;
 	}
 	
+	public static String findSubscriptionIdFromPoolId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception{
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/pools/"+poolId));
+		return jsonPool.getString("subscriptionId");
+	}
+	
 	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception {
 		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
 		
