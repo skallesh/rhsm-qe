@@ -25,15 +25,7 @@ import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
-/**
- * @author jsefler
- *
- *
- *REFERENCE MATERIAL:
- * https://tcms.engineering.redhat.com/case/55702/
- * https://tcms.engineering.redhat.com/case/55718/
- * https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/RH-Personal_dev_testplan
- * https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
+/* Notes...
 Data prep
 ==========================================================
 (in candlepin/client/ruby - assuming that the cp_product_utils product data has been imported)
@@ -113,21 +105,18 @@ https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
  - Justin
  */
 
-
+/**
+ * @author jsefler
+ *
+ *
+ *REFERENCE MATERIAL:
+ * https://tcms.engineering.redhat.com/case/55702/
+ * https://tcms.engineering.redhat.com/case/55718/
+ * https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/RH-Personal_dev_testplan
+ * https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
+ */
 @Test(groups={"rhelPersonal"})
 public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
-	protected List<String> systemConsumerIds = new ArrayList<String>();
-	protected String personConsumerId = null;
-	protected int multipleSystems = 4;	// multiple (unlimited)  // multipleSystems is a count of systems that will be used to subscribe to the sub-pool.  Theoretically this number should be very very large to test the unlimited quantity
-	
-	protected String username = getProperty("sm.rhpersonal.username", "");
-	protected String password = getProperty("sm.rhpersonal.password", "");
-	protected String anotherUsername = null;	// under the same ownerkey as username
-	protected String anotherPassword = null;
-	protected String personSubscriptionName = null;
-	protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
-
-
 	
 	
 	// Test Methods ***********************************************************************
@@ -278,11 +267,11 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			JSONArray bundledProductData = subpoolProductDataAsJSONObject.getJSONArray("bundledProductData");
 			
 			log.info("Subscribe client1 (already registered as a person under username '"+username+"') to subscription pool with ProductId'"+personProductId+"'...");
-			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+			personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 			Assert.assertNotNull(personSubscriptionPool,"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
 			//client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null);
 			//personalEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool));
-			client1tasks.subscribeToSubscriptionPool(personSubscriptionPool);
+			personEntitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(client1tasks.subscribeToSubscriptionPool(personSubscriptionPool));
 	
 			log.info("Register "+multipleSystems+" new systems under username '"+username+"' and subscribe to sub productId '"+systemProductId+"'...");
 			systemConsumerIds = new ArrayList<String>();
@@ -341,6 +330,19 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 			The above entitlements were derived from the pool: {0}.
 			Please unsubscribe from the above entitlements first.
+			
+			
+			// AFTER BUG FIX 658683
+			Cannot unregister person consumer testuser1 because: 
+			-Cannot unsubscribe entitlement '8a90f8b42e349f20012e34a76157020e' because:
+  			  system consumer 'jsefler-onprem04.usersys.redhat.com' with id '187546b3-4d90-4d43-b689-a4e6c09fae04' has the following entitlements:
+    			Entitlement '8a90f8b42e349f20012e34a872ab0214':
+        			account number: '12331131231'
+        			serial number: '521,297,963,578,060,232'
+
+			These consumed entitlements were derived from subscription pool: '8a90f8b42e349f20012e349f9cb40149'.
+			You must first unsubscribe these consumers from these entitlements.
+
 		*/
 		
 		Assert.assertEquals(result.getExitCode(),new Integer(255),
@@ -349,9 +351,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered by the same consumer is consuming from a subpool."); // stderr: Cannot unregister due to outstanding entitlement: 9
 		//Assert.assertContainsMatch(result.getStderr(),"Cannot unbind due to outstanding sub-pool entitlements in [a-f,0-9]{32}",
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stderr: Cannot unbind due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
-		Assert.assertContainsMatch(result.getStderr(),"-Cannot unsubscribe entitlement '"+/*"blockedByBug-661130" personalEntitlementCert.id*/"[a-f,0-9]{32}"+"' because:",
+		Assert.assertContainsMatch(result.getStderr(),"-Cannot unsubscribe entitlement '"+personEntitlementCert.id+"' because:",
 				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: -Cannot unsubscribe entitlement ff8080812c9942fa012c994cf1da02a1 because:
-		Assert.assertContainsMatch(result.getStderr(),"Please unsubscribe from the above entitlements first.",
+		//Assert.assertContainsMatch(result.getStderr(),"Please unsubscribe from the above entitlements first.",
+		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool.");
+		Assert.assertContainsMatch(result.getStderr(),"These consumed entitlements were derived from subscription pool: '"+personSubscriptionPool.poolId+"'.",
+				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool.");
+		Assert.assertContainsMatch(result.getStderr(),"You must first unsubscribe these consumers from these entitlements.",
 				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool.");
 
 		// TODO include loop to assert all the system consumer information in the stderr message
@@ -391,6 +397,18 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 			The above entitlements were derived from the pool: {0}.
 			Please unsubscribe from the above entitlements first.
+			
+			// AFTER BUG FIX 658683
+			Cannot unregister person consumer testuser1 because: 
+			-Cannot unsubscribe entitlement '8a90f8b42e349f20012e34a76157020e' because:
+  			  system consumer 'jsefler-onprem04.usersys.redhat.com' with id '187546b3-4d90-4d43-b689-a4e6c09fae04' has the following entitlements:
+    			Entitlement '8a90f8b42e349f20012e34a872ab0214':
+        			account number: '12331131231'
+        			serial number: '521,297,963,578,060,232'
+
+			These consumed entitlements were derived from subscription pool: '8a90f8b42e349f20012e349f9cb40149'.
+			You must first unsubscribe these consumers from these entitlements.
+
 		*/
 		
 		Assert.assertEquals(result.getExitCode(),new Integer(255),
@@ -622,7 +640,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// TODO Candidates for an automated Test:
-	// https://bugzilla.redhat.com/show_bug.cgi?id=626509
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=626509
+	
+	
+	
+	
+	
 	
 	
 	
@@ -664,6 +687,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		}
 
 	}
+	
 	
 	// FIXME: It might be a good idea for a BeforeGroups methods to somehow query all the system consumers that have entitlements from the subpool and unregister them first
 	// this would avoid errors like this:
@@ -709,6 +733,21 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Protected Methods ***********************************************************************
+
+	protected List<String> systemConsumerIds = new ArrayList<String>();
+	protected String personConsumerId = null;
+	protected int multipleSystems = 4;	// multiple (unlimited)  // multipleSystems is a count of systems that will be used to subscribe to the sub-pool.  Theoretically this number should be very very large to test the unlimited quantity
+	
+	protected String username = getProperty("sm.rhpersonal.username", "");
+	protected String password = getProperty("sm.rhpersonal.password", "");
+	protected String anotherUsername = null;	// under the same ownerkey as username
+	protected String anotherPassword = null;
+	protected String personSubscriptionName = null;
+	protected EntitlementCert personEntitlementCert = null;
+	SubscriptionPool personSubscriptionPool = null;
+	protected String systemSubscriptionQuantity = getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
+
+
 
 
 	
