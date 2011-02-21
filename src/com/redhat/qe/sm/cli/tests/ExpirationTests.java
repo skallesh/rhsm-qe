@@ -31,54 +31,6 @@ import com.redhat.qe.tools.SSHCommandRunner;
 @Test(groups="expiration")
 public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
-	protected String ownerKey = "";
-
-	
-	
-	
-	// Configuration methods ***********************************************************************
-	
-	
-	@BeforeClass(groups="setup")
-	public void skipIfHosted() {
-		if (!servertasks.isOnPremises) throw new SkipException("These tests are only valid for on-premises candlepin servers.");
-	}
-	
-	@BeforeClass(dependsOnMethods="skipIfHosted", groups="setup")
-	public void registerBeforeClass() throws Exception {
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
-		
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
-	}
-	
-	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
-	public void checkTimeBeforeClass() throws Exception{
-		checkTime("candlepin server", server);
-		checkTime("client", client);
-		clienttasks.restart_rhsmcertd(1, false);
-	}
-	
-//	@BeforeMethod
-//	public void createTestPoolsBeforeMethod() throws Exception{
-//		
-//		Calendar cal = new GregorianCalendar();
-//		cal.add(Calendar.MINUTE, 2); 	// pool will expire in 2 min from now
-//		Date _3min = cal.getTime();
-//		cal.add(Calendar.DATE, -21);
-//		Date _3weeksago = cal.getTime();
-//		/*List<InstalledProduct> clientProds = clienttasks.getCurrentlyInstalledProducts();
-//		String product = clientProds.get(0).productName;*/
-//		String[] providedProducts = {"37068", "37069", "37060"};
-//		String requestBody = CandlepinTasks.createPoolRequest(10, _3weeksago, _3min, "MKT-rhel-server", 123, providedProducts).toString();
-//		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, "/owners/" + owner + "/subscriptions", requestBody);
-//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, owner);
-//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 5*1000, 1);
-//
-//	}
-	
-
-	
 	
 	// Test methods ***********************************************************************
 	
@@ -175,13 +127,67 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=655835
 	
 	
+
 	
 	
+	
+	// Configuration methods ***********************************************************************
+	
+	
+	@BeforeClass(groups="setup")
+	public void skipIfHosted() {
+		if (!servertasks.isOnPremises) throw new SkipException("These tests are only valid for on-premises candlepin servers.");
+	}
+	
+	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")
+	public void registerBeforeClass() throws Exception {
+		clienttasks.unregister(null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
+		
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+	}
+	
+	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
+	public void findRandomAvailableProductIdBeforeClass() throws Exception {
+
+		// find a randomly available product id
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		randomAvailableProductId = pool.productId;
+	}
+	
+	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
+	public void checkTimeBeforeClass() throws Exception{
+		checkTime("candlepin server", server);
+		checkTime("client", client);
+		clienttasks.restart_rhsmcertd(1, false);
+	}
+	
+//	@BeforeMethod
+//	public void createTestPoolsBeforeMethod() throws Exception{
+//		
+//		Calendar cal = new GregorianCalendar();
+//		cal.add(Calendar.MINUTE, 2); 	// pool will expire in 2 min from now
+//		Date _3min = cal.getTime();
+//		cal.add(Calendar.DATE, -21);
+//		Date _3weeksago = cal.getTime();
+//		/*List<InstalledProduct> clientProds = clienttasks.getCurrentlyInstalledProducts();
+//		String product = clientProds.get(0).productName;*/
+//		String[] providedProducts = {"37068", "37069", "37060"};
+//		String requestBody = CandlepinTasks.createPoolRequest(10, _3weeksago, _3min, "MKT-rhel-server", 123, providedProducts).toString();
+//		CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, "/owners/" + owner + "/subscriptions", requestBody);
+//		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, owner);
+//		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 5*1000, 1);
+//
+//	}
+	
+
 	
 	
 	// protected methods ***********************************************************************
 	
-
+	protected String ownerKey = "";
+	protected String randomAvailableProductId = null;
 	
 	protected void checkTime(String host, SSHCommandRunner runner)throws Exception {
 		//make sure local clock and server clock are synced
@@ -195,9 +201,14 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		long timeDiffms = Math.abs(localTime.getTime() - remoteTime.getTime());
 		Assert.assertLess(timeDiffms, 60000L, "Time difference with " + host + " is less than 1 minute");
 	}
-	
 
-
+	/**
+	 * @param startingMinutesFromNow
+	 * @param endingMinutesFromNow
+	 * @return poolId to the newly available SubscriptionPool
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
 		
 		// set the start and end dates
@@ -209,25 +220,26 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Date startDate = startCalendar.getTime();
 
 		
-		// choose a contract number
+		// randomly choose a contract number
 		Integer contractNumber = Integer.valueOf(getRandInt());
 		
 		// choose a product id for the subscription
-		JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
-		//String  productId =  "MKT-rhel-server";
-		String productId = null;
-		do {	// pick a random productId (excluding a personal productId)
-			productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		} while (getPersonProductIds().contains(productId));
+		//String productId =  "MKT-rhel-server";  // too hard coded
+		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
+		//String productId = null;
+		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
+		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
+		//} while (getPersonProductIds().contains(productId));
+		String productId = randomAvailableProductId;
+
 		// choose providedProducts for the subscription
 		//String[] providedProducts = {"37068", "37069", "37060"};
-		/*List<InstalledProduct> clientProds = clienttasks.getCurrentlyInstalledProducts();
-		String product = clientProds.get(0).productName;*/
-		String[] providedProducts = {
-//				((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-//				((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-//				((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
-				};
+		//String[] providedProducts = {
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
+		//};
+		String[] providedProducts = {};
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createPoolRequest(3, startDate, endDate, productId, contractNumber, providedProducts).toString();
