@@ -353,6 +353,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stderr: Cannot unbind due to outstanding sub-pool entitlements in ff8080812c9942fa012c994cf1da02a1
 		Assert.assertContainsMatch(result.getStderr(),"-Cannot unsubscribe entitlement '"+personEntitlementCert.id+"' because:",
 				"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool."); // stdout: -Cannot unsubscribe entitlement ff8080812c9942fa012c994cf1da02a1 because:
+		//Assert.assertContainsMatch(result.getStderr(),"The above entitlements were derived from the pool: "+personSubscriptionPool.poolId+".",
+		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool.");
 		//Assert.assertContainsMatch(result.getStderr(),"Please unsubscribe from the above entitlements first.",
 		//		"Attempting to unsubscribe the person consumer from all pools is blocked when another system registered with the same username is consuming from a subpool.");
 		Assert.assertContainsMatch(result.getStderr(),"These consumed entitlements were derived from subscription pool: '"+personSubscriptionPool.poolId+"'.",
