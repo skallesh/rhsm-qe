@@ -31,36 +31,41 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-//Notes from the developer Justin Harris:
-//<jsefler> I'm trying to strategize an automated test for the virt entitlements stuff you demo'ed on Wednesday.  I got a few questions to start with...
-//<jharris> sure
-// shoot
-//<jsefler> using the RESTapi, if I search through all the owners subscriptions and find one with a virt_limit attribute, then that means that two pools should get created corresponding to it.  correct?
-// one pool for the host and one pool fir the guests
-//<jharris> yes
-// specifically the attribute is on either the product or the pool
-//<jsefler> what does that mean?
-// the virt_limit is an attribute of the product - that I know
-// next I need to figure out what the relevant attributes are on the pool
-//<jharris> pools have attributes
-// products have attributes
-// the two pools are created, as you said
-// the physical (host) pool will have no additional attributes
-// the virt (guest) pool will have an attribute of "virt_only" set to true
-// the candlepin logic should only let virtual machines subscribe to that second pool
-// this is done by checking the virt.is_guest fact
-// that is set in subscription manager
-//<jsefler> yup - that sounds good - that's what I need to get started
-//<jharris> excellent
-// but the virt_only attribute can also just be used on a product, for example
-// so that maybe we want to start selling a product that is like RHEL for virtual machines
-// IT can just stick that virt_only attribute on the product directly
-// and it should do the same filtering
+/* Notes...
+<jsefler> I'm trying to strategize an automated test for the virt entitlements stuff you demo'ed on Wednesday.  I got a few questions to start with...
+<jharris> sure
+ shoot
+<jsefler> using the RESTapi, if I search through all the owners subscriptions and find one with a virt_limit attribute, then that means that two pools should get created corresponding to it.  correct?
+ one pool for the host and one pool fir the guests
+<jharris> yes
+ specifically the attribute is on either the product or the pool
+<jsefler> what does that mean?
+ the virt_limit is an attribute of the product - that I know
+ next I need to figure out what the relevant attributes are on the pool
+<jharris> pools have attributes
+ products have attributes
+ the two pools are created, as you said
+ the physical (host) pool will have no additional attributes
+ the virt (guest) pool will have an attribute of "virt_only" set to true
+ the candlepin logic should only let virtual machines subscribe to that second pool
+ this is done by checking the virt.is_guest fact
+ that is set in subscription manager
+<jsefler> yup - that sounds good - that's what I need to get started
+<jharris> excellent
+ but the virt_only attribute can also just be used on a product, for example
+ so that maybe we want to start selling a product that is like RHEL for virtual machines
+ IT can just stick that virt_only attribute on the product directly
+ and it should do the same filtering
+ */
 
-
+/**
+ * @author jsefler
+ *
+ */
 @Test(groups="virtualization")
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
+	
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type",
