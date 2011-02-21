@@ -286,7 +286,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// assert that the name is happily placed in the consumer cert
 		if (expectedExitCode!=null && expectedExitCode==0) {
 			ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-			Assert.assertEquals(consumerCert.username, name, "");
+			Assert.assertEquals(consumerCert.name, name, "");
 		}
 	}
 	
