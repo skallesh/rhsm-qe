@@ -93,14 +93,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		// assert the consumer feed...
+		assertTheNewConsumerFeed(consumerCert.consumerid, null, newEventTitles);
 		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-        
-		// assert the consumer feed...
-		assertTheNewConsumerFeed(consumerCert.consumerid, null, newEventTitles);
+       
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -115,8 +115,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.name);
-		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.name+"'.");
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -127,19 +127,17 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-//FIXME subscribing to RHEL for Physical Servers (MKT-rhel-server) instead of a random pool will cause the next testcase to fail
-//clienttasks.subscribe("ff8080812bd07e4f012bd07fbc2100cb", null, null, null, null);
-//https://bugzilla.redhat.com/show_bug.cgi?id=645597
 		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
 
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
-		
-		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-       
+
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+
+		// assert the owner feed...
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+  
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -149,29 +147,23 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
-		//FIXME
-		if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.name);
-		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.name+"'.");
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
-		
-//		log.info("First, let's refresh the subscription pools to get rid of any pending events...");
-//		JSONObject jobDetail1 = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
-//		jobDetail1 = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail1, "FINISHED", 10*1000, 3);
+
+        // find the first pool id of a currently consumed product
+        List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),clientusername,clientpassword);
+		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(consumerCert.consumerid,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         
-        // find the first pool id of a currently consumed product
-        List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),clientusername,clientpassword);
-		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
-		
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
 		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+pool+"' by subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
@@ -181,16 +173,20 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 //		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
-		clienttasks.refresh(null, null, null);
-		
-		// assert the feed...
-		//assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
-		
-        // assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
- 
+		//clienttasks.refresh(null, null, null);
+	
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, new String[]{"ENTITLEMENT MODIFIED"});
+
+//FIXME
+if (false) throw new SkipException("I COULD NOT GET THIS TEST TO WORK RELIABLY SINCE THE RSS FEED APPEARS TO BE PRODUCING MORE/LESS EVENTS THAN I EXPECTED.  THIS MAY BE A BUG.  NEEDS MORE INVESTIGATION.");
+
+// TODO 2/22/2011 Notes...The new owner feed appears to increase by MANY events such that all the new events include one ENTITLEMENT MODIFIED and the rest are POOL MODIFIED 
+        // assert the owner feed...
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
+
+		// assert the feed...
+		//assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
 	}
 	
 	
@@ -204,8 +200,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.name);
-		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.name+"'.");
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -215,14 +211,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String[] newEventTitles = new String[]{"ENTITLEMENT DELETED"};
 
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
-		
-		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-       
 		// assert the consumer feed...
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+
+		// assert the owner feed...
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -235,8 +231,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.name);
-		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.name+"'.");
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -248,14 +244,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.facts(null,true, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
-		
+		// assert the consumer feed...
+        assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+	
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
        
-		// assert the consumer feed...
-        assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -268,8 +264,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.name);
-		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.name+"'.");
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -278,11 +274,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER DELETED"};
 		
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
-		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -301,11 +297,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		testOwner = servertasks.createOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER CREATED"};
 		
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
-	
 		// assert the owner feed...
 		assertTheNewOwnerFeed(testOwner.getString("key"), null, newEventTitles);
+		
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -320,9 +316,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 
         // do something that will fire a create product event
-		testProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" For Test");
+		testProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
-
+		
 		// WORKAROUND
 		if (true) throw new SkipException("09/02/2010 Events for PRODUCT CREATED are not yet dev complete.  Agilo Story: http://mgmt1.rhq.lab.eng.bos.redhat.com:8001/web/ticket/3737");
 
@@ -343,7 +339,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 
         // do something that will fire a create product event
-		testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testOwner.getString("id"), "99");
+		testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testProductId+" Test Product", testOwner.getString("id"), "99");
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
 		// assert the feed...
@@ -427,8 +423,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// get the owner and consumer feeds before we test the firing of a new event
 		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-		RegistrationData registration = findRegistrationDataMatchingUsername(consumerCert.name);
-		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+consumerCert.name+"'.");
+		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
+		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
@@ -438,14 +434,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.exportConsumerUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,consumerCert.consumerid,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"EXPORT CREATED"};
 		
-		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
-		
-		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
-        
 		// assert the consumer feed...
 		assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+
+		// assert the owner feed...
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+
+		// assert the feed...
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -464,11 +460,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		CandlepinTasks.importConsumerUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,ownerKey,"/tmp/export.zip");
 //		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
 		
-		// assert the feed...
-		assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
-		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
+
+		// assert the feed...
+		assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
 	}
 	
 	
@@ -676,10 +672,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		Statement sql = dbConnection.createStatement();
 		if (endDate!=null) {
+			log.info("About to change the endDate in the database for this subscription pool: "+pool);
 			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
 			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
 		}
 		if (startDate!=null) {
+			log.info("About to change the startDate in the database for this subscription pool: "+pool);
 			log.fine("Executing SQL: "+updateSubscriptionPoolStartDateSql);
 			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
 		}
