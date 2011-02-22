@@ -56,7 +56,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	@BeforeSuite(groups={"setup"},description="subscription manager set up")
 	public void setupBeforeSuite() throws IOException {
-	
+		if (isSetupBeforeSuiteComplete) return;
+		
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
