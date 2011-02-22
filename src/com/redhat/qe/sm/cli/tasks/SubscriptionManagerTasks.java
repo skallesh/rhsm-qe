@@ -1386,9 +1386,9 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * subscribe to the given SubscriptionPool and return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
+	 * subscribe to the given SubscriptionPool 
 	 * @param pool
-	 * @return
+	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
@@ -1442,6 +1442,7 @@ public class SubscriptionManagerTasks {
 			}
 		}
 		*/
+		/* VALID BUT INEFFICIENT
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		File newCertFile = null;
 		Map<BigInteger, SubscriptionPool> map = new HashMap<BigInteger, SubscriptionPool>();
@@ -1457,8 +1458,29 @@ public class SubscriptionManagerTasks {
 				break;
 			}
 		}
+		*/
+		File newCertFile = null;
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		for (File entitlementCertFile : afterEntitlementCertFiles) {
+			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
+				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+				try {
+					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,entitlementCert.id);
+					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
+					if (jsonPool.getString("id").equals(pool.poolId)) {
+						newCertFile = entitlementCertFile; break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					Assert.fail(e.getMessage());
+				}
+			}
+		}
 		
-		// when the pool is already subscribe to...
+		// when the pool is already subscribed to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
 			// assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
@@ -1469,7 +1491,7 @@ public class SubscriptionManagerTasks {
 					"The existing entitlement certificate count remains unchanged after attempting to subscribe to an already subscribed to pool: "+pool);
 
 			// find the existing entitlement cert file corresponding to the already subscribed pool
-			/* ALREADY FOUND USING getCurrentSerialMapToSubscriptionPools ALGORITHM ABOVE 
+			/* ALREADY FOUND USING ALGORITHM ABOVE 
 			EntitlementCert entitlementCert = null;
 			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
 				EntitlementCert thisEntitlementCert = getEntitlementCertFromEntitlementCertFile(thisEntitlementCertFile);
