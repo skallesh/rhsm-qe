@@ -175,7 +175,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 
 		log.info("When an owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
 
@@ -200,12 +200,87 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
+			groups={},
+			dependsOnGroups={},
+			dataProvider="getVirtSubscriptionData",
+			enabled=true)
+	public void VerifyHostAndGuestPoolQuantities_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
+
+		// get the hostPool
+		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, allAvailablePools);
+		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+hostPool);
+
+		// assert hostPoolId quantity
+		Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity), "Assuming that nobody else is consuming from this host pool '"+hostPool.poolId+"', the maximum quantity of available entitlements should be "+quantity+".");
+		
+		// get the guestPool
+		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, allAvailablePools);
+		Assert.assertNotNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+guestPool);
+
+		// assert guestPoolId quantity
+		Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf(quantity*Integer.valueOf(virtLimit)), "Assuming that nobody else is consuming from this guest pool '"+guestPool.poolId+"', the maximum quantity of available entitlements should be the virt_limit of '"+virtLimit+"' times the host quantity '"+quantity+"'.");
+	}
+	
+	
+	@Test(	description="Verify the virt_limit multiplier on guest pool quantity is not clobbered by refresh pools",
+			groups={"blockedByBug-679617"},
+			dependsOnGroups={},
+			dependsOnMethods={"VerifyHostAndGuestPoolQuantities_Test"},
+			dataProvider="getVirtSubscriptionData",
+			enabled=true)
+	public void VerifyGuestPoolQuantityIsNotClobberedByRefreshPools_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
+
+		// get the hostPool
+		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, allAvailablePools);
+		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+hostPool);
+
+		// remember the hostPool quantity before calling refresh pools
+		String hostPoolQuantityBefore = hostPool.quantity;
+		
+		// get the guestPool
+		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, allAvailablePools);
+		Assert.assertNotNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+guestPool);
+
+		// remember the hostPool quantity before calling refresh pools
+		String guestPoolQuantityBefore = guestPool.quantity;
+
+		log.info("Now let's modify the start date of the virtualization-aware subscription id '"+subscriptionId+"'...");
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONObject jsonSubscription = null;
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			if (jsonSubscription.getString("id").equals(subscriptionId)) {break;} else {jsonSubscription=null;}
+		}
+		Calendar startDate = parseDateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+		Calendar newStartDate = (Calendar) startDate.clone(); newStartDate.add(Calendar.MONTH, -1);	// subtract a month
+		updateSubscriptionDatesOnDatabase(subscriptionId,newStartDate,null);
+
+		log.info("Now let's refresh the subscription pools...");
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+
+		// retrieve the host pool again and assert the quantity has not changed
+		hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, allAvailablePools);
+		Assert.assertEquals(hostPool.quantity, hostPoolQuantityBefore, "The quantity of entitlements available from the host pool has NOT changed after refreshing pools.");
+		
+		// retrieve the guest pool again and assert the quantity has not changed
+		guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, allAvailablePools);
+		Assert.assertEquals(guestPool.quantity, guestPoolQuantityBefore, "The quantity of entitlements available from the guest pool has NOT changed after refreshing pools.");
+	}
+	
+	
 	@Test(	description="Verify host and guest pools to a virtualization-aware subscription are subscribable on a guest system.",
 			groups={},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostAndGuestPoolsAreSubscribableOnGuestSystem_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// trick this system into believing it is a virt guest
@@ -215,9 +290,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, availablePools);
 		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system: "+hostPool);
-
-		// assert hostPoolId quantity
-		Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity), "Assuming that nobody else is consuming from this host pool '"+hostPool.poolId+"', the maximum quantity of available entitlements should be "+quantity+".");
 		
 		// attempt to subscribe to the hostPoolId
 		clienttasks.subscribeToSubscriptionPool(hostPool);
@@ -225,9 +297,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// assert that the guestPoolId is available
 		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, availablePools);
 		Assert.assertNotNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is available on a guest system: "+guestPool);
-
-		// assert guestPoolId quantity
-		Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf(quantity*Integer.valueOf(virtLimit)), "Assuming that nobody else is consuming from this guest pool '"+guestPool.poolId+"', the maximum quantity of available entitlements should be the virt_limit of '"+virtLimit+"' times the host quantity '"+quantity+"'.");
 
 		// attempt to subscribe to the guestPoolId
 		clienttasks.subscribeToSubscriptionPool(guestPool);
@@ -239,7 +308,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
-	public void VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
+	public void VerifyHostPoolIsSubscribableOnHostSystemWhileGuestPoolIsNot_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// trick this system into believing it is a host
@@ -263,6 +332,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"':");
 	}
 	
+
 
 	
 	

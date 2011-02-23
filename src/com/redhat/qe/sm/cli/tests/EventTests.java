@@ -710,39 +710,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			i++;
 		}
 	}
-		
 	
-	/**
-	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
-	 * @param pool
-	 * @param startDate
-	 * @param endDate
-	 * @throws SQLException 
-	 */
-	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) throws SQLException {
-		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
-		String updateSubscriptionPoolEndDateSql = "";
-		String updateSubscriptionPoolStartDateSql = "";
-		if (endDate!=null) {
-			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
-		}
-		if (startDate!=null) {
-			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
-		}
-		
-		Statement sql = dbConnection.createStatement();
-		if (endDate!=null) {
-			log.info("About to change the endDate in the database for this subscription pool: "+pool);
-			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
-			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
-		}
-		if (startDate!=null) {
-			log.info("About to change the startDate in the database for this subscription pool: "+pool);
-			log.fine("Executing SQL: "+updateSubscriptionPoolStartDateSql);
-			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
-		}
-		sql.close();
-	}
 
 	
 	
