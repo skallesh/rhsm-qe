@@ -279,9 +279,15 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = clienttasks.register_(clientusername,clientpassword,null,name,null,null, null, null, null, null);
 		
 		// assert the sshCommandResult here
-		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" option:");
-		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" option:");
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" option:");
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name=\""+name+"\" option:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name=\""+name+"\" option:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name=\""+name+"\" option:");
+		
+		// assert that the name is happily placed in the consumer cert
+		if (expectedExitCode!=null && expectedExitCode==0) {
+			ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+			Assert.assertEquals(consumerCert.username, name, "");
+		}
 	}
 	
 	
@@ -731,26 +737,64 @@ Expected Results:
 	}
 	protected List<List<Object>> getRegisterWithNameDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		String alphanumericOnlyStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";
+		
+		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
+		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		String name;
 
-		// valid names
-		name = "RegisterWithNameTest";								ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
-		name = "periods...dashes---underscores___alphanumerics123";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
-		name = "249chars__12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
-																	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
+		// valid names according to bugzilla 672233
+		name = "periods...dashes---underscores___alphanumerics123";
+										ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
+		name = "249_characters_678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+										ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
+
+		// the tolerable characters has increased due to bugzilla 677405
+		// https://bugzilla.redhat.com/show_bug.cgi?id=677405#c1
+		name = "@at@";					ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
+		name = "?questionMark?";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\?questionMark\\?",	null}));
+		name = "[openingBracket[";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\[openingBracket\\[",	null}));
+		name = "]closingBracket]";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\]closingBracket\\]",	null}));
+		name = "{openingBrace{";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\{openingBrace\\{",	null}));
+		name = "}closingBrace}";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\}closingBrace\\}",	null}));
+		name = "(openingParentesis(";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\(openingParentesis\\(",	null}));
+		name = ")closingParentesis)";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\)closingParentesis\\)",	null}));
+		
+		// invalid names
+		// Invalid Chars: (") ($) (^) (<) (>) (|) (+) (%) (/) (;) (:) (,) (\) (*) (=) (~)  // from https://bugzilla.redhat.com/show_bug.cgi?id=677405#c1
+		name = "\"doubleQuotes\"";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "$dollarSign$";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "^caret^";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "<lessThan<";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ">greaterThan>";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "|verticalBar|";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "+plus+";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "%percent%";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "/slash/";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ";semicolon;";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ":colon:";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ",comma,";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "\\backslash\\";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "*asterisk*";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "=equal=";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "~tilde~";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
 	
-		// invalid non-alphanumeric names
-		for (String nonAlphanumericName : new String[]{"pound#", "comma,", "\"space bar\"", "exclamationPoint!", "asterisk*"}) {
-			ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr)}));
-			//ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr}));
-		}
+		// FIXME These invalid names may change depending on the outcome of bugzilla 677405
+		name = "#pound#";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "s p a c e s";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "!exclamationPoint!";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "'singleQuote'";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		// http://www.ascii.cl/htmlcodes.htm
+		// TODO
+		//name = "é";						ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		//name = "ë";						ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		//name = "â";						ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+
+
 
 		// names that are too long (>=250 chars)
-		name = "250chars__123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	name,	Integer.valueOf(255),	null,	maxCharsStderr)}));
-		//ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
+		name = "250_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+										ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	name,	Integer.valueOf(255),	null,	maxCharsStderr)}));
 
 
 		return ll;
