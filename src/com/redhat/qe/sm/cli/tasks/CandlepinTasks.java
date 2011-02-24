@@ -521,11 +521,11 @@ public class CandlepinTasks {
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 
-	public JSONObject createPoolUsingCPC(String productId, String ownerId, String quantity) throws JSONException {
-		log.info("Using the ruby client to create_pool productId='"+productId+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
+	public JSONObject createPoolUsingCPC(String productId, String productName, String ownerId, String quantity) throws JSONException {
+		log.info("Using the ruby client to create_pool productId='"+productId+"' productName='"+productName+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
 
 		// call the ruby client
-		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, ownerId, quantity);
+		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, productName, ownerId, quantity);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 		
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
