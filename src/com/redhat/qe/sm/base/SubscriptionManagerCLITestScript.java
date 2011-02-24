@@ -6,8 +6,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
@@ -28,6 +30,7 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
  * @author ssalevan
@@ -393,7 +396,63 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-
+	/**
+	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
+	 * @param pool
+	 * @param startDate
+	 * @param endDate
+	 * @throws SQLException 
+	 */
+	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) throws SQLException {
+		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+		String updateSubscriptionPoolEndDateSql = "";
+		String updateSubscriptionPoolStartDateSql = "";
+		if (endDate!=null) {
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+		}
+		if (startDate!=null) {
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+		}
+		
+		Statement sql = dbConnection.createStatement();
+		if (endDate!=null) {
+			log.info("About to change the endDate in the database for this subscription pool: "+pool);
+			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
+		}
+		if (startDate!=null) {
+			log.info("About to change the startDate in the database for this subscription pool: "+pool);
+			log.fine("Executing SQL: "+updateSubscriptionPoolStartDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
+		}
+		sql.close();
+	}
+	
+	protected void updateSubscriptionDatesOnDatabase(String subscriptionId, Calendar startDate, Calendar endDate) throws SQLException {
+		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+		String updateSubscriptionEndDateSql = "";
+		String updateSubscriptionStartDateSql = "";
+		if (endDate!=null) {
+			updateSubscriptionEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id='"+subscriptionId+"';";
+		}
+		if (startDate!=null) {
+			updateSubscriptionStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id='"+subscriptionId+"';";
+		}
+		
+		Statement sql = dbConnection.createStatement();
+		if (endDate!=null) {
+			log.info("About to change the endDate in the database for this subscription id: "+subscriptionId);
+			log.fine("Executing SQL: "+updateSubscriptionEndDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionEndDateSql);
+		}
+		if (startDate!=null) {
+			log.info("About to change the startDate in the database for this subscription id: "+subscriptionId);
+			log.fine("Executing SQL: "+updateSubscriptionStartDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionStartDateSql);
+		}
+		sql.close();
+	}
+	
 	
 	// Data Providers ***********************************************************************
 
