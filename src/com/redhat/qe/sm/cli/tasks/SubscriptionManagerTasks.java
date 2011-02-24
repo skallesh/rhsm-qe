@@ -850,7 +850,7 @@ public class SubscriptionManagerTasks {
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
 		if (type!=null)								command += " --type="+type;
-		if (name!=null)								command += " --name="+name;
+		if (name!=null)								command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\"));
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
 		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
 		if (force!=null && force)					command += " --force";
