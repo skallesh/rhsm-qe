@@ -117,7 +117,7 @@ public class CandlepinTasks {
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull origin master", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
 		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.1 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.2 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 			branch = sshCommandRunner.getStdout().trim();
 		}
 		if (branch.startsWith("candlepin-")) {
@@ -126,9 +126,11 @@ public class CandlepinTasks {
 		} else {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout "+branch+"; git pull origin "+branch, Integer.valueOf(0), null, "(Already on|Switched to branch|Switched to a new branch) '"+branch+"'");	// Switched to branch 'master' // Already on 'master' // Switched to a new branch 'BETA'
 		}
+		if (!serverImportDir.equals("")) {
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
+		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql service:\\s+\\[  OK  \\]", null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1; export FORCECERT=1; export GENDB=1; export HOSTNAME="+hostname+"; export IMPORTDIR="+serverImportDir+"; cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 		// Update 1/21/2011                                    ^^^^^^ TESTDATA is new for master branch                                             ^^^^^^ IMPORTDIR applies to branches <= BETA
 
@@ -383,6 +385,97 @@ public class CandlepinTasks {
 	}
 	
 	
+	public static List<String> findPoolIdsFromSubscriptionId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String ownerKey, String fromSubscriptionId) throws JSONException, Exception{
+		List<String> poolIds = new ArrayList<String>();
+		/* Example jsonPool:
+		  		{
+			    "id": "8a90f8b42e398f7a012e399000780147",
+			    "attributes": [
+			      {
+			        "name": "requires_consumer_type",
+			        "value": "system",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_limit",
+			        "value": "0",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_only",
+			        "value": "true",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "owner": {
+			      "href": "/owners/admin",
+			      "id": "8a90f8b42e398f7a012e398f8d310005"
+			    },
+			    "providedProducts": [
+			      {
+			        "id": "8a90f8b42e398f7a012e39900079014b",
+			        "productName": "Awesome OS Server Bits",
+			        "productId": "37060",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "endDate": "2012-02-18T00:00:00.000+0000",
+			    "startDate": "2011-02-18T00:00:00.000+0000",
+			    "productName": "Awesome OS with up to 4 virtual guests",
+			    "quantity": 20,
+			    "contractNumber": "39",
+			    "accountNumber": "12331131231",
+			    "consumed": 0,
+			    "subscriptionId": "8a90f8b42e398f7a012e398ff0ef0104",
+			    "productId": "awesomeos-virt-4",
+			    "sourceEntitlement": null,
+			    "href": "/pools/8a90f8b42e398f7a012e399000780147",
+			    "activeSubscription": true,
+			    "restrictedToUsername": null,
+			    "updated": "2011-02-18T16:17:42.008+0000",
+			    "created": "2011-02-18T16:17:42.008+0000"
+			  }
+		*/
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/owners/"+ownerKey+"/pools"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String poolId = jsonPool.getString("id");
+			String subscriptionId = jsonPool.getString("subscriptionId");
+			if (fromSubscriptionId.equals(subscriptionId)) {
+				poolIds.add(poolId);
+			}
+		}
+		return poolIds;
+	}
+	
+	public static String findSubscriptionIdFromPoolId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception{
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/pools/"+poolId));
+		return jsonPool.getString("subscriptionId");
+	}
+	
+	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception {
+		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
+		
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/pools/"+poolId));	
+		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
+		// loop through the attributes of this pool looking for the "virt_only" attribute
+		for (int j = 0; j < jsonAttributes.length(); j++) {
+			JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+			String attributeName = jsonAttribute.getString("name");
+			if (attributeName.equals("virt_only")) {
+				virt_only = jsonAttribute.getBoolean("value");
+				break;
+			}
+		}
+		return virt_only;
+	}
+
+	
+	
 	/**
 	 * @param server
 	 * @param port
@@ -521,11 +614,11 @@ public class CandlepinTasks {
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 
-	public JSONObject createPoolUsingCPC(String productId, String ownerId, String quantity) throws JSONException {
-		log.info("Using the ruby client to create_pool productId='"+productId+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
+	public JSONObject createPoolUsingCPC(String productId, String productName, String ownerId, String quantity) throws JSONException {
+		log.info("Using the ruby client to create_pool productId='"+productId+"' productName='"+productName+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
 
 		// call the ruby client
-		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, ownerId, quantity);
+		String command = String.format("cd %s; ./cpc create_pool \"%s\" \"%s\" \"%s\" \"%s\"", serverInstallDir+rubyClientDir, productId, productName, ownerId, quantity);
 		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 		
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));

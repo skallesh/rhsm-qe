@@ -9,6 +9,18 @@
 	</listeners>
 	-->
 	
+	<test name="Help Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="help" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="General Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -20,7 +32,6 @@
 			</run>
 		</groups>
 	</test>
-	
 	
 	<test name="Register Tests">
 		<packages>
@@ -34,6 +45,18 @@
 		</groups>
 	</test>
 		
+	<test name="Proxy Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="proxy" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="Event Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -182,18 +205,6 @@
 		</groups>
 	</test>
 	
-	<test name="Proxy Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="proxy" />
-			</run>
-		</groups>
-	</test>
-	
 	<test name="Certificate Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -214,6 +225,30 @@
 			<run>
 				<include name="setup" />
 				<include name="content" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Virtualization Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="virtualization" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Overconsumption Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="overconsumption" />
 			</run>
 		</groups>
 	</test>

@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tasks;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,6 +47,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
+	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
@@ -54,8 +56,12 @@ public class SubscriptionManagerTasks {
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
+	public String caCertDir						= null; // "/etc/rhsm/ca";
 	
-	public String hostname			= null;
+	public String hostname						= null;	// of the client
+	
+	protected String currentAuthenticator				= null;	// most recent username used during register
+	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
@@ -72,9 +78,10 @@ public class SubscriptionManagerTasks {
 	 */
 	public void initializeFieldsFromConfigFile() {
 		if (RemoteFileTasks.testFileExists(sshCommandRunner, rhsmConfFile)==1) {
-			this.consumerCertDir	= getConfFileParameter(rhsmConfFile, "consumerCertDir");
-			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir");
-			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir");
+			this.consumerCertDir	= getConfFileParameter(rhsmConfFile, "consumerCertDir").replaceFirst("/$", "");
+			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir").replaceFirst("/$", "");
+			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
+			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
 			this.consumerCertFile	= consumerCertDir+"/cert.pem";
 			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
@@ -84,6 +91,48 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * Must be called after initializeFieldsFromConfigFile(...)
+	 * @param repoCaCertUrls
+	 */
+	public void installRepoCaCerts(List<String> repoCaCertUrls) {
+		// transfer copies of CA certs that cane be used when generating yum repo configs 
+		for (String repoCaCertUrl : repoCaCertUrls) {
+			String repoCaCert = Arrays.asList(repoCaCertUrl.split("/")).get(repoCaCertUrl.split("/").length-1);
+			log.info("Copying repo CA cert '"+repoCaCert+"' from "+repoCaCertUrl+"...");
+			//File repoCaCertFile = new File(serverCaCertDir.replaceFirst("/$","/")+Arrays.asList(repoCaCertUrl.split("/|=")).get(repoCaCertUrl.split("/|=").length-1));
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"cd "+caCertDir+"; wget --no-clobber --no-check-certificate \""+repoCaCertUrl+"\"",Integer.valueOf(0),null,"“"+repoCaCert+"” saved|File “"+repoCaCert+"” already there");
+		}
+	}
+	
+	
+	/**
+	 * Must be called after initializeFieldsFromConfigFile(...)
+	 * @param repoCaCertFile
+	 * @param toNewName
+	 * @throws IOException
+	 */
+	public void installRepoCaCert(File repoCaCertFile, String toNewName) throws IOException {
+		if (repoCaCertFile==null) return;
+		if (toNewName==null) toNewName = repoCaCertFile.getName();
+		
+		// transfer the CA Cert File from the candlepin server to the clients so we can test in secure mode
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), repoCaCertFile.getPath(), caCertDir+"/"+toNewName, "0644");
+		updateConfFileParameter(rhsmConfFile, "insecure", "0");
+	}
+	
+	
+	/**
+	 * Must be called after installProductCerts(...)
+	 * @param productCerts
+	 * @throws IOException
+	 */
+	public void installProductCerts(List <File> productCerts) throws IOException {
+		for (File file : productCerts) {
+			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
+		}
+	}
+
 	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine
@@ -360,7 +409,7 @@ public class SubscriptionManagerTasks {
 //		String certificates = sshCommandRunner.getStdout();
 //		return SubscriptionPool.parseCerts(certificates);
 //	}
-	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception {
+	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception  {
 		
 		Map<BigInteger, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<BigInteger, SubscriptionPool>();
 		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
@@ -800,13 +849,13 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
-
+		
 		// assemble the register command
 		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
 		if (type!=null)								command += " --type="+type;
-		if (name!=null)								command += " --name="+name;
+		if (name!=null)								command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\"));
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
 		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
 		if (force!=null && force)					command += " --force";
@@ -838,7 +887,9 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult register(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = register_(username, password, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
-
+		this.currentAuthenticator = null;
+		this.currentAuthenticatorPassword = null;
+		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
@@ -852,9 +903,11 @@ public class SubscriptionManagerTasks {
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		}
 		
-		// assert certificate files are dropped into /etc/pki/consumer
+		// assert certificate files are installed into /etc/pki/consumer
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
+		this.currentAuthenticator = username;
+		this.currentAuthenticatorPassword = password;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -865,7 +918,7 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-		
+
 		return sshCommandResult; // from the register command
 	}
 	
@@ -983,7 +1036,9 @@ public class SubscriptionManagerTasks {
 		
 		// assert that the consumer cert directory is gone
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
-
+		this.currentAuthenticator = null;
+		this.currentAuthenticatorPassword = null;
+		
 		// assert that the entitlement cert directory is gone
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
 
@@ -1116,9 +1171,11 @@ public class SubscriptionManagerTasks {
 		// assert that the consumer cert and key have been removed
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),0, "Consumer key file '"+this.consumerKeyFile+"' does NOT exist after unregister.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
-
-		// assert that all of the entitlement product certs have been removed (Actually, the entitlementCertDir should get removed)
-		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement product certificates have been removed after unregister.");
+		this.currentAuthenticator = null;
+		this.currentAuthenticatorPassword = null;
+		
+		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
+		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
 // FIXME UNCOMMENT SOMETIME IN THE FUTURE.  DOES NOT SEEM TO BE ACCURATE AT THIS TIME 10/25/2010
 //		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, entitlementCertDir),0,"Entitlement Cert directory '"+entitlementCertDir+"' should not exist after unregister.");
 
@@ -1293,6 +1350,14 @@ public class SubscriptionManagerTasks {
 		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
 
+		// if no free entitlements, just return the result
+		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'
+		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
+		
+		// if rule failed, just return the result
+		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
+		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
+		
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
 
@@ -1321,14 +1386,13 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * subscribe to the given SubscriptionPool and return the newly dropped EntitlementCert file to the newly consumed ProductSubscriptions 
+	 * subscribe to the given SubscriptionPool 
 	 * @param pool
-	 * @return
+	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
-	public File subscribeToSubscriptionPool(SubscriptionPool pool) {
+	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
-		File newCertFile = null;
 		log.info("Subscribing to subscription pool: "+pool);
 		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null, null, null, null);
 
@@ -1368,10 +1432,66 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 		} 
 		
-		// when the pool is already subscribe to...
+		// figure out which entitlement cert file has been newly installed into /etc/pki/entitlement after attempting to subscribe to pool
+		/* OLD WAY - THIS ALGORITHM BREAKS DOWN WHEN MODIFIER ENTITLEMENTS ARE IN PLAY
+		File newCertFile = null;
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		for (File file : afterEntitlementCertFiles) {
+			if (!beforeEntitlementCertFiles.contains(file)) {
+				newCertFile = file; break;
+			}
+		}
+		*/
+		/* VALID BUT INEFFICIENT
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		File newCertFile = null;
+		Map<BigInteger, SubscriptionPool> map = new HashMap<BigInteger, SubscriptionPool>();
+		try {
+			map = getCurrentSerialMapToSubscriptionPools(this.currentAuthenticator,this.currentAuthenticatorPassword);
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+		for (BigInteger serial: map.keySet()) {
+			if (map.get(serial).poolId.equals(pool.poolId)) {
+				newCertFile = new File(this.entitlementCertDir+"/"+serial+".pem");
+				break;
+			}
+		}
+		*/
+		File newCertFile = null;
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		for (File entitlementCertFile : afterEntitlementCertFiles) {
+			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
+				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+				try {
+					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,entitlementCert.id);
+					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
+					if (jsonPool.getString("id").equals(pool.poolId)) {
+						newCertFile = entitlementCertFile; break;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					Assert.fail(e.getMessage());
+				}
+			}
+		}
+		
+		// when the pool is already subscribed to...
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) {
 			
+			// assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
+			/*Assert.assertNull(newCertFile,
+					"A new entitlement certificate has NOT been installed after attempting to subscribe to an already subscribed to pool: "+pool);
+			*/
+			Assert.assertEquals(beforeEntitlementCertFiles.size(), afterEntitlementCertFiles.size(),
+					"The existing entitlement certificate count remains unchanged after attempting to subscribe to an already subscribed to pool: "+pool);
+
 			// find the existing entitlement cert file corresponding to the already subscribed pool
+			/* ALREADY FOUND USING ALGORITHM ABOVE 
 			EntitlementCert entitlementCert = null;
 			for (File thisEntitlementCertFile : getCurrentEntitlementCertFiles()) {
 				EntitlementCert thisEntitlementCert = getEntitlementCertFromEntitlementCertFile(thisEntitlementCertFile);
@@ -1380,36 +1500,50 @@ public class SubscriptionManagerTasks {
 					break;
 				}
 			}
-			
 			Assert.assertNotNull(entitlementCert, isSubpool?
 					"Found an already existing Entitlement Cert whose personal productId matches the system productId from the subscription pool: "+pool:
 					"Found an already existing Entitlement Cert whose productId matches the productId from the subscription pool: "+pool);
 			newCertFile = getEntitlementCertFileFromEntitlementCert(entitlementCert); // not really new, just already existing
-		
-			// assert that NO new entitlement cert file has been dropped in /etc/pki/entitlement
-			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
-			Assert.assertEquals(afterEntitlementCertFiles.size(),beforeEntitlementCertFiles.size(),
-					"The entitlement certificate file count has not changed (from "+beforeEntitlementCertFiles.size()+" to "+afterEntitlementCertFiles.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
-
+			*/
+			
 			// assert that consumed ProductSubscriptions has NOT changed
 			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
 					"The list of currently consumed product subscriptions has not changed (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+") since the productId of the pool we are trying to subscribe to is already consumed.");
 
-		// otherwise, when the pool is NOT already subscribe to...
+		// when no free entitlements exist...
+		} else if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) {
+			
+			// assert that the depleted pool Quantity is zero
+			SubscriptionPool depletedPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, getCurrentlyAllAvailableSubscriptionPools());
+			Assert.assertNotNull(depletedPool,
+					"Found the depleted pool amongst --all --available after having consumed all of its available entitlements: ");
+			Assert.assertEquals(depletedPool.quantity, "0",
+					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
+
+			//  assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
+			Assert.assertNull(newCertFile,
+					"A new entitlement certificate has NOT been installed after attempting to subscribe to depleted pool: "+depletedPool);
+			Assert.assertEquals(beforeEntitlementCertFiles.size(), afterEntitlementCertFiles.size(),
+					"The existing entitlement certificate count remains unchanged after attempting to subscribe to depleted pool: "+depletedPool);
+
+			
+		// otherwise, the pool is NOT already subscribe to...
 		} else {
 	
-			// assert that a new entitlement cert file has been dropped in /etc/pki/entitlement
-			List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t"); // sorted with the newest at index 0
-			newCertFile = afterEntitlementCertFiles.get(0);
-			Assert.assertTrue(afterEntitlementCertFiles.size()>0 && !beforeEntitlementCertFiles.contains(newCertFile),
-					"A new entitlement certificate has been dropped after subscribing to pool: "+pool);
-	
-			// assert that only ONE new entitlement cert file has been dropped in /etc/pki/entitlement
+			// assert that only ONE new entitlement cert file has been installed in /etc/pki/entitlement
 			// https://bugzilla.redhat.com/show_bug.cgi?id=640338
 			Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()+1,
-					"Only ONE new entitlement certificate (got '"+String.valueOf(afterEntitlementCertFiles.size()-beforeEntitlementCertFiles.size())+"' new certs; total is now '"+afterEntitlementCertFiles.size()+"') has been dropped after subscribing to pool: "+pool);
-	
+					"Only ONE new entitlement certificate has been installed (count was '"+beforeEntitlementCertFiles.size()+"'; is now '"+afterEntitlementCertFiles.size()+"') after subscribing to pool: "+pool);
+
+			// assert that the other cert files remain unchanged
+			/* CANNOT MAKE THIS ASSERT/ASSUMPTION ANYMORE BECAUSE ADDITION OF AN ENTITLEMENT CAN AFFECT A MODIFIER PRODUCT THAT PROVIDES EXTRA CONTENT FOR THIS PRODUCT (A MODIFIER PRODUCT IS ALSO CALLED EUS) 2/21/2011 jsefler
+			if (!afterEntitlementCertFiles.remove(newCertFile)) Assert.fail("Failed to remove certFile '"+newCertFile+"' from list.  This could be an automation logic error.");
+			Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After subscribing to pool id '"+pool+"', the other entitlement cert serials remain unchanged");
+			*/
+			
+			// assert the new entitlement cert file has been installed in /etc/pki/entitlement
+			Assert.assertNotNull(newCertFile, "A new entitlement certificate has been installed after subscribing to pool: "+pool);
 			log.info("The new entitlement certificate file is: "+newCertFile);
 			
 			// assert that the productId from the pool matches the entitlement productId
@@ -1459,7 +1593,7 @@ public class SubscriptionManagerTasks {
 		*/
 	}
 	
-	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/){
+	public File subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool pool/*, boolean withPoolID*/) {
 		return subscribeToSubscriptionPool(pool);
 		
 		/* jsefler 11/22/2010
@@ -1486,7 +1620,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * Individually subscribe to each of the currently available subscription pools one at a time
+	 * Individually subscribe to each of the currently available subscription pools one at a time 
 	 */
 	public void subscribeToEachOfTheCurrentlyAvailableSubscriptionPools() {
 
@@ -1622,14 +1756,16 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * unsubscribe from entitlement product certificate serial and assert results
+	 * unsubscribe from entitlement certificate serial and assert results
 	 * @param serialNumber
 	 * @return - false when no unsubscribe took place
 	 */
 	public boolean unsubscribeFromSerialNumber(BigInteger serialNumber) {
-		String certFile = entitlementCertDir+"/"+serialNumber+".pem";
-		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==1? true:false;
-		
+		String certFilePath = entitlementCertDir+"/"+serialNumber+".pem";
+		File certFile = new File(certFilePath);
+		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==1? true:false;
+		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
+
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
 		SSHCommandResult result = unsubscribe_(Boolean.FALSE, serialNumber, null, null, null);
 		
@@ -1648,14 +1784,24 @@ public class SubscriptionManagerTasks {
 						
 			Assert.assertContainsMatch(result.getStderr(), "Entitlement Certificate with serial number "+regexForSerialNumber+" could not be found.",
 				"Entitlement Certificate with serial "+serialNumber+" could not be removed since it was not found.");
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFile+") does not exist.");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "The unsubscribe should fail when its corresponding entitlement cert file ("+certFilePath+") does not exist.");
 			return false;
 		}
 		
 		// assert the certFileExists is removed
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFile)==0,
-				"Entitlement Certificate with serial "+serialNumber+" ("+certFile+") has been removed.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
+				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
 
+		// assert that only ONE entitlement cert file was removed
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()-1,
+				"Only ONE entitlement certificate has been removed (count was '"+beforeEntitlementCertFiles.size()+"'; is now '"+afterEntitlementCertFiles.size()+"') after unsubscribing from serial: "+serialNumber);
+
+		// assert that the other cert files remain unchanged
+		/* CANNOT MAKE THIS ASSERT/ASSUMPTION ANYMORE BECAUSE REMOVAL OF AN ENTITLEMENT CAN AFFECT A MODIFIER PRODUCT THAT PROVIDES EXTRA CONTENT FOR THIS SERIAL (A MODIFIER PRODUCT IS ALSO CALLED EUS) 2/21/2011 jsefler
+		if (!beforeEntitlementCertFiles.remove(certFile)) Assert.fail("Failed to remove certFile '"+certFile+"' from list.  This could be an automation logic error.");
+		Assert.assertEquals(afterEntitlementCertFiles,beforeEntitlementCertFiles,"After unsubscribing from serial '"+serialNumber+"', the other entitlement cert serials remain unchanged");
+		*/
 		return true;
 	}
 	
@@ -1687,9 +1833,9 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(listConsumedProductSubscriptions().getStdout().trim(),
 				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
-		// assert that there are no entitlement product cert files
+		// assert that there are no entitlement cert files
 		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name *.pem | grep -v key.pem").getStdout().equals(""),
-				"No entitlement product cert files exist after unsubscribing from all subscription pools.");
+				"No entitlement cert files exist after unsubscribing from all subscription pools.");
 
 		// assert that the yum redhat repo file is gone
 		/* bad assert...  the repo file is present but empty
