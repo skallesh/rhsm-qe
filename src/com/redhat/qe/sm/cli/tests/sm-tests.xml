@@ -56,7 +56,7 @@
 			</run>
 		</groups>
 	</test>
-<!-- TEMPORARILY COMMENTING OUT TO VERIFY JAVA HEAP ERROR	
+
 	<test name="Event Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -68,7 +68,7 @@
 			</run>
 		</groups>
 	</test>
--->
+
 	<test name="Identity Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
