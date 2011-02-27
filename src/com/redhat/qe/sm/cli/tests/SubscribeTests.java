@@ -25,6 +25,7 @@ import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -111,18 +112,44 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				//FIXME		Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
 			}
 			
-			// assert whether or not the product is installed			
-			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
-			Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
+			// find the corresponding productNamespace from the entitlementCert
+			ProductNamespace productNamespace = null;
+			for (ProductNamespace pn : entitlementCert.productNamespaces) {
+				if (pn.name.equals(productName)) productNamespace = pn;
+			}
+			
+			// assert the installed status of the corresponding product
+			if (entitlementCert.productNamespaces.isEmpty()) {
+				log.warning("This product '"+productId+"' ("+productName+") does not appear to grant entitlement to any client side content.  This must be a server side management add-on product. Asserting as such...");
 
-			// assert the status of the installed products
-			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
-			if (productCert!=null) {
-				Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
-				Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
-				Assert.assertEquals(installedProduct.subscription, productSubscription.serialNumber, "Installed Product '"+productName+"' subscription matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
+				Assert.assertEquals(entitlementCert.contentNamespaces.size(),0,
+						"When there are no productNamespaces in the entitlementCert, there should not be any contentNamespaces.");
+
+				// when there is no corresponding product, then there better not be an installed product status by the same product name
+				Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts()),
+						"Should not find any installed product status matching a server side management add-on productName: "+ productName);
+
+				// when there is no corresponding product, then there better not be an installed product cert by the same product name
+				Assert.assertNull(ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts),
+						"Should not find any installed product certs matching a server side management add-on productName: "+ productName);
+
 			} else {
-				Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
+				Assert.assertNotNull(productNamespace, "The new entitlement cert's product namespace corresponding to this expected ProductSubscription with ProductName '"+productName+"' was found.");
+
+				// assert whether or not the product is installed			
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
+	
+				// assert the status of the installed product
+				//ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
+				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("id", productNamespace.hash, currentlyInstalledProductCerts);
+				if (productCert!=null) {
+					Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
+					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
+					Assert.assertEquals(installedProduct.subscription, productSubscription.serialNumber, "Installed Product '"+productName+"' subscription matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
+				} else {
+					Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
+				}
 			}
 		}
 	}
@@ -498,8 +525,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyInstalledProductCertWasAutoSubscribed_Test(ProductCert productCert) throws JSONException {
 		// get the expected subscriptionPoolProductIdData
+		String sm_debug_dataProviders_minimize = getProperty("sm.debug.dataProviders.minimize","$NULL");
+		System.setProperty("sm.debug.dataProviders.minimize","false");
 		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
-
+		System.setProperty("sm.debug.dataProviders.minimize",sm_debug_dataProviders_minimize);
+		
 		// search the subscriptionPoolProductData for a bundledProduct matching the productCert's productName
 		String subscriptionPoolProductId = null;
 		for (List<Object> row : subscriptionPoolProductData) {
@@ -519,27 +549,17 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// determine what autosubscribe results to assert for this installed productCert 
 		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productCert.productName, clienttasks.getCurrentlyInstalledProducts());
-		if (subscriptionPoolProductId!=null) {
-			// yes - this productCert should have been autosubscribed
-			
-			// assert the installed product status is Subscribed
-			Assert.assertEquals(installedProduct.status,"Subscribed",
-					"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is now subscribed.");
 
-			// assert the sshCommandResultOfAutosubscribe shows the productCert was autosubscribed
-			Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"),
-					"As expected, ProductName '"+productCert.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		} else {
-			// no - this productCert should not have been autosubscribed
-			
-			// assert the installed product status is Not Subscribed
-			Assert.assertEquals(installedProduct.status,"Not Subscribed",
-					"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is NOT subscribed.");
+		// when subscriptionPoolProductId!=null, then this productCert should have been autosubscribed
+		String expectedSubscribeStatus = (subscriptionPoolProductId!=null)? "Subscribed":"Not Subscribed";
+		
+		// assert the installed product status matches the expected status 
+		Assert.assertEquals(installedProduct.status,expectedSubscribeStatus,
+				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is now "+expectedSubscribeStatus.toLowerCase()+".");
 
-			// assert the sshCommandResultOfAutosubscribe does NOT show the productCert was autosubscribed
-			Assert.assertContainsNoMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"),
-					"As expected, ProductName '"+productCert.productName+"' was NOT reported as autosubscribed in the output from register with autotosubscribe.");
-		}
+		// assert that the sshCommandResultOfAutosubscribe showed the expected Subscribe Status for this productCert
+		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
+				"As expected, ProductName '"+productCert.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 	}
 	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
 	SSHCommandResult sshCommandResultFromAutosubscribe;
