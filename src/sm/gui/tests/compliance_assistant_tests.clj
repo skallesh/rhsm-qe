@@ -59,8 +59,13 @@
   (tasks/wait-for-progress-bar)
   (do-to-all-rows-in :compliance-product-view
       (fn [product] (check-product product)))
-)
-        
+  (let [subscription-list (get-table-elements :compliance-subscription-view 0)]
+    (doseq [item subscription-list]
+      (with-handlers  [(ignore :subscription-not-available)] 
+        (tasks/compliance-subscribe item)
+        (do-to-all-rows-in :compliance-product-view
+          (fn [product] (check-product product)))))))
+
 
         
 (gen-class-testng)

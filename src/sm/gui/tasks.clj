@@ -179,6 +179,18 @@
 
 (defn compliance? []
   (= 1 (ui guiexist :main-window "All products are in compliance*")))  
+  
+(defn compliance-subscribe [s]
+  (if-not (ui rowexist? :compliance-subscription-view s)
+    (raise {:type :subscription-not-available
+            :name s
+            :msg (str "Not found in 'Compliance Assistant Subscriptions':" s)}))
+  (ui selectrow :compliance-subscription-view s)
+  (ui click :compliance-subscribe)
+  (checkforerror)
+  (wait-for-progress-bar))  
+
+
 
 (comment (defn get-all-facts []
    (ui click :view-system-facts)

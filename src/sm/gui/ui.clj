@@ -103,6 +103,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :different-date "On a different date:"
          :date-entry "date-entry"
          :update "Update"
+         :compliance-subscribe "subscribe button"
          :compliance-product-view "Uncompliant Product List"
          :compliance-subscription-view "Compliance Subscription List"}) ))
 
