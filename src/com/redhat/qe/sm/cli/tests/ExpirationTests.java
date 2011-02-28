@@ -71,6 +71,14 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="Verify granted entitlements are added to the certifiate revocation list after the subscription expires",
+			groups={}, dependsOnGroups={},
+			enabled=false) // TODO Implement VerifyGrantedEntitlementsAreAddedToCertificateRevocationListAfterSubscriptionExpires_Test()
+	public void VerifyGrantedEntitlementsAreAddedToCertificateRevocationListAfterSubscriptionExpires_Test() throws Exception{
+		
+	}
+	
+	
 	@Test(	description="assert that a soon to expire pool is removed from availablity after it expires",
 			groups={}, dependsOnGroups={},
 			enabled=true)

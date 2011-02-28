@@ -58,7 +58,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
-	public void ExpectedCommandLineOptions_Test(String command, String stdoutRegex, List<String> expectedOptions) {
+	public void ExpectedCommandLineOptions_Test(Object meta, String command, String stdoutRegex, List<String> expectedOptions) {
 		log.info("Testing subscription-manager-cli command line options '"+command+"' and verifying that only the expected options are available.");
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
 		
@@ -125,8 +125,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" [options] MODULENAME --help";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, modulesRegex, modules}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
 		}
 		
 		// MODULE: activate
@@ -144,8 +144,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, activateOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, activateOptions}));
 		}
 		
 		// MODULE: clean
@@ -161,8 +161,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, cleanOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, cleanOptions}));
 		}
 		
 		// MODULE: facts
@@ -180,8 +180,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, factsOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, factsOptions}));
 		}
 		
 		// MODULE: identity
@@ -199,8 +199,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, identityOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, identityOptions}));
 		}
 		
 		// MODULE: list
@@ -221,8 +221,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, listOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, listOptions}));
 		}
 		
 		// MODULE: refresh
@@ -237,8 +237,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, refreshOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, refreshOptions}));
 		}
 		
 		// MODULE: register
@@ -261,8 +261,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ new BlockedByBzBug("628589", smHelpCommand, optionsRegex, registerOptions)}));
+			ll.add(Arrays.asList(new Object[]{null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, registerOptions}));
 		}
 		
 //		// MODULE: reregister
@@ -298,8 +298,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, subscribeOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, subscribeOptions}));
 		}
 		
 		// MODULE: unregister
@@ -315,8 +315,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unregisterOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unregisterOptions}));
 		}
 		
 		// MODULE: unsubscribe
@@ -334,8 +334,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, unsubscribeOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unsubscribeOptions}));
 		}
 		
 		
