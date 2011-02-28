@@ -498,7 +498,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterWithProxyConfigurationsCommentedOutOfRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithProxyConfigurationsCommentedOutOfRhsmConfig_Test(String[] proxyConfigs) {
+	public void RegisterWithProxyConfigurationsCommentedOutOfRhsmConfig_Test(Object meta, String[] proxyConfigs) {
 		
 		// comment out each of the config proxy parameters
 		for (String proxyConfig : proxyConfigs) clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, proxyConfig);
@@ -568,13 +568,13 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		// String[] proxyConfigs
 
-		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_hostname"}  }));
-		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_port"}  }));
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("667829", (Object)new String[]{"proxy_hostname", "proxy_port"} ) }));
-		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_user"}  }));
-		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_password"}  }));
-		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_user", "proxy_password"}  }));
-		ll.add(Arrays.asList(new Object[]{	new String[]{"proxy_hostname", "proxy_port", "proxy_user", "proxy_password"}  }));
+		ll.add(Arrays.asList(new Object[] {null,	new String[]{"proxy_hostname"}  }));
+		ll.add(Arrays.asList(new Object[] {null,	new String[]{"proxy_port"}  }));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("667829"), (Object)new String[]{"proxy_hostname", "proxy_port"} }));
+		ll.add(Arrays.asList(new Object[] {null,	new String[]{"proxy_user"}  }));
+		ll.add(Arrays.asList(new Object[] {null,	new String[]{"proxy_password"}  }));
+		ll.add(Arrays.asList(new Object[] {null,	new String[]{"proxy_user", "proxy_password"}  }));
+		ll.add(Arrays.asList(new Object[] {null,	new String[]{"proxy_hostname", "proxy_port", "proxy_user", "proxy_password"}  }));
 
 
 		return ll;
