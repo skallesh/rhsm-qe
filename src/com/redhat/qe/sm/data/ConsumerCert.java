@@ -21,7 +21,7 @@ public class ConsumerCert extends AbstractCommandLineData {
 
 	// abstraction fields
 	public String consumerid;
-	public String username;
+	public String name;				// value of register --name option
 	public String issuer;
 	public String serialNumber;
 	public Calendar validityNotBefore;
@@ -41,7 +41,7 @@ public class ConsumerCert extends AbstractCommandLineData {
 		
 		String string = "";
 		if (consumerid != null)			string += String.format(" %s='%s'", "consumerid",consumerid);
-		if (username != null)			string += String.format(" %s='%s'", "username",username);
+		if (name != null)				string += String.format(" %s='%s'", "name",name);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
@@ -65,7 +65,7 @@ public class ConsumerCert extends AbstractCommandLineData {
 	public boolean equals(Object obj){
 
 		return	((ConsumerCert)obj).consumerid.equals(this.consumerid) &&
-				((ConsumerCert)obj).username.equals(this.username) &&
+				((ConsumerCert)obj).name.equals(this.name) &&
 				((ConsumerCert)obj).issuer.equals(this.issuer) &&
 				((ConsumerCert)obj).serialNumber.equals(this.serialNumber) &&
 				((ConsumerCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
@@ -149,7 +149,7 @@ Certificate:
 		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("consumerid",			"Subject: CN=\\s*(.*)");
-		regexes.put("username",				"X509v3 Subject Alternative Name:[\\s\\cM]*DirName:/CN=\\s*(.*)");
+		regexes.put("name",					"X509v3 Subject Alternative Name:[\\s\\cM]*DirName:/CN=\\s*(.*)");
 		regexes.put("issuer",				"Issuer:\\s*(.*)");
 		regexes.put("serialNumber",			"Serial Number:\\s*([\\d\\w:]+)");
 		regexes.put("validityNotBefore",	"Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");

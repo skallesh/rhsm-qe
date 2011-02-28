@@ -279,9 +279,15 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult sshCommandResult = clienttasks.register_(clientusername,clientpassword,null,name,null,null, null, null, null, null);
 		
 		// assert the sshCommandResult here
-		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" option:");
-		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" option:");
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" option:");
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name=\""+name+"\" option:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name=\""+name+"\" option:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name=\""+name+"\" option:");
+		
+		// assert that the name is happily placed in the consumer cert
+		if (expectedExitCode!=null && expectedExitCode==0) {
+			ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+			Assert.assertEquals(consumerCert.name, name, "");
+		}
 	}
 	
 	
@@ -519,12 +525,41 @@ Expected Results:
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
+	
+	@Test(	description="User is warned when already registered using RHN Classic",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=75972)	
+	public void InteroperabilityRegister_Test() {
+
+		final String interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
+			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
+			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+
+		log.info("Simulating registration by RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+		
+		log.info("Attempt to register while already registered via RHN Classic...");
+		SSHCommandResult result = clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
+		Assert.assertContainsMatch(result.getStdout(),"^"+interoperabilityWarningMessage, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
+
+		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
+		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==0, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
+		result = clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
+		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessage, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
+	}
+	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=668814
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=669395
-
 
 
 	
@@ -535,21 +570,24 @@ Expected Results:
 	@AfterClass (alwaysRun=true)
 	@AfterGroups(value={"RegisterWithAutosubscribe_Test"},alwaysRun=true)
 	public void cleaupAfterClass() {
+		if (clienttasks==null) return;
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
+		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
 	}
 	final String tmpProductCertDir = "/tmp/productCertDir";
 
 	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
+		if (clienttasks==null) return;
 		clienttasks.unregister_(null, null, null);
 	}
 	@AfterGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
 	public void generateRegistrationReportTableAfterRegisterWithUsernameAndPassword_Test() {
 		
 		// now dump out the list of userData to a file
-	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the workspace directory on hudson
+	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
 	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
 	    try {
 	    	Writer output = new BufferedWriter(new FileWriter(file));
@@ -614,6 +652,10 @@ Expected Results:
 	}
 	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		
@@ -642,6 +684,10 @@ Expected Results:
 	}
 	protected List<List<Object>> getInvalidRegistrationWithLocalizedStringsAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
@@ -720,26 +766,64 @@ Expected Results:
 	}
 	protected List<List<Object>> getRegisterWithNameDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		String alphanumericOnlyStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";
+		
+		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
+		       invalidNameStderr = "System name cannot contain most special characters.";	// bugzilla 677405
 		String maxCharsStderr = "Name of the consumer should be shorter than 250 characters\\.";
 		String name;
 
-		// valid names
-		name = "RegisterWithNameTest";								ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
-		name = "periods...dashes---underscores___alphanumerics123";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
-		name = "249chars__12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
-																	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+name,	null}));
+		// valid names according to bugzilla 672233
+		name = "periods...dashes---underscores___alphanumerics123";
+										ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
+		name = "249_characters_678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+										ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
+
+		// the tolerable characters has increased due to bugzilla 677405
+		// https://bugzilla.redhat.com/show_bug.cgi?id=677405#c1
+		name = "@at@";					ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
+		name = "?questionMark?";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\?questionMark\\?",	null}));
+		name = "[openingBracket[";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\[openingBracket\\[",	null}));
+		name = "]closingBracket]";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\]closingBracket\\]",	null}));
+		name = "{openingBrace{";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\{openingBrace\\{",	null}));
+		name = "}closingBrace}";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\}closingBrace\\}",	null}));
+		name = "(openingParentesis(";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\(openingParentesis\\(",	null}));
+		name = ")closingParentesis)";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\)closingParentesis\\)",	null}));
+		
+		// invalid names
+		// Invalid Chars: (") ($) (^) (<) (>) (|) (+) (%) (/) (;) (:) (,) (\) (*) (=) (~)  // from https://bugzilla.redhat.com/show_bug.cgi?id=677405#c1
+		name = "\"doubleQuotes\"";		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "$dollarSign$";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "^caret^";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "<lessThan<";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ">greaterThan>";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "|verticalBar|";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "+plus+";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "%percent%";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "/slash/";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ";semicolon;";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ":colon:";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = ",comma,";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "\\backslash\\";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "*asterisk*";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "=equal=";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "~tilde~";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
 	
-		// invalid non-alphanumeric names
-		for (String nonAlphanumericName : new String[]{"pound#", "comma,", "\"space bar\"", "exclamationPoint!", "asterisk*"}) {
-			ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr, new BlockedByBzBug("672233")}));
-			//ll.add(Arrays.asList(new Object[]{	nonAlphanumericName,	Integer.valueOf(255),	null,	alphanumericOnlyStderr}));
-		}
+		// FIXME These invalid names may change depending on the outcome of bugzilla 677405
+		name = "#pound#";				ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "s p a c e s";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "!exclamationPoint!";	ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		name = "'singleQuote'";			ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		// http://www.ascii.cl/htmlcodes.htm
+		// TODO
+		//name = "é";						ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		//name = "ë";						ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+		//name = "â";						ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	invalidNameStderr}));
+
+
 
 		// names that are too long (>=250 chars)
-		name = "250chars__123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
-		ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr, new BlockedByBzBug("672233")}));
-		//ll.add(Arrays.asList(new Object[]{	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
+		name = "250_characters_6789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+										ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("672233",	name,	Integer.valueOf(255),	null,	maxCharsStderr)}));
 
 
 		return ll;

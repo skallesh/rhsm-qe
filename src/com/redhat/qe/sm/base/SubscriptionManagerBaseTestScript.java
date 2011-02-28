@@ -86,7 +86,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String dbUsername				= getProperty("sm.server.db.username","");
 	public String dbPassword				= getProperty("sm.server.db.password","");
 
-	public List<String> rpmUrls			= null;
+	protected List<String> rpmUrls			= null;
+	protected List<String> repoCaCertUrls	= null;
 
 	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray personSubscriptionPoolProductData = null;
@@ -98,7 +99,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public SubscriptionManagerBaseTestScript() {
 		super();
 		
-		if (getProperty("sm.rpm.urls", "").equals("")) rpmUrls = new ArrayList<String>(); else rpmUrls = Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(", *"));
+		if (getProperty("sm.rpm.urls", "").equals("")) rpmUrls = new ArrayList<String>(); else rpmUrls = Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
+		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals("")) repoCaCertUrls = new ArrayList<String>(); else repoCaCertUrls = Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 		
 		// rhsm.conf [server] configurations
 		serverHostname				= getProperty("sm.server.hostname","");

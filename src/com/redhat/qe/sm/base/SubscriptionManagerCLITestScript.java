@@ -6,8 +6,10 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
@@ -28,6 +30,7 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
+import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
  * @author ssalevan
@@ -56,21 +59,22 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	@BeforeSuite(groups={"setup"},description="subscription manager set up")
 	public void setupBeforeSuite() throws IOException {
-	
+		if (isSetupBeforeSuiteComplete) return;
+		
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
 		client1tasks = clienttasks;
+		File serverCaCertFile = null;
+		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
 		// will we be connecting to the candlepin server?
 		if (!serverHostname.equals("") && isServerOnPremises) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
-
 		} else {
 			log.info("Assuming the server is already setup and running.");
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises);
-
 		}
 		
 		// will we be testing multiple clients?
@@ -91,10 +95,26 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.deploy(serverHostname, serverImportDir,serverBranch);
 
 			// also connect to the candlepin server database
-			dbConnection = connectToDatabase();  // do this after the call to deploy since it will restart postgresql
+			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
+			
+			// fetch the candlepin CA Cert
+			log.info("Fetching Candlepin CA cert...");
+			serverCaCertFile = new File(getProperty("automation.dir", "/tmp")+"/"+servertasks.candlepinCACertFile.getName());
+			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
+			
+			// fetch the generated Product Certs
+			log.info("Fetching the generated product certs...");
+			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+				File remoteFile = new File(remoteFileAsString);
+				File localFile = new File(getProperty("automation.dir", "/tmp")+"/"+remoteFile.getName());
+				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+				generatedProductCertFiles.add(localFile);
+			}
+
 		}
 		
-		// in the event that the clients are already registered from a prior run, unregister them
+		// if clients are already registered from a prior run, unregister them
 		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
@@ -124,33 +144,47 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 			smt.initializeFieldsFromConfigFile();
 			smt.removeAllCerts(true,true);
+			smt.installRepoCaCerts(repoCaCertUrls);
+			
+			// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
+			log.info("Copying Candlepin cert onto client to enable certificate validation...");
+			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+".pem");
+			
+			// transfer copies of all the generated product certs from the candlepin server to the clients
+			log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
+			smt.installProductCerts(generatedProductCertFiles);
 		}
 		
-		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
-		if (server!=null && servertasks.isOnPremises) {
-			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
-			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
-			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
-
-								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
-			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
-		}
+//		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
+//		if (server!=null && servertasks.isOnPremises) {
+//			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
+//			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
+//			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
+//			
+//			for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
+//				if (smt==null) continue;
+//				smt.installRepoCaCert(localFile, serverHostname);
+//			}
+//
+//								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+//								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
+//			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
+//			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
+//		}
 		
-		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
-		if (server!=null && servertasks.isOnPremises) {
-			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
-			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
-				File remoteFile = new File(remoteFileAsString);
-				File localFile = new File("/tmp/"+remoteFile.getName());
-				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
-				
-									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
-				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
-			}
-		}
+//		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
+//		if (server!=null && servertasks.isOnPremises) {
+//			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
+//			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+//			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+//				File remoteFile = new File(remoteFileAsString);
+//				File localFile = new File("/tmp/"+remoteFile.getName());
+//				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+//				
+//									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
+//				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
+//			}
+//		}
 		
 		
 		log.info("Installed version of candlepin...");
@@ -194,6 +228,33 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// Protected Methods ***********************************************************************
 	
 	protected Connection connectToDatabase() {
+		/* Notes on setting up the db for a connection:
+		 * # yum install postgresql-server
+		 * 
+		 * # service postgresql initdb 
+		 * 
+		 * # su - postgres
+		 * $ psql
+		 * # CREATE USER candlepin WITH PASSWORD 'candlepin';
+		 * # ALTER user candlepin CREATEDB;
+		 * [Ctrl-D]
+		 * $ createdb -O candlepin candlepin
+		 * $ exit
+		 * 
+		 * # vi /var/lib/pgsql/data/pg_hba.conf
+		 * # TYPE  DATABASE    USER        CIDR-ADDRESS          METHOD
+		 * local   all         all                               trust
+		 * host    all         all         127.0.0.1/32          trust
+		 *
+		 * # vi /var/lib/pgsql/data/postgresql.conf
+		 * listen_addresses = '*'
+		 * 
+		 * # netstat -lpn | grep 5432
+		 * tcp        0      0 0.0.0.0:5432                0.0.0.0:*                   LISTEN      24935/postmaster    
+		 * tcp        0      0 :::5432                     :::*                        LISTEN      24935/postmaster    
+		 * unix  2      [ ACC ]     STREAM     LISTENING     1717127 24935/postmaster    /tmp/.s.PGSQL.5432
+		 * 
+		 */
 		Connection dbConnection = null;
 		try { 
 			// Load the JDBC driver 
@@ -363,7 +424,62 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-
+	/**
+	 * On the connected candlepin server database, update the startdate and enddate in the cp_subscription table on rows where the pool id is a match.
+	 * @param pool
+	 * @param startDate
+	 * @param endDate
+	 * @throws SQLException 
+	 */
+	protected void updateSubscriptionPoolDatesOnDatabase(SubscriptionPool pool, Calendar startDate, Calendar endDate) throws SQLException {
+		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+		String updateSubscriptionPoolEndDateSql = "";
+		String updateSubscriptionPoolStartDateSql = "";
+		if (endDate!=null) {
+			updateSubscriptionPoolEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+		}
+		if (startDate!=null) {
+			updateSubscriptionPoolStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id=(select pool.subscriptionid from cp_pool pool where pool.id='"+pool.poolId+"');";
+		}
+		
+		Statement sql = dbConnection.createStatement();
+		if (endDate!=null) {
+			log.info("About to change the endDate in the database for this subscription pool: "+pool);
+			log.fine("Executing SQL: "+updateSubscriptionPoolEndDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolEndDateSql);
+		}
+		if (startDate!=null) {
+			log.info("About to change the startDate in the database for this subscription pool: "+pool);
+			log.fine("Executing SQL: "+updateSubscriptionPoolStartDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionPoolStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionPoolStartDateSql);
+		}
+		sql.close();
+	}
+	
+	protected void updateSubscriptionDatesOnDatabase(String subscriptionId, Calendar startDate, Calendar endDate) throws SQLException {
+		//DateFormat dateFormat = new SimpleDateFormat(CandlepinAbstraction.dateFormat);
+		String updateSubscriptionEndDateSql = "";
+		String updateSubscriptionStartDateSql = "";
+		if (endDate!=null) {
+			updateSubscriptionEndDateSql = "update cp_subscription set enddate='"+AbstractCommandLineData.formatDateString(endDate)+"' where id='"+subscriptionId+"';";
+		}
+		if (startDate!=null) {
+			updateSubscriptionStartDateSql = "update cp_subscription set startdate='"+AbstractCommandLineData.formatDateString(startDate)+"' where id='"+subscriptionId+"';";
+		}
+		
+		Statement sql = dbConnection.createStatement();
+		if (endDate!=null) {
+			log.info("About to change the endDate in the database for this subscription id: "+subscriptionId);
+			log.fine("Executing SQL: "+updateSubscriptionEndDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionEndDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionEndDateSql);
+		}
+		if (startDate!=null) {
+			log.info("About to change the startDate in the database for this subscription id: "+subscriptionId);
+			log.fine("Executing SQL: "+updateSubscriptionStartDateSql);
+			Assert.assertEquals(sql.executeUpdate(updateSubscriptionStartDateSql), 1, "Updated one row of the cp_subscription table with sql: "+updateSubscriptionStartDateSql);
+		}
+		sql.close();
+	}
 	
 	// Data Providers ***********************************************************************
 

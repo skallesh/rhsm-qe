@@ -51,6 +51,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool cl1SubscriptionPool;
 		SubscriptionPool cl2SubscriptionPool;
 		
+		/* THE FOLLOWING BLOCK OF LOGIC WAS NEEDED PRIOR TO DESIGN CHANGE AS DETAILED IN https://bugzilla.redhat.com/show_bug.cgi?id=663455
 		// Before proceeding with this test, determine if the productId provided by this subscription pool has already been entitled.
 		// This will happen when more than one pool has been created under a different contract/serial so as to increase the
 		// total quantity of entitlements available to the consumers.
@@ -62,6 +63,7 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(cl2SubscriptionPool.quantity, pool.quantity, "The quantity of entitlements from subscription pool "+pool+" available to consumer2 ("+client2username+") remains unchanged.");
 			return; // test complete
 		}
+		*/
 		
 		// assert that the subscriptionPool is available to consumer 1
 		Assert.assertTrue(cl1SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer1 ("+client1username+").");
