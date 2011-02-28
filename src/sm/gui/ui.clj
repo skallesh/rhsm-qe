@@ -32,7 +32,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		      :progress-dialog "Progress Dialog"
 		      :contract-selection-dialog "Contract Selection"
           :proxy-config-dialog "Advanced Network Configuration"
-          :compliance-assistant-dialog "Subscription Manager - Compliance Assistant"
+          :compliance-assistant-dialog "Compliance Assistant"
           :information-dialog "Information"
           :warning-dialog "Warning"}))
 
@@ -99,8 +99,12 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
         {:warn-ok "OK"
          :warn-cancel "Cancel"})
       (define-elements (windows :compliance-assistant-dialog)
-        {:date-entry "date-entry"
-         :update "Update"}) ))
+        {:first-date "*first date of non-compliance*"
+         :different-date "On a different date:"
+         :date-entry "date-entry"
+         :update "Update"
+         :compliance-product-view "Uncompliant Product List"
+         :compliance-subscription-view "Compliance Subscription List"}) ))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
