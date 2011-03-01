@@ -11,7 +11,7 @@ to the testng group name you are using to categorize your @Test -->
 
 	<test name="MyDevTest">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 					
 			
 		</packages>

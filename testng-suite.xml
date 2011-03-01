@@ -11,7 +11,7 @@ to the testng group name you are using to categorize your @Test -->
 
 	<test name="Registration">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
@@ -24,7 +24,7 @@ to the testng group name you are using to categorize your @Test -->
 	
 	<test name="Subscribe/Unsubscribe">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>			
 		</packages>	
 		<groups>
@@ -37,7 +37,7 @@ to the testng group name you are using to categorize your @Test -->
 	
 	<test name="Autosubscribe">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
@@ -50,7 +50,7 @@ to the testng group name you are using to categorize your @Test -->
 	
 	<test name="Compliance Assistant">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
@@ -63,7 +63,7 @@ to the testng group name you are using to categorize your @Test -->
 	
 	<test name="Proxy">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
@@ -76,7 +76,7 @@ to the testng group name you are using to categorize your @Test -->
 	
 	<test name="Interop">
 		<packages>
-			<package name="sm.gui.tests" />
+			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
