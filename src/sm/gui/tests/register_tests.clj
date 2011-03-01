@@ -7,7 +7,7 @@
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
-(defn ^{BeforeClass {}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
@@ -36,7 +36,7 @@
                (verify (and (= thrown-error expected-error) (action exists? register-button))))))))
 
 (defn ^{Test {:groups ["registration"]
-	       :dependsOnTests ["simple_register"]}}
+	       :dependsOnMethods ["simple_register"]}}
   unregister [_]
   (tasks/unregister))
 

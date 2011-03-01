@@ -1,9 +1,11 @@
 (ns sm.gui.tests.subscribe-tests
   (:use [test-clj.testng :only (gen-class-testng)]
 	[sm.gui.test-config :only (config)]
+        [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
 	 gnome.ldtp)
-  (:require [sm.gui.tasks :as tasks])
+  (:require [sm.gui.tasks :as tasks]
+            sm.gui.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
 (defn- do-to-all-rows-in [view f]
@@ -20,7 +22,7 @@
 
 (defn ^{Test {:groups ["subscribe"]}}
   subscribe_all [_]
-  (tasks/search)
+  (tasks/search {})
   (do-to-all-rows-in :all-subscriptions-view
                   (fn [subscription]
                     (with-handlers [(ignore :subscription-not-available)
@@ -30,10 +32,11 @@
 
 (defn ^{Test {:groups ["subscribe"]
               :dependsOnMethods [ "subscribe_all"]}}
-  unsubsubscribe_all [_]
+  unsubscribe_all [_]
   (action selecttab :my-subscriptions)
   (do-to-all-rows-in :my-subscriptions-view
                      (fn [subscription] (with-handlers [(ignore :not-subscribed)]
-                                         (tasks/unsubscribe subscription)))))
+                                         (tasks/unsubscribe subscription)
+                                         (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
 
 (gen-class-testng)

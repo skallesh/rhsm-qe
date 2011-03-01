@@ -1,14 +1,14 @@
 (ns sm.gui.tests.proxy-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-	[sm.gui.test-config :only (config clientcmd)]
+	      [sm.gui.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.str-utils :only (re-split)]
-	 gnome.ldtp)
+	       gnome.ldtp)
   (:require [sm.gui.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
-(defn ^{BeforeClass {}}
+(defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
@@ -42,6 +42,25 @@
         port (@config :noauth-proxy-port)]
     (tasks/enableproxy-noauth hostname port)
     (let [config-file-hostname (conf-file-value "proxy_hostname")
-          config-file-port (conf-file-value "proxy_port")]
+          config-file-port (conf-file-value "proxy_port")
+          config-file-user (conf-file-value "proxy_user")
+          config-file-password (conf-file-value "proxy_password")]
       (verify (= config-file-hostname hostname))
-      (verify (= config-file-port port)) )))
+      (verify (= config-file-port port)) 
+      (verify (= config-file-user ""))
+      (verify (= config-file-password "")) )))
+      
+(defn ^{Test {:groups ["proxy"]
+              :dependsOnMethods ["enable_proxy_auth" "enable_proxy_noauth"]}}
+  disable_proxy [_]
+  (tasks/disableproxy)
+  (let [config-file-hostname (conf-file-value "proxy_hostname")
+          config-file-port (conf-file-value "proxy_port")
+          config-file-user (conf-file-value "proxy_user")
+          config-file-password (conf-file-value "proxy_password")]
+      (verify (= config-file-hostname ""))
+      (verify (= config-file-port ""))
+      (verify (= config-file-user ""))
+      (verify (= config-file-password "")) ))
+      
+(gen-class-testng)

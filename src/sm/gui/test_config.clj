@@ -1,7 +1,7 @@
 (ns sm.gui.test-config
   (:use [com.redhat.qe.config :only [property-map]])
   (:import [com.redhat.qe.auto.testng TestScript]
-	   [com.redhat.qe.tools SSHCommandRunner]
+	         [com.redhat.qe.tools SSHCommandRunner]
            [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]))
 
 
