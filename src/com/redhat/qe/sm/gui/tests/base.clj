@@ -1,7 +1,7 @@
 (ns sm.gui.tests.base
   (:use [test-clj.testng :only (gen-class-testng)]
-	[sm.gui.tasks])
-  (:require [sm.gui.test-config :as config])
+	[sm.gui.tasks.tasks])
+  (:require [sm.gui.tasks.test-config :as config])
   (:import [org.testng.annotations BeforeSuite AfterSuite]))
 
 (defn ^{BeforeSuite {:groups ["setup"]}}

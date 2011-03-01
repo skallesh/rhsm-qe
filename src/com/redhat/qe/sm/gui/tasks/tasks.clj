@@ -1,10 +1,10 @@
-(ns sm.gui.tasks
-  (:use [sm.gui.test-config :only (config)]
+(ns sm.gui.tasks.tasks
+  (:use [sm.gui.tasks.test-config :only (config)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
-            sm.gui.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+            sm.gui.tasks.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here

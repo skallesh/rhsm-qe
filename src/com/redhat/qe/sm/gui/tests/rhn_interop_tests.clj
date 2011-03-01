@@ -1,12 +1,12 @@
 (ns sm.gui.tests.rhn-interop-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-        [sm.gui.test-config :only (config clientcmd)]
+        [sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
 	       gnome.ldtp)
-  (:require [sm.gui.tasks :as tasks]
+  (:require [sm.gui.tasks.tasks :as tasks]
             [clojure.contrib.java-utils :as jutils]
-             sm.gui.ui)
+             sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")

@@ -1,11 +1,11 @@
 (ns sm.gui.tests.autosubscribe-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-        [sm.gui.test-config :only (config clientcmd)]
+        [sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
 	       gnome.ldtp)
-  (:require [sm.gui.tasks :as tasks]
-             sm.gui.ui)
+  (:require [sm.gui.tasks.tasks :as tasks]
+             sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
   
