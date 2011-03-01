@@ -27,8 +27,8 @@
 			    :client-hostname "sm.client1.hostname"
 			    :username "sm.client1.username"
 			    :password "sm.client1.password"
-          :ssh-user ["sm.ssh.user" "root"]
-          :ssh-key-private ["sm.sshkey.private" ".ssh/id_auto_dsa"]
+          :ssh-user (DefaultMapKey. "sm.ssh.user" "root")
+          :ssh-key-private (DefaultMapKey."sm.sshkey.private" ".ssh/id_auto_dsa")
 			    :ssh-key-passphrase "sm.sshkey.passphrase"
           :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
           :basicauth-proxy-port "sm.basicauthproxy.port"
@@ -37,8 +37,8 @@
           :noauth-proxy-hostname "sm.noauthproxy.hostname"
           :noauth-proxy-port "sm.noauthproxy.port"})]
        (merge m (property-map
-		 {:ldtp-url ["sm.ldtp.url"
-                              (str "http://" (m :client-hostname) ":4118")]}))))
+		 {:ldtp-url (DefaultMapKey. "sm.ldtp.url"
+			      (str "http://" (m :client-hostname) ":4118"))}))))
 (def config (atom {}))
 (def clientcmd (atom nil))
 (def cli-tasks (atom nil))
