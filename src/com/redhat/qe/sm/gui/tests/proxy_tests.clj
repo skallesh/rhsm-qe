@@ -1,11 +1,11 @@
-(ns sm.gui.tests.proxy-tests
+(ns com.redhat.qe.sm.gui.tests.proxy-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-	      [sm.gui.tasks.test-config :only (config clientcmd)]
+	      [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.str-utils :only (re-split)]
 	       gnome.ldtp)
-  (:require [sm.gui.tasks.tasks :as tasks])
+  (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
 (defn ^{BeforeClass {:groups ["setup"]}}

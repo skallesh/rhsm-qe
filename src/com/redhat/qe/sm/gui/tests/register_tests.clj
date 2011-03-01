@@ -1,10 +1,10 @@
-(ns sm.gui.tests.register-tests
+(ns com.redhat.qe.sm.gui.tests.register-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-	[sm.gui.tasks.test-config :only (config)]
+	[com.redhat.qe.sm.gui.tasks.test-config :only (config)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
 	 gnome.ldtp)
-  (:require [sm.gui.tasks.tasks :as tasks])
+  (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
 
 (defn ^{BeforeClass {:groups ["setup"]}}

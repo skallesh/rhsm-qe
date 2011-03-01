@@ -1,11 +1,11 @@
-(ns sm.gui.tests.compliance-assistant-tests
+(ns com.redhat.qe.sm.gui.tests.compliance-assistant-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-        [sm.gui.tasks.test-config :only (config clientcmd)]
+        [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
 	       gnome.ldtp)
-  (:require [sm.gui.tasks.tasks :as tasks]
-             sm.gui.tasks.ui)
+  (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+             com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
  
 (defn- get-table-elements [view col]

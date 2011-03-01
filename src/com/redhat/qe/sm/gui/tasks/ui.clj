@@ -1,4 +1,4 @@
-(ns sm.gui.tasks.ui
+(ns com.redhat.qe.sm.gui.tasks.ui
   (:use  [clojure.contrib [string :only [join split capitalize]]])
   (:require [gnome.ldtp :as ldtp])
   (:import java.util.NoSuchElementException
