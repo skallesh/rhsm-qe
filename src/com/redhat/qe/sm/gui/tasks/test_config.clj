@@ -22,9 +22,8 @@
       (for [v (vals map) ]
         (System/getProperty (mapkey v) (default v)))))
 
-
 (defn get-properties []
-     (let [m (property-map {:binary-path (DefaultMapKey. "com.redhat.qe.sm.gui.binary" "subscription-manager-gui")
+     (let [m (property-map {:binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
 			    :client-hostname "sm.client1.hostname"
 			    :username "sm.client1.username"
 			    :password "sm.client1.password"
