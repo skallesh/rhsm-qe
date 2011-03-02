@@ -38,6 +38,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		client1tasks.register(clientusername, clientpassword, null, registereeName, null, null, Boolean.TRUE, null, null, null);
 		int quantity = 10000000;
 		for (SubscriptionPool pool: client1tasks.getCurrentlyAvailableSubscriptionPools()) {
+			if (pool.quantity.equalsIgnoreCase("unlimited")) continue;
 			int pool_quantity = Integer.valueOf(pool.quantity);
 			if (pool_quantity < quantity && pool_quantity >= 2) {
 				quantity = pool_quantity;
