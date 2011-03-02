@@ -19,7 +19,7 @@
         (tasks/ui uncheckrow :compliance-product-view row 0)))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
-  register_first [_]
+  register [_]
   (with-handlers [(handle :already-registered [e]
                                (recover e :unregister-first))]
     (tasks/register (@config :username) (@config :password))))
@@ -36,7 +36,7 @@
         
 (defn ^{Test {:groups ["compliance-assistant"]}}
   launch_assistant [_]
-  (register_first nil)
+  (register nil)
   (tasks/ui click :become-compliant)
   (tasks/ui waittillwindowexist :compliance-assistant-dialog 60)
   (tasks/wait-for-progress-bar)
@@ -48,7 +48,7 @@
   (tasks/ui click :first-date)
   (tasks/ui click :update)
   (tasks/wait-for-progress-bar)
-  (tasks/do-to-all-rows-in :compliance-product-view
+  (tasks/do-to-all-rows-in :compliance-product-view 1
       (fn [product] (check-product product)))
   (let [subscription-list (tasks/get-table-elements :compliance-subscription-view 0)
         nocomply-count (atom (tasks/warn-count))]
@@ -56,9 +56,10 @@
       (with-handlers  [(ignore :subscription-not-available)] 
         (tasks/compliance-subscribe item)
         (let [warn-count (tasks/warn-count)]
-          (verify (< warn-count @nocomply-count))
-          (reset! nocomply-count warn-count))
-        (tasks/do-to-all-rows-in :compliance-product-view
+          (if-not (= 0 @nocomply-count)
+            (do (verify (< warn-count @nocomply-count))
+                (reset! nocomply-count warn-count))))
+        (tasks/do-to-all-rows-in :compliance-product-view 1
           (fn [product] (check-product product)))))))
 
 (defn ^{AfterClass {:groups ["setup"]}}

@@ -194,11 +194,10 @@
   (for [row (range (action getrowcount view))]
     (ui getcellvalue view row col))) 
   
-(defn do-to-all-rows-in [view f]
-  (let [item-list (get-table-elements view 1)]
+(defn do-to-all-rows-in [view col f]
+  (let [item-list (get-table-elements view col)]
     (doseq [item item-list]
       (f item))))
-
 
 (comment (defn get-all-facts []
    (ui click :view-system-facts)

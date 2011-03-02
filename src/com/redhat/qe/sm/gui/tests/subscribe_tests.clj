@@ -17,7 +17,7 @@
 (defn ^{Test {:groups ["subscribe"]}}
   subscribe_all [_]
   (tasks/search {})
-  (tasks/do-to-all-rows-in :all-subscriptions-view
+  (tasks/do-to-all-rows-in :all-subscriptions-view 0
                   (fn [subscription]
                     (with-handlers [(ignore :subscription-not-available)
                                     (handle :wrong-consumer-type [e]
@@ -28,7 +28,7 @@
               :dependsOnMethods [ "subscribe_all"]}}
   unsubscribe_all [_]
   (tasks/ui selecttab :my-subscriptions)
-  (tasks/do-to-all-rows-in :my-subscriptions-view
+  (tasks/do-to-all-rows-in :my-subscriptions-view 0
                      (fn [subscription] (with-handlers [(ignore :not-subscribed)]
                                          (tasks/unsubscribe subscription)
                                          (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
