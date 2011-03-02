@@ -61,7 +61,7 @@
         (tasks/do-to-all-rows-in :compliance-product-view
           (fn [product] (check-product product)))))))
 
-(defn ^{AfterClass {:groups "setup"}}
+(defn ^{AfterClass {:groups ["setup"]}}
   exit_compliance_assistant [_]
   (if (= 1 (tasks/ui guiexist :compliance-assistant-dialog))
     (tasks/ui closewindow :compliance-assistant-dialog)))
