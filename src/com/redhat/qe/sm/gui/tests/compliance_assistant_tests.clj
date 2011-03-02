@@ -6,17 +6,8 @@
 	       gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
+  (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
  
-(defn- get-table-elements [view col]
-  (for [row (range (action getrowcount view))]
-    (action getcellvalue view row col))) 
-  
-(defn- do-to-all-rows-in [view f]
-  (let [products-list (get-table-elements view 1)]
-    (doseq [item products-list]
-      (f item))))
-
 (defn- check-product 
   ([product]
     (let [row (tasks/ui gettablerowindex :compliance-product-view product)]
@@ -28,7 +19,7 @@
         (tasks/ui uncheckrow :compliance-product-view row 0)))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
-  register_first [_]
+  register [_]
   (with-handlers [(handle :already-registered [e]
                                (recover e :unregister-first))]
     (tasks/register (@config :username) (@config :password))))
@@ -45,7 +36,7 @@
         
 (defn ^{Test {:groups ["compliance-assistant"]}}
   launch_assistant [_]
-  (register_first nil)
+  (register nil)
   (tasks/ui click :become-compliant)
   (tasks/ui waittillwindowexist :compliance-assistant-dialog 60)
   (tasks/wait-for-progress-bar)
@@ -57,15 +48,23 @@
   (tasks/ui click :first-date)
   (tasks/ui click :update)
   (tasks/wait-for-progress-bar)
-  (do-to-all-rows-in :compliance-product-view
+  (tasks/do-to-all-rows-in :compliance-product-view 1
       (fn [product] (check-product product)))
-  (let [subscription-list (get-table-elements :compliance-subscription-view 0)]
+  (let [subscription-list (tasks/get-table-elements :compliance-subscription-view 0)
+        nocomply-count (atom (tasks/warn-count))]
     (doseq [item subscription-list]
       (with-handlers  [(ignore :subscription-not-available)] 
         (tasks/compliance-subscribe item)
-        (do-to-all-rows-in :compliance-product-view
+        (let [warn-count (tasks/warn-count)]
+          (if-not (= 0 @nocomply-count)
+            (do (verify (< warn-count @nocomply-count))
+                (reset! nocomply-count warn-count))))
+        (tasks/do-to-all-rows-in :compliance-product-view 1
           (fn [product] (check-product product)))))))
 
-
+(defn ^{AfterClass {:groups ["setup"]}}
+  exit_compliance_assistant [_]
+  (if (= 1 (tasks/ui guiexist :compliance-assistant-dialog))
+    (tasks/ui closewindow :compliance-assistant-dialog)))
         
 (gen-class-testng)

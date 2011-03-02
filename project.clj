@@ -15,3 +15,16 @@
   :dev-dependencies [[swank-clojure "1.2.1"]]
   :javac-options {:debug "on"}
   :repositories ["hudson" "http://hudson.rhq.lab.eng.bos.redhat.com:8080/archiva/repository/hudson"])
+  
+  
+(comment 
+(do 
+  (require :reload-all '[com.redhat.qe.sm.gui.tasks.test-config :as config])
+  (require :reload-all '[com.redhat.qe.sm.gui.tasks.tasks :as tasks])
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.compliance-assistant-tests :as catest])  
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.subscribe-tests :as stest])
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.register-tests :as rtest])
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.proxy-tests :as ptest])
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.rhn-interop-tests :as ritest])
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest]))  
+)
