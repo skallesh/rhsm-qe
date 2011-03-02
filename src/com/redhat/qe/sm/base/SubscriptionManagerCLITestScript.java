@@ -99,7 +99,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// fetch the candlepin CA Cert
 			log.info("Fetching Candlepin CA cert...");
-			serverCaCertFile = new File(getProperty("automation.dir", "/tmp")+"/"+servertasks.candlepinCACertFile.getName());
+			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
 			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 			
 			// fetch the generated Product Certs
