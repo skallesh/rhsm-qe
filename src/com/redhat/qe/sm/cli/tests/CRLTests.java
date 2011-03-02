@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -110,6 +111,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 		Calendar originalEndDate = (Calendar) products.get(0).endDate.clone();
 		String originalCertFile = clienttasks.entitlementCertDir+"/"+products.get(0).serialNumber+".pem";
+		Integer contractNumber = products.get(0).contractNumber;
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),1,"Original certificate file '"+originalCertFile+"' exists.");
 		
 		log.info("Now we will change the start and end date of the subscription pool adding one month to enddate and subtracting one month from startdate...");
@@ -120,52 +122,50 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("Now let's refresh the subscription pools...");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
-//		log.info("Now let's update the certFrequency to 1 minutes so that the rhcertd will pull down the new certFiles");
-//		clienttasks.restart_rhsmcertd(1, true);
 		log.info("Refresh to make sure the latest certs are on the client...");
-		clienttasks.refresh(null, null, null); // make sure the new entitlements are downloaded
+		clienttasks.refresh(null, null, null); // make sure the new entitlement is downloaded
 
 		log.info("The updated certs should now be on the client...");
 
 		log.info("First, let's assert that subscription pool reflects the new end date...");
 		SubscriptionPool newPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(newPool,"Pool id '"+pool.poolId+"' is still available after changing its the start and end dates and refreshing pools.");
+		Assert.assertNotNull(newPool,"Pool id '"+pool.poolId+"' is still available after changing its start and end dates and refreshing pools.");
 		Assert.assertEquals(SubscriptionPool.formatDateString(newPool.endDate), SubscriptionPool.formatDateString(newEndDate),
-				"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
+				"As seen by the client, the enddate of the subscribed to pool '"+pool.poolId+"' ("+pool.subscriptionName+") has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
 
 //FIXME UNCOMMENT WHILE DEBUGGING WITH AJAY
 //if (true)return;
 		log.info("Second, let's assert that the original cert file '"+originalCertFile+"' is gone...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalCertFile),0,"Original certificate file '"+originalCertFile+"' has been removed.");
-
-		log.info("Third, let's assert that consumed product certs have been updated...");
-		String newCertFile = "";
+		
+		log.info("Third, let's assert that consumed products have been refreshed...");
+		List<ProductSubscription> newProducts = ProductSubscription.findAllInstancesWithMatchingFieldFromList("contractNumber",contractNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertEquals(newProducts.size(), products.size(),"The number of ProductSubscriptions corresponding to this subscription's contract number ("+contractNumber+") remains the same.");
+		BigInteger newSerialNumber = newProducts.get(0).serialNumber;
+		String newCertFile = clienttasks.entitlementCertDir+"/"+newProducts.get(0).serialNumber+".pem";
 		for (ProductSubscription product : products) {
-			ProductSubscription newProduct = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",product.productName,clienttasks.getCurrentlyConsumedProductSubscriptions());
+			ProductSubscription newProduct = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",product.productName,newProducts);
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.startDate), ProductSubscription.formatDateString(newStartDate),
-					"Rhsmcertd has updated the entitled startdate to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product: "+newProduct.productName);
+					"Rhsmcertd has updated the entitled startdate from '"+ProductSubscription.formatDateString(originalStartDate)+"' to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product: "+newProduct.productName);
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.endDate), ProductSubscription.formatDateString(newEndDate),
-					"Rhsmcertd has updated the entitled enddate to '"+ProductSubscription.formatDateString(newEndDate)+"' for consumed product: "+newProduct.productName);
+					"Rhsmcertd has updated the entitled enddate from '"+ProductSubscription.formatDateString(originalEndDate)+"' to '"+ProductSubscription.formatDateString(newEndDate)+"' for consumed product: "+newProduct.productName);
 
-			log.info("And, let's assert that consumed product cert serial has been updated...");
-			Assert.assertTrue(!newProduct.serialNumber.equals(product.serialNumber), 
-					"The consumed product cert serial has been updated from '"+product.serialNumber+"' to '"+newProduct.serialNumber+"' for product: "+newProduct.productName);
-			newCertFile = clienttasks.entitlementCertDir+"/"+newProduct.serialNumber+".pem";
+			log.info("And, let's assert that consumed product entitlement serial has been updated...");
+			Assert.assertTrue(!newProduct.serialNumber.equals(product.serialNumber) && newProduct.serialNumber.equals(newSerialNumber), 
+					"The consumed product entitlement serial has been updated from '"+product.serialNumber+"' to '"+newSerialNumber+"' for product: "+newProduct.productName);
 		}
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New certificate file '"+newCertFile+"' exists.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile),1,"New entitlement certificate file '"+newCertFile+"' exists.");
 
-		log.info("Finally, check the CRL list on the server and verify the original entitlement cert serials are revoked...");
+		log.info("Finally, check the CRL list on the server and verify the original entitlement cert serial is revoked...");
 		log.info("Waiting 2 minutes...  (Assuming this is the candlepin.conf value set for pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule)");
 		sleep(2*60*1000);	// give the CertificateRevocationListTask.schedule 2 minutes to update the list since that is what was set in setupBeforeSuite()
 		// NOTE: The refresh schedule should have been set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
 		//       Set inside /etc/candlepin/candlepin.conf
 		//       pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
 		// NOTE: if not set, the default is  public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?" Fire at 12pm (noon) every day
-		for (ProductSubscription product : products) {
-			RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",product.serialNumber,servertasks.getCurrentlyRevokedCerts());
-			Assert.assertTrue(revokedCert!=null,"Original entitlement certificate serial number '"+product.serialNumber+"' for product '"+product.productName+"' has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
-			Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","Expanding the certificate start and end dates should revoke the certificated with a reason code of Privilege Withdrawn");
-		}
+		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber,servertasks.getCurrentlyRevokedCerts());
+		Assert.assertTrue(revokedCert!=null,"Original entitlement certificate serial number '"+entitlementCert.serialNumber+"' granted from pool '"+pool.poolId+"' ("+pool.subscriptionName+") has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
+		Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","Expanding the certificate start and end dates should revoke the certificated with a reason code of Privilege Withdrawn.");
 	}
 	protected List<String> alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test = new ArrayList<String>();
 
