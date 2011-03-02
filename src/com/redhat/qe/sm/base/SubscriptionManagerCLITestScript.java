@@ -107,7 +107,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
 			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
 				File remoteFile = new File(remoteFileAsString);
-				File localFile = new File(getProperty("automation.dir", "/tmp")+"/"+remoteFile.getName());
+				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
 				generatedProductCertFiles.add(localFile);
 			}
