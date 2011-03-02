@@ -271,7 +271,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterWithNameData",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(caseId=62352)
+	@ImplementsNitrateTest(caseId=62352) // caseIds=81089 81090 81091
 	public void RegisterWithName_Test(Object meta, String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
