@@ -156,6 +156,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath())==0,"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
+		
+		// cleanup
+		client.runCommandAndWait("rm -rf "+randDir);
 	}
 
 	
