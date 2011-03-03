@@ -1090,17 +1090,23 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * identity without asserting results
-	 * @param proxy TODO
-	 * @param proxyuser TODO
-	 * @param proxypassword TODO
+	 * @param username
+	 * @param password
+	 * @param regenerate
+	 * @param force
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult identity_(String username, String password, Boolean regenerate, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult identity_(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the unregister command
 		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
 		if (password!=null)					command += " --password="+password;
 		if (regenerate!=null && regenerate)	command += " --regenerate";
+		if (force!=null && force)			command += " --force";
 		if (proxy!=null)					command += " --proxy="+proxy;
 		if (proxyuser!=null)				command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
@@ -1111,13 +1117,18 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager-cli identity"
-	 * @param proxy TODO
-	 * @param proxyuser TODO
-	 * @param proxypassword TODO
+	 * @param username
+	 * @param password
+	 * @param regenerate
+	 * @param force
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult identity(String username, String password, Boolean regenerate, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult identity(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, force, proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful identify
 		/* Example sshCommandResult.getStdout():

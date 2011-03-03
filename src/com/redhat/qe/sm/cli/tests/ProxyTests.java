@@ -180,7 +180,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String moduleTask = "identity";
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
-		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -206,7 +206,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
 
 		// attempt the moduleTask with the proxy options
-		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");

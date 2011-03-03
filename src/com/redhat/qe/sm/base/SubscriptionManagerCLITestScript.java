@@ -416,6 +416,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 */
 	protected void RegisterWithUsernameAndPassword_Test() throws IOException {
 		if (registrationDataList.isEmpty()) {
+			clienttasks.unregister(null,null,null); // make sure client is unregistered
 			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();

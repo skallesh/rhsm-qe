@@ -57,7 +57,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		for (String username : new String[]{null,clientusername}) {
 			for (String password : new String[]{null,clientpassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
-					SSHCommandResult result = clienttasks.identity_(username,password,regenerate, null, null, null);
+					SSHCommandResult result = clienttasks.identity_(username,password,regenerate, null, null, null, null);
 					Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
 						"One must be registered to have an identity.");
 				}
@@ -77,7 +77,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
 		
 		// get the current identity
-		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
@@ -98,7 +98,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,nickname,null,null, null, null, null, null));
 		
 		// get the current identity
-		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
 		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);
@@ -118,7 +118,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// regenerate the identity... and assert
 		log.info("Regenerating identity using the current cert for authentication...");
-		SSHCommandResult result = clienttasks.identity(null,null,Boolean.TRUE, null, null, null);
+		SSHCommandResult result = clienttasks.identity(null,null,Boolean.TRUE, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
@@ -149,7 +149,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
-		SSHCommandResult result = clienttasks.identity(clientusername,clientpassword,Boolean.TRUE, null, null, null);
+		SSHCommandResult result = clienttasks.identity(clientusername,clientpassword,Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
@@ -159,7 +159,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// regenerate the identity using a different username and password as used during register... and assert
 		log.info("Regenerating identity with a different username and password (but belonging to the same owner) than used during register...");
-		result = clienttasks.identity(registrationData.username,registrationData.password,Boolean.TRUE, null, null, null);
+		result = clienttasks.identity(registrationData.username,registrationData.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 			"The original registered result is returned from identity regenerate using a different authenticator who belongs to the same owner/organization.");
 	}
@@ -183,14 +183,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
-		SSHCommandResult result = clienttasks.identity_(registrationData.username,registrationData.password,Boolean.TRUE, null, null, null);
+		SSHCommandResult result = clienttasks.identity_(registrationData.username,registrationData.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 		Assert.assertEquals(result.getStderr().trim(),"access denied.");
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (negative test)",
-			groups={},
+	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (attempt with and without force) (negative test)",
+			groups={"blockedByBug-678151"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
@@ -201,11 +201,19 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
-		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null);
+		// first attempt without --force
+		SSHCommandResult result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, null, null, null, null);
+		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
+		Assert.assertEquals(result.getStdout().trim(),"--username and --password can only be used with --force");
+		// now attempt with --force
+		result = clienttasks.identity_("FOO","BAR",Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
 		Assert.assertContainsMatch(result.getStderr().trim(),servertasks.invalidCredentialsRegexMsg(),"The stderr expresses a message such that authentication credentials are invalid.");
 	}
 	
+	
+	// TODO Candidates for an automated Test:
+	//		https://bugzilla.redhat.com/show_bug.cgi?id=678151
 	
 	
 	
