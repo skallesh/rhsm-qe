@@ -76,7 +76,10 @@
   (reset-assistant)
   (let [beforedate (tasks/first-date-of-noncomply)]
     (subscribe_all_products nil)
-    (verify (= (tasks/first-date-of-noncomply) beforedate))))
+    (verify (= (tasks/first-date-of-noncomply) beforedate))
+    (verify (< 0 (tasks/ui getrowcount :compliance-product-view)))
+    (verify (= 0 (tasks/ui getrowcount :compliance-subscription-view)))))
+
 
 (defn ^{Test {:groups ["compliance-assistant" "AllProductsSubscribable"]
               :dependsOnMethods ["launch_assistant"]}}
