@@ -17,6 +17,14 @@
       (if check?
         (tasks/ui checkrow :compliance-product-view row 0)
         (tasks/ui uncheckrow :compliance-product-view row 0)))))
+        
+(defn- reset-assistant []
+  (exit_compliance_assistant nil)
+  (launch_assistant nil))
+
+(defn- check-all-products []
+  (tasks/do-to-all-rows-in :compliance-product-view 1
+      (fn [product] (check-product product))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
@@ -45,11 +53,11 @@
 (defn ^{Test {:groups ["compliance-assistant"]
               :dependsOnMethods ["launch_assistant"]}}
   subscribe_all_products [_]
+  (reset-assistant)
   (tasks/ui click :first-date)
   (tasks/ui click :update)
   (tasks/wait-for-progress-bar)
-  (tasks/do-to-all-rows-in :compliance-product-view 1
-      (fn [product] (check-product product)))
+  (check-all-products)
   (let [subscription-list (tasks/get-table-elements :compliance-subscription-view 0)
         nocomply-count (atom (tasks/warn-count))]
     (doseq [item subscription-list]
@@ -59,8 +67,37 @@
           (if-not (= 0 @nocomply-count)
             (do (verify (< warn-count @nocomply-count))
                 (reset! nocomply-count warn-count))))
-        (tasks/do-to-all-rows-in :compliance-product-view 1
-          (fn [product] (check-product product)))))))
+        (check-all-products)))))
+
+(comment
+(defn ^{Test {:groups ["compliance-assistant" "SomeProductsSubscribable"]
+              :dependsOnMethods ["launch_assistant"]}}
+  some_products_subscribable [_]
+  (reset-assistant)
+  (let [beforedate (tasks/first-date-of-noncomply)]
+    (subscribe_all_products nil)
+    (verify (= (tasks/first-date-of-noncomply) beforedate))))
+
+(defn ^{Test {:groups ["compliance-assistant" "AllProductsSubscribable"]
+              :dependsOnMethods ["launch_assistant"]}}
+  all_products_subscribable [_]
+  (reset-assistant)
+  (let [beforedate (tasks/first-date-of-noncomply)]
+    (subscribe_all_products nil)
+    (verify (not (= (tasks/first-date-of-noncomply) beforedate)))))
+
+(defn ^{Test {:groups ["compliance-assistant" "NoProductsSubscribable"]
+              :dependsOnMethods ["launch_assistant"]}}
+  no_products_subscribable [_]
+  (reset-assistant)
+  (check-all-products)
+  (verify (= 0 (tasks/ui getrowcount :compliance-subscription-view))))
+
+(defn ^{Test {:groups ["compliance-assistant" "NoProductsInstalled"]
+              :dependsOnMethods ["launch_assistant"]}}
+  no_products_installed [_]
+  (reset-assistant))
+)
 
 (defn ^{AfterClass {:groups ["setup"]}}
   exit_compliance_assistant [_]
