@@ -179,6 +179,11 @@
 
 (defn compliance? []
   (= 1 (ui guiexist :main-window "All products are in compliance*")))  
+
+(defn first-date-of-noncomply []
+  (if (= 1 (ui guiexist :compliance-assistant-dialog))
+    (let [datelabel (ui getobjectproperty :compliance-assistant-dialog "*first date*" "label")]
+      (.substring datelabel 0 10))))
   
 (defn compliance-subscribe [s]
   (if-not (ui rowexist? :compliance-subscription-view s)
@@ -199,7 +204,8 @@
     (doseq [item item-list]
       (f item))))
 
-(comment (defn get-all-facts []
+(comment 
+(defn get-all-facts []
    (ui click :view-system-facts)
    (ui waittillguiexist :facts-view)
    (let [table (element :facts-view)
@@ -210,7 +216,8 @@
 				  [(getcell rowid 0) (getcell rowid 1)])
 				rownums))]
      (ui click :close-facts)
-     facts)))
+     facts))
+)
 
 
 
