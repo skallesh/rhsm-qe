@@ -34,7 +34,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
           :proxy-config-dialog "Advanced Network Configuration"
           :compliance-assistant-dialog "Compliance Assistant"
           :information-dialog "Information"
-          :warning-dialog "Warning"}))
+          :warning-dialog "Warning"
+          :firstboot-window "firstboot"
+          :firstboot-proxy-dialog "Advanced Network Configuration"}))
 
 
 (def elements (merge
@@ -105,7 +107,30 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :update "Update"
          :compliance-subscribe "subscribe button"
          :compliance-product-view "Uncompliant Product List"
-         :compliance-subscription-view "Compliance Subscription List"}) ))
+         :compliance-subscription-view "Compliance Subscription List"})
+      (define-elements (windows :firstboot-window)
+        {:firstboot-back "Back"
+         :firstboot-forward "Forward"
+         :license-yes "Yes, I agree to the License Agreement"
+         :license-no "No, I do not agree"
+         :register-now "Yes, I'd like to register now"
+         :register-later "No, I prefer to register at a later time"
+         :register-rhn "I'd like to recieve updates from Red Hat Network*"
+         :register-satellite "I have access to a Red Hat Network Satellite*"
+         :satelite-location "satellite server location"
+         :rhn-classic-mode "RHN Classic Mode"
+         :firstboot-proxy-config "Advanced Network Configuration button"
+         :firstboot-user "account_login"
+         :firstboot-pass "account_password"
+         :firstboot-autosubscribe "auto_bind"
+         :firstboot-system-name "consumer_name"})
+      (define-elements (windows :firstboot-proxy-dialog)
+        {:firstboot-proxy-checkbox "I would like to connect*"
+         :firstboot-proxy-location "proxy-location"
+         :firstboot-auth-checkbox "Use Authentication*"
+         :firstboot-proxy-user "proxy user field"
+         :firstboot-proxy-pass "proxy password field"
+         :firstboot-proxy-close "Close"}) ))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
