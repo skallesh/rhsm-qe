@@ -26,7 +26,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * @author jsefler
  *
  */
-@Test(groups={"content"})
+@Test(groups={"ContentTests"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username", "");

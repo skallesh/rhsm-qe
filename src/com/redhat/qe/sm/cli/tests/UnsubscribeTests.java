@@ -25,7 +25,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * @author jsefler
  *
  */
-@Test(groups={"unsubscribe"})
+@Test(groups={"UnsubscribeTests"})
 public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	

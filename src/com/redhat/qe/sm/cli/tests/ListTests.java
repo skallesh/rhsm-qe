@@ -30,7 +30,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *  @author jsefler
  *
  */
-@Test(groups={"list"})
+@Test(groups={"ListTests"})
 public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	

@@ -115,7 +115,7 @@ https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
  * https://engineering.redhat.com/trac/IntegratedMgmtQE/wiki/RH-Personal_dev_testplan
  * https://engineering.redhat.com/trac/Entitlement/wiki/RHPersonalDevTools
  */
-@Test(groups={"rhelPersonal"})
+@Test(groups={"RHELPersonalTests"})
 public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	

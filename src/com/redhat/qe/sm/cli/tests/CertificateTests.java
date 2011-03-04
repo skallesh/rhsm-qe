@@ -20,7 +20,7 @@ import com.redhat.qe.sm.data.ProductCert;
  *
  *
  */
-@Test(groups={"certificate"})
+@Test(groups={"CertificateTests"})
 public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	

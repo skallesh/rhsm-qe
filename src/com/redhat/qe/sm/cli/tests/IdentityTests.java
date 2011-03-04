@@ -38,7 +38,7 @@ using the username/password as authentication
 
 -- bk
  */
-@Test(groups={"identity"})
+@Test(groups={"IdentityTests"})
 public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 	

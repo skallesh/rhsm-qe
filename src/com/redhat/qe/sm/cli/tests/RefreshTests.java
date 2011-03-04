@@ -15,11 +15,12 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  *
  *
  */
-@Test(groups={"refresh"})
+@Test(groups={"RefreshTests"})
 public class RefreshTests extends SubscriptionManagerCLITestScript {
 
 	
-	
+	// Test methods ***********************************************************************
+
 	@Test(	description="subscription-manager-cli: refresh and verify entitlements are updated",
 			groups={"RefreshEntitlements_Test"},
 			enabled=true)

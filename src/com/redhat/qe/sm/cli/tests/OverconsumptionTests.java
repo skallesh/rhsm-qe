@@ -22,7 +22,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 
 
-@Test(groups={"overconsumption"})
+@Test(groups={"OverconsumptionTests"})
 public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	
 	

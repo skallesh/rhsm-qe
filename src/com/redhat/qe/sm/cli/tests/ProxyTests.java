@@ -38,7 +38,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * 		refresh
  * 		list
  */
-@Test(groups={"proxy"})
+@Test(groups={"ProxyTests"})
 public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	protected String basicauthproxyHostname = getProperty("sm.basicauthproxy.hostname", "");

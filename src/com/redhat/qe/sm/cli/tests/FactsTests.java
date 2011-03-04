@@ -32,7 +32,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
 /**
  * @author jsefler
  */
-@Test(groups={"facts"})
+@Test(groups={"FactsTests"})
 public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	

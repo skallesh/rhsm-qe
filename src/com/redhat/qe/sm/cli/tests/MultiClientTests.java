@@ -20,7 +20,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"multi-client"})
+@Test(groups={"MultiClientTests"})
 public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	
 

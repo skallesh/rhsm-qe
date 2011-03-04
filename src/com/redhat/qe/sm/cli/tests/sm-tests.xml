@@ -16,7 +16,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="help" />
+				<include name="HelpTests" />
 			</run>
 		</groups>
 	</test>
@@ -28,7 +28,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="general" />
+				<include name="GeneralTests" />
 			</run>
 		</groups>
 	</test>
@@ -40,7 +40,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="register" />
+				<include name="RegisterTests" />
 			</run>
 		</groups>
 	</test>
@@ -52,7 +52,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="proxy" />
+				<include name="ProxyTests" />
 			</run>
 		</groups>
 	</test>
@@ -64,7 +64,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="events" />
+				<include name="EventTests" />
 			</run>
 		</groups>
 	</test>
@@ -76,7 +76,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="identity" />
+				<include name="IdentityTests" />
 			</run>
 		</groups>
 	</test>
@@ -89,7 +89,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="list" />
+				<include name="ListTests" />
 			</run>
 		</groups>
 	</test>
@@ -102,7 +102,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="subscribe" />
+				<include name="SubscribeTests" />
 			</run>
 		</groups>
 	</test>
@@ -115,7 +115,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="unsubscribe" />
+				<include name="UnsubscribeTests" />
 			</run>
 		</groups>
 	</test>
@@ -128,7 +128,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="unregister" />
+				<include name="UnregisterTests" />
 			</run>
 		</groups>
 	</test>
@@ -140,7 +140,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="multi-client" />
+				<include name="MultiClientTests" />
 			</run>
 		</groups>
 	</test>
@@ -152,7 +152,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="rhelPersonal" />
+				<include name="RHELPersonalTests" />
 			</run>
 		</groups>
 	</test>
@@ -164,7 +164,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="facts" />
+				<include name="FactsTests" />
 			</run>
 		</groups>
 	</test>
@@ -176,7 +176,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="clean" />
+				<include name="CleanTests" />
 			</run>
 		</groups>
 	</test>
@@ -188,7 +188,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="refresh" />
+				<include name="RefreshTests" />
 			</run>
 		</groups>
 	</test>
@@ -200,7 +200,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="expiration" />
+				<include name="ExpirationTests" />
 			</run>
 		</groups>
 	</test>
@@ -212,7 +212,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="certificate" />
+				<include name="CertificateTests" />
 			</run>
 		</groups>
 	</test>
@@ -224,7 +224,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="compliance" />
+				<include name="ComplianceTests" />
 			</run>
 		</groups>
 	</test>
@@ -236,7 +236,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="content" />
+				<include name="ContentTests" />
 			</run>
 		</groups>
 	</test>
@@ -248,7 +248,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="virtualization" />
+				<include name="VirtualizationTests" />
 			</run>
 		</groups>
 	</test>
@@ -260,7 +260,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="overconsumption" />
+				<include name="OverconsumptionTests" />
 			</run>
 		</groups>
 	</test>
@@ -272,7 +272,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="crl" />
+				<include name="CRLTests" />
 			</run>
 		</groups>
 	</test>

@@ -16,7 +16,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *
  *
  */
-@Test(groups={"clean"})
+@Test(groups={"CleanTests"})
 public class CleanTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************

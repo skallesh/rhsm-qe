@@ -14,7 +14,7 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  * @author ssalevan
  *
  */
-@Test(groups={"unregister"})
+@Test(groups={"UnregisterTests"})
 public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	
