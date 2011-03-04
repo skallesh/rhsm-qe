@@ -16,11 +16,7 @@
     (let [row (tasks/ui gettablerowindex :compliance-product-view product)]
       (if check?
         (tasks/ui checkrow :compliance-product-view row 0)
-        (tasks/ui uncheckrow :compliance-product-view row 0)))))
-        
-(defn- reset-assistant []
-  (exit_compliance_assistant nil)
-  (launch_assistant nil))
+        (tasks/ui uncheckrow :compliance-product-view row 0)))))        
 
 (defn- check-all-products []
   (tasks/do-to-all-rows-in :compliance-product-view 1
@@ -31,6 +27,11 @@
   (with-handlers [(handle :already-registered [e]
                                (recover e :unregister-first))]
     (tasks/register (@config :username) (@config :password))))
+    
+(defn ^{AfterClass {:groups ["setup"]}}
+  exit_compliance_assistant [_]
+  (if (= 1 (tasks/ui guiexist :compliance-assistant-dialog))
+    (tasks/ui closewindow :compliance-assistant-dialog)))    
     
 (defn ^{Test {:groups ["compliance-assistant"]}}
   register_warning [_]
@@ -49,6 +50,10 @@
   (tasks/ui waittillwindowexist :compliance-assistant-dialog 60)
   (tasks/wait-for-progress-bar)
   (verify (= 1 (action guiexist :compliance-assistant-dialog))))
+
+(defn- reset-assistant []
+  (exit_compliance_assistant nil)
+  (launch_assistant nil))
 
 (defn ^{Test {:groups ["compliance-assistant"]
               :dependsOnMethods ["launch_assistant"]}}
@@ -87,12 +92,14 @@
   (reset-assistant)
   (let [beforedate (tasks/first-date-of-noncomply)]
     (subscribe_all_products nil)
+    (verify tasks/compliance?)
     (verify (not (= (tasks/first-date-of-noncomply) beforedate)))))
 
 (defn ^{Test {:groups ["compliance-assistant" "NoProductsSubscribable"]
               :dependsOnMethods ["launch_assistant"]}}
   no_products_subscribable [_]
   (reset-assistant)
+  (verify (< 0 (tasks/ui getrowcount :compliance-product-view)))
   (check-all-products)
   (verify (= 0 (tasks/ui getrowcount :compliance-subscription-view))))
 
@@ -102,9 +109,6 @@
   (reset-assistant))
 )
 
-(defn ^{AfterClass {:groups ["setup"]}}
-  exit_compliance_assistant [_]
-  (if (= 1 (tasks/ui guiexist :compliance-assistant-dialog))
-    (tasks/ui closewindow :compliance-assistant-dialog)))
+
         
 (gen-class-testng)
