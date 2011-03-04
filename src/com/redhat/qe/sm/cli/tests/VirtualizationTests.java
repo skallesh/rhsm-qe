@@ -62,7 +62,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups="virtualization")
+@Test(groups="VirtualizationTests")
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 	

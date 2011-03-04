@@ -23,7 +23,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  *
  */
-@Test(groups={"general"})
+@Test(groups={"GeneralTests"})
 public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	

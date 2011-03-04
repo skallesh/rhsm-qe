@@ -99,7 +99,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// fetch the candlepin CA Cert
 			log.info("Fetching Candlepin CA cert...");
-			serverCaCertFile = new File(getProperty("automation.dir", "/tmp")+"/"+servertasks.candlepinCACertFile.getName());
+			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
 			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 			
 			// fetch the generated Product Certs
@@ -107,7 +107,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
 			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
 				File remoteFile = new File(remoteFileAsString);
-				File localFile = new File(getProperty("automation.dir", "/tmp")+"/"+remoteFile.getName());
+				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
 				generatedProductCertFiles.add(localFile);
 			}
@@ -416,6 +416,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 */
 	protected void RegisterWithUsernameAndPassword_Test() throws IOException {
 		if (registrationDataList.isEmpty()) {
+			clienttasks.unregister(null,null,null); // make sure client is unregistered
 			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();

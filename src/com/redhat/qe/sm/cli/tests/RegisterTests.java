@@ -43,7 +43,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  * @author jsefler
  *
  */
-@Test(groups={"register"})
+@Test(groups={"RegisterTests"})
 public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -224,9 +224,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
+		// FIXME The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
 
 	
@@ -271,7 +272,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterWithNameData",
 			groups={},
 			enabled=true)
-	@ImplementsNitrateTest(caseId=62352)
+	@ImplementsNitrateTest(caseId=62352) // caseIds=81089 81090 81091
 	public void RegisterWithName_Test(Object meta, String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
@@ -528,6 +529,37 @@ Expected Results:
 	}
 	
 	
+	@Test(	description="register with interactive prompting for credentials",
+			groups={"blockedByBug-678151"},
+			dataProvider = "getInteractiveRegistrationData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithInteractivePromptingForUsername_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		
+		// ensure we are unregistered
+		clienttasks.unregister(null,null,null);
+
+		// register while providing a valid username at the interactive prompt
+		// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the register command
+		String echoUsername= promptedUsername==null?"":promptedUsername;
+		String echoPassword = promptedPassword==null?"":promptedPassword;
+		String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";
+		String command = String.format("echo -e \"%s\" | %s register %s %s",
+				echoUsername+n+echoPassword,
+				clienttasks.command,
+				commandLineUsername==null?"":"--username="+commandLineUsername,
+				commandLinePassword==null?"":"--password="+commandLinePassword);
+		
+		// attempt to register with the interactive credentials
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The expected exit code from the register attempt.");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout(), expectedStdoutRegex, "The expected stdout result from register while supplying interactive credentials.");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr(), expectedStderrRegex, "The expected stderr result from register while supplying interactive credentials.");
+	}
+	
+	
 	@Test(	description="User is warned when already registered using RHN Classic",
 			groups={},
 			enabled=true)
@@ -557,27 +589,37 @@ Expected Results:
 		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessage, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 	}
 	
+
+	
 	// TODO Candidates for an automated Test:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=668814
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=669395
 
-
 	
+	
+	
+
+	// Protected Class Variables ***********************************************************************
+	
+	protected final String tmpProductCertDir = "/tmp/productCertDir";
+	protected String productCertDir = null;
 	
 	// Configuration methods ***********************************************************************
-	
-	
-	@AfterClass (alwaysRun=true)
+
+	@BeforeGroups(value={"RegisterWithAutosubscribe_Test"})
+	public void storeProductCertDir() {
+		this.productCertDir = clienttasks.productCertDir;
+	}
 	@AfterGroups(value={"RegisterWithAutosubscribe_Test"},alwaysRun=true)
+	@AfterClass (alwaysRun=true)
 	public void cleaupAfterClass() {
 		if (clienttasks==null) return;
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", clienttasks.productCertDir);
+		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
 		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
 	}
-	final String tmpProductCertDir = "/tmp/productCertDir";
 
 	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
@@ -660,22 +702,48 @@ Expected Results:
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
-		
-		// String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		// 									username,			password,						type,	name,	consumerId,	autosubscribe,	force,			debug,	exitCode,				stdoutRegex,																	stderrRegex
-		ll.add(Arrays.asList(new Object[] {null,	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
-		ll.add(Arrays.asList(new Object[] {null,	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: password not provided. Use --password <value>",							null}));
-		ll.add(Arrays.asList(new Object[] {null,	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username not provided. Use --username <name>",							null}));
-		ll.add(Arrays.asList(new Object[] {null,	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,	clientusername+"X",	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,	clientusername,		String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		// Object bugzilla, String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
+		ll.add(Arrays.asList(new Object[] {null,	clientusername,					String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,	clientusername+getRandInt(),	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,	clientusername,					String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
 
 		// force a successful registration, and then...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
-											clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null}));
+													clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null}));
 
 		// ... try to register again even though the system is already registered
 		ll.add(Arrays.asList(new Object[] {null,	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
+
+		/* moving these testcases with missing username/password to a dedicated test due to behavior introduced by https://bugzilla.redhat.com/show_bug.cgi?id=678151
+		// moved to @DataProvider(name="getInteractiveRegistrationData")
+		ll.add(Arrays.asList(new Object[] {null,	"",					"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username and password are required to register, try register --help.",	null}));
+		ll.add(Arrays.asList(new Object[] {null,	clientusername,		"",								null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: password not provided. Use --password <value>",							null}));
+		ll.add(Arrays.asList(new Object[] {null,	"",					clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	"Error: username not provided. Use --username <name>",							null}));
+		*/
+
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getInteractiveRegistrationData")
+	public Object[][] getInteractiveRegistrationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getInteractiveRegistrationDataAsListOfLists());
+	}
+	protected List<List<Object>> getInteractiveRegistrationDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
+		// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		ll.add(Arrays.asList(new Object[] {	null,	clientusername,					null,							null,			clientpassword,	new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
+		ll.add(Arrays.asList(new Object[] {	null,	clientusername+getRandInt(),	null,							null,			clientpassword,	new Integer(255),	null,										uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,							clientpassword,					clientusername,	null,			new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,							clientpassword+getRandInt(),	clientusername,	null,			new Integer(255),	null,										uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	clientusername,					clientpassword,					null,			null,			new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
+		ll.add(Arrays.asList(new Object[] {	null,	clientusername+getRandInt(),	clientpassword+getRandInt(),	null,			null,			new Integer(255),	null,										uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+clientusername,			"\n\n"+clientpassword,			null,			null,			new Integer(0),		"(Username: ){3}[a-f,0-9,\\-]{36} "+clienttasks.hostname,	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
 
 		return ll;
 	}

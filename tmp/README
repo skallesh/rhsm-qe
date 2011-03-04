@@ -1,0 +1,3 @@
+Do NOT delete this directory
+The sm/tmp directory is used as a temporary directory location
+for files generated and used during runtime testing of subscription-manager.

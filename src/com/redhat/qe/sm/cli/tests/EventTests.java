@@ -60,7 +60,7 @@ A   3. Events should be consumable via RSS based on consumer
          1. It should be possible to enable each message type to be published to an AMQP Bus.
          2. It should be possible to publish no messages to the AMQP bus. 
  */
-@Test(groups={"events"})
+@Test(groups={"EventTests"})
 public class EventTests extends SubscriptionManagerCLITestScript{
 	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
 	protected JSONObject testOwner;
