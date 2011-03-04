@@ -284,6 +284,9 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 
+	// Candidates for an automated Test:
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=672562
+	
 	
 	// Data Providers ***********************************************************************
 	

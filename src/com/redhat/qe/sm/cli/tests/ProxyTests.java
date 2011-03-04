@@ -512,7 +512,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// TODO Candidates for an automated Test:
+	// Candidates for an automated Test:
 	//		
 	
 	

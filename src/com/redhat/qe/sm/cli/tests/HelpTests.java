@@ -192,7 +192,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		identityOptions.add("--username=USERNAME");
 		identityOptions.add("--password=PASSWORD");
 		identityOptions.add("--regenerate");
-		identityOptions.add("--force");	// introduced by https://bugzilla.redhat.com/show_bug.cgi?id=678151
+		identityOptions.add("--force");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=678151
 		identityOptions.add("--proxy=PROXY_URL");
 		identityOptions.add("--proxyuser=PROXY_USER");
 		identityOptions.add("--proxypassword=PROXY_PASSWORD");
@@ -210,11 +210,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		listOptions.add("-h, --help");
 		listOptions.add("--debug=DEBUG");
 //		listOptions.add("-k, --insecure");
-		listOptions.add("--installed");
+		listOptions.add("--installed");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=634254
 		listOptions.add("--consumed");
 		listOptions.add("--available");
 		listOptions.add("--all");
-		listOptions.add("--ondate=ON_DATE");
+		listOptions.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
 		listOptions.add("--proxy=PROXY_URL");
 		listOptions.add("--proxyuser=PROXY_USER");
 		listOptions.add("--proxypassword=PROXY_PASSWORD");

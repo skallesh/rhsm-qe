@@ -591,11 +591,11 @@ Expected Results:
 	
 
 	
-	// TODO Candidates for an automated Test:
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=627685
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=627665
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=668814
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=669395
+	// Candidates for an automated Test:
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=627685
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668814
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669395
 
 	
 	
@@ -781,6 +781,32 @@ Expected Results:
 			ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", disabledUsername, disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
 		}
 
+		/* TODO reference for locales
+		[root@jsefler-onprem03 ~]# rpm -lq subscription-manager | grep locale
+		/usr/share/locale/as_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/bn_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/de_DE/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/en_US/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/es_ES/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/fr_FR/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/gu_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/hi_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/it_IT/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/ja_JP/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/kn_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/ko_KR/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/ml_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/mr_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/or_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/pa_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/pt_BR/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/ru_RU/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/ta_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/te_IN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/zh_CN/LC_MESSAGES/rhsm.mo
+		/usr/share/locale/zh_TW/LC_MESSAGES/rhsm.mo
+		*/
+		
 		return ll;
 	}
 	

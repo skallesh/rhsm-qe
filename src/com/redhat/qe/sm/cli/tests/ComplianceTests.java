@@ -102,8 +102,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	// TODO Candidates for an automated Test:
-	//		https://bugzilla.redhat.com/show_bug.cgi?id=649068 future subscription compliance test
+	// Candidates for an automated Test:
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=649068 future subscription compliance test
 	
 	
 	
