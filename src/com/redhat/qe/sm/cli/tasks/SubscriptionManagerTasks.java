@@ -54,9 +54,10 @@ public class SubscriptionManagerTasks {
 	public String productCertDir				= null; // "/etc/pki/product";
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
+	public String caCertDir						= null; // "/etc/rhsm/ca";
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
-	public String caCertDir						= null; // "/etc/rhsm/ca";
+
 	
 	public String hostname						= null;	// of the client
 	
@@ -205,6 +206,12 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
 				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value: " + value);
+		
+		// also update this "cached" value for these config file parameters
+		if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
+		if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
+		if (parameter.equals("productCertDir"))		this.productCertDir = value;
+		if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
 	}
 	
 	public void commentConfFileParameter(String confFile, String parameter){

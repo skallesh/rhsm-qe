@@ -596,21 +596,29 @@ Expected Results:
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=668814
 	//		https://bugzilla.redhat.com/show_bug.cgi?id=669395
 
-
 	
+	
+	
+
+	// Protected Class Variables ***********************************************************************
+	
+	protected final String tmpProductCertDir = "/tmp/productCertDir";
+	protected String productCertDir = null;
 	
 	// Configuration methods ***********************************************************************
-	
-	
-	@AfterClass (alwaysRun=true)
+
+	@BeforeGroups(value={"RegisterWithAutosubscribe_Test"})
+	public void storeProductCertDir() {
+		this.productCertDir = clienttasks.productCertDir;
+	}
 	@AfterGroups(value={"RegisterWithAutosubscribe_Test"},alwaysRun=true)
+	@AfterClass (alwaysRun=true)
 	public void cleaupAfterClass() {
 		if (clienttasks==null) return;
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", clienttasks.productCertDir);
+		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
 		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
 	}
-	final String tmpProductCertDir = "/tmp/productCertDir";
 
 	
 	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)

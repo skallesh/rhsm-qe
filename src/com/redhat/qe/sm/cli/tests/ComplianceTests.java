@@ -1,7 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.testng.annotations.AfterClass;
@@ -10,15 +9,10 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
-import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
-import com.redhat.qe.sm.data.ProductNamespace;
-import com.redhat.qe.sm.data.ProductSubscription;
-import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -40,7 +34,16 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable() {
+		clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE,null,null,null);
+		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installdProducts.isEmpty(),
+				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant even after having subscribed to every available subscription pool.");
 	}
 	
 	@Test(	description="subscription-manager: compliance test",
@@ -48,7 +51,16 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable() {
+		clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE,null,null,null);
+		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installdProducts.isEmpty(),
+				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant after having subscribed to every available subscription pool.");
 	}
 	
 	@Test(	description="subscription-manager: compliance test",
@@ -56,7 +68,16 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
+		clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE,null,null,null);
+		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installdProducts.isEmpty(),
+				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant after having subscribed to every available subscription pool.");
 	}
 	
 	@Test(	description="subscription-manager: compliance test",
@@ -64,7 +85,17 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled() {
+		clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE,null,null,null);
+		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertTrue(installdProducts.isEmpty(),
+				"No products are currently installed.");
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+				"Because no prodycts are currently installed, the system should inherently be compliant even without subscribing to any subscription pools.");
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
+		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant.");
+
 	}
 	
 
@@ -81,39 +112,22 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Class Variables ***********************************************************************
 	
-//	protected List<String> systemConsumerIds = new ArrayList<String>();
-//	protected SubscriptionPool testPool = null;
-//	protected final String registereeName = "Overconsumer";
 	protected final String productCertDirForSomeProductsSubscribable = "/tmp/sm-someProductsSubscribable";
 	protected final String productCertDirForAllProductsSubscribable = "/tmp/sm-allProductsSubscribable";
 	protected final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
 	protected final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
-
+	protected String productCertDir = null;
+	
 	
 	
 	// Protected Methods ***********************************************************************
-	@BeforeGroups(groups={"setup"},value="configureProductCertDirForSomeProductsSubscribable")
-	protected void configureProductCertDirForSomeProductsSubscribable() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForSomeProductsSubscribable);
-	}
-	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribable")
-	protected void configureProductCertDirForAllProductsSubscribable() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribable);
-	}
-	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsSubscribable")
-	protected void configureProductCertDirForNoProductsSubscribable() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsSubscribable);
-	}
-	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsInstalled")
-	protected void configureProductCertDirForNoProductsInstalled() {
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsinstalled);
-	}
 	
-
+	
+	
 	
 	// Configuration Methods ***********************************************************************
 
-	@BeforeClass(groups={"setup"},alwaysRun=true)
+	@BeforeClass(groups={"setup"})
 	public void setupProductCertDirsBeforeClass() {
 		
 		// clean out the productCertDirs
@@ -139,54 +153,50 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
-		
-		
-		
-		
-//		// find the corresponding productNamespace from the entitlementCert
-//		ProductNamespace productNamespace = null;
-//		for (ProductNamespace pn : entitlementCert.productNamespaces) {
-//			if (pn.name.equals(productName)) productNamespace = pn;
-//		}
-//		
-//		// assert the installed status of the corresponding product
-//		if (entitlementCert.productNamespaces.isEmpty()) {
-//			log.warning("This product '"+productId+"' ("+productName+") does not appear to grant entitlement to any client side content.  This must be a server side management add-on product. Asserting as such...");
-//
-//			Assert.assertEquals(entitlementCert.contentNamespaces.size(),0,
-//					"When there are no productNamespaces in the entitlementCert, there should not be any contentNamespaces.");
-//
-//			// when there is no corresponding product, then there better not be an installed product status by the same product name
-//			Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts()),
-//					"Should not find any installed product status matching a server side management add-on productName: "+ productName);
-//
-//			// when there is no corresponding product, then there better not be an installed product cert by the same product name
-//			Assert.assertNull(ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts),
-//					"Should not find any installed product certs matching a server side management add-on productName: "+ productName);
-//
-//		} else {
-//			Assert.assertNotNull(productNamespace, "The new entitlement cert's product namespace corresponding to this expected ProductSubscription with ProductName '"+productName+"' was found.");
-//
-//			// assert whether or not the product is installed			
-//			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
-//			Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
-//
-//			// assert the status of the installed product
-//			//ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
-//			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("id", productNamespace.hash, currentlyInstalledProductCerts);
-//			if (productCert!=null) {
-//				Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
-//				Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
-//				Assert.assertEquals(installedProduct.subscription, productSubscription.serialNumber, "Installed Product '"+productName+"' subscription matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
-//			} else {
-//				Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
-//			}
-//		}
-		
-
+		this.productCertDir = clienttasks.productCertDir;
+	}
+	
+	@AfterClass(groups={"setup"},alwaysRun=true)
+	public void configureProductCertDirAfterClass() {
+		if (clienttasks==null) return;
+		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
 	}
 	
 	
+	@BeforeGroups(groups={"setup"},value="configureProductCertDirForSomeProductsSubscribable")
+	protected void configureProductCertDirForSomeProductsSubscribable() {
+		clienttasks.unregister(null, null, null);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForSomeProductsSubscribable);
+		SSHCommandResult r0 = client.runCommandAndWait("ls -1 "+productCertDirForSomeProductsSubscribable+" | wc -l");
+		SSHCommandResult r1 = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
+		SSHCommandResult r2 = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsSubscribable+" | wc -l");
+		Assert.assertTrue(Integer.valueOf(r0.getStdout().trim())>0 && Integer.valueOf(r1.getStdout().trim())>0 && Integer.valueOf(r2.getStdout().trim())>0,
+				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains some subscribable products based on the currently available subscriptions.");
+	}
+	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribable")
+	protected void configureProductCertDirForAllProductsSubscribable() {
+		clienttasks.unregister(null, null, null);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribable);	
+		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
+		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
+				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all subscribable products based on the currently available subscriptions.");
+	}
+	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsSubscribable")
+	protected void configureProductCertDirForNoProductsSubscribable() {
+		clienttasks.unregister(null, null, null);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsSubscribable);
+		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsSubscribable+" | wc -l");
+		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
+				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all non-subscribable products based on the currently available subscriptions.");
+	}
+	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsInstalled")
+	protected void configureProductCertDirForNoProductsInstalled() {
+		clienttasks.unregister(null, null, null);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsinstalled);
+		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsinstalled+" | wc -l");
+		Assert.assertEquals(Integer.valueOf(r.getStdout().trim()),Integer.valueOf(0),
+				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains no products.");
+	}
 	
 	// Data Providers ***********************************************************************
 
