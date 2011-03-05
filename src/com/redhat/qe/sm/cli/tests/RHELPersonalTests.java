@@ -628,8 +628,12 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
 		
 			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
-			Assert.assertNotNull(personSubscriptionPool,
-					"ProductId '"+personProductId+"' is listed as all available to user '"+username+"' registered as a system.");
+			/* behavior changed on list --all --available  (3/4/2011)
+			Assert.assertNotNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is listed as all available to user '"+username+"' registered as a system.");
+			*/
+			Assert.assertNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is NOT listed in all available subscription pools to user '"+username+"' registered as a system.");
+
+			
 			SSHCommandResult sshComandResult = client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null, null, null, null);
 	
 			// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'

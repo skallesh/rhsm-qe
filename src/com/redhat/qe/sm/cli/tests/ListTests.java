@@ -271,11 +271,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		for (String personProductId : getPersonProductIds()) {
 			// assert that RHEL Personal *is not* included in --available subscription pools
 			rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", personProductId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-			Assert.assertNull(rhelPersonalPool,"Personal ProductId '"+personProductId+"' is NOT available to this consumer from any available subscription pool when registered as type system.");
+			Assert.assertNull(rhelPersonalPool,"Personal ProductId '"+personProductId+"' is NOT available to this consumer from --available subscription pools when registered as type system.");
 			
+			/* behavior changed on list --all --available  (3/4/2011)
 			// also assert that RHEL Personal *is* included in --all --available subscription pools
 			rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", personProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 			Assert.assertNotNull(rhelPersonalPool,"Personal ProductId '"+personProductId+"' is included in --all --available subscription pools when registered as type system.");
+			*/
+			// also assert that RHEL Personal *is not* included in --all --available subscription pools
+			rhelPersonalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", personProductId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+			Assert.assertNull(rhelPersonalPool,"Personal ProductId '"+personProductId+"' is NOT available to this consumer from --all --available subscription pools when registered as type system.");
 		}
 	}
 	@AfterGroups(groups={}, value="EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test", alwaysRun=true)
