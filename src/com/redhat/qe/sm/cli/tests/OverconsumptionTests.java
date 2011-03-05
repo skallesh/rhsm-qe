@@ -4,12 +4,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -32,11 +35,11 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void BasicAttemptToOversubscribe_Test() {
+	public void BasicAttemptToOversubscribe_Test() throws JSONException, Exception {
 	
 		// find the pool with the least positive quantity available >= 2
 		client1tasks.register(clientusername, clientpassword, null, registereeName, null, null, Boolean.TRUE, null, null, null);
-		int quantity = 10000000;
+		int quantity = 1000000;
 		for (SubscriptionPool pool: client1tasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.quantity.equalsIgnoreCase("unlimited")) continue;
 			int pool_quantity = Integer.valueOf(pool.quantity);
@@ -64,10 +67,15 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		client1tasks.clean(null,null,null);
 		systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(clientusername, clientpassword, null, registereeName, null, null, null, null, null, null)));
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
-		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity after having consumed all of its available entitlements.");
+//		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
+		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNull(pool, "The test pool after having consumed all of its available subscriptions is no longer --available.");
+		Assert.assertNull(pool, "The test pool is no longer in the --available list after having consumed all of its available subscriptions.");
+		
+		// assert the consumed quantity
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+testPool.poolId));
+		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
+				"Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 
 		// now attempt to oversubscribe
 		log.info("Now we will attempt to oversubscribe to original pool: "+testPool);
@@ -75,6 +83,11 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
 		Assert.assertEquals(client1tasks.subscribe_(testPool.poolId, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'");
+		// assert the consumed quantity again
+		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+testPool.poolId));
+		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
+				"Asserting the test pool's consumed attribute has not overconsumed it's total quantity after attempting a basic overconsumption of its entitlements.");
+
 	}
 	
 	
@@ -83,7 +96,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			dependsOnMethods={"BasicAttemptToOversubscribe_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConcurrentAttemptToSubscribe_Test() {
+	public void ConcurrentAttemptToSubscribe_Test() throws JSONException, Exception {
 	
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
@@ -102,7 +115,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(client2EntitlementCerts.size(), 0, "Registered client on '"+client2tasks.hostname+"' should have NO entitlements.");
 		
 		// assert that the test pool now has a quantity of 2 available
-		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
+		SubscriptionPool pool;
+		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Found the test pool after having consumed available subscriptions.");
 		Assert.assertEquals(pool.quantity, "2", "Asserting the test pool quantity after having consumed almost all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -131,13 +145,19 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result2.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client2tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		
 		// assert that the test pool has dropped by 2
+//		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+//		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
+//		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity has dropped by 2 due to the concurrent call to subscribe.");
+//		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
+//		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
+//		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity has dropped by 2 due to the concurrent call to subscribe.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
-		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity has dropped by 2 due to the concurrent call to subscribe.");
+		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
-		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity has dropped by 2 due to the concurrent call to subscribe.");
-		
+		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+testPool.poolId));
+		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
+
 		// make sure both clients got individualized entitlement certs
 		client1EntitlementCerts = client1tasks.getCurrentEntitlementCertFiles();
 		Assert.assertEquals(client1EntitlementCerts.size(), 1, "Registered client on '"+client1tasks.hostname+"' should have 1 entitlement from the attempt to subscribe to poolid: "+testPool.poolId);
@@ -154,7 +174,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			dependsOnMethods={"ConcurrentAttemptToSubscribe_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConcurrentAttemptToOversubscribe_Test() {
+	public void ConcurrentAttemptToOversubscribe_Test() throws JSONException, Exception {
 	
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
@@ -166,7 +186,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		systemConsumerIds.add(client2tasks.getCurrentConsumerId(client2tasks.register(clientusername, clientpassword, null, registereeName, null, null, null, null, null, null)));
 
 		// assert that the test pool has a quantity of 1 available
-		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
+		SubscriptionPool pool;
+		pool= SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Found the test pool after having consumed available subscriptions.");
 		Assert.assertEquals(pool.quantity, "1", "Asserting the test pool quantity after having consumed almost all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAvailableSubscriptionPools());
@@ -185,12 +206,18 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result2 = client2.getSSHCommandResult();
 		
 		// assert that the test pool does NOT fall below zero
+//		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+//		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
+//		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity does not fall below zero after attempting a concurrent subscribe.");
+//		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
+//		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
+//		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity does not fall below zero after attempting a concurrent subscribe.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
-		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity does not fall below zero after attempting a concurrent subscribe.");
+		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
-		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
-		Assert.assertEquals(pool.quantity, "0", "Asserting the test pool quantity does not fall below zero after attempting a concurrent subscribe.");
+		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+testPool.poolId));
+		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 		
 		// one of these command should have succeeded and one should have failed with "No free entitlements..."
 		// decide who was the winner and who must have been the loser
@@ -214,7 +241,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(sshWinner.getStderr().trim(), "","No stderr information is expected on '"+smtWinner.hostname+"'.");
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
-		Assert.assertEquals(sshLoser.getStdout().trim(), "No free entitlements are available for the pool with id '"+pool.poolId+"'", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left for pool '"+pool.poolId+"'.");
+		Assert.assertEquals(sshLoser.getStdout().trim(), "No free entitlements are available for the pool with id '"+testPool.poolId+"'", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
 		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");
 	}

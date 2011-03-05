@@ -1446,8 +1446,8 @@ public class SubscriptionManagerTasks {
 				}
 			}
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			Assert.fail(e.getMessage());
 		} 
 		
 		// figure out which entitlement cert file has been newly installed into /etc/pki/entitlement after attempting to subscribe to pool
@@ -1534,10 +1534,27 @@ public class SubscriptionManagerTasks {
 			
 			// assert that the depleted pool Quantity is zero
 			SubscriptionPool depletedPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", pool.poolId, getCurrentlyAllAvailableSubscriptionPools());
+			/* behavior changed on list --all --available  (3/4/2011)
 			Assert.assertNotNull(depletedPool,
 					"Found the depleted pool amongst --all --available after having consumed all of its available entitlements: ");
-			Assert.assertEquals(depletedPool.quantity, "0",
-					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
+			*/
+			Assert.assertNull(depletedPool,
+					"Should no longer find the depleted pool amongst --all --available after having consumed all of its available entitlements: ");
+//			Assert.assertEquals(depletedPool.quantity, "0",
+//					"Asserting the pool's quantity after having consumed all of its available entitlements is zero.");
+			JSONObject jsonPool = null;
+			int consumed = 0;
+			int quantity = Integer.valueOf(pool.quantity);
+			try {
+				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,"/pools/"+pool.poolId));
+				consumed = jsonPool.getInt("consumed");
+				quantity = jsonPool.getInt("quantity");
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			} 
+			Assert.assertEquals(consumed, quantity,
+					"Asserting the pool's consumed attribute equals it's total quantity after having consumed all of its available entitlements.");
 
 			//  assert that NO new entitlement cert file has been installed in /etc/pki/entitlement
 			Assert.assertNull(newCertFile,
