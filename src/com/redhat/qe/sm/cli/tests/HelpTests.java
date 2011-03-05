@@ -288,6 +288,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		subscribeOptions.add("-h, --help");
 		subscribeOptions.add("--debug=DEBUG");
 		subscribeOptions.add("--pool=POOL");
+		subscribeOptions.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
 //		subscribeOptions.add("-k, --insecure");
 //		subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 //		subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
