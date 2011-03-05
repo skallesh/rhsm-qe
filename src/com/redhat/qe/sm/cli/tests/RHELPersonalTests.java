@@ -11,8 +11,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -534,10 +536,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureSystemAutosubscribeConsumesSubPool_Test() throws JSONException {
-		log.info("Now register client1 under username '"+username+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
-		client1tasks.unregister(null, null, null);
-		client1tasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
-		personConsumerId = client1tasks.getCurrentConsumerId();
+//		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 		
 		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
 			JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
@@ -545,12 +544,13 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
 			String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
 			JSONArray bundledProductData = subpoolProductDataAsJSONObject.getJSONArray("bundledProductData");
-		
-			SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
-			Assert.assertNotNull(pool,"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
-			List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
 
-			client1tasks.subscribeToSubscriptionPool(pool);
+			log.info("Register client1 under username '"+username+"' as a person and subscribe to the '"+personProductId+"' subscription pool...");
+			personConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(username, password, ConsumerType.person, null, null, null, Boolean.TRUE, null, null, null));
+			SubscriptionPool personalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
+			Assert.assertNotNull(personalPool,"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
+			List<File> beforeEntitlementCertFiles = client1tasks.getCurrentEntitlementCertFiles();
+			client1tasks.subscribeToSubscriptionPool(personalPool);
 		
 			log.info("Now register client2 under username '"+username+"' as a system with autosubscribe to assert that subpools bundled products gets consumed...");
 			client2tasks.unregister(null, null, null);
@@ -568,6 +568,9 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();	
 			client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		}
+		
+		// unregister the last person consumer from client1
+		client1tasks.unregister(null,null,null);
 	}
 	
 	
@@ -577,11 +580,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=61126)
 	public void EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test() throws JSONException {
-		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
-		
-		log.info("Register client1 under username '"+username+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
-		client1tasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
-		personConsumerId = client1tasks.getCurrentConsumerId();
+//		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 		
 		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
 			JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
@@ -589,6 +588,9 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
 			String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
 			
+			log.info("Register client1 under username '"+username+"' as a person and subscribe to the '"+personSubscriptionName+"' subscription pool...");
+			personConsumerId = client1tasks.getCurrentConsumerId(client1tasks.register(username, password, ConsumerType.person, null, null, null, Boolean.TRUE, null, null, null));
+
 			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 			Assert.assertNotNull(personSubscriptionPool,
 					"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
@@ -607,37 +609,46 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2tasks.getCurrentlyAvailableSubscriptionPools()),
 					"Personal subpool subscription with ProductId '"+systemProductId+"' is NOT available to user '"+anotherUsername+"' who is under the same owner as '"+username+"'.");
 		}
+		
+		// unregister the last person consumer from client1
+		client1tasks.unregister(null,null,null);
+		
 	}
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure a system cannot subscribe to a personal subscription pool",
 			groups={"EnsureSystemCannotSubscribeToPersonalPool_Test"},
+//			dependsOnGroups={"EnsureSubPoolIsNotDeletedAfterAllOtherSystemsUnsubscribeFromSubPool_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureSystemCannotSubscribeToPersonalPool_Test() throws JSONException {
-		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
-		
-		log.info("Register client1 under username '"+username+"' as a system and assert that personal products can NOT be subscribed to...");
-		//client1tasks.unregister();
-		client1tasks.register(username, password, ConsumerType.system, null, null, null, null, null, null, null);
-		
+//		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
+				
 		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
 			JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
 			String personProductId = poolProductDataAsJSONObject.getString("personProductId");
 			JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
 			String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
-		
+			
+			log.info("Register client1 under username '"+username+"' as a person and find the personal subscription PoolId with ProductId '"+personProductId+"'...");
+			client1tasks.register(username, password, ConsumerType.person, null, null, null, Boolean.TRUE, null, null, null);
+			SubscriptionPool personalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
+			Assert.assertNotNull(personalPool,"Personal Subscription with ProductId '"+personProductId+"' (PoolId="+personalPool.poolId+") is available to user '"+username+"' registered as a person.");
+			
+			log.info("Now register client1 under username '"+username+"' as a system and assert that personal pool can NOT be subscribed to...");
+			client1tasks.register(username, password, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+			
 			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 			/* behavior changed on list --all --available  (3/4/2011)
 			Assert.assertNotNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is listed as all available to user '"+username+"' registered as a system.");
 			*/
 			Assert.assertNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is NOT listed in all available subscription pools to user '"+username+"' registered as a system.");
-
 			
-			SSHCommandResult sshComandResult = client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null, null, null, null);
-	
+			// attempt to subscribe system consumer to personal pool
+			SSHCommandResult sshComandResult = client1tasks.subscribe(personalPool.poolId, null, null, null, null, null, null, null);
+			
 			// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'
-			Assert.assertContainsMatch(sshComandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personSubscriptionPool.poolId+"'",
+			Assert.assertContainsMatch(sshComandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
 					"Attempting to subscribe a system consumer to a personal pool is blocked.");
 			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),"No Consumed subscription pools to list",
 					"Because the subscribe attempt was blocked, there should still be 'No Consumed subscription pools to list'.");
@@ -708,7 +719,9 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	//
 	//	The above entitlements were derived from the pool: '8a9b90882dce731d012dd25e1a7804be'.
 	//	Please unsubscribe from the above entitlements first.
-	@AfterGroups(groups={"setup"}, value={"RHELPersonal","EnsureSystemAutosubscribeConsumesSubPool_Test"}, alwaysRun=true)
+	@AfterClass(groups={"setup"})
+//	@AfterGroups(groups={"setup"}, value={"RHELPersonal"}, alwaysRun=true)
+	@BeforeGroups(groups={"setup"}, value={"EnsureSystemAutosubscribeConsumesSubPool_Test","EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test","EnsureSystemCannotSubscribeToPersonalPool_Test"}, alwaysRun=true)
 	public void unsubscribeAndUnregisterMultipleSystemsAfterGroups() {
 		if (client2tasks!=null) {
 			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
