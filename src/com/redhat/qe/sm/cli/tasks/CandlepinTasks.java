@@ -719,7 +719,7 @@ public class CandlepinTasks {
         return feed;
 	}
 		
-	public static JSONObject createPoolRequest(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, String... providedProducts) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, String... providedProducts) throws JSONException{
 		JSONObject sub = new JSONObject();
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 		sub.put("startDate", sdf.format(startDate));

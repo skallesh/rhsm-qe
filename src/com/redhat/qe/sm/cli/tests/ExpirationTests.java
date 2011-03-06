@@ -24,6 +24,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -49,12 +50,13 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
 		// subscribe
 		File expiringCertFile = clienttasks.subscribeToSubscriptionPool(expiringPool);
-		EntitlementCert expiringCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringCertFile);
+		/*EntitlementCert*/ expiringCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringCertFile);
 		List <ProductSubscription> expiringProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", expiringCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
 		Assert.assertMore(expiringProductSubscriptions.size(),0, "Found ProductSubscriptions corresponding to the just subscribed SubscriptionPool: "+expiringPool);
 
 		// wait for pool to expire
-		sleep(endingMinutesFromNow*60*1000 + 30*1000); // plus a 30 sec buffer;
+		sleep(endingMinutesFromNow*60*1000 + 30*1000); // plus a 30 sec buffer
+		sleep(30*1000); // wait another 30 sec for rhsmcertd insurance
 		
 		// verify that that the pool expired
 		SubscriptionPool expiredPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -63,19 +65,31 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		//verify that the expired product subscriptions are gone
 		List <ProductSubscription> currentProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		for (ProductSubscription p : expiringProductSubscriptions) {
-			Assert.assertTrue(!currentProductSubscriptions.contains(p),"The expired ProductSubscription '"+p+"' has been removed by rhsmd.");
+			Assert.assertTrue(!currentProductSubscriptions.contains(p),"The expired ProductSubscription '"+p+"' has been removed by rhsmcertd.");
 		}
 		
 		// verify that the expired entitlement cert file is gone
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client,expiringCertFile.getPath())==0,"The expired entitlement cert file has been removed by rhsm");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client,expiringCertFile.getPath())==0,"The expired entitlement cert file has been removed by rhsmcertd");
 	}
 	
 	
-	@Test(	description="Verify granted entitlements are added to the certifiate revocation list after the subscription expires",
-			groups={}, dependsOnGroups={},
-			enabled=false) // TODO Implement VerifyGrantedEntitlementsAreAddedToCertificateRevocationListAfterSubscriptionExpires_Test()
-	public void VerifyGrantedEntitlementsAreAddedToCertificateRevocationListAfterSubscriptionExpires_Test() throws Exception{
-		
+	// TODO Review the validity of this testcase with development (My observation is that expiringCert is NOT actually added to list of RevokedCerts
+	@Test(	description="Verify expired entitlement is added to the certifiate revocation list after the subscription expires",
+			groups={}, dependsOnMethods={"VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test"},
+			enabled=false)
+	public void VerifyExpiredEntitlementIsAddedToCertificateRevocationList_Test() throws Exception{
+		if (expiringCert==null) throw new SkipException("This test requires a successful run of a prior test whose entitlement cert has expired."); 
+
+		log.info("Check the CRL list on the server and verify the expired entitlement cert serial is revoked...");
+		log.info("Waiting 2 minutes...  (Assuming this is the candlepin.conf value set for pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule)");
+		sleep(2*60*1000);	// give the CertificateRevocationListTask.schedule 2 minutes to update the list since that is what was set in setupBeforeSuite()
+		// NOTE: The refresh schedule should have been set with a call to servertasks.updateConfigFileParameter in the setupBeforeSuite()
+		//       Set inside /etc/candlepin/candlepin.conf
+		//       pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule=0 0/2 * * * ?
+		// NOTE: if not set, the default is  public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?" Fire at 12pm (noon) every day
+		RevokedCert revokedCert = RevokedCert.findFirstInstanceWithMatchingFieldFromList("serialNumber",expiringCert.serialNumber,servertasks.getCurrentlyRevokedCerts());
+		Assert.assertTrue(revokedCert!=null,"Expiring entitlement certificate serial number '"+expiringCert.serialNumber+"' has been added to the Certificate Revocation List (CRL) as: "+revokedCert);
+		Assert.assertEquals(revokedCert.reasonCode, "Privilege Withdrawn","An expired entitlement certificate should be revoked with a reason code of Privilege Withdrawn.");
 	}
 	
 	
@@ -196,6 +210,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	protected String ownerKey = "";
 	protected String randomAvailableProductId = null;
+	protected EntitlementCert expiringCert = null;
 	
 	protected void checkTime(String host, SSHCommandRunner runner)throws Exception {
 		//make sure local clock and server clock are synced
@@ -250,7 +265,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		String[] providedProducts = {};
 		
 		// create the subscription
-		String requestBody = CandlepinTasks.createPoolRequest(3, startDate, endDate, productId, contractNumber, providedProducts).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, providedProducts).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		
 		// refresh the pools
