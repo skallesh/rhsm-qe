@@ -201,7 +201,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={},
+			groups={}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
