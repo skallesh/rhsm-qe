@@ -35,6 +35,9 @@
   ([path]
      (ui launchapp path [] 10)
      (ui waittillwindowexist :main-window 30)))
+     
+(defn start-firstboot []
+  (start-app (@config :firstboot-binary-path)))
 
 (defn get-error-msg "Retrieves the error string from the RHSM error dialog."
   []

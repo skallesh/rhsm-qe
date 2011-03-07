@@ -4,8 +4,6 @@
   (:import java.util.NoSuchElementException
 	   [gnome.ldtp Element Tab Window TabGroup]))
 
-
-
 (defn same-name "takes a collection of keywords like :registration-settings
 and returns a mapping like :registration-settings -> 'Registration Settings'" 
   ([coll]
@@ -35,7 +33,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
           :compliance-assistant-dialog "Compliance Assistant"
           :information-dialog "Information"
           :warning-dialog "Warning"
-          :firstboot-window "firstboot"
+          :firstboot-window "frm0"
           :firstboot-proxy-dialog "Advanced Network Configuration"}))
 
 
