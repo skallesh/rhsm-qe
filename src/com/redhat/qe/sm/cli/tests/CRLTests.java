@@ -174,7 +174,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(SubscriptionPool.formatDateString(pool.endDate), SubscriptionPool.formatDateString(newEndDate),
 				"As seen by the client, the enddate of the refreshed pool '"+pool.poolId+"' ("+pool.subscriptionName+") has been changed from '"+SubscriptionPool.formatDateString(originalEndDate)+"' to '"+SubscriptionPool.formatDateString(newEndDate)+"'.");
 
-		log.info("Forth, in honor of https://bugzilla.redhat.com/show_bug.cgi?id=679617 let's assert that after unsubscribing, the subscription pool's original quantity is restored...");
+		log.info("Forth, in honor of bugzillas 682930, 679617 let's assert that after unsubscribing, the subscription pool's original quantity is restored...");
 		Assert.assertEquals(pool.quantity,originalPool.quantity,
 				"Assuming that nobody else has recently subscribed to this pool, the original pool quantity should be restored after updating the subscription's start/end dates and unsubscribing from the poolId '"+pool.poolId+"' ("+pool.subscriptionName+").");
 
