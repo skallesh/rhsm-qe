@@ -26,6 +26,7 @@ import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -1946,6 +1947,40 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+	public boolean areAllRequiredTagsInContentNamespaceProvidedByProductCerts(ContentNamespace contentNamespace, List<ProductCert> productCerts) {
+
+		// get all of the provided tags from the productCerts
+		List<String> providedTags = new ArrayList<String>();
+		for (ProductCert productCert : productCerts) {
+			for (ProductNamespace productNamespace : productCert.productNamespaces) {
+				if (productNamespace.providedTags!=null) {
+					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
+						providedTags.add(providedTag);
+					}
+				}
+			}
+		}
+		
+		// get all of the required tags from the contentNamespace
+		List<String> requiredTags = new ArrayList<String>();
+		if (contentNamespace.requiredTags!=null) {
+			for (String requiredTag : contentNamespace.requiredTags.split("\\s*,\\s*")) {
+				requiredTags.add(requiredTag);
+			}
+		}
+		
+		// are ALL of the requiredTags provided?  Note: true is returned (and should be) when requiredTags.isEmpty()
+		return providedTags.containsAll(requiredTags);
+	}
+	
+	
 	/**
 	 * Assert that the given entitlement certs are displayed in the stdout from "yum repolist all".
 	 * @param entitlementCerts
@@ -2003,6 +2038,7 @@ repolist: 3,394
 		*/
 		
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		List<ProductCert> currentProductCerts = this.getCurrentProductCerts();
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
@@ -2011,7 +2047,8 @@ repolist: 3,394
 
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
 				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-				if (areReported)
+//				if (areReported)	// before development of conditional content tagging
+				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts))
 					Assert.assertContainsMatch(result.getStdout(), regex);
 				else
 					Assert.assertContainsNoMatch(result.getStdout(), regex);
