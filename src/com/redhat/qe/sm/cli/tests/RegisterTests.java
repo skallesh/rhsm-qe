@@ -770,7 +770,7 @@ Expected Results:
 		if (!isServerOnPremises)	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),	"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
 		else 						ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                      	"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
 
-									ll.add(Arrays.asList(new Object[]{null,													"as_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "FIXME":"FIXME"}));
+									ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),							"as_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "FIXME":"FIXME"}));
 									ll.add(Arrays.asList(new Object[]{null,													"bn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "অবৈধ পরিচয়":"অবৈধ পরিচয়"}));
 									ll.add(Arrays.asList(new Object[]{null,													"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise":"Ungültige Berechtigungnachweise"}));
 									ll.add(Arrays.asList(new Object[]{null,													"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Invalid Credentials":"Invalid Credentials"}));
@@ -782,14 +782,14 @@ Expected Results:
 									ll.add(Arrays.asList(new Object[]{null,													"ja_JP.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "無効な識別情報":"無効な識別情報"}));
 									ll.add(Arrays.asList(new Object[]{null,													"kn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ":"ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ"}));
 									ll.add(Arrays.asList(new Object[]{null,													"ko_KR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "잘못된 인증 정보":"잘못된 인증 정보"}));
-									ll.add(Arrays.asList(new Object[]{null,													"ml_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "FIXME":"FIXME"}));
+									ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),							"ml_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "FIXME":"FIXME"}));
 									ll.add(Arrays.asList(new Object[]{null,													"mr_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "अवैध श्रेय":"अवैध श्रेय"}));  // same as hi_IN.UTF8?
 									ll.add(Arrays.asList(new Object[]{null,													"or_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "ଅବୈଧ ପ୍ରାଧିକରଣ":"ଅବୈଧ ପ୍ରାଧିକରଣ"}));
 									ll.add(Arrays.asList(new Object[]{null,													"pa_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ":"ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ"}));
 									ll.add(Arrays.asList(new Object[]{null,													"pt_BR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Credenciais inválidos":"Credenciais inválidos"}));
 									ll.add(Arrays.asList(new Object[]{null,													"ru_RU.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Недопустимые реквизиты":"Недопустимые реквизиты"}));
 									ll.add(Arrays.asList(new Object[]{null,													"ta_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "தவறான சான்றுகள்":"தவறான சான்றுகள்"}));
-									ll.add(Arrays.asList(new Object[]{null,													"te_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "FIXME":"FIXME"}));
+									ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),							"te_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "FIXME":"FIXME"}));
 									ll.add(Arrays.asList(new Object[]{null,													"zh_CN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "无效证书":"无效证书"}));
 									ll.add(Arrays.asList(new Object[]{null,													"zh_TW.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "無效的認證":"無效的認證"}));
 
