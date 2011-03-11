@@ -233,7 +233,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			clienttasks.subscribeToProduct(pool.subscriptionName);
 //		}
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-		SSHCommandResult result = clienttasks.subscribe_(pool.poolId,null,null,null,null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
 	}
@@ -367,136 +367,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	//FIXME THIS TEST WAS REPLACED BY THE TESTS BELOW AND TESTED AGAINST BETA SUBSCRIPTIONS
-//	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-//			groups={},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void AutoSubscribeToExpectedSubscriptionPoolProductId_Test() throws JSONException {
-//		// get the expected subscriptionPoolProductIdData
-//		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
-//
-//		// before testing, make sure all the expected subscriptionPoolProductId are available
-//		clienttasks.unregister(null, null, null);
-//		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-//		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
-//		for (List<Object> row : subscriptionPoolProductIdData) {
-//			String subscriptionPoolProductId = (String)row.get(0);
-//			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
-//			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
-//		}
-//		
-//		// get a list of the product certs on the client 
-//		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
-//		
-//		// register with autosubscribe
-//		clienttasks.unregister(null, null, null);
-//		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null, null, null, null);
-//
-//		/* Example sshCommandResult.getStdout(): 
-//			e1aef738-5d03-4a8a-9c87-7a2652e110a8 rh-alpha-qa-105
-//			Bind Product  Red Hat Enterprise Linux High Availability (for RHEL 6 Entitlement) 407
-//			Bind Product  Red Hat Enterprise Linux Scalable File System (for RHEL 6 Entitlement) 410
-//			Bind Product  Red Hat Enterprise Linux Resilient Storage (for RHEL 6 Entitlement) 409
-//			Bind Product  Red Hat Enterprise Linux Load Balancer (for RHEL 6 Entitlement) 408
-//			Bind Product  Red Hat Enterprise Linux 6 Entitlement Alpha 406
-//		*/
-//		
-//		/* Sample sshCommandResult.getStdout():
-//			d67df9c8-f381-4449-9d17-56094ea58092 testuser1
-//			Subscribed to Products:
-//	    		RHEL for Physical Servers SVC(37060)
-//		 */
-//
-//		// get the state of affairs after having registered with autosubscribe
-//		List<SubscriptionPool> availableSubscriptionPoolsAfterAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
-//		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-//		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-//		
-//		// loop through the subscriptionPoolProductIdData and verify...
-//		for (List<Object> row : subscriptionPoolProductIdData) {
-//			String subscriptionPoolProductId = (String)row.get(0);
-//			String[] bundledProductNames = (String[])row.get(1);
-//			SubscriptionPool subscriptionPool;
-//			
-//			// assert that the subscriptionPoolProductIds that are not installed, do not get autosubscribed to
-//			subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
-//			if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", subscriptionPool.subscriptionName, productCerts)==null) {
-//				log.warning("Note: No product cert with a name matching '"+subscriptionPool.subscriptionName+"' was found in '"+clienttasks.productCertDir+"'.  Therefore this expected product id cannot possibly be autosubscribed to.  Asserting this fact...");
-//				Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe),
-//						"SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is STILL available after registering with autosubscribe because no corressponding product cert is installed and therefore cannot possibly be autosubscribed to.");
-//				continue;
-//			}
-//			
-//			// assert that the subscriptionPoolProductId has been subscribed to...
-//			
-//			// assert that subscriptionPoolProductId is not available
-//			subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsAfterAutosubscribe);
-//			if (subscriptionPool!=null) {
-//				String bundledProductNamesAsString = "";
-//				for (String bundledProductName : bundledProductNames) bundledProductNamesAsString += bundledProductName+", ";bundledProductNamesAsString = bundledProductNamesAsString.replaceFirst("(?s), (?!.*?, )",""); // this will replaceLast ", " with ""
-//				log.warning("SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is still available after registering with autosubscribe.");
-//				log.warning("The probable cause is that the products we expected to be installed, '"+bundledProductNamesAsString+"', are probably not installed and therefore autosubscribing to '"+subscriptionPoolProductId+"' was not performed.");
-//			}
-//			Assert.assertNull(subscriptionPool, "SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' is NOT available after registering with autosubscribe.");
-//
-//			for (String bundledProductName : bundledProductNames) {
-//				// assert that the sshCommandResult from register indicates the bundledProductName was subscribed
-////DELETEME ALPHA ASSERT				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Bind Product  "+bundledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+bundledProductName+"' was reported as autosubscribed/bound in the output from register with autotosubscribe.");
-//				//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe appears to have subscribed to something");
-//				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+bundledProductName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+bundledProductName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-//
-//				// assert that the bundledProductName is consumed
-//				ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, consumedProductSubscriptions);
-//				Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+bundledProductName+"' is consumed after registering with autosubscribe.");
-//	
-//				// assert that the bundledProductName is installed and subscribed
-//				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, installedProducts);
-//				Assert.assertNotNull(installedProduct, "The status of expected product with ProductName '"+bundledProductName+"' is reported in the list of installed products.");
-//				Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe, the status of Installed Product '"+bundledProductName+"' is Subscribed.");
-//			}
-//		}
-//		
-//		// finally assert that no extraneous subscription pools were subscribed to
-//		for (SubscriptionPool subscriptionPoolBeforeAutosubscribe : availableSubscriptionPoolsBeforeAutosubscribe) {
-//			if (!availableSubscriptionPoolsAfterAutosubscribe.contains(subscriptionPoolBeforeAutosubscribe)) {
-//				boolean subscribedPoolWasExpected = false;
-//				for (List<Object> row : subscriptionPoolProductIdData) {
-//					String subscriptionPoolProductId = (String)row.get(0);
-//					if (subscriptionPoolBeforeAutosubscribe.productId.equals(subscriptionPoolProductId)) {
-//						subscribedPoolWasExpected = true;
-//						break;
-//					}
-//				}
-//				if (!subscribedPoolWasExpected) Assert.fail("Did NOT expect pool '"+subscriptionPoolBeforeAutosubscribe+"' to be removed from the available list following a register with autosubscribe.");
-//			}
-//		}
-//		Assert.assertTrue(true,"No pools were unexpectedly subscribed to following a register with autosubscribe.");
-//	}
-//	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-//			groups={"AutoSubscribeAndVerify"},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void InititiateAutoSubscribe_Test() throws JSONException {
-//		// get the expected subscriptionPoolProductIdData
-//		List<List<Object>> subscriptionPoolProductIdData = getSubscriptionPoolProductIdDataAsListOfLists();
-//
-//		// before testing, make sure all the expected subscriptionPoolProductId are available
-//		clienttasks.unregister(null, null, null);
-//		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-//		availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
-//		for (List<Object> row : subscriptionPoolProductIdData) {
-//			String subscriptionPoolProductId = (String)row.get(0);
-//			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", subscriptionPoolProductId, availableSubscriptionPoolsBeforeAutosubscribe);
-//			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+subscriptionPoolProductId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
-//		}
-//		
-//		// register with autosubscribe
-//		clienttasks.unregister(null, null, null);
-//		sshCommandResultFromAutosubscribe = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
-//	}
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AutoSubscribeAndVerify"},
+			groups={"AutoSubscribeAndVerify", "blockedByBug-680399"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void InititiateAutoSubscribe_Test() throws JSONException {
@@ -513,9 +385,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
 		}
 		
-		// register with autosubscribe
-		clienttasks.unregister(null, null, null);
-		sshCommandResultFromAutosubscribe = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
+		// autosubscribe
+		//clienttasks.unregister(null, null, null);
+		//sshCommandResultFromAutosubscribe = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
+		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null);
 		
 		// Example Results from register --autosubscribe
 		//		[root@jsefler-onprem03 ~]# subscription-manager register --username=testuser1 --password=password --autosubscribe

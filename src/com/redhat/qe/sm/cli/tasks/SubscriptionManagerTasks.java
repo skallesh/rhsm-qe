@@ -1310,6 +1310,7 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe without asserting results
+	 * @param auto TODO
 	 * @param poolId TODO
 	 * @param productId TODO
 	 * @param regtoken TODO
@@ -1319,10 +1320,11 @@ public class SubscriptionManagerTasks {
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the subscribe command
-		String command = this.command;	command += " subscribe";	
+		String command = this.command;	command += " subscribe";
+		if (auto!=null && auto)			command += " --auto";
 		if (poolId!=null)				command += " --pool="+poolId;
 		if (productId!=null)			command += " --product="+productId;
 		if (regtoken!=null)				command += " --regtoken="+regtoken;
@@ -1359,9 +1361,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, email, locale, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
@@ -1413,7 +1415,7 @@ public class SubscriptionManagerTasks {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null);
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();

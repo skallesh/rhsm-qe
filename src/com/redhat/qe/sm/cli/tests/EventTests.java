@@ -417,7 +417,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(pool.poolId, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event
