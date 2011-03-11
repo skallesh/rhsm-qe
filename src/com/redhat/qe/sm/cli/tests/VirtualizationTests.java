@@ -337,7 +337,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	//		
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=683459
 	
 	
 	
