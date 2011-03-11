@@ -31,6 +31,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality without registering",
+			groups={},
 			dataProvider="UnregisteredCommandData")
 	@ImplementsNitrateTest(caseId=41697)
 	public void AttemptingCommandsWithoutBeingRegistered_Test(String command) {
@@ -43,10 +44,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
+			groups={},
 			dataProvider="NegativeFunctionalityData")
-	public void AttemptingCommandsThatDoNotExist_Test(String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression) {
-		log.info("Testing subscription-manager-cli command that does not exist, expecting it to fail: "+ command);
-		RemoteFileTasks.runCommandAndAssert(client,command,expectedExitCode,stdoutGrepExpression,stderrGrepExpression);
+	public void AttemptingCommandsThatAreInvalid_Test(String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		log.info("Testing subscription-manager-cli command that is invalid, expecting it to fail: "+ command);
+		RemoteFileTasks.runCommandAndAssert(client,command,expectedExitCode,expectedStdoutRegex,expectedStderrRegex);
 
 	}
 	
@@ -96,10 +98,11 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
-		// String command, int expectedExitCode, String stderrGrepExpression, String stdoutGrepExpression
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO", 2, clienttasks.command+": error: no such option: --product",null}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO", 2, clienttasks.command+": error: no such option: --regtoken",null}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO", 2, clienttasks.command+": error: no such option: --pool",null}));
+		// String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",		2,		null,	clienttasks.command+": error: no such option: --product"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",	2,		null,	clienttasks.command+": error: no such option: --regtoken"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",		2,		null,	clienttasks.command+": error: no such option: --pool"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",	255,	"Only one of --pool or --auto may be used.",	null}));
 		
 		return ll;
 	}
