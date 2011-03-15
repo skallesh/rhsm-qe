@@ -1860,7 +1860,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * Issues a call to "subscription-manager-cli unsubscribe" which will unsubscribe from
+	 * Issues a call to "subscription-manager unsubscribe --all" which will unsubscribe from
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
