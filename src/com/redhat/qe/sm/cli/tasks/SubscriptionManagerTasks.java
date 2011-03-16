@@ -1956,7 +1956,36 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+//	public boolean areAllRequiredTagsInContentNamespaceProvidedByProductCerts(ContentNamespace contentNamespace, List<ProductCert> productCerts) {
+//
+//		// get all of the provided tags from the productCerts
+//		List<String> providedTags = new ArrayList<String>();
+//		for (ProductCert productCert : productCerts) {
+//			for (ProductNamespace productNamespace : productCert.productNamespaces) {
+//				if (productNamespace.providedTags!=null) {
+//					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
+//						providedTags.add(providedTag);
+//					}
+//				}
+//			}
+//		}
+//		
+//		// get all of the required tags from the contentNamespace
+//		List<String> requiredTags = new ArrayList<String>();
+//		if (contentNamespace.requiredTags!=null) {
+//			for (String requiredTag : contentNamespace.requiredTags.split("\\s*,\\s*")) {
+//				requiredTags.add(requiredTag);
+//			}
+//		}
+//		
+//		// are ALL of the requiredTags provided?  Note: true is returned (and should be) when requiredTags.isEmpty()
+//		return providedTags.containsAll(requiredTags);
+//	}
 	public boolean areAllRequiredTagsInContentNamespaceProvidedByProductCerts(ContentNamespace contentNamespace, List<ProductCert> productCerts) {
+		return areAllRequiredTagsProvidedByProductCerts(contentNamespace.requiredTags, productCerts);
+	}
+	
+	public boolean areAllRequiredTagsProvidedByProductCerts(String requiredTagsAsString, List<ProductCert> productCerts) {
 
 		// get all of the provided tags from the productCerts
 		List<String> providedTags = new ArrayList<String>();
@@ -1972,8 +2001,8 @@ public class SubscriptionManagerTasks {
 		
 		// get all of the required tags from the contentNamespace
 		List<String> requiredTags = new ArrayList<String>();
-		if (contentNamespace.requiredTags!=null) {
-			for (String requiredTag : contentNamespace.requiredTags.split("\\s*,\\s*")) {
+		if (requiredTagsAsString!=null) {
+			for (String requiredTag : requiredTagsAsString.split("\\s*,\\s*")) {
 				requiredTags.add(requiredTag);
 			}
 		}
@@ -1981,7 +2010,6 @@ public class SubscriptionManagerTasks {
 		// are ALL of the requiredTags provided?  Note: true is returned (and should be) when requiredTags.isEmpty()
 		return providedTags.containsAll(requiredTags);
 	}
-	
 	
 	/**
 	 * Assert that the given entitlement certs are displayed in the stdout from "yum repolist all".

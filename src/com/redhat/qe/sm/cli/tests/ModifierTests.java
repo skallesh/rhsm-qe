@@ -82,25 +82,59 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListWhenProvidingPoolsAreSubscribed(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools) throws JSONException, Exception {
 
-		log.info("");
-//		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-//		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
-//		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(modifierPool);
-//		entitlementCerts.add(clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
-		// assert that the content label is not available
-//		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts, false);
-	
-		ArrayList<String> repolist = clienttasks.yumRepolist("all");
-//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-//			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
-//				Assert.assertTrue(repolist.contains(contentNamespace.label),
-//					"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
-//			} else {
-//				Assert.assertFalse(repolist.contains(contentNamespace.label),
-//					"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
-//			}
-//		}
+		// make sure we are not subscribed to anything
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+
+		boolean areAllRequiredTagsProvided = clienttasks.areAllRequiredTagsProvidedByProductCerts(requiredTags, clienttasks.getCurrentProductCerts());
+
+		log.info("Before subscribing to anything, assert that the label (repo id) '"+label+"' is not available.");
+		Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+				"Before beginning our test, yum repolist all should exclude label (repo id) '"+label+"'.");
+
 		
+		log.info("Now subscribe to the modifier pool and assert that the label (repo id) '"+label+"' is still not available.");
+		clienttasks.subscribeToSubscriptionPool(modifierPool);
+		Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+				"After subscribing to modifier pool for productId '"+modifierPool.productId+"', yum repolist all should not include (repo id) '"+label+"' because the subscribing product(s) being modified is not yet subscribed to.");
+
+		log.info("Now individually subscribe to each of the subscribing products being modified and assert that once both the modifier pool and product being modified are both subscribed, then the modifier (repo id) '"+label+"' will become available.");
+		for (SubscriptionPool providingPool : providingPools) {
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(providingPool));
+			if (areAllRequiredTagsProvided) {
+				Assert.assertTrue(clienttasks.yumRepolist("all").contains(label),
+					"Having subscribed to both the modifier pool and its providing pool, now the modifier pool's (repo id) '"+label+"' is available in yum repolist all.");
+			} else {
+				Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+						"Because not all of the requiredTags '"+requiredTags+"' for content label '"+label+"' are not 100% provided by the currently installed product certs, we should be blocked from seeing the repo id label '"+label+"' in yum repolist all.");				
+			}
+			clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+			Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+					"After unsubscribing from the providing pool for productId '"+providingPool.productId+"', yum repolist all should no longer include (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
+		}
+		
+		log.info("Now let's subscribe to the providing pools first before subscribing to the modifier.");
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+				"Yum repolist all should exclude label (repo id) '"+label+"' since we are not subscribed to anything.");
+		for (SubscriptionPool providingPool : providingPools) {
+			clienttasks.subscribeToSubscriptionPool(providingPool);
+		}
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool));
+		if (areAllRequiredTagsProvided) {
+			Assert.assertTrue(clienttasks.yumRepolist("all").contains(label),
+					"Having subscribed to all of its possible providing pools and the modifier pool, the modifier pool's (repo id) '"+label+"' should immediately be available in yum repolist all.");
+		} else {
+			Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+					"Because not all of the requiredTags '"+requiredTags+"' for content label '"+label+"' are not 100% provided by the currently installed product certs, we should be blocked from seeing the repo id label '"+label+"' in yum repolist all.");
+		}
+		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+		Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+				"After unsubscribing from the modifier pool, yum repolist all should no longer include (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
+	
+		if (!areAllRequiredTagsProvided) {
+			throw new SkipException("We cannot claim success on this test until 100% of the requiredTags '"+requiredTags+"' are provided by the currently install products.");
+		}
+
 	}
 //	
 //	
