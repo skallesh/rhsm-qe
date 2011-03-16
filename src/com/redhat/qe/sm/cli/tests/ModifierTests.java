@@ -81,6 +81,13 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
 	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListWhenProvidingPoolsAreSubscribed(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools) throws JSONException, Exception {
+		
+		// make sure we are not subscribed to anything
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+		log.info("Before subscribing to anything, assert that the label (repo id) '"+label+"' is not available.");
+		Assert.assertFalse(clienttasks.yumRepolist("all").contains(label),
+				"Before beginning our test, yum repolist all should exclude label (repo id) '"+label+"'.");
 
 		// make sure we are not subscribed to anything
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -134,6 +141,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		if (!areAllRequiredTagsProvided) {
 			throw new SkipException("We cannot claim success on this test until 100% of the requiredTags '"+requiredTags+"' are provided by the currently install products.");
 		}
+
 
 	}
 //	
