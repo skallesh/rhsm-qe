@@ -42,6 +42,9 @@ for i in $*
       --TAG=*)
           TAG="`echo $i | sed 's/[-a-zA-Z]*=//'`"
           ;;
+      --VARIANT=*)
+          VARIANT="`echo $i | sed 's/[-a-zA-Z]*=//'`"
+          ;;
         *)
          # unknown option 
 	   usage
@@ -54,16 +57,16 @@ echo "ARCH = $ARCH"
 echo "FAMILY = $FAMILY"
 echo "TAG = $TAG"
 
-if [[ -z $ARCH ]] || [[ -z $FAMILY ]] || [[ -z $TAG ]] ; then
+if [[ -z $ARCH ]] || [[ -z $FAMILY ]] || [[ -z $TAG ]] || [[ -z $VARIANT ]]  ; then
  usage
  exit 1
 fi
 
 
-bkr workflow-simple --username=cloudqe --password=Q05Syutri --arch=$ARCH --variant=Server --family=$FAMILY --tag=$TAG --task=/CoreOS/rhsm/Install/subscription-manager-env  --task=/distribution/reservesys > job || (echo "bkr workflow-simple --username=cloudqe --password=Q05Syutri --arch=$ARCH --variant=Server --family=$FAMILY --tag=$TAG --task=/CoreOS/rhsm/Install/subscription-manager-env --task=/distribution/reservesys " && cat job && exit 1)
+bkr workflow-simple --username=cloudqe --password=Q05Syutri --arch=$ARCH --variant=$VARIANT --family=$FAMILY --tag=$TAG --task=/CoreOS/rhsm/Install/subscription-manager-env  --task=/distribution/reservesys > job || (echo "bkr workflow-simple --username=cloudqe --password=Q05Syutri --arch=$ARCH --variant=$VARIANT --family=$FAMILY --tag=$TAG --task=/CoreOS/rhsm/Install/subscription-manager-env --task=/distribution/reservesys " && cat job && exit 1)
 
 echo "===================== JOB DETAILS ================"
-echo "bkr workflow-simple --username=cloudqe --password=Q05Syutri --arch=$ARCH --variant=Server --family=$FAMILY --tag=$TAG --task=/CoreOS/rhsm/Install/subscription-manager-env --task=/distribution/reservesys "
+echo "bkr workflow-simple --username=cloudqe --password=pcx7MOdy1 --arch=$ARCH --variant=$VARIANT --family=$FAMILY --tag=$TAG --task=/CoreOS/rhsm/Install/subscription-manager-env --task=/distribution/reservesys "
 cat job
 echo "===================== JOB DETAILS ================"
 JOB=`cat job | cut -d \' -f 2`
