@@ -27,6 +27,7 @@ import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -74,21 +75,32 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@Test(	description="subscribe to pool for a modifier product and assert its content repo is NOT available",
+	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist when providing subscriptions are entitled",
 			groups={},
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
-	public void SubscribeToModifierPoolAndAssertItsContentIsNotAvailable(SubscriptionPool modifierPool, String contentLabel, List<String> modifiedProductIds, List<SubscriptionPool> providingPools) throws JSONException, Exception {
+	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListWhenProvidingPoolsAreSubscribed(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools) throws JSONException, Exception {
 
-//		log.info("When an owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(modifierPool);
-		entitlementCerts.add(clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
+		log.info("");
+//		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+//		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+//		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(modifierPool);
+//		entitlementCerts.add(clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
 		// assert that the content label is not available
-		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts, false);
+//		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts, false);
 	
+		ArrayList<String> repolist = clienttasks.yumRepolist("all");
+//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+//			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+//				Assert.assertTrue(repolist.contains(contentNamespace.label),
+//					"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
+//			} else {
+//				Assert.assertFalse(repolist.contains(contentNamespace.label),
+//					"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
+//			}
+//		}
+		
 	}
 //	
 //	
@@ -366,12 +378,14 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 					
 					// get the label and modifiedProductIds for each of the productContents
 					String label = jsonContent.getString("label");
+					String requiredTags = jsonContent.getString("requiredTags"); // comma separated string
 					JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
 					List<String> modifiedProductIds = new ArrayList<String>();
 					for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
 						String modifiedProductId = (String) jsonModifiedProductIds.get(k);
 						modifiedProductIds.add(modifiedProductId);
 					}
+
 					
 					
 					// does this pool contain productContents that modify other products?
@@ -380,7 +394,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
 						// yes, now its time to find the subscriptions that provide the modifiedProductIds
 						for (SubscriptionPool providingPool : allAvailablePools) {
-							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+modifierPool.poolId));	
+							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+providingPool.poolId));	
 							
 							// iterate through each of the providedProducts
 							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");
@@ -396,7 +410,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 						
 						
 						
-						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, providingPools}));
+						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
 					}
 				}
 			}
