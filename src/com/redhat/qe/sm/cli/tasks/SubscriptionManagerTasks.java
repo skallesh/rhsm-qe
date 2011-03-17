@@ -2105,9 +2105,9 @@ repolist: 3,394
 		int repolistEndLn = 0;
 		
 		for(int i=0;i<availRepos.length;i++)
-			if (availRepos[i].contains("repo id"))
+			if (availRepos[i].startsWith("repo id"))
 				repolistStartLn = i + 1;
-			else if (availRepos[i].contains("repolist:"))
+			else if (availRepos[i].startsWith("repolist:"))
 				repolistEndLn = i;
 		
 		for(int i=repolistStartLn;i<repolistEndLn;i++)
