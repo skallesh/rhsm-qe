@@ -7,6 +7,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -24,8 +25,8 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  * </BR>
  * These tests target subscriptions that do not provide any products, but instead are intended to grant an entitlement to a server-side function such as a Management Add-On.
  */
-@Test(groups="AddOnTests")
-public class AddOnTests extends SubscriptionManagerCLITestScript {
+@Test(groups="ManagementAddOnTests")
+public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Test methods ***********************************************************************
@@ -36,16 +37,29 @@ public class AddOnTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getAddOnSubscriptionData",
 			enabled=true)
-	public void VerifyContentNamespaceIsAbsentFromAnAddOnEntitlement (SubscriptionPool addOnPool) {
+	public void VerifyManagementAddOnEntitlementsContainNoContentNamespace (SubscriptionPool managementAddOnPool) {
 		
-		// subscribe to the pool
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(addOnPool));
+		// subscribe to a management add-on pool
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool));
 
-		// assert the contentnamespace
-		Assert.assertTrue(entitlementCert.contentNamespaces.isEmpty(),"There are no content namespaces in the grantent entitlement cert after subscribing to add-on subscription pool: "+addOnPool);
-		
+		// assert that there are no content namespaces in the granted entitlement cert
+		Assert.assertTrue(entitlementCert.contentNamespaces.isEmpty(),"There are no content namespaces in the entitlement cert granted after subscribing to management add-on subscription pool: "+managementAddOnPool);
 	}
 
+	
+	@Test(	description="verify that the entitlement cert granted by subscribing to a management add-on product does not contain a product namespace.",
+			groups={},
+			dependsOnGroups={},
+			dataProvider="getAddOnSubscriptionData",
+			enabled=true)
+	public void VerifyManagementAddOnEntitlementsContainNoProductNamespace (SubscriptionPool managementAddOnPool) {
+		
+		// subscribe to a management add-on pool
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(managementAddOnPool));
+
+		// assert that there are no product namespaces contained within the granted entitlement cert
+		Assert.assertTrue(entitlementCert.productNamespaces.isEmpty(),"There are no product namespaces in the entitlement cert granted after subscribing to management add-on subscription pool: "+managementAddOnPool);
+	}
 	
 	
 	// Candidates for an automated Test:
@@ -58,10 +72,13 @@ public class AddOnTests extends SubscriptionManagerCLITestScript {
 		
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
-		
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
 //		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+	}
+	
+	@AfterClass(groups="setup")
+	public void unregisterAfterClass() {
+		clienttasks.unregister(null, null, null);
 	}
 
 	
@@ -81,6 +98,8 @@ public class AddOnTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getAddOnSubscriptionDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// iterate through all available pools looking for those that contain no provided products
@@ -89,7 +108,7 @@ public class AddOnTests extends SubscriptionManagerCLITestScript {
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==0) {
 				
-				// found a subscription to a Management Add-on
+				// found a subscription to a Management Add-on, add it to the list of subscriptions to test
 				ll.add(Arrays.asList(new Object[]{pool}));
 			}
 		}
@@ -131,10 +150,6 @@ Example jsonPool:
 
 		  
 */
-	
-	
-
-	
 	
 
 }
