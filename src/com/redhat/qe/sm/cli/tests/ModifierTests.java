@@ -181,23 +181,19 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 									// NOTE: This test takes a long time to run when there are many providingPools.
 									// To reduce the execution time, let's simply limit the number of providing pools tested to 2,
 									// otherwise this block of code could be commented out for a more thorough test.
-									boolean poolProductIdIsAlreadyInProvidingPools = false;
+									boolean thisPoolProductIdIsAlreadyInProvidingPools = false;
 									for (SubscriptionPool providedPool : providingPools) {
 										if (providedPool.productId.equals(providingPool.productId)) {
-											poolProductIdIsAlreadyInProvidingPools=true;
-											break;
+											thisPoolProductIdIsAlreadyInProvidingPools=true; break;
 										}
 									}
-									if (providingPools.size()>=2||poolProductIdIsAlreadyInProvidingPools)break;
+									if (thisPoolProductIdIsAlreadyInProvidingPools||providingPools.size()>=2) break;
 									
-									providingPools.add(providingPool);
-									break;
+									providingPools.add(providingPool); break;
 								}
 							}
-
 						}
-						
-											
+										
 						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
 					}
 				}
