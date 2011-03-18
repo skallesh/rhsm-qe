@@ -57,11 +57,11 @@ JSON[8]="{\"parameter\": [{\"name\": \"CLIENT1_ARCH\",         \"value\": \"s390
           ], \"\": \"\"}"
 
 
-for job in ${JSON[@]}; do
-  echo "Queing Job:  curl -X POST $URL -d token=hudsonbeaker-remote --data-urlencode json='$job'"
-  curl -X POST $URL -d token=hudsonbeaker-remote --data-urlencode json="$job"
+for i in `seq 0 $(expr ${#JSON[@]} - 1)`; do
+  echo $job
+  echo "Queing Job:  curl -X POST $URL -d token=hudsonbeaker-remote --data-urlencode json='${JSON[$i]}'"
+  curl -X POST $URL -d token=hudsonbeaker-remote --data-urlencode json="${JSON[$i]}"
   echo
-  sleep 10
 done
 
 
