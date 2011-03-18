@@ -265,6 +265,18 @@
 		</groups>
 	</test>
 	
+	<test name="Modifier Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="ModifierTests" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="Overconsumption Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />

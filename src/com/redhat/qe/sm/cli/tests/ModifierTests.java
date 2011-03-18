@@ -1,15 +1,8 @@
 package com.redhat.qe.sm.cli.tests;
 
-import java.io.File;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,21 +10,15 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SSHCommandResult;
 
 
 /**
@@ -107,8 +94,6 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		if (!areAllRequiredTagsProvided) {
 			throw new SkipException("We cannot claim success on this test until 100% of the requiredTags '"+requiredTags+"' are provided by the currently install products.");
 		}
-
-
 	}
 
 	
@@ -123,12 +108,14 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
-		
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 	}
-
+	
+	@AfterClass(groups="setup")
+	public void unregisterAfterClass() {
+		clienttasks.unregister(null, null, null);
+	}
 	
 	// protected methods ***********************************************************************
 	
@@ -190,7 +177,21 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 								JSONObject jsonProvidingProvidedProduct = (JSONObject) jsonProvidingProvidedProducts.get(l);
 								String providingProvidedProductId = jsonProvidingProvidedProduct.getString("productId");
 								if (modifiedProductIds.contains(providingProvidedProductId)) {
+									
+									// NOTE: This test takes a long time to run when there are many providingPools.
+									// To reduce the execution time, let's simply limit the number of providing pools tested to 2,
+									// otherwise this block of code could be commented out for a more thorough test.
+									boolean poolProductIdIsAlreadyInProvidingPools = false;
+									for (SubscriptionPool providedPool : providingPools) {
+										if (providedPool.productId.equals(providingPool.productId)) {
+											poolProductIdIsAlreadyInProvidingPools=true;
+											break;
+										}
+									}
+									if (providingPools.size()>=2||poolProductIdIsAlreadyInProvidingPools)break;
+									
 									providingPools.add(providingPool);
+									break;
 								}
 							}
 
