@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -156,7 +157,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049"},
 			enabled=true)
-	public void RegisterWithAutosubscribe_Test() {
+	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");
@@ -186,9 +187,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//}
 
 		// subscribe to a randomly available pool
+		/* This is too random
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		*/
+		// subscribe to the first available pool that provides one product
+		File entitlementCertFile = null;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+pool.poolId));	
+			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+			if (jsonProvidedProducts.length()==1) {
+				entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+				break;
+			}
+		}
+		if (entitlementCertFile==null) throw new SkipException("Could not find an available pool that provides only one product with which to test register with --autosubscribe.");
 		
 		// copy the downloaded entitlement cert to the temporary product cert directory (this will fake rhsm into believing that the same product is installed)
 		RemoteFileTasks.runCommandAndAssert(client, "cp "+entitlementCertFile.getPath()+" "+tmpProductCertDir, Integer.valueOf(0));
