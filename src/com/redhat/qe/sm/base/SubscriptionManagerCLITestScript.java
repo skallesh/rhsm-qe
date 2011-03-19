@@ -108,8 +108,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
 				File remoteFile = new File(remoteFileAsString);
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
+				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
 				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
-				generatedProductCertFiles.add(localFile);
+				localFile.renameTo(localFileRenamed);
+				generatedProductCertFiles.add(localFileRenamed);
 			}
 
 		}
