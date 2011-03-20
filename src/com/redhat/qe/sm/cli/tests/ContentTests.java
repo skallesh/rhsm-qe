@@ -8,6 +8,7 @@ import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -286,12 +287,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 	
+	@AfterClass(groups={"setup"})
 	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
 	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
-		client1tasks.unregister(null,null,null);
-		client2tasks.unregister(null,null,null);
+		// first, unregister client1 since it is a personal subpool consumer
+		client1tasks.unregister_(null,null,null);
+		// second, unregister client2 since it is a personal consumer
+//		client2tasks.unregister_(null,null,null);
+		client2tasks.register_(clientusername, clientpassword, null, null, personalConsumerId, null, Boolean.TRUE, null, null, null);
+		client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+		client2tasks.unregister_(null,null,null);
 	}
-	
+
 	
 	// Protected Methods ***********************************************************************
 	
