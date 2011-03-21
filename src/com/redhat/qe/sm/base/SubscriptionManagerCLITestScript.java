@@ -224,6 +224,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}	// close the connection to the database
 		}
 	}
+	
+	@AfterSuite(groups={"setup", "cleanup"},description="return clients to beaker",dependsOnMethods={"disconnectDatabaseAfterSuite","unregisterClientsAfterSuite"}, alwaysRun=true)
+	public void return2beaker() {
+
+		Boolean return2beaker = Boolean.valueOf(getProperty("sm.client.return2beaker","false"));
+
+		if (return2beaker) {
+			if (client1!=null) client1.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
+			if (client2!=null) client2.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
+		}
+	}
 
 
 	
