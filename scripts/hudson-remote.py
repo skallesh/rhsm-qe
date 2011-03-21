@@ -24,6 +24,8 @@ for value in data['property'][1]['parameterDefinitions']:
   else:
     value_list.append(value['defaultParameterValue'])
 
+# variants is a list of tests.  Each test is a list in this format:
+# ['arch','variant','release']
 variants = [['x86_64','Server','RedHatEnterpriseLinux6'],
             ['x86_64','Client','RedHatEnterpriseLinux6'],
             ['x86_64','Workstation','RedHatEnterpriseLinux6'],
@@ -54,6 +56,5 @@ for variant in variants:
   print output
   time.sleep(10)
 
-#urllib2.urlopen(url + "/build?token=hudsonbeaker-remote", outputdata, {'Content-Type': 'application/json'}).read()
 
 
