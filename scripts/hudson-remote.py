@@ -24,15 +24,15 @@ for value in data['property'][1]['parameterDefinitions']:
   else:
     value_list.append(value['defaultParameterValue'])
 
-variants = [['x86_64','Server'],
-            ['x86_64','Client'],
-            ['x86_64','Workstation'],
-            ['x86_64','ComputeNode'],
-            ['i386','Server'],
-            ['i386','Workstation'],
-            ['i386','Client'],
-            ['ppc64','Server'],
-            ['s390x','Server']]
+variants = [['x86_64','Server','RedHatEnterpriseLinux6'],
+            ['x86_64','Client','RedHatEnterpriseLinux6'],
+            ['x86_64','Workstation','RedHatEnterpriseLinux6'],
+            ['x86_64','ComputeNode','RedHatEnterpriseLinux6'],
+            ['i386','Server','RedHatEnterpriseLinux6'],
+            ['i386','Workstation','RedHatEnterpriseLinux6'],
+            ['i386','Client','RedHatEnterpriseLinux6'],
+            ['ppc64','Server','RedHatEnterpriseLinux6'],
+            ['s390x','Server','RedHatEnterpriseLinux6']]
 
 for variant in variants:
   print variant
@@ -40,13 +40,15 @@ for variant in variants:
     if item['name'] == 'CLIENT1_ARCH':
       item['value'] = variant[0]
     if item['name'] == 'CLIENT1_VARIANT':
-      item['value'] = variant[1]  
+      item['value'] = variant[1]
+    if item['name'] == 'CLIENT1_DistroFamily':
+      item['value'] = variant[2]
   output_dict = dict()
   output_dict['parameter'] = value_list
+  print "Parameters:"
+  pprint(output_dict)
   outputdata = json.dumps(output_dict)
   cmd = 'curl -X POST %s -d token=hudsonbeaker-remote --data-urlencode json="%s"' % (url + "/build", sanitize(outputdata))
-  print cmd
-  print
   status, output = commands.getstatusoutput(cmd)
   print status
   print output
