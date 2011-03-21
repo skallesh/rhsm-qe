@@ -364,12 +364,19 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentConsumerId(SSHCommandResult registerResult) {
 		
-		// FIXME  This algorithm is incorrect when stdout is:
+		// Example stdout:
+		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 jsefler.usersys.redhat.com
+		
+		// Example stdout:
 		// The system with UUID 4e3675b1-450a-4066-92da-392c204ca5c7 has been unregistered
 		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
 		
-		// this algorithm assumes the stdout format is: ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
-		return registerResult.getStdout().split(" ")[0];
+		//return registerResult.getStdout().split(" ")[0]; // FIXME: fails when stdout format is: ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1 
+		
+		Pattern pattern = Pattern.compile("^[a-f,0-9,\\-]{36} [^ ]*$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		Matcher matcher = pattern.matcher(registerResult.getStdout());
+		Assert.assertTrue(matcher.find(),"Found the registered UUID and name in the register result."); 
+		return matcher.group().split(" ")[0];
 	}
 	
 	/**
