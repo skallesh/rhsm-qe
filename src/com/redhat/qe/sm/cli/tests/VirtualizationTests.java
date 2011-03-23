@@ -1,15 +1,11 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -387,22 +383,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
 	protected File virtWhatFile = null;
 	protected File virtWhatFileBackup = null;
-	
-	protected Calendar parseDateString(String dateString){
-		String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"2012-02-08T00:00:00.000+0000"
-		try{
-			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
-			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-			Calendar calendar = new GregorianCalendar();
-			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
-			return calendar;
-		}
-		catch (ParseException e){
-			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
-			return null;
-		}
-	}
-
 	
 	protected void forceVirtWhatToReturnGuest(String hypervisorType) {
 		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0

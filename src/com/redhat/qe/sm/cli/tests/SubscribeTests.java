@@ -371,9 +371,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"AutoSubscribeAndVerify", "blockedByBug-680399"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void InititiateAutoSubscribe_Test() throws JSONException {
+	public void InititiateAutoSubscribe_Test() throws Exception {
 		// get the expected subscriptionPoolProductIdData
-		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister(null, null, null);
@@ -409,6 +409,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//		   Awesome OS Developer Bits - Not Subscribed
 		//		   Awesome OS Modifier Bits - Subscribed
 	}
+	protected List<List<Object>> subscriptionPoolProductData;
 
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={"AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049"},
@@ -416,11 +417,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyInstalledProductCertWasAutoSubscribed_Test(ProductCert productCert) throws JSONException {
+	public void VerifyInstalledProductCertWasAutoSubscribed_Test(ProductCert productCert) throws Exception {
 		// get the expected subscriptionPoolProductIdData
 		String sm_debug_dataProviders_minimize = getProperty("sm.debug.dataProviders.minimize","$NULL");
 		System.setProperty("sm.debug.dataProviders.minimize","false");
-		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
+		//List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 		System.setProperty("sm.debug.dataProviders.minimize",sm_debug_dataProviders_minimize);
 		
 		// search the subscriptionPoolProductData for a bundledProduct matching the productCert's productName

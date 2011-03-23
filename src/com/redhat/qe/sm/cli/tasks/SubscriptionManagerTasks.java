@@ -19,6 +19,7 @@ import org.json.JSONObject;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -61,6 +62,7 @@ public class SubscriptionManagerTasks {
 
 	
 	public String hostname						= null;	// of the client
+	public String arch							= null;	// of the client
 	
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
@@ -69,6 +71,7 @@ public class SubscriptionManagerTasks {
 		super();
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
+		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();;
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {

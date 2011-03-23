@@ -7,11 +7,16 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Random;
+import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +26,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
@@ -576,9 +582,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	
 	@DataProvider(name="getSystemSubscriptionPoolProductData")
-	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws JSONException {
+	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists());
 	}
+	/* HARDCODED IMPLEMENTATION THAT READS FROM systemSubscriptionPoolProductData
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 				
@@ -595,6 +602,306 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		return ll;
+	}
+	*/
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
+		
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			
+			// skip subscriptions that are not valid today (at this time now)
+			Calendar startDate = parseDateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parseDateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+			if (!(startDate.before(now) && endDate.after(now))) continue;
+			
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String productId = jsonProduct.getString("id");
+			String productName = jsonProduct.getString("name");
+			
+			// skip subscriptions that have already been added to SystemSubscriptionPoolProductData
+			if (productIdsAddedToSystemSubscriptionPoolProductData.contains(productId)) continue;
+			
+			// process this subscription productId
+			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
+			boolean productAttributesPassRulesCheck = true; // assumed
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {
+				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+				String attributeName = jsonProductAttribute.getString("name");
+				String attributeValue = jsonProductAttribute.getString("value");
+				if (attributeName.equals("arch")) {
+					if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.arch)) {
+						productAttributesPassRulesCheck = false;
+					}
+				}
+				if (attributeName.equals("variant")) {
+//					if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.variant)) {
+//						productAttributesPassRulesCheck = false;
+//					}
+				}
+				if (attributeName.equals("type")) {
+
+				}
+				if (attributeName.equals("version")) {
+//					if (!attributeValue.equalsIgnoreCase(clienttasks.version)) {
+//						productAttributesPassRulesCheck = false;
+//					}
+				}
+				if (attributeName.equals("requires_consumer_type")) {
+					if (!attributeValue.equalsIgnoreCase(ConsumerType.system.toString())) {
+						productAttributesPassRulesCheck = false;
+					}
+				}
+			}
+			if (productAttributesPassRulesCheck) {
+				
+				// process this subscription's providedProducts
+				JSONArray jsonBundledProductData = new JSONArray();
+				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
+				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
+					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
+					String providedProductName = jsonProvidedProduct.getString("name");
+					String providedProductId = jsonProvidedProduct.getString("id");
+
+					
+					JSONArray jsonProvidedProductAttributes = jsonProvidedProduct.getJSONArray("attributes");
+					boolean providedProductAttributesPassRulesCheck = true; // assumed
+					for (int l = 0; l < jsonProvidedProductAttributes.length(); l++) {
+						JSONObject jsonProvidedProductAttribute = (JSONObject) jsonProvidedProductAttributes.get(l);
+						String attributeName = jsonProvidedProductAttribute.getString("name");
+						String attributeValue = jsonProvidedProductAttribute.getString("value");
+						if (attributeName.equals("arch")) {
+							if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.arch)) {
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
+						if (attributeName.equals("variant")) {
+//								if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.variant)) {
+//									providedProductAttributesPassRulesCheck = false;
+//								}
+						}
+						if (attributeName.equals("type")) {
+
+						}
+						if (attributeName.equals("version")) {
+//								if (!attributeValue.equalsIgnoreCase(clienttasks.version)) {
+//									productAttributesPassRulesCheck = false;
+//								}
+						}
+						if (attributeName.equals("requires_consumer_type")) {
+							if (!attributeValue.equalsIgnoreCase(ConsumerType.system.toString())) {
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
+					}
+					if (providedProductAttributesPassRulesCheck) {
+						JSONObject bundledProduct = new JSONObject(String.format("{productName:'%s'}", providedProductName));
+
+						jsonBundledProductData.put(bundledProduct);
+					}
+				}
+				// Example:
+				// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
+
+				// String systemProductId, JSONArray bundledProductDataAsJSONArray
+				ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
+				productIdsAddedToSystemSubscriptionPoolProductData.add(productId);
+			}
+		}
+		
+		return ll;
+		/* Example
+		< {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
+		*/
+	/* Example jsonSubscription:
+	  {
+		    "id": "8a90f8b42e398f7a012e398ff0ef0104",
+		    "owner": {
+		      "href": "/owners/admin",
+		      "id": "8a90f8b42e398f7a012e398f8d310005"
+		    },
+		    "certificate": null,
+		    "product": {
+		      "name": "Awesome OS with up to 4 virtual guests",
+		      "id": "awesomeos-virt-4",
+		      "attributes": [
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-02-18T16:17:37.960+0000",
+		          "created": "2011-02-18T16:17:37.960+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-02-18T16:17:37.960+0000",
+		          "created": "2011-02-18T16:17:37.960+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "MKT",
+		          "updated": "2011-02-18T16:17:37.960+0000",
+		          "created": "2011-02-18T16:17:37.960+0000"
+		        },
+		        {
+		          "name": "version",
+		          "value": "6.1",
+		          "updated": "2011-02-18T16:17:37.961+0000",
+		          "created": "2011-02-18T16:17:37.961+0000"
+		        },
+		        {
+		          "name": "virt_limit",
+		          "value": "4",
+		          "updated": "2011-02-18T16:17:37.960+0000",
+		          "created": "2011-02-18T16:17:37.960+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/awesomeos-virt-4",
+		      "updated": "2011-02-18T16:17:37.959+0000",
+		      "created": "2011-02-18T16:17:37.959+0000"
+		    },
+		    "providedProducts": [
+		      {
+		        "name": "Awesome OS Server Bits",
+		        "id": "37060",
+		        "attributes": [
+		          {
+		            "name": "variant",
+		            "value": "ALL",
+		            "updated": "2011-02-18T16:17:22.174+0000",
+		            "created": "2011-02-18T16:17:22.174+0000"
+		          },
+		          {
+		            "name": "sockets",
+		            "value": "2",
+		            "updated": "2011-02-18T16:17:22.175+0000",
+		            "created": "2011-02-18T16:17:22.175+0000"
+		          },
+		          {
+		            "name": "arch",
+		            "value": "ALL",
+		            "updated": "2011-02-18T16:17:22.175+0000",
+		            "created": "2011-02-18T16:17:22.175+0000"
+		          },
+		          {
+		            "name": "type",
+		            "value": "SVC",
+		            "updated": "2011-02-18T16:17:22.175+0000",
+		            "created": "2011-02-18T16:17:22.175+0000"
+		          },
+		          {
+		            "name": "warning_period",
+		            "value": "30",
+		            "updated": "2011-02-18T16:17:22.175+0000",
+		            "created": "2011-02-18T16:17:22.175+0000"
+		          },
+		          {
+		            "name": "version",
+		            "value": "6.1",
+		            "updated": "2011-02-18T16:17:22.175+0000",
+		            "created": "2011-02-18T16:17:22.175+0000"
+		          }
+		        ],
+		        "multiplier": 1,
+		        "productContent": [
+		          {
+		            "content": {
+		              "name": "always-enabled-content",
+		              "id": "1",
+		              "type": "yum",
+		              "modifiedProductIds": [
+
+		              ],
+		              "label": "always-enabled-content",
+		              "vendor": "test-vendor",
+		              "contentUrl": "/foo/path/always",
+		              "gpgUrl": "/foo/path/always/gpg",
+		              "metadataExpire": 200,
+		              "updated": "2011-02-18T16:17:16.254+0000",
+		              "created": "2011-02-18T16:17:16.254+0000"
+		            },
+		            "flexEntitlement": 0,
+		            "physicalEntitlement": 0,
+		            "enabled": true
+		          },
+		          {
+		            "content": {
+		              "name": "never-enabled-content",
+		              "id": "0",
+		              "type": "yum",
+		              "modifiedProductIds": [
+
+		              ],
+		              "label": "never-enabled-content",
+		              "vendor": "test-vendor",
+		              "contentUrl": "/foo/path/never",
+		              "gpgUrl": "/foo/path/never/gpg",
+		              "metadataExpire": 600,
+		              "updated": "2011-02-18T16:17:16.137+0000",
+		              "created": "2011-02-18T16:17:16.137+0000"
+		            },
+		            "flexEntitlement": 0,
+		            "physicalEntitlement": 0,
+		            "enabled": false
+		          },
+		          {
+		            "content": {
+		              "name": "content",
+		              "id": "1111",
+		              "type": "yum",
+		              "modifiedProductIds": [
+
+		              ],
+		              "label": "content-label",
+		              "vendor": "test-vendor",
+		              "contentUrl": "/foo/path",
+		              "gpgUrl": "/foo/path/gpg/",
+		              "metadataExpire": 0,
+		              "updated": "2011-02-18T16:17:16.336+0000",
+		              "created": "2011-02-18T16:17:16.336+0000"
+		            },
+		            "flexEntitlement": 0,
+		            "physicalEntitlement": 0,
+		            "enabled": true
+		          }
+		        ],
+		        "dependentProductIds": [
+
+		        ],
+		        "href": "/products/37060",
+		        "updated": "2011-02-18T16:17:22.174+0000",
+		        "created": "2011-02-18T16:17:22.174+0000"
+		      }
+		    ],
+		    "endDate": "2012-02-18T00:00:00.000+0000",
+		    "startDate": "2011-02-18T00:00:00.000+0000",
+		    "quantity": 5,
+		    "contractNumber": "39",
+		    "accountNumber": "12331131231",
+		    "modified": null,
+		    "tokens": [
+
+		    ],
+		    "upstreamPoolId": null,
+		    "updated": "2011-02-18T16:17:38.031+0000",
+		    "created": "2011-02-18T16:17:38.031+0000"
+		  }
+	  */
 	}
 	
 	@DataProvider(name="getUsernameAndPasswordData")
@@ -669,5 +976,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		return ll;
+	}
+
+
+
+
+	protected Calendar parseDateString(String dateString) {
+		String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"2012-02-08T00:00:00.000+0000"
+		try{
+			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			Calendar calendar = new GregorianCalendar();
+			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
+			return calendar;
+		}
+		catch (ParseException e){
+			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
+			return null;
+		}
 	}
 }
