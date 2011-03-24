@@ -660,6 +660,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						productAttributesPassRulesCheck = false;
 					}
 				}
+				if (attributeName.equals("sockets")) {
+					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+						productAttributesPassRulesCheck = false;
+					}
+				}
 			}
 			if (productAttributesPassRulesCheck) {
 				
@@ -701,6 +706,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 								providedProductAttributesPassRulesCheck = false;
 							}
 						}
+						if (attributeName.equals("sockets")) {
+							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
 					}
 					if (providedProductAttributesPassRulesCheck) {
 						JSONObject bundledProduct = new JSONObject(String.format("{productName:'%s'}", providedProductName));
@@ -718,6 +728,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		return ll;
+		
+//		Awesome OS Server Bundled
+//		awesomeos-server
+//		[{"created":"2011-03-23T23:32:55.779+0000","updated":"2011-03-23T23:32:55.779+0000","name":"version","value":"1.0"},
+//		 {"created":"2011-03-23T23:32:55.779+0000","updated":"2011-03-23T23:32:55.779+0000","name":"variant","value":"ALL"},
+//		 {"created":"2011-03-23T23:32:55.780+0000","updated":"2011-03-23T23:32:55.780+0000","name":"support_level","value":"Premium"},
+//		 {"created":"2011-03-23T23:32:55.780+0000","updated":"2011-03-23T23:32:55.780+0000","name":"sockets","value":"2"},
+//		 {"created":"2011-03-23T23:32:55.780+0000","updated":"2011-03-23T23:32:55.780+0000","name":"arch","value":"ALL"},
+//		 {"created":"2011-03-23T23:32:55.780+0000","updated":"2011-03-23T23:32:55.780+0000","name":"management_enabled","value":"1"},
+//		 {"created":"2011-03-23T23:32:55.781+0000","updated":"2011-03-23T23:32:55.781+0000","name":"type","value":"MKT"},
+//		 {"created":"2011-03-23T23:32:55.781+0000","updated":"2011-03-23T23:32:55.781+0000","name":"warning_period","value":"30"},
+//		 {"created":"2011-03-23T23:32:55.781+0000","updated":"2011-03-23T23:32:55.781+0000","name":"support_type","value":"Level 3"}]
 		/* Example
 		< {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
 		*/

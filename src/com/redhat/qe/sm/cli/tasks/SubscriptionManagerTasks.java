@@ -63,6 +63,7 @@ public class SubscriptionManagerTasks {
 	
 	public String hostname						= null;	// of the client
 	public String arch							= null;	// of the client
+	public String sockets						= null;	// of the client
 	
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
@@ -71,7 +72,8 @@ public class SubscriptionManagerTasks {
 		super();
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
-		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();;
+		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
+		sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -1253,7 +1255,9 @@ public class SubscriptionManagerTasks {
 		if (getCurrentEntitlementCertFiles().isEmpty() && getCurrentProductCertFiles().isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
 		} else {
-			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status");
+			//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status"); // produces too much logging
+			String title = "Installed Product Status";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of installed products is entitled '"+title+"'.");
 		}
 
 		return sshCommandResult;
@@ -1267,7 +1271,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
-		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
 		return sshCommandResult;
 	}
@@ -1289,7 +1293,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
-		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
 		return sshCommandResult;
 		
@@ -1307,9 +1311,11 @@ public class SubscriptionManagerTasks {
 
 		if (entitlementCertFiles.isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No Consumed subscription pools to list"), "No Consumed subscription pools to list");
-		} /*else {
-			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Consumed Product Subscriptions");
-		}*/
+		} else {
+			//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Consumed Product Subscriptions"); // produces too much logging
+			String title = "Consumed Product Subscriptions";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of consumed products is entitled '"+title+"'.");
+		}
 
 		return sshCommandResult;
 	}

@@ -44,7 +44,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSystemSubscriptionPoolProductData",
-			groups={"blockedByBug-660713"},
+			groups={"myDevGroup","blockedByBug-660713"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException {
@@ -55,7 +55,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
-		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+//		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		// assert the installed status of the bundled products
