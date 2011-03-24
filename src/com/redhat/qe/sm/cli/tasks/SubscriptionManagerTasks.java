@@ -364,6 +364,10 @@ public class SubscriptionManagerTasks {
 	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile)!=1) {
+			log.info("Currently, there is no consumer registered.");
+			return null;
+		}
 		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+this.consumerCertFile);
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
@@ -373,7 +377,9 @@ public class SubscriptionManagerTasks {
 	 * @return from the contents of the current /etc/pki/consumer/cert.pem
 	 */
 	public String getCurrentConsumerId() {
-		return getCurrentConsumerCert().consumerid;
+		ConsumerCert currentConsumerCert = getCurrentConsumerCert();
+		if (currentConsumerCert==null) return null;
+		return currentConsumerCert.consumerid;
 	}
 	
 	/**
