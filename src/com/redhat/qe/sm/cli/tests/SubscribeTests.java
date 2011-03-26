@@ -48,8 +48,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException {
-		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
-
+		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
@@ -59,6 +58,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
+		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
+		List<InstalledProduct> currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		
 		// assert the installed status of the bundled products
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
@@ -67,7 +69,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			// assert the status of the installed product
 			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 			if (productCert!=null) {
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProducts);
 				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Not Subscribed.");
 			}
@@ -77,12 +79,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
+		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
+		List<ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+
 		// assert the expected products are consumed
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
 			String productName = bundledProductAsJSONObject.getString("productName");
 			
-			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyConsumedProductSubscriptions());
+			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyConsumedProductSubscriptions);
 			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
 
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
@@ -127,7 +132,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						"When there are no productNamespaces in the entitlementCert, there should not be any contentNamespaces.");
 
 				// when there is no corresponding product, then there better not be an installed product status by the same product name
-				Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts()),
+				Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProducts),
 						"Should not find any installed product status matching a server side management add-on productName: "+ productName);
 
 				// when there is no corresponding product, then there better not be an installed product cert by the same product name
@@ -138,7 +143,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				Assert.assertNotNull(productNamespace, "The new entitlement cert's product namespace corresponding to this expected ProductSubscription with ProductName '"+productName+"' was found.");
 
 				// assert whether or not the product is installed			
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, clienttasks.getCurrentlyInstalledProducts());
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProducts);
 				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
 	
 				// assert the status of the installed product
