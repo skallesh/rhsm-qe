@@ -373,22 +373,34 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void InititiateAutoSubscribe_Test() throws Exception {
-		// get the expected subscriptionPoolProductIdData
-		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-		availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		for (List<Object> row : subscriptionPoolProductData) {
-			String productId = (String)row.get(0);
+		
+		// get the expected subscriptionPoolProductIdData
+// TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST"
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
+		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
+			String productId = (String)subscriptionPoolProductDatum.get(0);
 			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availableSubscriptionPoolsBeforeAutosubscribe);
 			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
 		}
+		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPoolsBeforeAutosubscribe) {
+			boolean productIdFound = false;
+			for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
+				if (availableSubscriptionPool.productId.equals((String)subscriptionPoolProductDatum.get(0))) {
+					productIdFound = true;
+					break;
+				}
+			}
+			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' should passed the hardware rules check for availabity.");
+		}
+// TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST"				
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
 		
 		// autosubscribe
-		//clienttasks.unregister(null, null, null);
-		//sshCommandResultFromAutosubscribe = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null);
 		
 		// Example Results from register --autosubscribe
@@ -450,13 +462,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the installed product status matches the expected status 
 		Assert.assertEquals(installedProduct.status,expectedSubscribeStatus,
-				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is now "+expectedSubscribeStatus.toLowerCase()+".");
+				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is "+expectedSubscribeStatus.toLowerCase()+".");
 
 		// assert that the sshCommandResultOfAutosubscribe showed the expected Subscribe Status for this productCert
 		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
 				"As expected, ProductName '"+productCert.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 	}
-	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
+//	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
 	SSHCommandResult sshCommandResultFromAutosubscribe;
 	
 	

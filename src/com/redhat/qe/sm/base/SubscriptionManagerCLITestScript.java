@@ -699,6 +699,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	*/
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
+		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
+	}
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean obeySocketRules) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
 		
@@ -759,7 +762,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 				if (attributeName.equals("sockets")) {
 					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-						productAttributesPassRulesCheck = false;
+						if (obeySocketRules) productAttributesPassRulesCheck = false;
 					}
 				}
 			}
@@ -807,9 +810,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						}
 						if (attributeName.equals("sockets")) {
 							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-								providedProductAttributesPassRulesCheck = false;
+								if (obeySocketRules) providedProductAttributesPassRulesCheck = false;
 							}
 						}
+
 					}
 					if (providedProductAttributesPassRulesCheck) {
 						JSONObject bundledProduct = new JSONObject(String.format("{productName:'%s'}", providedProductName));
