@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -97,7 +98,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConcurrentAttemptToSubscribe_Test() throws JSONException, Exception {
-	
+		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
+
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
 		client1tasks.register(clientusername,clientpassword,null,registereeName,systemConsumerIds.get(0),null, null, null, null, null);
@@ -175,7 +177,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConcurrentAttemptToOversubscribe_Test() throws JSONException, Exception {
-	
+		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
+		
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
 		client1tasks.register(clientusername,clientpassword,null,registereeName,systemConsumerIds.get(0),null, null, null, null, null);
