@@ -701,7 +701,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
 		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
 	}
-	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean obeySocketRules) throws Exception {
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystem) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
 		
@@ -762,7 +762,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 				if (attributeName.equals("sockets")) {
 					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-						if (obeySocketRules) productAttributesPassRulesCheck = false;
+						if (matchSystem) productAttributesPassRulesCheck = false;
 					}
 				}
 			}
@@ -809,8 +809,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 							}
 						}
 						if (attributeName.equals("sockets")) {
-							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-								if (obeySocketRules) providedProductAttributesPassRulesCheck = false;
+//							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+//								if (matchSystem) providedProductAttributesPassRulesCheck = false;
+//							}
+							if (Integer.valueOf(attributeValue) > Integer.valueOf(clienttasks.sockets)) {
+								providedProductAttributesPassRulesCheck = false;
 							}
 						}
 
