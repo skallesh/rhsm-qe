@@ -425,7 +425,23 @@ public class SubscriptionManagerTasks {
 	public String getFactValue(String factName) {
 		SSHCommandResult result = facts_(true, false, null, null, null);
 		
-		String regex=factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+":(.*)";
+		// # subscription-manager facts --list
+		// cpu.architecture: x86_64
+		// cpu.bogomips: 4600.03
+		// cpu.core(s)_per_socket: 1
+		// cpu.cpu(s): 2
+		// uname.sysname: Linux
+		// uname.version: #1 SMP Mon Mar 21 10:20:35 EDT 2011
+		// virt.host_type: ibm_systemz
+		// ibm_systemz-zvm
+		// uname.sysname: Linux
+		// network.ipaddr: 10.16.66.203
+		// system.compliant: False
+		
+		String factNameRegex = factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");
+		//String regex=factNameRegex+":(.*)";	// works with single-line fact values
+		String regex=factNameRegex+":(.*(\n.*?)+)(?:^.+?:|$)";	// works with multi-line fact values
+		
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
