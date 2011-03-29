@@ -65,6 +65,7 @@ public class SubscriptionManagerTasks {
 	public String hostname						= null;	// of the client
 	public String arch							= null;	// of the client
 	public String sockets						= null;	// of the client
+	public String variant						= null;	// of the client
 	
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
@@ -75,6 +76,11 @@ public class SubscriptionManagerTasks {
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
 		sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		SSHCommandResult redhatReleaseResult = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release");
+		if (redhatReleaseResult.getStdout().contains("Server")) variant = "Server";
+		if (redhatReleaseResult.getStdout().contains("Client")) variant = "Client";
+		if (redhatReleaseResult.getStdout().contains("Workstation")) variant = "Workstation";
+		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -1455,8 +1461,12 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult;
 	}
 	
-	public void subscribeToProduct(String product) {
-		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
+	public File subscribeToProductId(String productId) {
+		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
+		
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+productId+"': "+pool);
+		return subscribeToSubscriptionPool(pool);
 	}
 	
 	/**
