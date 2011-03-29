@@ -139,6 +139,18 @@ public class CandlepinTasks {
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0));
 			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Initialized!");
 		*/
+		
+		/* Note: if getting error on install from master branch:
+/usr/lib/ruby/site_ruby/1.8/rubygems/custom_require.rb:31:in `gem_original_require': no such file to load -- oauth (LoadError)
+	from /usr/lib/ruby/site_ruby/1.8/rubygems/custom_require.rb:31:in `require'
+	from ../client/ruby/candlepin_api.rb:9
+	from buildconf/scripts/import_products.rb:3:in `require'
+	from buildconf/scripts/import_products.rb:3
+
+		 * 
+		 * Solution:
+		 * # gem install oauth
+		 */
 	}
 	
 	public void cleanOutCRL() {
