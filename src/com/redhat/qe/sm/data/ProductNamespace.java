@@ -16,6 +16,9 @@ public class ProductNamespace extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String name;
+	public String version;
+	public String arch;
+	public String providedTags;	// comma separated list of tags: String1, String2, String3
 
 	public String hash;
 	
@@ -29,8 +32,11 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (hash != null)	string += String.format(" %s='%s'", "hash",hash);
-		if (name != null)	string += String.format(" %s='%s'", "name",name);
+		if (hash != null)			string += String.format(" %s='%s'", "hash",hash);
+		if (name != null)			string += String.format(" %s='%s'", "name",name);
+		if (version != null)		string += String.format(" %s='%s'", "version",version);
+		if (arch != null)			string += String.format(" %s='%s'", "arch",arch);
+		if (providedTags != null)	string += String.format(" %s='%s'", "providedTags",providedTags);
 		
 		return string.trim();
 	}
@@ -180,9 +186,15 @@ public class ProductNamespace extends AbstractCommandLineData {
 		
 		// https://docspace.corp.redhat.com/docs/DOC-30244
 		//   1.3.6.1.4.1.2312.9.1.<product_hash>  (Red Hat Enterprise Linux for Physical Servers)
-		//   1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : Red Hat Enterprise Linux
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : Red Hat Enterprise Linux
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.2 (Version) : 6.0
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.3 (Architecture) : x86_64
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.4 (Provides) : String1, String2, String3
 		//   1.3.6.1.4.1.2312.9.1.<product_hash>  (High Availability)
-		//   1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : High Availability
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : High Availability
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.2 (Version) : 6.0
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.3 (Architecture) : x86_64
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>.4 (Provides) : String1, String2, String3
 		//... (#may contain many products, with distinct product_hash id's)
 		
 		
@@ -190,6 +202,9 @@ public class ProductNamespace extends AbstractCommandLineData {
 		
 		// abstraction field				regex pattern (with a capturing group)
 		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("version",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("arch",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("providedTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

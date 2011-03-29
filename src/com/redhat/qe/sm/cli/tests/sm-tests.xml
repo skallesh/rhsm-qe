@@ -144,6 +144,18 @@
 			</run>
 		</groups>
 	</test>
+		
+	<test name="Management Add-On Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="ManagementAddOnTests" />
+			</run>
+		</groups>
+	</test>
 	
 	<test name="RHEL Personal Tests">
 		<packages>
@@ -249,6 +261,18 @@
 			<run>
 				<include name="setup" />
 				<include name="VirtualizationTests" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="Modifier Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="ModifierTests" />
 			</run>
 		</groups>
 	</test>

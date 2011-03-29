@@ -3,7 +3,6 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -12,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
@@ -594,7 +592,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 			Assert.assertNotNull(personSubscriptionPool,
 					"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
-			client1tasks.subscribe(personSubscriptionPool.poolId, null, null, null, null, null, null, null);
+			client1tasks.subscribe(null, personSubscriptionPool.poolId, null, null, null, null, null, null, null);
 	
 			log.info("Now register client2 under username '"+username+"' as a system and assert the subpool ProductId '"+systemProductId+"' is available...");
 			client2tasks.unregister(null, null, null);
@@ -645,7 +643,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is NOT listed in all available subscription pools to user '"+username+"' registered as a system.");
 			
 			// attempt to subscribe system consumer to personal pool
-			SSHCommandResult sshComandResult = client1tasks.subscribe(personalPool.poolId, null, null, null, null, null, null, null);
+			SSHCommandResult sshComandResult = client1tasks.subscribe(null, personalPool.poolId, null, null, null, null, null, null, null);
 			
 			// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'
 			Assert.assertContainsMatch(sshComandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
@@ -772,7 +770,315 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	// Data Providers ***********************************************************************
 
-	
+	/* PERSONAL SUBSCRIPTION
+	[root@jsefler-onprem-server ~]# curl -k -u admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/subscriptions/8a90f8b42ee62404012ee6248eab0099 | json_reformat 
+		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+		                                 Dload  Upload   Total   Spent    Left  Speed
+		103  1545    0  1545    0     0   9821      0 --:--:-- --:--:-- --:--:-- 67173
+		{
+		  "id": "8a90f8b42ee62404012ee6248eab0099",
+		  "owner": {
+		    "href": "/owners/admin",
+		    "id": "8a90f8b42ee62404012ee62448260005"
+		  },
+		  "certificate": null,
+		  "product": {
+		    "name": "Awesome OS Developer Edition",
+		    "id": "AWESOMEOS09XYU34",
+		    "attributes": [
+		      {
+		        "name": "version",
+		        "value": "1.0",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      },
+		      {
+		        "name": "variant",
+		        "value": "ALL",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      },
+		      {
+		        "name": "arch",
+		        "value": "ALL",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      },
+		      {
+		        "name": "requires_consumer_type",
+		        "value": "person",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      },
+		      {
+		        "name": "type",
+		        "value": "MKT",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      },
+		      {
+		        "name": "user_license",
+		        "value": "unlimited",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      },
+		      {
+		        "name": "user_license_product",
+		        "value": "1144",
+		        "updated": "2011-03-24T04:34:38.821+0000",
+		        "created": "2011-03-24T04:34:38.821+0000"
+		      }
+		    ],
+		    "multiplier": 1,
+		    "productContent": [
 
+		    ],
+		    "dependentProductIds": [
+
+		    ],
+		    "href": "/products/AWESOMEOS09XYU34",
+		    "updated": "2011-03-24T04:34:38.820+0000",
+		    "created": "2011-03-24T04:34:38.820+0000"
+		  },
+		  "providedProducts": [
+
+		  ],
+		  "endDate": "2012-03-23T00:00:00.000+0000",
+		  "startDate": "2011-03-24T00:00:00.000+0000",
+		  "quantity": 5,
+		  "contractNumber": "15",
+		  "accountNumber": "12331131231",
+		  "modified": null,
+		  "tokens": [
+
+		  ],
+		  "upstreamPoolId": null,
+		  "updated": "2011-03-24T04:34:38.891+0000",
+		  "created": "2011-03-24T04:34:38.891+0000"
+		}
+
+	
+	PERSONAL SUB-PRODUCT
+	[root@jsefler-onprem-server ~]# curl -k -u testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/products/1144 | json_reformat 
+		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+		                                 Dload  Upload   Total   Spent    Left  Speed
+		114   684    0   684    0     0    312      0 --:--:--  0:00:02 --:--:-- 22800
+		{
+		  "name": "Awesome OS Developer Basic",
+		  "id": "1144",
+		  "attributes": [
+		    {
+		      "name": "version",
+		      "value": "1.0",
+		      "updated": "2011-03-24T04:34:37.812+0000",
+		      "created": "2011-03-24T04:34:37.812+0000"
+		    },
+		    {
+		      "name": "variant",
+		      "value": "ALL",
+		      "updated": "2011-03-24T04:34:37.812+0000",
+		      "created": "2011-03-24T04:34:37.812+0000"
+		    },
+		    {
+		      "name": "arch",
+		      "value": "ALL",
+		      "updated": "2011-03-24T04:34:37.812+0000",
+		      "created": "2011-03-24T04:34:37.812+0000"
+		    },
+		    {
+		      "name": "type",
+		      "value": "SYS",
+		      "updated": "2011-03-24T04:34:37.813+0000",
+		      "created": "2011-03-24T04:34:37.813+0000"
+		    }
+		  ],
+		  "multiplier": 1,
+		  "productContent": [
+
+		  ],
+		  "dependentProductIds": [
+
+		  ],
+		  "href": "/products/1144",
+		  "updated": "2011-03-24T04:34:37.812+0000",
+		  "created": "2011-03-24T04:34:37.812+0000"
+		}
+
+	
+	PERSONAL SUB-POOL (found after subscribing to personal subscription)
+	[root@jsefler-onprem-server ~]# curl -k -u testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8b42ee62404012ee9627cfa2345 | json_reformat 
+		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+		                                 Dload  Upload   Total   Spent    Left  Speed
+		110   881    0   881    0     0   5655      0 --:--:-- --:--:-- --:--:--  9576
+		{
+		  "id": "8a90f8b42ee62404012ee9627cfa2345",
+		  "attributes": [
+		    {
+		      "name": "requires_consumer_type",
+		      "value": "system",
+		      "id": "8a90f8b42ee62404012ee9627cfa2346",
+		      "updated": "2011-03-24T19:41:09.242+0000",
+		      "created": "2011-03-24T19:41:09.242+0000"
+		    }
+		  ],
+		  "owner": {
+		    "href": "/owners/admin",
+		    "id": "8a90f8b42ee62404012ee62448260005"
+		  },
+		  "providedProducts": [
+
+		  ],
+		  "endDate": "2012-03-23T00:00:00.000+0000",
+		  "startDate": "2011-03-24T00:00:00.000+0000",
+		  "productName": "Awesome OS Developer Basic",
+		  "quantity": -1,
+		  "contractNumber": "15",
+		  "accountNumber": "12331131231",
+		  "consumed": 0,
+		  "subscriptionId": null,
+		  "productId": "1144",
+		  "sourceEntitlement": {
+		    "href": "/entitlements/8a90f8b42ee62404012ee9627cf82344",
+		    "id": "8a90f8b42ee62404012ee9627cf82344"
+		  },
+		  "href": "/pools/8a90f8b42ee62404012ee9627cfa2345",
+		  "activeSubscription": true,
+		  "restrictedToUsername": "testuser1",
+		  "updated": "2011-03-24T19:41:09.242+0000",
+		  "created": "2011-03-24T19:41:09.242+0000"
+		}
+	*/
+	
+	
+	
+	
+	/*
+	 * PERSONAL SUBSCRIPTION - missing
+
+	PERSONAL SUB-PRODUCT
+	[root@jsefler-betaqa-1 ~]# curl -k -u CHANGE-ME:CHANGE-ME --request GET https://subscription.rhn.webqa.redhat.com:443/subscription/products/RH3036913 | json_reformat 
+		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+		                                 Dload  Upload   Total   Spent    Left  Speed
+		105   634    0   634    0     0     33      0 --:--:--  0:00:18 --:--:--   136
+		{
+		  "name": "Red Hat Enterprise Linux Server Entitlement Beta for Certified Engineers and System Administrators - NOT FOR SALE",
+		  "id": "RH3036913",
+		  "attributes": [
+		    {
+		      "name": "support_type",
+		      "value": "NONE"
+		    },
+		    {
+		      "name": "name",
+		      "value": "Red Hat Enterprise Linux Server Entitlement Beta for Certified Engineers and System Administrators - NOT FOR SALE"
+		    },
+		    {
+		      "name": "variant",
+		      "value": "Entitlement Beta"
+		    },
+		    {
+		      "name": "description",
+		      "value": "Red Hat Enterprise Linux"
+		    },
+		    {
+		      "name": "type",
+		      "value": "MKT"
+		    },
+		    {
+		      "name": "support_level",
+		      "value": "NONE"
+		    },
+		    {
+		      "name": "option_code",
+		      "value": "30"
+		    }
+		  ],
+		  "multiplier": 1,
+		  "href": "/products/RH3036913",
+		  "productContent": [
+
+		  ],
+		  "dependentProductIds": [
+
+		  ]
+		}
+
+	PERSONAL SUB-POOL (found after subscribing to personal subscription)
+	[root@jsefler-betaqa-1 ~]# curl -k -u CHANGE-ME:CHANGE-ME --request GET https://subscription.rhn.webqa.redhat.com:443/subscription/pools/8a9b90882eda2722012ee99785d4018d | json_reformat 
+		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+		                                 Dload  Upload   Total   Spent    Left  Speed
+		101  2028    0  2028    0     0    478      0 --:--:--  0:00:04 --:--:--   508
+		{
+		  "id": "8a9b90882eda2722012ee99785d4018d",
+		  "attributes": [
+		    {
+		      "name": "requires_consumer_type",
+		      "value": "system",
+		      "updated": "2011-03-24T20:39:04.000+0000",
+		      "created": "2011-03-24T20:39:04.000+0000"
+		    }
+		  ],
+		  "owner": {
+		    "href": "/owners/6238647",
+		    "id": "8a8aa80d2d960061012d9ff1daff0578"
+		  },
+		  "startDate": "2011-03-24T04:00:00.000+0000",
+		  "href": "/pools/8a9b90882eda2722012ee99785d4018d",
+		  "providedProducts": [
+		    {
+		      "id": "8a9b90882eda2722012ee99785d50193",
+		      "productName": "Red Hat Enterprise Linux High Availability (for RHEL Entitlement)",
+		      "productId": "4",
+		      "updated": "2011-03-24T20:39:04.000+0000",
+		      "created": "2011-03-24T20:39:04.000+0000"
+		    },
+		    {
+		      "id": "8a9b90882eda2722012ee99785d5018f",
+		      "productName": "Red Hat Enterprise Linux Entitlement",
+		      "productId": "3",
+		      "updated": "2011-03-24T20:39:04.000+0000",
+		      "created": "2011-03-24T20:39:04.000+0000"
+		    },
+		    {
+		      "id": "8a9b90882eda2722012ee99785d50190",
+		      "productName": "Red Hat Enterprise Linux Resilient Storage (for RHEL Entitlement)",
+		      "productId": "6",
+		      "updated": "2011-03-24T20:39:04.000+0000",
+		      "created": "2011-03-24T20:39:04.000+0000"
+		    },
+		    {
+		      "id": "8a9b90882eda2722012ee99785d50192",
+		      "productName": "Red Hat Enterprise Linux Load Balancer (for RHEL Entitlement)",
+		      "productId": "5",
+		      "updated": "2011-03-24T20:39:04.000+0000",
+		      "created": "2011-03-24T20:39:04.000+0000"
+		    },
+		    {
+		      "id": "8a9b90882eda2722012ee99785d50191",
+		      "productName": "Red Hat Enterprise Linux Scalable File System (for RHEL Entitlement)",
+		      "productId": "7",
+		      "updated": "2011-03-24T20:39:04.000+0000",
+		      "created": "2011-03-24T20:39:04.000+0000"
+		    }
+		  ],
+		  "endDate": "2011-09-24T03:59:59.000+0000",
+		  "quantity": 10,
+		  "productName": "Red Hat Enterprise Linux Server Entitlement Beta for Certified Engineers and System Administrators - NOT FOR SALE",
+		  "contractNumber": "2119677",
+		  "accountNumber": "1407236",
+		  "consumed": 0,
+		  "subscriptionId": null,
+		  "productId": "RH3036913",
+		  "sourceEntitlement": {
+		    "href": "/entitlements/8a9b90882eda2722012ee99785d50194",
+		    "id": "8a9b90882eda2722012ee99785d50194"
+		  },
+		  "activeSubscription": true,
+		  "restrictedToUsername": "jsefler-qabetaperson-1",
+		  "updated": "2011-03-24T20:39:04.000+0000",
+		  "created": "2011-03-24T20:39:04.000+0000"
+		}
+	*/
+	
 }
 

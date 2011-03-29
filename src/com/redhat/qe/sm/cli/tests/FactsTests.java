@@ -215,7 +215,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			//log.warning("The facts for this system did not allow us to perform a conclusive test.");
 			throw new SkipException("The facts for this system did not allow us to perform a conclusive test.");
 		}
-		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pools was found for which we could attempt this test.");
+		Assert.assertTrue(foundPoolWithSocketAttributes,"At least one Subscription Pool was found for which we could attempt this test.");
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: check arch",
@@ -335,6 +335,12 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=664847#2
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=629670
+
+	// TODO create tests that overrides the facts, for example....  and the uses getSystemSubscriptionPoolProductDataAsListOfLists()
+	// see TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST" from SubscribeTests
+	//String factsFile = clienttasks.factsDir+"/subscriptionTests.facts";
+	//client.runCommandAndWait("echo '{\"cpu.cpu_socket(s)\": \"4\"}' > "+factsFile);	// create an override for facts
+	//clienttasks.facts(true,true, null, null, null);
 
 	
 	

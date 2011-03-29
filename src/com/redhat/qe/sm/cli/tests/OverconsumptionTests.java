@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
@@ -82,7 +83,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// No free entitlements are available for the pool with id	'8a9b90882df297d5012df31def5e00bb'
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
-		Assert.assertEquals(client1tasks.subscribe_(testPool.poolId, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'");
+		Assert.assertEquals(client1tasks.subscribe_(null, testPool.poolId, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'");
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
@@ -97,7 +98,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConcurrentAttemptToSubscribe_Test() throws JSONException, Exception {
-	
+		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
+
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
 		client1tasks.register(clientusername,clientpassword,null,registereeName,systemConsumerIds.get(0),null, null, null, null, null);
@@ -175,7 +177,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConcurrentAttemptToOversubscribe_Test() throws JSONException, Exception {
-	
+		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
+		
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
 		client1tasks.register(clientusername,clientpassword,null,registereeName,systemConsumerIds.get(0),null, null, null, null, null);

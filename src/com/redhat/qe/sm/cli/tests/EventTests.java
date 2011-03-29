@@ -1,13 +1,10 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.IOException;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -23,7 +20,6 @@ import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
-import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.io.FeedException;
@@ -115,7 +111,6 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// test prerequisites
 
 		// get the owner and consumer feeds before we test the firing of a new event
-		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
 		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
@@ -151,14 +146,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 
 		// get the owner and consumer feeds before we test the firing of a new event
-		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
 		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
 		String ownerKey = registration.ownerKey;
 
 		// get the number of subscriptions this owner owns
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		//JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
 			
         // find the first pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -186,13 +180,16 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
 		// assert the owner feed...
-		for (int s=0; s<jsonSubscriptions.length(); s++) newEventTitles.add("POOL MODIFIED");		
-		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		////assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
+		//for (int s=0; s<jsonSubscriptions.length(); s++) newEventTitles.add("POOL MODIFIED");		// NOTE: This is troublesome because the number of POOL MODIFIED events is not this predictable especially when the pool (which is randomly chosen) is a virt pool
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+        newEventTitles.add("POOL MODIFIED");
+        assertTheNewOwnerFeedContains(ownerKey, oldOwnerFeed, newEventTitles);
 
 		// assert the feed...
-		//assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
-		assertTheNewFeed(oldFeed, newEventTitles);
+		////assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
+		//assertTheNewFeed(oldFeed, newEventTitles);
+        assertTheNewFeedContains(oldFeed, newEventTitles);
 	}
 	
 	
@@ -204,7 +201,6 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
-		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
 		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
@@ -235,7 +231,6 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void ConsumerModified_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
 		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
@@ -268,7 +263,6 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		//String ownerKey = clientOwnerUsername; // FIXME this hard-coded owner key assumes the key is the same as the owner name
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		RegistrationData registration = findRegistrationDataMatchingUsername(clientusername);
 		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+clientusername+"'.");
@@ -423,7 +417,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.register(clientusername,clientpassword,ConsumerType.candlepin,null,null,null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(pool.poolId, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -597,6 +591,25 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 
+	protected void assertTheNewOwnerFeedContains(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
+		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+
+		// assert the owner feed...
+		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		
+		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by events that contain (at a minimum) the following events: ");
+		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
+		
+		int newOwnerFeedGrowthCount = newOwnerFeed.getEntries().size() - oldOwnerFeed_EntriesSize;
+		log.info("The event feed length for owner '"+ownerKey+"' has increased by "+newOwnerFeedGrowthCount+" entries.");
+		List<String> actualNewEventTitles = new ArrayList<String>();
+		for (int i=0; i<newOwnerFeedGrowthCount; i++) {
+			actualNewEventTitles.add(((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle());
+		}
+		Assert.assertTrue(actualNewEventTitles.containsAll(newEventTitles), "The newest event feed entries for owner '"+ownerKey+"' contains (at a minimum) all of the expected new event titles.");
+	}
+	
 	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
@@ -671,6 +684,25 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry for consumer "+consumerKey+" is '"+newEventTitle+"'.");
 			i++;
 		}
+	}
+	
+	protected void assertTheNewFeedContains(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
+		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+		
+		// assert the feed...
+		SyndFeed newFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);		
+		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
+
+		log.info("Expecting the new feed to have grown by events that contain (at a minimum) the following events: ");
+		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
+		
+		int newFeedGrowthCount = newFeed.getEntries().size() - oldFeed_EntriesSize;
+		log.info("The event feed length has increased by "+newFeedGrowthCount+" entries.");
+		List<String> actualNewEventTitles = new ArrayList<String>();
+		for (int i=0; i<newFeedGrowthCount; i++) {
+			actualNewEventTitles.add(((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle());
+		}
+		Assert.assertTrue(actualNewEventTitles.containsAll(newEventTitles), "The newest event feed entries contains (at a minimum) all of the expected new event titles.");
 	}
 	
 	protected void assertTheNewFeed(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {

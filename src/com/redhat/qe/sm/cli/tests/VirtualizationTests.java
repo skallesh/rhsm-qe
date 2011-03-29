@@ -1,15 +1,11 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -201,13 +197,16 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={},
+			groups={}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
 	public void VerifyHostAndGuestPoolQuantities_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
+		// trick this system into believing it is a virt guest
+		forceVirtWhatToReturnGuest("kvm");
+		
 		// get the hostPool
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		SubscriptionPool hostPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", hostPoolId, allAvailablePools);
@@ -327,7 +326,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPool(hostPool);
 
 		// attempt to subscribe to the guestPoolId (should be blocked)
-		SSHCommandResult result = clienttasks.subscribe(guestPoolId,null,null,null,null,null,null,null);
+		SSHCommandResult result = clienttasks.subscribe(null,guestPoolId,null,null,null,null,null,null, null);
 		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
 		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"':");
 	}
@@ -337,7 +336,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	//		
+	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=683459
 	
 	
 	
@@ -384,22 +383,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
 	protected File virtWhatFile = null;
 	protected File virtWhatFileBackup = null;
-	
-	protected Calendar parseDateString(String dateString){
-		String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"2012-02-08T00:00:00.000+0000"
-		try{
-			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
-			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-			Calendar calendar = new GregorianCalendar();
-			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
-			return calendar;
-		}
-		catch (ParseException e){
-			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
-			return null;
-		}
-	}
-
 	
 	protected void forceVirtWhatToReturnGuest(String hypervisorType) {
 		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0

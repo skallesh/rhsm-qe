@@ -24,6 +24,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 	public String gpgKeyUrl;
 	public String enabled;
 	public Integer metadataExpire;	// seconds
+	public String requiredTags;	// comma separated list of tags: TAG1,TAG2,TAG3
 
 	public String hash;
 	
@@ -48,6 +49,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		if (gpgKeyUrl != null)				string += String.format(" %s='%s'", "gpgKeyUrl",gpgKeyUrl);
 		if (enabled != null)				string += String.format(" %s='%s'", "enabled",enabled);
 		if (metadataExpire != null)			string += String.format(" %s='%s'", "metadataExpire",metadataExpire);
+		if (requiredTags != null)			string += String.format(" %s='%s'", "requiredTags",requiredTags);
 		
 		return string.trim();
 	}
@@ -64,7 +66,8 @@ public class ContentNamespace extends AbstractCommandLineData {
 				((ContentNamespace)obj).downloadUrl.equals(this.downloadUrl) &&
 				((ContentNamespace)obj).gpgKeyUrl.equals(this.gpgKeyUrl) &&
 				((ContentNamespace)obj).enabled.equals(this.enabled) &&
-				((ContentNamespace)obj).metadataExpire.equals(this.metadataExpire);
+				((ContentNamespace)obj).metadataExpire.equals(this.metadataExpire) &&
+				((ContentNamespace)obj).requiredTags.equals(this.requiredTags);
 	}
 	
 	/**
@@ -243,6 +246,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.7 (GPG Key URL): file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.8 (Enabled): 1
 		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.9 (Metadata Expire Seconds): 604800
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.10 (Required Tags): TAG1,TAG2,TAG3
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
@@ -255,6 +259,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		regexes.put("gpgKeyUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		regexes.put("metadataExpire",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("requiredTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
 		
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

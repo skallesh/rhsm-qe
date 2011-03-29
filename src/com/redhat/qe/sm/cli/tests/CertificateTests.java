@@ -26,6 +26,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="candidate product cert validity dates",
+			groups={},
 			dataProvider="getProductCertFilesData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64656)
@@ -44,10 +45,14 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// verify that the validity period for this product cert has not yet ended.
 		Assert.assertTrue(productCert.validityNotAfter.after(now),"This validity period for this product cert has not yet ended.");
 
-		// verify that the validity period for this product cert is expected.
-		long expectedValidityDurationDays = Long.valueOf(getProperty("sm.client.productCertValidityDuration", "0"));
-		Assert.assertEquals(actualValidityDurationDays,expectedValidityDurationDays,"This validity period for this product certificate spans the expected number of days.");
-
+		// verify that the validity period for this product cert is among the expected values.
+		List<Long>expectedValidityDurationDaysList=new ArrayList<Long>();
+		String productCertValidityDuration = getProperty("sm.client.productCertValidityDuration", "").trim();
+		for (String expectedValidityDurationDayOption :  Arrays.asList(productCertValidityDuration.trim().split(" *, *"))) {
+			expectedValidityDurationDaysList.add(Long.valueOf(expectedValidityDurationDayOption));
+		}
+		log.info("Asserting that the the validity period for this product certificate ("+actualValidityDurationDays+") spans one of the expected number of days ("+productCertValidityDuration+")...");
+		Assert.assertContains(expectedValidityDurationDaysList, new Long(actualValidityDurationDays));
 	}
 	
 	

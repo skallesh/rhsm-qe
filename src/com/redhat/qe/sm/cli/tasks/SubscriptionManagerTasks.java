@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +20,7 @@ import org.json.JSONObject;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -26,6 +28,7 @@ import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -60,6 +63,8 @@ public class SubscriptionManagerTasks {
 
 	
 	public String hostname						= null;	// of the client
+	public String arch							= null;	// of the client
+	public String sockets						= null;	// of the client
 	
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
@@ -68,6 +73,8 @@ public class SubscriptionManagerTasks {
 		super();
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
+		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
+		sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -137,9 +144,9 @@ public class SubscriptionManagerTasks {
 	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String enablerepofordeps) {
 
 		// verify the subscription-manager client is a rhel 6 machine
-		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
-				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
+//		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
+//		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
+//				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
 
 		// make sure the client's time is accurate
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
@@ -287,7 +294,21 @@ public class SubscriptionManagerTasks {
 	 */
 	public void restart_rhsmcertd (int certFrequency, boolean waitForMinutes){
 		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);
+				
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=691137 - jsefler 03/26/2011
+		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="691137"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				RemoteFileTasks.runCommandAndWait(sshCommandRunner,"service rhsmcertd restart", LogMessageUtil.action());
+			} else {
+				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);	
+			}
+		} else {
+		// END OF WORKAROUND
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);	
+		}
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+certFrequency+" minutes",null);
 
@@ -358,6 +379,10 @@ public class SubscriptionManagerTasks {
 	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile)!=1) {
+			log.info("Currently, there is no consumer registered.");
+			return null;
+		}
 		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+this.consumerCertFile);
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
@@ -367,7 +392,9 @@ public class SubscriptionManagerTasks {
 	 * @return from the contents of the current /etc/pki/consumer/cert.pem
 	 */
 	public String getCurrentConsumerId() {
-		return getCurrentConsumerCert().consumerid;
+		ConsumerCert currentConsumerCert = getCurrentConsumerCert();
+		if (currentConsumerCert==null) return null;
+		return currentConsumerCert.consumerid;
 	}
 	
 	/**
@@ -376,12 +403,19 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentConsumerId(SSHCommandResult registerResult) {
 		
-		// FIXME  This algorithm is incorrect when stdout is:
+		// Example stdout:
+		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 jsefler.usersys.redhat.com
+		
+		// Example stdout:
 		// The system with UUID 4e3675b1-450a-4066-92da-392c204ca5c7 has been unregistered
 		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
 		
-		// this algorithm assumes the stdout format is: ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
-		return registerResult.getStdout().split(" ")[0];
+		//return registerResult.getStdout().split(" ")[0]; // FIXME: fails when stdout format is: ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1 
+		
+		Pattern pattern = Pattern.compile("^[a-f,0-9,\\-]{36} [^ ]*$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		Matcher matcher = pattern.matcher(registerResult.getStdout());
+		Assert.assertTrue(matcher.find(),"Found the registered UUID and name in the register result."); 
+		return matcher.group().split(" ")[0];
 	}
 	
 	/**
@@ -391,7 +425,23 @@ public class SubscriptionManagerTasks {
 	public String getFactValue(String factName) {
 		SSHCommandResult result = facts_(true, false, null, null, null);
 		
-		String regex=factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)")+":(.*)";
+		// # subscription-manager facts --list
+		// cpu.architecture: x86_64
+		// cpu.bogomips: 4600.03
+		// cpu.core(s)_per_socket: 1
+		// cpu.cpu(s): 2
+		// uname.sysname: Linux
+		// uname.version: #1 SMP Mon Mar 21 10:20:35 EDT 2011
+		// virt.host_type: ibm_systemz
+		// ibm_systemz-zvm
+		// uname.sysname: Linux
+		// network.ipaddr: 10.16.66.203
+		// system.compliant: False
+		
+		String factNameRegex = factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");
+		//String regex=factNameRegex+":(.*)";	// works with single-line fact values
+		String regex=factNameRegex+":(.*(\n.*?)+)(?:^.+?:|$)";	// works with multi-line fact values
+		
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
@@ -1242,7 +1292,9 @@ public class SubscriptionManagerTasks {
 		if (getCurrentEntitlementCertFiles().isEmpty() && getCurrentProductCertFiles().isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed Products to list"), "No installed Products to list");
 		} else {
-			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status");
+			//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Installed Product Status"); // produces too much logging
+			String title = "Installed Product Status";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of installed products is entitled '"+title+"'.");
 		}
 
 		return sshCommandResult;
@@ -1256,7 +1308,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
-		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
 		return sshCommandResult;
 	}
@@ -1278,7 +1330,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
-		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
 		return sshCommandResult;
 		
@@ -1296,9 +1348,11 @@ public class SubscriptionManagerTasks {
 
 		if (entitlementCertFiles.isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No Consumed subscription pools to list"), "No Consumed subscription pools to list");
-		} /*else {
-			Assert.assertContainsMatch(sshCommandResult.getStdout(), "Consumed Product Subscriptions");
-		}*/
+		} else {
+			//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Consumed Product Subscriptions"); // produces too much logging
+			String title = "Consumed Product Subscriptions";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of consumed products is entitled '"+title+"'.");
+		}
 
 		return sshCommandResult;
 	}
@@ -1309,6 +1363,7 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe without asserting results
+	 * @param auto TODO
 	 * @param poolId TODO
 	 * @param productId TODO
 	 * @param regtoken TODO
@@ -1318,10 +1373,11 @@ public class SubscriptionManagerTasks {
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult subscribe_(String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the subscribe command
-		String command = this.command;	command += " subscribe";	
+		String command = this.command;	command += " subscribe";
+		if (auto!=null && auto)			command += " --auto";
 		if (poolId!=null)				command += " --pool="+poolId;
 		if (productId!=null)			command += " --product="+productId;
 		if (regtoken!=null)				command += " --regtoken="+regtoken;
@@ -1358,9 +1414,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult subscribe(String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(poolId, productId, regtoken, email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, email, locale, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
@@ -1412,7 +1468,7 @@ public class SubscriptionManagerTasks {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(pool.poolId, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null);
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
@@ -1587,12 +1643,12 @@ public class SubscriptionManagerTasks {
 			try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("skipping assert that the productId from the pool matches the entitlement productId");
+			} else {
 			// END OF WORKAROUND
-			} else {		
-				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
-				Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
-						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
-						"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
+			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+			Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
+					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
+					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
 			}
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
@@ -1734,7 +1790,8 @@ public class SubscriptionManagerTasks {
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
-		} // END OF WORKAROUND
+		}
+		// END OF WORKAROUND
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=622839 - jsefler 8/10/2010
 		invokeWorkaroundWhileBugIsOpen = true;
@@ -1742,7 +1799,8 @@ public class SubscriptionManagerTasks {
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
-		} // END OF WORKAROUND
+		}
+		// END OF WORKAROUND
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/12/2010
 		invokeWorkaroundWhileBugIsOpen = true;
@@ -1750,7 +1808,8 @@ public class SubscriptionManagerTasks {
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No Available subscription pools to list$",assertMsg);
 			return;
-		} // END OF WORKAROUND
+		}
+		// END OF WORKAROUND
 		
 		// assert
 		Assert.assertEquals(listAvailableSubscriptionPools().getStdout().trim(),
@@ -1857,7 +1916,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * Issues a call to "subscription-manager-cli unsubscribe" which will unsubscribe from
+	 * Issues a call to "subscription-manager unsubscribe --all" which will unsubscribe from
 	 * all currently consumed product subscriptions and then asserts the list --consumed is empty.
 	 */
 	public void unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions() {
@@ -1946,6 +2005,68 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+	
+	
+	
+	
+	
+	
+	
+//	public boolean areAllRequiredTagsInContentNamespaceProvidedByProductCerts(ContentNamespace contentNamespace, List<ProductCert> productCerts) {
+//
+//		// get all of the provided tags from the productCerts
+//		List<String> providedTags = new ArrayList<String>();
+//		for (ProductCert productCert : productCerts) {
+//			for (ProductNamespace productNamespace : productCert.productNamespaces) {
+//				if (productNamespace.providedTags!=null) {
+//					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
+//						providedTags.add(providedTag);
+//					}
+//				}
+//			}
+//		}
+//		
+//		// get all of the required tags from the contentNamespace
+//		List<String> requiredTags = new ArrayList<String>();
+//		if (contentNamespace.requiredTags!=null) {
+//			for (String requiredTag : contentNamespace.requiredTags.split("\\s*,\\s*")) {
+//				requiredTags.add(requiredTag);
+//			}
+//		}
+//		
+//		// are ALL of the requiredTags provided?  Note: true is returned (and should be) when requiredTags.isEmpty()
+//		return providedTags.containsAll(requiredTags);
+//	}
+	public boolean areAllRequiredTagsInContentNamespaceProvidedByProductCerts(ContentNamespace contentNamespace, List<ProductCert> productCerts) {
+		return areAllRequiredTagsProvidedByProductCerts(contentNamespace.requiredTags, productCerts);
+	}
+	
+	public boolean areAllRequiredTagsProvidedByProductCerts(String requiredTagsAsString, List<ProductCert> productCerts) {
+
+		// get all of the provided tags from the productCerts
+		List<String> providedTags = new ArrayList<String>();
+		for (ProductCert productCert : productCerts) {
+			for (ProductNamespace productNamespace : productCert.productNamespaces) {
+				if (productNamespace.providedTags!=null) {
+					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
+						providedTags.add(providedTag);
+					}
+				}
+			}
+		}
+		
+		// get all of the required tags from the contentNamespace
+		List<String> requiredTags = new ArrayList<String>();
+		if (requiredTagsAsString!=null) {
+			for (String requiredTag : requiredTagsAsString.split("\\s*,\\s*")) {
+				requiredTags.add(requiredTag);
+			}
+		}
+		
+		// are ALL of the requiredTags provided?  Note: true is returned (and should be) when requiredTags.isEmpty()
+		return providedTags.containsAll(requiredTags);
+	}
+	
 	/**
 	 * Assert that the given entitlement certs are displayed in the stdout from "yum repolist all".
 	 * @param entitlementCerts
@@ -2003,6 +2124,7 @@ repolist: 3,394
 		*/
 		
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
+		List<ProductCert> currentProductCerts = this.getCurrentProductCerts();
 		
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
@@ -2011,7 +2133,8 @@ repolist: 3,394
 
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
 				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-				if (areReported)
+//				if (areReported)	// before development of conditional content tagging
+				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts))
 					Assert.assertContainsMatch(result.getStdout(), regex);
 				else
 					Assert.assertContainsNoMatch(result.getStdout(), regex);
@@ -2038,9 +2161,9 @@ repolist: 3,394
 		int repolistEndLn = 0;
 		
 		for(int i=0;i<availRepos.length;i++)
-			if (availRepos[i].contains("repo id"))
+			if (availRepos[i].startsWith("repo id"))
 				repolistStartLn = i + 1;
-			else if (availRepos[i].contains("repolist:"))
+			else if (availRepos[i].startsWith("repolist:"))
 				repolistEndLn = i;
 		
 		for(int i=repolistStartLn;i<repolistEndLn;i++)

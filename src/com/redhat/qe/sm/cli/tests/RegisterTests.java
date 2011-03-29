@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -156,7 +157,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049"},
 			enabled=true)
-	public void RegisterWithAutosubscribe_Test() {
+	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");
@@ -186,9 +187,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//}
 
 		// subscribe to a randomly available pool
+		/* This is too random
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		*/
+		// subscribe to the first available pool that provides one product
+		File entitlementCertFile = null;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+pool.poolId));	
+			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+			if (jsonProvidedProducts.length()==1) {
+				entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+				break;
+			}
+		}
+		if (entitlementCertFile==null) throw new SkipException("Could not find an available pool that provides only one product with which to test register with --autosubscribe.");
 		
 		// copy the downloaded entitlement cert to the temporary product cert directory (this will fake rhsm into believing that the same product is installed)
 		RemoteFileTasks.runCommandAndAssert(client, "cp "+entitlementCertFile.getPath()+" "+tmpProductCertDir, Integer.valueOf(0));
@@ -767,8 +781,31 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, uErrMsg}));
 		
 		// registration test for a user who with "invalid credentials" (translated)
-		if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
-		else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                       "de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
+		if (!isServerOnPremises)	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),	"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
+		else 						ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                      	"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
+
+									ll.add(Arrays.asList(new Object[]{null,													"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Invalid Credentials":"Invalid Credentials"}));
+									ll.add(Arrays.asList(new Object[]{null,													"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise":"Ungültige Berechtigungnachweise"}));
+									ll.add(Arrays.asList(new Object[]{null,													"es_ES.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Credenciales inválidas":"Credenciales inválidas"}));
+									ll.add(Arrays.asList(new Object[]{null,													"fr_FR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Informations d’identification invalides":"Informations d’identification invalides"}));
+									ll.add(Arrays.asList(new Object[]{null,													"it_IT.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Credenziali invalide":"Credenziali invalide"}));
+									ll.add(Arrays.asList(new Object[]{null,													"ja_JP.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "無効な識別情報":"無効な識別情報"}));
+									ll.add(Arrays.asList(new Object[]{null,													"ko_KR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "잘못된 인증 정보":"잘못된 인증 정보"}));
+									ll.add(Arrays.asList(new Object[]{null,													"pt_BR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Credenciais inválidos":"Credenciais inválidos"}));
+									ll.add(Arrays.asList(new Object[]{null,													"ru_RU.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Недопустимые реквизиты":"Недопустимые реквизиты"}));
+									ll.add(Arrays.asList(new Object[]{null,													"zh_CN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "无效证书":"无效证书"}));
+									ll.add(Arrays.asList(new Object[]{null,													"zh_TW.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "無效的認證":"無效的認證"}));
+									ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),							"as_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "অবৈধ পৰিচয়":"অবৈধ পৰিচয়"}));
+									ll.add(Arrays.asList(new Object[]{null,													"bn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "অবৈধ পরিচয়":"অবৈধ পরিচয়"}));
+									ll.add(Arrays.asList(new Object[]{null,													"hi_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "अवैध श्रेय":"अवैध श्रेय"}));
+									ll.add(Arrays.asList(new Object[]{null,													"mr_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "अवैध श्रेय":"अवैध श्रेय"}));
+									ll.add(Arrays.asList(new Object[]{null,													"gu_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "અયોગ્ય શ્રેય":"અયોગ્ય શ્રેય"}));
+									ll.add(Arrays.asList(new Object[]{null,													"kn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ":"ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ"}));
+									ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),							"ml_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "തെറ്റായ ആധികാരികതകള്‍":"തെറ്റായ ആധികാരികതകള്‍"}));
+									ll.add(Arrays.asList(new Object[]{null,													"or_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "ଅବୈଧ ପ୍ରାଧିକରଣ":"ଅବୈଧ ପ୍ରାଧିକରଣ"}));
+									ll.add(Arrays.asList(new Object[]{null,													"pa_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ":"ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ"}));
+									ll.add(Arrays.asList(new Object[]{null,													"ta_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "தவறான சான்றுகள்":"தவறான சான்றுகள்"}));
+									ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),							"te_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "చెల్లని ప్రమాణాలు":"చెల్లని ప్రమాణాలు"}));
 
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!usernameWithUnacceptedTC.equals("")) {
@@ -780,7 +817,7 @@ Expected Results:
 		if (!disabledUsername.equals("")) {
 			ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", disabledUsername, disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
 		}
-
+		// [root@jsefler-onprem-server ~]# for l in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo ""; echo "# LANG=$l.UTF8 subscription-manager clean --help"; LANG=$l.UTF8 subscription-manager clean --help; done;
 		/* TODO reference for locales
 		[root@jsefler-onprem03 ~]# rpm -lq subscription-manager | grep locale
 		/usr/share/locale/as_IN/LC_MESSAGES/rhsm.mo

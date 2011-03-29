@@ -22,13 +22,18 @@ public class ProductCert extends AbstractCommandLineData {
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-	public String productName;	// comes from the Product Namespace
+	public String productName;	// comes from the ProductNamespace
+	
+	public List<ProductNamespace> productNamespaces;
 
 
 
 	public ProductCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
 		this.serialNumber = serialNumber;
+		productNamespaces = ProductNamespace.parse(this.rawCertificate);
+		// TODO we should assert that there was only one ProductNamespace parsed!
+		productName = productNamespaces.get(0).name;	// extract the product name
 	}
 
 	
@@ -179,8 +184,10 @@ Certificate:
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		regexes.put("productName",			"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*).1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.4:");	// FIXME THIS IS ONLY PART OF THE CERT
+		//regexes.put("productName",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*.1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+
+		//regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*).1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(?:\\d+)\\.4:");	// FIXME THIS IS ONLY PART OF THE CERT
+		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*)Signature Algorithm:.*\\s+(?:([a-f]|[\\d]){2}:){10}");	// FIXME THIS IS ONLY PART OF THE CERT
 
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

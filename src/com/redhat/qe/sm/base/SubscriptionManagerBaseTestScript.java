@@ -89,7 +89,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> rpmUrls			= null;
 	protected List<String> repoCaCertUrls	= null;
 
-	protected JSONArray systemSubscriptionPoolProductData = null;
+//	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray personSubscriptionPoolProductData = null;
 	
 	
@@ -123,7 +123,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 
 	
 		try {
-			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+//			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block

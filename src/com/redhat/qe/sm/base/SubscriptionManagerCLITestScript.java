@@ -7,11 +7,16 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Random;
+import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +26,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
@@ -108,8 +114,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
 				File remoteFile = new File(remoteFileAsString);
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
+				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
 				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
-				generatedProductCertFiles.add(localFile);
+				localFile.renameTo(localFileRenamed);
+				generatedProductCertFiles.add(localFileRenamed);
 			}
 
 		}
@@ -196,8 +204,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		log.info("Installed version of subscription-manager...");
-		log.info("Subscription manager client '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
-		if (client2!=null) log.info("Subscription manager client '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+
+		log.info("Installed version of python-rhsm...");
+		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
+		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
+
+		log.info("Installed version of RHEL...");
+		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+
+		log.info("Installed version of kernel...");
+		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
+		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 
 		isSetupBeforeSuiteComplete = true;
 	}
@@ -220,6 +240,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}	// close the connection to the database
+		}
+	}
+	
+	@AfterSuite(groups={"setup", "cleanup"},description="return clients to beaker",dependsOnMethods={"disconnectDatabaseAfterSuite","unregisterClientsAfterSuite"}, alwaysRun=true)
+	public void return2beaker() {
+
+		Boolean return2beaker = Boolean.valueOf(getProperty("sm.client.return2beaker","false"));
+
+		if (return2beaker) {
+			if (client1!=null) client1.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
+			if (client2!=null) client2.runCommandAndWait("return2beaker.sh");	// return this client back to beaker
 		}
 	}
 
@@ -482,6 +513,25 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		sql.close();
 	}
 	
+
+	protected Calendar parseDateString(String dateString) {
+		String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"2012-02-08T00:00:00.000+0000"
+		try{
+			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			Calendar calendar = new GregorianCalendar();
+			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
+			return calendar;
+		}
+		catch (ParseException e){
+			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
+			return null;
+		}
+	}
+	
+	
+	
+	
 	// Data Providers ***********************************************************************
 
 	@DataProvider(name="getGoodRegistrationData")
@@ -562,28 +612,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	
-	@DataProvider(name="getSystemSubscriptionPoolProductData")
-	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists());
-	}
-	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-				
-		for (int j=0; j<systemSubscriptionPoolProductData.length(); j++) {
-			JSONObject poolProductDataAsJSONObject = (JSONObject) systemSubscriptionPoolProductData.get(j);
-			String systemProductId = poolProductDataAsJSONObject.getString("systemProductId");
-			JSONArray bundledProductDataAsJSONArray = poolProductDataAsJSONObject.getJSONArray("bundledProductData");
-
-			// String systemProductId, JSONArray bundledProductDataAsJSONArray
-			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductDataAsJSONArray}));
-
-			// minimize the number of dataProvided rows (useful during automated testcase development)
-			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
-		}
-		
-		return ll;
-	}
-	
 	@DataProvider(name="getUsernameAndPasswordData")
 	public Object[][] getUsernameAndPasswordDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
@@ -604,7 +632,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
-
+	
 	
 	@DataProvider(name="getAllConsumedProductSubscriptionsData")
 	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() {
@@ -657,4 +685,935 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
+	
+	
+	@DataProvider(name="getSystemSubscriptionPoolProductData")
+	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists());
+	}
+	/* HARDCODED IMPLEMENTATION THAT READS FROM systemSubscriptionPoolProductData
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+				
+		for (int j=0; j<systemSubscriptionPoolProductData.length(); j++) {
+			JSONObject poolProductDataAsJSONObject = (JSONObject) systemSubscriptionPoolProductData.get(j);
+			String systemProductId = poolProductDataAsJSONObject.getString("systemProductId");
+			JSONArray bundledProductDataAsJSONArray = poolProductDataAsJSONObject.getJSONArray("bundledProductData");
+
+			// String systemProductId, JSONArray bundledProductDataAsJSONArray
+			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductDataAsJSONArray}));
+
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+		}
+		
+		return ll;
+	}
+	*/
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
+		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
+	}
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystem) throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
+		
+		// get the owner key for clientusername, clientpassword
+		String consumerId = clienttasks.getCurrentConsumerId();
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			
+			// skip subscriptions that are not valid today (at this time now)
+			Calendar startDate = parseDateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parseDateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+			if (!(startDate.before(now) && endDate.after(now))) continue;
+			
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String productId = jsonProduct.getString("id");
+			String productName = jsonProduct.getString("name");
+			
+			// skip subscriptions that have already been added to SystemSubscriptionPoolProductData
+			if (productIdsAddedToSystemSubscriptionPoolProductData.contains(productId)) continue;
+			
+			// process this subscription productId
+			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
+			boolean productAttributesPassRulesCheck = true; // assumed
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {
+				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+				String attributeName = jsonProductAttribute.getString("name");
+				String attributeValue = jsonProductAttribute.getString("value");
+				if (attributeName.equals("arch")) {
+					if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.arch)) {
+						productAttributesPassRulesCheck = false;
+					}
+				}
+				if (attributeName.equals("variant")) {
+//					if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.variant)) {
+//						productAttributesPassRulesCheck = false;
+//					}
+				}
+				if (attributeName.equals("type")) {
+
+				}
+				if (attributeName.equals("version")) {
+//					if (!attributeValue.equalsIgnoreCase(clienttasks.version)) {
+//						productAttributesPassRulesCheck = false;
+//					}
+				}
+				if (attributeName.equals("requires_consumer_type")) {
+					if (!attributeValue.equalsIgnoreCase(ConsumerType.system.toString())) {
+						productAttributesPassRulesCheck = false;
+					}
+				}
+				if (attributeName.equals("sockets")) {
+					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+						if (matchSystem) productAttributesPassRulesCheck = false;
+					}
+				}
+			}
+			if (productAttributesPassRulesCheck) {
+				
+				// process this subscription's providedProducts
+				JSONArray jsonBundledProductData = new JSONArray();
+				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
+				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
+					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
+					String providedProductName = jsonProvidedProduct.getString("name");
+					String providedProductId = jsonProvidedProduct.getString("id");
+
+					
+					JSONArray jsonProvidedProductAttributes = jsonProvidedProduct.getJSONArray("attributes");
+					boolean providedProductAttributesPassRulesCheck = true; // assumed
+					for (int l = 0; l < jsonProvidedProductAttributes.length(); l++) {
+						JSONObject jsonProvidedProductAttribute = (JSONObject) jsonProvidedProductAttributes.get(l);
+						String attributeName = jsonProvidedProductAttribute.getString("name");
+						String attributeValue = jsonProvidedProductAttribute.getString("value");
+						if (attributeName.equals("arch")) {
+							if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.arch)) {
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
+						if (attributeName.equals("variant")) {
+//								if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.variant)) {
+//									providedProductAttributesPassRulesCheck = false;
+//								}
+						}
+						if (attributeName.equals("type")) {
+							if (attributeValue.equals("MKT")) { // provided products of type "MKT" should not pass the rules check
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
+						if (attributeName.equals("version")) {
+//								if (!attributeValue.equalsIgnoreCase(clienttasks.version)) {
+//									providedProductAttributesPassRulesCheck = false;
+//								}
+						}
+						if (attributeName.equals("requires_consumer_type")) {
+							if (!attributeValue.equalsIgnoreCase(ConsumerType.system.toString())) {
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
+						if (attributeName.equals("sockets")) {
+//							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+//								if (matchSystem) providedProductAttributesPassRulesCheck = false;
+//							}
+							if (Integer.valueOf(attributeValue) > Integer.valueOf(clienttasks.sockets)) {
+								providedProductAttributesPassRulesCheck = false;
+							}
+						}
+
+					}
+					if (providedProductAttributesPassRulesCheck) {
+						JSONObject bundledProduct = new JSONObject(String.format("{productName:'%s'}", providedProductName));
+
+						jsonBundledProductData.put(bundledProduct);
+					}
+				}
+				// Example:
+				// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
+
+				// String systemProductId, JSONArray bundledProductDataAsJSONArray
+				ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
+				productIdsAddedToSystemSubscriptionPoolProductData.add(productId);
+			}
+		}
+		
+		return ll;
+		
+	}
+	
+	/* SUBSCRIPTION WITH BUNDLED PRODUCTS
+	
+	[root@jsefler-onprem-server ~]# curl -k -u admin:admin --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/subscriptions/8a90f8b42ee62404012ee624918b00a9 | json_reformat 
+		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+		                                 Dload  Upload   Total   Spent    Left  Speed
+		100 13941    0 13941    0     0   127k      0 --:--:-- --:--:-- --:--:--  412k
+		{
+		  "id": "8a90f8b42ee62404012ee624918b00a9",
+		  "owner": {
+		    "href": "/owners/admin",
+		    "id": "8a90f8b42ee62404012ee62448260005"
+		  },
+		  "certificate": null,
+		  "product": {
+		    "name": "Awesome OS Server Bundled (2 Sockets, Standard Support)",
+		    "id": "awesomeos-server-2-socket-std",
+		    "attributes": [
+		      {
+		        "name": "variant",
+		        "value": "ALL",
+		        "updated": "2011-03-24T04:34:39.173+0000",
+		        "created": "2011-03-24T04:34:39.173+0000"
+		      },
+		      {
+		        "name": "sockets",
+		        "value": "2",
+		        "updated": "2011-03-24T04:34:39.174+0000",
+		        "created": "2011-03-24T04:34:39.174+0000"
+		      },
+		      {
+		        "name": "arch",
+		        "value": "ALL",
+		        "updated": "2011-03-24T04:34:39.174+0000",
+		        "created": "2011-03-24T04:34:39.174+0000"
+		      },
+		      {
+		        "name": "support_level",
+		        "value": "Standard",
+		        "updated": "2011-03-24T04:34:39.174+0000",
+		        "created": "2011-03-24T04:34:39.174+0000"
+		      },
+		      {
+		        "name": "support_type",
+		        "value": "L1-L3",
+		        "updated": "2011-03-24T04:34:39.175+0000",
+		        "created": "2011-03-24T04:34:39.175+0000"
+		      },
+		      {
+		        "name": "management_enabled",
+		        "value": "1",
+		        "updated": "2011-03-24T04:34:39.175+0000",
+		        "created": "2011-03-24T04:34:39.175+0000"
+		      },
+		      {
+		        "name": "type",
+		        "value": "MKT",
+		        "updated": "2011-03-24T04:34:39.175+0000",
+		        "created": "2011-03-24T04:34:39.175+0000"
+		      },
+		      {
+		        "name": "warning_period",
+		        "value": "30",
+		        "updated": "2011-03-24T04:34:39.176+0000",
+		        "created": "2011-03-24T04:34:39.176+0000"
+		      },
+		      {
+		        "name": "version",
+		        "value": "6.1",
+		        "updated": "2011-03-24T04:34:39.176+0000",
+		        "created": "2011-03-24T04:34:39.176+0000"
+		      }
+		    ],
+		    "multiplier": 1,
+		    "productContent": [
+
+		    ],
+		    "dependentProductIds": [
+
+		    ],
+		    "href": "/products/awesomeos-server-2-socket-std",
+		    "updated": "2011-03-24T04:34:39.173+0000",
+		    "created": "2011-03-24T04:34:39.173+0000"
+		  },
+		  "providedProducts": [
+		    {
+		      "name": "Clustering Bits",
+		      "id": "37065",
+		      "attributes": [
+		        {
+		          "name": "version",
+		          "value": "1.0",
+		          "updated": "2011-03-24T04:34:26.104+0000",
+		          "created": "2011-03-24T04:34:26.104+0000"
+		        },
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:26.104+0000",
+		          "created": "2011-03-24T04:34:26.104+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T04:34:26.104+0000",
+		          "created": "2011-03-24T04:34:26.104+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:26.104+0000",
+		          "created": "2011-03-24T04:34:26.104+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "SVC",
+		          "updated": "2011-03-24T04:34:26.104+0000",
+		          "created": "2011-03-24T04:34:26.104+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+		        {
+		          "content": {
+		            "name": "always-enabled-content",
+		            "id": "1",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "always-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": 200,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.415+0000",
+		            "created": "2011-03-24T04:34:25.415+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "never-enabled-content",
+		            "id": "0",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/never",
+		            "label": "never-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/never/gpg",
+		            "metadataExpire": 600,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.277+0000",
+		            "created": "2011-03-24T04:34:25.277+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": false
+		        }
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/37065",
+		      "updated": "2011-03-24T04:34:26.103+0000",
+		      "created": "2011-03-24T04:34:26.103+0000"
+		    },
+		    {
+		      "name": "Awesome OS Server Bundled",
+		      "id": "awesomeos-server",
+		      "attributes": [
+		        {
+		          "name": "version",
+		          "value": "1.0",
+		          "updated": "2011-03-24T04:34:35.841+0000",
+		          "created": "2011-03-24T04:34:35.841+0000"
+		        },
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:35.841+0000",
+		          "created": "2011-03-24T04:34:35.841+0000"
+		        },
+		        {
+		          "name": "support_level",
+		          "value": "Premium",
+		          "updated": "2011-03-24T04:34:35.841+0000",
+		          "created": "2011-03-24T04:34:35.841+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T04:34:35.841+0000",
+		          "created": "2011-03-24T04:34:35.841+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:35.841+0000",
+		          "created": "2011-03-24T04:34:35.841+0000"
+		        },
+		        {
+		          "name": "management_enabled",
+		          "value": "1",
+		          "updated": "2011-03-24T04:34:35.842+0000",
+		          "created": "2011-03-24T04:34:35.842+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "MKT",
+		          "updated": "2011-03-24T04:34:35.842+0000",
+		          "created": "2011-03-24T04:34:35.842+0000"
+		        },
+		        {
+		          "name": "warning_period",
+		          "value": "30",
+		          "updated": "2011-03-24T04:34:35.842+0000",
+		          "created": "2011-03-24T04:34:35.842+0000"
+		        },
+		        {
+		          "name": "support_type",
+		          "value": "Level 3",
+		          "updated": "2011-03-24T04:34:35.842+0000",
+		          "created": "2011-03-24T04:34:35.842+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/awesomeos-server",
+		      "updated": "2011-03-24T04:34:35.841+0000",
+		      "created": "2011-03-24T04:34:35.841+0000"
+		    },
+		    {
+		      "name": "Awesome OS Server Bits",
+		      "id": "37060",
+		      "attributes": [
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T05:28:28.464+0000",
+		          "created": "2011-03-24T05:28:28.464+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T05:28:28.465+0000",
+		          "created": "2011-03-24T05:28:28.465+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T05:28:28.464+0000",
+		          "created": "2011-03-24T05:28:28.464+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "SVC",
+		          "updated": "2011-03-24T05:28:28.465+0000",
+		          "created": "2011-03-24T05:28:28.465+0000"
+		        },
+		        {
+		          "name": "warning_period",
+		          "value": "30",
+		          "updated": "2011-03-24T05:28:28.465+0000",
+		          "created": "2011-03-24T05:28:28.465+0000"
+		        },
+		        {
+		          "name": "version",
+		          "value": "6.1",
+		          "updated": "2011-03-24T05:28:28.465+0000",
+		          "created": "2011-03-24T05:28:28.465+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+		        {
+		          "content": {
+		            "name": "tagged-content",
+		            "id": "2",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "tagged-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": null,
+		            "requiredTags": "TAG1,TAG2",
+		            "updated": "2011-03-24T04:34:25.482+0000",
+		            "created": "2011-03-24T04:34:25.482+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "always-enabled-content",
+		            "id": "1",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "always-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": 200,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.415+0000",
+		            "created": "2011-03-24T04:34:25.415+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "never-enabled-content",
+		            "id": "0",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/never",
+		            "label": "never-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/never/gpg",
+		            "metadataExpire": 600,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.277+0000",
+		            "created": "2011-03-24T04:34:25.277+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": false
+		        },
+		        {
+		          "content": {
+		            "name": "content",
+		            "id": "1111",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path",
+		            "label": "content-label",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/gpg/",
+		            "metadataExpire": 0,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.559+0000",
+		            "created": "2011-03-24T04:34:25.559+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        }
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/37060",
+		      "updated": "2011-03-24T04:34:32.608+0000",
+		      "created": "2011-03-24T04:34:32.608+0000"
+		    },
+		    {
+		      "name": "Load Balancing Bits",
+		      "id": "37070",
+		      "attributes": [
+		        {
+		          "name": "version",
+		          "value": "1.0",
+		          "updated": "2011-03-24T04:34:27.252+0000",
+		          "created": "2011-03-24T04:34:27.252+0000"
+		        },
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:27.252+0000",
+		          "created": "2011-03-24T04:34:27.252+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T04:34:27.253+0000",
+		          "created": "2011-03-24T04:34:27.253+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:27.252+0000",
+		          "created": "2011-03-24T04:34:27.252+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "SVC",
+		          "updated": "2011-03-24T04:34:27.253+0000",
+		          "created": "2011-03-24T04:34:27.253+0000"
+		        },
+		        {
+		          "name": "warning_period",
+		          "value": "30",
+		          "updated": "2011-03-24T04:34:27.253+0000",
+		          "created": "2011-03-24T04:34:27.253+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+		        {
+		          "content": {
+		            "name": "always-enabled-content",
+		            "id": "1",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "always-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": 200,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.415+0000",
+		            "created": "2011-03-24T04:34:25.415+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "never-enabled-content",
+		            "id": "0",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/never",
+		            "label": "never-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/never/gpg",
+		            "metadataExpire": 600,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.277+0000",
+		            "created": "2011-03-24T04:34:25.277+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": false
+		        }
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/37070",
+		      "updated": "2011-03-24T04:34:27.251+0000",
+		      "created": "2011-03-24T04:34:27.251+0000"
+		    },
+		    {
+		      "name": "Large File Support Bits",
+		      "id": "37068",
+		      "attributes": [
+		        {
+		          "name": "version",
+		          "value": "1.0",
+		          "updated": "2011-03-24T04:34:30.292+0000",
+		          "created": "2011-03-24T04:34:30.292+0000"
+		        },
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:30.293+0000",
+		          "created": "2011-03-24T04:34:30.293+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T04:34:30.293+0000",
+		          "created": "2011-03-24T04:34:30.293+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:30.293+0000",
+		          "created": "2011-03-24T04:34:30.293+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "SVC",
+		          "updated": "2011-03-24T04:34:30.293+0000",
+		          "created": "2011-03-24T04:34:30.293+0000"
+		        },
+		        {
+		          "name": "warning_period",
+		          "value": "30",
+		          "updated": "2011-03-24T04:34:30.293+0000",
+		          "created": "2011-03-24T04:34:30.293+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+		        {
+		          "content": {
+		            "name": "always-enabled-content",
+		            "id": "1",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "always-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": 200,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.415+0000",
+		            "created": "2011-03-24T04:34:25.415+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "never-enabled-content",
+		            "id": "0",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/never",
+		            "label": "never-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/never/gpg",
+		            "metadataExpire": 600,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.277+0000",
+		            "created": "2011-03-24T04:34:25.277+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": false
+		        }
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/37068",
+		      "updated": "2011-03-24T04:34:30.292+0000",
+		      "created": "2011-03-24T04:34:30.292+0000"
+		    },
+		    {
+		      "name": "Shared Storage Bits",
+		      "id": "37067",
+		      "attributes": [
+		        {
+		          "name": "version",
+		          "value": "1.0",
+		          "updated": "2011-03-24T04:34:28.860+0000",
+		          "created": "2011-03-24T04:34:28.860+0000"
+		        },
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:28.861+0000",
+		          "created": "2011-03-24T04:34:28.861+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T04:34:28.861+0000",
+		          "created": "2011-03-24T04:34:28.861+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:28.861+0000",
+		          "created": "2011-03-24T04:34:28.861+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "SVC",
+		          "updated": "2011-03-24T04:34:28.861+0000",
+		          "created": "2011-03-24T04:34:28.861+0000"
+		        },
+		        {
+		          "name": "warning_period",
+		          "value": "30",
+		          "updated": "2011-03-24T04:34:28.861+0000",
+		          "created": "2011-03-24T04:34:28.861+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+		        {
+		          "content": {
+		            "name": "always-enabled-content",
+		            "id": "1",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "always-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": 200,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.415+0000",
+		            "created": "2011-03-24T04:34:25.415+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "never-enabled-content",
+		            "id": "0",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/never",
+		            "label": "never-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/never/gpg",
+		            "metadataExpire": 600,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.277+0000",
+		            "created": "2011-03-24T04:34:25.277+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": false
+		        }
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/37067",
+		      "updated": "2011-03-24T04:34:28.859+0000",
+		      "created": "2011-03-24T04:34:28.859+0000"
+		    },
+		    {
+		      "name": "Management Bits",
+		      "id": "37069",
+		      "attributes": [
+		        {
+		          "name": "version",
+		          "value": "1.0",
+		          "updated": "2011-03-24T04:34:31.181+0000",
+		          "created": "2011-03-24T04:34:31.181+0000"
+		        },
+		        {
+		          "name": "variant",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:31.181+0000",
+		          "created": "2011-03-24T04:34:31.181+0000"
+		        },
+		        {
+		          "name": "sockets",
+		          "value": "2",
+		          "updated": "2011-03-24T04:34:31.181+0000",
+		          "created": "2011-03-24T04:34:31.181+0000"
+		        },
+		        {
+		          "name": "arch",
+		          "value": "ALL",
+		          "updated": "2011-03-24T04:34:31.181+0000",
+		          "created": "2011-03-24T04:34:31.181+0000"
+		        },
+		        {
+		          "name": "type",
+		          "value": "SVC",
+		          "updated": "2011-03-24T04:34:31.181+0000",
+		          "created": "2011-03-24T04:34:31.181+0000"
+		        },
+		        {
+		          "name": "warning_period",
+		          "value": "30",
+		          "updated": "2011-03-24T04:34:31.181+0000",
+		          "created": "2011-03-24T04:34:31.181+0000"
+		        }
+		      ],
+		      "multiplier": 1,
+		      "productContent": [
+		        {
+		          "content": {
+		            "name": "always-enabled-content",
+		            "id": "1",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/always",
+		            "label": "always-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/always/gpg",
+		            "metadataExpire": 200,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.415+0000",
+		            "created": "2011-03-24T04:34:25.415+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": true
+		        },
+		        {
+		          "content": {
+		            "name": "never-enabled-content",
+		            "id": "0",
+		            "type": "yum",
+		            "modifiedProductIds": [
+
+		            ],
+		            "contentUrl": "/foo/path/never",
+		            "label": "never-enabled-content",
+		            "vendor": "test-vendor",
+		            "gpgUrl": "/foo/path/never/gpg",
+		            "metadataExpire": 600,
+		            "requiredTags": null,
+		            "updated": "2011-03-24T04:34:25.277+0000",
+		            "created": "2011-03-24T04:34:25.277+0000"
+		          },
+		          "flexEntitlement": 0,
+		          "physicalEntitlement": 0,
+		          "enabled": false
+		        }
+		      ],
+		      "dependentProductIds": [
+
+		      ],
+		      "href": "/products/37069",
+		      "updated": "2011-03-24T04:34:31.180+0000",
+		      "created": "2011-03-24T04:34:31.180+0000"
+		    }
+		  ],
+		  "endDate": "2013-03-13T00:00:00.000+0000",
+		  "startDate": "2012-03-13T00:00:00.000+0000",
+		  "quantity": 15,
+		  "contractNumber": "20",
+		  "accountNumber": "12331131231",
+		  "modified": null,
+		  "tokens": [
+
+		  ],
+		  "upstreamPoolId": null,
+		  "updated": "2011-03-24T04:34:39.627+0000",
+		  "created": "2011-03-24T04:34:39.627+0000"
+		}
+	*/
+	
+
+
+
 }
