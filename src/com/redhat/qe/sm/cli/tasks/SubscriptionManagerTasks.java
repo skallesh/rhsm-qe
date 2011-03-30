@@ -52,6 +52,8 @@ public class SubscriptionManagerTasks {
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
+	public final String rhsmComplianceD		= "/usr/libexec/rhsm-complianced";
+	public final String varLogMessagesFile	= "/var/log/messages";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
