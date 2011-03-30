@@ -181,20 +181,20 @@
     0))
 
 (defn compliance? []
-  (= 1 (ui guiexist :main-window "All products are in compliance*")))  
+  (= 1 (ui guiexist :main-window "Product entitlement certificates valid through*")))  
 
 (defn first-date-of-noncomply []
-  (if (= 1 (ui guiexist :compliance-assistant-dialog))
-    (let [datelabel (ui getobjectproperty :compliance-assistant-dialog "*first date*" "label")]
+  (if (= 1 (ui guiexist :subscription-assistant-dialog))
+    (let [datelabel (ui getobjectproperty :subscription-assistant-dialog "*first date*" "label")]
       (.substring datelabel 0 10))))
   
-(defn compliance-subscribe [s]
-  (if-not (ui rowexist? :compliance-subscription-view s)
+(defn assistant-subscribe [s]
+  (if-not (ui rowexist? :assistant-subscription-view s)
     (raise {:type :subscription-not-available
             :name s
-            :msg (str "Not found in 'Compliance Assistant Subscriptions':" s)}))
-  (ui selectrow :compliance-subscription-view s)
-  (ui click :compliance-subscribe)
+            :msg (str "Not found in 'Subscription Assistant Subscriptions':" s)}))
+  (ui selectrow :assistant-subscription-view s)
+  (ui click :assistant-subscribe)
   (checkforerror)
   (wait-for-progress-bar))  
 
