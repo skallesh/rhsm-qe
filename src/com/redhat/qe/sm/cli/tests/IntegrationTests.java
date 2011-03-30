@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -284,14 +285,52 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@Test(	description="subscribe to expected product subscription",
-		groups={},
-		dataProvider="getSubscribeData",
-		enabled=true)
+	@Test(	description="register and subscribe to expected product subscription",
+			groups={},
+			dataProvider="getSubscribeData",
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void Subscribe_Test(String username, String password, String productId) {
 		clienttasks.register(username, password, null, null, null, null, true, null, null, null);
+		File entitlementCertFile = clienttasks.subscribeToProductId(productId);
+
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		entitlementCertData.add(Arrays.asList(new Object[]{username, password, productId, entitlementCert}));
+	}
+	
+	@Test(	description="verify the default enabled content set for product subscription contains packages",
+			groups={},
+			dependsOnMethods={"Subscribe_Test"}, alwaysRun=true,
+			dataProvider="getDefaultEnabledContentNamespaceData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void VerifyDefaultEnabledContentNamespaceContainsPackages_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
+		clienttasks.register(username, password, null, null, null, null, true, null, null, null);
 		clienttasks.subscribeToProductId(productId);
+
+		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
+		// 1. Repolist contains repositories corresponding to your entitled products
+		ArrayList<String> repolist = clienttasks.yumRepolist("enabled");
+
+		if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+			Assert.assertTrue(repolist.contains(contentNamespace.label),
+				"Yum repolist enabled includes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+productId+"'.");
+		} else {
+			Assert.assertFalse(repolist.contains(contentNamespace.label),
+				"Yum repolist enabled excludes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+productId+"' because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
+		}
+
+		//TODO verify the yum repolist contentNamespace.label returns more than 0 packages
+//		[root@jsefler-betastage-server ~]# yum repolist rhel-6-server-beta-rpms
+//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//		Updating Red Hat repositories.
+//		INFO:rhsm-app.repolib:repos updated: 63
+//		rhel-6-server-beta-rpms                                  | 3.7 kB     00:00     
+//		rhel-6-server-rpms                                       | 2.1 kB     00:00     
+//		repo id                   repo name                                       status
+//		rhel-6-server-beta-rpms   Red Hat Enterprise Linux 6 Server Beta (RPMs)   3,470
+//		repolist: 3,470
+
 	}
 	
 	
@@ -311,50 +350,80 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //		client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
 //		client2tasks.unregister_(null,null,null);
 //	}
+	
+	@BeforeClass(groups={"setup"})
+	public void getCurrentProductCertsBeforeClass() {
+		currentProductCerts = clienttasks.getCurrentProductCerts();
+	}
 
 	
 	// Protected Methods ***********************************************************************
 	
+	List<List<Object>> entitlementCertData = new ArrayList<List<Object>>();
+	List<ProductCert> currentProductCerts = new ArrayList<ProductCert>();
 
 	
 	// Data Providers ***********************************************************************
 
 	
-@DataProvider(name="getSubscribeData")
-public Object[][] getSubscribeDataAs2dArray() throws JSONException, Exception {
-	return TestNGUtils.convertListOfListsTo2dArray(getSubscribeDataAsListOfLists());
-}
-protected List<List<Object>> getSubscribeDataAsListOfLists() throws JSONException, Exception {
-	List<List<Object>> ll = new ArrayList<List<Object>>();
-	
-	//JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
-	JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
-	for (int i = 0; i < jsonIntegrationTestData.length(); i++) {
-		JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
-		String username = jsonIntegrationTestDatum.getString("username");
-		String password = jsonIntegrationTestDatum.getString("password");
-		String arch = "ALL";
-		if (jsonIntegrationTestDatum.has("arch")) arch = jsonIntegrationTestDatum.getString("arch");
-		String variant = "ALL";
-		if (jsonIntegrationTestDatum.has("variant")) variant = jsonIntegrationTestDatum.getString("variant");
-
-		// skip this jsonIntegrationTestDatum when it does not match the client arch
-		if (!arch.equals("ALL") && !arch.equals(clienttasks.arch)) continue;
+	@DataProvider(name="getSubscribeData")
+	public Object[][] getSubscribeDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeDataAsListOfLists());
+	}
+	protected List<List<Object>> getSubscribeDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-		// skip this jsonIntegrationTestDatum when it does not match the client variant
-		if (!variant.equals("ALL") && !variant.equals(clienttasks.variant)) continue;
+		//JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+		JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+		for (int i = 0; i < jsonIntegrationTestData.length(); i++) {
+			JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
+			String username = jsonIntegrationTestDatum.getString("username");
+			String password = jsonIntegrationTestDatum.getString("password");
+			String arch = "ALL";
+			if (jsonIntegrationTestDatum.has("arch")) arch = jsonIntegrationTestDatum.getString("arch");
+			String variant = "ALL";
+			if (jsonIntegrationTestDatum.has("variant")) variant = jsonIntegrationTestDatum.getString("variant");
 	
-		JSONArray jsonProductIdsData = (JSONArray) jsonIntegrationTestDatum.getJSONArray("productIdsData");
-		for (int j = 0; j < jsonProductIdsData.length(); j++) {
-			JSONObject jsonProductIdsDatum = (JSONObject) jsonProductIdsData.get(j);
-			String productId = jsonProductIdsDatum.getString("productId");
-
-			ll.add(Arrays.asList(new Object[]{username, password, productId}));
+			// skip this jsonIntegrationTestDatum when it does not match the client arch
+			if (!arch.equals("ALL") && !arch.equals(clienttasks.arch)) continue;
+			
+			// skip this jsonIntegrationTestDatum when it does not match the client variant
+			if (!variant.equals("ALL") && !variant.equals(clienttasks.variant)) continue;
+		
+			JSONArray jsonProductIdsData = (JSONArray) jsonIntegrationTestDatum.getJSONArray("productIdsData");
+			for (int j = 0; j < jsonProductIdsData.length(); j++) {
+				JSONObject jsonProductIdsDatum = (JSONObject) jsonProductIdsData.get(j);
+				String productId = jsonProductIdsDatum.getString("productId");
+	
+				ll.add(Arrays.asList(new Object[]{username, password, productId}));
+			}
 		}
+		
+		return ll;
 	}
 	
-	return ll;
-}
+	@DataProvider(name="getDefaultEnabledContentNamespaceData")
+	public Object[][] getDefaultEnabledContentNamespaceDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getDefaultEnabledContentNamespaceDataAsListOfLists());
+	}
+	protected List<List<Object>> getDefaultEnabledContentNamespaceDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		for (List<Object> row : entitlementCertData) {
+			String username = (String) row.get(0);
+			String password = (String) row.get(1);
+			String productId = (String) row.get(2);
+			EntitlementCert entitlementCert = (EntitlementCert) row.get(3);
+			
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (contentNamespace.enabled.equals("1")) {
+					ll.add(Arrays.asList(new Object[]{username, password, productId, contentNamespace}));
+				}
+			}
+		}
+		return ll;
+	}
+
 
 //	@DataProvider(name="getPackageFromEnabledRepoAndSubscriptionPoolData")
 //	public Object[][] getPackageFromEnabledRepoAndSubscriptionPoolDataAs2dArray() {
