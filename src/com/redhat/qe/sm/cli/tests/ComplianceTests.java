@@ -38,11 +38,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant even after having subscribed to every available subscription pool.");
 	}
 	
@@ -55,11 +55,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant after having subscribed to every available subscription pool.");
 	}
 	
@@ -72,11 +72,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant after having subscribed to every available subscription pool.");
 	}
 	
@@ -89,11 +89,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertTrue(installdProducts.isEmpty(),
 				"No products are currently installed.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Because no prodycts are currently installed, the system should inherently be compliant even without subscribing to any subscription pools.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant.");
 
 	}
@@ -116,7 +116,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
 	protected final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
 	protected String productCertDir = null;
-	
+	protected final String factNameForSystemCompliance = "system.entitlements_valid"; // "system.compliant"; // changed with the removal of the word "compliance" 3/30/2011
+
 	
 	
 	// Protected Methods ***********************************************************************
