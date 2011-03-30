@@ -745,6 +745,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			// process this subscription productId
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			boolean productAttributesPassRulesCheck = true; // assumed
+			String productAttributeSocketsValue = "";
 			for (int j = 0; j < jsonProductAttributes.length(); j++) {
 				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
 				String attributeName = jsonProductAttribute.getString("name");
@@ -773,6 +774,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					}
 				}
 				if (attributeName.equals("sockets")) {
+					productAttributeSocketsValue = attributeValue;
 					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
 						if (matchSystem) productAttributesPassRulesCheck = false;
 					}
@@ -824,7 +826,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
 //								if (matchSystem) providedProductAttributesPassRulesCheck = false;
 //							}
-							if (Integer.valueOf(attributeValue) > Integer.valueOf(clienttasks.sockets)) {
+//							if (Integer.valueOf(attributeValue) > Integer.valueOf(clienttasks.sockets)) {
+//								providedProductAttributesPassRulesCheck = false;
+//							}
+							if (!attributeValue.equals(productAttributeSocketsValue)) {
+								log.warning("THE VALIDITY OF SUBSCRIPTION '"+productName+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' SOCKETS ATTRIBUTE '"+attributeValue+"' DOES NOT MATCH THE BASE SUBSCRIPTION PRODUCT '"+productId+"' SOCKETS ATTRIBUTE '"+productAttributeSocketsValue+"'.");
+							}
+							if (!productAttributeSocketsValue.equals("") && Integer.valueOf(attributeValue) > Integer.valueOf(productAttributeSocketsValue)) {
 								providedProductAttributesPassRulesCheck = false;
 							}
 						}
