@@ -9,6 +9,7 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.InstalledProduct;
@@ -29,7 +30,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 	
-	@Test(	description="subscription-manager: compliance test",
+	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
 			groups={"configureProductCertDirForSomeProductsSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -38,15 +39,33 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant even after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="subscription-manager: compliance test",
+	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when some installed products are subscribable",
+			groups={"blockedbyBug-691480"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable() {
+		String command = clienttasks.rhsmComplianceD+" -s -d";
+		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, LogMessageUtil.action());
+
+		// verify the stdout message
+		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenIncompliant, null);
+		
+		// also verify the /var/syslog/messages
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenIncompliant, null);
+	}
+	
+	
+	
+	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable",
 			groups={"configureProductCertDirForAllProductsSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -55,15 +74,28 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="subscription-manager: compliance test",
+	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when all installed products are subscribable",
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable() {
+		String command = clienttasks.rhsmComplianceD+" -s -d";
+
+		// verify the stdout message
+		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+	}
+	
+	
+	
+	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
 			groups={"configureProductCertDirForNoProductsSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -72,15 +104,33 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="subscription-manager: compliance test",
+	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when no installed products are subscribable",
+			groups={"blockedbyBug-691480"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable() {
+		String command = clienttasks.rhsmComplianceD+" -s -d";
+		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, LogMessageUtil.action());
+
+		// verify the stdout message
+		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenIncompliant, null);
+		
+		// also verify the /var/syslog/messages
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenIncompliant, null);
+	}
+
+	
+	
+	@Test(	description="subscription-manager: verify the system.compliant fact is True when no products are installed",
 			groups={"configureProductCertDirForNoProductsInstalled"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -89,16 +139,24 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertTrue(installdProducts.isEmpty(),
 				"No products are currently installed.");
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Because no prodycts are currently installed, the system should inherently be compliant even without subscribing to any subscription pools.");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 		clienttasks.listInstalledProducts();
-		Assert.assertEquals(clienttasks.getFactValue("system.compliant").toLowerCase(), Boolean.TRUE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant.");
-
 	}
 	
+	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when no products are installed",
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled() {
+		String command = clienttasks.rhsmComplianceD+" -s -d";
 
+		// verify the stdout message
+		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+	}
 	
 	
 	
@@ -116,7 +174,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
 	protected final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
 	protected String productCertDir = null;
-	
+	protected final String factNameForSystemCompliance = "system.entitlements_valid"; // "system.compliant"; // changed with the removal of the word "compliance" 3/30/2011
+	protected final String rhsmComplianceDStdoutMessageWhenIncompliant = "System has one or more certificates that are not valid";
+	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
+	protected final String rhsmComplianceDSyslogMessageWhenIncompliant = "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
 	
 	
 	// Protected Methods ***********************************************************************

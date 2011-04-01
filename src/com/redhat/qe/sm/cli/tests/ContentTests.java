@@ -61,7 +61,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 1. Repolist contains repositories corresponding to your entitled products
-		ArrayList<String> repolist = clienttasks.yumRepolist("enabled");
+		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (contentNamespace.enabled.equals("1")) {
 				if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
@@ -76,7 +76,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					"Yum repolist enabled excludes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
 			}
 		}
-		repolist = clienttasks.yumRepolist("disabled");
+		repolist = clienttasks.getYumRepolist("disabled");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (contentNamespace.enabled.equals("1")) {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
@@ -86,7 +86,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 					"Yum repolist disabled includes disabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
 			}
 		}
-		repolist = clienttasks.yumRepolist("all");
+		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
@@ -100,7 +100,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		log.info("Unsubscribe from the pool and verify that yum repolist no longer reports the expected repo id/labels...");
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
 		
-		repolist = clienttasks.yumRepolist("all");
+		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
 				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
@@ -115,7 +115,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		// 2. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 2. Repolist does not contain repositories corresponding to your entitled products
-		repolist = clienttasks.yumRepolist("all");
+		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
 				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
@@ -124,7 +124,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		log.info("Now we will restart the rhsmcertd and expect the repo list to be updated");
 		int minutes = 2;
 		clienttasks.restart_rhsmcertd(minutes, false);
-		repolist = clienttasks.yumRepolist("all");
+		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
@@ -137,7 +137,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now we will unsubscribe from the pool and verify that yum repolist continues to report the repo id/labels until the next refresh from the rhsmcertd runs...");
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
-		repolist = clienttasks.yumRepolist("all");
+		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
@@ -149,7 +149,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		log.info("Wait for the next refresh by rhsmcertd to remove the repos from the yum repo file '"+clienttasks.redhatRepoFile+"'...");
 		sleep(minutes*60*1000);
-		repolist = clienttasks.yumRepolist("all");
+		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
 				"Yum repolist all finally excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled AND waiting for the next refresh by rhsmcertd.");
@@ -187,7 +187,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
-		ArrayList<String> repolist = clienttasks.yumRepolist("enabled");
+		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
 		for (EntitlementCert entitlementCert : entitlementCerts) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.enabled.equals("1")) {

@@ -52,6 +52,8 @@ public class SubscriptionManagerTasks {
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
+	public final String rhsmComplianceD		= "/usr/libexec/rhsm-complianced";
+	public final String varLogMessagesFile	= "/var/log/messages";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -65,6 +67,7 @@ public class SubscriptionManagerTasks {
 	public String hostname						= null;	// of the client
 	public String arch							= null;	// of the client
 	public String sockets						= null;	// of the client
+	public String variant						= null;	// of the client
 	
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
@@ -75,6 +78,11 @@ public class SubscriptionManagerTasks {
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
 		sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		SSHCommandResult redhatReleaseResult = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release");
+		if (redhatReleaseResult.getStdout().contains("Server")) variant = "Server";
+		if (redhatReleaseResult.getStdout().contains("Client")) variant = "Client";
+		if (redhatReleaseResult.getStdout().contains("Workstation")) variant = "Workstation";
+		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -1455,8 +1463,12 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult;
 	}
 	
-	public void subscribeToProduct(String product) {
-		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
+	public File subscribeToProductId(String productId) {
+		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
+		
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, getCurrentlyAvailableSubscriptionPools());
+		Assert.assertNotNull(pool,"Found an available pool to subscribe to productId '"+productId+"': "+pool);
+		return subscribeToSubscriptionPool(pool);
 	}
 	
 	/**
@@ -2148,13 +2160,32 @@ repolist: 3,394
 	
 	/**
 	 * @param options [all|enabled|disabled] [--option=...]
-	 * @return
+	 * @return array of repo labels returned from a call to yum repolist [options]
 	 */
-	public ArrayList<String> yumRepolist(String options){
+	public ArrayList<String> getYumRepolist(String options){
 		ArrayList<String> repos = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
-		
 		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		// WARNING: DO NOT MAKE ANYMORE CALLS TO sshCommandRunner.runCommand* IN THE REST OF THIS METHOD.
+		// getYumRepolistPackageCount() ASSUMES sshCommandRunner.getStdout() CAME FROM THE CALL TO yum repolist
+
+		// Example sshCommandRunner.getStdout()
+		//	[root@jsefler-itclient01 product]# yum repolist all
+		//	Loaded plugins: pidplugin, refresh-packagekit, rhnplugin, rhsmplugin
+		//	Updating Red Hat repositories.
+		//	INFO:repolib:repos updated: 0
+		//	This system is not registered with RHN.
+		//	RHN support will be disabled.
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms                                                                         | 4.0 kB     00:00     
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms-updates                                                                 |  951 B     00:00     
+		//	repo id                                                                        repo name                                           status
+		//	red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms                        Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms-updates                Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms               Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	repolist: 3,394
+
+		
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		
 		int repolistStartLn = 0;
@@ -2170,6 +2201,52 @@ repolist: 3,394
 			repos.add(availRepos[i].split(" ")[0]);
 		
 		return repos;
+	}
+	
+	/**
+	 * @param options [all|enabled|disabled] [--option=...]
+	 * @return the value reported at the bottom of a call to yum repolist [options] (repolist: value)
+	 */
+	public Integer getYumRepolistPackageCount(String options){
+		getYumRepolist(options);
+
+		// Example sshCommandRunner.getStdout()
+		//	[root@jsefler-itclient01 product]# yum repolist all
+		//	Loaded plugins: pidplugin, refresh-packagekit, rhnplugin, rhsmplugin
+		//	Updating Red Hat repositories.
+		//	INFO:repolib:repos updated: 0
+		//	This system is not registered with RHN.
+		//	RHN support will be disabled.
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms                                                                         | 4.0 kB     00:00     
+		//	red-hat-enterprise-linux-6-entitlement-alpha-rpms-updates                                                                 |  951 B     00:00     
+		//	repo id                                                                        repo name                                           status
+		//	red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms                        Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-debug-rpms-updates                Red Hat Enterprise Linux 6 Entitlement Alpha (Debug disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms               Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
+		//	repolist: 3,394
+		
+		// Example sshCommandRunner.getStderr()
+		//	INFO:rhsm-app.repolib:repos updated: 63
+		//	https://cdn.redhat.com/FOO/content/beta/rhel/server/6/6Server/x86_64/os/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 403"
+		//	https://cdn.redhat.com/content/beta/rhel/client/6/x86_64/supplementary/source/SRPMS/repodata/repomd.xml: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404"
+
+		Assert.assertTrue(!sshCommandRunner.getStderr().contains("The requested URL returned error:"),"The requested URL did NOT return an error.");
+		
+		// parse out the value from repolist: value
+		String regex="repolist:(.*)";
+		
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(sshCommandRunner.getStdout());
+		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
+		if (!matcher.find()) {
+			log.warning("Did not find repolist package count.");
+			return null;
+		}
+		
+		Integer packageCount = Integer.valueOf(matcher.group(1).replaceAll(",","").trim());
+
+		return packageCount;
 	}
 	
 	@Deprecated
@@ -2204,7 +2281,11 @@ repolist: 3,394
 	}
 	
 //	public ArrayList<String> yumListAvailable (String disableplugin, String disablerepo, String enablerepo, String globExpression) {
-	public ArrayList<String> yumListAvailable (String options) {
+	/**
+	 * @param options
+	 * @return array of packages returned from a call to yum list available [options]
+	 */
+	public ArrayList<String> getYumListAvailable (String options) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 
@@ -2231,10 +2312,10 @@ repolist: 3,394
 		}
 		
 		// Example result.getStdout()
-		//xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		//xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		//xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
-		//xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
+		//	xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
 		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
 		String regex="^(\\S+) +(\\S+) +(\\S+)$";
@@ -2264,24 +2345,24 @@ repolist: 3,394
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command,Long.valueOf(min*60000));
 		
 		// Example result.getStdout()
-//		[root@jsefler-betaqa-1 product]# yum grouplist --disablerepo=* --enablerepo=rhel-entitlement-beta
-//		Loaded plugins: product-id, refresh-packagekit, rhnplugin, subscription-manager
-//		Updating Red Hat repositories.
-//		INFO:rhsm-app.repolib:repos updated: 0
-//		This system is not registered with RHN.
-//		RHN support will be disabled.
-//		Setting up Group Process
-//		rhel-entitlement-beta                                                                                                                                 | 4.0 kB     00:00     
-//		rhel-entitlement-beta/group_gz                                                                                                                        | 190 kB     00:00     
-//		Installed Groups:
-//		   Additional Development
-//		   Assamese Support
-//		   Base
-//		Available Groups:
-//		   Afrikaans Support
-//		   Albanian Support
-//		   Amazigh Support
-//		Done
+		//	[root@jsefler-betaqa-1 product]# yum grouplist --disablerepo=* --enablerepo=rhel-entitlement-beta
+		//	Loaded plugins: product-id, refresh-packagekit, rhnplugin, subscription-manager
+		//	Updating Red Hat repositories.
+		//	INFO:rhsm-app.repolib:repos updated: 0
+		//	This system is not registered with RHN.
+		//	RHN support will be disabled.
+		//	Setting up Group Process
+		//	rhel-entitlement-beta                                                                                                                                 | 4.0 kB     00:00     
+		//	rhel-entitlement-beta/group_gz                                                                                                                        | 190 kB     00:00     
+		//	Installed Groups:
+		//	   Additional Development
+		//	   Assamese Support
+		//	   Base
+		//	Available Groups:
+		//	   Afrikaans Support
+		//	   Albanian Support
+		//	   Amazigh Support
+		//	Done
 
 		String regex = Installed_or_Available+" Groups:((\\n\\s{3}.*)+)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
@@ -2300,8 +2381,8 @@ repolist: 3,394
 	
 	public String findUniqueAvailablePackageFromRepo (String repo) {
 		
-		for (String pkg : yumListAvailable("--disablerepo=* --enablerepo="+repo)) {
-			if (!yumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
+		for (String pkg : getYumListAvailable("--disablerepo=* --enablerepo="+repo)) {
+			if (!getYumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
 				return pkg;
 			}
 		}
@@ -2335,9 +2416,9 @@ repolist: 3,394
 	}
 	
 	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel) {
-		String command = "yum -y install "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		String command = "yum -y install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*"+repoLabel+"$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*@"+repoLabel+"$",null);
 		return result;
 	}
 	
@@ -2359,6 +2440,12 @@ repolist: 3,394
 		String command = "yum -y groupremove \""+group+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		Assert.assertFalse(this.yumGroupList("Installed", ""/*"--disablerepo=* --enablerepo="+repo*/).contains(group),"Yum group is Installed after calling '"+command+"'.");
+		return result;
+	}
+	
+	public SSHCommandResult yumClean (String option) {
+		String command = "yum clean \""+option+"\" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Cleaning",null);
 		return result;
 	}
 	

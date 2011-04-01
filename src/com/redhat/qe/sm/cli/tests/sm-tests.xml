@@ -301,4 +301,15 @@
 		</groups>
 	</test>
 	
+	<test name="Integration Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="IntegrationTests" />
+			</run>
+		</groups>
+	</test>
 </suite>

@@ -7,11 +7,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -37,8 +39,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String cliCommand = clienttasks.command;
 		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+cliCommand,0);
-		RemoteFileTasks.runCommandAndAssert(client,"man -k "+cliCommand,0,"^"+cliCommand+" ",null);
-		log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		RemoteFileTasks.runCommandAndAssert(client,"whatis "+cliCommand,0,"^"+cliCommand+" ",null);
+		log.warning("We only tested the existence of the man page; NOT the content.");
 	}
 	
 	@Test(	description="subscription-manager-gui: man page",
@@ -48,9 +50,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	public void ManPageForGUI_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
-		RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
-		RemoteFileTasks.runCommandAndAssert(client,"man -k "+guiCommand,0,"^"+guiCommand+" ",null);
-		log.warning("In this test we tested only the existence of the man page; NOT the content.");
+
+		// is the guiCommand installed?
+		if (client.runCommandAndWait("rpm -q "+guiCommand).getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(guiCommand+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
 	}
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
@@ -88,6 +99,15 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(expectedOptions.containsAll(actualOptions), "All of the available command '"+command+"' line options are expected.");
 	}
 	
+	
+	
+	// Configuration Methods ***********************************************************************
+	
+	@BeforeClass(groups={"setup"})
+	public void makewhatisBeforeClass() {
+		// running makewhatis to ensure that the whatis database is built on Beaker provisioned systems
+		RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
+	}
 	
 	
 	
