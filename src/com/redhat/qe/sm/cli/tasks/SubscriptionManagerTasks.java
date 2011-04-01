@@ -78,12 +78,14 @@ public class SubscriptionManagerTasks {
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
-		sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		
 		SSHCommandResult redhatReleaseResult = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release");
 		if (redhatReleaseResult.getStdout().contains("Server")) variant = "Server";
 		if (redhatReleaseResult.getStdout().contains("Client")) variant = "Client";
 		if (redhatReleaseResult.getStdout().contains("Workstation")) variant = "Workstation";
 		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
+		if (redhatReleaseResult.getStdout().contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("dmidecode | grep 'Socket Designation' | grep 'CPU' | wc -l").getStdout().trim();
+		if (redhatReleaseResult.getStdout().contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -183,7 +185,7 @@ public class SubscriptionManagerTasks {
 			rpmUrl = rpmUrl.trim();
 			log.info("Installing RPM from "+rpmUrl+"...");
 			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+sm_rpm+". saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
 			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),
