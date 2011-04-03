@@ -193,7 +193,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		//JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
-		JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+		JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
 		for (int i = 0; i < jsonIntegrationTestData.length(); i++) {
 			JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
 			String username = jsonIntegrationTestDatum.getString("username");

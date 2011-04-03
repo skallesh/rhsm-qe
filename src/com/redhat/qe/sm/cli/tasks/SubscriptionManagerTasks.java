@@ -1505,7 +1505,7 @@ public class SubscriptionManagerTasks {
 		try {
 			JSONArray personSubscriptionPoolProductData;
 //			personSubscriptionPoolProductData = new JSONArray(System.getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
-			personSubscriptionPoolProductData = new JSONArray(SubscriptionManagerBaseTestScript.getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+			personSubscriptionPoolProductData = new JSONArray(SubscriptionManagerBaseTestScript.getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
 			for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
 				JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
 				String personProductId = poolProductDataAsJSONObject.getString("personProductId");
