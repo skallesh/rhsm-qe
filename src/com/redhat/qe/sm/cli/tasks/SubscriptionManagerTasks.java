@@ -147,6 +147,11 @@ public class SubscriptionManagerTasks {
 	 * @throws IOException
 	 */
 	public void installProductCerts(List <File> productCerts) throws IOException {
+		if (productCerts.size() > 0) {
+			// directory must exist otherwise the copy will fail
+			sshCommandRunner.runCommandAndWait("mkdir -p "+productCertDir);
+		}
+
 		for (File file : productCerts) {
 			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
 		}
