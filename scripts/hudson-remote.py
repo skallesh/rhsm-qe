@@ -23,7 +23,7 @@ from pprint import pprint
 
 def sanitize(arg):
     """Sanitize an argument to put in a shell command."""
-    return arg.replace("\"", "\\\"").replace("$", r"\$").replace("`", r"\`")
+    return arg.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", r"\$").replace("`", r"\`")
 
 url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises"
 json_data = urllib.urlopen(url + "/api/json").read()
@@ -64,7 +64,11 @@ for variant in variants:
   print "Parameters:"
   pprint(output_dict)
   outputdata = json.dumps(output_dict)
-  cmd = 'curl -X POST %s -d token=hudsonbeaker-remote --data-urlencode json="%s"' % (url + "/build", sanitize(outputdata))
+#  print "JSON:"
+#  print outputdata
+  cmd = 'curl -X POST %s -d token=hudsonbeaker-remote --data-urlencode json="%s"' % (url + "/build", sanitize(outputdata))  
+#  print "COMMAND:"
+#  print cmd
   status, output = commands.getstatusoutput(cmd)
   print status
   print output
