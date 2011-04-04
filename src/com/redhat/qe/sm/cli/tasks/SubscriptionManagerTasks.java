@@ -84,7 +84,7 @@ public class SubscriptionManagerTasks {
 		if (redhatReleaseResult.getStdout().contains("Client")) variant = "Client";
 		if (redhatReleaseResult.getStdout().contains("Workstation")) variant = "Workstation";
 		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
-		if (redhatReleaseResult.getStdout().contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("dmidecode | grep 'Socket Designation' | grep 'CPU' | wc -l").getStdout().trim();
+		if (redhatReleaseResult.getStdout().contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
 		if (redhatReleaseResult.getStdout().contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
