@@ -159,6 +159,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //	public void Test300() {}
 
 	// Candidates for an automated Test:
+	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
 
 	
 	
