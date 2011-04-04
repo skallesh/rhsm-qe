@@ -52,7 +52,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String guiCommand = clienttasks.command+"-gui";
 
 		// is the guiCommand installed?
-		if (client.runCommandAndWait("rpm -q "+guiCommand).getStdout().contains("is not installed")) {
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+": nothing appropriate",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
