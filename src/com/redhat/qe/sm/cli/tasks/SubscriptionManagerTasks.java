@@ -2424,10 +2424,89 @@ repolist: 3,394
 		return null;
 	}
 	
-	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel) {
-		String command = "yum -y install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
+		
+		// install the package with repoLabel enabled
+		if (installOptions==null) installOptions="";
+		String command = "yum -y install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*@"+repoLabel+"$",null);
+		
+//		201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+//		201104051837:18.156 - FINE: Stdout: 
+//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//		No plugin match for: rhnplugin
+//		Updating Red Hat repositories.
+//		Setting up Install Process
+//		Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
+//		Resolving Dependencies
+//		--> Running transaction check
+//		---> Package spice-server.x86_64 0:0.7.3-2.el6 will be installed
+//		--> Finished Dependency Resolution
+//
+//		Dependencies Resolved
+//
+//		================================================================================
+//		 Package          Arch       Version          Repository                   Size
+//		================================================================================
+//		Installing:
+//		 spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
+//
+//		Transaction Summary
+//		================================================================================
+//		Install       1 Package(s)
+//
+//		Total download size: 245 k
+//		Installed size: 913 k
+//		Downloading Packages:
+//		Running rpm_check_debug
+//		Running Transaction Test
+//		Transaction Test Succeeded
+//		Running Transaction
+//
+//		  Installing : spice-server-0.7.3-2.el6.x86_64                              1/1 
+//		duration: 205(ms)
+//
+//		Installed:
+//		  spice-server.x86_64 0:0.7.3-2.el6                                             
+//
+//		Complete!
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051837:18.180 - FINE: Stderr: 
+//		INFO:rhsm-app.repolib:repos updated: 63
+//		Installed products updated.
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051837:18.182 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+
+				
+		// check if the package was obsoleted:
+		// Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
+		String regex="Package "+pkg.split("\\.")[0]+".* is obsoleted by (.+), trying to install .+ instead";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(sshCommandRunner.getStdout());
+		String obsoletedByPkg = null;
+		if (matcher.find()) {
+			obsoletedByPkg = matcher.group(1);
+			log.warning("Package '"+pkg+"' was obsoleted by '"+obsoletedByPkg+"'.");
+			pkg = obsoletedByPkg;
+		}
+		
+		// FIXME, If the package is obsoleted, then the obsoletedByPkg may not come from the same repo and the following assert will fail
+		
+		// assert the installed package came from repoLabel
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+".* .* @"+repoLabel+"$",null);
+
+//		201104051839:15.836 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum list installed spice-server --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+//		201104051839:16.447 - FINE: Stdout: 
+//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//		No plugin match for: rhnplugin
+//		Updating Red Hat repositories.
+//		Installed Packages
+//		spice-server.x86_64             0.7.3-2.el6             @rhel-6-server-beta-rpms
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051839:16.453 - FINE: Stderr: INFO:rhsm-app.repolib:repos updated: 63
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051839:16.455 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		
 		return result;
 	}
 	

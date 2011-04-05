@@ -219,7 +219,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// install the package and assert that it is successfully installed
-		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel); //pkgInstalled = true;
+		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
 		
 		// now remove the package
 		clienttasks.yumRemovePackage(pkg);
