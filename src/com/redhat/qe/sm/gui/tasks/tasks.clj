@@ -63,7 +63,7 @@
     (raise {:type :not-registered
             :msg "Tried to unregister when already unregistered."}))
   (ui click :unregister-system)
-  (ui waittillwindowexist :question-dialog 5)
+  (ui waittillwindowexist :question-dialog 30)
   (ui click :yes)
   (checkforerror))
 
