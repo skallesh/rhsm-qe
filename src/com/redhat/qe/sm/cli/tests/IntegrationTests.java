@@ -30,6 +30,7 @@ import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -64,7 +65,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
-
+//if(true) throw new SkipException("debugging");
 		// register
 		clienttasks.register(username, password, null, null, null, null, true, null, null, null);
 		
@@ -114,6 +115,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
 
+//if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
 		clienttasks.register(username, password, null, null, null, null, true, null, null, null);
 		
@@ -131,9 +133,13 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		if (pkg==null) {
 			throw new SkipException("Could NOT find a unique available package from this repo '"+contentNamespace.label+"' to attempt an install/remove test.");
 		}
+//pkg="cairo-spice-debuginfo.x86_64";
 		
 		// install the package and assert that it is successfully installed
-		clienttasks.yumInstallPackageFromRepo(pkg, contentNamespace.label); //pkgInstalled = true;
+		clienttasks.yumInstallPackageFromRepo(pkg, contentNamespace.label, null); //pkgInstalled = true;
+		
+		//FIXME check if the package was obsolete and its replacement was installed instead
+		//if (!obsoletedByPkg.isEmpty()) pkg = obsoletedByPkg;
 		
 		// now remove the package
 		clienttasks.yumRemovePackage(pkg);
@@ -159,6 +165,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //	public void Test300() {}
 
 	// Candidates for an automated Test:
+	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
 
 	
 	
@@ -193,7 +200,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		//JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
-		JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+		JSONArray jsonIntegrationTestData = new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
 		for (int i = 0; i < jsonIntegrationTestData.length(); i++) {
 			JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
 			String username = jsonIntegrationTestDatum.getString("username");
@@ -258,3 +265,89 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 
 
 }
+
+
+
+//[root@jsefler-betastage-server pki]# yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin
+//Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//No plugin match for: rhnplugin
+//Updating Red Hat repositories.
+//INFO:rhsm-app.repolib:repos updated: 63
+//rhel-6-server-beta-debug-rpms                                                                                                                   |  951 B     00:00     
+//rhel-6-server-beta-rpms                                                                                                                         | 3.7 kB     00:00     
+//rhel-6-server-rpms                                                                                                                              | 2.1 kB     00:00     
+//Setting up Install Process
+//Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
+//Resolving Dependencies
+//--> Running transaction check
+//---> Package spice-server.x86_64 0:0.7.3-2.el6 will be installed
+//--> Finished Dependency Resolution
+//
+//Dependencies Resolved
+//
+//=======================================================================================================================================================================
+//Package                                Arch                             Version                               Repository                                         Size
+//=======================================================================================================================================================================
+//Installing:
+//spice-server                           x86_64                           0.7.3-2.el6                           rhel-6-server-beta-rpms                           245 k
+//
+//Transaction Summary
+//=======================================================================================================================================================================
+//Install       1 Package(s)
+//
+//Total download size: 245 k
+//Installed size: 913 k
+//Downloading Packages:
+//spice-server-0.7.3-2.el6.x86_64.rpm                                                                                                             | 245 kB     00:00     
+//Running rpm_check_debug
+//Running Transaction Test
+//Transaction Test Succeeded
+//Running Transaction
+//Installing : spice-server-0.7.3-2.el6.x86_64                                                                                                                     1/1 
+//duration: 297(ms)
+//Installed products updated.
+//
+//Installed:
+//spice-server.x86_64 0:0.7.3-2.el6                                                                                                                                    
+//
+//Complete!
+//[root@jsefler-betastage-server pki]# yum remove spice-server.x86_64
+//Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//Updating Red Hat repositories.
+//INFO:rhsm-app.repolib:repos updated: 63
+//Setting up Remove Process
+//Resolving Dependencies
+//--> Running transaction check
+//---> Package spice-server.x86_64 0:0.7.3-2.el6 will be erased
+//--> Finished Dependency Resolution
+//rhel-6-server-beta-rpms                                                                                                                         | 3.7 kB     00:00     
+//rhel-6-server-rpms                                                                                                                              | 2.1 kB     00:00     
+//
+//Dependencies Resolved
+//
+//=======================================================================================================================================================================
+//Package                               Arch                            Version                                 Repository                                         Size
+//=======================================================================================================================================================================
+//Removing:
+//spice-server                          x86_64                          0.7.3-2.el6                             @rhel-6-server-beta-rpms                          913 k
+//
+//Transaction Summary
+//=======================================================================================================================================================================
+//Remove        1 Package(s)
+//
+//Installed size: 913 k
+//Is this ok [y/N]: y
+//Downloading Packages:
+//Running rpm_check_debug
+//Running Transaction Test
+//Transaction Test Succeeded
+//Running Transaction
+//Erasing    : spice-server-0.7.3-2.el6.x86_64                                                                                                                     1/1 
+//duration: 207(ms)
+//Installed products updated.
+//
+//Removed:
+//spice-server.x86_64 0:0.7.3-2.el6                                                                                                                                    
+//
+//Complete!
+//[root@jsefler-betastage-server pki]# 

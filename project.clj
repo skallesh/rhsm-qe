@@ -13,8 +13,7 @@
                  [gnome.ldtp "1.0.0-SNAPSHOT"]
                  [test_clj.testng "1.0.0-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]]
-  :javac-options {:debug "on"}
-  :repositories ["hudson" "http://hudson.rhq.lab.eng.bos.redhat.com:8080/archiva/repository/hudson"])
+  :javac-options {:debug "on"})
   
   
 (comment 

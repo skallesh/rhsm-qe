@@ -219,7 +219,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.subscribeToSubscriptionPool(pool);
 		
 		// install the package and assert that it is successfully installed
-		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel); //pkgInstalled = true;
+		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
 		
 		// now remove the package
 		clienttasks.yumRemovePackage(pkg);
@@ -284,6 +284,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=654442
+	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
+
 	
 	// Configuration Methods ***********************************************************************
 	

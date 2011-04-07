@@ -22,6 +22,7 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.ConsumerType;
+import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ContentNamespace;
@@ -77,12 +78,14 @@ public class SubscriptionManagerTasks {
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
-		sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		
 		SSHCommandResult redhatReleaseResult = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release");
 		if (redhatReleaseResult.getStdout().contains("Server")) variant = "Server";
 		if (redhatReleaseResult.getStdout().contains("Client")) variant = "Client";
 		if (redhatReleaseResult.getStdout().contains("Workstation")) variant = "Workstation";
 		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
+		if (redhatReleaseResult.getStdout().contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+		if (redhatReleaseResult.getStdout().contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -144,6 +147,11 @@ public class SubscriptionManagerTasks {
 	 * @throws IOException
 	 */
 	public void installProductCerts(List <File> productCerts) throws IOException {
+		if (productCerts.size() > 0) {
+			// directory must exist otherwise the copy will fail
+			sshCommandRunner.runCommandAndWait("mkdir -p "+productCertDir);
+		}
+
 		for (File file : productCerts) {
 			RemoteFileTasks.putFile(sshCommandRunner.getConnection(), file.getPath(), productCertDir+"/", "0644");
 		}
@@ -182,7 +190,7 @@ public class SubscriptionManagerTasks {
 			rpmUrl = rpmUrl.trim();
 			log.info("Installing RPM from "+rpmUrl+"...");
 			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"“"+sm_rpm+"” saved");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+sm_rpm+". saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
 			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),
@@ -1501,7 +1509,8 @@ public class SubscriptionManagerTasks {
 		boolean isSubpool = false; 
 		try {
 			JSONArray personSubscriptionPoolProductData;
-			personSubscriptionPoolProductData = new JSONArray(System.getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+//			personSubscriptionPoolProductData = new JSONArray(System.getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
+			personSubscriptionPoolProductData = new JSONArray(SubscriptionManagerBaseTestScript.getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
 			for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
 				JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
 				String personProductId = poolProductDataAsJSONObject.getString("personProductId");
@@ -2415,10 +2424,89 @@ repolist: 3,394
 		return null;
 	}
 	
-	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel) {
-		String command = "yum -y install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
+		
+		// install the package with repoLabel enabled
+		if (installOptions==null) installOptions="";
+		String command = "yum -y install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+" .*@"+repoLabel+"$",null);
+		
+//		201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+//		201104051837:18.156 - FINE: Stdout: 
+//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//		No plugin match for: rhnplugin
+//		Updating Red Hat repositories.
+//		Setting up Install Process
+//		Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
+//		Resolving Dependencies
+//		--> Running transaction check
+//		---> Package spice-server.x86_64 0:0.7.3-2.el6 will be installed
+//		--> Finished Dependency Resolution
+//
+//		Dependencies Resolved
+//
+//		================================================================================
+//		 Package          Arch       Version          Repository                   Size
+//		================================================================================
+//		Installing:
+//		 spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
+//
+//		Transaction Summary
+//		================================================================================
+//		Install       1 Package(s)
+//
+//		Total download size: 245 k
+//		Installed size: 913 k
+//		Downloading Packages:
+//		Running rpm_check_debug
+//		Running Transaction Test
+//		Transaction Test Succeeded
+//		Running Transaction
+//
+//		  Installing : spice-server-0.7.3-2.el6.x86_64                              1/1 
+//		duration: 205(ms)
+//
+//		Installed:
+//		  spice-server.x86_64 0:0.7.3-2.el6                                             
+//
+//		Complete!
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051837:18.180 - FINE: Stderr: 
+//		INFO:rhsm-app.repolib:repos updated: 63
+//		Installed products updated.
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051837:18.182 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+
+				
+		// check if the package was obsoleted:
+		// Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
+		String regex="Package "+pkg.split("\\.")[0]+".* is obsoleted by (.+), trying to install .+ instead";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(sshCommandRunner.getStdout());
+		String obsoletedByPkg = null;
+		if (matcher.find()) {
+			obsoletedByPkg = matcher.group(1);
+			log.warning("Package '"+pkg+"' was obsoleted by '"+obsoletedByPkg+"'.");
+			pkg = obsoletedByPkg;
+		}
+		
+		// FIXME, If the package is obsoleted, then the obsoletedByPkg may not come from the same repo and the following assert will fail
+		
+		// assert the installed package came from repoLabel
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+".* .* @"+repoLabel+"$",null);
+
+//		201104051839:15.836 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum list installed spice-server --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+//		201104051839:16.447 - FINE: Stdout: 
+//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
+//		No plugin match for: rhnplugin
+//		Updating Red Hat repositories.
+//		Installed Packages
+//		spice-server.x86_64             0.7.3-2.el6             @rhel-6-server-beta-rpms
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051839:16.453 - FINE: Stderr: INFO:rhsm-app.repolib:repos updated: 63
+//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+//		201104051839:16.455 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		
 		return result;
 	}
 	
