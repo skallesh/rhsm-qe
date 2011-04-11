@@ -35,8 +35,10 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- * Reference: https://docspace.corp.redhat.com/docs/DOC-60198
+ * References:
+ * https://docspace.corp.redhat.com/docs/DOC-60198
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
+ * https://docspace.corp.redhat.com/docs/DOC-63084
  */
 @Test(groups={"IntegrationTests"})
 public class IntegrationTests extends SubscriptionManagerCLITestScript{

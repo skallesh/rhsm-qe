@@ -122,6 +122,13 @@ public class ProductSubscription extends AbstractCommandLineData {
 		Begins:             	2010-12-14               
 		Expires:            	2011-12-15   
 		
+		ProductName:        	Awesome OS Server Bundled
+		ContractNumber:     	1391380943               
+		AccountNumber:      	None                     
+		SerialNumber:       	1669803970633823565      
+		Active:             	True                     
+		Begins:             	2011-04-07               
+		Expires:            	2011-04-08     
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
