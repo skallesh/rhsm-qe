@@ -92,5 +92,5 @@ variants = [['ppc64','','RedHatEnterpriseLinuxServer5'],
             ['x86_64','','RedHatEnterpriseLinuxServer5'],
             ['i386','','RedHatEnterpriseLinuxClient5'],
             ['x86_64','','RedHatEnterpriseLinuxClient5']]
-schedule_job(url, variants, token)            
+schedule_job(url, variants, token)
 
