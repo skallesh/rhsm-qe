@@ -110,8 +110,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// fetch the generated Product Certs
 			log.info("Fetching the generated product certs...");
-			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+			//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+			SSHCommandResult result = server.runCommandAndWait("find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+			String[] remoteFilesAsString = result.getStdout().trim().split("\\n");
+			if (remoteFilesAsString.length==1 && remoteFilesAsString[0].equals("")) remoteFilesAsString = new String[]{};
+			if (remoteFilesAsString.length==0) log.warning("No generated product certs were found on the candlpin server for use in testing.");
+			for (String remoteFileAsString : remoteFilesAsString) {
 				File remoteFile = new File(remoteFileAsString);
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
@@ -119,6 +123,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				localFile.renameTo(localFileRenamed);
 				generatedProductCertFiles.add(localFileRenamed);
 			}
+
 
 		}
 		
