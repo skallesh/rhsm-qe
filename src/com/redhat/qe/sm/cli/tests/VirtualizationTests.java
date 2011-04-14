@@ -352,7 +352,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// making a backup of virt-what...
 		virtWhatFileBackup = new File(virtWhatFile.getPath()+".bak");
-		RemoteFileTasks.runCommandAndAssert(client, "cp -n "+virtWhatFile+" "+virtWhatFileBackup, 0);
+		//RemoteFileTasks.runCommandAndAssert(client, "cp -np "+virtWhatFile+" "+virtWhatFileBackup, 0); // cp option -n does not exist on RHEL5 
+		if (RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==0) {
+			RemoteFileTasks.runCommandAndAssert(client, "cp -p "+virtWhatFile+" "+virtWhatFileBackup, 0);
+		}
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, virtWhatFileBackup.getPath())==1,"successfully made a backup of virt-what to: "+virtWhatFileBackup);
 
 	}
