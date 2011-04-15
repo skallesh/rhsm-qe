@@ -67,6 +67,8 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
+		Integer packageCount=null;
+
 //if(true) throw new SkipException("debugging");
 		// register
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
@@ -78,8 +80,9 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// assert that there are not yet any available packages from the default enabled/disabled repo
-		Integer packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label);
-		Assert.assertEquals(packageCount,Integer.valueOf(0),"Before subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is zero.");
+		// NOT REALLY A VALID ASSERTION WHEN WE COULD ALREADY BE SUBSCRIBED (FOR EFFICIENCY SAKE).  MOREOVER, THE MORE APPROPRIATE ASSERTION COMES AFTER THE SUBSCRIBE)   
+		//packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label);
+		//Assert.assertEquals(packageCount,Integer.valueOf(0),"Before subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is zero.");
 
 		// subscribe
 		if (!productId.equals(currentSubscribedProductId)) { // try to save some time by not re-subscribing
@@ -104,7 +107,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		// verify the yum repolist contentNamespace.label returns more than 0 packages
 		String options = contentNamespace.enabled.equals("1")? contentNamespace.label:contentNamespace.label+" --enablerepo="+contentNamespace.label;
 		packageCount = clienttasks.getYumRepolistPackageCount(options);
-		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero.");
+		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero (actual packageCount is '"+packageCount+"').");
 	}
 	
 	
