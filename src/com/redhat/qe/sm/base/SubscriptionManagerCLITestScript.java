@@ -230,12 +230,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="subscription manager gui set up")
 	public void setupGUIBeforeSuite() throws IOException {
-		//		201104251443:55.877 - FINE: ssh root@jsefler-onprem-workstation.usersys.redhat.com service vncserver restart (com.redhat.qe.tools.SSHCommandRunner.run)
-		//		201104251444:02.676 - FINE: Stdout: 
-		//		Shutting down VNC server: 2:root [  OK  ]
-		//		Starting VNC server: 2:root [  OK  ]
-		if (client1!=null) RemoteFileTasks.runCommandAndAssert(client1, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
-		if (client2!=null) RemoteFileTasks.runCommandAndAssert(client2, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+		// 201104251443:55.877 - FINE: ssh root@jsefler-onprem-workstation.usersys.redhat.com service vncserver restart (com.redhat.qe.tools.SSHCommandRunner.run)
+		// 201104251444:02.676 - FINE: Stdout: 
+		// Shutting down VNC server: 2:root [  OK  ]
+		// Starting VNC server: 2:root [  OK  ]
+		//if (client1!=null) RemoteFileTasks.runCommandAndAssert(client1, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+		//if (client2!=null) RemoteFileTasks.runCommandAndAssert(client2, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+		if (client1!=null) client1.runCommandAndWait("service vncserver restart");
+		if (client2!=null) client2.runCommandAndWait("service vncserver restart");
+
 		// vncviewer <client1tasks.hostname>:2
 	}
 	
