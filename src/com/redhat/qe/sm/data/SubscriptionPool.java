@@ -1,6 +1,8 @@
 package com.redhat.qe.sm.data;
 
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -12,7 +14,8 @@ import java.util.regex.Pattern;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 public class SubscriptionPool extends AbstractCommandLineData {
-	
+	protected static String simpleDateFormat = "MM/dd/yyyy";	// 04/24/2011 https://bugzilla.redhat.com/show_bug.cgi?id=695234
+
 	public SubscriptionPool() {
 		super(null);
 	}
@@ -145,7 +148,16 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		return string.trim();
 	}
 	
+	@Override
+	protected Calendar parseDateString(String dateString){
+		return parseDateString(dateString, simpleDateFormat);
+	}
 	
+	//@Override
+	public static String formatDateString(Calendar date){
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		return dateFormat.format(date.getTime());
+	}
 	
 	/**
 	 * @param stdoutListingOfAvailableSubscriptions - stdout from "subscription-manager-cli list --available"
