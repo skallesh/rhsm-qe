@@ -312,4 +312,86 @@
 			</run>
 		</groups>
 	</test>
+	
+	
+	<!-- GUI TESTS -->
+	
+	<test name="GUI Registration">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="registration"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI Subscribe/Unsubscribe">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>			
+		</packages>	
+		<groups>
+			<run>
+				<include name="subscribe"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI Autosubscribe">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="autosubscribe"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI Compliance Assistant">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="compliance-assistant"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI Proxy">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="proxy"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI Interop">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="interop"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
 </suite>

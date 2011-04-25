@@ -228,8 +228,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected static boolean isSetupBeforeSuiteComplete = false;
 	
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="subscription manager gui set up")
+	public void setupGUIBeforeSuite() throws IOException {
+		//		201104251443:55.877 - FINE: ssh root@jsefler-onprem-workstation.usersys.redhat.com service vncserver restart (com.redhat.qe.tools.SSHCommandRunner.run)
+		//		201104251444:02.676 - FINE: Stdout: 
+		//		Shutting down VNC server: 2:root [  OK  ]
+		//		Starting VNC server: 2:root [  OK  ]
+		if (client1!=null) RemoteFileTasks.runCommandAndAssert(client1, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+		if (client2!=null) RemoteFileTasks.runCommandAndAssert(client2, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+		// vncviewer <client1tasks.hostname>:2
+	}
+	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
+		
 		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 	}
