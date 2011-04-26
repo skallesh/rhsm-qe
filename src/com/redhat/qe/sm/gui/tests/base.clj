@@ -5,8 +5,9 @@
   (:import [org.testng.annotations BeforeSuite AfterSuite]))
   
 (defn- restart-vnc []
-  (.runCommandAndWait @config/clientcmd "service vncserver restart"))
-  
+  (.runCommandAndWait @config/clientcmd "service vncserver restart")
+  ( . Thread (sleep 10000)))
+
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (config/init)
