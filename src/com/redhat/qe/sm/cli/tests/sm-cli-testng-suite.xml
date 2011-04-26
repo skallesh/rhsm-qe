@@ -1,6 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="SMTestSuite">
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="SM CLI TestSuite">
 
 	<!-- the hudson.groovy script already includes these listeners
 	<listeners>
@@ -9,7 +10,10 @@
 	</listeners>
 	-->
 	
-	<test name="Help Tests">
+	
+	<!-- CLI TESTS -->
+		
+	<test name="CLI: Help Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -21,7 +25,7 @@
 		</groups>
 	</test>
 	
-	<test name="General Tests">
+	<test name="CLI: General Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -33,7 +37,7 @@
 		</groups>
 	</test>
 	
-	<test name="Register Tests">
+	<test name="CLI: Register Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -45,7 +49,7 @@
 		</groups>
 	</test>
 		
-	<test name="Proxy Tests">
+	<test name="CLI: Proxy Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -57,7 +61,7 @@
 		</groups>
 	</test>
 
-	<test name="Event Tests">
+	<test name="CLI: Event Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -69,7 +73,7 @@
 		</groups>
 	</test>
 
-	<test name="Identity Tests">
+	<test name="CLI: Identity Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -82,7 +86,7 @@
 	</test>
 	
 	
-	<test name="List Tests">
+	<test name="CLI: List Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -95,7 +99,7 @@
 	</test>
 	
 	
-	<test name="Subscribe Tests">
+	<test name="CLI: Subscribe Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -108,7 +112,7 @@
 	</test>
 	
 	
-	<test name="Unsubscribe Tests">
+	<test name="CLI: Unsubscribe Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -121,7 +125,7 @@
 	</test>
 	
 	
-	<test name="Unregister Tests">
+	<test name="CLI: Unregister Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -133,7 +137,7 @@
 		</groups>
 	</test>
 	
-	<test name="Multi-client Tests">
+	<test name="CLI: Multi-client Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -145,7 +149,7 @@
 		</groups>
 	</test>
 		
-	<test name="Management Add-On Tests">
+	<test name="CLI: Management Add-On Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -157,7 +161,7 @@
 		</groups>
 	</test>
 	
-	<test name="RHEL Personal Tests">
+	<test name="CLI: RHEL Personal Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -169,7 +173,7 @@
 		</groups>
 	</test>
 	
-	<test name="Facts Tests">
+	<test name="CLI: Facts Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -181,7 +185,7 @@
 		</groups>
 	</test>
 	
-	<test name="Clean Tests">
+	<test name="CLI: Clean Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -193,7 +197,7 @@
 		</groups>
 	</test>
 	
-	<test name="Refresh Tests">
+	<test name="CLI: Refresh Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -205,7 +209,7 @@
 		</groups>
 	</test>
 	
-	<test name="Subscription Expiration Tests">
+	<test name="CLI: Subscription Expiration Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -217,7 +221,7 @@
 		</groups>
 	</test>
 	
-	<test name="Certificate Tests">
+	<test name="CLI: Certificate Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -229,7 +233,7 @@
 		</groups>
 	</test>
 	
-	<test name="Compliance Tests">
+	<test name="CLI: Compliance Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -241,7 +245,7 @@
 		</groups>
 	</test>
 	
-	<test name="Content Tests">
+	<test name="CLI: Content Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -253,7 +257,7 @@
 		</groups>
 	</test>
 	
-	<test name="Virtualization Tests">
+	<test name="CLI: Virtualization Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -265,7 +269,7 @@
 		</groups>
 	</test>
 	
-	<test name="Modifier Tests">
+	<test name="CLI: Modifier Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -277,7 +281,7 @@
 		</groups>
 	</test>
 	
-	<test name="Overconsumption Tests">
+	<test name="CLI: Overconsumption Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -289,7 +293,7 @@
 		</groups>
 	</test>
 	
-	<test name="Certificate Revocation List (CRL) Tests">
+	<test name="CLI: Certificate Revocation List (CRL) Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -301,7 +305,7 @@
 		</groups>
 	</test>
 	
-	<test name="Integration Tests">
+	<test name="CLI: Integration Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
@@ -309,87 +313,6 @@
 			<run>
 				<include name="setup" />
 				<include name="IntegrationTests" />
-			</run>
-		</groups>
-	</test>
-	
-	
-	<!-- GUI TESTS -->
-	
-	<test name="GUI Registration">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="registration"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI Subscribe/Unsubscribe">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>			
-		</packages>	
-		<groups>
-			<run>
-				<include name="subscribe"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI Autosubscribe">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="autosubscribe"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI Compliance Assistant">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="compliance-assistant"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI Proxy">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="proxy"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI Interop">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="interop"/>
-				<include name="setup" />
 			</run>
 		</groups>
 	</test>
