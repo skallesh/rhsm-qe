@@ -3,10 +3,14 @@
 	[com.redhat.qe.sm.gui.tasks.tasks])
   (:require [com.redhat.qe.sm.gui.tasks.test-config :as config])
   (:import [org.testng.annotations BeforeSuite AfterSuite]))
-
+  
+(defn- restart-vnc []
+  (.runCommandAndWait @config/clientcmd "service vncserver restart"))
+  
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (config/init)
+  (restart-vnc)
   (connect)
   (start-app))
 
