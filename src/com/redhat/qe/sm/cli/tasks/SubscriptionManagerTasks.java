@@ -53,8 +53,8 @@ public class SubscriptionManagerTasks {
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
-	public final String rhsmComplianceD		= "/usr/libexec/rhsm-complianced";
 	public final String varLogMessagesFile	= "/var/log/messages";
+	public /*final*/ String rhsmComplianceD	= "/usr/libexec/rhsmd";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -86,6 +86,7 @@ public class SubscriptionManagerTasks {
 		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
 		if (redhatReleaseResult.getStdout().contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
 		if (redhatReleaseResult.getStdout().contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		if (redhatReleaseResult.getStdout().contains("release 6.1 ")) rhsmComplianceD = "/usr/libexec/rhsm-complianced";	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -1447,6 +1448,9 @@ public class SubscriptionManagerTasks {
 		// if rule failed, just return the result
 		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
 		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
+		
+		// assert the subscribe does NOT report "The system is unable to complete the requested transaction"
+		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction");
 		
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");

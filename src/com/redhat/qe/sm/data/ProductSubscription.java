@@ -1,7 +1,9 @@
 package com.redhat.qe.sm.data;
 
 import java.math.BigInteger;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -13,6 +15,7 @@ import java.util.regex.Pattern;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 public class ProductSubscription extends AbstractCommandLineData {
+	protected static String simpleDateFormat = "MM/dd/yyyy";	// 04/24/2011 https://bugzilla.redhat.com/show_bug.cgi?id=695234  https://bugzilla.redhat.com/show_bug.cgi?id=699442
 	
 	// abstraction fields
 	public String productName;
@@ -79,6 +82,16 @@ public class ProductSubscription extends AbstractCommandLineData {
 		return string.trim();
 	}
 	
+	@Override
+	protected Calendar parseDateString(String dateString){
+		return parseDateString(dateString, simpleDateFormat);
+	}
+	
+	//@Override
+	public static String formatDateString(Calendar date){
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		return dateFormat.format(date.getTime());
+	}
 	
 	@Override
 	public boolean equals(Object obj){
@@ -122,6 +135,13 @@ public class ProductSubscription extends AbstractCommandLineData {
 		Begins:             	2010-12-14               
 		Expires:            	2011-12-15   
 		
+		ProductName:        	Awesome OS Server Bundled
+		ContractNumber:     	1391380943               
+		AccountNumber:      	None                     
+		SerialNumber:       	1669803970633823565      
+		Active:             	True                     
+		Begins:             	2011-04-07               
+		Expires:            	2011-04-08     
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();

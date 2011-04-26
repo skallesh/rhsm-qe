@@ -35,8 +35,10 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- * Reference: https://docspace.corp.redhat.com/docs/DOC-60198
+ * References:
+ * https://docspace.corp.redhat.com/docs/DOC-60198
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
+ * https://docspace.corp.redhat.com/docs/DOC-63084
  */
 @Test(groups={"IntegrationTests"})
 public class IntegrationTests extends SubscriptionManagerCLITestScript{
@@ -65,16 +67,30 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
+		Integer packageCount=null;
+
 //if(true) throw new SkipException("debugging");
 		// register
-		clienttasks.register(username, password, null, null, null, null, true, null, null, null);
+		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
+			clienttasks.register(username, password, null, null, null, null, true, null, null, null);
+			currentRegisteredUsername = username;
+			currentSubscribedProductId = null;
+		} else {
+			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
+		}
 		
 		// assert that there are not yet any available packages from the default enabled/disabled repo
-		Integer packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label);
-		Assert.assertEquals(packageCount,Integer.valueOf(0),"Before subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is zero.");
+		// NOT REALLY A VALID ASSERTION WHEN WE COULD ALREADY BE SUBSCRIBED (FOR EFFICIENCY SAKE).  MOREOVER, THE MORE APPROPRIATE ASSERTION COMES AFTER THE SUBSCRIBE)   
+		//packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label);
+		//Assert.assertEquals(packageCount,Integer.valueOf(0),"Before subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is zero.");
 
 		// subscribe
-		clienttasks.subscribeToProductId(productId);
+		if (!productId.equals(currentSubscribedProductId)) { // try to save some time by not re-subscribing
+			clienttasks.subscribeToProductId(productId);
+			currentSubscribedProductId = productId;
+		} else {
+			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
+		}
 
 		// Assert that after subscribing, the default enabled/disabled repo is now included in yum repolist
 		ArrayList<String> repolist = clienttasks.getYumRepolist(abled);
@@ -91,7 +107,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		// verify the yum repolist contentNamespace.label returns more than 0 packages
 		String options = contentNamespace.enabled.equals("1")? contentNamespace.label:contentNamespace.label+" --enablerepo="+contentNamespace.label;
 		packageCount = clienttasks.getYumRepolistPackageCount(options);
-		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero.");
+		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero (actual packageCount is '"+packageCount+"').");
 	}
 	
 	
@@ -117,10 +133,21 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
-		clienttasks.register(username, password, null, null, null, null, true, null, null, null);
+		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
+			clienttasks.register(username, password, null, null, null, null, true, null, null, null);
+			currentRegisteredUsername = username;
+			currentSubscribedProductId = null;
+		} else {
+			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
+		}
 		
 		// subscribe
-		clienttasks.subscribeToProductId(productId);
+		if (!productId.equals(currentSubscribedProductId)) { // try to save some time by not re-subscribing
+			clienttasks.subscribeToProductId(productId);
+			currentSubscribedProductId = productId;
+		} else {
+			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
+		}
 		
 		// make sure there is a positive package count provided by this repo
 		Integer packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label+" --enablerepo="+contentNamespace.label);
@@ -188,7 +215,8 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	List<List<Object>> entitlementCertData = new ArrayList<List<Object>>();
 	List<ProductCert> currentProductCerts = new ArrayList<ProductCert>();
-
+	protected String currentRegisteredUsername = null;
+	protected String currentSubscribedProductId = null;
 	
 	// Data Providers ***********************************************************************
 	

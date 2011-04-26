@@ -1,0 +1,94 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="SM GUI TestSuite">
+
+	<!-- the hudson.groovy script already includes these listeners
+	<listeners>
+  		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+  		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+	</listeners>
+	-->
+	
+	
+	<!-- GUI TESTS -->
+	
+	<test name="GUI: Registration">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="registration"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI: Subscribe/Unsubscribe">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>			
+		</packages>	
+		<groups>
+			<run>
+				<include name="subscribe"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI: Autosubscribe">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="autosubscribe"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI: Compliance Assistant">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="compliance-assistant"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI: Proxy">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="proxy"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="GUI: Interop">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="interop"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+	
+</suite>

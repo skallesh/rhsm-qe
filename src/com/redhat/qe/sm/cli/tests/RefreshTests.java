@@ -64,6 +64,9 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	// Candidates for an automated Test:
+	// TODO Bug 665118 - Refresh pools will not notice change in provided products 
+	
 	
 	
 	// Configuration methods ***********************************************************************

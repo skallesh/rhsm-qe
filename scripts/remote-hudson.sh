@@ -1,5 +1,9 @@
 #!/bin/bash
 
+##################
+# 4/12/2011 This script is not currently being used, but serves as an example of how to POST json data to start a hudson job
+##################
+
 URL="http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises/build"
 
 #rhel6-server-x86_64

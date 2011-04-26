@@ -110,8 +110,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// fetch the generated Product Certs
 			log.info("Fetching the generated product certs...");
-			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
+			//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+			SSHCommandResult result = server.runCommandAndWait("find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+			String[] remoteFilesAsString = result.getStdout().trim().split("\\n");
+			if (remoteFilesAsString.length==1 && remoteFilesAsString[0].equals("")) remoteFilesAsString = new String[]{};
+			if (remoteFilesAsString.length==0) log.warning("No generated product certs were found on the candlpin server for use in testing.");
+			for (String remoteFileAsString : remoteFilesAsString) {
 				File remoteFile = new File(remoteFileAsString);
 				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
 				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
@@ -119,6 +123,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				localFile.renameTo(localFileRenamed);
 				generatedProductCertFiles.add(localFileRenamed);
 			}
+
 
 		}
 		
@@ -223,8 +228,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected static boolean isSetupBeforeSuiteComplete = false;
 	
+//	@BeforeSuite(groups={"gui-setup"},dependsOnMethods={"setupBeforeSuite"}, description="subscription manager gui set up")
+//	public void setupGUIBeforeSuite() throws IOException {
+//		// 201104251443:55.877 - FINE: ssh root@jsefler-onprem-workstation.usersys.redhat.com service vncserver restart (com.redhat.qe.tools.SSHCommandRunner.run)
+//		// 201104251444:02.676 - FINE: Stdout: 
+//		// Shutting down VNC server: 2:root [  OK  ]
+//		// Starting VNC server: 2:root [  OK  ]
+//		//if (client1!=null) RemoteFileTasks.runCommandAndAssert(client1, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+//		//if (client2!=null) RemoteFileTasks.runCommandAndAssert(client2, "service vncserver restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting VNC server: 2:root \\[  OK  \\]", null);
+//		if (client1!=null) client1.runCommandAndWait("service vncserver restart");
+//		if (client2!=null) client2.runCommandAndWait("service vncserver restart");
+//
+//		// vncviewer <client1tasks.hostname>:2
+//	}
+	
 	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
+		
 		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 	}

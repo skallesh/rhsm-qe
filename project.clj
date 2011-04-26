@@ -9,7 +9,7 @@
 		 [net.java.dev.rome/rome "1.0.0"]
 		 [org.jdom/jdom "1.1"]
 		 [postgresql/postgresql "8.4-701.jdbc4"]
-		 [webui-framework "1.0.1-SNAPSHOT"]
+		 [webui-framework "1.0.2-SNAPSHOT"]
                  [gnome.ldtp "1.0.0-SNAPSHOT"]
                  [test_clj.testng "1.0.0-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]]
