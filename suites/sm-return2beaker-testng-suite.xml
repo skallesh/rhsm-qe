@@ -1,7 +1,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
-<suite name="SM TestSuite">
+<suite>
 
 	<!-- the hudson.groovy script already includes these listeners
 	<listeners>
