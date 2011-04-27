@@ -12,6 +12,10 @@ import java.util.regex.Pattern;
 
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
+/**
+ * @author jsefler
+ *
+ */
 public class InstalledProduct extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MM/dd/yyyy";	// 04/24/2011 https://bugzilla.redhat.com/show_bug.cgi?id=695234  https://bugzilla.redhat.com/show_bug.cgi?id=699442
 	

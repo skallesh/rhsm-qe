@@ -32,6 +32,7 @@ import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -73,20 +74,21 @@ public class SubscriptionManagerTasks {
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
 	
+	protected String redhatRelease	= null;
+	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
-		
-		SSHCommandResult redhatReleaseResult = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release");
-		if (redhatReleaseResult.getStdout().contains("Server")) variant = "Server";
-		if (redhatReleaseResult.getStdout().contains("Client")) variant = "Client";
-		if (redhatReleaseResult.getStdout().contains("Workstation")) variant = "Workstation";
-		if (redhatReleaseResult.getStdout().contains("ComputeNode")) variant = "ComputeNode";
-		if (redhatReleaseResult.getStdout().contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
-		if (redhatReleaseResult.getStdout().contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
-		if (redhatReleaseResult.getStdout().contains("release 6.1 ")) rhsmComplianceD = "/usr/libexec/rhsm-complianced";	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+		redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
+		if (redhatRelease.contains("Server")) variant = "Server";
+		if (redhatRelease.contains("Client")) variant = "Client";
+		if (redhatRelease.contains("Workstation")) variant = "Workstation";
+		if (redhatRelease.contains("ComputeNode")) variant = "ComputeNode";
+		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		if (redhatRelease.contains("release 6.1 ")) rhsmComplianceD = "/usr/libexec/rhsm-complianced";	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
 	}
 	
 	public void setSSHCommandRunner(SSHCommandRunner runner) {
@@ -2198,6 +2200,26 @@ repolist: 3,394
 		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
 		//	repolist: 3,394
 
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
+		if (this.redhatRelease.contains("release 5")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="697087"; 
+			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				
+				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
+				List<YumRepo> yumRepoList =  YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
+				for (YumRepo yumRepo : yumRepoList) {
+					if		(options.equals("all"))													repos.add(yumRepo.name);
+					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.name);
+					else if (options.equals("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.name);
+					else if (options.equals("")			&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.name);
+				}
+				return repos;
+			}
+		}
+		// END OF WORKAROUND
+		
 		
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		
