@@ -55,16 +55,15 @@
 		</groups>
 	</test>
 	
-	<test name="GUI: Compliance Assistant">
+	<test name="GUI: Subscription Assistant">
 		<packages>
 			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
 			<run>
-				<include name="compliance-assistant"/>
+				<include name="subscription-assistant"/>
 				<include name="setup" />
-				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
