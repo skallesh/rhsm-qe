@@ -242,14 +242,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //		// vncviewer <client1tasks.hostname>:2
 //	}
 	
-	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
+	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
 		
 		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 	}
 	
-	@AfterSuite(groups={"setup", "cleanup"},description="subscription manager tear down")
+	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
 	public void disconnectDatabaseAfterSuite() {
 		
 		// close the candlepin database connection
@@ -263,7 +263,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-	@AfterSuite(groups={"setup", "cleanup"},description="return clients to beaker",dependsOnMethods={"disconnectDatabaseAfterSuite","unregisterClientsAfterSuite"}, alwaysRun=true)
+	@AfterSuite(groups={"return2beaker"/*"cleanup"*/},description="return clients to beaker",dependsOnMethods={"disconnectDatabaseAfterSuite","unregisterClientsAfterSuite"}/*, alwaysRun=true*/)
 	public void return2beaker() {
 
 		Boolean return2beaker = Boolean.valueOf(getProperty("sm.client.return2beaker","false"));

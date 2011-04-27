@@ -21,6 +21,7 @@
 			<run>
 				<include name="setup" />
 				<include name="HelpTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -33,6 +34,7 @@
 			<run>
 				<include name="setup" />
 				<include name="GeneralTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -45,6 +47,7 @@
 			<run>
 				<include name="setup" />
 				<include name="RegisterTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -57,6 +60,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ProxyTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -69,6 +73,7 @@
 			<run>
 				<include name="setup" />
 				<include name="EventTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -81,6 +86,7 @@
 			<run>
 				<include name="setup" />
 				<include name="IdentityTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -94,6 +100,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ListTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -107,6 +114,7 @@
 			<run>
 				<include name="setup" />
 				<include name="SubscribeTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -120,6 +128,7 @@
 			<run>
 				<include name="setup" />
 				<include name="UnsubscribeTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -133,6 +142,7 @@
 			<run>
 				<include name="setup" />
 				<include name="UnregisterTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -145,6 +155,7 @@
 			<run>
 				<include name="setup" />
 				<include name="MultiClientTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -157,6 +168,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ManagementAddOnTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -169,6 +181,7 @@
 			<run>
 				<include name="setup" />
 				<include name="RHELPersonalTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -181,6 +194,7 @@
 			<run>
 				<include name="setup" />
 				<include name="FactsTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -193,6 +207,7 @@
 			<run>
 				<include name="setup" />
 				<include name="CleanTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -205,6 +220,7 @@
 			<run>
 				<include name="setup" />
 				<include name="RefreshTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -217,6 +233,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ExpirationTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -229,6 +246,7 @@
 			<run>
 				<include name="setup" />
 				<include name="CertificateTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -241,6 +259,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ComplianceTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -253,6 +272,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ContentTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -265,6 +285,7 @@
 			<run>
 				<include name="setup" />
 				<include name="VirtualizationTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -277,6 +298,7 @@
 			<run>
 				<include name="setup" />
 				<include name="ModifierTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -289,6 +311,7 @@
 			<run>
 				<include name="setup" />
 				<include name="OverconsumptionTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -301,6 +324,7 @@
 			<run>
 				<include name="setup" />
 				<include name="CRLTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -313,6 +337,7 @@
 			<run>
 				<include name="setup" />
 				<include name="IntegrationTests" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>

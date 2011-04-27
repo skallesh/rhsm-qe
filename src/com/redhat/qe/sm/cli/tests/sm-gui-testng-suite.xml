@@ -22,6 +22,7 @@
 			<run>
 				<include name="registration"/>
 				<include name="setup" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -35,6 +36,7 @@
 			<run>
 				<include name="subscribe"/>
 				<include name="setup" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -48,6 +50,7 @@
 			<run>
 				<include name="autosubscribe"/>
 				<include name="setup" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -61,6 +64,7 @@
 			<run>
 				<include name="compliance-assistant"/>
 				<include name="setup" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -74,6 +78,7 @@
 			<run>
 				<include name="proxy"/>
 				<include name="setup" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
@@ -87,6 +92,7 @@
 			<run>
 				<include name="interop"/>
 				<include name="setup" />
+				<include name="cleanup" />
 			</run>
 		</groups>
 	</test>
