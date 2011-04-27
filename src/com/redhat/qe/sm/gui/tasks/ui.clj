@@ -4,8 +4,6 @@
   (:import java.util.NoSuchElementException
 	   [gnome.ldtp Element Tab Window TabGroup]))
 
-
-
 (defn same-name "takes a collection of keywords like :registration-settings
 and returns a mapping like :registration-settings -> 'Registration Settings'" 
   ([coll]
@@ -32,10 +30,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		      :progress-dialog "Progress Dialog"
 		      :contract-selection-dialog "Contract Selection"
           :proxy-config-dialog "Advanced Network Configuration"
-          :compliance-assistant-dialog "Compliance Assistant"
+          :subscription-assistant-dialog "Subscription Assistant"
           :information-dialog "Information"
           :warning-dialog "Warning"
-          :firstboot-window "firstboot"
+          :firstboot-window "frm0"
           :firstboot-proxy-dialog "Advanced Network Configuration"}))
 
 
@@ -48,7 +46,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 					                     :add-subscription
 					                     :view-system-facts
 					                     :glossary
-					                     :become-compliant
+					                     :update-certificates
 					                     :all-available-subscriptions
 					                     :my-subscriptions
 					                     :my-installed-software
@@ -100,14 +98,14 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
       (define-elements (windows :warning-dialog)
         {:warn-ok "OK"
          :warn-cancel "Cancel"})
-      (define-elements (windows :compliance-assistant-dialog)
-        {:first-date "*first date of non-compliance*"
-         :different-date "On a different date:"
+      (define-elements (windows :subscription-assistant-dialog)
+        {:first-date "*first date of invalid entitlements*"
+         :different-date "A different date:"
          :date-entry "date-entry"
          :update "Update"
-         :compliance-subscribe "subscribe button"
-         :compliance-product-view "Uncompliant Product List"
-         :compliance-subscription-view "Compliance Subscription List"})
+         :assistant-subscribe "subscribe button"
+         :subscription-product-view "Invalid Product List"
+         :assistant-subscription-view "Subscription List"})
       (define-elements (windows :firstboot-window)
         {:firstboot-back "Back"
          :firstboot-forward "Forward"

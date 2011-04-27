@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# mydaemon     This shell script takes care of starting and stopping
+#               the $DAEMON
+#
+
+# Source function library
+. /etc/rc.d/init.d/functions
+
+
+# Do preliminary checks here, if any
+#### START of preliminary checks #########
+
+
+##### END of preliminary checks #######
+
+
+# Handle manual control parameters like start, stop, status, restart, etc.
+
+DAEMON=ldtpd
+EXEC=/usr/sbin/ldtpd
+PIDFILE=/var/lock/ldtpd.pid
+export DISPLAY=:0
+case "$1" in
+  start)
+    # Start daemons.
+    echo -n $"Starting $DAEMON daemon: "
+    daemon $EXEC start
+    echo
+    ;;
+
+  stop)
+    # Stop daemons.
+    echo -n $"Shutting down $DAEMON: "
+    killproc -p $PIDFILE
+    echo
+
+    # Do clean-up works here like removing pid files from /var/run, etc.
+    ;;
+  status)
+    echo -n "$DAEMON"
+    status -p $PIDFILE
+
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+
+  *)
+    echo $"Usage: $0 {start|stop|status|restart}"
+    exit 1
+esac
+
+exit 0

@@ -48,14 +48,14 @@ to the testng group name you are using to categorize your @Test -->
 		</groups>
 	</test>
 	
-	<test name="Compliance Assistant">
+	<test name="Subscription Assistant">
 		<packages>
 			<package name="com.redhat.qe.sm.gui.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
 			<run>
-				<include name="compliance-assistant"/>
+				<include name="subscription-assistant"/>
 				<include name="setup" />
 			</run>
 		</groups>
