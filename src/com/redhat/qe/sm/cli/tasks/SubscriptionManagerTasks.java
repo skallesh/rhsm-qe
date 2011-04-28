@@ -2210,10 +2210,10 @@ repolist: 3,394
 				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
 				List<YumRepo> yumRepoList =  YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
 				for (YumRepo yumRepo : yumRepoList) {
-					if		(options.equals("all"))													repos.add(yumRepo.name);
-					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.name);
-					else if (options.equals("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.name);
-					else if (options.equals("")			&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.name);
+					if		(options.equals("all"))													repos.add(yumRepo.id);
+					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
+					else if (options.equals("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.id);
+					else if (options.equals("")			&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
 				}
 				return repos;
 			}

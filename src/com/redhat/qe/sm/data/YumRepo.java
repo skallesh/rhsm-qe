@@ -15,6 +15,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 public class YumRepo extends AbstractCommandLineData {
 	
 	// abstraction fields
+	public String id;	// repo id/label
 	public String name;
 	public String baseurl;
 	public Boolean enabled;
@@ -29,6 +30,7 @@ public class YumRepo extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
+		if (id != null)			string += String.format(" %s='%s'", "id",id);
 		if (name != null)		string += String.format(" %s='%s'", "name",name);
 		if (baseurl != null)	string += String.format(" %s='%s'", "baseurl",baseurl);
 		if (enabled != null)	string += String.format(" %s='%s'", "enabled",enabled);
@@ -122,6 +124,7 @@ public class YumRepo extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("id",					"\\[(.*)\\]");
 		regexes.put("name",					"name = (.*)");
 		regexes.put("baseurl",				"baseurl = (.*)");
 		regexes.put("enabled",				"enabled = (.*)");
