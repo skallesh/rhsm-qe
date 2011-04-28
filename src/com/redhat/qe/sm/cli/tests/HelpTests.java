@@ -101,6 +101,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
+	// Candidates for an automated Test:
+	// TODO Bug 694662 - the whitespace in the title line of man subscription-manager-gui is completely consumed
+	
+	
+	
+	
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeClass(groups={"setup"})
