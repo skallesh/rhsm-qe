@@ -2150,10 +2150,48 @@ red-hat-enterprise-linux-6-entitlement-alpha-supplementary-source-rpms-updates R
 repolist: 3,394
 		*/
 		
-		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		List<ProductCert> currentProductCerts = this.getCurrentProductCerts();
 		
+		// NOTE: THIS COULD ALSO BE A PERMANENT IMPLEMENTATION FOR THIS METHOD
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
+		if (this.redhatRelease.contains("release 5")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="697087"; 
+			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				
+				List<String> yumRepoListAll			= this.getYumRepolist("all");
+				List<String> yumRepoListEnabled		= this.getYumRepolist("enabled");
+				List<String> yumRepoListDisabled	= this.getYumRepolist("disabled");
+				
+		 		for (EntitlementCert entitlementCert : entitlementCerts) {
+		 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+		 				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts)) {
+							if (contentNamespace.enabled.equals("1")) {
+								Assert.assertTrue(yumRepoListEnabled.contains(contentNamespace.label),
+										"Yum repolist enabled includes repo id/label '"+contentNamespace.label+"' that comes from entitlement cert "+entitlementCert.id+"'s content namespace: "+contentNamespace);
+							} else if (contentNamespace.enabled.equals("0")) {
+								Assert.assertTrue(yumRepoListDisabled.contains(contentNamespace.label),
+										"Yum repolist disabled includes repo id/label '"+contentNamespace.label+"' that comes from entitlement cert "+entitlementCert.id+"'s content namespace: "+contentNamespace);
+							} else {
+								Assert.fail("Encountered entitlement cert '"+entitlementCert.id+"' whose content namespace has an unexpected enabled field: "+contentNamespace);
+							}
+		 				}
+						else
+							Assert.assertFalse(yumRepoListAll.contains(contentNamespace.label),
+									"Yum repolist all excludes repo id/label '"+contentNamespace.label+"'.");
+			 		}
+		 		}
+		 		return;
+			}
+		}
+		// END OF WORKAROUND
+		
+		
+				
+				
 		// assert all of the entitlement certs are reported in the stdout from "yum repolist all"
+		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
