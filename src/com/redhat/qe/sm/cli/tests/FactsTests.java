@@ -342,8 +342,12 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//client.runCommandAndWait("echo '{\"cpu.cpu_socket(s)\": \"4\"}' > "+factsFile);	// create an override for facts
 	//clienttasks.facts(true,true, null, null, null);
 
-	
-	
+	// TODO Activation Notes
+	// To enable activation on the QA env, the machine factsdmi.system.manufacturer must contain string "DELL" and the fact dmi.system.serial_number must be known on the RedHat IT backend
+	//	<aedwards> dmi.system.manufacturer
+	//	<aedwards> dmi.system.serial_number
+	//	<aedwards> candlepin.subscription.activation.debug_prefix
+	// To enable activation on the onpremises env set the config value in /etc/candlepin/candlepin.conf candlepin.subscription.activation.debug_prefix to the beginning of a consumer user (like "test" for testuser1)
 	
 	// Configuration Methods ***********************************************************************
 
