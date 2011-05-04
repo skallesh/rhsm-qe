@@ -16,7 +16,13 @@
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
   (tasks/ui click :register-now)
-  (tasks/ui click :firstboot-forward))
+  (tasks/ui click :firstboot-forward)
+  (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Server"))))
+
+(defn ^{AfterClass {:groups ["setup"]}}
+  kill_firstboot [_]
+  (.runCommand @clientcmd "killall -9 firstboot")
+  (tasks/sleep 5000))
 
 (defn reset_firstboot []
   (kill_firstboot nil)
@@ -26,13 +32,18 @@
 (defn conf-file-value [k]
   (->> (.getStdout (.runCommandAndWait @clientcmd (str "grep " k " /etc/rhsm/rhsm.conf"))) (re-split #"=") last .trim))  
   
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"]
+              :dependsOnMethods ["simple_register"]}}
   firstboot_enable_proxy_auth [_]
+  (reset_firstboot)
   (let [hostname (@config :basicauth-proxy-hostname)
         port (@config :basicauth-proxy-port)
         username (@config :basicauth-proxy-username)
         password (@config :basicauth-proxy-password)]
     (tasks/enableproxy-auth hostname port username password true)
+    (tasks/ui click :firstboot-forward)
+    (tasks/checkforerror)
+    (tasks/firstboot-register (@config :username) (@config :password))
     (let [config-file-hostname (conf-file-value "proxy_hostname")
           config-file-port (conf-file-value "proxy_port")
           config-file-user (conf-file-value "proxy_user")
@@ -42,11 +53,16 @@
       (verify (= config-file-user username))
       (verify (= config-file-password password)) )))
 
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"]
+              :dependsOnMethods ["simple_register"]}}
   firstboot_enable_proxy_noauth [_]
+  (reset_firstboot)
   (let [hostname (@config :noauth-proxy-hostname)
         port (@config :noauth-proxy-port)]
     (tasks/enableproxy-noauth hostname port true)
+    (tasks/ui click :firstboot-forward)
+    (tasks/checkforerror)
+    (tasks/firstboot-register (@config :username) (@config :password))
     (let [config-file-hostname (conf-file-value "proxy_hostname")
           config-file-port (conf-file-value "proxy_port")
           config-file-user (conf-file-value "proxy_user")
@@ -56,9 +72,14 @@
       (verify (= config-file-user ""))
       (verify (= config-file-password "")) )))
       
-(defn ^{Test {:groups ["firstboot"]}}
+(defn ^{Test {:groups ["firstboot"]
+              :dependsOnMethods ["simple_register"]}}
   firstboot_disable_proxy [_]
+  (reset_firstboot)
   (tasks/disableproxy true)
+  (tasks/ui click :firstboot-forward)
+  (tasks/checkforerror)
+  (tasks/firstboot-register (@config :username) (@config :password))
   (let [config-file-hostname (conf-file-value "proxy_hostname")
           config-file-port (conf-file-value "proxy_port")
           config-file-user (conf-file-value "proxy_user")
@@ -67,10 +88,5 @@
       (verify (= config-file-port ""))
       (verify (= config-file-user ""))
       (verify (= config-file-password "")) ))
-
-(defn ^{AfterClass {:groups ["setup"]}}
-  kill_firstboot [_]
-  (.runCommand @clientcmd "killall -9 firstboot")
-  (tasks/sleep 5000))
 
 (gen-class-testng)

@@ -124,7 +124,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :firstboot-system-name "consumer_name"})
       (define-elements (windows :firstboot-proxy-dialog)
         {:firstboot-proxy-checkbox "I would like to connect*"
-         :firstboot-proxy-location "proxy-location"
+         :firstboot-proxy-location "Proxy Location:"
          :firstboot-auth-checkbox "Use Authentication*"
          :firstboot-proxy-user "proxy user field"
          :firstboot-proxy-pass "proxy password field"

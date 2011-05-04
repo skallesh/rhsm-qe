@@ -11,6 +11,12 @@
 
 (defn sleep [ms] (. Thread (sleep ms)))
 
+(def is-boolean?
+  (fn [expn]
+    (or
+      (= expn 'true)
+      (= expn 'false))))
+
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
                    :no-username #"You must enter a login"
@@ -90,6 +96,19 @@
     (ui click :register)
     (checkforerror)))
 
+(defn firstboot-register [username password & {:keys [system-name-input, autosubscribe]
+                          :or {system-name-input nil, autosubscribe false}}]
+  (assert  (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration")))
+  (ui settextvalue :firstboot-user username)
+  (ui settextvalue :firstboot-pass password)
+  (when system-name-input
+    (ui settextvalue :firstboot-system-name system-name-input))
+  (if autosubscribe
+    (ui check :firstboot-autosubscribe)
+    (ui uncheck :firstboot-autosubscribe))
+  (ui click :firstboot-forward)
+  (checkforerror))
+
 (defn wait-for-progress-bar []
   (ui waittillwindowexist :progress-dialog 1)
   (ui waittillwindownotexist :progress-dialog 30))
@@ -145,12 +164,6 @@
   (ui click :yes)
   (checkforerror) )
 
-(def is-boolean?
-  (fn [expn]
-    (or
-      (= expn 'true)
-      (= expn 'false))))
-
 (defn enableproxy-auth 
   ([proxy port user pass firstboot]
   (assert (is-boolean? firstboot))
@@ -204,7 +217,7 @@
     (do (ui click :firstboot-proxy-config)
         (ui waittillwindowexist :firstboot-proxy-dialog 60)
         (ui uncheck :firstboot-proxy-checkbox)
-        (ui uncheck ::firstboot-auth-checkbox)
+        (ui uncheck :firstboot-auth-checkbox)
         (ui click :firstboot-proxy-close)
         (checkforerror))
     (do (ui selecttab :my-installed-software)
