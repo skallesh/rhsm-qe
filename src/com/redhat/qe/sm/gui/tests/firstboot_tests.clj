@@ -36,6 +36,8 @@
               :dependsOnMethods ["simple_register"]}}
   firstboot_enable_proxy_auth [_]
   (reset_firstboot)
+  (tasks/ui click :register-rhn)
+  (tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :basicauth-proxy-hostname)
         port (@config :basicauth-proxy-port)
         username (@config :basicauth-proxy-username)
@@ -57,6 +59,8 @@
               :dependsOnMethods ["simple_register"]}}
   firstboot_enable_proxy_noauth [_]
   (reset_firstboot)
+  (tasks/ui click :register-rhn)
+  (tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :noauth-proxy-hostname)
         port (@config :noauth-proxy-port)]
     (tasks/enableproxy-noauth hostname port true)
@@ -76,6 +80,8 @@
               :dependsOnMethods ["simple_register"]}}
   firstboot_disable_proxy [_]
   (reset_firstboot)
+  (tasks/ui click :register-rhn)
+  (tasks/ui uncheck :rhn-classic-mode)
   (tasks/disableproxy true)
   (tasks/ui click :firstboot-forward)
   (tasks/checkforerror)
