@@ -360,6 +360,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// against QA 
 	//	[root@jsefler-onprem-workstation facts]# subscription-manager activate --email=jsefler@redhat.com
 	//	Your subscription activation is being processed and should be available soon. You will be notified via email once it is available. If you have any questions, additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.
+	//	[root@jsefler-onprem-workstation facts]# subscription-manager activate --email=jsefler@redhat.com
+	//	The Dell service tag: CNZFGH1, has already been used to activate a subscription
+	//	[root@jsefler-onprem-workstation facts]# 
 
 
 	
