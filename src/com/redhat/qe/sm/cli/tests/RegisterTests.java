@@ -921,8 +921,8 @@ Expected Results:
 		name = "]closingBracket]";		ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\]closingBracket\\]",	null}));
 		name = "{openingBrace{";		ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\{openingBrace\\{",	null}));
 		name = "}closingBrace}";		ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\}closingBrace\\}",	null}));
-		name = "(openingParentesis(";	ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\(openingParentesis\\(",	null}));
-		name = ")closingParentesis)";	ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\)closingParentesis\\)",	null}));
+		name = "(openingParenthesis(";	ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\(openingParentesis\\(",	null}));
+		name = ")closingParenthesis)";	ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\)closingParentesis\\)",	null}));
 		name = "?questionMark?";		ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} \\?questionMark\\?",	null}));
 		name = "@at@";					ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
 		name = "!exclamationPoint!";	ll.add(Arrays.asList(new Object[] {null,	name,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));
