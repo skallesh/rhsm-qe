@@ -65,7 +65,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
-			groups={"blockedByBug-664581"},
+			groups={"blockedByBug-664581"/*,"blockedByBug-693527"*/},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)

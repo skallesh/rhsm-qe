@@ -343,11 +343,30 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//clienttasks.facts(true,true, null, null, null);
 
 	// TODO Activation Notes
-	// To enable activation on the QA env, the machine factsdmi.system.manufacturer must contain string "DELL" and the fact dmi.system.serial_number must be known on the RedHat IT backend
+	// To enable activation on the QA env, the machine factsdmi.system.manufacturer must contain string "DELL" and the fact dmi.system.serial_number must be known on the RedHat IT backend:  put them in this overrider file: /etc/rhsm/facts
 	//	<aedwards> dmi.system.manufacturer
 	//	<aedwards> dmi.system.serial_number
 	//	<aedwards> candlepin.subscription.activation.debug_prefix
-	// To enable activation on the onpremises env set the config value in /etc/candlepin/candlepin.conf candlepin.subscription.activation.debug_prefix to the beginning of a consumer user (like "test" for testuser1)
+	// To enable activation on the onpremises env set the config value in /etc/candlepin/candlepin.conf candlepin.subscription.activation.debug_prefix to a value like "activator" and then when you register use the --consumername=activator<BLAH> to see the "Activate a Subscription" button
+	// [root@jsefler-onprem-server facts]# cat /etc/rhsm/facts/activator.facts 
+	// {"dmi.system.manufacturer": "MyDELLManfacturer","dmi.system.serial_number":"CNZFGH6"}
+	// https://engineering.redhat.com/trac/Entitlement/wiki/DellActivation
+	// TODO Bug 701458 - "We are currently processing your subscription activation, please check back later." should not render as an "Error activating subscription:"
+	// TODO activate test:
+	// against QA or Stage env...
+	// [root@jsefler-onprem-workstation facts]# subscription-manager activate --email=jsefler@redhat.com
+	// A subscription was not found for the given Dell service tag: CNZFGH6
+	// [root@jsefler-onprem-workstation facts]# subscription-manager unregister
+	// against QA 
+	//	[root@jsefler-onprem-workstation facts]# subscription-manager activate --email=jsefler@redhat.com
+	//	Your subscription activation is being processed and should be available soon. You will be notified via email once it is available. If you have any questions, additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.
+	//	[root@jsefler-onprem-workstation facts]# subscription-manager activate --email=jsefler@redhat.com
+	//	The Dell service tag: CNZFGH1, has already been used to activate a subscription
+	//	[root@jsefler-onprem-workstation facts]# 
+
+
+	
+	
 	
 	// Configuration Methods ***********************************************************************
 
