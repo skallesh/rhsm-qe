@@ -33,4 +33,25 @@
                                          (tasks/unsubscribe subscription)
                                          (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
 
+;; https://bugzilla.redhat.com/show_bug.cgi?id=679961                                         
+(defn ^{Test {:groups ["subscribe"]}}
+  check_unsubscribe_clear [_]
+  (tasks/search {})
+  (let [subscripton (tasks/ui getcellvalue :all-subscriptions-view 0 0)]
+    ;;add error handler?
+    (tasks/subscribe subscritpion))
+  (tasks/ui selecttab :my-subscriptions)
+  (let [subscripton (tasks/ui getcellvalue :my-subscriptions-view 0 0)]
+    ;;verify that info field populated
+    (tasks/unsubscribe subscription)
+    ;;verify that info field cleared
+    )
+)
+
+;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
+;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
+;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
+
+
+
 (gen-class-testng)

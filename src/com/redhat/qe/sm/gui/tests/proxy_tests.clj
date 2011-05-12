@@ -70,6 +70,12 @@
   ;;TODO verify this also by connecting to the server and checking the proxy log
   )
 
-;;TODO add a disabled case to check for no connectivity through a proxy
+(defn ^{Test {:groups ["proxy"]
+              :dependsOnMethods ["disable_proxy"]}}
+  disable_proxy_connect [_]
+  (disable_proxy nil)
+  (register)
+  ;;TODO add a disabled case to check for no connectivity through a proxy
+  )
 
 (gen-class-testng)

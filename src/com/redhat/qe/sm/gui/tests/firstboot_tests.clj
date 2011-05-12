@@ -94,5 +94,8 @@
       (verify (= config-file-port ""))
       (verify (= config-file-user ""))
       (verify (= config-file-password "")) ))
+      
+      
+;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
 
 (gen-class-testng)
