@@ -33,6 +33,7 @@
                                          (tasks/unsubscribe subscription)
                                          (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
 
+(comment
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=679961                                         
 (defn ^{Test {:groups ["subscribe"]}}
   check_unsubscribe_clear [_]
@@ -48,6 +49,7 @@
     )
 )
 
+)
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
