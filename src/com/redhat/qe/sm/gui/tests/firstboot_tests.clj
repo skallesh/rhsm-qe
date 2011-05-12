@@ -3,7 +3,6 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-        [clojure.contrib.str-utils :only (re-split)]
 	       gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
@@ -29,9 +28,6 @@
   (.runCommand @clientcmd "subscription-manager clean")
   (start_firstboot nil))
   
-(defn conf-file-value [k]
-  (->> (.getStdout (.runCommandAndWait @clientcmd (str "grep " k " /etc/rhsm/rhsm.conf"))) (re-split #"=") last .trim))  
-  
 (defn ^{Test {:groups ["firstboot"]
               :dependsOnMethods ["simple_register"]}}
   firstboot_enable_proxy_auth [_]
@@ -46,14 +42,7 @@
     (tasks/ui click :firstboot-forward)
     (tasks/checkforerror)
     (tasks/firstboot-register (@config :username) (@config :password))
-    (let [config-file-hostname (conf-file-value "proxy_hostname")
-          config-file-port (conf-file-value "proxy_port")
-          config-file-user (conf-file-value "proxy_user")
-          config-file-password (conf-file-value "proxy_password")]
-      (verify (= config-file-hostname hostname))
-      (verify (= config-file-port port))
-      (verify (= config-file-user username))
-      (verify (= config-file-password password)) )))
+    (tasks/verify-conf-proxies hostname port username password)))
 
 (defn ^{Test {:groups ["firstboot"]
               :dependsOnMethods ["simple_register"]}}
@@ -67,14 +56,7 @@
     (tasks/ui click :firstboot-forward)
     (tasks/checkforerror)
     (tasks/firstboot-register (@config :username) (@config :password))
-    (let [config-file-hostname (conf-file-value "proxy_hostname")
-          config-file-port (conf-file-value "proxy_port")
-          config-file-user (conf-file-value "proxy_user")
-          config-file-password (conf-file-value "proxy_password")]
-      (verify (= config-file-hostname hostname))
-      (verify (= config-file-port port)) 
-      (verify (= config-file-user ""))
-      (verify (= config-file-password "")) )))
+    (tasks/verify-conf-proxies hostname port "" "")))
       
 (defn ^{Test {:groups ["firstboot"]
               :dependsOnMethods ["simple_register"]}}
@@ -86,14 +68,7 @@
   (tasks/ui click :firstboot-forward)
   (tasks/checkforerror)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (let [config-file-hostname (conf-file-value "proxy_hostname")
-          config-file-port (conf-file-value "proxy_port")
-          config-file-user (conf-file-value "proxy_user")
-          config-file-password (conf-file-value "proxy_password")]
-      (verify (= config-file-hostname ""))
-      (verify (= config-file-port ""))
-      (verify (= config-file-user ""))
-      (verify (= config-file-password "")) ))
+  (tasks/verify-conf-proxies "" "" "" ""))
       
       
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601

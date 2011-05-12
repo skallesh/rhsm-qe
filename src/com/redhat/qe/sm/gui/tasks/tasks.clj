@@ -1,7 +1,8 @@
 (ns com.redhat.qe.sm.gui.tasks.tasks
-  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config)]
+  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
+        [clojure.contrib.str-utils :only (re-split)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             com.redhat.qe.sm.gui.tasks.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
@@ -261,6 +262,19 @@
   (let [item-list (get-table-elements view col)]
     (doseq [item item-list]
       (f item))))
+
+(defn conf-file-value [k]
+  (->> (.getStdout (.runCommandAndWait @clientcmd (str "grep " k " /etc/rhsm/rhsm.conf"))) (re-split #"=") last .trim)) 
+
+(defn verify-conf-proxies [hostname port user password]
+  (let [config-file-hostname  (conf-file-value "proxy_hostname")
+        config-file-port      (conf-file-value "proxy_port")
+        config-file-user      (conf-file-value "proxy_user")
+        config-file-password  (conf-file-value "proxy_password")]
+    (verify (= config-file-hostname hostname))
+    (verify (= config-file-port port)) 
+    (verify (= config-file-user user))
+    (verify (= config-file-password password))))
 
 (comment 
 (defn get-all-facts []
