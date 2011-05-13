@@ -28,8 +28,7 @@
   (.runCommand @clientcmd "subscription-manager clean")
   (start_firstboot nil))
   
-(defn ^{Test {:groups ["firstboot"]
-              :dependsOnMethods ["simple_register"]}}
+(defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_auth [_]
   (reset_firstboot)
   (tasks/ui click :register-rhn)
@@ -44,8 +43,7 @@
     (tasks/firstboot-register (@config :username) (@config :password))
     (tasks/verify-conf-proxies hostname port username password)))
 
-(defn ^{Test {:groups ["firstboot"]
-              :dependsOnMethods ["simple_register"]}}
+(defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_noauth [_]
   (reset_firstboot)
   (tasks/ui click :register-rhn)
@@ -58,8 +56,7 @@
     (tasks/firstboot-register (@config :username) (@config :password))
     (tasks/verify-conf-proxies hostname port "" "")))
       
-(defn ^{Test {:groups ["firstboot"]
-              :dependsOnMethods ["simple_register"]}}
+(defn ^{Test {:groups ["firstboot"]}}
   firstboot_disable_proxy [_]
   (reset_firstboot)
   (tasks/ui click :register-rhn)
