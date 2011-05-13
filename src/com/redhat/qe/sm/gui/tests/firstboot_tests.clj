@@ -66,8 +66,33 @@
   (tasks/checkforerror)
   (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/verify-conf-proxies "" "" "" ""))
-      
-      
+
+(comment 
+;; https://bugzilla.redhat.com/show_bug.cgi?id=703491      
+(defn firstboot_register_invalid_user [user pass recovery]
+  (reset_firstboot)
+  (tasks/ui click :register-rhn)
+  (tasks/ui uncheck :rhn-classic-mode)
+  (let [test-fn (fn [username password expected-error-type]
+                    (with-handlers [(handle expected-error-type [e]
+                                      (recover e :cancel)
+                                      (:type e))])
+                      (tasks/firstboot-register username password)))]
+    (let [thrown-error (apply test-fn [user pass recovery])
+          expected-error recovery
+          register-button :register-system]  ;; FIXME < this is not in firstboot
+     (verify (and (= thrown-error expected-error) (action exists? register-button)))))
+
+(data-driven register_invalid_user {Test {:groups ["firstboot"]}}
+  [["sdf" "sdf" :invalid-credentials]
+   ["" "" :no-username]
+   ["" "password" :no-username]
+   ["sdf" "" :no-password]])
+
+)
+
+
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
+
 
 (gen-class-testng)
