@@ -67,7 +67,6 @@
   (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/verify-conf-proxies "" "" "" ""))
 
-;; https://bugzilla.redhat.com/show_bug.cgi?id=703491      
 (defn firstboot_register_invalid_user [user pass recovery]
   (reset_firstboot)
   (tasks/ui click :register-rhn)
@@ -80,14 +79,17 @@
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
      (verify (and (= thrown-error expected-error) 
+                  ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491      
                   (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration"))))))
 
-(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703528"]}}
+(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [["sdf" "sdf" :invalid-credentials]
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
 
+(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703491"]}}
+  [["badusername" "badpassword" :invalid-credentials]])
 
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
 
