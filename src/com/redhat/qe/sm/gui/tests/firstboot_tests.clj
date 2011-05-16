@@ -77,11 +77,11 @@
                     (with-handlers [(handle expected-error-type [e]
                                       (recover e :cancel)
                                       (:type e))])
-                      (tasks/firstboot-register username password)))]
+                      (tasks/firstboot-register username password))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery
           register-button :register-system]  ;; FIXME < this is not in firstboot
-     (verify (and (= thrown-error expected-error) (action exists? register-button)))))
+     (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
 (data-driven register_invalid_user {Test {:groups ["firstboot"]}}
   [["sdf" "sdf" :invalid-credentials]
@@ -96,3 +96,4 @@
 
 
 (gen-class-testng)
+
