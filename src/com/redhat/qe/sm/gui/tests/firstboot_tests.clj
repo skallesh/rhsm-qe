@@ -1,5 +1,5 @@
 (ns com.redhat.qe.sm.gui.tests.firstboot-tests
-  (:use [test-clj.testng :only (gen-class-testng)]
+  (:use [test-clj.testng :only (gen-class-testng data-driven)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
@@ -78,15 +78,16 @@
                                       (:type e))])
                       (tasks/firstboot-register username password))]
     (let [thrown-error (apply test-fn [user pass recovery])
-          expected-error recovery
+          expected-error recovery]
      (verify (and (= thrown-error expected-error) 
                   (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration"))))))
 
-(data-driven register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703528"]}}
+(data-driven firstboot_register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703528"]}}
   [["sdf" "sdf" :invalid-credentials]
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
+
 
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
 
