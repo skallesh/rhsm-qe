@@ -132,7 +132,9 @@ public class CandlepinTasks {
 		if (!serverImportDir.equals("")) {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		}
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "1 gem installed", null);	// Successfully installed bundler-1.0.13  // 1 gem installed  // Installing ri documentation for bundler-1.0.13... // Installing RDoc documentation for bundler-1.0.13...
+		// TODO: maybe someday we should uninstall all gems first
+ 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql service:\\s+\\[  OK  \\]", null);
@@ -155,6 +157,38 @@ public class CandlepinTasks {
 		 * 
 		 * Solution:
 		 * # gem install oauth
+		 */
+		
+		/* Note: if getting error on install from branch:
+ssh root@mgmt5.rhq.lab.eng.bos.redhat.com export TESTDATA=1; export FORCECERT=1; export GENDB=1; export HOSTNAME=mgmt5.rhq.lab.eng.bos.redhat.com; export IMPORTDIR=/root/cp_product_utils; cd /root/candlepin/proxy; buildconf/scripts/deploy (com.redhat.qe.tools.SSHCommandRunner.run)
+201105121112:39.195 - FINE: Stdout: 
+Stopping tomcat6: [  OK  ]
+using NO logdriver
+============ generating a new db ==============
+schema generation failed
+ (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+201105121112:39.196 - FINE: Stderr: 
+/usr/lib/ruby/site_ruby/1.8/rubygems.rb:233:in `activate': can't activate rspec (= 2.1.0, runtime) for ["buildr-1.4.5"], already activated rspec-1.3.1 for [] (Gem::LoadError)
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:249:in `activate'
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:248:in `each'
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:248:in `activate'
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:1082:in `gem'
+	from /usr/bin/buildr:18
+/usr/lib/ruby/site_ruby/1.8/rubygems.rb:233:in `activate': can't activate rspec (= 2.1.0, runtime) for ["buildr-1.4.5"], already activated rspec-1.3.1 for [] (Gem::LoadError)
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:249:in `activate'
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:248:in `each'
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:248:in `activate'
+	from /usr/lib/ruby/site_ruby/1.8/rubygems.rb:1082:in `gem'
+	from /usr/bin/buildr:18
+		 * 
+		 * 
+		 * Solution: remove all gems...
+		 * # for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "("); do gem uninstall $item -a; done
+		 * 
+		 * Then install fresh...
+		 * # gem install bundler
+		 * # gem install buildr
+		 * # bundle install  (in the proxy dir)
 		 */
 	}
 	
