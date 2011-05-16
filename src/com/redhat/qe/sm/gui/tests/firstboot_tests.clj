@@ -80,7 +80,7 @@
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery
      (verify (and (= thrown-error expected-error) 
-                  (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))
+                  (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration"))))))
 
 (data-driven register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703528"]}}
   [["sdf" "sdf" :invalid-credentials]
