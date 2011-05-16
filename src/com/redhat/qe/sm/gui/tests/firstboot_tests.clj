@@ -67,7 +67,6 @@
   (tasks/firstboot-register (@config :username) (@config :password))
   (tasks/verify-conf-proxies "" "" "" ""))
 
-(comment 
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491      
 (defn firstboot_register_invalid_user [user pass recovery]
   (reset_firstboot)
@@ -80,17 +79,14 @@
                       (tasks/firstboot-register username password))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery
-          register-button :register-system]  ;; FIXME < this is not in firstboot
-     (verify (and (= thrown-error expected-error) (action exists? register-button))))))
+     (verify (and (= thrown-error expected-error) 
+                  (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))
 
-(data-driven register_invalid_user {Test {:groups ["firstboot"]}}
+(data-driven register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703528"]}}
   [["sdf" "sdf" :invalid-credentials]
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
-
-)
-
 
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
 
