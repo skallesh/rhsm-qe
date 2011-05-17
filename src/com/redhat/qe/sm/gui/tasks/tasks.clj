@@ -1,7 +1,8 @@
 (ns com.redhat.qe.sm.gui.tasks.tasks
-  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config)]
+  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd cli-tasks)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
+        [clojure.contrib.str-utils :only (re-split)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             com.redhat.qe.sm.gui.tasks.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
@@ -10,6 +11,12 @@
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 
 (defn sleep [ms] (. Thread (sleep ms)))
+
+(def is-boolean?
+  (fn [expn]
+    (or
+      (= expn 'true)
+      (= expn 'false))))
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
@@ -37,7 +44,9 @@
      (ui waittillwindowexist :main-window 30)))
      
 (defn start-firstboot []
-  (start-app (@config :firstboot-binary-path)))
+  (let [path (@config :firstboot-binary-path)]
+    (ui launchapp path [] 10)
+    (ui waittillwindowexist :firstboot-window 30)))
 
 (defn get-error-msg "Retrieves the error string from the RHSM error dialog."
   []
@@ -57,6 +66,12 @@
        (clear-error-dialog)
        (raise {:type type 
                :msg message})))))
+               
+(defn set-conf-file-value [field value]
+  (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) field value))
+  
+(defn conf-file-value [k]
+  (.getConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) k))
 
 (defn unregister []
   (if (ui showing? :register-system)
@@ -87,6 +102,20 @@
   (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
     (ui click :register)
     (checkforerror)))
+
+(defn firstboot-register [username password & {:keys [system-name-input, autosubscribe]
+                          :or {system-name-input nil, autosubscribe false}}]
+  (assert  (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration")))
+  (ui settextvalue :firstboot-user username)
+  (ui settextvalue :firstboot-pass password)
+  (when system-name-input
+    (ui settextvalue :firstboot-system-name system-name-input))
+  (if autosubscribe
+    (ui check :firstboot-autosubscribe)
+    (ui uncheck :firstboot-autosubscribe))
+    (ui click :firstboot-forward)
+    (checkforerror))
+  
 
 (defn wait-for-progress-bar []
   (ui waittillwindowexist :progress-dialog 1)
@@ -143,36 +172,70 @@
   (ui click :yes)
   (checkforerror) )
 
-(defn enableproxy-auth [proxy port user pass]
-  (ui selecttab :my-installed-software)
-  (ui click :proxy-configuration)
-  (ui waittillwindowexist :proxy-config-dialog 60)
-  (ui check :proxy-checkbox)
-  (ui settextvalue :proxy-location (str proxy ":" port))
-  (ui check :authentication-checkbox)
-  (ui settextvalue :username-text user)
-  (ui settextvalue :password-text pass)
-  (ui click :close-proxy)
-  (checkforerror) )
+(defn enableproxy-auth 
+  ([proxy port user pass firstboot]
+  (assert (is-boolean? firstboot))
+  (if firstboot 
+    (do (ui click :firstboot-proxy-config)
+        (ui waittillwindowexist :firstboot-proxy-dialog 60)
+        (ui check :firstboot-proxy-checkbox)
+        (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
+        (ui check :firstboot-auth-checkbox)
+        (ui settextvalue :firstboot-proxy-user user)
+        (ui settextvalue :firstboot-proxy-pass pass)
+        (ui click :firstboot-proxy-close)
+        (checkforerror))
+    (do (ui selecttab :my-installed-software)
+        (ui click :proxy-configuration)
+        (ui waittillwindowexist :proxy-config-dialog 60)
+        (ui check :proxy-checkbox)
+        (ui settextvalue :proxy-location (str proxy ":" port))
+        (ui check :authentication-checkbox)
+        (ui settextvalue :username-text user)
+        (ui settextvalue :password-text pass)
+        (ui click :close-proxy)
+        (checkforerror))))
+  ([proxy port user pass] (enableproxy-auth proxy port user pass false)))
 
-(defn enableproxy-noauth [proxy port]
-  (ui selecttab :my-installed-software)
-  (ui click :proxy-configuration)
-  (ui waittillwindowexist :proxy-config-dialog 60)
-  (ui check :proxy-checkbox)
-  (ui settextvalue :proxy-location (str proxy ":" port))
-  (ui uncheck :authentication-checkbox)
-  (ui click :close-proxy)
-  (checkforerror) )
+(defn enableproxy-noauth 
+  ([proxy port firstboot]
+  (assert (is-boolean? firstboot))
+    (if firstboot
+      (do (ui click :firstboot-proxy-config)
+          (ui waittillwindowexist :firstboot-proxy-dialog 60)
+          (ui check :firstboot-proxy-checkbox)
+          (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
+          (ui uncheck :firstboot-auth-checkbox)
+          (ui click :firstboot-proxy-close)
+          (checkforerror))
+      (do (ui selecttab :my-installed-software)
+          (ui click :proxy-configuration)
+          (ui waittillwindowexist :proxy-config-dialog 60)
+          (ui check :proxy-checkbox)
+          (ui settextvalue :proxy-location (str proxy ":" port))
+          (ui uncheck :authentication-checkbox)
+          (ui click :close-proxy)
+          (checkforerror))))
+  ([proxy port] (enableproxy-noauth proxy port false)))
   
-(defn disableproxy []
-  (ui selecttab :my-installed-software)
-  (ui click :proxy-configuration)
-  (ui waittillwindowexist :proxy-config-dialog 60)
-  (ui uncheck :proxy-checkbox)
-  (ui uncheck :authentication-checkbox)
-  (ui click :close-proxy)
-  (checkforerror) )
+(defn disableproxy 
+  ([firstboot]
+  (assert (is-boolean? firstboot))
+  (if firstboot
+    (do (ui click :firstboot-proxy-config)
+        (ui waittillwindowexist :firstboot-proxy-dialog 60)
+        (ui uncheck :firstboot-proxy-checkbox)
+        (ui uncheck :firstboot-auth-checkbox)
+        (ui click :firstboot-proxy-close)
+        (checkforerror))
+    (do (ui selecttab :my-installed-software)
+        (ui click :proxy-configuration)
+        (ui waittillwindowexist :proxy-config-dialog 60)
+        (ui uncheck :proxy-checkbox)
+        (ui uncheck :authentication-checkbox)
+        (ui click :close-proxy)
+        (checkforerror))))
+  ([] (disableproxy false)))
 
 (defn warn-count []
   (if (= 1 (ui guiexist :main-window "You have*"))
@@ -206,6 +269,16 @@
   (let [item-list (get-table-elements view col)]
     (doseq [item item-list]
       (f item))))
+
+(defn verify-conf-proxies [hostname port user password]
+  (let [config-file-hostname  (conf-file-value "proxy_hostname")
+        config-file-port      (conf-file-value "proxy_port")
+        config-file-user      (conf-file-value "proxy_user")
+        config-file-password  (conf-file-value "proxy_password")]
+    (verify (= config-file-hostname hostname))
+    (verify (= config-file-port port)) 
+    (verify (= config-file-user user))
+    (verify (= config-file-password password))))
 
 (comment 
 (defn get-all-facts []

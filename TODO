@@ -1,10 +1,53 @@
-Write automation for:
+OPEN BUG ON: 
+https://tcms.engineering.redhat.com/case/44116/?from_plan=2806 
+  -register with bad creds, click outside of error dialog and loose focus
+  -happens any time two dialogs are open, import cert
+
+GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=667991
-  https://bugzilla.redhat.com/show_bug.cgi?id=679961
-  https://bugzilla.redhat.com/show_bug.cgi?id=676371
+  https://bugzilla.redhat.com/show_bug.cgi?id=679961   << partial done
+  https://bugzilla.redhat.com/show_bug.cgi?id=676371   
   https://bugzilla.redhat.com/show_bug.cgi?id=676377
   https://bugzilla.redhat.com/show_bug.cgi?id=683151
   https://bugzilla.redhat.com/show_bug.cgi?id=629670#c4
   https://bugzilla.redhat.com/show_bug.cgi?id=683550
   https://bugzilla.redhat.com/show_bug.cgi?id=691784
   https://bugzilla.redhat.com/show_bug.cgi?id=691788
+  https://bugzilla.redhat.com/show_bug.cgi?id=700601
+  https://bugzilla.redhat.com/show_bug.cgi?id=703920
+  https://bugzilla.redhat.com/show_bug.cgi?id=705170
+
+  https://bugzilla.redhat.com/show_bug.cgi?id=702075
+  https://bugzilla.redhat.com/show_bug.cgi?id=704069
+  
+  https://tcms.engineering.redhat.com/case/44125/?from_plan=2806
+  https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
+  https://tcms.engineering.redhat.com/case/72670/?from_plan=2806
+  https://tcms.engineering.redhat.com/case/56689/?from_plan=2681
+  https://tcms.engineering.redhat.com/case/56690/?from_plan=2681
+  https://tcms.engineering.redhat.com/case/69776/?from_plan=2681 (use john's value getter to assert content)
+  
+  verify content of product list in "my installed software"
+  
+CLI TASKS
+  https://tcms.engineering.redhat.com/case/55826/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/50223/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/50224/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/50232/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/50392/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/50215/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/50238/?from_plan=2851
+  https://tcms.engineering.redhat.com/case/56387/?from_plan=2681 (update things other than hostname/ip)
+  https://tcms.engineering.redhat.com/case/56897/?from_plan=2681
+  https://tcms.engineering.redhat.com/case/56389/?from_plan=2681
+  https://tcms.engineering.redhat.com/case/56690/?from_plan=2681
+  https://tcms.engineering.redhat.com/case/56390/?from_plan=2681
+  https://tcms.engineering.redhat.com/case/55934/?from_plan=2634
+  https://tcms.engineering.redhat.com/case/54962/?from_plan=2634
+  https://tcms.engineering.redhat.com/case/55355/?from_plan=2634
+  https://tcms.engineering.redhat.com/case/55979/?from_plan=2634
+  https://tcms.engineering.redhat.com/case/56014/?from_plan=2634
+  https://tcms.engineering.redhat.com/case/61115/?from_plan=2493
+  
+
+

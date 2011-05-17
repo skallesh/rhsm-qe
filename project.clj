@@ -22,10 +22,16 @@
 (do 
   (require :reload-all '[com.redhat.qe.sm.gui.tasks.test-config :as config])
   (require :reload-all '[com.redhat.qe.sm.gui.tasks.tasks :as tasks])
-  (require :reload-all '[com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])  
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
   (require :reload-all '[com.redhat.qe.sm.gui.tests.subscribe-tests :as stest])
   (require :reload-all '[com.redhat.qe.sm.gui.tests.register-tests :as rtest])
   (require :reload-all '[com.redhat.qe.sm.gui.tests.proxy-tests :as ptest])
   (require :reload-all '[com.redhat.qe.sm.gui.tests.rhn-interop-tests :as ritest])
-  (require :reload-all '[com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest]))
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest])
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.firstboot-tests :as ftest]))
+
+(do
+  (config/init)
+  (tasks/connect)
+  (use 'gnome.ldtp))
 )
