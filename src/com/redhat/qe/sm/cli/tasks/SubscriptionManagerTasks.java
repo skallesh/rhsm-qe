@@ -391,7 +391,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
-		sshCommandRunner.runCommandAndWait("find "+productCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+productCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return ProductCert.parse(certificates);
 	}
@@ -404,7 +404,7 @@ public class SubscriptionManagerTasks {
 			log.info("Currently, there is no consumer registered.");
 			return null;
 		}
-		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+this.consumerCertFile);
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+this.consumerCertFile);
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
 	}
@@ -867,7 +867,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public EntitlementCert getEntitlementCertCorrespondingToProductSubscription(ProductSubscription productSubscription) {
 		String certFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
-		sshCommandRunner.runCommandAndWait("openssl x509 -text -noout -in '"+certFile+"'");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in '"+certFile+"'");
 		String certificate = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificate);
 		Assert.assertEquals(entitlementCerts.size(), 1,"Only one EntitlementCert corresponds to ProductSubscription: "+productSubscription);
@@ -875,7 +875,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
-		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+serialPemFile.getPath());
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+serialPemFile.getPath());
 		String certificates = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		
@@ -885,7 +885,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public ProductCert getProductCertFromProductCertFile(File productPemFile) {
-		sshCommandRunner.runCommandAndWait("openssl x509 -noout -text -in "+productPemFile.getPath());
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+productPemFile.getPath());
 		String certificates = sshCommandRunner.getStdout();
 		List<ProductCert> productCerts = ProductCert.parse(certificates);
 		

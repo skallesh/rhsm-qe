@@ -611,7 +611,7 @@ schema generation failed
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {
-		sshCommandRunner.runCommandAndWait("openssl crl -noout -text -in "+candlepinCRLFile);
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl crl -noout -text -in "+candlepinCRLFile);
 		String crls = sshCommandRunner.getStdout();
 		return RevokedCert.parse(crls);
 	}
