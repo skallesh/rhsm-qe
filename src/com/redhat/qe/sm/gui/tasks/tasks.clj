@@ -1,5 +1,5 @@
 (ns com.redhat.qe.sm.gui.tasks.tasks
-  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
+  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd cli-tasks)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.contrib.str-utils :only (re-split)]
@@ -66,6 +66,12 @@
        (clear-error-dialog)
        (raise {:type type 
                :msg message})))))
+               
+(defn set-conf-file-value [field value]
+  (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) field value))
+  
+(defn conf-file-value [k]
+  (.getConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) k))
 
 (defn unregister []
   (if (ui showing? :register-system)
@@ -107,8 +113,9 @@
   (if autosubscribe
     (ui check :firstboot-autosubscribe)
     (ui uncheck :firstboot-autosubscribe))
-  (ui click :firstboot-forward)
-  (checkforerror))
+    (ui click :firstboot-forward)
+    (checkforerror))
+  
 
 (defn wait-for-progress-bar []
   (ui waittillwindowexist :progress-dialog 1)
@@ -262,9 +269,6 @@
   (let [item-list (get-table-elements view col)]
     (doseq [item item-list]
       (f item))))
-
-(defn conf-file-value [k]
-  (->> (.getStdout (.runCommandAndWait @clientcmd (str "grep " k " /etc/rhsm/rhsm.conf"))) (re-split #"=") last .trim)) 
 
 (defn verify-conf-proxies [hostname port user password]
   (let [config-file-hostname  (conf-file-value "proxy_hostname")

@@ -23,10 +23,18 @@
   (.runCommand @clientcmd "killall -9 firstboot")
   (tasks/sleep 5000))
 
+(defn zero-proxy-values []
+  (tasks/set-conf-file-value "proxy_hostname" "")
+  (tasks/set-conf-file-value "proxy_port" "")
+  (tasks/set-conf-file-value "proxy_user" "")
+  (tasks/set-conf-file-value "proxy_password" ""))
+
 (defn reset_firstboot []
   (kill_firstboot nil)
   (.runCommand @clientcmd "subscription-manager clean")
+  (zero-proxy-values)
   (start_firstboot nil))
+  
   
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_auth [_]
@@ -71,11 +79,11 @@
   (reset_firstboot)
   (tasks/ui click :register-rhn)
   (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :firstboot-forward)
   (let [test-fn (fn [username password expected-error-type]
                     (with-handlers [(handle expected-error-type [e]
-                                      (recover e :cancel)
-                                      (:type e))])
-                      (tasks/firstboot-register username password))]
+                                      (:type e))]
+                      (tasks/firstboot-register username password)))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
      (verify (and (= thrown-error expected-error) 
@@ -92,6 +100,7 @@
   [["badusername" "badpassword" :invalid-credentials]])
 
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
+;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=705170
 
 
 (gen-class-testng)
