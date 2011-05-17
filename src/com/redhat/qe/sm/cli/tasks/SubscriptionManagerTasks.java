@@ -67,6 +67,7 @@ public class SubscriptionManagerTasks {
 
 	
 	public String hostname						= null;	// of the client
+	public String ipaddr						= null;	// of the client
 	public String arch							= null;	// of the client
 	public String sockets						= null;	// of the client
 	public String variant						= null;	// of the client
@@ -80,6 +81,7 @@ public class SubscriptionManagerTasks {
 		super();
 		setSSHCommandRunner(runner);
 		hostname = sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
+		ipaddr = sshCommandRunner.runCommandAndWait("ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | sed s/'  Bcast'//g").getStdout().trim();
 		arch = sshCommandRunner.runCommandAndWait("uname -i").getStdout().trim();
 		redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";
