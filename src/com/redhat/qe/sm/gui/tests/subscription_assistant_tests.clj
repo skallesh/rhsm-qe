@@ -55,7 +55,7 @@
   (exit_subscription_assistant nil)
   (launch_assistant nil))
 
-(defn ^{Test {:groups ["subscription-assistant"]
+(defn ^{Test {:groups ["subscription-assistant" "blockedByBug-703997"]
               :dependsOnMethods ["launch_assistant"]}}
   subscribe_all_products [_]
   (reset-assistant)
