@@ -13,6 +13,8 @@
                  [gnome.ldtp "1.0.0-SNAPSHOT"]
                  [test_clj.testng "1.0.0-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]]
+  :repositories {"clojars.org" {:url "http://clojars.org/repo"
+                                :snapshots {:update :always}}}
   :javac-options {:debug "on"})
   
   
