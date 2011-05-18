@@ -12,6 +12,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -48,6 +49,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException {
+//if (!productId.equals("awesomeos-server")) throw new SkipException("debugging");
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
