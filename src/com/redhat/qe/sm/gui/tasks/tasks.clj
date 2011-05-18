@@ -119,7 +119,8 @@
 
 (defn wait-for-progress-bar []
   (ui waittillwindowexist :progress-dialog 1)
-  (ui waittillwindownotexist :progress-dialog 30))
+  (ui waittillwindownotexist :progress-dialog 30)
+  (checkforerror))
 
 (defn search ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
   (ui selecttab :all-available-subscriptions)

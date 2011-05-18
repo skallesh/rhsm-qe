@@ -26,6 +26,25 @@ GUI TODO:
   https://tcms.engineering.redhat.com/case/56689/?from_plan=2681
   https://tcms.engineering.redhat.com/case/56690/?from_plan=2681
   https://tcms.engineering.redhat.com/case/69776/?from_plan=2681 (use john's value getter to assert content)
+  https://tcms.engineering.redhat.com/case/68740/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68749/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/57053/?from_plan=2105
+  https://tcms.engineering.redhat.com/case/70508/?from_plan=2110 < PARTIAL
+  https://tcms.engineering.redhat.com/case/70510/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/70509/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/70303/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/70305/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/73580/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/70205/?from_plan=2110 (verify that facts match cli facts only)
+  https://tcms.engineering.redhat.com/case/73339/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/69815/?from_plan=2110 (fake by removing and adding product cert)
+  https://tcms.engineering.redhat.com/case/69814/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/70304/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/44226/?from_plan=2110
+  https://tcms.engineering.redhat.com/case/90737/?from_plan=2110
+  
+  Add (checkforerror) in subscribe during progress bar
   
   verify content of product list in "my installed software"
   
@@ -48,6 +67,28 @@ CLI TASKS
   https://tcms.engineering.redhat.com/case/55979/?from_plan=2634
   https://tcms.engineering.redhat.com/case/56014/?from_plan=2634
   https://tcms.engineering.redhat.com/case/61115/?from_plan=2493
+  https://tcms.engineering.redhat.com/case/71208/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68740/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68738/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68737/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68735/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68734/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68749/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/50229/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/50236/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/50230/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/46710/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/68736/?from_plan=2477
+  https://tcms.engineering.redhat.com/case/64183/?from_plan=2105
+  https://tcms.engineering.redhat.com/case/57053/?from_plan=2105
+  https://tcms.engineering.redhat.com/case/64181/?from_plan=2105
+  https://tcms.engineering.redhat.com/case/50401/?from_plan=2105
+  https://tcms.engineering.redhat.com/case/50235/?from_plan=2105
+  https://tcms.engineering.redhat.com/case/61710/?from_plan=2476
+  https://tcms.engineering.redhat.com/case/61716/?from_plan=2476
+  
+MANUAL TODO:
+  https://tcms.engineering.redhat.com/case/46711/?from_plan=2477
   
 
 
