@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -24,7 +25,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: refresh and verify entitlements are updated",
 			groups={"RefreshEntitlements_Test"},
 			enabled=true)
-	//@ImplementsTCMS(id="")	// http://gibson.usersys.redhat.com/agilo/ticket/4022
+	@ImplementsNitrateTest(caseId=64182)	// http://gibson.usersys.redhat.com/agilo/ticket/4022
 	public void RefreshEntitlements_Test() {
 		
 		// Start fresh by unregistering and registering...

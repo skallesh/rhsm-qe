@@ -108,7 +108,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: identity regenerate",
 			groups={},
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=64179)
 	public void IdentityRegenerate_Test() {
 		
 		// start fresh by unregistering and registering

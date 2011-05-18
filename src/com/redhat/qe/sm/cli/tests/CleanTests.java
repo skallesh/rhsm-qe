@@ -24,7 +24,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
 			groups={"Clean_Test","blockedByBug-654429"},
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)	// http://gibson.usersys.redhat.com/agilo/ticket/4020
+	@ImplementsNitrateTest(caseId=64178)	// http://gibson.usersys.redhat.com/agilo/ticket/4020
 	public void Clean_Test() {
 		
 		// Start fresh by unregistering and registering...
