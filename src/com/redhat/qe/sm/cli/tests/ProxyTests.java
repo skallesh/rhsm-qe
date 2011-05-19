@@ -80,7 +80,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String moduleTask = "register";
 
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
@@ -150,7 +150,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 
@@ -206,7 +206,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
@@ -264,7 +264,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
@@ -322,7 +322,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
@@ -380,7 +380,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 	
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
@@ -442,7 +442,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 
@@ -500,7 +500,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		
 		// pad the tail of basicauthproxyLog with a message
-		String proxyLogMarker = "Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 		
@@ -681,14 +681,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{	"bad-username",	"bad-password",	null,				null,					null,					basicauthproxyHostname,	basicauthproxyPort,		basicauthproxyUsername,		basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg,	basicauthproxy,	basicauthproxyLog,	"TCP_MISS"}));
 
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Closed connection"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Closed connection"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Connect"}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	null,				null,					null,					noauthproxyHostname,	noauthproxyPort+"0",	"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	noauthproxyLog,		null}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	null,				null,					null,					"bad-proxy",			noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	noauthproxyLog,		null}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,	"bad-password",	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	noauthproxyLog,		"Closed connection"}));
-		ll.add(Arrays.asList(new Object[]{	"bad-username",	"bad-password",	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	noauthproxyLog,		"Closed connection"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	noauthproxyUrl,		null,					null,					"bad-proxy",			noauthproxyPort+"0",	"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Closed connection"}));
-		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	noauthproxyUrl,		"ignored-username",		"ignored-password",		"bad-proxy",			noauthproxyPort+"0",	"bad-username",				"bad-password",			Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Closed connection"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,	"bad-password",	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	"bad-username",	"bad-password",	null,				null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	noauthproxyUrl,		null,					null,					"bad-proxy",			noauthproxyPort+"0",	"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	noauthproxyUrl,		"ignored-username",		"ignored-password",		"bad-proxy",			noauthproxyPort+"0",	"bad-username",				"bad-password",			Integer.valueOf(0),		null,		null,		noauthproxy,	noauthproxyLog,		"Connect"}));
 		ll.add(Arrays.asList(new Object[]{	clientusername,	clientpassword,	"bad-proxy",		null,					null,					noauthproxyHostname,	noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	noauthproxyLog,		null}));
 
 
