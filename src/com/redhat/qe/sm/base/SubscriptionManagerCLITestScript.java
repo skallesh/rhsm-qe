@@ -598,7 +598,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);
-			client2tasks.register(client2username, client2password, null, null, null, null, null, null, null, null);
+			if (!client2username.equals("") && !client2password.equals(""))
+				client2tasks.register(client2username, client2password, null, null, null, null, null, null, null, null);
 		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
