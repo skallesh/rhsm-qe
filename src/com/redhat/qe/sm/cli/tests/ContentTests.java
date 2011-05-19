@@ -286,6 +286,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=654442
 	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
 	// TODO Bug 701425 - NSS issues with more than one susbcription 
+	// TODO Bug 706265 - product cert is not getting removed after removing all the installed packages from its repo using yum
+	
+
 	
 	// Configuration Methods ***********************************************************************
 	
