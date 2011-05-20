@@ -37,4 +37,7 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 				"The subscription quantity count for Pool "+originalPool.poolId+" returned to its original count after subscribing to it and then unregistering from the candlepin server.");
 		}
 	}
+	
+	// Candidates for an automated Test:
+	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister
 }
