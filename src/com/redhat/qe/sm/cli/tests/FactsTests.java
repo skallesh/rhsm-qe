@@ -173,6 +173,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// get the number of cpu_sockets for this system consumer
 		String factName = "cpu.cpu_socket(s)";
+//TODO need a workaround for bug 696791 when getFactValue(factName)==null when getFactValue("uname.machine").equals("s390x"); should probably treat this as though socket is 1   see http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/job/rhsm-beaker-on-premises-RHEL5/179/TestNG_Report/
 		int systemValue = Integer.valueOf(smt.getFactValue(factName));
 		log.info(factName+" for this system consumer: "+systemValue);
 		
