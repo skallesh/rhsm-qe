@@ -103,7 +103,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	// Candidates for an automated Test:
 	// TODO Bug 694662 - the whitespace in the title line of man subscription-manager-gui is completely consumed
-	
+	// TODO Bug 693527 - missing some translation in usage help string
 	
 	
 	
@@ -369,4 +369,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
+	
+
 }
