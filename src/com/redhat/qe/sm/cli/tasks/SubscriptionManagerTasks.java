@@ -75,7 +75,7 @@ public class SubscriptionManagerTasks {
 	protected String currentAuthenticator				= null;	// most recent username used during register
 	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
 	
-	protected String redhatRelease	= null;
+	public String redhatRelease	= null;
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
