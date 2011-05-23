@@ -161,7 +161,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("rm -rf "+randDir);
 	}
 
-	
+	// Candidates for an automated Test:
+	// TODO Bug 706889 - “-1” displayed on console while unsubscribe invalid serial
 	
 	// Data Providers ***********************************************************************
 	
