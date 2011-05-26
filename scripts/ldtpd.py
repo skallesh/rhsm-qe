@@ -65,8 +65,48 @@ _supported_methods = filter(lambda x: x in ldtp2commands, _ldtp_methods)
 #create a class with all ldtp methods as attributes
 class AllMethods:
   def _translate_state(self,value):
+    
     #states from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
-    states = ['INVALID', 'ACTIVE', 'ARMED', 'BUSY', 'CHECKED', 'COLLAPSED', 'DEFUNCT', 'EDITABLE', 'ENABLED', 'EXPANDABLE', 'EXPANDED', 'FOCUSABLE', 'FOCUSED', 'HORIZONTAL', 'ICONIFIED', 'MODAL', 'MULTI_LINE', 'MULTISELECTABLE', 'OPAQUE', 'PRESSED', 'RESIZABLE', 'SELECTABLE', 'SELECTED', 'SENSITIVE', 'SHOWING', 'SINGLE_LINE', 'STALE', 'TRANSIENT', 'VERTICAL', 'VISIBLE', 'MANAGES_DESCENDANTS', 'INDETERMINATE', 'TRUNCATED', 'REQUIRED', 'INVALID_ENTRY', 'SUPPORTS_AUTOCOMPLETION', 'SELECTABLE_TEXT', 'IS_DEFAULT', 'VISITED', 'LAST_DEFINED']
+    states = ['INVALID',
+              'ACTIVE',
+              'ARMED',
+              'BUSY',
+              'CHECKED',
+              'COLLAPSED',
+              'DEFUNCT',
+              'EDITABLE',
+              'ENABLED',
+              'EXPANDABLE',
+              'EXPANDED',
+              'FOCUSABLE',
+              'FOCUSED',
+              'HORIZONTAL',
+              'ICONIFIED',
+              'MODAL',
+              'MULTI_LINE',
+              'MULTISELECTABLE',
+              'OPAQUE',
+              'PRESSED',
+              'RESIZABLE',
+              'SELECTABLE',
+              'SELECTED',
+              'SENSITIVE',
+              'SHOWING',
+              'SINGLE_LINE',
+              'STALE',
+              'TRANSIENT',
+              'VERTICAL',
+              'VISIBLE',
+              'MANAGES_DESCENDANTS',
+              'INDETERMINATE',
+              'TRUNCATED',
+              'REQUIRED',
+              'INVALID_ENTRY',
+              'SUPPORTS_AUTOCOMPLETION',
+              'SELECTABLE_TEXT',
+              'IS_DEFAULT',
+              'VISITED',
+              'LAST_DEFINED']
     
     if value in states: 
       return states.index(value)

@@ -7,7 +7,7 @@
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [clojure.contrib.java-utils :as jutils]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
+  (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")
   
@@ -22,9 +22,16 @@
   
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (if (tasks/ui exists? :main-window "")
+  (if (tasks/ui exists? :main-window "*")
     (kill-app))
   (.runCommandAndWait @clientcmd (str "touch " systemid))
+)
+
+(defn ^{AfterClass {:groups ["setup"]}}
+  cleanup [_]
+    (if-not (tasks/ui exists? :main-window "*")
+      (tasks/start-app))
+    (.runCommandAndWait @clientcmd (str "rm -f " systemid))
 )
 
 (defn ^{Test {:groups ["interop"]}}
@@ -32,7 +39,7 @@
   (tasks/start-app)
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (verify (systemid-exists?))
-  (verify (tasks/ui exists? :warning-dialog ""))
+  (verify (tasks/ui exists? :warning-dialog "*"))
   (kill-app)
 )
 
@@ -43,7 +50,7 @@
   (tasks/ui waittillwindowexist :warning-dialog 30)
   (tasks/ui click :warn-ok)
   (verify (tasks/ui waittillwindownotexist :warning-dialog 30))
-  (verify (tasks/ui exists? :main-window ""))
+  (verify (tasks/ui exists? :main-window "*"))
   (kill-app)
 )
 
@@ -63,7 +70,7 @@
   (.runCommandAndWait @clientcmd (str "rm -f " systemid))
   (verify (not (systemid-exists?)))
   (tasks/start-app)
-  (verify (not (tasks/ui exists? :warning-dialog "")))
+  (verify (not (tasks/ui exists? :warning-dialog "*")))
 )
 
 (gen-class-testng)
