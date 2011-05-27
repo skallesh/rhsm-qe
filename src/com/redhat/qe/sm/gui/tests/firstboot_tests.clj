@@ -29,7 +29,7 @@
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/sleep 30) ;; FIXME find a better way than a hard wait...
-      (verify (fbshowing? "Set Up software Updates."))))
+      (verify (fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
   (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Server"))))
