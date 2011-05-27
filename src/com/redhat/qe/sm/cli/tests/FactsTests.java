@@ -336,6 +336,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=664847#2
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=629670
+	// TODO Bug 706552 - Wrong DMI structures length: 3263 bytes announced, structures occupy 3265 bytes.
 
 	// TODO create tests that overrides the facts, for example....  and the uses getSystemSubscriptionPoolProductDataAsListOfLists()
 	// see TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST" from SubscribeTests

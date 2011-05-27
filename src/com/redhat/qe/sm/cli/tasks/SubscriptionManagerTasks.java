@@ -88,7 +88,7 @@ public class SubscriptionManagerTasks {
 		if (redhatRelease.contains("Client")) variant = "Client";
 		if (redhatRelease.contains("Workstation")) variant = "Workstation";
 		if (redhatRelease.contains("ComputeNode")) variant = "ComputeNode";
-		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
 		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 		if (redhatRelease.contains("release 6.1 ")) rhsmComplianceD = "/usr/libexec/rhsm-complianced";	// Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
 	}
