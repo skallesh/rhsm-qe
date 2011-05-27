@@ -3,17 +3,33 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-	       gnome.ldtp)
+         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
-  
+
+
+(defn- fbshowing? [item]
+  ;; since all items 'exist' at all times in firstboot,
+  ;;  we must poll the states and see if 'SHOWING' is among them
+  ;; "SHOWING" == 24
+  (= 24 (some #{24} (seq (tasks/ui guiexist :firstboot-window item)))))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   start_firstboot [_]
   (tasks/start-firstboot)
   (tasks/ui click :firstboot-forward)
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
+  ;; RHEL5 has a different firstboot order than RHEL6 
+  (if (fbshowing? "Firewall")
+    (do
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/ui click :firstboot-forward)
+      (tasks/sleep 30) ;; FIXME find a better way than a hard wait...
+      (verify (fbshowing? "Set Up software Updates."))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
   (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Server"))))
@@ -87,7 +103,7 @@
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
      (verify (and (= thrown-error expected-error) 
-                  ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491      
+                  ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
                   (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration"))))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
