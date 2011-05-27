@@ -1,155 +1,188 @@
-#!/usr/bin/env python
-
+#!/usr/bin/python
+import ldtp
 import sys
-import time
-import os
-import atexit
-from signal import SIGTERM
-#from daemon import Daemon
-import ldtpd
+import SimpleXMLRPCServer
+import getopt
+import logging
+import re
+import inspect
 
-class Daemon:
-	"""
-	A generic daemon class.
-	
-	Usage: subclass the Daemon class and override the run() method
-	"""
-	def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-		self.stdin = stdin
-		self.stdout = stdout
-		self.stderr = stderr
-		self.pidfile = pidfile
-	
-	def daemonize(self):
-		"""
-		do the UNIX double-fork magic, see Stevens' "Advanced 
-		Programming in the UNIX Environment" for details (ISBN 0201563177)
-		http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
-		"""
-		try: 
-			pid = os.fork() 
-			if pid > 0:
-				# exit first parent
-				sys.exit(0) 
-		except OSError, e: 
-			sys.stderr.write("fork #1 failed: %d (%s)\n" % (e.errno, e.strerror))
-			sys.exit(1)
-	
-		# decouple from parent environment
-		os.chdir("/") 
-		os.setsid() 
-		os.umask(0) 
-	
-		# do second fork
-		try: 
-			pid = os.fork() 
-			if pid > 0:
-				# exit from second parent
-				sys.exit(0) 
-		except OSError, e: 
-			sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-			sys.exit(1) 
-	
-		# redirect standard file descriptors
-		sys.stdout.flush()
-		sys.stderr.flush()
-		si = file(self.stdin, 'r')
-		so = file(self.stdout, 'a+')
-		se = file(self.stderr, 'a+', 0)
-		os.dup2(si.fileno(), sys.stdin.fileno())
-		os.dup2(so.fileno(), sys.stdout.fileno())
-		os.dup2(se.fileno(), sys.stderr.fileno())
-	
-		# write pidfile
-		atexit.register(self.delpid)
-		pid = str(os.getpid())
-		file(self.pidfile,'w+').write("%s\n" % pid)
-	
-	def delpid(self):
-		os.remove(self.pidfile)
+logger = logging.getLogger("xmlrpcserver.ldtp")
+logger.setLevel(logging.INFO)
 
-	def start(self):
-		"""
-		Start the daemon
-		"""
-		# Check for a pidfile to see if the daemon already runs
-		try:
-			pf = file(self.pidfile,'r')
-			pid = int(pf.read().strip())
-			pf.close()
-		except IOError:
-			pid = None
-	
-		if pid:
-			message = "pidfile %s already exist. Daemon already running?\n"
-			sys.stderr.write(message % self.pidfile)
-			sys.exit(1)
-		
-		# Start the daemon
-		self.daemonize()
-		self.run()
+class LoggingSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler): 
+  """Overides the default SimpleXMLRPCRequestHander to support logging.  Logs
+  client IP and the XML request and response.
+  """
 
-	def stop(self):
-		"""
-		Stop the daemon
-		"""
-		# Get the pid from the pidfile
-		try:
-			pf = file(self.pidfile,'r')
-			pid = int(pf.read().strip())
-			pf.close()
-		except IOError:
-			pid = None
-	
-		if not pid:
-			message = "pidfile %s does not exist. Daemon not running?\n"
-			sys.stderr.write(message % self.pidfile)
-			return # not an error in a restart
+  def do_POST(self):
+    clientIP, port = self.client_address
+    # Log client IP and Port
+    logger.info('Client IP: %s - Port: %s' % (clientIP, port))
+    try:
+      # get arguments
+      data = self.rfile.read(int(self.headers["content-length"]))
+      # Log client request
+      logger.info('Client request: \n%s\n' % data)
+        
+      response = self.server._marshaled_dispatch(data, getattr(self, '_dispatch', None))
+      # Log server response
+      logger.info('Server response: \n%s\n' % response)
+        
+    except: 
+      # This should only happen if the module is buggy
+      # internal error, report as HTTP server error
+      self.send_response(500)
+      self.end_headers()
+    else:
+      # got a valid XML RPC response
+      self.send_response(200)
+      self.send_header("Content-type", "text/xml")
+      self.send_header("Content-length", str(len(response)))
+      self.end_headers()
+      self.wfile.write(response)
 
-		# Try killing the daemon process	
-		try:
-			while 1:
-				os.kill(pid, SIGTERM)
-				time.sleep(0.1)
-		except OSError, err:
-			err = str(err)
-			if err.find("No such process") > 0:
-				if os.path.exists(self.pidfile):
-					os.remove(self.pidfile)
-			else:
-				print str(err)
-				sys.exit(1)
+      # shut down the connection
+      self.wfile.flush()
+      self.connection.shutdown(1)
 
-	def restart(self):
-		"""
-		Restart the daemon
-		"""
-		self.stop()
-		self.start()
+#figure out which methods are in LDTPv2 and only use those
+#f = open("/root/bin/ldtp_api2.clj", "r")
+#ldtp2commands = []
+#line = f.readline().strip()
+#while line:
+#  command = line.split("\"")[1]
+#  ldtp2commands.append(command)
+#  line = f.readline()
+#ldtp2commands.sort()
+#f.close
 
-	def run(self):
-		"""
-		You should override this method when you subclass Daemon. It will be called after the process has been
-		daemonized by start() or restart().
-		"""
+ldtp2commands = ['activatetext', 'activatewindow', 'appendtext', 'check', 'checkrow', 'click', 'closewindow', 'comboselect', 'comboselectindex', 'copytext', 'cuttext', 'decrease', 'deletetext', 'doesmenuitemexist', 'doesrowexist', 'doubleclick', 'doubleclickrow', 'enterstring', 'expandtablecell', 'generatekeyevent', 'generatemouseevent', 'getallitem', 'getallstates', 'getapplist', 'getcellvalue', 'getcharcount', 'getchild', 'getcursorposition', 'getmax', 'getmaxvalue', 'getminincrement', 'getminvalue', 'getobjectinfo', 'getobjectlist', 'getobjectproperty', 'getobjectsize', 'getrowcount', 'getslidervalue', 'getstatusbartext', 'gettabcount', 'gettablerowindex', 'gettabname', 'gettextvalue', 'getvalue', 'getwindowlist', 'getwindowsize', 'grabfocus', 'guiexist', 'hasstate', 'hidelist', 'imagecapture', 'increase', 'invokemenu', 'isalive', 'ischildindexselected', 'ischildselected', 'istextstateenabled', 'keypress', 'keyrelease', 'launchapp', 'listsubmenus', 'maximizewindow', 'menucheck', 'menuitemenabled', 'menuuncheck', 'minimizewindow', 'mouseleftclick', 'mousemove', 'mouserightclick', 'objectexist', 'onedown', 'oneleft', 'oneright', 'oneup', 'onwindowcreate', 'pastetext', 'poll_events', 'press', 'registerevent', 'remap', 'removecallback', 'removeevent', 'scrolldown', 'scrollleft', 'scrollright', 'scrollup', 'selectall', 'selecteditemcount', 'selectindex', 'selectitem', 'selectlastrow', 'selectmenuitem', 'selectrow', 'selectrowindex', 'selectrowpartialmatch', 'selecttab', 'selecttabindex', 'setcellvalue', 'setcursorposition', 'setlocale', 'setmax', 'setmin', 'settextvalue', 'setvalue', 'showlist', 'simulatemousemove', 'singleclickrow', 'stateenabled', 'uncheck', 'uncheckrow', 'unmaximizewindow', 'unminimizewindow', 'unselectall', 'unselectindex', 'unselectitem', 'verifycheck', 'verifydropdown', 'verifyhidelist', 'verifymenucheck', 'verifymenuuncheck', 'verifypartialmatch', 'verifypartialtablecell', 'verifyscrollbarhorizontal', 'verifyscrollbarvertical', 'verifyselect', 'verifysettext', 'verifysetvalue', 'verifyshowlist', 'verifysliderhorizontal', 'verifyslidervertical', 'verifytablecell', 'verifytabname', 'verifytoggled', 'verifyuncheck', 'wait', 'waittillguiexist', 'waittillguinotexist', 'windowuptime']
 
-class MyDaemon(Daemon):
-	def run(self):
-		ldtpd.main()
-	
+_ldtp_methods = filter(lambda fn: inspect.isfunction(getattr(ldtp,fn)),  dir(ldtp))
+_supported_methods = filter(lambda x: x in ldtp2commands, _ldtp_methods)
+
+#create a class with all ldtp methods as attributes
+class AllMethods:
+  def _translate_state(self,value):
+    
+    #states from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
+    states = ['INVALID',
+              'ACTIVE',
+              'ARMED',
+              'BUSY',
+              'CHECKED',
+              'COLLAPSED',
+              'DEFUNCT',
+              'EDITABLE',
+              'ENABLED',
+              'EXPANDABLE',
+              'EXPANDED',
+              'FOCUSABLE',
+              'FOCUSED',
+              'HORIZONTAL',
+              'ICONIFIED',
+              'MODAL',
+              'MULTI_LINE',
+              'MULTISELECTABLE',
+              'OPAQUE',
+              'PRESSED',
+              'RESIZABLE',
+              'SELECTABLE',
+              'SELECTED',
+              'SENSITIVE',
+              'SHOWING',
+              'SINGLE_LINE',
+              'STALE',
+              'TRANSIENT',
+              'VERTICAL',
+              'VISIBLE',
+              'MANAGES_DESCENDANTS',
+              'INDETERMINATE',
+              'TRUNCATED',
+              'REQUIRED',
+              'INVALID_ENTRY',
+              'SUPPORTS_AUTOCOMPLETION',
+              'SELECTABLE_TEXT',
+              'IS_DEFAULT',
+              'VISITED',
+              'LAST_DEFINED']
+    
+    if value in states: 
+      return states.index(value)
+    else:
+      return value
+      
+  def _dispatch(self,method,params):
+    if method in _supported_methods:
+      if method == "hasstate":
+        paramslist = list(params)
+        paramslist[2]=self._translate_state(paramslist[2])
+        params = tuple(paramslist)
+      function = getattr(ldtp,method)
+      retval = function(*params)
+      if retval == None:
+        return 0
+      else:
+        return retval
+    
+  pass
+
+for name in _supported_methods:
+  setattr(AllMethods, name, getattr(ldtp, name))
+
+def usage():
+  print "Usage:"
+  print "[-p, --port=] Port to listen on"
+  print "[-l --logfile=] file to write logging to"
+  print "[-h] This help message"
+
+def start_server(port,logfile):
+  if logfile:
+    hdlr = logging.FileHandler(logfile)
+    formatter = logging.Formatter("%(asctime)s  %(levelname)s  %(message)s")
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    server = SimpleXMLRPCServer.SimpleXMLRPCServer(("",int(port)), 
+                                                    LoggingSimpleXMLRPCRequestHandler)
+  else:    
+    server = SimpleXMLRPCServer.SimpleXMLRPCServer(('',int(port)),
+                                                    logRequests=True)
+
+  server.register_introspection_functions()
+  server.register_instance(AllMethods())
+
+  try:
+    print("Listening on port %s" % port)
+    server.serve_forever()
+  except KeyboardInterrupt:
+    print 'Exiting'
+
+def main():
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], "hpl:v", ["help", "port=", "logfile="])
+    print(opts)
+  except getopt.GetoptError, err:
+    # print help information and exit:
+    print str(err) # will print something like "option -a not recognized"
+    usage()
+    sys.exit(2)
+
+  port = 4118 #default port
+  logfile = None
+    
+  for o, a in opts:
+    if o in ("-p", "--port"): 
+      port = a
+    elif o in ("-l", "--logfile"):
+      logfile = a
+    elif o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    else:
+        assert False, "unhandled option"
+            
+  start_server(port,logfile)
+
 if __name__ == "__main__":
-	daemon = MyDaemon('/var/lock/ldtpd.pid')
-	if len(sys.argv) == 2:
-		if 'start' == sys.argv[1]:
-			daemon.start()
-		elif 'stop' == sys.argv[1]:
-			daemon.stop()
-		elif 'restart' == sys.argv[1]:
-			daemon.restart()
-		else:
-			print "Unknown command"
-			sys.exit(2)
-		sys.exit(0)
-	else:
-		print "usage: %s start|stop|restart" % sys.argv[0]
-		sys.exit(2)
+    main()

@@ -80,7 +80,10 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 		    :close-facts "close_button"} )
 		 (define-elements (windows :error-dialog)
 		   {:ok-error "OK"
-		    :error-msg "lbl[A-Za-z]*"})
+		    ;; matching "lblUnabletoregisterthesystem.InvalidCredentialsPleasesee/var/log/rhsm/rhsm.logformoreinformation."
+		    ;; rhel6 code:  :error-msg "lbl[A-Za-z]*"
+		    ;; current impl may match "lbl1" (which is also in the error dialog)
+		    :error-msg "lbl*"})
 		 (define-elements (windows :contract-selection-dialog)
 	     {:contract-selection-table "tbl0"
 	      :cancel-contract-selection "Cancel"
