@@ -9,11 +9,14 @@
   (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
 
 
-(defn- fbshowing? [item]
+(defn fbshowing? 
+  ([item]
   ;; since all items exist at all times in firstboot,
   ;;  we must poll the states and see if 'SHOWING' is among them
   ;; "SHOWING" == 24  on RHEL5
-  (= 24 (some #{24} (seq (tasks/ui getallstates :firstboot-window item)))))
+  (= 24 (some #{24} (seq (tasks/ui getallstates item)))))
+  ([window_name component_name]
+  (= 24 (some #{24} (seq (tasks/ui getallstates window_name component_name))))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   start_firstboot [_]
@@ -22,13 +25,13 @@
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
   ;; RHEL5 has a different firstboot order than RHEL6 
-  (if (fbshowing? "Firewall")
+  (if (fbshowing? :firstboot-window "Firewall")
     (do
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
-      (tasks/sleep 30) ;; FIXME find a better way than a hard wait...
+      (tasks/sleep 3000) ;; FIXME find a better way than a hard wait...
       (verify (fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)

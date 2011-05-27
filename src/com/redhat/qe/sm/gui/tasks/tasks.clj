@@ -44,8 +44,8 @@
      (ui waittillwindowexist :main-window 30)))
      
 (defn start-firstboot []
-  (if (= "NO" (.getConfFileParameter @cli-tasks "/etc/sysconfig/firstboot" "RUN_FIRSTBOOT"))
-    (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) "RUN_FIRSTBOOT" "YES"))
+  ;(if (= "NO" (.getConfFileParameter @cli-tasks "/etc/sysconfig/firstboot" "RUN_FIRSTBOOT"))
+  ;  (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) "RUN_FIRSTBOOT" "YES"))
   (let [path (@config :firstboot-binary-path)]
     (ui launchapp path [] 10)
     (ui waittillwindowexist :firstboot-window 30)))
