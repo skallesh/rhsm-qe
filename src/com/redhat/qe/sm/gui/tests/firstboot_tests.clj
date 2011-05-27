@@ -10,10 +10,10 @@
 
 
 (defn- fbshowing? [item]
-  ;; since all items 'exist' at all times in firstboot,
+  ;; since all items exist at all times in firstboot,
   ;;  we must poll the states and see if 'SHOWING' is among them
-  ;; "SHOWING" == 24
-  (= 24 (some #{24} (seq (tasks/ui guiexist :firstboot-window item)))))
+  ;; "SHOWING" == 24  on RHEL5
+  (= 24 (some #{24} (seq (tasks/ui getallstates :firstboot-window item)))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   start_firstboot [_]
