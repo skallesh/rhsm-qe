@@ -126,7 +126,7 @@
 
 (defn search ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
   (ui selecttab :all-available-subscriptions)
-  (ui check :more-search-options)
+  (ui click :more-search-options)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
     (ui (setchecked match-system?) :match-system)
     (ui (setchecked do-not-overlap?) :do-not-overlap)
