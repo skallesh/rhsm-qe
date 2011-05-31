@@ -105,9 +105,10 @@
                       (tasks/firstboot-register username password)))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
-     (verify (and (= thrown-error expected-error) 
+     (verify (= thrown-error expected-error)) 
                   ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
-                  (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration"))))))
+     (verify (or (fbshowing? :firstboot-user)
+                 (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [["sdf" "sdf" :invalid-credentials]
