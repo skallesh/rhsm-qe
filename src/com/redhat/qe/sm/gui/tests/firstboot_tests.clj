@@ -8,16 +8,6 @@
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
 
-
-(defn fbshowing? 
-  ([item]
-  ;; since all items exist at all times in firstboot,
-  ;;  we must poll the states and see if 'SHOWING' is among them
-  ;; "SHOWING" == 24  on RHEL5
-  (= 24 (some #{24} (seq (tasks/ui getallstates item)))))
-  ([window_name component_name]
-  (= 24 (some #{24} (seq (tasks/ui getallstates window_name component_name))))))
-
 (defn ^{BeforeClass {:groups ["setup"]}}
   start_firstboot [_]
   (tasks/start-firstboot)
@@ -25,14 +15,14 @@
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
   ;; RHEL5 has a different firstboot order than RHEL6 
-  (if (fbshowing? :firstboot-window "Firewall")
+  (if (tasks/fbshowing? :firstboot-window "Firewall")
     (do
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/ui click :firstboot-forward)
       (tasks/sleep 3000) ;; FIXME find a better way than a hard wait...
-      (verify (fbshowing? :register-now))))
+      (verify (tasks/fbshowing? :register-now))))
   (tasks/ui click :register-now)
   (tasks/ui click :firstboot-forward)
   (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Server"))))
@@ -106,9 +96,9 @@
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
      (verify (= thrown-error expected-error)) 
-                  ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
-     (verify (or (fbshowing? :firstboot-user)
-                 (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
+     ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
+     (verify  (or (tasks/fbshowing? :firstboot-user)
+              (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [["sdf" "sdf" :invalid-credentials]

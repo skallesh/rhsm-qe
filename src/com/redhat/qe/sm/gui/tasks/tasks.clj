@@ -105,9 +105,19 @@
     (ui click :register)
     (checkforerror)))
 
+(defn fbshowing? 
+  ([item]
+  ;; since all items exist at all times in firstboot,
+  ;;  we must poll the states and see if 'SHOWING' is among them
+  ;; "SHOWING" == 24  on RHEL5
+  (= 24 (some #{24} (seq (ui getallstates item)))))
+  ([window_name component_name]
+  (= 24 (some #{24} (seq (ui getallstates window_name component_name))))))
+
 (defn firstboot-register [username password & {:keys [system-name-input, autosubscribe]
                           :or {system-name-input nil, autosubscribe false}}]
-  (assert  (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration")))
+  (assert  (or (fbshowing? :firstboot-user)
+               (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration"))))
   (ui settextvalue :firstboot-user username)
   (ui settextvalue :firstboot-pass password)
   (when system-name-input
