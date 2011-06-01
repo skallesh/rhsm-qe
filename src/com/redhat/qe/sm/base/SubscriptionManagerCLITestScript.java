@@ -77,10 +77,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// will we be connecting to the candlepin server?
 		if (!serverHostname.equals("") && isServerOnPremises) {
 			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises,serverBranch);
 		} else {
 			log.info("Assuming the server is already setup and running.");
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises,serverBranch);
 		}
 		
 		// will we be testing multiple clients?
@@ -98,7 +98,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//       I suggest manually setting this on hosted and asking calfanso to restart
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
-			servertasks.deploy(serverHostname, serverImportDir,serverBranch);
+			servertasks.deploy(serverHostname, serverImportDir);
 
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql

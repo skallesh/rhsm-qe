@@ -331,15 +331,23 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"PoolCreated_Test"}, dependsOnGroups={"ProductCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void PoolCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void PoolCreated_Test() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 
-        // do something that will fire a create product event
-		testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testProductId+" Test Product", testOwner.getString("id"), "99");
+        // do something that will fire a create pool event
+		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
+			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
+			testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testProductId+" Test Product", testOwner.getString("id"), "99");
+		} else {
+			// candlepin branch 0.3+
+			testPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testProduct.getString("id"));
+			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
+			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		}
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
 		// assert the feed...
@@ -356,7 +364,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"PoolDeleted_Test"}, dependsOnGroups={"PoolCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void PoolDeleted_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void PoolDeleted_Test() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (serverAdminUsername.equals("")||serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
@@ -364,7 +372,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword);
 
         // do something that will fire a delete pool event
-		servertasks.deletePoolUsingCPC(testPool.getString("id"));
+		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
+			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
+			servertasks.deletePoolUsingCPC(testPool.getString("id"));
+		} else {
+			// candlepin branch 0.3+
+			servertasks.deleteSubscriptionUsingCPC(testPool.getString("id"));
+			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
+			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		}
 		String[] newEventTitles = new String[]{"POOL DELETED"};
 		
 		// assert the feed...

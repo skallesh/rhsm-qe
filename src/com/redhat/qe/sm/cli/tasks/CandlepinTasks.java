@@ -77,6 +77,7 @@ public class CandlepinTasks {
 	public static String generatedProductsDir	= "/proxy/generated_certs";
 	public static HttpClient client;
 	public boolean isOnPremises = false;
+	public String branch = "";
 
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
@@ -95,19 +96,22 @@ public class CandlepinTasks {
 		// TODO Auto-generated constructor stub
 	}
 	
-	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, boolean isOnPremises) {
+	/**
+	 * @param sshCommandRunner
+	 * @param serverInstallDir
+	 * @param isOnPremises
+	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
+	 */
+	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, boolean isOnPremises, String branch) {
 		super();
 		this.sshCommandRunner = sshCommandRunner;
 		this.serverInstallDir = serverInstallDir;
 		this.isOnPremises = isOnPremises;
+		this.branch = branch;
 	}
 	
 	
-	/**
-	 * @param serverImportDir
-	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
-	 */
-	public void deploy(String hostname, String serverImportDir, String branch) {
+	public void deploy(String hostname, String serverImportDir) {
 
 		if (branch.equals("")) {
 			log.info("Skipping deploy of candlepin server since no branch was specified.");
@@ -120,7 +124,7 @@ public class CandlepinTasks {
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
 		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.3 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.4 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 			branch = sshCommandRunner.getStdout().trim();
 		}
 		if (branch.startsWith("candlepin-")) {
@@ -387,10 +391,12 @@ schema generation failed
 	
 	static public void importConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
-		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
+		//log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
+		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");
 		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 
-		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
+		//PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");	// candlepin branch 0.2-
+		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");		// candlepin branch 0.3+ (/import changed to /imports)
 		File f = new File(fromExportZipFile);
 		Part[] parts = {
 			      new FilePart(f.getName(), f)
@@ -688,6 +694,16 @@ schema generation failed
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 
+	public JSONObject createSubscriptionUsingCPC(String ownerKey, String productId) throws JSONException {
+		log.info("Using the ruby client to create_subscription ownerKey='"+ownerKey+"' productId='"+productId+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc create_subscription \"%s\" \"%s\"", serverInstallDir+rubyClientDir, ownerKey, productId);
+		SSHCommandResult sshCommandResult = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+		
+		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
+	}
+	
 	public JSONObject createPoolUsingCPC(String productId, String productName, String ownerId, String quantity) throws JSONException {
 		log.info("Using the ruby client to create_pool productId='"+productId+"' productName='"+productName+"' ownerId='"+ownerId+"' quantity='"+quantity+"'...");
 
@@ -703,6 +719,14 @@ schema generation failed
 
 		// call the ruby client
 		String command = String.format("cd %s; ./cpc delete_pool \"%s\"", serverInstallDir+rubyClientDir, id);
+		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
+	}
+	
+	public SSHCommandResult deleteSubscriptionUsingCPC(String id) {
+		log.info("Using the ruby client to delete_subscription id='"+id+"'...");
+
+		// call the ruby client
+		String command = String.format("cd %s; ./cpc delete_subscription \"%s\"", serverInstallDir+rubyClientDir, id);
 		return RemoteFileTasks.runCommandAndAssert(sshCommandRunner, command, 0);
 	}
 	
