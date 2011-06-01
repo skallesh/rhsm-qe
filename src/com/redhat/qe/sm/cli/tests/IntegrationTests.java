@@ -39,6 +39,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * https://docspace.corp.redhat.com/docs/DOC-60198
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
  * https://docspace.corp.redhat.com/docs/DOC-63084
+ * https://docspace.corp.redhat.com/docs/DOC-67214
  */
 @Test(groups={"IntegrationTests"})
 public class IntegrationTests extends SubscriptionManagerCLITestScript{
