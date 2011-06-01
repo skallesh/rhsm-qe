@@ -6,6 +6,12 @@ import getopt
 import logging
 import re
 import inspect
+import wnck
+import gobject
+import gtk
+import time
+import fnmatch
+
 
 logger = logging.getLogger("xmlrpcserver.ldtp")
 logger.setLevel(logging.INFO)
@@ -61,12 +67,16 @@ ldtp2commands = ['activatetext', 'activatewindow', 'appendtext', 'check', 'check
 
 _ldtp_methods = filter(lambda fn: inspect.isfunction(getattr(ldtp,fn)),  dir(ldtp))
 _supported_methods = filter(lambda x: x in ldtp2commands, _ldtp_methods)
+_additional_methods = ['closewindow']
+for item in _additional_methods: _supported_methods.append(item)
+_supported_methods.sort()
+
 
 #create a class with all ldtp methods as attributes
 class AllMethods:
-  def _translate_state(self,value):
-    
-    #states from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
+  def _translate_state(self,value):        
+    #states enum from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
+    #hint: state = $line_number - 80
     states = ['INVALID',
               'ACTIVE',
               'ARMED',
@@ -112,13 +122,46 @@ class AllMethods:
       return states.index(value)
     else:
       return value
+
+  def _window_search(self,match,term):
+    if re.search(fnmatch.translate(term),
+                   match,
+                   re.U | re.M | re.L) \
+          or re.search(fnmatch.translate(re.sub("(^frm|^dlg)", "", term)),
+                       re.sub(" *(\t*)|(\n*)", "", match),
+                       re.U | re.M | re.L):
+      return True
+    else:
+      return False
+
+  def _closewindow(self,window_name): 
+    screen = wnck.screen_get_default()
+    while gtk.events_pending():
+      gtk.main_iteration()
       
+    windows = screen.get_windows()
+    success = 0
+    for w in windows:
+      current_window = w.get_name()
+      if self._window_search(current_window,window_name):
+        w.close(int(time.time()))
+        success = 1
+        break
+        
+    gobject.idle_add(gtk.main_quit)
+    gtk.main()
+    return success
+        
   def _dispatch(self,method,params):
     if method in _supported_methods:
       if method == "hasstate":
         paramslist = list(params)
         paramslist[2]=self._translate_state(paramslist[2])
         params = tuple(paramslist)
+      elif method == "closewindow":
+        paramslist = list(params)
+        return self._closewindow(paramslist[0])
+        
       function = getattr(ldtp,method)
       retval = function(*params)
       if retval == None:
@@ -129,7 +172,8 @@ class AllMethods:
   pass
 
 for name in _supported_methods:
-  setattr(AllMethods, name, getattr(ldtp, name))
+  if not item in _additional_methods:
+    setattr(AllMethods, name, getattr(ldtp, name))
 
 def usage():
   print "Usage:"

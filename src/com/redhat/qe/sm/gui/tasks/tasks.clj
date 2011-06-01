@@ -44,6 +44,8 @@
      (ui waittillwindowexist :main-window 30)))
      
 (defn start-firstboot []
+  ;(if (= "NO" (.getConfFileParameter @cli-tasks "/etc/sysconfig/firstboot" "RUN_FIRSTBOOT"))
+  ;  (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) "RUN_FIRSTBOOT" "YES"))
   (let [path (@config :firstboot-binary-path)]
     (ui launchapp path [] 10)
     (ui waittillwindowexist :firstboot-window 30)))
@@ -103,9 +105,19 @@
     (ui click :register)
     (checkforerror)))
 
+(defn fbshowing? 
+  ([item]
+  ;; since all items exist at all times in firstboot,
+  ;;  we must poll the states and see if 'SHOWING' is among them
+  ;; "SHOWING" == 24  on RHEL5
+  (= 24 (some #{24} (seq (ui getallstates item)))))
+  ([window_name component_name]
+  (= 24 (some #{24} (seq (ui getallstates window_name component_name))))))
+
 (defn firstboot-register [username password & {:keys [system-name-input, autosubscribe]
                           :or {system-name-input nil, autosubscribe false}}]
-  (assert  (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration")))
+  (assert  (or (fbshowing? :firstboot-user)
+               (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration"))))
   (ui settextvalue :firstboot-user username)
   (ui settextvalue :firstboot-pass password)
   (when system-name-input
@@ -124,7 +136,7 @@
 
 (defn search ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
   (ui selecttab :all-available-subscriptions)
-  (ui check :more-search-options)
+  (ui click :more-search-options)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
     (ui (setchecked match-system?) :match-system)
     (ui (setchecked do-not-overlap?) :do-not-overlap)
