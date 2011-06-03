@@ -72,8 +72,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String disabledUsername		= getProperty("sm.client.username.disabled","");
 	public String disabledPassword		= getProperty("sm.client.password.disabled","");
 	
-	public String regtoken				= getProperty("sm.client.regtoken","");
-	public String enableRepoForDeps		= getProperty("sm.client.enableRepoForDeps","");
+	public String regtoken					= getProperty("sm.client.regtoken","");
+	public String yumInstallOptions		= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumLocalinstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
 	
 	public String sshUser				= getProperty("sm.ssh.user","root");
 	public String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");

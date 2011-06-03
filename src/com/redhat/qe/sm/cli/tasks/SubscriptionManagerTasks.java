@@ -162,7 +162,7 @@ public class SubscriptionManagerTasks {
 		}
 	}
 
-	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String enablerepofordeps) {
+	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String installOptions) {
 
 		// verify the subscription-manager client is a rhel 6 machine
 //		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
@@ -195,10 +195,10 @@ public class SubscriptionManagerTasks {
 			rpmUrl = rpmUrl.trim();
 			log.info("Installing RPM from "+rpmUrl+"...");
 			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
+			if (!sm_rpm.endsWith(".rpm")) sm_rpm+=".rpm";
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+sm_rpm+". saved");
 			// using yum localinstall should enable testing on RHTS boxes right off the bat.
-			String enablerepo_option = enablerepofordeps.trim().equals("")? "":"--enablerepo="+enablerepofordeps;
-			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" --nogpgcheck --disablerepo=* "+enablerepo_option).getExitCode(),Integer.valueOf(0),
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" "+installOptions).getExitCode(),Integer.valueOf(0),
 					"Yum installed local rpm: "+sm_rpm);
 		}
 		

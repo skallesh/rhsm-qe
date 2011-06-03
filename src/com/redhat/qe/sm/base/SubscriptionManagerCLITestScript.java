@@ -134,7 +134,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt==null) continue;
 			
-			smt.installSubscriptionManagerRPMs(rpmUrls,enableRepoForDeps);
+			smt.installSubscriptionManagerRPMs(rpmUrls,yumInstallOptions);
 			
 			// rhsm.conf [server] configurations
 			if (!serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", serverHostname);							else serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
