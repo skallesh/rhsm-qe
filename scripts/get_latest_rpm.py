@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # mod_python wrapper around latest_rpm.py
+# place in same directory as latest_rpm.py
 
 from latest_rpm import *
 from mod_python import apache, util
