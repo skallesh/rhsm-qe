@@ -112,7 +112,10 @@
   ;; "SHOWING" == 24  on RHEL5
   (= 24 (some #{24} (seq (ui getallstates item)))))
   ([window_name component_name]
-  (= 24 (some #{24} (seq (ui getallstates window_name component_name))))))
+  (if (re-find (re-pattern component_name)
+               (apply str (seq (ui getobjectlist window_name))))
+    (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
+    false)))
 
 (defn firstboot-register [username password & {:keys [system-name-input, autosubscribe]
                           :or {system-name-input nil, autosubscribe false}}]
