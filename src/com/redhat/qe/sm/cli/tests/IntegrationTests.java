@@ -28,6 +28,7 @@ import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -40,6 +41,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
  * https://docspace.corp.redhat.com/docs/DOC-63084
  * https://docspace.corp.redhat.com/docs/DOC-67214
+ * https://docspace.corp.redhat.com/docs/DOC-68623
  */
 @Test(groups={"IntegrationTests"})
 public class IntegrationTests extends SubscriptionManagerCLITestScript{
@@ -75,7 +77,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
 			clienttasks.register(username, password, null, null, null, null, true, null, null, null);
 			currentRegisteredUsername = username;
-			currentSubscribedProductId = null;
+			currentlySubscribedProductIds.clear();
 		} else {
 			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
 		}
@@ -86,9 +88,9 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		//Assert.assertEquals(packageCount,Integer.valueOf(0),"Before subscribing to product subscription '"+productId+"', the number of available packages '"+packageCount+"' from the default "+abled+" repo '"+contentNamespace.label+"' is zero.");
 
 		// subscribe
-		if (!productId.equals(currentSubscribedProductId)) { // try to save some time by not re-subscribing
+		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
 			clienttasks.subscribeToProductId(productId);
-			currentSubscribedProductId = productId;
+			currentlySubscribedProductIds.add(productId);
 		} else {
 			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
 		}
@@ -123,32 +125,40 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, productId, contentNamespace);
 	}
 	
+	
 	@Test(	description="ensure an available package can be downloaded/installed/removed from the enabled repo ",
 			groups={},
 			dependsOnMethods={"Subscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
-			dataProvider="getContentNamespaceData",
+			dataProvider="getContentNamespaceWithProductNamespacesData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
+	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace, List<ProductNamespace> productNamespaces) {
 
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
 			clienttasks.register(username, password, null, null, null, null, true, null, null, null);
 			currentRegisteredUsername = username;
-			currentSubscribedProductId = null;
+			currentlySubscribedProductIds.clear();
 		} else {
 			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
 		}
 		
 		// subscribe
-		if (!productId.equals(currentSubscribedProductId)) { // try to save some time by not re-subscribing
+		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
 			clienttasks.subscribeToProductId(productId);
-			currentSubscribedProductId = productId;
+			currentlySubscribedProductIds.add(productId);
 		} else {
 			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
 		}
+		
+		
+		// make sure that the products required for this repo are installed
+		if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+			throw new SkipException("This contentNamespace has requiredTags '"+contentNamespace.requiredTags+"' that were not found amongst all of the currently installed products.  Therefore we cannot install and remove any package from repo '"+contentNamespace.label+"'.");
+		}
+		
 		
 		// make sure there is a positive package count provided by this repo
 		Integer packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label+" --enablerepo="+contentNamespace.label);
@@ -165,12 +175,48 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		
 		// install the package and assert that it is successfully installed
 		clienttasks.yumInstallPackageFromRepo(pkg, contentNamespace.label, null); //pkgInstalled = true;
+
+
+		// 06/09/2011 TODO Would also like to add an assert that the productid.pem file is also installed.
+		/* To do this, we need to also include the List of ProductNamepaces from the entitlement cert as another argument to this test,
+		 * Then after the yum install, we need to make sure that at least one of the hash values in the list of product ids is
+		 * included in the installed products.  If the list of ProductNamespaces from the entitlement cert is one, then this is
+		 * a definitive test.  If the list is greater than one, then we don't know for sure if the product hash(s) that is installed is actually the 
+		 * right one.  But we do know that if none of the product hashes are installed, then the repo is missing the product ids and this test should fail.
+		 * Also note that we should probably make this assertion after removing the package so that we don't over install all the packages in the repo.
+		 */
+		// 06/10/2011 Mostly Done in the following blocks of code; jsefler
 		
+		// determine if at least one of the productids from the productNamespaces was found installed on the client after running yumInstallPackageFromRepo(...)
+		// ideally there is only one ProductNamespace in productNamespaces in which case we can definitively know that the correct product cert is installed
+		// when there are more than one ProductNamespace in productNamespaces, then we can't say for sure if the product cert installed actually corresponds to the repo under test
+		// however if none of the productNamespaces ends up installed, then the yum product-id plugin is not installing the expected product cert
+		int numberOfProductNamespacesInstalled = 0;
+		ProductCert productCertInstalled=null;
+		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+			for (ProductNamespace productNamespace : productNamespaces) {
+				if (productNamespace.hash.equals(productCert.hash)) {
+					numberOfProductNamespacesInstalled++;
+					productCertInstalled=productCert;
+				}
+			}
+		}
+
 		//FIXME check if the package was obsolete and its replacement was installed instead
 		//if (!obsoletedByPkg.isEmpty()) pkg = obsoletedByPkg;
 		
 		// now remove the package
 		clienttasks.yumRemovePackage(pkg);
+		
+		// assert that a productid.pem is/was installed that covers the product from which this package was installed
+		// Note: I am making this assertion after the yumRemovePackage call to avoid leaving packages installed
+		if (numberOfProductNamespacesInstalled>1) {
+			log.info("Found product certs installed that match the ProductNamespaces from the entitlement cert that provided the right to install package '"+pkg+"' from repo '"+contentNamespace.label+"'.");
+		} else if (numberOfProductNamespacesInstalled==1){
+			Assert.assertTrue(true,"An installed product cert (productName='"+productCertInstalled.productName+"' hash='"+productCertInstalled.hash+"') corresponding to installed package '"+pkg+"' from repo '"+contentNamespace.label+"' was found after its install.");
+		} else {
+			Assert.fail("After installing package '"+pkg+"' from repo '"+contentNamespace.label+"', there was no productid cert installed.  Expected one of the following productid certs to get installed via the yum product-id plugin: "+productNamespaces);		
+		}
 	}
 	
 	
@@ -217,7 +263,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	List<List<Object>> entitlementCertData = new ArrayList<List<Object>>();
 	List<ProductCert> currentProductCerts = new ArrayList<ProductCert>();
 	protected String currentRegisteredUsername = null;
-	protected String currentSubscribedProductId = null;
+	protected List<String> currentlySubscribedProductIds = new ArrayList<String>();;
 	
 	// Data Providers ***********************************************************************
 	
@@ -260,17 +306,21 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	@DataProvider(name="getDefaultEnabledContentNamespaceData")
 	public Object[][] getDefaultEnabledContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("1"));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("1", false));
 	}
 	@DataProvider(name="getDefaultDisabledContentNamespaceData")
 	public Object[][] getDefaultDisabledContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("0"));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("0", false));
 	}
 	@DataProvider(name="getContentNamespaceData")
 	public Object[][] getContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(null));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(null, false));
 	}
-	protected List<List<Object>> getContentNamespaceDataAsListOfLists(String enabledValue) throws JSONException {
+	@DataProvider(name="getContentNamespaceWithProductNamespacesData")
+	public Object[][] getContentNamespaceWithProductNamespacesDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(null, true));
+	}
+	protected List<List<Object>> getContentNamespaceDataAsListOfLists(String enabledValue, boolean withProductNamespaces) throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		for (List<Object> row : entitlementCertData) {
@@ -282,14 +332,14 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.enabled.equals(enabledValue) || enabledValue==null) {	// enabled="1", not enabled="0", either=null
 					
-					// String username, String password, String productId, ContentNamespace contentNamespace
-					ll.add(Arrays.asList(new Object[]{username, password, productId, contentNamespace}));
+					// String username, String password, String productId, ContentNamespace contentNamespace, List<ProductNamespaces> productNamespaces
+					if (withProductNamespaces)	ll.add(Arrays.asList(new Object[]{username, password, productId, contentNamespace, entitlementCert.productNamespaces}));
+					else 						ll.add(Arrays.asList(new Object[]{username, password, productId, contentNamespace}));
 				}
 			}
 		}
 		return ll;
 	}
-
 
 
 
