@@ -57,7 +57,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions",
-			groups={},
+			groups={/*"blockedByBugzilla-712502"*/},
 			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)

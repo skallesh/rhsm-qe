@@ -136,8 +136,8 @@ public class CandlepinTasks {
 		if (!serverImportDir.equals("")) {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		}
-		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once
+		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS	
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "installed", null);	// probably only needs to be run once
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		*/
