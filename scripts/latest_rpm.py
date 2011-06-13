@@ -39,6 +39,15 @@ def get_links_matching_regex(regex, page):
             matches.append(link)
     return matches
 
+def rchop(thestring, ending):
+  if thestring.endswith(ending):
+    newstring = thestring[:-len(ending)]
+    if newstring.endswith(ending):
+      rchop(newstring, ending)
+    else:
+      return newstring
+  return thestring
+
 def sort_by_version(links):
     versions = []
     for item in links: versions.append(str(item['href'].replace('/','')))
@@ -73,7 +82,7 @@ def sort_by_version(links):
         n += 1
    
     for item in cur_list:
-        cur_list[cur_list.index(item)] = str(item.rstrip('.0') + '/')
+        cur_list[cur_list.index(item)] = str(rchop(item,".0") + '/')
 
     return cur_list
  

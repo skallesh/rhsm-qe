@@ -151,6 +151,14 @@ class AllMethods:
     gobject.idle_add(gtk.main_quit)
     gtk.main()
     return success
+
+  def _getobjectproperty(self,window,object):
+    getobjectlist = getattr(ldtp,"getobjectlist")
+    objects = getobjectlist(window)
+    for item in objects:
+      if re.search(object,str(item)):
+        return str(item)
+    return object
         
   def _dispatch(self,method,params):
     if method in _supported_methods:
@@ -161,7 +169,11 @@ class AllMethods:
       elif method == "closewindow":
         paramslist = list(params)
         return self._closewindow(paramslist[0])
-        
+      elif method = "getobjectproperty":
+        paramslist = list(params)
+        paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
+        params = tuple(paramslist)        
+
       function = getattr(ldtp,method)
       retval = function(*params)
       if retval == None:
