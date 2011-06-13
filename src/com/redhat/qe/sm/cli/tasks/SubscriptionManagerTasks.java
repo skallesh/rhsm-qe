@@ -125,7 +125,7 @@ public class SubscriptionManagerTasks {
 			String repoCaCert = Arrays.asList(repoCaCertUrl.split("/")).get(repoCaCertUrl.split("/").length-1);
 			log.info("Copying repo CA cert '"+repoCaCert+"' from "+repoCaCertUrl+"...");
 			//File repoCaCertFile = new File(serverCaCertDir.replaceFirst("/$","/")+Arrays.asList(repoCaCertUrl.split("/|=")).get(repoCaCertUrl.split("/|=").length-1));
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"cd "+caCertDir+"; wget --no-clobber --no-check-certificate \""+repoCaCertUrl+"\"",Integer.valueOf(0),null,"“"+repoCaCert+"” saved|File “"+repoCaCert+"” already there");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"cd "+caCertDir+"; wget --no-clobber --no-check-certificate \""+repoCaCertUrl+"\"",Integer.valueOf(0),null,"."+repoCaCert+". saved|File ."+repoCaCert+". already there");
 		}
 	}
 	
@@ -2221,6 +2221,28 @@ repolist: 3,394
 		ArrayList<String> repos = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+				
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
+		if (this.redhatRelease.contains("release 5")) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="697087"; 
+			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				
+				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
+				List<YumRepo> yumRepoList =  YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
+				for (YumRepo yumRepo : yumRepoList) {
+					if		(options.equals("all"))													repos.add(yumRepo.id);
+					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
+					else if (options.equals("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.id);
+					else if (options.equals("")			&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
+				}
+				sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+				return repos;
+			}
+		}
+		// END OF WORKAROUND
+		
 		// WARNING: DO NOT MAKE ANYMORE CALLS TO sshCommandRunner.runCommand* IN THE REST OF THIS METHOD.
 		// getYumRepolistPackageCount() ASSUMES sshCommandRunner.getStdout() CAME FROM THE CALL TO yum repolist
 
@@ -2239,26 +2261,6 @@ repolist: 3,394
 		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms               Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
 		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
 		//	repolist: 3,394
-
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
-		if (this.redhatRelease.contains("release 5")) {
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="697087"; 
-			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				
-				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
-				List<YumRepo> yumRepoList =  YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
-				for (YumRepo yumRepo : yumRepoList) {
-					if		(options.equals("all"))													repos.add(yumRepo.id);
-					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
-					else if (options.equals("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.id);
-					else if (options.equals("")			&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
-				}
-				return repos;
-			}
-		}
-		// END OF WORKAROUND
 		
 		
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
@@ -2458,7 +2460,9 @@ repolist: 3,394
 		
 		for (String pkg : getYumListAvailable("--disablerepo=* --enablerepo="+repo)) {
 			if (!getYumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
-				return pkg;
+				if (yumCanInstallPackageFromRepo(pkg,repo,null)) {
+					return pkg;
+				}
 			}
 		}
 		return null;
@@ -2490,11 +2494,27 @@ repolist: 3,394
 		return null;
 	}
 	
+	/**
+	 * @param pkg
+	 * @param repoLabel
+	 * @param installOptions
+	 * @return true - when pkg can be cleanly installed from repolLabel with installOptions. <br>
+	 *         false - when the install will not successfully "Complete!" 
+	 */
+	public boolean yumCanInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
+		
+		// attempt to install the pkg from repo with the installOptions, but say N at the prompt: Is this ok [y/N]: N
+		if (installOptions==null) installOptions=""; installOptions = installOptions.replaceFirst("-y", "");
+		String command = "echo N | yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 1);
+		return result.getStdout().contains("Complete!");
+	}
+	
 	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
 		
 		// install the package with repoLabel enabled
-		if (installOptions==null) installOptions="";
-		String command = "yum -y install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		if (installOptions==null) installOptions=""; installOptions += " -y";
+		String command = "yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		
 //		201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
@@ -2559,19 +2579,41 @@ repolist: 3,394
 		// FIXME, If the package is obsoleted, then the obsoletedByPkg may not come from the same repo and the following assert will fail
 		
 		// assert the installed package came from repoLabel
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg+".* .* @"+repoLabel+"$",null);
+		//	spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
+		regex=pkg.split("\\.")[0]+"\\n? +(\\w*) +([\\w\\.-]*) +"+repoLabel;
+		pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		matcher = pattern.matcher(sshCommandRunner.getStdout());
+		Assert.assertTrue(matcher.find(), "Package '"+pkg+"' appears to have been installed from repository '"+repoLabel+"'.");
+		String arch = matcher.group(1);
+		String version = matcher.group(2);
+		
 
-//		201104051839:15.836 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum list installed spice-server --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
-//		201104051839:16.447 - FINE: Stdout: 
-//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
-//		No plugin match for: rhnplugin
-//		Updating Red Hat repositories.
-//		Installed Packages
-//		spice-server.x86_64             0.7.3-2.el6             @rhel-6-server-beta-rpms
-//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-//		201104051839:16.453 - FINE: Stderr: INFO:rhsm-app.repolib:repos updated: 63
-//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-//		201104051839:16.455 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		// finally assert that the package is actually installed
+		//
+		// RHEL 5...
+		//	201106061840:40.270 - FINE: ssh root@jsefler-stage-5server.usersys.redhat.com yum list installed GConf2-debuginfo.x86_64 --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201106061840:41.529 - FINE: Stdout: 
+		//	Loaded plugins: product-id, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating Red Hat repositories.
+		//	Installed Packages
+		//	GConf2-debuginfo.x86_64                  2.14.0-9.el5                  installed
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201106061840:41.530 - FINE: Stderr:  (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201106061840:41.530 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//
+		// RHEL 6...
+		//	201104051839:15.836 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum list installed spice-server --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201104051839:16.447 - FINE: Stdout: 
+		//	Loaded plugins: product-id, refresh-packagekit, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating Red Hat repositories.
+		//	Installed Packages
+		//	spice-server.x86_64             0.7.3-2.el6             @rhel-6-server-beta-rpms
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201104051839:16.453 - FINE: Stderr: INFO:rhsm-app.repolib:repos updated: 63	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201104051839:16.455 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"yum list installed "+pkg+" --disableplugin=rhnplugin", 0, "^"+pkg.split("\\.")[0]+"."+arch+" +"+version+" +(installed|@"+repoLabel+")$",null);
 		
 		return result;
 	}
