@@ -26,10 +26,11 @@ public class ProductCert extends AbstractCommandLineData {
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-	public String productName;	// comes from the ProductNamespace
-	
+		
 	public List<ProductNamespace> productNamespaces;
 
+	public String productName;	// comes from the ProductNamespace
+	public String hash;			// comes from the ProductNamespace
 
 
 	public ProductCert(BigInteger serialNumber, Map<String, String> certData){
@@ -38,6 +39,7 @@ public class ProductCert extends AbstractCommandLineData {
 		productNamespaces = ProductNamespace.parse(this.rawCertificate);
 		// TODO we should assert that there was only one ProductNamespace parsed!
 		productName = productNamespaces.get(0).name;	// extract the product name
+		hash = productNamespaces.get(0).hash;			// extract the hash
 	}
 
 	
@@ -47,6 +49,7 @@ public class ProductCert extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
+		if (hash != null)				string += String.format(" %s='%s'", "hash",hash);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (id != null)					string += String.format(" %s='%s'", "id",id);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
