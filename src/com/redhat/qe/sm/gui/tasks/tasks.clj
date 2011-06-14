@@ -107,13 +107,13 @@
 
 (defn fbshowing? 
   ([item]
-  ;; since all items exist at all times in firstboot,
-  ;;  we must poll the states and see if 'SHOWING' is among them
-  ;; "SHOWING" == 24  on RHEL5
-  (= 24 (some #{24} (seq (ui getallstates item)))))
+     ;; since all items exist at all times in firstboot,
+     ;;  we must poll the states and see if 'SHOWING' is among them
+     ;; "SHOWING" == 24  on RHEL5
+     (= 24 (some #{24} (seq (ui getallstates item)))))
   ([window_name component_name]
-  (if (re-find (re-pattern component_name)
-               (apply str (seq (ui getobjectlist window_name))))
+     (if (some #(re-find (re-pattern (str ".*" component_name ".*")) %)
+               (seq (ui getobjectlist window_name)))
     (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
     false)))
 
@@ -190,67 +190,67 @@
 
 (defn enableproxy-auth 
   ([proxy port user pass firstboot]
-  (assert (is-boolean? firstboot))
-  (if firstboot 
-    (do (ui click :firstboot-proxy-config)
-        (ui waittillwindowexist :firstboot-proxy-dialog 60)
-        (ui check :firstboot-proxy-checkbox)
-        (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-        (ui check :firstboot-auth-checkbox)
-        (ui settextvalue :firstboot-proxy-user user)
-        (ui settextvalue :firstboot-proxy-pass pass)
-        (ui click :firstboot-proxy-close)
-        (checkforerror))
-    (do (ui selecttab :my-installed-software)
-        (ui click :proxy-configuration)
-        (ui waittillwindowexist :proxy-config-dialog 60)
-        (ui check :proxy-checkbox)
-        (ui settextvalue :proxy-location (str proxy ":" port))
-        (ui check :authentication-checkbox)
-        (ui settextvalue :username-text user)
-        (ui settextvalue :password-text pass)
-        (ui click :close-proxy)
-        (checkforerror))))
+     (assert (is-boolean? firstboot))
+     (if firstboot 
+       (do (ui click :firstboot-proxy-config)
+           (ui waittillwindowexist :firstboot-proxy-dialog 60)
+           (ui check :firstboot-proxy-checkbox)
+           (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
+           (ui check :firstboot-auth-checkbox)
+           (ui settextvalue :firstboot-proxy-user user)
+           (ui settextvalue :firstboot-proxy-pass pass)
+           (ui click :firstboot-proxy-close)
+           (checkforerror))
+       (do (ui selecttab :my-installed-software)
+           (ui click :proxy-configuration)
+           (ui waittillwindowexist :proxy-config-dialog 60)
+           (ui check :proxy-checkbox)
+           (ui settextvalue :proxy-location (str proxy ":" port))
+           (ui check :authentication-checkbox)
+           (ui settextvalue :username-text user)
+           (ui settextvalue :password-text pass)
+           (ui click :close-proxy)
+           (checkforerror))))
   ([proxy port user pass] (enableproxy-auth proxy port user pass false)))
 
 (defn enableproxy-noauth 
   ([proxy port firstboot]
-  (assert (is-boolean? firstboot))
-    (if firstboot
-      (do (ui click :firstboot-proxy-config)
-          (ui waittillwindowexist :firstboot-proxy-dialog 60)
-          (ui check :firstboot-proxy-checkbox)
-          (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-          (ui uncheck :firstboot-auth-checkbox)
-          (ui click :firstboot-proxy-close)
-          (checkforerror))
-      (do (ui selecttab :my-installed-software)
-          (ui click :proxy-configuration)
-          (ui waittillwindowexist :proxy-config-dialog 60)
-          (ui check :proxy-checkbox)
-          (ui settextvalue :proxy-location (str proxy ":" port))
-          (ui uncheck :authentication-checkbox)
-          (ui click :close-proxy)
-          (checkforerror))))
+     (assert (is-boolean? firstboot))
+     (if firstboot
+       (do (ui click :firstboot-proxy-config)
+           (ui waittillwindowexist :firstboot-proxy-dialog 60)
+           (ui check :firstboot-proxy-checkbox)
+           (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
+           (ui uncheck :firstboot-auth-checkbox)
+           (ui click :firstboot-proxy-close)
+           (checkforerror))
+       (do (ui selecttab :my-installed-software)
+           (ui click :proxy-configuration)
+           (ui waittillwindowexist :proxy-config-dialog 60)
+           (ui check :proxy-checkbox)
+           (ui settextvalue :proxy-location (str proxy ":" port))
+           (ui uncheck :authentication-checkbox)
+           (ui click :close-proxy)
+           (checkforerror))))
   ([proxy port] (enableproxy-noauth proxy port false)))
   
 (defn disableproxy 
   ([firstboot]
-  (assert (is-boolean? firstboot))
-  (if firstboot
-    (do (ui click :firstboot-proxy-config)
-        (ui waittillwindowexist :firstboot-proxy-dialog 60)
-        (ui uncheck :firstboot-proxy-checkbox)
-        (ui uncheck :firstboot-auth-checkbox)
-        (ui click :firstboot-proxy-close)
-        (checkforerror))
-    (do (ui selecttab :my-installed-software)
-        (ui click :proxy-configuration)
-        (ui waittillwindowexist :proxy-config-dialog 60)
-        (ui uncheck :proxy-checkbox)
-        (ui uncheck :authentication-checkbox)
-        (ui click :close-proxy)
-        (checkforerror))))
+     (assert (is-boolean? firstboot))
+     (if firstboot
+       (do (ui click :firstboot-proxy-config)
+           (ui waittillwindowexist :firstboot-proxy-dialog 60)
+           (ui uncheck :firstboot-proxy-checkbox)
+           (ui uncheck :firstboot-auth-checkbox)
+           (ui click :firstboot-proxy-close)
+           (checkforerror))
+       (do (ui selecttab :my-installed-software)
+           (ui click :proxy-configuration)
+           (ui waittillwindowexist :proxy-config-dialog 60)
+           (ui uncheck :proxy-checkbox)
+           (ui uncheck :authentication-checkbox)
+           (ui click :close-proxy)
+           (checkforerror))))
   ([] (disableproxy false)))
 
 (defn warn-count []
