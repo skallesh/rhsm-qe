@@ -402,7 +402,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					break;
 				}
 			}
-			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' should passed the hardware rules check for availabity.");
+			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' should pass the hardware rules check for availabity.");
 		}
 // TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST"				
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
