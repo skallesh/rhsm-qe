@@ -11,7 +11,7 @@
 		 [postgresql/postgresql "8.4-701.jdbc4"]
 		 [webui-framework "1.0.2-SNAPSHOT"]
                  [gnome.ldtp "1.0.0-SNAPSHOT"]
-                 [test_clj.testng "1.0.0-SNAPSHOT"]]
+                 [test_clj.testng "1.0.1-SNAPSHOT"]]
   :dev-dependencies [[swank-clojure "1.2.1"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
