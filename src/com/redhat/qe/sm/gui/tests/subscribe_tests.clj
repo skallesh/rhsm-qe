@@ -6,7 +6,7 @@
 	       gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
+  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
@@ -14,14 +14,18 @@
                                (recover e :unregister-first))]
     (tasks/register (@config :username) (@config :password))))
 
-(comment 
-(defn subscribe_each [subscription]
-  (tasks/search {})
-  (with-handlers [(ignore :subsription-not-available)
+
+(defn ^{Test {:dataProvider "subscriptions"}}
+  subscribe_each [_ subscription]
+  (with-handlers [(ignore :subscription-not-available)
                   (handle :wrong-consumer-type [e]
-                  (recover e :log-warning))]
+                          (recover e :log-warning))]
     (tasks/subscribe subscription)))
-)
+
+(defn ^{DataProvider {:name "subscriptions"}}
+  get_subscriptions [_]
+  (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 0))))
+
 
 (defn ^{Test {:groups ["subscribe"]}}
   subscribe_all [_]
