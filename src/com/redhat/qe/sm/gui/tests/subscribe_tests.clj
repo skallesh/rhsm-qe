@@ -25,6 +25,7 @@
 
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_]
+  (tasks/search {})
   (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 0))))
 
 (comment 
