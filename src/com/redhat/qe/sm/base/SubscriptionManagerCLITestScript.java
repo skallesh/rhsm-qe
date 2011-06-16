@@ -772,7 +772,37 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String attributeName = jsonProductAttribute.getString("name");
 				String attributeValue = jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
-					if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.arch)) {
+					/* FOR TEST REFERENCE, THIS IS A BLOCK OF CODE WAS TAKEN FROM CANDLEPIN
+					function architectureMatches(product, consumer) {
+					    var supportedArches = [];
+					    var archString = product.getAttribute('arch');
+					    if (archString != null) {
+					        supportedArches = archString.toUpperCase().split(prodAttrSeparator);
+
+					        supportedArches = new java.util.HashSet(java.util.Arrays.asList(supportedArches));
+
+					        // If X86 is supported, add all variants to this list:
+					        if (supportedArches.contains("X86")) {
+					           supportedArches.add("I386");
+					           supportedArches.add("I586");
+					           supportedArches.add("I686");
+					        }
+
+					        if(!supportedArches.contains('ALL') &&
+					           (!consumer.hasFact("cpu.architecture")  ||
+					            !supportedArches.contains(consumer.getFact('cpu.architecture').toUpperCase())
+					            )
+					          ){
+					           return false;
+					       }
+					   }
+
+					   return true;
+					}
+					*/
+					List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+					if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+					if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch.toUpperCase())) {
 						productAttributesPassRulesCheck = false;
 					}
 				}
@@ -819,7 +849,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						String attributeName = jsonProvidedProductAttribute.getString("name");
 						String attributeValue = jsonProvidedProductAttribute.getString("value");
 						if (attributeName.equals("arch")) {
-							if (!attributeValue.equalsIgnoreCase("ALL") && !attributeValue.equalsIgnoreCase(clienttasks.arch)) {
+							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+							if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+							if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch.toUpperCase())) {
 								providedProductAttributesPassRulesCheck = false;
 							}
 						}
@@ -876,6 +908,56 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 		
+	}
+	
+	@DataProvider(name="getNonAvailableSystemSubscriptionPoolProductData")
+	public Object[][] getNonAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists());
+	}
+	protected List<List<Object>> getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
+
+		// String systemProductId, JSONArray bundledProductDataAsJSONArray
+		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true);
+
+		
+		// get the owner key for clientusername, clientpassword
+		String consumerId = clienttasks.getCurrentConsumerId();
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String productId = jsonProduct.getString("id");
+			String productName = jsonProduct.getString("name");
+			
+			// skip subscriptions that have already been added to NonAvailableSystemSubscriptionPoolProductData
+			if (productIdsAddedToNonAvailableSystemSubscriptionPoolProductData.contains(productId)) continue;
+
+			boolean isAvailable = false;
+			for (List<Object> systemSubscriptionPoolProductDatum : availSystemSubscriptionPoolProductData) {
+				String availProductId = (String) systemSubscriptionPoolProductDatum.get(0);
+				JSONArray availJsonBundledProductData = (JSONArray) systemSubscriptionPoolProductDatum.get(1);
+				if (availProductId.equals(productId)) {
+					isAvailable = true;
+					break;
+				}
+			}
+			if (!isAvailable) {
+				// String systemProductId
+				ll.add(Arrays.asList(new Object[]{productId}));
+				productIdsAddedToNonAvailableSystemSubscriptionPoolProductData.add(productId);
+			}
+		}
+		return ll;
 	}
 	
 	/* SUBSCRIPTION WITH BUNDLED PRODUCTS
