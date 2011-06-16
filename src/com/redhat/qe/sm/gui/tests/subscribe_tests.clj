@@ -15,7 +15,8 @@
     (tasks/register (@config :username) (@config :password))))
 
 
-(defn ^{Test {:dataProvider "subscriptions"}}
+(defn ^{Test {:groups ["subscribe"]
+              :dataProvider "subscriptions"}}
   subscribe_each [_ subscription]
   (with-handlers [(ignore :subscription-not-available)
                   (handle :wrong-consumer-type [e]
@@ -26,25 +27,25 @@
   get_subscriptions [_]
   (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 0))))
 
+(comment 
+  (defn ^{Test {:groups ["subscribe"]}}
+    subscribe_all [_]
+    (tasks/search {})
+    (tasks/do-to-all-rows-in :all-subscriptions-view 0
+                             (fn [subscription]
+                               (with-handlers [(ignore :subscription-not-available)
+                                               (handle :wrong-consumer-type [e]
+                                                       (recover e :log-warning))]
+                                 (tasks/subscribe subscription)))))
 
-(defn ^{Test {:groups ["subscribe"]}}
-  subscribe_all [_]
-  (tasks/search {})
-  (tasks/do-to-all-rows-in :all-subscriptions-view 0
-                  (fn [subscription]
-                    (with-handlers [(ignore :subscription-not-available)
-                                    (handle :wrong-consumer-type [e]
-                                                 (recover e :log-warning))]
-                      (tasks/subscribe subscription)))))
-
-(defn ^{Test {:groups ["subscribe"]
-              :dependsOnMethods [ "subscribe_all"]}}
-  unsubscribe_all [_]
-  (tasks/ui selecttab :my-subscriptions)
-  (tasks/do-to-all-rows-in :my-subscriptions-view 0
-                     (fn [subscription] (with-handlers [(ignore :not-subscribed)]
-                                         (tasks/unsubscribe subscription)
-                                         (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
+  (defn ^{Test {:groups ["subscribe"]
+                :dependsOnMethods [ "subscribe_all"]}}
+    unsubscribe_all [_]
+    (tasks/ui selecttab :my-subscriptions)
+    (tasks/do-to-all-rows-in :my-subscriptions-view 0
+                             (fn [subscription] (with-handlers [(ignore :not-subscribed)]
+                                                 (tasks/unsubscribe subscription)
+                                                 (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false)))))))
 
 
 
