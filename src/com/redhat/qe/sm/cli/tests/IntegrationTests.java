@@ -42,7 +42,17 @@ import com.redhat.qe.tools.SSHCommandResult;
  * https://docspace.corp.redhat.com/docs/DOC-63084
  * https://docspace.corp.redhat.com/docs/DOC-67214
  * https://docspace.corp.redhat.com/docs/DOC-68623
+ *
+ * 
+ * Where to look when a product cert does not get installed:
+ * e.g.
+ * repo [rhel-scalefs-for-rhel-5-server-rpms]  
+ * baseurl=https://cdn.redhat.com/content/dist/rhel/server/5/$releasever/$basearch/scalablefilesystem/os
+ * if the expected productid has 92 is not getting installed from this repo, browse to:
+ * http://download.devel.redhat.com/cds/prod/content/dist/rhel/server/5/5Server/x86_64/scalablefilesystem/os/repodata/
+ * if no productid is there, then contact rhel-eng/jgreguske/dgregor
  */
+
 @Test(groups={"IntegrationTests"})
 public class IntegrationTests extends SubscriptionManagerCLITestScript{
 
