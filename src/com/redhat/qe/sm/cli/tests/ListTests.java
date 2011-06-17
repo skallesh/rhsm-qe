@@ -62,8 +62,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		// implicitly registered in dataProvider; no need to register with force; saves time
+		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is listed as available for subscribing: "+pool);
@@ -76,8 +76,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
 	public void EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(String productId) {
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		// implicitly registered in dataProvider; no need to register with force; saves time
+		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNull(pool, "As expected, SubscriptionPool with ProductId '"+productId+"' is NOT listed as available for subscribing.");
