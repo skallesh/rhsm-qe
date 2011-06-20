@@ -824,7 +824,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						/* 6/17/2011 The availability of a Subscription depends only on its attributes and NOT the attributes of its provided products.
 						 * You will get ALL of its provided product even if they don't make arch/socket sense.
 						 * In this case you could argue that it is not subscription-manager's job to question the meaningfulness of the subscription and its provided products.
-						 * For this reason, I am commenting out all the providedProductAttributesPassRulesCheck = false; ...
+						 * For this reason, I am commenting out all the providedProductAttributesPassRulesCheck = false; ... (except "type")
 						 * */
 						if (attributeName.equals("arch")) {
 							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
@@ -842,8 +842,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //								}
 						}
 						if (attributeName.equals("type")) {
-							if (attributeValue.equals("MKT")) { // provided products of type "MKT" should not pass the rules check
-// THIS MAY NEED TO BE UNCOMMENTED								//providedProductAttributesPassRulesCheck = false;
+							if (attributeValue.equals("MKT")) { // provided products of type "MKT" should not pass the rules check  e.g. providedProductName="Awesome OS Server Bundled"
+								providedProductAttributesPassRulesCheck = false;	// do not comment out!
 							}
 						}
 						if (attributeName.equals("version")) {
