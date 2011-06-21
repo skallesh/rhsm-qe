@@ -20,11 +20,11 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public String arch;
 	public String providedTags;	// comma separated list of tags: String1, String2, String3
 
-	public String hash;
+	public String id;
 	
-	public ProductNamespace(String hash, Map<String, String> certData){
+	public ProductNamespace(String id, Map<String, String> certData){
 		super(certData);
-		this.hash = hash;
+		this.id = id;
 	}
 	
 	
@@ -32,7 +32,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (hash != null)			string += String.format(" %s='%s'", "hash",hash);
+		if (id != null)				string += String.format(" %s='%s'", "id",id);
 		if (name != null)			string += String.format(" %s='%s'", "name",name);
 		if (version != null)		string += String.format(" %s='%s'", "version",version);
 		if (arch != null)			string += String.format(" %s='%s'", "arch",arch);
@@ -44,7 +44,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 	@Override
 	public boolean equals(Object obj){
 
-		return	((ProductNamespace)obj).hash.equals(this.hash) &&
+		return	((ProductNamespace)obj).id.equals(this.id) &&
 				((ProductNamespace)obj).name.equals(this.name);
 	}
 	
@@ -185,12 +185,13 @@ public class ProductNamespace extends AbstractCommandLineData {
 		*/
 		
 		// https://docspace.corp.redhat.com/docs/DOC-30244
-		//   1.3.6.1.4.1.2312.9.1.<product_hash>  (Red Hat Enterprise Linux for Physical Servers)
+		//                         <hash> is a bad name - call it <id>
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>  (Red Hat Enterprise Linux for Physical Servers)
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : Red Hat Enterprise Linux
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.2 (Version) : 6.0
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.3 (Architecture) : x86_64
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.4 (Provides) : String1, String2, String3
-		//   1.3.6.1.4.1.2312.9.1.<product_hash>  (High Availability)
+		//    1.3.6.1.4.1.2312.9.1.<product_hash>  (High Availability)
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.1 (Name) : High Availability
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.2 (Version) : 6.0
 		//    1.3.6.1.4.1.2312.9.1.<product_hash>.3 (Architecture) : x86_64

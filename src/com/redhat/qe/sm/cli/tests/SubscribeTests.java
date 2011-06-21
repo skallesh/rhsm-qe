@@ -150,7 +150,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 				// assert the status of the installed product
 				//ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
-				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("id", productNamespace.hash, currentlyInstalledProductCerts);
+				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productNamespace.id, currentlyInstalledProductCerts);
 				if (productCert!=null) {
 					Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
@@ -375,24 +375,21 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AutoSubscribeAndVerify", "blockedByBug-680399"},
+	@Test(	description="subscription-manager: make sure the available pools come from subscriptions that pass the hardware rules for availability.",
+			groups={},
+			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void InititiateAutoSubscribe_Test() throws Exception {
+	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
+	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 
-		// before testing, make sure all the expected subscriptionPoolProductId are available
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
-		
-		// get the expected subscriptionPoolProductIdData
-// TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST"
-		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
+		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 			String productId = (String)subscriptionPoolProductDatum.get(0);
 			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availableSubscriptionPoolsBeforeAutosubscribe);
-			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to '"+clientusername+"' before testing register with autosubscribe.");
+			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to registered user '"+clientusername+"'.");
 		}
 		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPoolsBeforeAutosubscribe) {
 			boolean productIdFound = false;
@@ -402,9 +399,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					break;
 				}
 			}
-			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' should pass the hardware rules check for availabity.");
+			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' passes the hardware rules check.");
 		}
-// TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST"				
+	}
+	
+	
+	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
+			groups={"AutoSubscribeAndVerify", "blockedByBug-680399"},
+			dependsOnMethods={"VerifyAvailablePoolsPassTheHardwareRulesCheck_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void InititiateAutoSubscribe_Test() throws Exception {
+
+		// before testing, make sure all the expected subscriptionPoolProductId are available
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		
+		// get the expected subscriptionPoolProductIdData
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
 		
 		// autosubscribe
@@ -452,8 +463,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 				JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
 				String bundledProductName = bundledProductAsJSONObject.getString("productName");
+				String bundledProductId = bundledProductAsJSONObject.getString("productId");
 
-				if (bundledProductName.equals(productCert.productName)) {
+				if (bundledProductId.equals(productCert.productId)) {
 					subscriptionPoolProductId = (String)row.get(0); // found
 					break;
 				}
@@ -473,7 +485,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// assert that the sshCommandResultOfAutosubscribe showed the expected Subscribe Status for this productCert
 		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
-				"As expected, ProductName '"+productCert.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+				"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
 	}
 //	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
 	SSHCommandResult sshCommandResultFromAutosubscribe;

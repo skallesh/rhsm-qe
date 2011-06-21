@@ -205,7 +205,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		ProductCert productCertInstalled=null;
 		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
 			for (ProductNamespace productNamespace : productNamespaces) {
-				if (productNamespace.hash.equals(productCert.hash)) {
+				if (productNamespace.id.equals(productCert.productId)) {
 					numberOfProductNamespacesInstalled++;
 					productCertInstalled=productCert;
 				}
@@ -223,7 +223,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		if (numberOfProductNamespacesInstalled>1) {
 			log.info("Found product certs installed that match the ProductNamespaces from the entitlement cert that provided the right to install package '"+pkg+"' from repo '"+contentNamespace.label+"'.");
 		} else if (numberOfProductNamespacesInstalled==1){
-			Assert.assertTrue(true,"An installed product cert (productName='"+productCertInstalled.productName+"' hash='"+productCertInstalled.hash+"') corresponding to installed package '"+pkg+"' from repo '"+contentNamespace.label+"' was found after its install.");
+			Assert.assertTrue(true,"An installed product cert (productName='"+productCertInstalled.productName+"' productId='"+productCertInstalled.productId+"') corresponding to installed package '"+pkg+"' from repo '"+contentNamespace.label+"' was found after its install.");
 		} else {
 			Assert.fail("After installing package '"+pkg+"' from repo '"+contentNamespace.label+"', there was no productid cert installed.  Expected one of the following productid certs to get installed via the yum product-id plugin: "+productNamespaces);		
 		}

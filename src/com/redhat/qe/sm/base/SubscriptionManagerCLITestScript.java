@@ -767,42 +767,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			boolean productAttributesPassRulesCheck = true; // assumed
 			String productAttributeSocketsValue = "";
+			List<String> productSupportedArches = new ArrayList<String>();
 			for (int j = 0; j < jsonProductAttributes.length(); j++) {
 				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
 				String attributeName = jsonProductAttribute.getString("name");
 				String attributeValue = jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
-					/* FOR TEST REFERENCE, THIS IS A BLOCK OF CODE WAS TAKEN FROM CANDLEPIN
-					function architectureMatches(product, consumer) {
-					    var supportedArches = [];
-					    var archString = product.getAttribute('arch');
-					    if (archString != null) {
-					        supportedArches = archString.toUpperCase().split(prodAttrSeparator);
-
-					        supportedArches = new java.util.HashSet(java.util.Arrays.asList(supportedArches));
-
-					        // If X86 is supported, add all variants to this list:
-					        if (supportedArches.contains("X86")) {
-					           supportedArches.add("I386");
-					           supportedArches.add("I586");
-					           supportedArches.add("I686");
-					        }
-
-					        if(!supportedArches.contains('ALL') &&
-					           (!consumer.hasFact("cpu.architecture")  ||
-					            !supportedArches.contains(consumer.getFact('cpu.architecture').toUpperCase())
-					            )
-					          ){
-					           return false;
-					       }
-					   }
-
-					   return true;
-					}
-					*/
-					List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-					if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
-					if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch.toUpperCase())) {
+					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+					if (productSupportedArches.contains("X86")) {productSupportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+					if (!productSupportedArches.contains("ALL") && !productSupportedArches.contains(clienttasks.arch.toUpperCase())) {
 						productAttributesPassRulesCheck = false;
 					}
 				}
@@ -848,11 +821,19 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						JSONObject jsonProvidedProductAttribute = (JSONObject) jsonProvidedProductAttributes.get(l);
 						String attributeName = jsonProvidedProductAttribute.getString("name");
 						String attributeValue = jsonProvidedProductAttribute.getString("value");
+						/* 6/17/2011 The availability of a Subscription depends only on its attributes and NOT the attributes of its provided products.
+						 * You will get ALL of its provided product even if they don't make arch/socket sense.
+						 * In this case you could argue that it is not subscription-manager's job to question the meaningfulness of the subscription and its provided products.
+						 * For this reason, I am commenting out all the providedProductAttributesPassRulesCheck = false; ... (except "type")
+						 * */
 						if (attributeName.equals("arch")) {
 							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
 							if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+							if (!productSupportedArches.containsAll(supportedArches)) {
+								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' ARCH ATTRIBUTE '"+attributeValue+"' IS NOT A SUBSET OF THE BASE SUBSCRIPTION PRODUCT '"+productId+"' ARCH ATTRIBUTE '"+productSupportedArches+"'.");
+							}
 							if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch.toUpperCase())) {
-								providedProductAttributesPassRulesCheck = false;
+								//providedProductAttributesPassRulesCheck = false;
 							}
 						}
 						if (attributeName.equals("variant")) {
@@ -861,8 +842,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //								}
 						}
 						if (attributeName.equals("type")) {
-							if (attributeValue.equals("MKT")) { // provided products of type "MKT" should not pass the rules check
-								providedProductAttributesPassRulesCheck = false;
+							if (attributeValue.equals("MKT")) { // provided products of type "MKT" should not pass the rules check  e.g. providedProductName="Awesome OS Server Bundled"
+								providedProductAttributesPassRulesCheck = false;	// do not comment out!
 							}
 						}
 						if (attributeName.equals("version")) {
@@ -872,27 +853,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						}
 						if (attributeName.equals("requires_consumer_type")) {
 							if (!attributeValue.equalsIgnoreCase(ConsumerType.system.toString())) {
-								providedProductAttributesPassRulesCheck = false;
+								//providedProductAttributesPassRulesCheck = false;
 							}
 						}
 						if (attributeName.equals("sockets")) {
-//							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-//								if (matchSystem) providedProductAttributesPassRulesCheck = false;
-//							}
-//							if (Integer.valueOf(attributeValue) > Integer.valueOf(clienttasks.sockets)) {
-//								providedProductAttributesPassRulesCheck = false;
-//							}
 							if (!attributeValue.equals(productAttributeSocketsValue)) {
 								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' SOCKETS ATTRIBUTE '"+attributeValue+"' DOES NOT MATCH THE BASE SUBSCRIPTION PRODUCT '"+productId+"' SOCKETS ATTRIBUTE '"+productAttributeSocketsValue+"'.");
 							}
 							if (!productAttributeSocketsValue.equals("") && Integer.valueOf(attributeValue) > Integer.valueOf(productAttributeSocketsValue)) {
-								providedProductAttributesPassRulesCheck = false;
+								//providedProductAttributesPassRulesCheck = false;
 							}
 						}
-
 					}
 					if (providedProductAttributesPassRulesCheck) {
-						JSONObject bundledProduct = new JSONObject(String.format("{productName:'%s'}", providedProductName));
+						JSONObject bundledProduct = new JSONObject(String.format("{productName:'%s', productId:'%s'}", providedProductName,providedProductId));
 
 						jsonBundledProductData.put(bundledProduct);
 					}
