@@ -1,11 +1,17 @@
 (ns com.redhat.qe.sm.gui.tests.proxy-tests
   (:use [test-clj.testng :only (gen-class-testng)]
-	      [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
+        [com.redhat.qe.sm.gui.tasks.test-config :only (config
+                                                       clientcmd
+                                                       auth-proxyrunner
+                                                       noauth-proxyrunner)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
 	       gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass]))
+
+(def auth-log "/var/log/squid/access.log")
+(def noauth-log "/var/log/tinyproxy.log")
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -44,24 +50,39 @@
               :dependsOnMethods ["enable_proxy_auth"]}}
   proxy_auth_connect [_]
   (enable_proxy_auth nil)
-  (register)
-  ;;TODO verify this also by connecting to the server and checking the proxy log
-  )
+  (let [logoutput (tasks/get-logging @auth-proxyrunner 
+                                     auth-log
+                                     "proxy-auth-connect"
+                                     nil
+                                     register)]
+    (verify (not  (clojure.string/blank? logoutput)))))
     
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_noauth"]}}
   proxy_noauth_connect [_]
   (enable_proxy_noauth nil)
-  (register)
-  ;;TODO verify this also by connecting to the server and checking the proxy log
-  )
+  (let [logoutput (tasks/get-logging @noauth-proxyrunner 
+                                     noauth-log
+                                     "proxy-noauth-connect"
+                                     nil
+                                     register)]
+    (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["disable_proxy"]}}
   disable_proxy_connect [_]
   (disable_proxy nil)
-  (register)
-  ;;TODO add a disabled case to check for no connectivity through a proxy
-  )
+  (let [logoutput (tasks/get-logging @auth-proxyrunner 
+                                     auth-log
+                                     "disabled-auth-connect"
+                                     nil
+                                     register)]
+    (verify (clojure.string/blank? logoutput)))
+  (let [logoutput (tasks/get-logging @noauth-proxyrunner 
+                                     noauth-log
+                                     "disabled-auth-connect"
+                                     nil
+                                     register)]
+    (verify (clojure.string/blank? logoutput))))
 
 (gen-class-testng)

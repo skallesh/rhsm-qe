@@ -1,6 +1,6 @@
 (ns com.redhat.qe.sm.gui.tasks.test-config
   (:import [com.redhat.qe.auto.testng TestScript]
-	         [com.redhat.qe.tools SSHCommandRunner]
+	   [com.redhat.qe.tools SSHCommandRunner]
            [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]))
 
 (defprotocol Defaultable
@@ -43,6 +43,9 @@
 (def config (atom {}))
 (def clientcmd (atom nil))
 (def cli-tasks (atom nil))
+(def auth-proxyrunner (atom nil))
+(def noauth-proxyrunner (atom nil))
+
 (defn init []
   (TestScript.) ;;sets up logging, reads properties
   (swap! config merge (get-properties))
@@ -51,4 +54,14 @@
 				       (@config :ssh-key-private)
 				       (@config :ssh-key-passphrase)
 				       nil))
-  (reset! cli-tasks (SubscriptionManagerTasks. @clientcmd)))
+  (reset! cli-tasks (SubscriptionManagerTasks. @clientcmd))
+  (reset! auth-proxyrunner (SSHCommandRunner. (@config :basicauth-proxy-hostname)
+                                              (@config :ssh-user)
+                                              (@config :ssh-key-private)
+                                              (@config :ssh-key-passphrase)
+                                              nil))
+  (reset! noauth-proxyrunner (SSHCommandRunner. (@config :noauth-proxy-hostname)
+                                                (@config :ssh-user)
+                                                (@config :ssh-key-private)
+                                                (@config :ssh-key-passphrase)
+                                                nil)))

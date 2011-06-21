@@ -1,16 +1,24 @@
 (ns com.redhat.qe.sm.gui.tasks.tasks
-  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd cli-tasks)]
+  (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config
+                                                       clientcmd
+                                                       cli-tasks
+                                                       auth-proxyrunner
+                                                       noauth-proxyrunner)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.contrib.str-utils :only (re-split)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
-            com.redhat.qe.sm.gui.tasks.ui)) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+            com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
+  (:import [com.redhat.qe.tools RemoteFileTasks]))
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
 
-(defn sleep [ms] (. Thread (sleep ms)))
+(defn sleep
+  "Sleeps for a given ammount of miliseconds."
+  [ms]
+  (. Thread (sleep ms)))
 
 (def is-boolean?
   (fn [expn]
@@ -25,7 +33,8 @@
                    :wrong-consumer-type #"Consumers of this type are not allowed"
                    })
 
-(defn matching-error "Returns a keyword of known error, if the message matches any of them."
+(defn matching-error
+  "Returns a keyword of known error, if the message matches any of them."
   [message]
   (let [matches-message? (fn [key] (let [re (known-errors key)]
                                     (if (re-find re message) key false)))]
@@ -37,45 +46,65 @@
   ([] (connect (@config :ldtp-url))))
 
 (defn start-app
+  "starts the subscription-manager-gui
+  @path: lauch the application at [path]"
   ([]
      (start-app (@config :binary-path)))
   ([path]
      (ui launchapp path [] 10)
      (ui waittillwindowexist :main-window 30)))
      
-(defn start-firstboot []
+(defn start-firstboot
+  "Convenience function that calls start-app with the firstboot path."
+  []
   ;(if (= "NO" (.getConfFileParameter @cli-tasks "/etc/sysconfig/firstboot" "RUN_FIRSTBOOT"))
   ;  (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) "RUN_FIRSTBOOT" "YES"))
   (let [path (@config :firstboot-binary-path)]
     (ui launchapp path [] 10)
     (ui waittillwindowexist :firstboot-window 30)))
 
-(defn get-error-msg "Retrieves the error string from the RHSM error dialog."
+(defn get-error-msg
+  "Retrieves the error string from the RHSM error dialog."
   []
   (.trim (ui getobjectproperty :error-msg "label")))
  
-(defn clear-error-dialog []
+(defn clear-error-dialog
+  "Clears an error dialog by clicking OK."
+  []
   (ui click :ok-error))
 
-(defn checkforerror []
-  (add-recoveries
-   {:log-warning (fn [e] (log/warn
-                         (format "Got error %s, message was: '%s'"
-                                 (name (:type e)) (:msg e))))}
-   (if (= 1 (ui waittillwindowexist :error-dialog 3)) 
-     (let [message (get-error-msg)
-           type (matching-error message)]
-       (clear-error-dialog)
-       (raise {:type type 
-               :msg message})))))
+(defn checkforerror
+  "Checks for the error dialog for 3 seconds and logs the error message.
+  Allows for recovery of the error message.
+  @wait: specify the time to wait for the error dialog."
+  ([wait]
+      (add-recoveries
+       {:log-warning (fn [e] (log/warn
+                             (format "Got error %s, message was: '%s'"
+                                     (name (:type e)) (:msg e))))}
+       (if (= 1 (ui waittillwindowexist :error-dialog wait)) 
+         (let [message (get-error-msg)
+               type (matching-error message)]
+           (clear-error-dialog)
+           (raise {:type type 
+                   :msg message})))))
+  ([] (checkforerror 3)))
                
-(defn set-conf-file-value [field value]
+(defn set-conf-file-value
+  "Edits /etc/rhsm/rhsm.conf to set values within it.
+  field: the field to change.
+  value: the value to set the field to."
+  [field value]
   (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) field value))
   
-(defn conf-file-value [k]
+(defn conf-file-value
+  "Grabs the value of a field in /etc/rhsm/rhsm.conf."
+  [k]
   (.getConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) k))
 
-(defn unregister []
+(defn unregister
+  "Unregisters subscripton manager by clicking the 'unregister' button."
+  []
   (if (ui showing? :register-system)
     (raise {:type :not-registered
             :msg "Tried to unregister when already unregistered."}))
@@ -84,7 +113,9 @@
   (ui click :yes)
   (checkforerror))
 
-(defn register [username password & {:keys [system-name-input, autosubscribe]
+(defn register
+  "Registers subscription manager by clicking the 'Register System' button in the gui."
+  [username password & {:keys [system-name-input, autosubscribe]
 				     :or {system-name-input nil, autosubscribe false}}]
   (if (ui showing? :unregister-system)
     (raise {:type :already-registered
@@ -105,7 +136,8 @@
     (ui click :register)
     (checkforerror)))
 
-(defn fbshowing? 
+(defn fbshowing?
+  "Utility to see if a GUI object in firstboot on a RHEL5 system is showing."
   ([item]
      ;; since all items exist at all times in firstboot,
      ;;  we must poll the states and see if 'SHOWING' is among them
@@ -117,7 +149,9 @@
     (= 24 (some #{24} (seq (ui getallstates window_name component_name))))
     false)))
 
-(defn firstboot-register [username password & {:keys [system-name-input, autosubscribe]
+(defn firstboot-register
+  "Subscribes subscription-manager from within firstboot."
+  [username password & {:keys [system-name-input, autosubscribe]
                           :or {system-name-input nil, autosubscribe false}}]
   (assert  (or (fbshowing? :firstboot-user)
                (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration"))))
@@ -132,12 +166,16 @@
     (checkforerror))
   
 
-(defn wait-for-progress-bar []
+(defn wait-for-progress-bar
+  "Waits for a progress bar to finish."
+  []
   (ui waittillwindowexist :progress-dialog 1)
   (ui waittillwindownotexist :progress-dialog 30)
   (checkforerror))
 
-(defn search ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
+(defn search
+  "Performs a subscription search within subscription-manager-gui."
+  ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
   (ui selecttab :all-available-subscriptions)
   (ui click :more-search-options)
   (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
@@ -159,7 +197,9 @@
      (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
   ([] (search {})))
 
-(defn subscribe [s]
+(defn subscribe
+  "Subscribes to a given subscription, s."
+  [s]
   (ui selecttab :all-available-subscriptions)
   (if-not (ui rowexist? :all-subscriptions-view s)
     (raise {:type :subscription-not-available
@@ -175,7 +215,9 @@
   (checkforerror)
   (wait-for-progress-bar))
 
-(defn unsubscribe [s]
+(defn unsubscribe
+  "Unsubscribes from a given subscription, s"
+  [s]
   (ui selecttab :my-subscriptions)
   (sleep 5000)
   (if-not (ui rowexist? :my-subscriptions-view s)
@@ -188,7 +230,8 @@
   (ui click :yes)
   (checkforerror) )
 
-(defn enableproxy-auth 
+(defn enableproxy-auth
+  "Configures a proxy that uses authentication through subscription-manager-gui."
   ([proxy port user pass firstboot]
      (assert (is-boolean? firstboot))
      (if firstboot 
@@ -213,7 +256,8 @@
            (checkforerror))))
   ([proxy port user pass] (enableproxy-auth proxy port user pass false)))
 
-(defn enableproxy-noauth 
+(defn enableproxy-noauth
+  "Configures a proxy that does not use authentication through subscription-manager-gui."
   ([proxy port firstboot]
      (assert (is-boolean? firstboot))
      (if firstboot
@@ -234,7 +278,8 @@
            (checkforerror))))
   ([proxy port] (enableproxy-noauth proxy port false)))
   
-(defn disableproxy 
+(defn disableproxy
+  "Disables any proxy settings through subscription-manager-gui."
   ([firstboot]
      (assert (is-boolean? firstboot))
      (if firstboot
@@ -253,21 +298,30 @@
            (checkforerror))))
   ([] (disableproxy false)))
 
-(defn warn-count []
+(defn warn-count
+  "Grabs the number of products that do not have a valid subscription tied to them
+  as reported by the GUI."
+  []
   (if (= 1 (ui guiexist :main-window "You have*"))
     (let [countlabel (ui getobjectproperty :main-window "You have*" "label")]
       (Integer/parseInt (first (re-seq #"\w+" (.substring countlabel 9)))))
     0))
 
-(defn compliance? []
+(defn compliance?
+  "Returns true if the GUI reports that all products have a valid subscription."
+  []
   (= 1 (ui guiexist :main-window "Product entitlement certificates valid through*")))  
 
-(defn first-date-of-noncomply []
+(defn first-date-of-noncomply
+  "Pulls the first date of noncompliance from the subscription assistant dialog."
+  []
   (if (= 1 (ui guiexist :subscription-assistant-dialog))
     (let [datelabel (ui getobjectproperty :subscription-assistant-dialog "*first date*" "label")]
       (.substring datelabel 0 10))))
   
-(defn assistant-subscribe [s]
+(defn assistant-subscribe
+  "Subscribes to a given subscription from within the subscription assistant."
+  [s]
   (if-not (ui rowexist? :assistant-subscription-view s)
     (raise {:type :subscription-not-available
             :name s
@@ -277,16 +331,23 @@
   (checkforerror)
   (wait-for-progress-bar))  
 
-(defn get-table-elements [view col]
+(defn get-table-elements
+  "Returns a vector containing all elements in a given table and column."
+  [view col]
   (for [row (range (action getrowcount view))]
     (ui getcellvalue view row col))) 
   
-(defn do-to-all-rows-in [view col f]
+(defn do-to-all-rows-in
+  "Perferms a given function on all elements in a given table and column."
+  [view col f]
   (let [item-list (get-table-elements view col)]
     (doseq [item item-list]
       (f item))))
 
-(defn verify-conf-proxies [hostname port user password]
+(defn verify-conf-proxies
+  "Utility function to help verify that the proxy values in
+  /etc/rhsm/rhsm.conf match what is expected."
+  [hostname port user password]
   (let [config-file-hostname  (conf-file-value "proxy_hostname")
         config-file-port      (conf-file-value "proxy_port")
         config-file-user      (conf-file-value "proxy_user")
@@ -295,6 +356,18 @@
     (verify (= config-file-port port)) 
     (verify (= config-file-user user))
     (verify (= config-file-password password))))
+
+(defn get-logging
+  "Runs a given function f and returns changes to a log file.
+  runner: an instance of a SSHCommandRunner
+  log: string containing which log file to look at
+  name: string used to mark the log file
+  grep: what to grep the results for"
+  [runner log name grep f]
+  (let [marker (str (System/currentTimeMillis) " " name)]
+    (RemoteFileTasks/markFile runner log marker)
+    (f)
+    (RemoteFileTasks/getTailFromMarkedFile runner log marker grep)))
 
 (comment 
 (defn get-all-facts []
