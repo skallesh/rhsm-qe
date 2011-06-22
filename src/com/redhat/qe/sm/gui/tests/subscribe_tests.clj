@@ -15,6 +15,26 @@
     (tasks/register (@config :username) (@config :password))))
 
 
+(defn subscribe_all
+  "Subscribes to everything available"
+  []
+  (tasks/search {})
+  (tasks/do-to-all-rows-in :all-subscriptions-view 0
+                           (fn [subscription]
+                                (with-handlers [(ignore :subscription-not-available)
+                                                (handle :wrong-consumer-type [e]
+                                                        (recover e :log-warning))]
+                                  (tasks/subscribe subscription)))))
+
+(defn unsubscribe_all 
+  "Unsubscribes from everything available"
+  []
+  (tasks/ui selecttab :my-subscriptions)
+  (tasks/do-to-all-rows-in :my-subscriptions-view 0
+                           (fn [subscription] (with-handlers [(ignore :not-subscribed)]
+                                               (tasks/unsubscribe subscription)
+                                               (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
+
 (defn ^{Test {:groups ["subscribe"]
               :dataProvider "subscriptions"}}
   subscribe_each [_ subscription]
@@ -40,49 +60,45 @@
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_]
   (tasks/ui selecttab :my-subscriptions)
-  (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0))))
+  (if (> 0 (tasks/ui getrowcount :my-subscriptions-view)) 
+    (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
+    (do (subscribe_all)
+        (tasks/ui selecttab :my-subscriptions)
+        (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
 
-(defn
-  subscribe_all [_]
-  (tasks/search {})
-  (tasks/do-to-all-rows-in :all-subscriptions-view 0
-                           (fn [subscription]
-                                (with-handlers [(ignore :subscription-not-available)
-                                                (handle :wrong-consumer-type [e]
-                                                        (recover e :log-warning))]
-                                  (tasks/subscribe subscription)))))
+(comment 
 
-(defn
-  unsubscribe_all [_]
-  (tasks/ui selecttab :my-subscriptions)
-  (tasks/do-to-all-rows-in :my-subscriptions-view 0
-                           (fn [subscription] (with-handlers [(ignore :not-subscribed)]
-                                               (tasks/unsubscribe subscription)
-                                               (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
-
-
-
-(comment
-  ;; https://bugzilla.redhat.com/show_bug.cgi?id=679961                                         
-  (defn ^{Test {:groups ["subscribe"]}}
-    check_unsubscribe_clear [_]
-    (tasks/search {})
-    (let [subscripton (tasks/ui getcellvalue :all-subscriptions-view 0 0)]
-      ;;add error handler?
-      (tasks/subscribe subscritpion))
-    (tasks/ui selecttab :my-subscriptions)
-    (let [subscripton (tasks/ui getcellvalue :my-subscriptions-view 0 0)]
-      ;;verify that info field populated
-      (tasks/unsubscribe subscription)
-      ;;verify that info field cleared
-      )
-    )
-
+(defn ^{Test {:groups ["subscribe" "blockedByBug-679961" "blockedByBug-714306"]
+              :dataProvider "subscribed"}}
+  check_unsubscribe_clear
+  "https://bugzilla.redhat.com/show_bug.cgi?id=679961
+  https://bugzilla.redhat.com/show_bug.cgi?id=714306"
+  [_ subscription]
   )
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=703920
 
+)
+
+(defn ^{Test {:groups ["subscribe" "blockedByBug-703920"]
+              :dataProvider "subscriptions"}}
+  check_contract_selection_dates
+  "https://bugzilla.redhat.com/show_bug.cgi?id=703920"
+  [_ subscription]
+  (with-handlers [(ignore :subscription-not-available)
+                  (handle :wrong-consumer-type [e]
+                          (recover e :log-warning))]
+    (tasks/open-contract-selection subscription)
+    (loop [row (- (tasks/ui getrowcount :contract-selection-dialog "tbl0") 1)]
+      (if (>= row 0)
+        (let [startdate (tasks/ui getcellvalue :contract-selection-dialog "tbl0" row 2)
+              enddate (tasks/ui getcellvalue :contract-selection-dialog "tbl0" row 3)]
+          (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
+          (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
+          (recur (dec row)))))
+    (tasks/ui click :contract-selection-dialog "Cancel"))) 
+
+
+  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
+  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
+  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
 
 (gen-class-testng)

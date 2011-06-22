@@ -197,6 +197,19 @@
      (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
   ([] (search {})))
 
+(defn open-contract-selection
+  "Opens the contract selection dialog for a given subscription." 
+  [s]
+  (ui selecttab :all-available-subscriptions)
+  (if-not (ui rowexist? :all-subscriptions-view s)
+    (raise {:type :subscription-not-available
+            :name s
+            :msg (str "Not found in 'All Available Subscriptions':" s)}))
+  (ui selectrow :all-subscriptions-view s)
+  (ui click :subscribe)
+  (checkforerror)
+  (ui waittillwindowexist :contract-selection-dialog 5))
+
 (defn subscribe
   "Subscribes to a given subscription, s."
   [s]
