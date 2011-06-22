@@ -247,6 +247,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
+		if (client2tasks!=null) client2tasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
+		if (client1tasks!=null) client1tasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
 	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
