@@ -73,8 +73,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getProductCertFilesDataAsListOfLists());
 	}
 	protected List<List<Object>> getProductCertFilesDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		if (clienttasks!=null) {
 			List<File> productCertFiles = clienttasks.getCurrentProductCertFiles();

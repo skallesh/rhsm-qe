@@ -435,7 +435,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getVirtSubscriptionDataAsListOfLists());
 	}
 	protected List<List<Object>> getVirtSubscriptionDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());

@@ -317,8 +317,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
 	}
 	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// assure we are freshly registered and process all available subscription pools
@@ -357,8 +356,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
 	}
 	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// assure we are freshly registered and process all available subscription pools
@@ -395,8 +393,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists());
 	}
 	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists() throws JSONException {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
 		if (client2tasks==null) return ll;
 		

@@ -71,6 +71,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
 		client1tasks = clienttasks;
+		
 		File serverCaCertFile = null;
 		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
@@ -591,8 +592,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailableSubscriptionPoolsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// assure we are registered
@@ -662,8 +662,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
@@ -688,8 +687,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAllEntitlementCertsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
@@ -737,9 +735,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
 	}
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystem) throws Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
-		
+
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
@@ -891,12 +889,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists());
 	}
 	protected List<List<Object>> getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
 
 		// String systemProductId, JSONArray bundledProductDataAsJSONArray
 		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true);
-
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();

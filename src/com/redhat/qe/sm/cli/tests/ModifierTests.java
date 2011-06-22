@@ -132,7 +132,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getModifierSubscriptionDataAsListOfLists());
 	}
 	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
 		// iterate through all available pools looking for those that contain products with content that modify other products
