@@ -59,6 +59,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=706518
+	// TODO Create a test to assert that the base server/client/desktop/workstation cert is installed.  Probbably need to compare /etc/redhat-release with the provides-tags in the product cert oid 
 	
 	// Configuration methods ***********************************************************************
 
