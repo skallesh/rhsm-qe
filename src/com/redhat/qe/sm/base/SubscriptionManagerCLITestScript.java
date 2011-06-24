@@ -72,18 +72,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		client1 = client;
 		client1tasks = clienttasks;
 		
-		File serverCaCertFile = null;
-		List<File> generatedProductCertFiles = new ArrayList<File>();
-		
-		// will we be connecting to the candlepin server?
-		if (!serverHostname.equals("") && isServerOnPremises) {
-			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises,serverBranch);
-		} else {
-			log.info("Assuming the server is already setup and running.");
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises,serverBranch);
-		}
-		
 		// will we be testing multiple clients?
 		if (!(	client2hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
 			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
@@ -92,14 +80,26 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info("Multi-client testing will be skipped.");
 		}
 		
-		// setup the server
+		File serverCaCertFile = null;
+		List<File> generatedProductCertFiles = new ArrayList<File>();
+		
+		// can we create an SSHCommandRunner to connect to the candlepin server ?
+		if (!serverHostname.equals("") && isServerOnPremises) {
+			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,serverImportDir,isServerOnPremises,serverBranch);
+		} else {
+			log.info("Assuming the server is already setup and running.");
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,isServerOnPremises,serverBranch);
+		}
+		
+		// setup the candlepin server
 		if (server!=null && servertasks.isOnPremises) {
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
-			servertasks.deploy(serverHostname, serverImportDir);
+			servertasks.deploy();
 
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
