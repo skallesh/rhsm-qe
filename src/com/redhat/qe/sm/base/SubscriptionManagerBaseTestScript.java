@@ -145,6 +145,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		// Hudson parameters that are left blank will be passed in by the variable
 		// name of the parameter beginning with a $ sign, catch these and blank it
 		String property = System.getProperty(key,def);
+		if (property==null) return null;
 		return (property.startsWith("$") || property.equals(""))? def:property;
 	}
 
