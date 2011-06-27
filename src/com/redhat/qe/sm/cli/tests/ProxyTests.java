@@ -618,8 +618,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
 	protected List<List<Object>> getRegisterAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		String basicauthproxyUrl = String.format("%s:%s", basicauthproxyHostname,basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
@@ -655,8 +654,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
 	protected List<List<Object>> getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		String basicauthproxyUrl = String.format("%s:%s", basicauthproxyHostname,basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");

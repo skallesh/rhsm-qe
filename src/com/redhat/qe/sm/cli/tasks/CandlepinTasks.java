@@ -70,6 +70,7 @@ public class CandlepinTasks {
 	protected static Logger log = Logger.getLogger(SubscriptionManagerTasks.class.getName());
 	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
 	protected /*NOT static*/ String serverInstallDir = null;
+	protected /*NOT static*/ String serverImportDir = null;
 	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/client/ruby";
@@ -99,21 +100,24 @@ public class CandlepinTasks {
 	/**
 	 * @param sshCommandRunner
 	 * @param serverInstallDir
+	 * @param serverImportDir
 	 * @param isOnPremises
 	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
 	 */
-	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, boolean isOnPremises, String branch) {
+	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, String serverImportDir, boolean isOnPremises, String branch) {
 		super();
 		this.sshCommandRunner = sshCommandRunner;
 		this.serverInstallDir = serverInstallDir;
+		this.serverImportDir = serverImportDir;
 		this.isOnPremises = isOnPremises;
 		this.branch = branch;
 	}
 	
 	
-	public void deploy(String hostname, String serverImportDir) {
+	public void deploy() {
+		String hostname = sshCommandRunner.getConnection().getHostname();
 
-		if (branch.equals("")) {
+		if (branch==null || branch.equals("")) {
 			log.info("Skipping deploy of candlepin server since no branch was specified.");
 			return;
 		}
@@ -142,8 +146,8 @@ public class CandlepinTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		*/
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql restart", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql service:\\s+\\[  OK  \\]", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop; service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1; export FORCECERT=1; export GENDB=1; export HOSTNAME="+hostname+"; export IMPORTDIR="+serverImportDir+"; cd "+serverInstallDir+"/proxy; buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 		// Update 1/21/2011                                    ^^^^^^ TESTDATA is new for master branch                                             ^^^^^^ IMPORTDIR applies to branches <= BETA
 

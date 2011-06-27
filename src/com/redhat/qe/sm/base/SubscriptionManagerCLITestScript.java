@@ -71,17 +71,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
 		client1tasks = clienttasks;
-		File serverCaCertFile = null;
-		List<File> generatedProductCertFiles = new ArrayList<File>();
-		
-		// will we be connecting to the candlepin server?
-		if (!serverHostname.equals("") && isServerOnPremises) {
-			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,isServerOnPremises,serverBranch);
-		} else {
-			log.info("Assuming the server is already setup and running.");
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,isServerOnPremises,serverBranch);
-		}
 		
 		// will we be testing multiple clients?
 		if (!(	client2hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
@@ -91,14 +80,26 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.info("Multi-client testing will be skipped.");
 		}
 		
-		// setup the server
+		File serverCaCertFile = null;
+		List<File> generatedProductCertFiles = new ArrayList<File>();
+		
+		// can we create an SSHCommandRunner to connect to the candlepin server ?
+		if (!serverHostname.equals("") && isServerOnPremises) {
+			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,serverImportDir,isServerOnPremises,serverBranch);
+		} else {
+			log.info("Assuming the server is already setup and running.");
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,isServerOnPremises,serverBranch);
+		}
+		
+		// setup the candlepin server
 		if (server!=null && servertasks.isOnPremises) {
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
-			servertasks.deploy(serverHostname, serverImportDir);
+			servertasks.deploy();
 
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
@@ -247,6 +248,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		if (client2tasks!=null) client2tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
 		if (client1tasks!=null) client1tasks.unregister_(null, null, null);	// release the entitlements consumed by the current registration
+		if (client2tasks!=null) client2tasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
+		if (client1tasks!=null) client1tasks.clean_(null, null, null);	// in case the unregister fails, also clean the client
 	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
@@ -589,8 +592,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailableSubscriptionPoolsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// assure we are registered
@@ -660,8 +662,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
@@ -686,8 +687,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAllEntitlementCertsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (!isSetupBeforeSuiteComplete) return ll;
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
 		// first make sure we are subscribed to all pools
@@ -735,9 +735,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
 	}
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystem) throws Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
-		
+
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
@@ -889,12 +889,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists());
 	}
 	protected List<List<Object>> getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
 
 		// String systemProductId, JSONArray bundledProductDataAsJSONArray
 		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true);
-
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();

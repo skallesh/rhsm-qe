@@ -97,7 +97,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getAddOnSubscriptionDataAsListOfLists());
 	}
 	protected List<List<Object>> getAddOnSubscriptionDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();

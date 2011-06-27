@@ -69,7 +69,7 @@ def schedule_job(url, variants, token):
     time.sleep(10)
 
 
-url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6"
+url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
 token = "hudsonbeaker-remote"
 variants = [['ppc64','Server','RedHatEnterpriseLinux6'],
             ['s390x','Server','RedHatEnterpriseLinux6'],
@@ -83,7 +83,7 @@ variants = [['ppc64','Server','RedHatEnterpriseLinux6'],
 schedule_job(url, variants, token)
 
 
-url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5"
+url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"
 token = "hudsonbeaker-remote"
 variants = [['ppc64','','RedHatEnterpriseLinuxServer5'],
             ['s390x','','RedHatEnterpriseLinuxServer5'],

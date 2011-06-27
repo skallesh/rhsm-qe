@@ -54,10 +54,12 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String client1hostname			= getProperty("sm.client1.hostname","");
 	public String client1username			= getProperty("sm.client1.username","");
 	public String client1password			= getProperty("sm.client1.password","");
+	public String client1owner				= getProperty("sm.client1.owner",null);
 
 	public String client2hostname			= getProperty("sm.client2.hostname","");
 	public String client2username			= getProperty("sm.client2.username","");
 	public String client2password			= getProperty("sm.client2.password","");
+	public String client2owner				= getProperty("sm.client2.owner",null);
 
 	public String clienthostname			= client1hostname;
 	public String clientusername			= client1username;
@@ -73,7 +75,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String disabledPassword		= getProperty("sm.client.password.disabled","");
 	
 	public String regtoken					= getProperty("sm.client.regtoken","");
-	public String yumInstallOptions		= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumLocalinstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
+	public String yumInstallOptions		= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumInstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
 	
 	public String sshUser				= getProperty("sm.ssh.user","root");
 	public String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
