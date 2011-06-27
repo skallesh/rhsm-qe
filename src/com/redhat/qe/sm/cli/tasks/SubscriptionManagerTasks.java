@@ -54,6 +54,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
+	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public /*final*/ String rhsmComplianceD	= "/usr/libexec/rhsmd";
 	
@@ -72,8 +73,9 @@ public class SubscriptionManagerTasks {
 	public String sockets						= null;	// of the client
 	public String variant						= null;	// of the client
 	
-	protected String currentAuthenticator				= null;	// most recent username used during register
-	protected String currentAuthenticatorPassword		= null;	// most recent password used during register
+	protected String currentlyRegisteredUsername		= null;	// most recent username used during register
+	protected String currentlyRegisteredPassword		= null;	// most recent password used during register
+	protected String currentlyRegisteredOwner			= null;	// most recent owner used during register
 	
 	public String redhatRelease	= null;
 	
@@ -916,6 +918,7 @@ public class SubscriptionManagerTasks {
 	 * register without asserting results
 	 * @param username
 	 * @param password
+	 * @param owner TODO
 	 * @param type
 	 * @param name
 	 * @param consumerId
@@ -926,12 +929,13 @@ public class SubscriptionManagerTasks {
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult register_(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the register command
 		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
+		if (owner!=null)							command += " --owner="+owner;
 		if (type!=null)								command += " --type="+type;
 		if (name!=null)								command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
@@ -949,6 +953,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @param username
 	 * @param password
+	 * @param owner TODO
 	 * @param type <br>
 	 * <i>system</i>		Used for example registering a plain RHEL machine (Default)<br>
 	 * <i>person</i>		Used for registering as a RH Personal<br>
@@ -962,11 +967,12 @@ public class SubscriptionManagerTasks {
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult register(String username, String password, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
-		this.currentAuthenticator = null;
-		this.currentAuthenticatorPassword = null;
+		SSHCommandResult sshCommandResult = register_(username, password, owner, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
+		this.currentlyRegisteredUsername = null;
+		this.currentlyRegisteredPassword = null;
+		this.currentlyRegisteredOwner = null;
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -984,8 +990,9 @@ public class SubscriptionManagerTasks {
 		// assert certificate files are installed into /etc/pki/consumer
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
-		this.currentAuthenticator = username;
-		this.currentAuthenticatorPassword = password;
+		this.currentlyRegisteredUsername = username;
+		this.currentlyRegisteredPassword = password;
+		this.currentlyRegisteredOwner = owner;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1073,7 +1080,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,consumerId,null, null, null, null, null);
+		return register(username,password,null,null,null,consumerId, null, null, null, null, null);
 	}
 	
 	
@@ -1114,8 +1121,9 @@ public class SubscriptionManagerTasks {
 		
 		// assert that the consumer cert directory is gone
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
-		this.currentAuthenticator = null;
-		this.currentAuthenticatorPassword = null;
+		this.currentlyRegisteredUsername = null;
+		this.currentlyRegisteredPassword = null;
+		this.currentlyRegisteredOwner = null;
 		
 		// assert that the entitlement cert directory is gone
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
@@ -1260,8 +1268,9 @@ public class SubscriptionManagerTasks {
 		// assert that the consumer cert and key have been removed
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),0, "Consumer key file '"+this.consumerKeyFile+"' does NOT exist after unregister.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
-		this.currentAuthenticator = null;
-		this.currentAuthenticatorPassword = null;
+		this.currentlyRegisteredUsername = null;
+		this.currentlyRegisteredPassword = null;
+		this.currentlyRegisteredOwner = null;
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
@@ -1571,8 +1580,8 @@ public class SubscriptionManagerTasks {
 			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 				try {
-					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,entitlementCert.id);
-					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
+					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,entitlementCert.id);
+					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
 					if (jsonPool.getString("id").equals(pool.poolId)) {
 						newCertFile = entitlementCertFile; break;
 					}
@@ -1631,7 +1640,7 @@ public class SubscriptionManagerTasks {
 			int consumed = 0;
 			int quantity = Integer.valueOf(pool.quantity);
 			try {
-				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentAuthenticator,this.currentAuthenticatorPassword,"/pools/"+pool.poolId));
+				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,"/pools/"+pool.poolId));
 				consumed = jsonPool.getInt("consumed");
 				quantity = jsonPool.getInt("quantity");
 			} catch (Exception e) {
@@ -2652,6 +2661,15 @@ repolist: 3,394
 		return sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout();
 	}
 	
+	/**
+	 * @param key - e.g. "REGISTERED_TO_OTHER_WARNING"
+	 * @return the branding string value for the key
+	 */
+	public String getBrandingString(String key) {
+
+		// view /usr/share/rhsm/subscription_manager/branding/__init__.py and search for "self." to find branding message strings e.g. "REGISTERED_TO_OTHER_WARNING"
+		return sshCommandRunner.runCommandAndWait("cd "+brandingDir+"; python -c \"import __init__ as sm;brand=sm.Branding(sm.get_branding());print brand."+key+"\"").getStdout();
+	}
 	
 	// protected methods ************************************************************
 

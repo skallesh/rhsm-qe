@@ -74,7 +74,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
@@ -95,7 +95,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
 		String nickname = "Mr_"+clientusername;
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,nickname,null,null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,nickname,null, null, null, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
@@ -113,7 +113,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
 		ConsumerCert origConsumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// regenerate the identity... and assert
@@ -143,7 +143,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, clienttasks.getCurrentConsumerId(registerResult));
 
@@ -173,7 +173,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 
@@ -197,7 +197,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");

@@ -371,7 +371,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null, null));
 		
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 	}
