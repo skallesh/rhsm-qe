@@ -32,7 +32,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
-	
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager Yum plugin: enable/disable",

@@ -97,7 +97,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// start with fresh registrations using the same clientusername user
 		smt.unregister(null, null, null);
-		smt.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		smt.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 		
 		// list the system facts
 		smt.facts(true, false, null, null, null);
@@ -132,8 +132,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// start with fresh registrations using the same clientusername user
 		workClientTasks.unregister(null, null, null);
 		servClientTasks.unregister(null, null, null);
-		workClientTasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
-		servClientTasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		workClientTasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
+		servClientTasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 		
 
 		// get all the pools available to each client
@@ -300,7 +300,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 
 		// on a RHEL workstation register to candlepin (as type system)
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, ConsumerType.system, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.system, null, null, null, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this system consumer)
 		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -313,7 +313,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// now register to candlepin (as type candlepin)
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, ConsumerType.candlepin, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.candlepin, null, null, null, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();

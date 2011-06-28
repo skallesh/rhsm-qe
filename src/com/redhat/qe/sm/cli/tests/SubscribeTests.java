@@ -53,7 +53,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
 //		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -254,7 +254,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// begin the test with a cleanly registered system
 		clienttasks.unregister(null, null, null);
-	    clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+	    clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 	    
 		// assemble a list of all the available SubscriptionPool ids with duplicates and bad ids
 		List <String> poolIds = new ArrayList<String>();
@@ -303,7 +303,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
 		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
@@ -353,7 +353,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		
 		// register a clean user
-	    clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+	    clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 	    
 	    // subscribe to all the available pools
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
@@ -382,7 +382,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
 	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, true, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, true, null, null, null);
 
 		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -413,7 +413,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 		
 		// get the expected subscriptionPoolProductIdData
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);

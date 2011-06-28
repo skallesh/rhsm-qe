@@ -175,7 +175,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, Boolean.TRUE, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, Boolean.TRUE, null, null, null, null);
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autosubscribe should NOT list the status of installed products when there are no installed products.");
 		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed Products to list",
@@ -211,7 +211,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// reregister with autosubscribe and assert that the product is bound
 		clienttasks.unregister(null, null, null);
-		sshCommandResult = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, Boolean.TRUE, null, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, Boolean.TRUE, null, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
 		/* pre-fix for blockedByBug-678049 
@@ -294,7 +294,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientusername,sm_clientpassword,null,null,name,null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientusername,sm_clientpassword,sm_clientowner,null,name,null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name=\""+name+"\" option:");
@@ -351,7 +351,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientusername,null,null,null, null,null,null,null,null));
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null, null,null,null,null,null));
 		
 		// take note of your identity cert before reregister
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -409,7 +409,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientusername,null,null,null,null,null,null,null,null);
+		clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null,null,null,null,null,null);
 		
 		// take note of your identity cert
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -472,7 +472,7 @@ Expected Results:
 		
 		// register with username and password and remember the consumerid
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientusername,null,null,null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null, null, null, null, null, null));
 		
 		// subscribe to one or more subscriptions
 		//// subscribe to a random pool
@@ -526,7 +526,7 @@ Expected Results:
 		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
 		
 		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
 	
@@ -542,7 +542,7 @@ Expected Results:
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
 		
 		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
 	
@@ -903,7 +903,7 @@ Expected Results:
 			List <String> registerableConsumerTypes = sm_consumerTypes;
 			
 			// decide what username and password to test with
-			if (type.equals(ConsumerType.person) && !sm_rhpersonalUsername.equals("")) {
+			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
 				username = sm_rhpersonalUsername;
 				password = sm_rhpersonalPassword;
 				owner = sm_rhpersonalOwner;

@@ -42,7 +42,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions","" +
 				"Available Subscriptions are listed for '"+sm_clientusername+"' to consume.");
@@ -90,7 +90,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscription, "No Consumed subscription pools to list",
 				"No Consumed subscription pools listed for '"+sm_clientusername+"' after registering (without autosubscribe).");
@@ -104,7 +104,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
@@ -123,7 +123,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		String installedProductsAsString = clienttasks.listInstalledProducts().getStdout();
@@ -160,7 +160,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureListAndListInstalledAreTheSame_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
@@ -281,7 +281,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() throws JSONException {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, ConsumerType.system, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.system, null, null, null, null, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		for (String personProductId : getPersonProductIds()) {
