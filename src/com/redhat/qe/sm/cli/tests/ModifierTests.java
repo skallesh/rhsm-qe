@@ -108,8 +108,8 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, Boolean.TRUE, null, null, null));
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientusername, sm_clientpassword, consumerId);
 	}
 	
 	@AfterClass(groups="setup")
@@ -137,7 +137,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		
 		// iterate through all available pools looking for those that contain products with content that modify other products
 		for (SubscriptionPool modifierPool : allAvailablePools) {
-			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+modifierPool.poolId));	
+			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+modifierPool.poolId));	
 			
 			// iterate through each of the providedProducts
 			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
@@ -146,7 +146,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
 				// get the productContents
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/products/"+modifierProvidedProductId));	
+				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/products/"+modifierProvidedProductId));	
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 				for (int j = 0; j < jsonProductContents.length(); j++) {
 					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
@@ -169,7 +169,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
 						// yes, now its time to find the subscriptions that provide the modifiedProductIds
 						for (SubscriptionPool providingPool : allAvailablePools) {
-							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+providingPool.poolId));	
+							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+providingPool.poolId));	
 							
 							// iterate through each of the providedProducts
 							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");

@@ -58,7 +58,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
 		
 		// determine this user's ability to register
-		SSHCommandResult registerResult = clienttasks.register_(username, password, null, null, null, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register_(username, password, null, null, null, null, null, null, null, null, null);
 			
 		// determine this user's available subscriptions
 		List<SubscriptionPool> allAvailableSubscriptionPools=null;
@@ -71,7 +71,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname,serverPort,serverPrefix,username,password, consumerId);
+				ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password, consumerId);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -102,7 +102,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 //DO NOT		clienttasks.unregister();
 		
 		// attempt the registration
-		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, type, name, consumerId, autosubscribe, force, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, null, type, name, consumerId, autosubscribe, force, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
@@ -135,8 +135,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=48502)
 	public void AttemptRegistrationWithUnacceptedTermsAndConditions_Test() {
-		String username = usernameWithUnacceptedTC;
-		String password = passwordWithUnacceptedTC;
+		String username = sm_usernameWithUnacceptedTC;
+		String password = sm_passwordWithUnacceptedTC;
 		if (username.equals("")) throw new SkipException("Must specify a username who has not accepted Terms & Conditions before attempting this test.");
 		AttemptRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc");
 	}
@@ -147,8 +147,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50210)
 	public void AttemptRegistrationWithDisabledUserCredentials_Test() {
-		String username = disabledUsername;
-		String password = disabledPassword;
+		String username = sm_disabledUsername;
+		String password = sm_disabledPassword;
 		if (username.equals("")) throw new SkipException("Must specify a username who has been disabled before attempting this test.");
 		AttemptRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.");
 	}
@@ -175,9 +175,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null, null, null, null);
-		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autotosubscribe should NOT appear to have subscribed to something when there are no installed products.");
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autotosubscribe should NOT list the status of installed products when there are no installed products.");
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, Boolean.TRUE, null, null, null, null);
+		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
+		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autosubscribe should NOT list the status of installed products when there are no installed products.");
 		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed Products to list",
 				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
 		//List <InstalledProduct> currentlyInstalledProducts = InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout());
@@ -195,7 +195,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the first available pool that provides one product
 		File entitlementCertFile = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/pools/"+pool.poolId));	
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==1) {
 				entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
@@ -211,7 +211,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// reregister with autosubscribe and assert that the product is bound
 		clienttasks.unregister(null, null, null);
-		sshCommandResult = clienttasks.register(clientusername, clientpassword, null, null, null, Boolean.TRUE, null, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, Boolean.TRUE, null, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
 		/* pre-fix for blockedByBug-678049 
@@ -254,7 +254,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// make sure you are first registered
-		SSHCommandResult sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null,null, null, null, null, null);
 		String firstConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// subscribe to a random pool (so as to consume an entitlement)
@@ -264,11 +264,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
-		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,null, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null,null, null, null, null, null);
 		Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting: This system is already registered.");
 		
 		// register with force
-		sshCommandResult = clienttasks.register(clientusername,clientpassword,null,null,null,null,Boolean.TRUE, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null,null, Boolean.TRUE, null, null, null);
 		String secondConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// assert the stdout reflects a new consumer
@@ -294,7 +294,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(clientusername,clientpassword,null,name,null,null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientusername,sm_clientpassword,null,null,name,null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name=\""+name+"\" option:");
@@ -320,7 +320,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,type,name,null,null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,null,type,name,null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
@@ -351,7 +351,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientusername,null,null,null, null,null,null,null,null));
 		
 		// take note of your identity cert before reregister
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -367,7 +367,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// reregister
 		//clienttasks.reregister(null,null,null);
-		clienttasks.reregisterToExistingConsumer(clientusername,clientpassword,consumerIdBefore);
+		clienttasks.reregisterToExistingConsumer(sm_clientusername,sm_clientpassword,consumerIdBefore);
 		
 		// assert that the identity cert has not changed
 		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
@@ -409,7 +409,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
+		clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientusername,null,null,null,null,null,null,null,null);
 		
 		// take note of your identity cert
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -430,7 +430,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// reregister w/ username, password, and consumerid
 		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
-		clienttasks.register(clientusername,clientpassword,null,null,consumerCertBefore.consumerid,null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername,sm_clientpassword,null,null,null,consumerCertBefore.consumerid, null, Boolean.TRUE, null, null, null);
 		
 		// assert that the identity cert has not changed
 		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
@@ -472,7 +472,7 @@ Expected Results:
 		
 		// register with username and password and remember the consumerid
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername,sm_clientpassword,sm_clientusername,null,null,null, null, null, null, null, null));
 		
 		// subscribe to one or more subscriptions
 		//// subscribe to a random pool
@@ -495,7 +495,7 @@ Expected Results:
 		
 		// register with same username, password and existing consumerid
 		// Note: no need to register with force as running clean wipes system of all local registration data
-		clienttasks.register(clientusername,clientpassword,null,null,consumerId,null, null, null, null, null);
+		clienttasks.register(sm_clientusername,sm_clientpassword,null,null,null,consumerId, null, null, null, null, null);
 
 		// assert that originally consumed subscriptions are once again being consumed
 		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -526,7 +526,7 @@ Expected Results:
 		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
 		
 		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
 	
@@ -542,7 +542,7 @@ Expected Results:
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
 		
 		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
 	
@@ -585,25 +585,32 @@ Expected Results:
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
 
-		final String interoperabilityWarningMessage = 
+		// interoperabilityWarningMessage is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
+		String interoperabilityWarningMessage = 
 			"WARNING" +"\n\n"+
 			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
 			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
 			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-
+		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
+		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
+			interoperabilityWarningMessage = clienttasks.getBrandingString("REGISTERED_TO_OTHER_WARNING");
+		}
+		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The interoperability message starts with \"WARNING\".");
+		
 		log.info("Simulating registration by RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
 		log.info("Attempt to register while already registered via RHN Classic...");
-		SSHCommandResult result = clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, true, null, null, null);
 		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
 		Assert.assertContainsMatch(result.getStdout(),"^"+interoperabilityWarningMessage, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
 
 		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
 		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==0, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
-		result = clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null);
+		result = clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, true, null, null, null);
+		
 		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
 		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessage, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 	}
@@ -661,7 +668,7 @@ Expected Results:
 			output.write("<table border=1>\n");
 			output.write("<h2>Candlepin Registration Report</h2>");
 			//output.write("<h3>(generated on "+dateFormat.format(System.currentTimeMillis())+")</h3>");
-			output.write("Candlepin hostname= <b>"+serverHostname+"</b>\n");
+			output.write("Candlepin hostname= <b>"+sm_serverHostname+"</b>\n");
 			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
 			output.write("<tr><th>Owner</th><th>Username/<BR>Password</th><th>Registration Output</th><th>All Available Subscriptions (to system consumers)</th></tr>\n");
 			for (RegistrationData registeredConsumer : registrationDataList) {
@@ -722,16 +729,16 @@ Expected Results:
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 
 		// Object bugzilla, String username, String password, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[] {null,	clientusername,					String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,	clientusername+getRandInt(),	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,	clientusername,					String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientusername,					String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientusername+getRandInt(),	String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientusername,					String.valueOf(getRandInt()),	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,																			uErrMsg}));
 
 		// force a successful registration, and then...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
-													clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null}));
+													sm_clientusername,		sm_clientpassword,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"[a-f,0-9,\\-]{36} "+/*clientusername*/clienttasks.hostname,					null}));
 
 		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[] {null,	clientusername,		clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientusername,		sm_clientpassword,					null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
 
 		/* moving these testcases with missing username/password to a dedicated test due to behavior introduced by https://bugzilla.redhat.com/show_bug.cgi?id=678151
 		// moved to @DataProvider(name="getInteractiveRegistrationData")
@@ -755,13 +762,13 @@ Expected Results:
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[] {	null,	clientusername,					null,							null,			clientpassword,	new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
-		ll.add(Arrays.asList(new Object[] {	null,	clientusername+getRandInt(),	null,							null,			clientpassword,	new Integer(255),	null,										uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,							clientpassword,					clientusername,	null,			new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,							clientpassword+getRandInt(),	clientusername,	null,			new Integer(255),	null,										uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	clientusername,					clientpassword,					null,			null,			new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
-		ll.add(Arrays.asList(new Object[] {	null,	clientusername+getRandInt(),	clientpassword+getRandInt(),	null,			null,			new Integer(255),	null,										uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+clientusername,			"\n\n"+clientpassword,			null,			null,			new Integer(0),		"(Username: ){3}[a-f,0-9,\\-]{36} "+clienttasks.hostname,	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientusername,					null,							null,			sm_clientpassword,	new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientusername+getRandInt(),	null,							null,			sm_clientpassword,	new Integer(255),	null,										uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,							sm_clientpassword,					sm_clientusername,	null,			new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,							sm_clientpassword+getRandInt(),	sm_clientusername,	null,			new Integer(255),	null,										uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientusername,					sm_clientpassword,					null,			null,			new Integer(0),		"[a-f,0-9,\\-]{36} "+clienttasks.hostname,	null}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientusername+getRandInt(),	sm_clientpassword+getRandInt(),	null,			null,			new Integer(255),	null,										uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientusername,			"\n\n"+sm_clientpassword,			null,			null,			new Integer(0),		"(Username: ){3}[a-f,0-9,\\-]{36} "+clienttasks.hostname,	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
 
 		return ll;
 	}
@@ -781,67 +788,67 @@ Expected Results:
 		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
 		
 		// registration test for a user who is invalid
-		ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, uErrMsg}));
 		
 		// registration test for a user who with "invalid credentials" (translated)
 		//if (!isServerOnPremises)	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),	"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
 		//else 						ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                      	"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
-		if (isServerOnPremises) {
-			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid Credentials"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),		"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));
-			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Credenciales inválidas"}));
-			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Informations d’identification invalides"}));
-			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Credenziali invalide"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "無効な識別情報"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ko_KR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "잘못된 인증 정보"}));
-			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Credenciais inválidos"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ru_RU.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Недопустимые реквизиты"}));
-			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "无效证书"}));
-			ll.add(Arrays.asList(new Object[]{null,								"zh_TW.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "無效的認證"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"as_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "অবৈধ পৰিচয়"}));
-			ll.add(Arrays.asList(new Object[]{null,								"bn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "অবৈধ পরিচয়"}));
-			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "अवैध श्रेय"}));
-			ll.add(Arrays.asList(new Object[]{null,								"mr_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "अवैध श्रेय"}));
-			ll.add(Arrays.asList(new Object[]{null,								"gu_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "અયોગ્ય શ્રેય"}));
-			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"ml_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "തെറ്റായ ആധികാരികതകള്‍"}));
-			ll.add(Arrays.asList(new Object[]{null,								"or_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ଅବୈଧ ପ୍ରାଧିକରଣ"}));
-			ll.add(Arrays.asList(new Object[]{null,								"pa_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ta_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "தவறான சான்றுகள்"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"te_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));
+		if (sm_isServerOnPremises) {
+			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Invalid Credentials"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),		"de_DE.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));
+			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Credenciales inválidas"}));
+			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Informations d’identification invalides"}));
+			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Credenziali invalide"}));
+			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "無効な識別情報"}));
+			ll.add(Arrays.asList(new Object[]{null,								"ko_KR.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "잘못된 인증 정보"}));
+			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Credenciais inválidos"}));
+			ll.add(Arrays.asList(new Object[]{null,								"ru_RU.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Недопустимые реквизиты"}));
+			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "无效证书"}));
+			ll.add(Arrays.asList(new Object[]{null,								"zh_TW.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "無效的認證"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"as_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "অবৈধ পৰিচয়"}));
+			ll.add(Arrays.asList(new Object[]{null,								"bn_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "অবৈধ পরিচয়"}));
+			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "अवैध श्रेय"}));
+			ll.add(Arrays.asList(new Object[]{null,								"mr_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "अवैध श्रेय"}));
+			ll.add(Arrays.asList(new Object[]{null,								"gu_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "અયોગ્ય શ્રેય"}));
+			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"ml_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "തെറ്റായ ആധികാരികതകള്‍"}));
+			ll.add(Arrays.asList(new Object[]{null,								"or_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ଅବୈଧ ପ୍ରାଧିକରଣ"}));
+			ll.add(Arrays.asList(new Object[]{null,								"pa_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ"}));
+			ll.add(Arrays.asList(new Object[]{null,								"ta_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "தவறான சான்றுகள்"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"te_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));
 		} else {
-			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"de_DE.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "El nombre de usuario o contraseña es inválido. Para crear un nombre de usuario, por favor visite https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Nom d'utilisateur ou mot de passe non valide. Pour créer une connexion, veuillez visiter https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Nome utente o password non valide. Per creare un login visitare https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ユーザー名かパスワードが無効です。ログインを作成するには、https://www.redhat.com/wapps/ugc/register.html に進んでください"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ko_KR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "잘못된 인증 정보"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Nome do usuário e senha incorretos. Por favor visite https://www.redhat.com/wapps/ugc/register.html para a criação do logon."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ru_RU.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "Недопустимые реквизиты"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "无效用户名或者密码。要创建登录，请访问 https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"zh_TW.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "無效的認證"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"as_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "অবৈধ পৰিচয়"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"bn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "অবৈধ পরিচয়"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "अवैध उपयोक्तानाम या कूटशब्द. लॉगिन करने के लिए, कृपया https://www.redhat.com/wapps/ugc/register.html भ्रमण करें"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"mr_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "अवैध श्रेय"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"gu_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "અયોગ્ય શ્રેય"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವ ಗುಪ್ತಪದ. ಒಂದು ಲಾಗಿನ್ ಅನ್ನು ರಚಿಸಲು, ದಯವಿಟ್ಟು https://www.redhat.com/wapps/ugc/register.html ಗೆ ತೆರಳಿ"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ml_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "തെറ്റായ ആധികാരികതകള്‍"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"or_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ଅବୈଧ ପ୍ରାଧିକରଣ"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"pa_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "ਗਲਤ ਯੂਜ਼ਰ-ਨਾਂ ਜਾਂ ਪਾਸਵਰਡ। ਲਾਗਇਨ ਬਣਾਉਣ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ ਇਹ ਵੇਖੋ https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ta_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "தவறான சான்றுகள்"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"te_IN.UTF8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"de_DE.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "El nombre de usuario o contraseña es inválido. Para crear un nombre de usuario, por favor visite https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Nom d'utilisateur ou mot de passe non valide. Pour créer une connexion, veuillez visiter https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Nome utente o password non valide. Per creare un login visitare https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ユーザー名かパスワードが無効です。ログインを作成するには、https://www.redhat.com/wapps/ugc/register.html に進んでください"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ko_KR.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "잘못된 인증 정보"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Nome do usuário e senha incorretos. Por favor visite https://www.redhat.com/wapps/ugc/register.html para a criação do logon."}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ru_RU.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "Недопустимые реквизиты"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "无效用户名或者密码。要创建登录，请访问 https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"zh_TW.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "無效的認證"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"as_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "অবৈধ পৰিচয়"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"bn_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "অবৈধ পরিচয়"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "अवैध उपयोक्तानाम या कूटशब्द. लॉगिन करने के लिए, कृपया https://www.redhat.com/wapps/ugc/register.html भ्रमण करें"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"mr_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "अवैध श्रेय"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"gu_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "અયોગ્ય શ્રેય"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವ ಗುಪ್ತಪದ. ಒಂದು ಲಾಗಿನ್ ಅನ್ನು ರಚಿಸಲು, ದಯವಿಟ್ಟು https://www.redhat.com/wapps/ugc/register.html ಗೆ ತೆರಳಿ"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ml_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "തെറ്റായ ആധികാരികതകള്‍"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"or_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ଅବୈଧ ପ୍ରାଧିକରଣ"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"pa_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "ਗਲਤ ਯੂਜ਼ਰ-ਨਾਂ ਜਾਂ ਪਾਸਵਰਡ। ਲਾਗਇਨ ਬਣਾਉਣ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ ਇਹ ਵੇਖੋ https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ta_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "தவறான சான்றுகள்"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"te_IN.UTF8", sm_clientusername+getRandInt(), sm_clientpassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));	// TODO need translation
 		}
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
-		if (!usernameWithUnacceptedTC.equals("")) {
-			if (!isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),"de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"}));
-			else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                       "de_DE.UTF8", usernameWithUnacceptedTC, passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"}));
+		if (!sm_usernameWithUnacceptedTC.equals("")) {
+			if (!sm_isServerOnPremises) ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),"de_DE.UTF8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"}));
+			else                     ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                       "de_DE.UTF8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"}));
 		}
 		
 		// registration test for a user who has been disabled (translated)
-		if (!disabledUsername.equals("")) {
-			ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", disabledUsername, disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
+		if (!sm_disabledUsername.equals("")) {
+			ll.add(Arrays.asList(new Object[]{null, "en_US.UTF8", sm_disabledUsername, sm_disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
 		}
 		// [root@jsefler-onprem-server ~]# for l in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo ""; echo "# LANG=$l.UTF8 subscription-manager clean --help"; LANG=$l.UTF8 subscription-manager clean --help; done;
 		/* TODO reference for locales
@@ -880,26 +887,30 @@ Expected Results:
 	}
 	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		String username=clientusername;
-		String password=clientpassword;
+		String username=sm_clientusername;
+		String password=sm_clientpassword;
+		String owner=sm_clientowner;
 
 		// flatten all the ConsumerType values into a comma separated list
-		String consumerTypesAsString = "";
-		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
-		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
+//		String consumerTypesAsString = "";
+//		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
+//		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
 		// interate across all ConsumerType values and append rows to the dataProvider
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
-			List <String> registerableConsumerTypes = Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
+//			List <String> registerableConsumerTypes = Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
+			List <String> registerableConsumerTypes = sm_consumerTypes;
 			
 			// decide what username and password to test with
-			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
-				username = getProperty("sm.rhpersonal.username", "");
-				password = getProperty("sm.rhpersonal.password", "");
+			if (type.equals(ConsumerType.person) && !sm_rhpersonalUsername.equals("")) {
+				username = sm_rhpersonalUsername;
+				password = sm_rhpersonalPassword;
+				owner = sm_rhpersonalOwner;
 			} else {
-				username = clientusername;
-				password = clientpassword;
+				username = sm_clientusername;
+				password = sm_clientpassword;
+				owner = sm_clientowner;
 			}
 			
 			// String username, String password, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex

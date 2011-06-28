@@ -34,9 +34,9 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
-		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, client1username, client1password, client1tasks.getCurrentConsumerId());
-		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, client2username, client2password, client2tasks.getCurrentConsumerId());
-		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+client1username+" ownerkey="+client1OwnerKey+") (client2: username="+client2username+" ownerkey="+client2OwnerKey+")");
+		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_client1username, sm_client1password, client1tasks.getCurrentConsumerId());
+		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_client2username, sm_client2password, client2tasks.getCurrentConsumerId());
+		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+sm_client1username+" ownerkey="+client1OwnerKey+") (client2: username="+sm_client2username+" ownerkey="+client2OwnerKey+")");
 		
 		String client1RedhatRelease = client1tasks.getRedhatRelease();
 		String client2RedhatRelease = client2tasks.getRedhatRelease();
@@ -66,11 +66,11 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		*/
 		
 		// assert that the subscriptionPool is available to consumer 1
-		Assert.assertTrue(cl1SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer1 ("+client1username+").");
+		Assert.assertTrue(cl1SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer1 ("+sm_client1username+").");
 		cl1SubscriptionPool = cl1SubscriptionPools.get(cl1SubscriptionPools.indexOf(pool));
 
 		// assert that the subscriptionPool is available to consumer 2
-		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer2 ("+client2username+").");
+		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool "+pool+" is available to consumer2 ("+sm_client2username+").");
 		cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
 
 		// assert that the quantity available to both clients is the same
@@ -85,11 +85,11 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 			cl2SubscriptionPools = client2tasks.getCurrentlyAvailableSubscriptionPools();
 		else
 			cl2SubscriptionPools = client2tasks.getCurrentlyAllAvailableSubscriptionPools();
-		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+client2username+").");
+		Assert.assertTrue(cl2SubscriptionPools.contains(pool),"Subscription pool id "+pool.poolId+" is still available to consumer2 ("+sm_client2username+").");
 		cl2SubscriptionPool = cl2SubscriptionPools.get(cl2SubscriptionPools.indexOf(pool));
 
 		// assert that the quantity has decremented by one
-		Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+client2username+") has decremented by one.");
+		Assert.assertEquals(Integer.valueOf(cl2SubscriptionPool.quantity).intValue(), Integer.valueOf(cl1SubscriptionPool.quantity).intValue()-1, "The quantity of entitlements from subscription pool id '"+pool.poolId+"' available to consumer2 ("+sm_client2username+") has decremented by one.");
 	}
 	protected List<String> alreadySubscribedProductIdsInMultiClientSubscribeToSameSubscriptionPool_Test = new ArrayList<String>();
 	
@@ -106,18 +106,20 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		unregisterMultiClientRegisterAsPersonAfterGroups();
 		
 		// decide what username and password to test with
-		String username = clientusername;
-		String password = clientpassword;
-		if (!getProperty("sm.rhpersonal.username", "").equals("")) {
-			username = getProperty("sm.rhpersonal.username", "");
-			password = getProperty("sm.rhpersonal.password", "");
+		String username = sm_clientusername;
+		String password = sm_clientpassword;
+		String owner = sm_clientowner;
+		if (!sm_rhpersonalUsername.equals("")) {
+			username = sm_rhpersonalUsername;
+			password = sm_rhpersonalPassword;
+			owner = sm_rhpersonalOwner;
 		}
 		
 		//personIdForMultiClientRegisterAsPerson_Test = client1tasks.getCurrentConsumerId(client1tasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null));
-		client1tasks.register(username, password, ConsumerType.person, null, null, null, null, null, null, null);
+		client1tasks.register(username, password, owner, ConsumerType.person, null, null, null, null, null, null, null);
 		
 		// attempt to register a second person consumer using the same username
-		SSHCommandResult sshCommandResult = client2tasks.register_(username, password, ConsumerType.person, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = client2tasks.register_(username, password, owner, ConsumerType.person, null, null, null, null, null, null, null);
 
 		// assert the sshCommandResult here
 		// User testuser1 has already registered a personal consumer

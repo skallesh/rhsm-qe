@@ -31,10 +31,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 @Test(groups={"ContentTests"})
 public class ContentTests extends SubscriptionManagerCLITestScript{
 
-	protected String rhpersonalUsername = getProperty("sm.rhpersonal.username", "");
-	protected String rhpersonalPassword = getProperty("sm.rhpersonal.password", "");
-	protected String personalConsumerId = null;
-	
 	
 	
 	// Test methods ***********************************************************************
@@ -183,7 +179,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		clienttasks.unregister(null, null, null);
-	    clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+	    clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
@@ -299,14 +295,14 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		client1tasks.unregister_(null,null,null);
 		// second, unregister client2 since it is a personal consumer
 //		client2tasks.unregister_(null,null,null);
-		client2tasks.register_(clientusername, clientpassword, null, null, personalConsumerId, null, Boolean.TRUE, null, null, null);
+		client2tasks.register_(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, personalConsumerId, null, Boolean.TRUE, null, null, null);
 		client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
 		client2tasks.unregister_(null,null,null);
 	}
 
 	
 	// Protected Methods ***********************************************************************
-	
+	protected String personalConsumerId = null;
 
 	
 	// Data Providers ***********************************************************************
@@ -321,7 +317,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return ll;
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
@@ -360,7 +356,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return ll;
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(clientusername, clientpassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
@@ -400,26 +396,26 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are registered (as a person on client2 and a system on client1)
 		
 		// register client1 as a system under rhpersonalUsername
-		client1tasks.register(rhpersonalUsername, rhpersonalPassword, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
+		client1tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOwner, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
 		
 		// register client2 as a person under rhpersonalUsername
-		client2tasks.register(rhpersonalUsername, rhpersonalPassword, ConsumerType.person, null, null, null, Boolean.TRUE, null, null, null);
+		client2tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOwner, ConsumerType.person, null, null, null, Boolean.TRUE, null, null, null);
 		
 		// subscribe to the personal subscription pool to unlock the subpool
 		personalConsumerId = client2tasks.getCurrentConsumerId();
-		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
-			JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
+			JSONObject poolProductDataAsJSONObject = (JSONObject) sm_personSubscriptionPoolProductData.get(j);
 			String personProductId = poolProductDataAsJSONObject.getString("personProductId");
 			JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
 			String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
 
 			SubscriptionPool personPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
-			Assert.assertNotNull(personPool,"Personal productId '"+personProductId+"' is available to user '"+rhpersonalUsername+"' registered as a person.");
+			Assert.assertNotNull(personPool,"Personal productId '"+personProductId+"' is available to user '"+sm_rhpersonalUsername+"' registered as a person.");
 			client2tasks.subscribeToSubscriptionPool(personPool);
 			
 			// now the subpool is available to the system
 			SubscriptionPool systemPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
-			Assert.assertNotNull(systemPool,"Personal subPool productId'"+systemProductId+"' is available to user '"+rhpersonalUsername+"' registered as a system.");
+			Assert.assertNotNull(systemPool,"Personal subPool productId'"+systemProductId+"' is available to user '"+sm_rhpersonalUsername+"' registered as a system.");
 			//client1tasks.subscribeToSubscriptionPool(systemPool);
 			
 			File entitlementCertFile = client1tasks.subscribeToSubscriptionPool(systemPool);

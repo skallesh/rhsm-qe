@@ -177,14 +177,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 		// assert that there are two (one for the host and one for the guest)
 		log.info("Using the RESTful Candlepin API, let's find all the pools generated from subscription id: "+subscriptionId);
-		List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(serverHostname,serverPort,serverPrefix,clientusername,clientpassword, ownerKey, subscriptionId);
+		List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword, ownerKey, subscriptionId);
 		Assert.assertEquals(poolIds.size(), 2, "Exactly two pools should be derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// assert that one pool is for the host and the other is for the guest
 		guestPoolId = null;
 		hostPoolId = null;
 		for (String poolId : poolIds) {
-			Boolean virtOnly = CandlepinTasks.isPoolVirtOnly (serverHostname,serverPort,serverPrefix,clientusername,clientpassword, poolId);		
+			Boolean virtOnly = CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword, poolId);		
 			if (virtOnly!=null && virtOnly) {
 				guestPoolId = poolId;
 			} else {
@@ -249,7 +249,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		String guestPoolQuantityBefore = guestPool.quantity;
 
 		log.info("Now let's modify the start date of the virtualization-aware subscription id '"+subscriptionId+"'...");
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
 		JSONObject jsonSubscription = null;
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
@@ -260,8 +260,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		updateSubscriptionDatesOnDatabase(subscriptionId,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 
 		// retrieve the host pool again and assert the quantity has not changed
@@ -371,9 +371,9 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientusername, null, null, null, null, null, null, null, null));
 		
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientusername, sm_clientpassword, consumerId);
 	}
 	
 	@BeforeMethod(groups="setup")
@@ -440,7 +440,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String subscriptionId = jsonSubscription.getString("id");
@@ -463,13 +463,13 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 					if (startDate.before(now) && endDate.after(now)) {
 
 						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
-						List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(serverHostname,serverPort,serverPrefix,clientusername,clientpassword, ownerKey, subscriptionId);
+						List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword, ownerKey, subscriptionId);
 
 						// determine which pool is for the guest, the other must be for the host
 						String guestPoolId = null;
 						String hostPoolId = null;
 						for (String poolId : poolIds) {
-							Boolean virtOnly = CandlepinTasks.isPoolVirtOnly (serverHostname,serverPort,serverPrefix,clientusername,clientpassword, poolId);		
+							Boolean virtOnly = CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword, poolId);		
 							if (virtOnly!=null && virtOnly) {
 								guestPoolId = poolId;
 							} else {
