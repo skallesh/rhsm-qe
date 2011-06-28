@@ -26,18 +26,18 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// rhsm.conf [server] configurations
 	public static String serverHostname				= null;
 	public static String serverPrefix 				= null;
-	public static String serverPort 					= null;
+	public static String serverPort 				= null;
 	public static String serverInsecure				= null;
 	public static String serverSslVerifyDepth		= null;
-	public static String serverCaCertDir				= null;
+	public static String serverCaCertDir			= null;
 	
 	// rhsm.conf [rhsm] configurations
-	public static String rhsmBaseUrl					= null;
+	public static String rhsmBaseUrl				= null;
 	public static String rhsmRepoCaCert				= null;
 	//public static String rhsmShowIncompatiblePools	= null;
 	public static String rhsmProductCertDir			= null;
 	public static String rhsmEntitlementCertDir		= null;
-	public static String rhsmConsumerCertDir			= null;
+	public static String rhsmConsumerCertDir		= null;
 	
 	// rhsm.conf [rhsmcertd] configurations
 	public static String rhsmcertdCertFrequency		= null;
@@ -64,25 +64,26 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String clienthostname			= client1hostname;
 	public String clientusername			= client1username;
 	public String clientpassword			= client1password;
+	public String clientowner				= client1owner;
 	
-	public String clientUsernames		= getProperty("sm.client.usernames","");
-	public String clientPasswords		= getProperty("sm.client.passwords","");
+	public String clientUsernames			= getProperty("sm.client.usernames","");
+	public String clientPasswords			= getProperty("sm.client.passwords","");
 	
 	public String usernameWithUnacceptedTC = getProperty("sm.client.username.unacceptedTC","");
 	public String passwordWithUnacceptedTC = getProperty("sm.client.password.unacceptedTC","");
 	
-	public String disabledUsername		= getProperty("sm.client.username.disabled","");
-	public String disabledPassword		= getProperty("sm.client.password.disabled","");
+	public String disabledUsername			= getProperty("sm.client.username.disabled","");
+	public String disabledPassword			= getProperty("sm.client.password.disabled","");
 	
 	public String regtoken					= getProperty("sm.client.regtoken","");
-	public String yumInstallOptions		= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumInstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
+	public String yumInstallOptions			= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumInstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
 	
-	public String sshUser				= getProperty("sm.ssh.user","root");
-	public String sshKeyPrivate			= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
-	public String sshkeyPassphrase		= getProperty("sm.sshkey.passphrase","");
+	public String sshUser					= getProperty("sm.ssh.user","root");
+	public String sshKeyPrivate				= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
+	public String sshkeyPassphrase			= getProperty("sm.sshkey.passphrase","");
 	
 	public String dbHostname				= getProperty("sm.server.db.hostname","");
-	public String dbSqlDriver			= getProperty("sm.server.db.sqlDriver","");
+	public String dbSqlDriver				= getProperty("sm.server.db.sqlDriver","");
 	public String dbPort					= getProperty("sm.server.db.port","");
 	public String dbName					= getProperty("sm.server.db.name","");
 	public String dbUsername				= getProperty("sm.server.db.username","");
@@ -145,6 +146,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		// Hudson parameters that are left blank will be passed in by the variable
 		// name of the parameter beginning with a $ sign, catch these and blank it
 		String property = System.getProperty(key,def);
+		if (property==null) return null;
 		return (property.startsWith("$") || property.equals(""))? def:property;
 	}
 

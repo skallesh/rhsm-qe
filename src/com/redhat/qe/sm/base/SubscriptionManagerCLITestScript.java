@@ -67,6 +67,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public void setupBeforeSuite() throws IOException {
 		if (isSetupBeforeSuiteComplete) return;
 		
+		// create SSHCommandRunners to connect to the subscription-manager clients
 		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
@@ -79,6 +80,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		} else {
 			log.info("Multi-client testing will be skipped.");
 		}
+		
+		// unregister clients in case they are still registered from prior run (DO THIS BEFORE SETTING UP A NEW CANDLEPIN)
+		unregisterClientsAfterSuite();
+		
 		
 		File serverCaCertFile = null;
 		List<File> generatedProductCertFiles = new ArrayList<File>();
@@ -124,12 +129,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				localFile.renameTo(localFileRenamed);
 				generatedProductCertFiles.add(localFileRenamed);
 			}
-
-
 		}
-		
-		// if clients are already registered from a prior run, unregister them
-		unregisterClientsAfterSuite();
 		
 		// setup the client(s)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
@@ -597,11 +597,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// assure we are registered
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null);
+		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);
 			if (!client2username.equals("") && !client2password.equals(""))
-				client2tasks.register(client2username, client2password, null, null, null, null, null, null, null, null);
+				client2tasks.register(client2username, client2password, null, null, null, null, null, null, null, null, null);
 		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
@@ -667,7 +667,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 		
 		// then assemble a list of all consumed ProductSubscriptions
@@ -692,7 +692,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null);
+		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 
 		
@@ -740,7 +740,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, Boolean.TRUE, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 
 		Calendar now = new GregorianCalendar();
@@ -897,7 +897,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, Boolean.TRUE, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, Boolean.TRUE, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 
 		Calendar now = new GregorianCalendar();
