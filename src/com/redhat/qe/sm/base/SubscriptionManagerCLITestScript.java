@@ -21,7 +21,9 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
@@ -115,19 +117,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 			
 			// fetch the generated Product Certs
-			log.info("Fetching the generated product certs...");
-			//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			SSHCommandResult result = server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
-			String[] remoteFilesAsString = result.getStdout().trim().split("\\n");
-			if (remoteFilesAsString.length==1 && remoteFilesAsString[0].equals("")) remoteFilesAsString = new String[]{};
-			if (remoteFilesAsString.length==0) log.warning("No generated product certs were found on the candlpin server for use in testing.");
-			for (String remoteFileAsString : remoteFilesAsString) {
-				File remoteFile = new File(remoteFileAsString);
-				File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
-				File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
-				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
-				localFile.renameTo(localFileRenamed);
-				generatedProductCertFiles.add(localFileRenamed);
+			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
+				log.info("Fetching the generated product certs...");
+				//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
+				SSHCommandResult result = server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+				String[] remoteFilesAsString = result.getStdout().trim().split("\\n");
+				if (remoteFilesAsString.length==1 && remoteFilesAsString[0].equals("")) remoteFilesAsString = new String[]{};
+				if (remoteFilesAsString.length==0) log.warning("No generated product certs were found on the candlpin server for use in testing.");
+				for (String remoteFileAsString : remoteFilesAsString) {
+					File remoteFile = new File(remoteFileAsString);
+					File localFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+remoteFile.getName()).replace("tmp/tmp", "tmp"));
+					File localFileRenamed = new File(localFile.getPath().replace(".pem", "_.pem")); // rename the generated productCertFile to help distinguish it from a true RHEL productCertFiles
+					RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
+					localFile.renameTo(localFileRenamed);
+					generatedProductCertFiles.add(localFileRenamed);
+				}
 			}
 		}
 		
@@ -242,6 +246,28 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //
 //		// vncviewer <client1tasks.hostname>:2
 //	}
+	
+
+	
+	protected String selinuxSuiteMarker = "SM TestSuite marker";	// do not use a timestamp on the whole suite marker
+	protected String selinuxClassMarker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Ensure SELinux is Enforcing before running the test suite.")
+	public void ensureSELinuxIsEnforcingBeforeSuite() {
+		if (client1!=null) Assert.assertEquals(client1.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+client1.getConnection().getHostname());
+		if (client2!=null) Assert.assertEquals(client2.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+client2.getConnection().getHostname());
+		if (client1!=null) RemoteFileTasks.markFile(client1, client1tasks.varLogAuditFile, selinuxSuiteMarker);
+		if (client2!=null) RemoteFileTasks.markFile(client2, client2tasks.varLogAuditFile, selinuxSuiteMarker);
+	}
+	@BeforeClass(groups={"setup"}, description="Mark the SELinux audit log before running the current class of tests so it can be searched for denials after the test class has run.")
+	public void MarkSELinuxAuditLogBeforeClass() {
+		if (client1!=null) RemoteFileTasks.markFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker);
+		if (client2!=null) RemoteFileTasks.markFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker);
+	}
+	@AfterClass(groups={"setup"}, description="Search the SELinux audit log for denials after running the current class of tests")
+	public void verifyNoSELinuxDenialsWereLoggedAfterClass() {
+		if (client1!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log on client "+client1.getConnection().getHostname()+" while executing this test class.");
+		if (client2!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log on client "+client2.getConnection().getHostname()+" while executing this test class.");
+	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {

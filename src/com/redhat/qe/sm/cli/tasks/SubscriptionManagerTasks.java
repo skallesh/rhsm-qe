@@ -56,6 +56,7 @@ public class SubscriptionManagerTasks {
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
+	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public /*final*/ String rhsmComplianceD	= "/usr/libexec/rhsmd";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
