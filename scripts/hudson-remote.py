@@ -16,81 +16,84 @@
 
 import json
 import urllib
-import urllib2
 import commands
 import time
 from pprint import pprint
 
 def sanitize(arg):
     """Sanitize an argument to put in a shell command."""
-    return arg.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", r"\$").replace("`", r"\`")
+    return arg.replace("\\", "\\\\")\
+              .replace("\"", "\\\"")\
+              .replace("$", r"\$")\
+              .replace("`", r"\`")
 
 def schedule_job(url, variants, token):
-  """Schedules a beaker job in hudson.
-  
-  Arguements:
-  url -- The url of the hudson job.
-  variants -- A list of tests.  Each test is a list in this format:
-              [['arch','variant','release'],
-               ['arch1','variant1','release1']]
-  token -- The token used to gain remote access to the hudson job.
-  
-  """
-  json_data = urllib.urlopen(url + "/api/json").read()
-  data = json.loads(json_data)
+    """Schedules a beaker job in hudson.
+    
+    Arguements:
+    url -- The url of the hudson job.
+    variants -- A list of tests.  Each test is a list in this format:
+                [['arch', 'variant', 'release'],
+                 ['arch1', 'variant1', 'release1']]
+    token -- The token used to gain remote access to the hudson job.
+    
+    """
+    json_data = urllib.urlopen(url + "/api/json").read()
+    data = json.loads(json_data)
 
-  value_list = []
-  for value in data['property'][1]['parameterDefinitions']:
-    if value['type'] == 'PasswordParameterDefinition':
-      continue
-    if value['defaultParameterValue'] == None:
-      continue
-    else:
-      value_list.append(value['defaultParameterValue'])
+    value_list = []
+    for value in data['property'][1]['parameterDefinitions']:
+        if value['type'] == 'PasswordParameterDefinition':
+            continue
+        if value['defaultParameterValue'] == None:
+            continue
+        else:
+            value_list.append(value['defaultParameterValue'])
 
-  for variant in variants:
-    print variant
-    for item in value_list:
-      if item['name'] == 'CLIENT1_ARCH':
-        item['value'] = variant[0]
-      if item['name'] == 'CLIENT1_VARIANT':
-        item['value'] = variant[1]
-      if item['name'] == 'CLIENT1_DistroFamily':
-        item['value'] = variant[2]
-    output_dict = dict()
-    output_dict['parameter'] = value_list
-    print "Parameters:"
-    pprint(output_dict)
-    outputdata = json.dumps(output_dict)
-    cmd = 'curl -X POST %s -d token="%s" --data-urlencode json="%s"' % (url + "/build", token, sanitize(outputdata))  
-    status, output = commands.getstatusoutput(cmd)
-    print status
-    print output
-    time.sleep(10)
-
-
-url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
-token = "hudsonbeaker-remote"
-variants = [['ppc64','Server','RedHatEnterpriseLinux6'],
-            ['s390x','Server','RedHatEnterpriseLinux6'],
-            ['x86_64','ComputeNode','RedHatEnterpriseLinux6'],
-            ['x86_64','Server','RedHatEnterpriseLinux6'],
-            ['x86_64','Client','RedHatEnterpriseLinux6'],
-            ['x86_64','Workstation','RedHatEnterpriseLinux6'],
-            ['i386','Client','RedHatEnterpriseLinux6'],
-            ['i386','Server','RedHatEnterpriseLinux6'],
-            ['i386','Workstation','RedHatEnterpriseLinux6']]
-schedule_job(url, variants, token)
+    for variant in variants:
+        print variant
+        for item in value_list:
+            if item['name'] == 'CLIENT1_ARCH':
+                item['value'] = variant[0]
+            if item['name'] == 'CLIENT1_VARIANT':
+                item['value'] = variant[1]
+            if item['name'] == 'CLIENT1_DistroFamily':
+                item['value'] = variant[2]
+        output_dict = dict()
+        output_dict['parameter'] = value_list
+        print "Parameters:"
+        pprint(output_dict)
+        outputdata = json.dumps(output_dict)
+        cmd = 'curl -X POST %s -d token="%s" --data-urlencode json="%s"' % \
+                  (url + "/build", token, sanitize(outputdata))  
+        status, output = commands.getstatusoutput(cmd)
+        print status
+        print output
+        time.sleep(10)
 
 
-url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"
-token = "hudsonbeaker-remote"
-variants = [['ppc64','','RedHatEnterpriseLinuxServer5'],
-            ['s390x','','RedHatEnterpriseLinuxServer5'],
-            ['ia64','','RedHatEnterpriseLinuxServer5'],
-            ['i386','','RedHatEnterpriseLinuxServer5'],
-            ['x86_64','','RedHatEnterpriseLinuxServer5'],
-            ['i386','','RedHatEnterpriseLinuxClient5'],
-            ['x86_64','','RedHatEnterpriseLinuxClient5']]
-schedule_job(url, variants, token)
+URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
+TOKEN = "hudsonbeaker-remote"
+VARIANTS = [['ppc64', 'Server', 'RedHatEnterpriseLinux6'],
+            ['s390x', 'Server', 'RedHatEnterpriseLinux6'],
+            ['x86_64', 'ComputeNode', 'RedHatEnterpriseLinux6'],
+            ['x86_64', 'Server', 'RedHatEnterpriseLinux6'],
+            ['x86_64', 'Client', 'RedHatEnterpriseLinux6'],
+            ['x86_64', 'Workstation', 'RedHatEnterpriseLinux6'],
+            ['i386', 'Client', 'RedHatEnterpriseLinux6'],
+            ['i386', 'Server', 'RedHatEnterpriseLinux6'],
+            ['i386', 'Workstation', 'RedHatEnterpriseLinux6']]
+schedule_job(URL, VARIANTS, TOKEN)
+
+
+URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"
+TOKEN = "hudsonbeaker-remote"
+VARIANTS = [['ppc64', '', 'RedHatEnterpriseLinuxServer5'],
+            ['s390x', '', 'RedHatEnterpriseLinuxServer5'],
+            ['ia64', '', 'RedHatEnterpriseLinuxServer5'],
+            ['i386', '', 'RedHatEnterpriseLinuxServer5'],
+            ['x86_64', '', 'RedHatEnterpriseLinuxServer5'],
+            ['i386', '', 'RedHatEnterpriseLinuxClient5'],
+            ['x86_64', '', 'RedHatEnterpriseLinuxClient5']]
+schedule_job(URL, VARIANTS, TOKEN)
 

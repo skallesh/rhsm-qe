@@ -26,6 +26,13 @@
       (= expn 'true)
       (= expn 'false))))
 
+(defmacro loop-timeout [timeout bindings & forms]
+  `(let [starttime# (System/currentTimeMillis)]
+     (loop ~bindings
+       (if  (> (- (System/currentTimeMillis) starttime#) ~timeout)
+	 (throw (RuntimeException. (str "Hit timeout of " ~timeout "ms.")))
+	 (do ~@forms)))))
+
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
                    :no-username #"You must enter a login"
@@ -115,8 +122,8 @@
 
 (defn register
   "Registers subscription manager by clicking the 'Register System' button in the gui."
-  [username password & {:keys [system-name-input, autosubscribe]
-				     :or {system-name-input nil, autosubscribe false}}]
+  [username password & {:keys [system-name-input, autosubscribe, owner]
+                        :or {system-name-input nil, autosubscribe false, owner nil}}]
   (if (ui showing? :unregister-system)
     (raise {:type :already-registered
             :username username
@@ -134,6 +141,17 @@
    (ui uncheck :automatically-subscribe))  
   (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
     (ui click :register)
+    (checkforerror)              
+    (if (= 1 (ui waittillshowing :owners 30))
+      (do
+        (when owner
+          (if-not (ui rowexist? :owners owner)
+            (raise {:type :owner-not-available
+                    :name owner
+                    :msg (str "Not found in 'Owner Selection':" owner)}))
+          (ui selectrow :owners owner))
+        (ui click :register)
+        (sleep 5)))              
     (checkforerror)))
 
 (defn fbshowing?

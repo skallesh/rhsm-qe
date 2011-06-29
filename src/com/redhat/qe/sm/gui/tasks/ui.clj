@@ -23,69 +23,70 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 (def windows (define-windows
 	       {:main-window "Subscription Manager"
-		      :register-dialog "register_dialog"
-		      :error-dialog "Error" 
-		      :question-dialog "Question"  
-		      :facts-dialog "facts_dialog" 
-		      :progress-dialog "Progress Dialog"
-		      :contract-selection-dialog "Contract Selection"
-          :proxy-config-dialog "Advanced Network Configuration"
-          :subscription-assistant-dialog "Subscription Assistant"
-          :information-dialog "Information"
-          :warning-dialog "Warning"
-          :firstboot-window "frm0"
-          :firstboot-proxy-dialog "Advanced Network Configuration"}))
+                :register-dialog "register_dialog"
+                :error-dialog "Error" 
+                :question-dialog "Question"  
+                :facts-dialog "facts_dialog" 
+                :progress-dialog "Progress Dialog"
+                :contract-selection-dialog "Contract Selection"
+                :proxy-config-dialog "Advanced Network Configuration"
+                :subscription-assistant-dialog "Subscription Assistant"
+                :information-dialog "Information"
+                :warning-dialog "Warning"
+                :firstboot-window "frm0"
+                :firstboot-proxy-dialog "Advanced Network Configuration"}))
 
 
-(def elements (merge
-		 (define-elements (windows :main-window)
-		   (merge
-		    (same-name capitalize [:registration-settings
-					                     :register-system
-					                     :unregister-system
-					                     :add-subscription
-					                     :view-system-facts
-					                     :glossary
-					                     :update-certificates
-					                     :all-available-subscriptions
-					                     :my-subscriptions
-					                     :my-installed-software
-					                     :search
-					                     :subscribe
-                               :all-subscriptions-view
-                               :my-subscriptions-view
-                               :match-system
-                               :match-installed
-                               :do-not-overlap
-                               :contain-text
-                               :text-in-subscription
-                               :unsubscribe
-                               :proxy-configuration ])
+(def elements
+  (merge
+    (define-elements (windows :main-window)
+      (merge (same-name capitalize [:registration-settings
+                                    :register-system
+                                    :unregister-system
+                                    :add-subscription
+                                    :view-system-facts
+                                    :glossary
+                                    :update-certificates
+                                    :all-available-subscriptions
+                                    :my-subscriptions
+                                    :my-installed-software
+                                    :search
+                                    :subscribe
+                                    :all-subscriptions-view
+                                    :my-subscriptions-view
+                                    :match-system
+                                    :match-installed
+                                    :do-not-overlap
+                                    :contain-text
+                                    :text-in-subscription
+                                    :unsubscribe
+                                    :proxy-configuration ])
 		    {:more-search-options "More search options"
-         :contains-the-text "Text in Subscription"
-         :date-entry "date-entry"}))
+                     :contains-the-text "Text in Subscription"
+                     :date-entry "date-entry"}))
 		    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
-		 (define-elements (windows :register-dialog)
+    (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
          :password "account_password"
          :system-name "consumer_name"
          :automatically-subscribe "auto_bind"
          :register "register_button"
-         :register-cancel "cancel_button"})
-		 (define-elements (windows :question-dialog)
-		   (same-name capitalize [:yes
-		                          :no ]))
-		 (define-elements (windows :facts-dialog)
-		   {:facts-view "facts_view"
-		    :close-facts "close_button"} )
-		 (define-elements (windows :error-dialog)
-		   {:ok-error "OK"
-		    :error-msg "lbl[A-Za-z]*"})
-		 (define-elements (windows :contract-selection-dialog)
-	     {:contract-selection-table "tbl0"
-	      :cancel-contract-selection "Cancel"
-	      :subscribe-contract-selection "Subscribe"})
-     (define-elements (windows :proxy-config-dialog)
+         :register-cancel "cancel_button"
+         :owners "tbl0"})
+    (define-elements (windows :question-dialog)
+      (same-name capitalize [:yes
+                             :no ]))
+    (define-elements (windows :facts-dialog)
+      {:facts-view "facts_view"
+       :close-facts "close_button"} )
+    (define-elements (windows :error-dialog)
+      {:ok-error "OK"
+       :error-msg "lbl[A-Za-z]*"})
+    (define-elements (windows :contract-selection-dialog)
+      {:contract-selection-table "tbl0"
+       :cancel-contract-selection "Cancel"
+       :subscribe-contract-selection "Subscribe"})
+    (define-elements (windows :proxy-config-dialog)
        (merge (same-name capitalize [:proxy-checkbox
                                      :authentication-checkbox
                                      :proxy-text
@@ -93,42 +94,42 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                      :username-text])
              {:close-proxy "Close Button"
               :proxy-location "Proxy Location:"}))
-      (define-elements (windows :information-dialog)
-        {:info-ok "OK"})
-      (define-elements (windows :warning-dialog)
-        {:warn-ok "OK"
-         :warn-cancel "Cancel"})
-      (define-elements (windows :subscription-assistant-dialog)
-        {:first-date "*first date of invalid entitlements*"
-         :different-date "A different date:"
-         :date-entry "date-entry"
-         :update "Update"
-         :assistant-subscribe "subscribe button"
-         :subscription-product-view "Invalid Product List"
-         :assistant-subscription-view "Subscription List"})
-      (define-elements (windows :firstboot-window)
-        {:firstboot-back "Back"
-         :firstboot-forward "Forward"
-         :license-yes "Yes, I agree to the License Agreement"
-         :license-no "No, I do not agree"
-         :register-now "Yes, I'd like to register now."
-         :register-later "No, I prefer to register at a later time."
-         :register-rhn "I'd like to receive updates from Red Hat Network*"
-         :register-satellite "I have access to a Red Hat Network Satellite*"
-         :satelite-location "satellite server location"
-         :rhn-classic-mode "RHN Classic Mode"
-         :firstboot-proxy-config "Advanced Network Configuration button"
-         :firstboot-user "account_login"
-         :firstboot-pass "account_password"
-         :firstboot-autosubscribe "auto_bind"
-         :firstboot-system-name "consumer_name"})
-      (define-elements (windows :firstboot-proxy-dialog)
-        {:firstboot-proxy-checkbox "I would like to connect*"
-         :firstboot-proxy-location "Proxy Location:"
-         :firstboot-auth-checkbox "Use Authentication*"
-         :firstboot-proxy-user "proxy user field"
-         :firstboot-proxy-pass "proxy password field"
-         :firstboot-proxy-close "Close"}) ))
+    (define-elements (windows :information-dialog)
+      {:info-ok "OK"})
+    (define-elements (windows :warning-dialog)
+      {:warn-ok "OK"
+       :warn-cancel "Cancel"})
+    (define-elements (windows :subscription-assistant-dialog)
+      {:first-date "*first date of invalid entitlements*"
+       :different-date "A different date:"
+       :date-entry "date-entry"
+       :update "Update"
+       :assistant-subscribe "subscribe button"
+       :subscription-product-view "Invalid Product List"
+       :assistant-subscription-view "Subscription List"})
+    (define-elements (windows :firstboot-window)
+      {:firstboot-back "Back"
+       :firstboot-forward "Forward"
+       :license-yes "Yes, I agree to the License Agreement"
+       :license-no "No, I do not agree"
+       :register-now "Yes, I'd like to register now."
+       :register-later "No, I prefer to register at a later time."
+       :register-rhn "I'd like to receive updates from Red Hat Network*"
+       :register-satellite "I have access to a Red Hat Network Satellite*"
+       :satelite-location "satellite server location"
+       :rhn-classic-mode "RHN Classic Mode"
+       :firstboot-proxy-config "Advanced Network Configuration button"
+       :firstboot-user "account_login"
+       :firstboot-pass "account_password"
+       :firstboot-autosubscribe "auto_bind"
+       :firstboot-system-name "consumer_name"})
+    (define-elements (windows :firstboot-proxy-dialog)
+      {:firstboot-proxy-checkbox "I would like to connect*"
+       :firstboot-proxy-location "Proxy Location:"
+       :firstboot-auth-checkbox "Use Authentication*"
+       :firstboot-proxy-user "proxy user field"
+       :firstboot-proxy-pass "proxy password field"
+       :firstboot-proxy-close "Close"}) ))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
