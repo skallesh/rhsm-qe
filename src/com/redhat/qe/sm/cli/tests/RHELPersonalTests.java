@@ -756,7 +756,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	protected String username = sm_rhpersonalUsername;
 	protected String password = sm_rhpersonalPassword;
-	protected String owner = sm_rhpersonalOwner;
+	protected String owner = sm_rhpersonalOrg;
 	protected String anotherUsername = null;	// under the same ownerkey as username
 	protected String anotherPassword = null;
 	protected String personSubscriptionName = null;

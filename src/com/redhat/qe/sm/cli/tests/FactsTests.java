@@ -97,7 +97,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// start with fresh registrations using the same clientusername user
 		smt.unregister(null, null, null);
-		smt.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
+		smt.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 		
 		// list the system facts
 		smt.facts(true, false, null, null, null);
@@ -132,8 +132,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		// start with fresh registrations using the same clientusername user
 		workClientTasks.unregister(null, null, null);
 		servClientTasks.unregister(null, null, null);
-		workClientTasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
-		servClientTasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, null, null, null, null, null, null, null);
+		workClientTasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+		servClientTasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 		
 
 		// get all the pools available to each client
@@ -162,8 +162,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null);
-		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null, null, null, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientusername, sm_clientpassword, consumerId);
+		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 		
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
@@ -178,7 +178,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the owner's subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");
@@ -209,8 +209,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		if (jsonSubscriptions.length()==0) {
-			log.warning("No owner subscriptions were found for a system registered by '"+sm_clientusername+"' and therefore we could not attempt this test.");
-			throw new SkipException("No owner subscriptions were found for a system registered by '"+sm_clientusername+"' and therefore we could not attempt this test.");		
+			log.warning("No owner subscriptions were found for a system registered by '"+sm_clientUsername+"' and therefore we could not attempt this test.");
+			throw new SkipException("No owner subscriptions were found for a system registered by '"+sm_clientUsername+"' and therefore we could not attempt this test.");		
 		}
 		if (!conclusiveTest) {
 			//log.warning("The facts for this system did not allow us to perform a conclusive test.");
@@ -226,8 +226,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null);
-		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientusername,sm_clientpassword,sm_clientowner,null,null,null, null, null, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientusername, sm_clientpassword, consumerId);
+		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		boolean foundPoolWithArchAttributes = false;
 		boolean conclusiveTest = false;
@@ -241,7 +241,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the owner's subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");
@@ -272,8 +272,8 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		if (jsonSubscriptions.length()==0) {
-			log.warning("No owner subscriptions were found for a system registered by '"+sm_clientusername+"' and therefore we could not attempt this test.");
-			throw new SkipException("No owner subscriptions were found for a system registered by '"+sm_clientusername+"' and therefore we could not attempt this test.");		
+			log.warning("No owner subscriptions were found for a system registered by '"+sm_clientUsername+"' and therefore we could not attempt this test.");
+			throw new SkipException("No owner subscriptions were found for a system registered by '"+sm_clientUsername+"' and therefore we could not attempt this test.");		
 		}
 		if (!conclusiveTest) {
 			log.warning("The facts for this system did not allow us to perform a conclusive test.");
@@ -300,7 +300,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 
 		// on a RHEL workstation register to candlepin (as type system)
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.system, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, ConsumerType.system, null, null, null, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this system consumer)
 		List<SubscriptionPool> compatiblePoolsAsSystemConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -313,7 +313,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		// now register to candlepin (as type candlepin)
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, ConsumerType.candlepin, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, ConsumerType.candlepin, null, null, null, null, null, null, null);
 
 		// get a list of available pools and all available pools (for this candlepin consumer)
 		List<SubscriptionPool> compatiblePoolsAsCandlepinConsumer = clienttasks.getCurrentlyAvailableSubscriptionPools();

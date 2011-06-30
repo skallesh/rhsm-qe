@@ -50,27 +50,27 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_serverBranch				= getProperty("sm.server.branch","");
 	public Boolean sm_isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
 
-	public String sm_client1hostname			= getProperty("sm.client1.hostname","");
-	public String sm_client1username			= getProperty("sm.client1.username","");
-	public String sm_client1password			= getProperty("sm.client1.password","");
-	public String sm_client1owner				= getProperty("sm.client1.owner",null);
+	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
+	public String sm_client1Username			= getProperty("sm.client1.username","");
+	public String sm_client1Password			= getProperty("sm.client1.password","");
+	public String sm_client1Org					= getProperty("sm.client1.org",null);
 
-	public String sm_client2hostname			= getProperty("sm.client2.hostname","");
-	public String sm_client2username			= getProperty("sm.client2.username","");
-	public String sm_client2password			= getProperty("sm.client2.password","");
-	public String sm_client2owner				= getProperty("sm.client2.owner",null);
+	public String sm_client2Hostname			= getProperty("sm.client2.hostname","");
+	public String sm_client2Username			= getProperty("sm.client2.username","");
+	public String sm_client2Password			= getProperty("sm.client2.password","");
+	public String sm_client2Org					= getProperty("sm.client2.org",null);
 
-	public String sm_clienthostname				= sm_client1hostname;
-	public String sm_clientusername				= sm_client1username;
-	public String sm_clientpassword				= sm_client1password;
-	public String sm_clientowner				= sm_client1owner;
+	public String sm_clientHostname				= sm_client1Hostname;
+	public String sm_clientUsername				= sm_client1Username;
+	public String sm_clientPassword				= sm_client1Password;
+	public String sm_clientOrg					= sm_client1Org;
 	
 	public String sm_clientUsernames			= getProperty("sm.client.usernames","");
 	public String sm_clientPasswords			= getProperty("sm.client.passwords","");
 	
 	public String sm_rhpersonalUsername			= getProperty("sm.rhpersonal.username", "");
 	public String sm_rhpersonalPassword			= getProperty("sm.rhpersonal.password", "");
-	public String sm_rhpersonalOwner			= getProperty("sm.rhpersonal.owner", null);
+	public String sm_rhpersonalOrg				= getProperty("sm.rhpersonal.org", null);
 	public String sm_rhpersonalSubproductQuantity =	getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	
 	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
@@ -127,7 +127,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		
 		if (getProperty("sm.rpm.urls", "").equals("")) 				sm_rpmUrls			= new ArrayList<String>();	else sm_rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
 		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
-		if (getProperty("sm.consumerTypes", "").equals(""))			sm_consumerTypes	= new ArrayList<String>();	else sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
+																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
 		 
 		 
 		// rhsm.conf [server] configurations

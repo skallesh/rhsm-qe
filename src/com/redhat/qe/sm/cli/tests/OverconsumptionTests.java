@@ -39,7 +39,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 	public void BasicAttemptToOversubscribe_Test() throws JSONException, Exception {
 	
 		// find the pool with the least positive quantity available >= 2
-		client1tasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, registereeName, null, null, Boolean.TRUE, null, null, null);
+		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, registereeName, null, null, Boolean.TRUE, null, null, null);
 		int quantity = 1000000;
 		for (SubscriptionPool pool: client1tasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (pool.quantity.equalsIgnoreCase("unlimited")) continue;
@@ -58,7 +58,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		for (int i=quantity; i>0; i--) {
 			// register a new system consumer
 			client1tasks.clean(null,null,null);
-			systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, registereeName, null, null, null, null, null, null)));
+			systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, registereeName, null, null, null, null, null, null)));
 
 			// subscribe to the pool
 			client1tasks.subscribeToSubscriptionPool(testPool);
@@ -66,7 +66,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now we will register and subscribe the final subscriber as an attempt to oversubscribe to original pool: "+testPool);
 		client1tasks.clean(null,null,null);
-		systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, registereeName, null, null, null, null, null, null)));
+		systemConsumerIds.add(client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, registereeName, null, null, null, null, null, null)));
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 //		Assert.assertNotNull(pool, "Found the test pool amongst --all --available after having consumed all of its available entitlements.");
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
@@ -74,7 +74,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(pool, "The test pool is no longer in the --available list after having consumed all of its available subscriptions.");
 		
 		// assert the consumed quantity
-		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+testPool.poolId));
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
 				"Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 
@@ -85,7 +85,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// try again
 		Assert.assertEquals(client1tasks.subscribe_(null, testPool.poolId, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'");
 		// assert the consumed quantity again
-		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+testPool.poolId));
+		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
 				"Asserting the test pool's consumed attribute has not overconsumed it's total quantity after attempting a basic overconsumption of its entitlements.");
 
@@ -102,12 +102,12 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
-		client1tasks.register(sm_clientusername,sm_clientpassword,null,null,registereeName,systemConsumerIds.get(0), null, null, null, null, null);
+		client1tasks.register(sm_clientUsername,sm_clientPassword,null,null,registereeName,systemConsumerIds.get(0), null, null, null, null, null);
 		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// reregister the second systemConsumerId and unsubscribe from the test pool
 		client2tasks.clean(null,null,null);
-		client2tasks.register(sm_clientusername,sm_clientpassword,null,null,registereeName,systemConsumerIds.get(1), null, null, null, null, null);
+		client2tasks.register(sm_clientUsername,sm_clientPassword,null,null,registereeName,systemConsumerIds.get(1), null, null, null, null, null);
 		client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// assert that each client has no entitlements
@@ -157,7 +157,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
-		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+testPool.poolId));
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 
 		// make sure both clients got individualized entitlement certs
@@ -181,12 +181,12 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		
 		// reregister the first systemConsumerId and unsubscribe from the test pool
 		client1tasks.clean(null,null,null);
-		client1tasks.register(sm_clientusername,sm_clientpassword,null,null,registereeName,systemConsumerIds.get(0), null, null, null, null, null);
+		client1tasks.register(sm_clientUsername,sm_clientPassword,null,null,registereeName,systemConsumerIds.get(0), null, null, null, null, null);
 		client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 
 		// register from a second client too
 		client2tasks.clean(null,null,null);
-		systemConsumerIds.add(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientusername, sm_clientpassword, sm_clientowner, null, registereeName, null, null, null, null, null, null)));
+		systemConsumerIds.add(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, registereeName, null, null, null, null, null, null)));
 
 		// assert that the test pool has a quantity of 1 available
 		SubscriptionPool pool;
@@ -219,7 +219,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
-		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientusername,sm_clientpassword,"/pools/"+testPool.poolId));
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 		
 		// one of these command should have succeeded and one should have failed with "No free entitlements..."
@@ -286,7 +286,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		if (client1tasks!=null) {
 			
 			for (String systemConsumerId : systemConsumerIds) {
-				client1tasks.register_(sm_clientusername,sm_clientpassword,null,null,null,systemConsumerId, null, Boolean.TRUE, null, null, null);
+				client1tasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,systemConsumerId, null, Boolean.TRUE, null, null, null);
 				client1tasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
 				client1tasks.unregister_(null, null, null);
 			}
