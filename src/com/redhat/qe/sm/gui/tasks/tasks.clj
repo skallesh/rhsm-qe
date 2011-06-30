@@ -144,12 +144,12 @@
     (checkforerror)              
     (if (= 1 (ui waittillshowing :owners 30))
       (do
-        (when owner
+        (when owner (do 
           (if-not (ui rowexist? :owners owner)
             (raise {:type :owner-not-available
                     :name owner
                     :msg (str "Not found in 'Owner Selection':" owner)}))
-          (ui selectrow :owners owner))
+          (ui selectrow :owners owner)))
         (ui click :register)
         (sleep 5)))              
     (checkforerror)))
@@ -400,7 +400,7 @@
     (f)
     (RemoteFileTasks/getTailFromMarkedFile runner log marker grep)))
 
-(comment 
+(comment  
 (defn get-all-facts []
    (ui click :view-system-facts)
    (ui waittillguiexist :facts-view)
