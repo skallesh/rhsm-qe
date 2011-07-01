@@ -55,7 +55,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithUsernameAndPassword_Test(String username, String password, String org) {
-		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
+		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
 		
 		// determine this user's ability to register
 		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, null);
