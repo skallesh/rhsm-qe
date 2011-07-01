@@ -596,7 +596,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeClass(groups="setup")
-	public void setupBeforeClass() throws IOException {
+	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithUsernameAndPassword_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.

@@ -39,6 +39,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
+import com.sun.org.apache.bcel.internal.generic.SIPUSH;
 
 /**
  * @author ssalevan
@@ -492,12 +493,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	/**
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	protected void RegisterWithUsernameAndPassword_Test() throws IOException {
+	protected void RegisterWithUsernameAndPassword_Test() throws Exception {
 		if (registrationDataList.isEmpty()) {
 			clienttasks.unregister(null,null,null); // make sure client is unregistered
-			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
+//DELETME			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
+			for (List<Object> UsernameAndPassword : getRegisterCredentialsDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
 				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1), (String)UsernameAndPassword.get(2));
@@ -660,37 +662,97 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-	
-	@DataProvider(name="getUsernameAndPasswordData")
-	public Object[][] getUsernameAndPasswordDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+// DELETEME
+//	@DataProvider(name="getUsernameAndPasswordData")
+//	public Object[][] getUsernameAndPasswordDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+//	}
+//	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+//		List<List<Object>> ll = new ArrayList<List<Object>>();
+//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
+//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
+//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
+//
+//		String[] usernames = sm_clientUsernames.split(",");
+//		String[] passwords = sm_clientPasswords.split(",");
+//		String password = passwords[0].trim();
+//		for (int i = 0; i < usernames.length; i++) {
+//			String username = usernames[i].trim();
+//			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
+//			// this allows one to specify only one password when all the usernames share the same password
+//			if (i<passwords.length) password = passwords[i].trim();
+//			
+//			// get the orgs for this username/password
+//			List<String> orgs = clienttasks.getOrgs(username,password);
+//			if (orgs.size()==1) {orgs.clear(); orgs.add(null);}	// 
+//			
+//			// append a username and password for each org the user belongs to
+//			for (String org : orgs) {
+//				ll.add(Arrays.asList(new Object[]{username,password,org}));
+//			}
+//		}
+//		
+//		return ll;
+//	}
+	@DataProvider(name="getRegisterCredentialsData")
+	public Object[][] getRegisterCredentialsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterCredentialsDataAsListOfLists());
 	}
-	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// Notes...
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
-		
-		String[] usernames = sm_clientUsernames.split(",");
-		String[] passwords = sm_clientPasswords.split(",");
-		String password = passwords[0].trim();
-		for (int i = 0; i < usernames.length; i++) {
-			String username = usernames[i].trim();
-			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
-			// this allows one to specify only one password when all the usernames share the same password
-			if (i<passwords.length) password = passwords[i].trim();
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
+
+		// get all of the candlepin users
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
+		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/users"));	
+		for (int i = 0; i < jsonUsers.length(); i++) {
+			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
+			// {
+			//   "created": "2011-07-01T06:40:00.951+0000", 
+			//   "hashedPassword": "05557a2aaec7cb676df574d2eb080691949a6752", 
+			//   "id": "8a90f8c630e46c7e0130e46ce9b70020", 
+			//   "superAdmin": false, 
+			//   "updated": "2011-07-01T06:40:00.951+0000", 
+			//   "username": "minnie"
+			// }
+			Boolean isSuperAdmin = jsonUser.getBoolean("superAdmin");
+			String username = jsonUser.getString("username");
+			String password = sm_clientPasswordDefault;
+			if (username.equals(sm_serverAdminUsername)) password = sm_serverAdminPassword;
 			
-			// get the orgs for this username/password
-			List<String> orgs = clienttasks.getOrgs(username,password);
-			if (orgs.size()==1) {orgs.clear(); orgs.add(null);}	// 
+			// get the user's owners
+			// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
+			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/users/"+username+"/owners"));	
+			for (int j = 0; j < jsonUserOwners.length(); j++) {
+				JSONObject jsonOwner = (JSONObject) jsonUserOwners.get(j);
+				// {
+				//    "contentPrefix": null, 
+				//    "created": "2011-07-01T06:39:58.740+0000", 
+				//    "displayName": "snowwhite", 
+				//    "href": "/owners/snowwhite", 
+				//    "id": "8a90f8c630e46c7e0130e46ce114000a", 
+				//    "key": "snowwhite", 
+				//    "parentOwner": null, 
+				//    "updated": "2011-07-01T06:39:58.740+0000", 
+				//    "upstreamUuid": null
+				// }
+				String owner = jsonOwner.getString("key");
+				
+				// String username, String password, String owner
+				ll.add(Arrays.asList(new Object[]{username,password,owner}));
+			}
 			
-			// append a username and password for each org the user belongs to
-			for (String org : orgs) {
-				ll.add(Arrays.asList(new Object[]{username,password,org}));
+			// don't forget that some users may have READ_ONLY permission and therefore no owners
+			if (jsonUserOwners.length()==0) {
+				ll.add(Arrays.asList(new Object[]{username,password,null}));			
 			}
 		}
 		
 		return ll;
 	}
-	
 	
 	@DataProvider(name="getAllConsumedProductSubscriptionsData")
 	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() {

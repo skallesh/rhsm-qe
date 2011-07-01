@@ -51,8 +51,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"RegisterWithUsernameAndPassword_Test"},
-			dataProvider="getUsernameAndPasswordData")
+			groups={"myDevGroup","RegisterWithUsernameAndPassword_Test"},
+			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithUsernameAndPassword_Test(String username, String password, String org) {
 		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
