@@ -47,7 +47,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 		// verify that the validity period for this product cert is among the expected values.
 		List<Long>expectedValidityDurationDaysList=new ArrayList<Long>();
-		String productCertValidityDuration = getProperty("sm.client.productCertValidityDuration", "").trim();
+		String productCertValidityDuration = sm_productCertValidityDuration;
 		for (String expectedValidityDurationDayOption :  Arrays.asList(productCertValidityDuration.trim().split(" *, *"))) {
 			expectedValidityDurationDaysList.add(Long.valueOf(expectedValidityDurationDayOption));
 		}

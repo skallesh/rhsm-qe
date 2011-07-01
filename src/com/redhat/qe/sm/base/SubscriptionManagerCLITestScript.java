@@ -21,7 +21,9 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
@@ -68,14 +70,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (isSetupBeforeSuiteComplete) return;
 		
 		// create SSHCommandRunners to connect to the subscription-manager clients
-		client = new SSHCommandRunner(clienthostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+		client = new SSHCommandRunner(sm_clientHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		clienttasks = new SubscriptionManagerTasks(client);
 		client1 = client;
 		client1tasks = clienttasks;
 		
 		// will we be testing multiple clients?
-		if (!(	client2hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
-			client2 = new SSHCommandRunner(client2hostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
+		if (!(	sm_client2Hostname.equals("") /*|| client2username.equals("") || client2password.equals("")*/ )) {
+			client2 = new SSHCommandRunner(sm_client2Hostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 			client2tasks = new SubscriptionManagerTasks(client2);
 		} else {
 			log.info("Multi-client testing will be skipped.");
@@ -89,12 +91,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
-		if (!serverHostname.equals("") && isServerOnPremises) {
-			server = new SSHCommandRunner(serverHostname, sshUser, sshKeyPrivate, sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,serverInstallDir,serverImportDir,isServerOnPremises,serverBranch);
+		if (!sm_serverHostname.equals("") && sm_isServerOnPremises) {
+			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_isServerOnPremises,sm_serverBranch);
 		} else {
 			log.info("Assuming the server is already setup and running.");
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,isServerOnPremises,serverBranch);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,sm_isServerOnPremises,sm_serverBranch);
 		}
 		
 		// setup the candlepin server
@@ -115,9 +117,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 			
 			// fetch the generated Product Certs
+			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
 			log.info("Fetching the generated product certs...");
 			//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-			SSHCommandResult result = server.runCommandAndWait("find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
+			SSHCommandResult result = server.runCommandAndWait("find "+sm_serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'");
 			String[] remoteFilesAsString = result.getStdout().trim().split("\\n");
 			if (remoteFilesAsString.length==1 && remoteFilesAsString[0].equals("")) remoteFilesAsString = new String[]{};
 			if (remoteFilesAsString.length==0) log.warning("No generated product certs were found on the candlpin server for use in testing.");
@@ -129,40 +132,41 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				localFile.renameTo(localFileRenamed);
 				generatedProductCertFiles.add(localFileRenamed);
 			}
+			}
 		}
 		
 		// setup the client(s)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
 			if (smt==null) continue;
 			
-			smt.installSubscriptionManagerRPMs(rpmUrls,yumInstallOptions);
+			smt.installSubscriptionManagerRPMs(sm_rpmUrls,sm_yumInstallOptions);
 			
 			// rhsm.conf [server] configurations
-			if (!serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", serverHostname);							else serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
-			if (!serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", serverPrefix);								else serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
-			if (!serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", serverPort);									else serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
-			if (!serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", serverInsecure);							else serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
-			if (!serverSslVerifyDepth.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "ssl_verify_depth", serverSslVerifyDepth);							else serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
-			if (!serverCaCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", serverCaCertDir);						else serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
+			if (!sm_serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", sm_serverHostname);							else sm_serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
+			if (!sm_serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", sm_serverPrefix);								else sm_serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
+			if (!sm_serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", sm_serverPort);									else sm_serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
+			if (!sm_serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", sm_serverInsecure);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+			if (!sm_serverSslVerifyDepth.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "ssl_verify_depth", sm_serverSslVerifyDepth);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+			if (!sm_serverCaCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", sm_serverCaCertDir);						else sm_serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
 
 			// rhsm.conf [rhsm] configurations
-			if (!rhsmBaseUrl.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", rhsmBaseUrl);								else rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
-			if (!rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", rhsmRepoCaCert);						else rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
+			if (!sm_rhsmBaseUrl.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", sm_rhsmBaseUrl);								else sm_rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
+			if (!sm_rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", sm_rhsmRepoCaCert);						else sm_rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
 			//if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
-			if (!rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", rhsmProductCertDir);				else rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
-			if (!rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", rhsmEntitlementCertDir);		else rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
-			if (!rhsmConsumerCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", rhsmConsumerCertDir);				else rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
+			if (!sm_rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", sm_rhsmProductCertDir);				else sm_rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
+			if (!sm_rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", sm_rhsmEntitlementCertDir);		else sm_rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
+			if (!sm_rhsmConsumerCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", sm_rhsmConsumerCertDir);				else sm_rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
 
 			// rhsm.conf [rhsmcertd] configurations
-			if (!rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", rhsmcertdCertFrequency);				else rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
+			if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
 		
 			smt.initializeFieldsFromConfigFile();
 			smt.removeAllCerts(true,true);
-			smt.installRepoCaCerts(repoCaCertUrls);
+			smt.installRepoCaCerts(sm_repoCaCertUrls);
 			
 			// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
 			log.info("Copying Candlepin cert onto client to enable certificate validation...");
-			smt.installRepoCaCert(serverCaCertFile, serverHostname.split("\\.")[0]+".pem");
+			smt.installRepoCaCert(serverCaCertFile, sm_serverHostname.split("\\.")[0]+".pem");
 			
 			// transfer copies of all the generated product certs from the candlepin server to the clients
 			log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
@@ -203,27 +207,27 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		log.info("Installed version of candlepin...");
 		try {
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
-			log.info("Candlepin server '"+serverHostname+"' is running version: "+jsonStatus.get("version"));
+			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
+			log.info("Candlepin server '"+sm_serverHostname+"' is running version: "+jsonStatus.get("version"));
 		} catch (Exception e) {
-			log.warning("Candlepin server '"+serverHostname+"' is running version: UNKNOWN");
+			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
 		}
 		
 		log.info("Installed version of subscription-manager...");
-		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
-		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 
 		log.info("Installed version of python-rhsm...");
-		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
-		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
+		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
+		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("rpm -q python-rhsm").getStdout()); // python-rhsm-0.63-1.el6.i686
 
 		log.info("Installed version of RHEL...");
-		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
-		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
+		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("cat /etc/redhat-release").getStdout()); // Red Hat Enterprise Linux Server release 6.1 Beta (Santiago)
 
 		log.info("Installed version of kernel...");
-		log.info("Client1 '"+client1hostname+"' is running version: "+client1.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
-		if (client2!=null) log.info("Client2 '"+client2hostname+"' is running version: "+client2.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
+		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
+		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("uname -a").getStdout()); // Linux jsefler-onprem-server.usersys.redhat.com 2.6.32-122.el6.x86_64 #1 SMP Wed Mar 9 23:54:34 EST 2011 x86_64 x86_64 x86_64 GNU/Linux
 
 		isSetupBeforeSuiteComplete = true;
 	}
@@ -242,6 +246,28 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //
 //		// vncviewer <client1tasks.hostname>:2
 //	}
+	
+
+	
+	protected String selinuxSuiteMarker = "SM TestSuite marker";	// do not use a timestamp on the whole suite marker
+	protected String selinuxClassMarker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
+	@BeforeSuite(groups={"setup"},dependsOnMethods={"setupBeforeSuite"}, description="Ensure SELinux is Enforcing before running the test suite.")
+	public void ensureSELinuxIsEnforcingBeforeSuite() {
+		if (client1!=null) Assert.assertEquals(client1.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+client1.getConnection().getHostname());
+		if (client2!=null) Assert.assertEquals(client2.runCommandAndWait("getenforce").getStdout().trim(), "Enforcing", "SELinux mode is set to enforcing on client "+client2.getConnection().getHostname());
+		if (client1!=null) RemoteFileTasks.markFile(client1, client1tasks.varLogAuditFile, selinuxSuiteMarker);
+		if (client2!=null) RemoteFileTasks.markFile(client2, client2tasks.varLogAuditFile, selinuxSuiteMarker);
+	}
+	@BeforeClass(groups={"setup"}, description="Mark the SELinux audit log before running the current class of tests so it can be searched for denials after the test class has run.")
+	public void MarkSELinuxAuditLogBeforeClass() {
+		if (client1!=null) RemoteFileTasks.markFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker);
+		if (client2!=null) RemoteFileTasks.markFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker);
+	}
+	@AfterClass(groups={"setup"}, description="Search the SELinux audit log for denials after running the current class of tests")
+	public void verifyNoSELinuxDenialsWereLoggedAfterClass() {
+		if (client1!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log on client "+client1.getConnection().getHostname()+" while executing this test class.");
+		if (client2!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log on client "+client2.getConnection().getHostname()+" while executing this test class.");
+	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")
 	public void unregisterClientsAfterSuite() {
@@ -312,14 +338,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		Connection dbConnection = null;
 		try { 
 			// Load the JDBC driver 
-			Class.forName(dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
+			Class.forName(sm_dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
 			
 			// Create a connection to the database
-			String url = dbSqlDriver.contains("postgres")? 
-					"jdbc:postgresql://" + dbHostname + ":" + dbPort + "/" + dbName :
-					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
-			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
-			dbConnection = DriverManager.getConnection(url, dbUsername, dbPassword);
+			String url = sm_dbSqlDriver.contains("postgres")? 
+					"jdbc:postgresql://" + sm_dbHostname + ":" + sm_dbPort + "/" + sm_dbName :
+					"jdbc:oracle:thin:@" + sm_dbHostname + ":" + sm_dbPort + ":" + sm_dbName ;
+			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,sm_dbUsername,sm_dbPassword));
+			dbConnection = DriverManager.getConnection(url, sm_dbUsername, sm_dbPassword);
 			//log.finer("default dbConnection.getAutoCommit()= "+dbConnection.getAutoCommit());
 			dbConnection.setAutoCommit(true);
 			
@@ -474,7 +500,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
-				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1));
+				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1), (String)UsernameAndPassword.get(2));
 			}
 		}
 	}
@@ -597,11 +623,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// assure we are registered
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername, clientpassword, null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);
-			if (!client2username.equals("") && !client2password.equals(""))
-				client2tasks.register(client2username, client2password, null, null, null, null, null, null, null, null, null);
+			if (!sm_client2Username.equals("") && !sm_client2Password.equals(""))
+				client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, null);
 		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
@@ -641,16 +667,25 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
 		
-		String[] usernames = clientUsernames.split(",");
-		String[] passwords = clientPasswords.split(",");
+		String[] usernames = sm_clientUsernames.split(",");
+		String[] passwords = sm_clientPasswords.split(",");
 		String password = passwords[0].trim();
 		for (int i = 0; i < usernames.length; i++) {
 			String username = usernames[i].trim();
 			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
 			// this allows one to specify only one password when all the usernames share the same password
 			if (i<passwords.length) password = passwords[i].trim();
-			ll.add(Arrays.asList(new Object[]{username,password}));
+			
+			// get the orgs for this username/password
+			List<String> orgs = clienttasks.getOrgs(username,password);
+			if (orgs.size()==1) {orgs.clear(); orgs.add(null);}	// 
+			
+			// append a username and password for each org the user belongs to
+			for (String org : orgs) {
+				ll.add(Arrays.asList(new Object[]{username,password,org}));
+			}
 		}
 		
 		return ll;
@@ -667,7 +702,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 		
 		// then assemble a list of all consumed ProductSubscriptions
@@ -692,7 +727,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
 
 		
@@ -740,14 +775,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, Boolean.TRUE, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			
@@ -897,14 +932,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername, clientpassword, null, null, null, null, null, Boolean.TRUE, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			

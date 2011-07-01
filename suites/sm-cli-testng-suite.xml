@@ -342,4 +342,17 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: SELinux Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="SELinuxTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 </suite>

@@ -24,76 +24,94 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	// /etc/rhsm/rhsm.conf parameters..................
 	
 	// rhsm.conf [server] configurations
-	public static String serverHostname				= null;
-	public static String serverPrefix 				= null;
-	public static String serverPort 				= null;
-	public static String serverInsecure				= null;
-	public static String serverSslVerifyDepth		= null;
-	public static String serverCaCertDir			= null;
+	public static String sm_serverHostname			= null;
+	public static String sm_serverPrefix 			= null;
+	public static String sm_serverPort 				= null;
+	public static String sm_serverInsecure			= null;
+	public static String sm_serverSslVerifyDepth	= null;
+	public static String sm_serverCaCertDir			= null;
 	
 	// rhsm.conf [rhsm] configurations
-	public static String rhsmBaseUrl				= null;
-	public static String rhsmRepoCaCert				= null;
-	//public static String rhsmShowIncompatiblePools	= null;
-	public static String rhsmProductCertDir			= null;
-	public static String rhsmEntitlementCertDir		= null;
-	public static String rhsmConsumerCertDir		= null;
+	public static String sm_rhsmBaseUrl				= null;
+	public static String sm_rhsmRepoCaCert			= null;
+	public static String sm_rhsmProductCertDir		= null;
+	public static String sm_rhsmEntitlementCertDir	= null;
+	public static String sm_rhsmConsumerCertDir		= null;
 	
 	// rhsm.conf [rhsmcertd] configurations
-	public static String rhsmcertdCertFrequency		= null;
+	public static String sm_rhsmcertdCertFrequency	= null;
 
 	
-	public String serverAdminUsername		= getProperty("sm.server.admin.username","");
-	public String serverAdminPassword		= getProperty("sm.server.admin.password","");
+	public String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
+	public String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
 	
-	public String serverInstallDir			= getProperty("sm.server.installDir","");
-	public String serverImportDir			= getProperty("sm.server.importDir","");
-	public String serverBranch				= getProperty("sm.server.branch","");
-	public Boolean isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
+	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");
+	public String sm_serverImportDir			= getProperty("sm.server.importDir","");
+	public String sm_serverBranch				= getProperty("sm.server.branch","");
+	public Boolean sm_isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
 
-	public String client1hostname			= getProperty("sm.client1.hostname","");
-	public String client1username			= getProperty("sm.client1.username","");
-	public String client1password			= getProperty("sm.client1.password","");
-	public String client1owner				= getProperty("sm.client1.owner",null);
+	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
+	public String sm_client1Username			= getProperty("sm.client1.username","");
+	public String sm_client1Password			= getProperty("sm.client1.password","");
+	public String sm_client1Org					= getProperty("sm.client1.org",null);
 
-	public String client2hostname			= getProperty("sm.client2.hostname","");
-	public String client2username			= getProperty("sm.client2.username","");
-	public String client2password			= getProperty("sm.client2.password","");
-	public String client2owner				= getProperty("sm.client2.owner",null);
+	public String sm_client2Hostname			= getProperty("sm.client2.hostname","");
+	public String sm_client2Username			= getProperty("sm.client2.username","");
+	public String sm_client2Password			= getProperty("sm.client2.password","");
+	public String sm_client2Org					= getProperty("sm.client2.org",null);
 
-	public String clienthostname			= client1hostname;
-	public String clientusername			= client1username;
-	public String clientpassword			= client1password;
-	public String clientowner				= client1owner;
+	public String sm_clientHostname				= sm_client1Hostname;
+	public String sm_clientUsername				= sm_client1Username;
+	public String sm_clientPassword				= sm_client1Password;
+	public String sm_clientOrg					= sm_client1Org;
 	
-	public String clientUsernames			= getProperty("sm.client.usernames","");
-	public String clientPasswords			= getProperty("sm.client.passwords","");
+	public String sm_clientUsernames			= getProperty("sm.client.usernames","");
+	public String sm_clientPasswords			= getProperty("sm.client.passwords","");
 	
-	public String usernameWithUnacceptedTC = getProperty("sm.client.username.unacceptedTC","");
-	public String passwordWithUnacceptedTC = getProperty("sm.client.password.unacceptedTC","");
+	public String sm_rhpersonalUsername			= getProperty("sm.rhpersonal.username", "");
+	public String sm_rhpersonalPassword			= getProperty("sm.rhpersonal.password", "");
+	public String sm_rhpersonalOrg				= getProperty("sm.rhpersonal.org", null);
+	public String sm_rhpersonalSubproductQuantity =	getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	
-	public String disabledUsername			= getProperty("sm.client.username.disabled","");
-	public String disabledPassword			= getProperty("sm.client.password.disabled","");
+	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
+	public String sm_passwordWithUnacceptedTC	= getProperty("sm.client.password.unacceptedTC","");
 	
-	public String regtoken					= getProperty("sm.client.regtoken","");
-	public String yumInstallOptions			= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumInstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
+	public String sm_disabledUsername			= getProperty("sm.client.username.disabled","");
+	public String sm_disabledPassword			= getProperty("sm.client.password.disabled","");
 	
-	public String sshUser					= getProperty("sm.ssh.user","root");
-	public String sshKeyPrivate				= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
-	public String sshkeyPassphrase			= getProperty("sm.sshkey.passphrase","");
+	public String sm_regtoken					= getProperty("sm.client.regtoken","");
+	public String sm_yumInstallOptions			= getProperty("sm.client.yumInstallOptions","--nogpgcheck");	// TODO update the hudson jobs to use sm.client.yumInstallOptions instead of sm.client.enableRepoForDeps  use a default value of --nogpgcheck on hudson
 	
-	public String dbHostname				= getProperty("sm.server.db.hostname","");
-	public String dbSqlDriver				= getProperty("sm.server.db.sqlDriver","");
-	public String dbPort					= getProperty("sm.server.db.port","");
-	public String dbName					= getProperty("sm.server.db.name","");
-	public String dbUsername				= getProperty("sm.server.db.username","");
-	public String dbPassword				= getProperty("sm.server.db.password","");
+	public String sm_sshUser					= getProperty("sm.ssh.user","root");
+	public String sm_sshKeyPrivate				= getProperty("sm.sshkey.private",".ssh/id_auto_dsa");
+	public String sm_sshkeyPassphrase			= getProperty("sm.sshkey.passphrase","");
+	
+	public String sm_dbHostname					= getProperty("sm.server.db.hostname","");
+	public String sm_dbSqlDriver				= getProperty("sm.server.db.sqlDriver","");
+	public String sm_dbPort						= getProperty("sm.server.db.port","");
+	public String sm_dbName						= getProperty("sm.server.db.name","");
+	public String sm_dbUsername					= getProperty("sm.server.db.username","");
+	public String sm_dbPassword					= getProperty("sm.server.db.password","");
+	
+	public String sm_productCertValidityDuration	= getProperty("sm.client.productCertValidityDuration", "");
 
-	protected List<String> rpmUrls			= null;
-	protected List<String> repoCaCertUrls	= null;
+	public String sm_basicauthproxyHostname		= getProperty("sm.basicauthproxy.hostname", "");
+	public String sm_basicauthproxyPort			= getProperty("sm.basicauthproxy.port", "");
+	public String sm_basicauthproxyUsername		= getProperty("sm.basicauthproxy.username", "");
+	public String sm_basicauthproxyPassword		= getProperty("sm.basicauthproxy.password", "");
+	public String sm_basicauthproxyLog			= getProperty("sm.basicauthproxy.log", "");
+	
+	public String sm_noauthproxyHostname		= getProperty("sm.noauthproxy.hostname", "");
+	public String sm_noauthproxyPort			= getProperty("sm.noauthproxy.port", "");
+	public String sm_noauthproxyLog				= getProperty("sm.noauthproxy.log", "");
+	
+	protected List<String> sm_rpmUrls			= null;
+	protected List<String> sm_repoCaCertUrls	= null;
+	protected List<String> sm_consumerTypes		= null;
 
 //	protected JSONArray systemSubscriptionPoolProductData = null;
-	protected JSONArray personSubscriptionPoolProductData = null;
+	protected JSONArray sm_personSubscriptionPoolProductData = null;
+	protected JSONArray sm_integrationTestData = null;
 	
 	
 	
@@ -102,33 +120,41 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public SubscriptionManagerBaseTestScript() {
 		super();
 		
-		if (getProperty("sm.rpm.urls", "").equals("")) rpmUrls = new ArrayList<String>(); else rpmUrls = Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
-		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals("")) repoCaCertUrls = new ArrayList<String>(); else repoCaCertUrls = Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
+		// flatten all the ConsumerType values into a comma separated list
+		String consumerTypesAsString = "";
+		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
+		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
+		if (getProperty("sm.rpm.urls", "").equals("")) 				sm_rpmUrls			= new ArrayList<String>();	else sm_rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
+		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
+																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
+		 
+		 
 		// rhsm.conf [server] configurations
-		serverHostname				= getProperty("sm.server.hostname","");
-		serverPrefix 				= getProperty("sm.server.prefix","");
-		serverPort 					= getProperty("sm.server.port","");
-		serverInsecure				= getProperty("sm.server.insecure","");
-		serverSslVerifyDepth		= getProperty("sm.server.sslVerifyDepth","");
-		serverCaCertDir				= getProperty("sm.server.caCertDir","");
+		sm_serverHostname				= getProperty("sm.server.hostname","");
+		sm_serverPrefix 				= getProperty("sm.server.prefix","");
+		sm_serverPort 					= getProperty("sm.server.port","");
+		sm_serverInsecure				= getProperty("sm.server.insecure","");
+		sm_serverSslVerifyDepth			= getProperty("sm.server.sslVerifyDepth","");
+		sm_serverCaCertDir				= getProperty("sm.server.caCertDir","");
 		
 		// rhsm.conf [rhsm] configurations
-		rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
-		rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
-		//rhsmShowIncompatiblePools	= getProperty("sm.rhsm.showIncompatiblePools","");
-		rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
-		rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
-		rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");
+		sm_rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
+		sm_rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
+		sm_rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
+		sm_rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
+		sm_rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");
 		
 		// rhsm.conf [rhsmcertd] configurations
-		rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
+		sm_rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
 
 	
 		try {
 //			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 //			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
-			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+			sm_personSubscriptionPoolProductData	= new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+			sm_integrationTestData					= new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -154,9 +180,9 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	public List<String> getPersonProductIds() throws JSONException {
 		List<String> personProductIds = new ArrayList<String>();
-		for (int j=0; j<personSubscriptionPoolProductData.length(); j++) {
+		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
 //			try {
-				JSONObject poolProductDataAsJSONObject = (JSONObject) personSubscriptionPoolProductData.get(j);
+				JSONObject poolProductDataAsJSONObject = (JSONObject) sm_personSubscriptionPoolProductData.get(j);
 				String personProductId;
 				personProductId = poolProductDataAsJSONObject.getString("personProductId");
 				personProductIds.add(personProductId);

@@ -88,7 +88,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", originalPool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "Successfully found the SubscriptionPool with the poolId that we are about to test from list --available.");
 	
-		log.info("Subscribe client (already registered as a system under username '"+clientusername+"') to subscription pool "+pool+"...");
+		log.info("Subscribe client (already registered as a system under username '"+sm_clientUsername+"') to subscription pool "+pool+"...");
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		Assert.assertNotNull(entitlementCertFile, "Our attempt to subscribe resulted in a new entitlement cert on our system.");
 		alreadySubscribedProductIdsInChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test.add(pool.productId);
@@ -128,8 +128,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		log.info("Refresh to make sure the latest entitlement certs are on the client...");
 		clienttasks.refresh(null, null, null); // makes sure the new entitlement is downloaded
 
@@ -203,7 +203,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test")
 	protected void getClientOwnerBeforeGroups() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 	}
 
@@ -253,14 +253,14 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		try {
 			
 			// Load the JDBC driver 
-			Class.forName(dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
+			Class.forName(sm_dbSqlDriver);	//	"org.postgresql.Driver" or "oracle.jdbc.driver.OracleDriver"
 			
 			// Create a connection to the database
-			String url = dbSqlDriver.contains("postgres")? 
-					"jdbc:postgresql://" + dbHostname + ":" + dbPort + "/" + dbName :
-					"jdbc:oracle:thin:@" + dbHostname + ":" + dbPort + ":" + dbName ;
-			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,dbUsername,dbPassword));
-			dbConnection1 = DriverManager.getConnection(url, dbUsername, dbPassword);
+			String url = sm_dbSqlDriver.contains("postgres")? 
+					"jdbc:postgresql://" + sm_dbHostname + ":" + sm_dbPort + "/" + sm_dbName :
+					"jdbc:oracle:thin:@" + sm_dbHostname + ":" + sm_dbPort + ":" + sm_dbName ;
+			log.info(String.format("Attempting to connect to database with url and credentials: url=%s username=%s password=%s",url,sm_dbUsername,sm_dbPassword));
+			dbConnection1 = DriverManager.getConnection(url, sm_dbUsername, sm_dbPassword);
 			sql = dbConnection1.createStatement();
 			String getSubscriptionPoolEndDateSql = String
 					.format("select %s from cp_subscription where id=(select subscriptionid from cp_pool where id='%s');", field, pool.poolId);

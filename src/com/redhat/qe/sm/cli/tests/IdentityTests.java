@@ -54,8 +54,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		log.info("Assert that one must be registered to query the identity...");
-		for (String username : new String[]{null,clientusername}) {
-			for (String password : new String[]{null,clientpassword}) {
+		for (String username : new String[]{null,sm_clientUsername}) {
+			for (String password : new String[]{null,sm_clientPassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
 					SSHCommandResult result = clienttasks.identity_(username,password,regenerate, null, null, null, null);
 					Assert.assertEquals(result.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
@@ -74,7 +74,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
@@ -94,8 +94,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String nickname = "Mr_"+clientusername;
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,nickname,null, null, null, null, null, null));
+		String nickname = "Mr_"+sm_clientUsername;
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,nickname,null, null, null, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
@@ -113,7 +113,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
 		ConsumerCert origConsumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// regenerate the identity... and assert
@@ -143,19 +143,19 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null);
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, clienttasks.getCurrentConsumerId(registerResult));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, clienttasks.getCurrentConsumerId(registerResult));
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
-		SSHCommandResult result = clienttasks.identity(clientusername,clientpassword,Boolean.TRUE, Boolean.TRUE, null, null, null);
+		SSHCommandResult result = clienttasks.identity(sm_clientUsername,sm_clientPassword,Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
 		// find a username from the registrationDataList whose owner does not match the registerer of this client
-		RegistrationData registrationData = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(ownerKey,clientusername);
-		if (registrationData==null) throw new SkipException("Could not find registration data for another user who belongs to the same owner '"+ownerKey+"' as '"+clientusername+"'.");
+		RegistrationData registrationData = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(ownerKey,sm_clientUsername);
+		if (registrationData==null) throw new SkipException("Could not find registration data for another user who belongs to the same owner '"+ownerKey+"' as '"+sm_clientUsername+"'.");
 
 		// regenerate the identity using a different username and password as used during register... and assert
 		log.info("Regenerating identity with a different username and password (but belonging to the same owner) than used during register...");
@@ -173,9 +173,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		// find a username from the registrationDataList whose owner does not match the registerer of this client
 		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(ownerKey);
@@ -197,7 +197,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(clientusername,clientpassword,null,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");

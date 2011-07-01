@@ -56,7 +56,9 @@ public class SubscriptionManagerTasks {
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
+	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public /*final*/ String rhsmComplianceD	= "/usr/libexec/rhsmd";
+	
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -73,9 +75,9 @@ public class SubscriptionManagerTasks {
 	public String sockets						= null;	// of the client
 	public String variant						= null;	// of the client
 	
-	protected String currentlyRegisteredUsername		= null;	// most recent username used during register
-	protected String currentlyRegisteredPassword		= null;	// most recent password used during register
-	protected String currentlyRegisteredOwner			= null;	// most recent owner used during register
+	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
+	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
+	protected String currentlyRegisteredOrg			= null;	// most recent owner used during register
 	
 	public String redhatRelease	= null;
 	
@@ -421,6 +423,19 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * @return from the contents of the current /etc/pki/consumer/cert.pem
+	 */
+	public List<String> getOrgs(String username, String password) {
+		List<String> orgs = new ArrayList<String>();
+		SSHCommandResult result = orgs(username, password);
+		for (String line : result.getStdout().split("\n")) {
+			orgs.add(line);
+		}
+		if (orgs.size()>0) orgs.remove(0); // exclude the first title line of output...  orgs:
+		return orgs;
+	}
+	
+	/**
 	 * @param registerResult
 	 * @return from the stdout of the register command
 	 */
@@ -433,12 +448,21 @@ public class SubscriptionManagerTasks {
 		// The system with UUID 4e3675b1-450a-4066-92da-392c204ca5c7 has been unregistered
 		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
 		
-		//return registerResult.getStdout().split(" ")[0]; // FIXME: fails when stdout format is: ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1 
-		
-		Pattern pattern = Pattern.compile("^[a-f,0-9,\\-]{36} [^ ]*$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		/*
+		Pattern pattern = Pattern.compile("^[a-f,0-9,\\-]{36} [^ ]*$", Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(registerResult.getStdout());
-		Assert.assertTrue(matcher.find(),"Found the registered UUID and name in the register result."); 
+		Assert.assertTrue(matcher.find(),"Found the registered UUID in the register result."); 
 		return matcher.group().split(" ")[0];
+		*/
+		
+		// The example output and code above is from RHEL61 and RHEL57, it has changed in RHEL62 to:
+		// The system with UUID 080ee4f9-736e-4195-88e1-8aff83250e7d has been unregistered
+		// The system has been registered with id: 3bc07645-781f-48ef-b3d4-8821dae438f8 
+
+		Pattern pattern = Pattern.compile("^The system has been registered with id: [a-f,0-9,\\-]{36} *$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		Matcher matcher = pattern.matcher(registerResult.getStdout());
+		Assert.assertTrue(matcher.find(),"Found the registered UUID in the register result."); 
+		return matcher.group().split(":")[1].trim();
 	}
 	
 	/**
@@ -918,7 +942,7 @@ public class SubscriptionManagerTasks {
 	 * register without asserting results
 	 * @param username
 	 * @param password
-	 * @param owner TODO
+	 * @param org TODO
 	 * @param type
 	 * @param name
 	 * @param consumerId
@@ -929,13 +953,13 @@ public class SubscriptionManagerTasks {
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult register_(String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the register command
 		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
-		if (owner!=null)							command += " --owner="+owner;
+		if (org!=null)								command += " --org="+org;
 		if (type!=null)								command += " --type="+type;
 		if (name!=null)								command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
@@ -953,7 +977,7 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @param username
 	 * @param password
-	 * @param owner TODO
+	 * @param org TODO
 	 * @param type <br>
 	 * <i>system</i>		Used for example registering a plain RHEL machine (Default)<br>
 	 * <i>person</i>		Used for registering as a RH Personal<br>
@@ -967,19 +991,20 @@ public class SubscriptionManagerTasks {
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult register(String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, owner, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
-		this.currentlyRegisteredOwner = null;
+		this.currentlyRegisteredOrg = null;
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);	// applicable to RHEL61 and RHEL57. changed in RHEL62 due to feedback from mmccune https://engineering.redhat.com/trac/kalpana/wiki/SubscriptionManagerReview - jsefler 6/28/2011
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
@@ -992,7 +1017,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
 		this.currentlyRegisteredUsername = username;
 		this.currentlyRegisteredPassword = password;
-		this.currentlyRegisteredOwner = owner;
+		this.currentlyRegisteredOrg = org;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1095,7 +1120,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult clean_(String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the unregister command
+		// assemble the clean command
 		String command = this.command;	command += " clean";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
@@ -1123,7 +1148,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
-		this.currentlyRegisteredOwner = null;
+		this.currentlyRegisteredOrg = null;
 		
 		// assert that the entitlement cert directory is gone
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
@@ -1143,7 +1168,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult refresh_(String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the unregister command
+		// assemble the refresh command
 		String command = this.command;	command += " refresh";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
@@ -1187,7 +1212,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult identity_(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the unregister command
+		// assemble the identity command
 		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
 		if (password!=null)					command += " --password="+password;
@@ -1225,6 +1250,49 @@ public class SubscriptionManagerTasks {
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
 		return sshCommandResult; // from the identity command
+	}
+	
+	
+	// orgs module tasks ************************************************************
+
+	/**
+	 * orgs without asserting results
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public SSHCommandResult orgs_(String username, String password) {
+
+		// assemble the orgs command
+		String command = this.command;		command += " orgs";
+		if (username!=null)					command += " --username="+username;
+		if (password!=null)					command += " --password="+password;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager orgs"
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public SSHCommandResult orgs(String username, String password) {
+		
+		SSHCommandResult sshCommandResult = orgs_(username, password);
+		
+		// assert results for a successful identify
+		/* Example sshCommandResult.getStdout():
+		 * orgs:
+		 * snowwhite
+		 * admin
+		 */
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
+		String regex = "^orgs:";
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+		
+		return sshCommandResult; // from the orgs command
 	}
 	
 	// unregister module tasks ************************************************************
@@ -1270,7 +1338,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
-		this.currentlyRegisteredOwner = null;
+		this.currentlyRegisteredOrg = null;
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
