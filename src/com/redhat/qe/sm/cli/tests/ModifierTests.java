@@ -99,7 +99,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// 
+	// TODO Bug 718291 - entitlement certs aren't always updated for modified products
 	
 	
 	
