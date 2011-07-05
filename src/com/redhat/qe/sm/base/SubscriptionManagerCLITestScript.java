@@ -502,7 +502,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			for (List<Object> UsernameAndPassword : getRegisterCredentialsDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
-				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1), (String)UsernameAndPassword.get(2));
+				try {
+					registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1), (String)UsernameAndPassword.get(2));			
+				} catch (AssertionError e) {
+					log.warning("Ignoring a failure in RegisterWithUsernameAndPassword_Test("+(String)UsernameAndPassword.get(0)+", "+(String)UsernameAndPassword.get(1)+", "+(String)UsernameAndPassword.get(2)+")");
+				}
 			}
 		}
 	}
@@ -592,19 +596,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getGoodRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-//		for (List<Object> registrationDataList : getBogusRegistrationDataAsListOfLists()) {
-//			// pull out all of the valid registration data (indicated by an Integer exitCode of 0)
-//			if (registrationDataList.contains(Integer.valueOf(0))) {
-//				// String username, String password, String type, String consumerId
-//				ll.add(registrationDataList.subList(0, 4));
-//			}
-//			
-//		}
-// changing to registrationDataList to get all the valid registeredConsumer
-		
+		// parse the registrationDataList to get all the successfully registeredConsumers
 		for (RegistrationData registeredConsumer : registrationDataList) {
 			if (registeredConsumer.registerResult.getExitCode().intValue()==0) {
-				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password}));
+				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password, registeredConsumer.ownerKey}));
 				
 				// minimize the number of dataProvided rows (useful during automated testcase development)
 				if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;

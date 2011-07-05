@@ -74,7 +74,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
@@ -82,7 +82,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// assert the current identity matches what was returned from register
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
-		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clienttasks.hostname);
+		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clienttasks.hostname);	// RHEL61 RHEL57
+		Assert.assertContainsMatch(result.getStdout().trim(), "^Current identity is: "+consumerId);
+		Assert.assertContainsMatch(result.getStdout().trim(), "^name: "+clienttasks.hostname);
 	}
 	
 	
@@ -101,7 +103,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = clienttasks.identity(null, null, null, null, null, null, null);
 		
 		// assert the current identity matches what was returned from register
-		Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);
+		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+nickname);	// RHEL61 RHEL57
+		Assert.assertContainsMatch(result.getStdout().trim(), "^Current identity is: "+consumerId);
+		Assert.assertContainsMatch(result.getStdout().trim(), "^name: "+nickname);
 	}
 	
 	
@@ -143,7 +147,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, clienttasks.getCurrentConsumerId(registerResult)).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, clienttasks.getCurrentConsumerId(registerResult));
 
@@ -173,7 +177,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
@@ -197,7 +201,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientUsername,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
