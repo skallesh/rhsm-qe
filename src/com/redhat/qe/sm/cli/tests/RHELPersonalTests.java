@@ -674,13 +674,19 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		RegisterWithUsernameAndPassword_Test(); // needed to populate registrationDataList
 		
 		// find anotherConsumerUsername under the same owner as consumerUsername
-		RegistrationData registrationDataForSystemUsername = findRegistrationDataMatchingUsername(username);
-		Assert.assertNotNull(registrationDataForSystemUsername, "Found the RegistrationData for username '"+username+"': "+registrationDataForSystemUsername);
-		RegistrationData registrationDataForAnotherSystemUsername = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(registrationDataForSystemUsername.ownerKey,username);
-		if (registrationDataForAnotherSystemUsername!=null) {
-			anotherUsername = registrationDataForAnotherSystemUsername.username;
-			anotherPassword = registrationDataForAnotherSystemUsername.password;
+//		RegistrationData registrationDataForSystemUsername = findRegistrationDataMatchingUsername(username);
+//		Assert.assertNotNull(registrationDataForSystemUsername, "Found the RegistrationData for username '"+username+"': "+registrationDataForSystemUsername);
+//		RegistrationData registrationDataForAnotherSystemUsername = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(registrationDataForSystemUsername.ownerKey,username);
+//		if (registrationDataForAnotherSystemUsername!=null) {
+//			anotherUsername = registrationDataForAnotherSystemUsername.username;
+//			anotherPassword = registrationDataForAnotherSystemUsername.password;
+//		}
+		List<RegistrationData> registrationData = findGoodRegistrationData(false,username,true,owner);
+		if (!registrationData.isEmpty()) {
+			anotherUsername = registrationData.get(0).username;
+			anotherPassword = registrationData.get(0).password;
 		}
+		
 
 	}
 	

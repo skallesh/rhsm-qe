@@ -435,61 +435,114 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
 	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
+//	/**
+//	 * Useful when trying to find a username that belongs to a different owner/org than the current username you are testing with.
+//	 * @param key
+//	 * @return null when no match is found
+//	 * @throws JSONException
+//	 */
+//	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		for (RegistrationData registration : registrationDataList) {
+//			if (registration.ownerKey!=null) {
+//				if (!registration.ownerKey.equals(key)) {
+//					return registration;
+//				}
+//			}
+//		}
+//		return null;
+//	}
+	
 	/**
-	 * Useful when trying to find a username that belongs to a different owner/org than the current username you are testing with.
-	 * @param key
-	 * @return null when no match is found
+	 * Useful when trying to find registerable credentials that belongs to a different (or same) owner than the current credentials you are testing with.
+	 * @param matchingUsername
+	 * @param username
+	 * @param matchingOwnerKey
+	 * @param ownerkey
+	 * @return
 	 * @throws JSONException
 	 */
-	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
+	protected List<RegistrationData> findGoodRegistrationData(Boolean matchingUsername, String username, Boolean matchingOwnerKey, String ownerKey) throws JSONException {
+		List<RegistrationData> finalRegistrationData = new ArrayList<RegistrationData>();
+		List<RegistrationData> goodRegistrationData = new ArrayList<RegistrationData>();
+		List<String> ownersWithMatchingUsername = new ArrayList<String>();
+		List<String> usernamesWithMatchingOwnerKey = new ArrayList<String>();
 		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
-		for (RegistrationData registration : registrationDataList) {
-			if (registration.ownerKey!=null) {
-				if (!registration.ownerKey.equals(key)) {
-					return registration;
+		for (RegistrationData registrationDatum : registrationDataList) {
+			if (registrationDatum.registerResult.getExitCode().intValue()==0) {
+				if (registrationDatum.ownerKey.equals(ownerKey)) usernamesWithMatchingOwnerKey.add(registrationDatum.username);
+				if (registrationDatum.username.equals(username)) ownersWithMatchingUsername.add(registrationDatum.ownerKey);
+				if ( matchingUsername &&  registrationDatum.username.equals(username) &&  matchingOwnerKey &&  registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
+				}
+				if ( matchingUsername &&  registrationDatum.username.equals(username) && !matchingOwnerKey && !registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
+				}
+				if (!matchingUsername && !registrationDatum.username.equals(username) &&  matchingOwnerKey &&  registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
+				}
+				if (!matchingUsername && !registrationDatum.username.equals(username) && !matchingOwnerKey && !registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
 				}
 			}
 		}
-		return null;
-	}
-	
-	/**
-	 * Useful when trying to find a username that belongs to the same owner/org as the current username you are testing with.
-	 * @param key
-	 * @param username
-	 * @return null when no match is found
-	 * @throws JSONException
-	 */
-	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
-		for (RegistrationData registration : registrationDataList) {
-			if (registration.ownerKey!=null) {
-				if (registration.ownerKey.equals(key)) {
-					if (!registration.username.equals(username)) {
-						return registration;
+		for (RegistrationData registrationDatum : goodRegistrationData) {
+				if ( !matchingOwnerKey &&  !matchingUsername) {
+					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey )&& !usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
+						finalRegistrationData.add(registrationDatum);
 					}
+				} else if ( !matchingOwnerKey ) {
+					if (!usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
+						finalRegistrationData.add(registrationDatum);
+					}
+				} else if ( !matchingUsername ) {
+					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey)) {
+						finalRegistrationData.add(registrationDatum);
+					}
+				} else {
+					finalRegistrationData.add(registrationDatum);
 				}
-			}
 		}
-		return null;
+		return finalRegistrationData;
 	}
 	
-	/**
-	 * Useful when trying to find registration data results from a prior registration by a given username.
-	 * @param key
-	 * @param username
-	 * @return null when no match is found
-	 * @throws JSONException
-	 */
-	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
-		for (RegistrationData registration : registrationDataList) {
-			if (registration.username.equals(username)) {
-				return registration;
-			}
-		}
-		return null;
-	}
+//	/**
+//	 * Useful when trying to find a username that belongs to the same owner/org as the current username you are testing with.
+//	 * @param key
+//	 * @param username
+//	 * @return null when no match is found
+//	 * @throws JSONException
+//	 */
+//	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		for (RegistrationData registration : registrationDataList) {
+//			if (registration.ownerKey!=null) {
+//				if (registration.ownerKey.equals(key)) {
+//					if (!registration.username.equals(username)) {
+//						return registration;
+//					}
+//				}
+//			}
+//		}
+//		return null;
+//	}
+//	
+//	/**
+//	 * Useful when trying to find registration data results from a prior registration by a given username.
+//	 * @param key
+//	 * @param username
+//	 * @return null when no match is found
+//	 * @throws JSONException
+//	 */
+//	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		for (RegistrationData registration : registrationDataList) {
+//			if (registration.username.equals(username)) {
+//				return registration;
+//			}
+//		}
+//		return null;
+//	}
 	
 	/**
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
@@ -498,14 +551,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected void RegisterWithUsernameAndPassword_Test() throws Exception {
 		if (registrationDataList.isEmpty()) {
 			clienttasks.unregister(null,null,null); // make sure client is unregistered
-//DELETME			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
-			for (List<Object> UsernameAndPassword : getRegisterCredentialsDataAsListOfLists()) {
+			for (List<Object> credentials : getRegisterCredentialsDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
 				try {
-					registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1), (String)UsernameAndPassword.get(2));			
+					registerTests.RegisterWithUsernameAndPassword_Test((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
 				} catch (AssertionError e) {
-					log.warning("Ignoring a failure in RegisterWithUsernameAndPassword_Test("+(String)UsernameAndPassword.get(0)+", "+(String)UsernameAndPassword.get(1)+", "+(String)UsernameAndPassword.get(2)+")");
+					log.warning("Ignoring a failure in RegisterWithUsernameAndPassword_Test("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
 				}
 			}
 		}
@@ -726,7 +778,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				// {
 				//    "contentPrefix": null, 
 				//    "created": "2011-07-01T06:39:58.740+0000", 
-				//    "displayName": "snowwhite", 
+				//    "displayName": "Snow White", 
 				//    "href": "/owners/snowwhite", 
 				//    "id": "8a90f8c630e46c7e0130e46ce114000a", 
 				//    "key": "snowwhite", 

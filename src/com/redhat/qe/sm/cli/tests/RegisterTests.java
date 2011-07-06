@@ -625,7 +625,7 @@ Expected Results:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668814
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669395
 	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically
-
+	// TODO Bug 719378 - White space in user name causes error 
 	
 	
 	

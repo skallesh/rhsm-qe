@@ -138,11 +138,13 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the results
 		log.info("SSHCommandResult from '"+client1tasks.hostname+"': "+result1);
-		Assert.assertEquals(result1.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client1tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
+//		Assert.assertEquals(result1.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client1tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
+		Assert.assertEquals(result1.getStdout().trim(), "Successfully subscribed the system to Pool "+testPool.poolId,"On '"+client1tasks.hostname+"' we successfully subscribed to poolid: "+testPool.poolId);
 		Assert.assertEquals(result1.getStderr().trim(), "","No stderr information is expected on '"+client1tasks.hostname+"'.");
 		Assert.assertEquals(result1.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client1tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		log.info("SSHCommandResult from '"+client2tasks.hostname+"': "+result2);
-		Assert.assertEquals(result2.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client2tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
+//		Assert.assertEquals(result2.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client2tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
+		Assert.assertEquals(result2.getStdout().trim(), "Successfully subscribed the system to Pool "+testPool.poolId,"On '"+client2tasks.hostname+"' we successfully subscribed to poolid: "+testPool.poolId);
 		Assert.assertEquals(result2.getStderr().trim(), "","No stderr information is expected on '"+client2tasks.hostname+"'.");
 		Assert.assertEquals(result2.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client2tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		

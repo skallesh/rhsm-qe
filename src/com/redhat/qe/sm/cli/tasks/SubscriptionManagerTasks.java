@@ -1250,7 +1250,7 @@ public class SubscriptionManagerTasks {
 		
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=719109 - jsefler 7/05/2011
-		boolean invokeWorkaroundWhileBugIsOpen = false;
+		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="719109"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
@@ -1261,7 +1261,7 @@ public class SubscriptionManagerTasks {
 		
 		
 		
-		String regex = "[a-f,0-9,\\-]{36}";			// consumerid regex
+		String regex = "Current identity is: [a-f,0-9,\\-]{36}";			// consumerid regex
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
 		return sshCommandResult; // from the identity command
