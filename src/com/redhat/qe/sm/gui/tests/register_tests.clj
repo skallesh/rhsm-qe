@@ -15,8 +15,14 @@
 (defn simple_register [user pass owner cleanup-fn]
   (if owner 
     (tasks/register user pass :owner owner)
-    (tasks/register user pass))
+    (tasks/register user pass)) 
   (verify (action exists? :unregister-system))
+  (if owner
+    (do 
+      (tasks/ui click :view-system-facts)
+      (tasks/sleep 5000)
+      (verify (= 1 (tasks/ui objectexist :facts-dialog owner)))
+      (tasks/ui click :close-facts)))
   (when cleanup-fn (cleanup-fn)))
 
 (defn register_bad_credentials [user pass recovery]
@@ -30,9 +36,16 @@
           register-button :register-system]
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
+(defn ^{Test {:groups ["registration"]}}
+  unregister [_]
+  (tasks/register (@config :username) (@config :password))
+  (tasks/unregister)
+  (verify (action exists? :register-system)))
+
 (data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) nil tasks/unregister]
-   [(@config :username1) (@config :password1) nil tasks/unregister]])
+  [[(@config :username) (@config :password) "Admin Owner" tasks/unsubscribe]
+   [(@config :username) (@config :password) "Snow White" tasks/unsubscribe]
+   [(@config :username1) (@config :password1) nil tasks/unsubscribe]])
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
@@ -44,12 +57,6 @@
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
-
-(defn ^{Test {:groups ["registration"]}}
-  unregister [_]
-  (tasks/register (@config :username) (@config :password))
-  (tasks/unregister)
-  (verify (action exists? :register-system)))
 
 (gen-class-testng)
 
