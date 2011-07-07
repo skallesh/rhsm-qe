@@ -140,18 +140,19 @@
    (ui check :automatically-subscribe)
    (ui uncheck :automatically-subscribe))  
   (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
-    (ui click :register)
-    (checkforerror)              
-    (if (= 1 (ui waittillshowing :owners 30))
-      (do
-        (when owner (do 
-          (if-not (ui rowexist? :owners owner)
-            (raise {:type :owner-not-available
-                    :name owner
-                    :msg (str "Not found in 'Owner Selection':" owner)}))
-          (ui selectrow :owners owner)))
-        (ui click :register)
-        (sleep 5)))              
+   (ui click :register)
+   (checkforerror 10)
+   (if (= 1 (ui guiexist :register-dialog)) 
+     (if (= 1 (ui waittillshowing :owners 30))
+       (do
+         (when owner (do 
+                       (if-not (ui rowexist? :owners owner)
+                         (raise {:type :owner-not-available
+                                 :name owner
+                                 :msg (str "Not found in 'Owner Selection':" owner)}))
+                       (ui selectrow :owners owner)))
+         (ui click :register)
+         (sleep 5))))              
     (checkforerror)))
 
 (defn fbshowing?

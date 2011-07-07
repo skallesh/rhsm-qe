@@ -25,12 +25,14 @@
 (defn get-properties []
      (let [m (property-map {:binary-path (DefaultMapKey. "sm.gui.binary" "subscription-manager-gui")
                             :firstboot-binary-path (DefaultMapKey. "sm.firstboot.binary" "firstboot")
-			                      :client-hostname "sm.client1.hostname"
-			                      :username "sm.client1.username"
-			                      :password "sm.client1.password"
+                            :client-hostname "sm.client1.hostname"
+                            :username "sm.client1.username"
+                            :password "sm.client1.password"
+                            :username1 "sm.client2.username"
+                            :username2 "sm.client2.password"
                             :ssh-user (DefaultMapKey. "sm.ssh.user" "root")
                             :ssh-key-private (DefaultMapKey."sm.sshkey.private" ".ssh/id_auto_dsa")
-			                      :ssh-key-passphrase "sm.sshkey.passphrase"
+                            :ssh-key-passphrase "sm.sshkey.passphrase"
                             :basicauth-proxy-hostname "sm.basicauthproxy.hostname"
                             :basicauth-proxy-port "sm.basicauthproxy.port"
                             :basicauth-proxy-username "sm.basicauthproxy.username"
