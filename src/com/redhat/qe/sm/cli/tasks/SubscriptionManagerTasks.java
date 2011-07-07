@@ -427,7 +427,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getOrgs(String username, String password) {
 		List<String> orgs = new ArrayList<String>();
-		SSHCommandResult result = orgs(username, password);
+		SSHCommandResult result = orgs(username, password, null, null, null);
 		for (String line : result.getStdout().split("\n")) {
 			orgs.add(line);
 		}
@@ -1276,12 +1276,15 @@ public class SubscriptionManagerTasks {
 	 * @param password
 	 * @return
 	 */
-	public SSHCommandResult orgs_(String username, String password) {
+	public SSHCommandResult orgs_(String username, String password, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the orgs command
-		String command = this.command;		command += " orgs";
-		if (username!=null)					command += " --username="+username;
-		if (password!=null)					command += " --password="+password;
+		String command = this.command;	command += " orgs";
+		if (username!=null)				command += " --username="+username;
+		if (password!=null)				command += " --password="+password;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -1293,9 +1296,9 @@ public class SubscriptionManagerTasks {
 	 * @param password
 	 * @return
 	 */
-	public SSHCommandResult orgs(String username, String password) {
+	public SSHCommandResult orgs(String username, String password, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = orgs_(username, password);
+		SSHCommandResult sshCommandResult = orgs_(username, password, proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful identify
 		/* Example sshCommandResult.getStdout():
