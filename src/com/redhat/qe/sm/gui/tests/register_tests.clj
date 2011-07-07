@@ -31,8 +31,8 @@
      (verify (and (= thrown-error expected-error) (action exists? register-button))))))
 
 (data-driven simple_register {Test {:groups ["registration"]}}
-  [(@config :username) (@config :password) nil tasks/unregister]
-  [(@config :username1) (@config :password1) nil tasks/unregister])
+  [[(@config :username) (@config :password) nil tasks/unregister]
+   [(@config :username1) (@config :password1) nil tasks/unregister]])
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
