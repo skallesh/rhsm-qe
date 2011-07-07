@@ -442,6 +442,40 @@ schema generation failed
 		return href.getName();
 	}
 	
+	/**
+	 * @param server
+	 * @param port
+	 * @param prefix
+	 * @param username
+	 * @param password
+	 * @param key - name of the key whose value you want to get (e.g. "displayName", "key", "id")
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
+
+		List<String> values = new ArrayList<String>();
+		JSONArray jsonUsersOrgs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, username, password,"/users/"+username+"/owners"));	
+		for (int j = 0; j < jsonUsersOrgs.length(); j++) {
+			JSONObject jsonOrg = (JSONObject) jsonUsersOrgs.get(j);
+			// {
+			//    "contentPrefix": null, 
+			//    "created": "2011-07-01T06:39:58.740+0000", 
+			//    "displayName": "Snow White", 
+			//    "href": "/owners/snowwhite", 
+			//    "id": "8a90f8c630e46c7e0130e46ce114000a", 
+			//    "key": "snowwhite", 
+			//    "parentOwner": null, 
+			//    "updated": "2011-07-01T06:39:58.740+0000", 
+			//    "upstreamUuid": null
+			// }
+			values.add(jsonOrg.getString(key));
+		}
+		return values;
+	}
+
+	
 	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
 		JSONArray consumers = new JSONArray(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "consumers"));
 		List<String> refs = new ArrayList<String>();
