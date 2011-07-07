@@ -225,7 +225,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// ORGS Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : orgs using a proxy server (Positive and Negative Variations)",
-			groups={"myDevGroup"},
+			groups={},
 			dataProvider="getOrgsAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
@@ -241,7 +241,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	
 	@Test(	description="subscription-manager : orgs using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={"myDevGroup"},
+			groups={},
 			dataProvider="getOrgsAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	

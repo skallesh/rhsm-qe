@@ -228,7 +228,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// decide who was the winner and who must have been the loser
 		SSHCommandResult sshWinner, sshLoser;
 		SubscriptionManagerTasks smtWinner, smtLoser;
-		if (result1.getStdout().equals("")) {	// client1 appears to be the winner, therefore client2 must be the loser
+//		if (result1.getStdout().equals("")) {	// client1 appears to be the winner, therefore client2 must be the loser
+		if (result1.getStdout().startsWith("Success")) {	// client1 appears to be the winner, therefore client2 must be the loser
 			sshWinner =	result1;
 			smtWinner = client1tasks;
 			sshLoser =	result2;
@@ -242,7 +243,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the Winner and Loser
 		log.info("SSHCommandResult from '"+smtWinner.hostname+"': "+sshWinner);
-		Assert.assertEquals(sshWinner.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+smtWinner.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
+//		Assert.assertEquals(sshWinner.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+smtWinner.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
+		Assert.assertEquals(sshWinner.getStdout().trim(), "Successfully subscribed the system to Pool "+testPool.poolId,"On '"+smtWinner.hostname+"' we successfully subscribed to poolid '"+testPool.poolId+"' indicating that it won the subscribe race to the subscription pool's final entitlement.");
 		Assert.assertEquals(sshWinner.getStderr().trim(), "","No stderr information is expected on '"+smtWinner.hostname+"'.");
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
