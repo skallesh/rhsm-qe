@@ -334,6 +334,125 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	// REDEEM Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : redeem using a proxy server (Positive and Negative Variations)",
+			groups={},
+			dataProvider="getRedeemAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RedeemAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		// setup for test
+		String moduleTask = "redeem";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+		
+		SSHCommandResult attemptResult = clienttasks.redeem_(null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : redeem using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+			groups={},
+			dataProvider="getRedeemAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RedeemAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "redeem";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+	
+		// pad the tail of basicauthproxyLog with a message
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.redeem_(null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
+	
+	
+
+// DELETME after bug https://bugzilla.redhat.com/show_bug.cgi?id=720049 is resolved
+//	// REPOS Test methods ***********************************************************************
+//
+//	@Test(	description="subscription-manager : repos using a proxy server (Positive and Negative Variations)",
+//			groups={"myDevGroup"},
+//			dataProvider="getReposAttemptsUsingProxyServerData",
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)	
+//	public void ReposAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+//		// setup for test
+//		String moduleTask = "repos";
+//		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+//		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+//		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+//		
+//		SSHCommandResult attemptResult = clienttasks.repos_(true,proxy, proxyuser, proxypassword);
+//		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+//	}
+//
+//	
+//	@Test(	description="subscription-manager : repos using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+//			groups={"myDevGroup"},
+//			dataProvider="getReposAttemptsUsingProxyServerViaRhsmConfigData",
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)	
+//	public void ReposAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+//		// setup for test
+//		String moduleTask = "repos";
+//		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+//		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+//		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+//	
+//		// pad the tail of basicauthproxyLog with a message
+//		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+//		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+//		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+//		
+//		// set the config parameters
+//		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+//		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+//
+//		// attempt the moduleTask with the proxy options
+//		SSHCommandResult attemptResult = clienttasks.repos_(true,proxy, proxyuser, proxypassword);
+//		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+//
+//		// assert the tail of proxyLog shows the proxyLogRegex
+//		if (proxyLogRegex!=null) {
+//			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+//			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+//			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+//			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+//			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+//		}
+//	}
+	
+	
+	
 	// FACTS Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : facts using a proxy server (Positive and Negative Variations)",
@@ -697,6 +816,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 
+	
 	@DataProvider(name="getRegisterAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
@@ -742,14 +862,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		return ll;
 	}
-	
-	
-	
-	@DataProvider(name="getUnregisterAttemptsUsingProxyServerData")
-	public Object[][] getUnregisterAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnregisterAttemptsUsingProxyServerDataAsListOfLists());
-	}
-	protected List<List<Object>> getUnregisterAttemptsUsingProxyServerDataAsListOfLists() {
+	protected List<List<Object>> getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
@@ -757,12 +870,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
-	
-	@DataProvider(name="getUnregisterAttemptsUsingProxyServerViaRhsmConfigData")
-	public Object[][] getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-	}
-	protected List<List<Object>> getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
+	protected List<List<Object>> getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
@@ -786,6 +894,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
+	
 	@DataProvider(name="getOrgsAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getOrgsAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getOrgsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
@@ -800,141 +909,100 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@DataProvider(name="getUnregisterAttemptsUsingProxyServerData")
+	public Object[][] getUnregisterAttemptsUsingProxyServerDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+	}
+	
+	
+	@DataProvider(name="getUnregisterAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+	}
+	
 	
 	@DataProvider(name="getListAttemptsUsingProxyServerData")
 	public Object[][] getListAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getListAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getListAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getListAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getListAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getListAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-	}
-	protected List<List<Object>> getListAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
 	
+	
+	@DataProvider(name="getRedeemAttemptsUsingProxyServerData")
+	public Object[][] getRedeemAttemptsUsingProxyServerDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+	}
+
+	
+	@DataProvider(name="getRedeemAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getRedeemAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+	}
+	
+	
+// DELETME after bug https://bugzilla.redhat.com/show_bug.cgi?id=720049 is resolved
+//	@DataProvider(name="getReposAttemptsUsingProxyServerData")
+//	public Object[][] getReposAttemptsUsingProxyServerDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+//	}
+//	
+//	
+//	@DataProvider(name="getReposAttemptsUsingProxyServerViaRhsmConfigData")
+//	public Object[][] getReposAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+//	}
 	
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerData")
 	public Object[][] getFactsAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getFactsAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getFactsAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getFactsAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
-	
 	
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerData")
 	public Object[][] getRefreshAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRefreshAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getRefreshAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
-	
 	
 	
 	@DataProvider(name="getSubscribeAttemptsUsingProxyServerData")
 	public Object[][] getSubscribeAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getSubscribeAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getSubscribeAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-	}
-	protected List<List<Object>> getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
 	
 	
 	@DataProvider(name="getUnsubscribeAttemptsUsingProxyServerData")
 	public Object[][] getUnsubscribeAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnsubscribeAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getUnsubscribeAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
-		}
-		return ll;
-	}
+
 }

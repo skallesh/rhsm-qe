@@ -955,7 +955,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult register_(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		// assemble the register command
+		// assemble the command
 		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
@@ -1043,7 +1043,7 @@ public class SubscriptionManagerTasks {
 //	 */
 //	public SSHCommandResult reregister_(String username, String password, String consumerid) {
 //
-//		// assemble the unregister command
+//		// assemble the command
 //		String					command  = "subscription-manager-cli reregister";	
 //		if (username!=null)		command += " --username="+username;
 //		if (password!=null)		command += " --password="+password;
@@ -1121,7 +1121,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult clean_(String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the clean command
+		// assemble the command
 		String command = this.command;	command += " clean";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
@@ -1169,7 +1169,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult refresh_(String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the refresh command
+		// assemble the command
 		String command = this.command;	command += " refresh";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
@@ -1213,7 +1213,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult identity_(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the identity command
+		// assemble the command
 		String command = this.command;		command += " identity";
 		if (username!=null)					command += " --username="+username;
 		if (password!=null)					command += " --password="+password;
@@ -1278,7 +1278,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult orgs_(String username, String password, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the orgs command
+		// assemble the command
 		String command = this.command;	command += " orgs";
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
@@ -1323,7 +1323,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult unregister_(String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the unregister command
+		// assemble the command
 		String command = this.command;	command += " unregister";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
@@ -1382,7 +1382,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the register command
+		// assemble the command
 		String command = this.command;		command += " list";	
 		if (all!=null && all)				command += " --all";
 		if (available!=null && available)	command += " --available";
@@ -1474,7 +1474,75 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+
+	// redeem module tasks ************************************************************
+
+	/**
+	 * redeem without asserting results
+	 * @param email TODO
+	 * @param locale TODO
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
+	 */
+	public SSHCommandResult redeem_(String email, String locale, String proxy, String proxyuser, String proxypassword) {
+		
+		// assemble the command
+		String command = this.command;	command += " redeem";
+		if (email!=null)				command += " --email="+email;
+		if (locale!=null)				command += " --locale="+locale;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+
+	public SSHCommandResult redeem(String email, String locale, String proxy, String proxyuser, String proxypassword) {
+
+		SSHCommandResult sshCommandResult = redeem_(email, locale, proxy, proxyuser, proxypassword);
+		
+		// TODO assert results...
+		
+		return sshCommandResult;
+	}
 	
+	
+	
+	// repos module tasks ************************************************************
+
+	/**
+	 * repos without asserting results
+	 * @param list TODO
+	 * @param proxy TODO
+	 * @param proxyuser TODO
+	 * @param proxypassword TODO
+	 */
+	public SSHCommandResult repos_(Boolean list, String proxy, String proxyuser, String proxypassword) {
+		
+		// assemble the command
+		String command = this.command;	command += " repos";
+		if (list!=null && list)			command += " --list";
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+
+	public SSHCommandResult repos(Boolean list, String proxy, String proxyuser, String proxypassword) {
+
+		SSHCommandResult sshCommandResult = repos_(list, proxy, proxyuser, proxypassword);
+		
+		// TODO assert results...
+		
+		return sshCommandResult;
+	}
+	
+	
+
 	// subscribe module tasks ************************************************************
 
 	/**
@@ -1491,7 +1559,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult subscribe_(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
-		// assemble the subscribe command
+		// assemble the command
 		String command = this.command;	command += " subscribe";
 		if (auto!=null && auto)			command += " --auto";
 		if (poolId!=null)				command += " --pool="+poolId;
@@ -1515,7 +1583,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the subscribe command
+		// assemble the command
 		String command = this.command;								command += " subscribe";	
 		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
@@ -1952,7 +2020,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult unsubscribe_(Boolean all, BigInteger serial, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the unsubscribe command
+		// assemble the command
 		String command = this.command;	command += " unsubscribe";
 		if (all!=null && all)			command += " --all";
 		if (serial!=null)				command += " --serial="+serial;
@@ -2087,7 +2155,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult facts_(Boolean list, Boolean update, String proxy, String proxyuser, String proxypassword) {
 
-		// assemble the register command
+		// assemble the command
 		String command = this.command;	command += " facts";	
 		if (list!=null && list)			command += " --list";
 		if (update!=null && update)		command += " --update";
