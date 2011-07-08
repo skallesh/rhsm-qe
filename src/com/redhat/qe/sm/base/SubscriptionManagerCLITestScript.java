@@ -548,16 +548,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
 	 * @throws Exception 
 	 */
-	protected void RegisterWithUsernameAndPassword_Test() throws Exception {
+	protected void RegisterWithCredentials_Test() throws Exception {
 		if (registrationDataList.isEmpty()) {
 			clienttasks.unregister(null,null,null); // make sure client is unregistered
 			for (List<Object> credentials : getRegisterCredentialsDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
 				try {
-					registerTests.RegisterWithUsernameAndPassword_Test((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
+					registerTests.RegisterWithCredentials_Test((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
 				} catch (AssertionError e) {
-					log.warning("Ignoring a failure in RegisterWithUsernameAndPassword_Test("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
+					log.warning("Ignoring a failure in RegisterWithCredentials_Test("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
 				}
 			}
 		}
@@ -792,7 +792,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				ll.add(Arrays.asList(new Object[]{username,password,owner}));
 			}
 			
-			// don't forget that some users may have READ_ONLY permission and therefore no owners
+			// don't forget that some users (for which no owners are returned) probably have READ_ONLY permission to their orgs
 			if (jsonUserOwners.length()==0) {
 				ll.add(Arrays.asList(new Object[]{username,password,null}));			
 			}
