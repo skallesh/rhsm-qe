@@ -319,7 +319,7 @@ schema generation failed
 			RequestEntity entity =  ((PostMethod)method).getRequestEntity();
 			log.finer("HTTP Request entity: " + ((StringRequestEntity)entity).getContent());
 		}
-		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", method.getRequestHeaders()));
+		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", (Object[])method.getRequestHeaders()));
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
@@ -855,11 +855,12 @@ schema generation failed
         return feed;
 	}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, String... providedProducts) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, String... providedProducts) throws JSONException{
 		JSONObject sub = new JSONObject();
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 		sub.put("startDate", sdf.format(startDate));
 		sub.put("contractNumber", contractNumber);
+		sub.put("accountNumber", accountNumber);
 		sub.put("endDate", sdf.format(endDate));
 		sub.put("quantity", quantity);
 
