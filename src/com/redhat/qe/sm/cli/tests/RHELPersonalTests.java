@@ -667,20 +667,26 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@BeforeClass(groups="setup")
-	public void setupBeforeClass() throws IOException, JSONException {
+	public void setupBeforeClass() throws Exception {
 		// alternative to dependsOnGroups={"RegisterWithUsernameAndPassword_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithUsernameAndPassword_Test(); // needed to populate registrationDataList
+		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 		
 		// find anotherConsumerUsername under the same owner as consumerUsername
-		RegistrationData registrationDataForSystemUsername = findRegistrationDataMatchingUsername(username);
-		Assert.assertNotNull(registrationDataForSystemUsername, "Found the RegistrationData for username '"+username+"': "+registrationDataForSystemUsername);
-		RegistrationData registrationDataForAnotherSystemUsername = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(registrationDataForSystemUsername.ownerKey,username);
-		if (registrationDataForAnotherSystemUsername!=null) {
-			anotherUsername = registrationDataForAnotherSystemUsername.username;
-			anotherPassword = registrationDataForAnotherSystemUsername.password;
+//		RegistrationData registrationDataForSystemUsername = findRegistrationDataMatchingUsername(username);
+//		Assert.assertNotNull(registrationDataForSystemUsername, "Found the RegistrationData for username '"+username+"': "+registrationDataForSystemUsername);
+//		RegistrationData registrationDataForAnotherSystemUsername = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(registrationDataForSystemUsername.ownerKey,username);
+//		if (registrationDataForAnotherSystemUsername!=null) {
+//			anotherUsername = registrationDataForAnotherSystemUsername.username;
+//			anotherPassword = registrationDataForAnotherSystemUsername.password;
+//		}
+		List<RegistrationData> registrationData = findGoodRegistrationData(false,username,true,owner);
+		if (!registrationData.isEmpty()) {
+			anotherUsername = registrationData.get(0).username;
+			anotherPassword = registrationData.get(0).password;
 		}
+		
 
 	}
 	

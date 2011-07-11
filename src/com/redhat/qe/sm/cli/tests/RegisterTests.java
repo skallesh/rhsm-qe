@@ -52,10 +52,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithUsernameAndPassword_Test"},
-			dataProvider="getUsernameAndPasswordData")
+			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
-	public void RegisterWithUsernameAndPassword_Test(String username, String password, String org) {
-		log.info("Testing registration to a Candlepin using username="+username+" and password="+password);
+	public void RegisterWithCredentials_Test(String username, String password, String org) {
+		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
 		
 		// determine this user's ability to register
 		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, null);
@@ -85,6 +85,17 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		registrationDataList.add(userData);
 		clienttasks.unregister_(null, null, null);
 		
+		// when no org was given by the dataprovider, then either:
+		// 1. the user has only READ_ONLY access to one org:
+		//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
+		// 2. the user has only READ_ONLY access to more than one org:
+		//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
+		// FIXME: Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
+		if (org==null) {
+			Assert.assertFalse(registerResult.getExitCode()==0, "The register command was NOT a success.");		
+			Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
+			return;
+		}
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
 		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
 		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
@@ -93,10 +104,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
-			dataProvider="getBogusRegistrationData")
+			dataProvider="getInvalidRegistrationData")
 //	@ImplementsNitrateTest(caseId={41691, 47918})
 	@ImplementsNitrateTest(caseId=47918)
-	public void Registration_Test(Object meta, String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void AttemptRegistrationWithInvalidCredentials_Test(Object meta, String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing registration to a Candlepin using various options and data and asserting various expected results.");
 		
 		// ensure we are unregistered
@@ -116,7 +127,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
 	@ImplementsNitrateTest(caseId=41691)
-	public void AttemptRegistrationWithInvalidCredentials_Test(Object meta, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object meta, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
 
 		// ensure we are unregistered
 		clienttasks.unregister(null, null, null);
@@ -139,7 +150,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String username = sm_usernameWithUnacceptedTC;
 		String password = sm_passwordWithUnacceptedTC;
 		if (username.equals("")) throw new SkipException("Must specify a username who has not accepted Terms & Conditions before attempting this test.");
-		AttemptRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc");
+		AttemptLocalizedRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc");
 	}
 	
 	
@@ -151,7 +162,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String username = sm_disabledUsername;
 		String password = sm_disabledPassword;
 		if (username.equals("")) throw new SkipException("Must specify a username who has been disabled before attempting this test.");
-		AttemptRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.");
+		AttemptLocalizedRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.");
 	}
 	
 	
@@ -625,7 +636,7 @@ Expected Results:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668814
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669395
 	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically
-
+	// TODO Bug 719378 - White space in user name causes error 
 	
 	
 	
@@ -719,11 +730,11 @@ Expected Results:
 	
 	// Data Providers ***********************************************************************
 
-	@DataProvider(name="getBogusRegistrationData")
-	public Object[][] getBogusRegistrationDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getBogusRegistrationDataAsListOfLists());
+	@DataProvider(name="getInvalidRegistrationData")
+	public Object[][] getInvalidRegistrationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
 	}
-	protected List<List<Object>> getBogusRegistrationDataAsListOfLists() {
+	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (servertasks==null) return ll;
 		if (clienttasks==null) return ll;
@@ -735,8 +746,8 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"Must specify org for new consumer."}));
-		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"Org "+randomString+" does not exist"}));
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"You must specify an organization/owner for new consumers."}));
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"Organization/Owner "+randomString+" does not exist."}));
 
 		// force a successful registration, and then...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),

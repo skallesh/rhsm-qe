@@ -51,10 +51,10 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void RegisterAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		String moduleTask = "register";
 		
-		SSHCommandResult attemptResult = clienttasks.register_(username, password, null, null, null, null, null, null, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.register_(username, password, org, null, null, null, null, null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -66,7 +66,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void RegisterAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		String moduleTask = "register";
 
 		// pad the tail of basicauthproxyLog with a message
@@ -79,7 +79,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
 
 		// attempt to register
-		SSHCommandResult attemptResult = clienttasks.register_(username, password, null, null, null, null, null, null, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.register_(username, password, org, null, null, null, null, null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from a negative attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -115,7 +115,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getUnregisterAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void UnregisterAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void UnregisterAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "unregister";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -133,7 +133,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getUnregisterAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void UnregisterAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void UnregisterAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "unregister";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -173,7 +173,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void IdentityAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void IdentityAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "identity";
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
@@ -190,7 +190,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void IdentityAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void IdentityAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "identity";
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
@@ -206,6 +206,60 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, Boolean.TRUE, proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
+	
+	
+	
+	// ORGS Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : orgs using a proxy server (Positive and Negative Variations)",
+			groups={},
+			dataProvider="getOrgsAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void OrgsAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		// setup for test
+		String moduleTask = "orgs";
+		
+		SSHCommandResult attemptResult = clienttasks.orgs_(username, password, proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : orgs using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+			groups={},
+			dataProvider="getOrgsAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void OrgsAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "orgs";
+	
+		// pad the tail of basicauthproxyLog with a message
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.orgs_(username, password, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -229,7 +283,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getListAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void ListAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void ListAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "list";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -247,7 +301,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getListAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void ListAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void ListAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "list";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -280,6 +334,125 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
+	// REDEEM Test methods ***********************************************************************
+
+	@Test(	description="subscription-manager : redeem using a proxy server (Positive and Negative Variations)",
+			groups={},
+			dataProvider="getRedeemAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RedeemAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+		// setup for test
+		String moduleTask = "redeem";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+		
+		SSHCommandResult attemptResult = clienttasks.redeem_(null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+
+	
+	@Test(	description="subscription-manager : redeem using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+			groups={},
+			dataProvider="getRedeemAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RedeemAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "redeem";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+	
+		// pad the tail of basicauthproxyLog with a message
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.redeem_(null,null,proxy, proxyuser, proxypassword);
+		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
+	
+	
+
+// DELETME after bug https://bugzilla.redhat.com/show_bug.cgi?id=720049 is resolved
+//	// REPOS Test methods ***********************************************************************
+//
+//	@Test(	description="subscription-manager : repos using a proxy server (Positive and Negative Variations)",
+//			groups={"myDevGroup"},
+//			dataProvider="getReposAttemptsUsingProxyServerData",
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)	
+//	public void ReposAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+//		// setup for test
+//		String moduleTask = "repos";
+//		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+//		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+//		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+//		
+//		SSHCommandResult attemptResult = clienttasks.repos_(true,proxy, proxyuser, proxypassword);
+//		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+//	}
+//
+//	
+//	@Test(	description="subscription-manager : repos using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+//			groups={"myDevGroup"},
+//			dataProvider="getReposAttemptsUsingProxyServerViaRhsmConfigData",
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)	
+//	public void ReposAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+//		// setup for test
+//		String moduleTask = "repos";
+//		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+//		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
+//		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+//	
+//		// pad the tail of basicauthproxyLog with a message
+//		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+//		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+//		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+//		
+//		// set the config parameters
+//		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+//		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+//
+//		// attempt the moduleTask with the proxy options
+//		SSHCommandResult attemptResult = clienttasks.repos_(true,proxy, proxyuser, proxypassword);
+//		if (exitCode!=null)		Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stdoutRegex!=null)	Assert.assertContainsMatch(attemptResult.getStdout().trim(), stdoutRegex, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+//		if (stderrRegex!=null)	Assert.assertContainsMatch(attemptResult.getStderr().trim(), stderrRegex, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+//
+//		// assert the tail of proxyLog shows the proxyLogRegex
+//		if (proxyLogRegex!=null) {
+//			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+//			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+//			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+//			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+//			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+//		}
+//	}
+	
+	
+	
 	// FACTS Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager : facts using a proxy server (Positive and Negative Variations)",
@@ -287,7 +460,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getFactsAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void FactsAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void FactsAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "facts";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -305,7 +478,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getFactsAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void FactsAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void FactsAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "facts";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -345,7 +518,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRefreshAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RefreshAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void RefreshAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "refresh";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -363,7 +536,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRefreshAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RefreshAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void RefreshAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "refresh";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -403,7 +576,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getSubscribeAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void SubscribeAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void SubscribeAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "subscribe";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -423,7 +596,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getSubscribeAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void SubscribeAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void SubscribeAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "subscribe";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -465,7 +638,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getUnsubscribeAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void UnsubscribeAttemptsUsingProxyServer_Test(String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
+	public void UnsubscribeAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
 		// setup for test
 		String moduleTask = "unsubscribe";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -483,7 +656,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void UnsubscribeAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	public void UnsubscribeAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
 		String moduleTask = "unsubscribe";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
@@ -514,6 +687,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	
+	
+	// More Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager :  register with proxy configurations commented out of rhsm.conf",
 			groups={},
@@ -614,30 +790,33 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg(); //"Invalid username or password";
-		
-		// String username, String password, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex
+	
+		// String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex
 
 		// basic auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	"bad-proxy",			sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl+"0",	sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,		"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,		sm_basicauthproxyUsername,		"bad-password",			Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,		"bad-username",				"bad-password",			Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,		null,						null,					Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	"bad-username",	sm_clientPassword,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",			sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl+"0",	sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		"bad-password",				Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		"bad-username",					"bad-password",				Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		null,							null,						Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	"bad-username",		sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",		sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		"Organization/Owner bad-org does not exist."}));
 
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	noauthproxyUrl,			null,						null,					Integer.valueOf(0),		null,		null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	noauthproxyUrl,			"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	noauthproxyUrl+"0",		null,						null,					Integer.valueOf(255),	nErrMsg,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	"bad-username",	sm_clientPassword,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(0),		null,		null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl+"0",		null,						null,					Integer.valueOf(255),	nErrMsg,	null}));
+		ll.add(Arrays.asList(new Object[]{	"bad-username",		sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",		sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	"bad-org",		noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		"Organization/Owner bad-org does not exist."}));
 
 		return ll;
 	}
 
+	
 	@DataProvider(name="getRegisterAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
@@ -651,201 +830,179 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg(); //"Invalid username or password";
 
-		// String username, String password, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
+		// String username, String password, Sring org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
 		// basic auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						"bad-proxy",				sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort+"0",	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	"bad-password",				Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				"bad-password",				Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		""/*no username*/,			""/*no password*/,			Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,	null,						null,						"bad-proxy",				sm_basicauthproxyPort+"0",	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,	sm_basicauthproxyUsername,	null,						"bad-proxy",				sm_basicauthproxyPort+"0",	"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	basicauthproxyUrl,	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	"bad-proxy",				sm_basicauthproxyPort+"0",	"bad-username",				"bad-password",				Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",		null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{	"bad-username",		"bad-password",		null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						"bad-proxy",				sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort+"0",	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	"bad-password",				Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		"bad-username",				"bad-password",				Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		""/*no username*/,			""/*no password*/,			Integer.valueOf(255),	nErrMsg,	null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_DENIED"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,	null,						null,						"bad-proxy",				sm_basicauthproxyPort+"0",	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,	sm_basicauthproxyUsername,	null,						"bad-proxy",				sm_basicauthproxyPort+"0",	"bad-username",				sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,	sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	"bad-proxy",				sm_basicauthproxyPort+"0",	"bad-username",				"bad-password",				Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	"bad-username",		sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",		sm_clientOrg,	null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		"Organization/Owner bad-org does not exist.",	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
 
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort+"0",	"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	null,				null,						null,						"bad-proxy",			sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",		null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{	"bad-username",		"bad-password",		null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	noauthproxyUrl,		null,						null,						"bad-proxy",			sm_noauthproxyPort+"0",	"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	noauthproxyUrl,		"ignored-username",			"ignored-password",			"bad-proxy",			sm_noauthproxyPort+"0",	"bad-username",				"bad-password",			Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"ignored-username",			"ignored-password",		Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort+"0",	"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	null,				null,						null,						"bad-proxy",			sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
+		ll.add(Arrays.asList(new Object[]{	"bad-username",		sm_clientPassword,	sm_clientOrg,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	"bad-password",		sm_clientOrg,	null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		uErrMsg,	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	null,		"Organization/Owner bad-org does not exist.",	noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		null,						null,						"bad-proxy",			sm_noauthproxyPort+"0",	"",							"",						Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,		"ignored-username",			"ignored-password",			"bad-proxy",			sm_noauthproxyPort+"0",	"bad-username",				"bad-password",			Integer.valueOf(0),		null,		null,		noauthproxy,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	"bad-proxy",		null,						null,						sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(255),	nErrMsg,	null,		noauthproxy,	sm_noauthproxyLog,		null}));
 
 
 		return ll;
 	}
+	protected List<List<Object>> getValidRegisterAttemptsUsingProxyServerDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			// only include dataProvided rows where username, password, and org are valid
+			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
+		}
+		return ll;
+	}
+	protected List<List<Object>> getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			// only include dataProvided rows where username, password, and org are valid
+			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword) && l.get(2).equals(sm_clientOrg)) ll.add(l);
+		}
+		return ll;
+	}
 	
+	
+	
+	@DataProvider(name="getOrgsAttemptsUsingProxyServerData")
+	public Object[][] getOrgsAttemptsUsingProxyServerDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getOrgsAttemptsUsingProxyServerDataAsListOfLists());
+	}
+	protected List<List<Object>> getOrgsAttemptsUsingProxyServerDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			// only include dataProvided rows where org is valid
+			if (l.get(2).equals(sm_clientOrg)) ll.add(l);
+		}
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getOrgsAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getOrgsAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getOrgsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+	}
+	protected List<List<Object>> getOrgsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			// only include dataProvided rows where org is valid
+			if (l.get(2).equals(sm_clientOrg)) ll.add(l);
+		}
+		return ll;
+	}
 	
 	
 	@DataProvider(name="getUnregisterAttemptsUsingProxyServerData")
 	public Object[][] getUnregisterAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnregisterAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getUnregisterAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getUnregisterAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getUnregisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
-	
 	
 	
 	@DataProvider(name="getListAttemptsUsingProxyServerData")
 	public Object[][] getListAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getListAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getListAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getListAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getListAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getListAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-	}
-	protected List<List<Object>> getListAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
 	
+	
+	@DataProvider(name="getRedeemAttemptsUsingProxyServerData")
+	public Object[][] getRedeemAttemptsUsingProxyServerDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+	}
+
+	
+	@DataProvider(name="getRedeemAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getRedeemAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+	}
+	
+	
+// DELETME after bug https://bugzilla.redhat.com/show_bug.cgi?id=720049 is resolved
+//	@DataProvider(name="getReposAttemptsUsingProxyServerData")
+//	public Object[][] getReposAttemptsUsingProxyServerDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+//	}
+//	
+//	
+//	@DataProvider(name="getReposAttemptsUsingProxyServerViaRhsmConfigData")
+//	public Object[][] getReposAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+//	}
 	
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerData")
 	public Object[][] getFactsAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getFactsAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getFactsAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getFactsAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
-	
 	
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerData")
 	public Object[][] getRefreshAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRefreshAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getRefreshAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getRefreshAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
-	
 	
 	
 	@DataProvider(name="getSubscribeAttemptsUsingProxyServerData")
 	public Object[][] getSubscribeAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getSubscribeAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getSubscribeAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-	}
-	protected List<List<Object>> getSubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
 	
 	
 	@DataProvider(name="getUnsubscribeAttemptsUsingProxyServerData")
 	public Object[][] getUnsubscribeAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnsubscribeAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	protected List<List<Object>> getUnsubscribeAttemptsUsingProxyServerDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+	
 	
 	@DataProvider(name="getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	protected List<List<Object>> getUnsubscribeAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-			// only include dataProvided rows where username and password are valid
-			if (l.get(0).equals(sm_clientUsername) && l.get(1).equals(sm_clientPassword)) ll.add(l);
-		}
-		return ll;
-	}
+
 }

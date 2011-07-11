@@ -72,18 +72,18 @@ def schedule_job(url, variants, token):
         time.sleep(10)
 
 
-URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
-TOKEN = "hudsonbeaker-remote"
-VARIANTS = [['ppc64', 'Server', 'RedHatEnterpriseLinux6'],
-            ['s390x', 'Server', 'RedHatEnterpriseLinux6'],
-            ['x86_64', 'ComputeNode', 'RedHatEnterpriseLinux6'],
-            ['x86_64', 'Server', 'RedHatEnterpriseLinux6'],
-            ['x86_64', 'Client', 'RedHatEnterpriseLinux6'],
-            ['x86_64', 'Workstation', 'RedHatEnterpriseLinux6'],
-            ['i386', 'Client', 'RedHatEnterpriseLinux6'],
-            ['i386', 'Server', 'RedHatEnterpriseLinux6'],
-            ['i386', 'Workstation', 'RedHatEnterpriseLinux6']]
-schedule_job(URL, VARIANTS, TOKEN)
+#url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
+#token = "hudsonbeaker-remote"
+#variants = [['ppc64','Server','RedHatEnterpriseLinux6'],
+#            ['s390x','Server','RedHatEnterpriseLinux6'],
+#            ['x86_64','ComputeNode','RedHatEnterpriseLinux6'],
+#            ['x86_64','Server','RedHatEnterpriseLinux6'],
+#            ['x86_64','Client','RedHatEnterpriseLinux6'],
+#            ['x86_64','Workstation','RedHatEnterpriseLinux6'],
+#            ['i386','Client','RedHatEnterpriseLinux6'],
+#            ['i386','Server','RedHatEnterpriseLinux6'],
+#            ['i386','Workstation','RedHatEnterpriseLinux6']]
+#schedule_job(url, variants, token)
 
 
 URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"

@@ -209,9 +209,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-584137"},
 			dataProvider="getGoodRegistrationData")
 	@ImplementsNitrateTest(caseId=41686)
-	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password){
+	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(username, password, null, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE, null, null, null);
+		clienttasks.register(username, password, owner, ConsumerType.system, null, null, Boolean.FALSE, Boolean.FALSE, null, null, null);
 		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 	}
 	

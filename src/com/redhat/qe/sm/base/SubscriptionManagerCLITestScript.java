@@ -39,6 +39,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
+import com.sun.org.apache.bcel.internal.generic.SIPUSH;
 
 /**
  * @author ssalevan
@@ -434,73 +435,130 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
 	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
+//	/**
+//	 * Useful when trying to find a username that belongs to a different owner/org than the current username you are testing with.
+//	 * @param key
+//	 * @return null when no match is found
+//	 * @throws JSONException
+//	 */
+//	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		for (RegistrationData registration : registrationDataList) {
+//			if (registration.ownerKey!=null) {
+//				if (!registration.ownerKey.equals(key)) {
+//					return registration;
+//				}
+//			}
+//		}
+//		return null;
+//	}
+	
 	/**
-	 * Useful when trying to find a username that belongs to a different owner/org than the current username you are testing with.
-	 * @param key
-	 * @return null when no match is found
+	 * Useful when trying to find registerable credentials that belongs to a different (or same) owner than the current credentials you are testing with.
+	 * @param matchingUsername
+	 * @param username
+	 * @param matchingOwnerKey
+	 * @param ownerkey
+	 * @return
 	 * @throws JSONException
 	 */
-	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
+	protected List<RegistrationData> findGoodRegistrationData(Boolean matchingUsername, String username, Boolean matchingOwnerKey, String ownerKey) throws JSONException {
+		List<RegistrationData> finalRegistrationData = new ArrayList<RegistrationData>();
+		List<RegistrationData> goodRegistrationData = new ArrayList<RegistrationData>();
+		List<String> ownersWithMatchingUsername = new ArrayList<String>();
+		List<String> usernamesWithMatchingOwnerKey = new ArrayList<String>();
 		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
-		for (RegistrationData registration : registrationDataList) {
-			if (registration.ownerKey!=null) {
-				if (!registration.ownerKey.equals(key)) {
-					return registration;
+		for (RegistrationData registrationDatum : registrationDataList) {
+			if (registrationDatum.registerResult.getExitCode().intValue()==0) {
+				if (registrationDatum.ownerKey.equals(ownerKey)) usernamesWithMatchingOwnerKey.add(registrationDatum.username);
+				if (registrationDatum.username.equals(username)) ownersWithMatchingUsername.add(registrationDatum.ownerKey);
+				if ( matchingUsername &&  registrationDatum.username.equals(username) &&  matchingOwnerKey &&  registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
+				}
+				if ( matchingUsername &&  registrationDatum.username.equals(username) && !matchingOwnerKey && !registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
+				}
+				if (!matchingUsername && !registrationDatum.username.equals(username) &&  matchingOwnerKey &&  registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
+				}
+				if (!matchingUsername && !registrationDatum.username.equals(username) && !matchingOwnerKey && !registrationDatum.ownerKey.equals(ownerKey)) {
+					goodRegistrationData.add(registrationDatum);
 				}
 			}
 		}
-		return null;
-	}
-	
-	/**
-	 * Useful when trying to find a username that belongs to the same owner/org as the current username you are testing with.
-	 * @param key
-	 * @param username
-	 * @return null when no match is found
-	 * @throws JSONException
-	 */
-	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
-		for (RegistrationData registration : registrationDataList) {
-			if (registration.ownerKey!=null) {
-				if (registration.ownerKey.equals(key)) {
-					if (!registration.username.equals(username)) {
-						return registration;
+		for (RegistrationData registrationDatum : goodRegistrationData) {
+				if ( !matchingOwnerKey &&  !matchingUsername) {
+					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey )&& !usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
+						finalRegistrationData.add(registrationDatum);
 					}
+				} else if ( !matchingOwnerKey ) {
+					if (!usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
+						finalRegistrationData.add(registrationDatum);
+					}
+				} else if ( !matchingUsername ) {
+					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey)) {
+						finalRegistrationData.add(registrationDatum);
+					}
+				} else {
+					finalRegistrationData.add(registrationDatum);
 				}
-			}
 		}
-		return null;
+		return finalRegistrationData;
 	}
 	
-	/**
-	 * Useful when trying to find registration data results from a prior registration by a given username.
-	 * @param key
-	 * @param username
-	 * @return null when no match is found
-	 * @throws JSONException
-	 */
-	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
-		for (RegistrationData registration : registrationDataList) {
-			if (registration.username.equals(username)) {
-				return registration;
-			}
-		}
-		return null;
-	}
+//	/**
+//	 * Useful when trying to find a username that belongs to the same owner/org as the current username you are testing with.
+//	 * @param key
+//	 * @param username
+//	 * @return null when no match is found
+//	 * @throws JSONException
+//	 */
+//	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		for (RegistrationData registration : registrationDataList) {
+//			if (registration.ownerKey!=null) {
+//				if (registration.ownerKey.equals(key)) {
+//					if (!registration.username.equals(username)) {
+//						return registration;
+//					}
+//				}
+//			}
+//		}
+//		return null;
+//	}
+//	
+//	/**
+//	 * Useful when trying to find registration data results from a prior registration by a given username.
+//	 * @param key
+//	 * @param username
+//	 * @return null when no match is found
+//	 * @throws JSONException
+//	 */
+//	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		for (RegistrationData registration : registrationDataList) {
+//			if (registration.username.equals(username)) {
+//				return registration;
+//			}
+//		}
+//		return null;
+//	}
 	
 	/**
 	 * This can be called by Tests that depend on it in a BeforeClass method to insure that registrationDataList has been populated.
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	protected void RegisterWithUsernameAndPassword_Test() throws IOException {
+	protected void RegisterWithCredentials_Test() throws Exception {
 		if (registrationDataList.isEmpty()) {
 			clienttasks.unregister(null,null,null); // make sure client is unregistered
-			for (List<Object> UsernameAndPassword : getUsernameAndPasswordDataAsListOfLists()) {
+			for (List<Object> credentials : getRegisterCredentialsDataAsListOfLists()) {
 				com.redhat.qe.sm.cli.tests.RegisterTests registerTests = new com.redhat.qe.sm.cli.tests.RegisterTests();
 				registerTests.setupBeforeSuite();
-				registerTests.RegisterWithUsernameAndPassword_Test((String)UsernameAndPassword.get(0), (String)UsernameAndPassword.get(1), (String)UsernameAndPassword.get(2));
+				try {
+					registerTests.RegisterWithCredentials_Test((String)credentials.get(0), (String)credentials.get(1), (String)credentials.get(2));			
+				} catch (AssertionError e) {
+					log.warning("Ignoring a failure in RegisterWithCredentials_Test("+(String)credentials.get(0)+", "+(String)credentials.get(1)+", "+(String)credentials.get(2)+")");
+				}
 			}
 		}
 	}
@@ -590,19 +648,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getGoodRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
-//		for (List<Object> registrationDataList : getBogusRegistrationDataAsListOfLists()) {
-//			// pull out all of the valid registration data (indicated by an Integer exitCode of 0)
-//			if (registrationDataList.contains(Integer.valueOf(0))) {
-//				// String username, String password, String type, String consumerId
-//				ll.add(registrationDataList.subList(0, 4));
-//			}
-//			
-//		}
-// changing to registrationDataList to get all the valid registeredConsumer
-		
+		// parse the registrationDataList to get all the successfully registeredConsumers
 		for (RegistrationData registeredConsumer : registrationDataList) {
 			if (registeredConsumer.registerResult.getExitCode().intValue()==0) {
-				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password}));
+				ll.add(Arrays.asList(new Object[]{registeredConsumer.username, registeredConsumer.password, registeredConsumer.ownerKey}));
 				
 				// minimize the number of dataProvided rows (useful during automated testcase development)
 				if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
@@ -660,37 +709,97 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-	
-	@DataProvider(name="getUsernameAndPasswordData")
-	public Object[][] getUsernameAndPasswordDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+// DELETEME
+//	@DataProvider(name="getUsernameAndPasswordData")
+//	public Object[][] getUsernameAndPasswordDataAs2dArray() {
+//		return TestNGUtils.convertListOfListsTo2dArray(getUsernameAndPasswordDataAsListOfLists());
+//	}
+//	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+//		List<List<Object>> ll = new ArrayList<List<Object>>();
+//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
+//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
+//		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
+//
+//		String[] usernames = sm_clientUsernames.split(",");
+//		String[] passwords = sm_clientPasswords.split(",");
+//		String password = passwords[0].trim();
+//		for (int i = 0; i < usernames.length; i++) {
+//			String username = usernames[i].trim();
+//			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
+//			// this allows one to specify only one password when all the usernames share the same password
+//			if (i<passwords.length) password = passwords[i].trim();
+//			
+//			// get the orgs for this username/password
+//			List<String> orgs = clienttasks.getOrgs(username,password);
+//			if (orgs.size()==1) {orgs.clear(); orgs.add(null);}	// 
+//			
+//			// append a username and password for each org the user belongs to
+//			for (String org : orgs) {
+//				ll.add(Arrays.asList(new Object[]{username,password,org}));
+//			}
+//		}
+//		
+//		return ll;
+//	}
+	@DataProvider(name="getRegisterCredentialsData")
+	public Object[][] getRegisterCredentialsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterCredentialsDataAsListOfLists());
 	}
-	protected List<List<Object>> getUsernameAndPasswordDataAsListOfLists() {
+	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// Notes...
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
-		
-		String[] usernames = sm_clientUsernames.split(",");
-		String[] passwords = sm_clientPasswords.split(",");
-		String password = passwords[0].trim();
-		for (int i = 0; i < usernames.length; i++) {
-			String username = usernames[i].trim();
-			// when there is not a 1:1 relationship between usernames and passwords, the last password is repeated
-			// this allows one to specify only one password when all the usernames share the same password
-			if (i<passwords.length) password = passwords[i].trim();
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
+
+		// get all of the candlepin users
+		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
+		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/users"));	
+		for (int i = 0; i < jsonUsers.length(); i++) {
+			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
+			// {
+			//   "created": "2011-07-01T06:40:00.951+0000", 
+			//   "hashedPassword": "05557a2aaec7cb676df574d2eb080691949a6752", 
+			//   "id": "8a90f8c630e46c7e0130e46ce9b70020", 
+			//   "superAdmin": false, 
+			//   "updated": "2011-07-01T06:40:00.951+0000", 
+			//   "username": "minnie"
+			// }
+			Boolean isSuperAdmin = jsonUser.getBoolean("superAdmin");
+			String username = jsonUser.getString("username");
+			String password = sm_clientPasswordDefault;
+			if (username.equals(sm_serverAdminUsername)) password = sm_serverAdminPassword;
 			
-			// get the orgs for this username/password
-			List<String> orgs = clienttasks.getOrgs(username,password);
-			if (orgs.size()==1) {orgs.clear(); orgs.add(null);}	// 
+			// get the user's owners
+			// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
+			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/users/"+username+"/owners"));	
+			for (int j = 0; j < jsonUserOwners.length(); j++) {
+				JSONObject jsonOwner = (JSONObject) jsonUserOwners.get(j);
+				// {
+				//    "contentPrefix": null, 
+				//    "created": "2011-07-01T06:39:58.740+0000", 
+				//    "displayName": "Snow White", 
+				//    "href": "/owners/snowwhite", 
+				//    "id": "8a90f8c630e46c7e0130e46ce114000a", 
+				//    "key": "snowwhite", 
+				//    "parentOwner": null, 
+				//    "updated": "2011-07-01T06:39:58.740+0000", 
+				//    "upstreamUuid": null
+				// }
+				String owner = jsonOwner.getString("key");
+				
+				// String username, String password, String owner
+				ll.add(Arrays.asList(new Object[]{username,password,owner}));
+			}
 			
-			// append a username and password for each org the user belongs to
-			for (String org : orgs) {
-				ll.add(Arrays.asList(new Object[]{username,password,org}));
+			// don't forget that some users (for which no owners are returned) probably have READ_ONLY permission to their orgs
+			if (jsonUserOwners.length()==0) {
+				ll.add(Arrays.asList(new Object[]{username,password,null}));			
 			}
 		}
 		
 		return ll;
 	}
-	
 	
 	@DataProvider(name="getAllConsumedProductSubscriptionsData")
 	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() {
