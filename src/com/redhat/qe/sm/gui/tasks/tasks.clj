@@ -126,10 +126,17 @@
                         :or {system-name-input nil, autosubscribe false, owner nil}}]
   (if (ui showing? :unregister-system)
     (raise {:type :already-registered
-            :username username
-            :password password
-            :unregister-first (fn [e] (unregister)
-                                (register (:username e) (:password e)))}))
+          :username username
+          :password password
+          :name system-name-input
+          :auto autosubscribe
+          :ownername owner
+          :unregister-first (fn [e] (unregister)
+                              (register (:username e)
+                                        (:password e)
+                                        :system-name-input (:name e)
+                                        :autosubscribe (:auto e)
+                                        :owner (:ownername e)))}))
   (ui click :register-system)
   (ui waittillguiexist :redhat-login)
   (ui settextvalue :redhat-login username)

@@ -12,18 +12,20 @@
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
-(defn simple_register [user pass owner cleanup-fn]
-  (if owner 
-    (tasks/register user pass :owner owner)
-    (tasks/register user pass)) 
+(defn simple_register [user pass owner]
+  (with-handlers [(handle :already-registered [e]
+                          (recover e :unregister-first))]
+    (if owner 
+      (tasks/register user pass :owner owner)
+      (tasks/register user pass)))
   (verify (action exists? :unregister-system))
   (if owner
     (do 
       (tasks/ui click :view-system-facts)
       (tasks/sleep 5000)
-      (verify (= 1 (tasks/ui objectexist :facts-dialog owner)))
-      (tasks/ui click :close-facts)))
-  (when cleanup-fn (cleanup-fn)))
+      (let [result (tasks/ui objectexist :facts-dialog owner)]
+        (tasks/ui click :close-facts)
+        (verify (= 1 result))))))
 
 (defn register_bad_credentials [user pass recovery]
   (let [test-fn (fn [username password expected-error-type]
@@ -43,9 +45,9 @@
   (verify (action exists? :register-system)))
 
 (data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) "Admin Owner" tasks/unsubscribe]
-   [(@config :username) (@config :password) "Snow White" tasks/unsubscribe]
-   [(@config :username1) (@config :password1) nil tasks/unsubscribe]])
+  [[(@config :username) (@config :password) "Admin Owner"]
+   [(@config :username) (@config :password) "Snow White"]
+   [(@config :username1) (@config :password1) nil]])
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
