@@ -5,14 +5,29 @@
         [error.handler :only (with-handlers handle ignore recover)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
-  (:import [org.testng.annotations Test BeforeClass]))
+  (:import [org.testng.annotations Test BeforeClass]
+           [com.redhat.qe.sm.cli.tasks CandlepinTasks]))
+
+(defn get-owners [username password]
+  (let [server (tasks/conf-file-value "hostname")
+        port (tasks/conf-file-value "port")
+        prefix (tasks/conf-file-value "prefix")]
+    (let [owners (seq (CandlepinTasks/getOrgsKeyValueForUser server
+                                                             port
+                                                             prefix
+                                                             username
+                                                             password
+                                                             "displayName"))]
+      (for [owner owners] (vector username password owner)))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
-(defn simple_register [user pass owner]
+(defn ^{Test {:groups ["registration"]
+              :dataProvider "userowners"}}
+  simple_register [_ user pass owner]
   (with-handlers [(handle :already-registered [e]
                           (recover e :unregister-first))]
     (if owner 
@@ -44,10 +59,10 @@
   (tasks/unregister)
   (verify (action exists? :register-system)))
 
-(data-driven simple_register {Test {:groups ["registration"]}}
-  [[(@config :username) (@config :password) "Admin Owner"]
-   [(@config :username) (@config :password) "Snow White"]
-   [(@config :username1) (@config :password1) nil]])
+(defn ^{DataProvider {:name "userowners"}}
+  get_userowners [_]
+  (to-array-2d (into (get-owners (@config :username1) (@config :password1))
+                     (get-owners (@config :username) (@config :password)))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
@@ -59,6 +74,13 @@
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
+
+(comment 
+(data-driven simple_register {Test {:groups ["registration"]}}
+  [[(@config :username) (@config :password) "Admin Owner"]
+   [(@config :username) (@config :password) "Snow White"]
+   [(@config :username1) (@config :password1) nil]])
+)
 
 (gen-class-testng)
 
