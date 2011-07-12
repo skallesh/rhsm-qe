@@ -170,7 +170,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 	@Test(	description="subscription-manager : identity using a proxy server (Positive and Negative Variations)",
 			groups={},
-			dataProvider="getRegisterAttemptsUsingProxyServerData",
+			dataProvider="getIdentityAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void IdentityAttemptsUsingProxyServer_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdoutRegex, String stderrRegex) {
@@ -187,7 +187,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager : identity using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
-			dataProvider="getRegisterAttemptsUsingProxyServerViaRhsmConfigData",
+			dataProvider="getIdentityAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void IdentityAttemptsUsingProxyServerViaRhsmConfig_Test(String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdoutRegex, String stderrRegex, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
@@ -879,6 +879,34 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
+	
+	
+	@DataProvider(name="getIdentityAttemptsUsingProxyServerData")
+	public Object[][] getIdentityAttemptsUsingProxyServerDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getIdentityAttemptsUsingProxyServerDataAsListOfLists());
+	}
+	protected List<List<Object>> getIdentityAttemptsUsingProxyServerDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			// only include dataProvided rows where org is valid
+			if (l.get(2).equals(sm_clientOrg)) ll.add(l);
+		}
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getIdentityAttemptsUsingProxyServerViaRhsmConfigData")
+	public Object[][] getIdentityAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getIdentityAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+	}
+	protected List<List<Object>> getIdentityAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			// only include dataProvided rows where org is valid
+			if (l.get(2).equals(sm_clientOrg)) ll.add(l);
+		}
+		return ll;
+	}
 	
 	
 	@DataProvider(name="getOrgsAttemptsUsingProxyServerData")

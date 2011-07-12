@@ -232,6 +232,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void VerifyGuestPoolQuantityIsNotClobberedByRefreshPools_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 		if (hostPoolId==null && guestPoolId==null) throw new SkipException("Failed to find expected host and guest pools derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
+		if (dbConnection==null) throw new SkipException("This testcase requires a connection to the candlepin database so that it can updateSubscriptionDatesOnDatabase.");
 
 		// get the hostPool
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();

@@ -39,7 +39,6 @@ import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
-import com.sun.org.apache.bcel.internal.generic.SIPUSH;
 
 /**
  * @author ssalevan

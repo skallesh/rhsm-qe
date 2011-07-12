@@ -1,13 +1,16 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +23,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -129,7 +134,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNull(startingPool,"The about to start SubscriptionPool with id '"+aboutToStartPoolId+"' is currently NOT YET available for subscribing.");
 
 		// wait for pool to start
-		sleep((startingMinutesFromNow-1)*60*1000 + 30*1000); // plus a 30 sec buffer;
+		sleep((startingMinutesFromNow-1)*60*1000 + 0*1000); // plus a 30 sec buffer;
 	
 		// assert the starting pool is still NOT currently available (1 minute before its startDate)
 		startingPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", aboutToStartPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -245,6 +250,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		// randomly choose a contract number
 		Integer contractNumber = Integer.valueOf(getRandInt());
 		
+		// randomly choose an account number
+		Integer accountNumber = Integer.valueOf(getRandInt());
+		
 		// choose a product id for the subscription
 		//String productId =  "MKT-rhel-server";  // too hard coded
 		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
@@ -264,16 +272,34 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		String[] providedProducts = {};
 		
 		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, providedProducts).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		
 		// refresh the pools
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 5*1000, 1);
 		
-		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription contract number
+		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id
 		String poolId = null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/owners/"+ownerKey+"/pools"));	
+		
+		String iso8601format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2012-02-08T00:00:00.000+0000"
+		DateFormat dateFormat = new SimpleDateFormat(iso8601format);
+		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(dateFormat.format(startDate), "UTF-8");
+		
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=720493 - jsefler 07/11/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="720493"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			 dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");	// the Z time zone was stripped	// "2012-02-08T00:00:00.000"
+			 //dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			 urlEncodedActiveOnDate = java.net.URLEncoder.encode(dateFormat.format(startDate), "UTF-8");
+		}
+		// END OF WORKAROUND
+		
+		
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
@@ -282,7 +308,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 				break;
 			}
 		}
-		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with contractNumber: "+contractNumber);
+		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
 		log.info("The newly created subscription pool with id '"+poolId+"' will start in '"+startingMinutesFromNow+"' minutes from now.");
 		log.info("The newly created subscription pool with id '"+poolId+"' will expire in '"+endingMinutesFromNow+"' minutes from now.");
 		return poolId; // return poolId to the newly available SubscriptionPool
