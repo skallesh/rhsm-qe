@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.json.JSONException;
 import org.testng.SkipException;
@@ -157,13 +158,16 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 				"The original registered result is returned from identity regenerate with original authenticator.");
 		
-		// find a username from the registrationDataList whose owner does not match the registerer of this client
-		RegistrationData registrationData = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(ownerKey,sm_clientUsername);
-		if (registrationData==null) throw new SkipException("Could not find registration data for another user who belongs to the same owner '"+ownerKey+"' as '"+sm_clientUsername+"'.");
+		// find a different username from the registrationDataList whose owner does match the registerer of this client
+//		RegistrationData registrationData = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(ownerKey,sm_clientUsername);
+//		if (registrationData==null) throw new SkipException("Could not find registration data for another user who belongs to the same owner '"+ownerKey+"' as '"+sm_clientUsername+"'.");
+		List<RegistrationData> registrationData = findGoodRegistrationData(false,sm_clientUsername,true,sm_clientOrg);
+		if (registrationData.isEmpty()) throw new SkipException("Could not find registration data for a different user who does belong to owner '"+ownerKey+"'.");
+		RegistrationData registrationDatum = registrationData.get(0);
 
 		// regenerate the identity using a different username and password as used during register... and assert
 		log.info("Regenerating identity with a different username and password (but belonging to the same owner) than used during register...");
-		result = clienttasks.identity(registrationData.username,registrationData.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
+		result = clienttasks.identity(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), registerResult.getStdout().trim(),
 			"The original registered result is returned from identity regenerate using a different authenticator who belongs to the same owner/organization.");
 	}
@@ -181,15 +185,19 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
-		// find a username from the registrationDataList whose owner does not match the registerer of this client
-		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(ownerKey);
-		if (registrationData==null) throw new SkipException("Could not find registration data for a user who does not belong to owner '"+ownerKey+"'.");
-
+		// find a different username from the registrationDataList whose owner does not match the registerer of this client
+//		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(ownerKey);
+//		if (registrationData==null) throw new SkipException("Could not find registration data for a user who does not belong to owner '"+ownerKey+"'.");
+		List<RegistrationData> registrationData = findGoodRegistrationData(false,sm_clientUsername,false,sm_clientOrg);
+		if (registrationData.isEmpty()) throw new SkipException("Could not find registration data for a different user who does not belong to owner '"+ownerKey+"'.");
+		RegistrationData registrationDatum = registrationData.get(0);
+		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
-		SSHCommandResult result = clienttasks.identity_(registrationData.username,registrationData.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
+		SSHCommandResult result = clienttasks.identity_(registrationDatum.username,registrationDatum.password,Boolean.TRUE, Boolean.TRUE, null, null, null);
 		Assert.assertNotSame(result.getExitCode(), Integer.valueOf(0), "The identify command was NOT a success.");
-		Assert.assertEquals(result.getStderr().trim(),"access denied.");
+//		Assert.assertEquals(result.getStderr().trim(),"access denied.");
+		Assert.assertEquals(result.getStderr().trim(),"Insufficient permissions");
 	}
 	
 	
@@ -228,7 +236,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// alternative to dependsOnGroups={"RegisterWithUsernameAndPassword_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
-		RegisterWithUsernameAndPassword_Test(); // needed to populate registrationDataList
+		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 	}
 	
 	

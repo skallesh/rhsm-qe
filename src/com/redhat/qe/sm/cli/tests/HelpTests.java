@@ -145,16 +145,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String modulesRegex = "^	\\w+";
 		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
 		
+		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
-		modules.add("activate");
+//		modules.add("redeem");
+//		modules.add("orgs");
+//		modules.add("repos");
 		modules.add("clean");
 		modules.add("facts");
 		modules.add("identity");
 		modules.add("list");
 		modules.add("refresh");
 		modules.add("register");
-//		modules.add("reregister");
 		modules.add("subscribe");
 		modules.add("unregister");
 		modules.add("unsubscribe");
@@ -166,31 +168,28 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
 		}
 		
-		// MODULE: activate
-		module = "activate";
-		List <String> activateOptions = new ArrayList<String>();
-		activateOptions.add("-h, --help");
-		activateOptions.add("--debug=DEBUG");
-//		activateOptions.add("-k, --insecure");
-		activateOptions.add("--email=EMAIL");
-		activateOptions.add("--locale=LOCALE");
-		activateOptions.add("--proxy=PROXY_URL");
-		activateOptions.add("--proxyuser=PROXY_USER");
-		activateOptions.add("--proxypassword=PROXY_PASSWORD");
+		// MODULE: redeem
+		module = "redeem";
+		List <String> redeemOptions = new ArrayList<String>();
+		redeemOptions.add("-h, --help");
+		redeemOptions.add("--email=EMAIL");
+		redeemOptions.add("--locale=LOCALE");
+		redeemOptions.add("--proxy=PROXY_URL");
+		redeemOptions.add("--proxyuser=PROXY_USER");
+		redeemOptions.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, activateOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, redeemOptions}));
 		}
-	
+		
 		// MODULE: clean
 		module = "clean";
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
-		cleanOptions.add("--debug=DEBUG");
 		// removed in https://bugzilla.redhat.com/show_bug.cgi?id=664581
 		//cleanOptions.add("--proxy=PROXY_URL");
 		//cleanOptions.add("--proxyuser=PROXY_USER");
@@ -208,8 +207,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "facts";
 		List <String> factsOptions = new ArrayList<String>();
 		factsOptions.add("-h, --help");
-		factsOptions.add("--debug=DEBUG");
-//		factsOptions.add("-k, --insecure");
 		factsOptions.add("--list");
 		factsOptions.add("--update");
 		factsOptions.add("--proxy=PROXY_URL");
@@ -228,7 +225,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "identity";
 		List <String> identityOptions = new ArrayList<String>();
 		identityOptions.add("-h, --help");
-		identityOptions.add("--debug=DEBUG");
 		identityOptions.add("--username=USERNAME");
 		identityOptions.add("--password=PASSWORD");
 		identityOptions.add("--regenerate");
@@ -249,8 +245,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "list";
 		List <String> listOptions = new ArrayList<String>();
 		listOptions.add("-h, --help");
-		listOptions.add("--debug=DEBUG");
-//		listOptions.add("-k, --insecure");
 		listOptions.add("--installed");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=634254
 		listOptions.add("--consumed");
 		listOptions.add("--available");
@@ -272,7 +266,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "refresh";
 		List <String> refreshOptions = new ArrayList<String>();
 		refreshOptions.add("-h, --help");
-		refreshOptions.add("--debug=DEBUG");
 		refreshOptions.add("--proxy=PROXY_URL");
 		refreshOptions.add("--proxyuser=PROXY_USER");
 		refreshOptions.add("--proxypassword=PROXY_PASSWORD");
@@ -289,8 +282,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "register";
 		List <String> registerOptions = new ArrayList<String>();
 		registerOptions.add("-h, --help");
-		registerOptions.add("--debug=DEBUG");
-//		registerOptions.add("-k, --insecure");
 		registerOptions.add("--username=USERNAME");
 		registerOptions.add("--type=CONSUMERTYPE");
 		registerOptions.add("--name=CONSUMERNAME");
@@ -310,31 +301,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, registerOptions}));
 		}
 		
-//		// MODULE: reregister
-//		List <String> reregisterOptions = new ArrayList<String>();
-//		reregisterOptions.add("-h, --help");
-//		reregisterOptions.add("--debug=DEBUG");
-////		reregisterOptions.add("-k, --insecure");
-//		reregisterOptions.add("--username=USERNAME");
-//		reregisterOptions.add("--password=PASSWORD");
-//		reregisterOptions.add("--consumerid=CONSUMERID");
-//		for (String smHelpCommand : new String[]{clienttasks.command+" -h reregister",clienttasks.command+" --help reregister"}) {
-//			List <String> usages = new ArrayList<String>();
-//			String usage = "Usage: "+clienttasks.command+" reregister [OPTIONS]";
-//			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
-//			usages.add(usage);
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-//			ll.add(Arrays.asList(new Object[]{ smHelpCommand, optionsRegex, reregisterOptions}));
-//		}
-		
 		// MODULE: subscribe
 		module = "subscribe";
 		List <String> subscribeOptions = new ArrayList<String>();
 		subscribeOptions.add("-h, --help");
-		subscribeOptions.add("--debug=DEBUG");
 		subscribeOptions.add("--pool=POOL");
 		subscribeOptions.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
-//		subscribeOptions.add("-k, --insecure");
 //		subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 //		subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 //		subscribeOptions.add("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
@@ -354,8 +326,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "unregister";
 		List <String> unregisterOptions = new ArrayList<String>();
 		unregisterOptions.add("-h, --help");
-		unregisterOptions.add("--debug=DEBUG");
-//		unregisterOptions.add("-k, --insecure");
 		unregisterOptions.add("--proxy=PROXY_URL");
 		unregisterOptions.add("--proxyuser=PROXY_USER");
 		unregisterOptions.add("--proxypassword=PROXY_PASSWORD");
@@ -372,8 +342,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "unsubscribe";
 		List <String> unsubscribeOptions = new ArrayList<String>();
 		unsubscribeOptions.add("-h, --help");
-		unsubscribeOptions.add("--debug=DEBUG");
-//		unsubscribeOptions.add("-k, --insecure");
 		unsubscribeOptions.add("--serial=SERIAL");
 		unsubscribeOptions.add("--all");
 		unsubscribeOptions.add("--proxy=PROXY_URL");

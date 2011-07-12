@@ -319,7 +319,7 @@ schema generation failed
 			RequestEntity entity =  ((PostMethod)method).getRequestEntity();
 			log.finer("HTTP Request entity: " + ((StringRequestEntity)entity).getContent());
 		}
-		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", method.getRequestHeaders()));
+		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", (Object[])method.getRequestHeaders()));
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
@@ -440,6 +440,49 @@ schema generation failed
 		// jsonOwner_.getString("href") takes the form /owners/6239231 where 6239231 is the key
 		File href = new File(jsonOwner_.getString("href")); // use a File to represent the path
 		return href.getName();
+	}
+	
+	/**
+	 * @param server
+	 * @param port
+	 * @param prefix
+	 * @param username
+	 * @param password
+	 * @param key - name of the key whose value you want to get (e.g. "displayName", "key", "id")
+	 * @return - a list of all the key values corresponding to each of the orgs that this username belongs to
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
+
+		List<String> values = new ArrayList<String>();
+		JSONArray jsonUsersOrgs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, username, password,"/users/"+username+"/owners"));	
+		for (int j = 0; j < jsonUsersOrgs.length(); j++) {
+			JSONObject jsonOrg = (JSONObject) jsonUsersOrgs.get(j);
+			// {
+			//    "contentPrefix": null, 
+			//    "created": "2011-07-01T06:39:58.740+0000", 
+			//    "displayName": "Snow White", 
+			//    "href": "/owners/snowwhite", 
+			//    "id": "8a90f8c630e46c7e0130e46ce114000a", 
+			//    "key": "snowwhite", 
+			//    "parentOwner": null, 
+			//    "updated": "2011-07-01T06:39:58.740+0000", 
+			//    "upstreamUuid": null
+			// }
+			values.add(jsonOrg.getString(key));
+		}
+		return values;
+	}
+
+	public static String getOrgDisplayName(String server, String port, String prefix, String authenticator, String authenticatorPassword, String orgKey) throws JSONException, Exception {
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/owners/"+orgKey));	
+		return jsonOrg.getString("displayName");
+	}
+	
+	public static String getOrgId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String orgKey) throws JSONException, Exception {
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/owners/"+orgKey));	
+		return jsonOrg.getString("id");
 	}
 	
 	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
@@ -744,19 +787,95 @@ schema generation failed
 		return new JSONObject(sshCommandResult.getStdout().replaceAll("=>", ":"));
 	}
 	
-	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("owners",key,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+//	public static SyndFeed getSyndFeedForOwner(String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+//		return getSyndFeedFor("owners",key,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+//	}
+//	
+//	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+//		return getSyndFeedFor("consumers",key,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+//	}
+//	
+//	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+//		return getSyndFeedFor(null,null,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+//	}
+//	
+//	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
+//			
+//		/* References:
+//		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
+//		 * http://www.avajava.com/tutorials/lessons/how-do-i-connect-to-a-url-using-basic-authentication.html
+//		 * http://wiki.java.net/bin/view/Javawsxml/Rome
+//		 */
+//			
+//		// Notes: Alternative curl approach to getting the atom feed:
+//		// [ajay@garuda-rh proxy{pool_refresh}]$ curl -k -u admin:admin --request GET "https://localhost:8443/candlepin/owners/admin/atom" > /tmp/atom.xml; xmllint --format /tmp/atom.xml > /tmp/atom1.xml
+//		// from https://bugzilla.redhat.com/show_bug.cgi?id=645597
+//		
+//		SSLCertificateTruster.trustAllCerts();
+//		
+//		// set the atom feed url for an owner, consumer, or null
+//		String url = String.format("https://%s:%s%s/atom", candlepinHostname, candlepinPort, candlepinPrefix);
+//		if (ownerORconsumer!=null && key!=null) {
+//			url = String.format("https://%s:%s%s/%s/%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, ownerORconsumer, key);
+//		}
+//		
+//        log.fine("SyndFeedUrl: "+url);
+//        String authString = candlepinUsername+":"+candlepinPassword;
+//        log.finer("SyndFeedAuthenticationString: "+authString);
+// 		byte[] authEncBytes = Base64.encodeBytesToBytes(authString.getBytes());
+// 		String authStringEnc = new String(authEncBytes);
+// 		log.finer("SyndFeed Base64 encoded SyndFeedAuthenticationString: "+authStringEnc);
+//
+// 		SyndFeed feed = null;
+//        URL feedUrl=null;
+//        URLConnection urlConnection=null;
+////		try {
+//			feedUrl = new URL(url);
+//			urlConnection = feedUrl.openConnection();
+//            urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
+//            SyndFeedInput input = new SyndFeedInput();
+//            XmlReader xmlReader = new XmlReader(urlConnection);
+//			feed = input.build(xmlReader);
+//
+////		} catch (MalformedURLException e1) {
+////			// TODO Auto-generated catch block
+////			e1.printStackTrace();
+////		} catch (IOException e) {
+////			// TODO Auto-generated catch block
+////			e.printStackTrace();
+////		} catch (IllegalArgumentException e) {
+////			// TODO Auto-generated catch block
+////			e.printStackTrace();
+////		} catch (FeedException e) {
+////			// TODO Auto-generated catch block
+////			e.printStackTrace();
+////		}
+//			
+//		// debug logging
+//		log.finest("SyndFeed from "+feedUrl+":\n"+feed);
+////log.fine("SyndFeed from "+feedUrl+":\n"+feed);
+//		if (feed.getEntries().size()==0) {
+//			log.fine(String.format("%s entries[] is empty", feed.getTitle()));		
+//		} else for (int i=0;  i<feed.getEntries().size(); i++) {
+//			log.fine(String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue()));
+//		}
+//
+//
+//        return feed;
+//	}
+	public static SyndFeed getSyndFeedForOwner(String org, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor("/owners/"+org,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
 	}
 	
-	public static SyndFeed getSyndFeedForConsumer(String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("consumers",key,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeedForConsumer(String org, String uuid, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor("/owners/"+org+"/consumers/"+uuid,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
 	}
 	
 	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor(null,null,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+		return getSyndFeedFor("",candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
 	}
 	
-	protected static SyndFeed getSyndFeedFor(String ownerORconsumer, String key, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
+	protected static SyndFeed getSyndFeedFor(String path, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
 			
 		/* References:
 		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
@@ -771,10 +890,10 @@ schema generation failed
 		SSLCertificateTruster.trustAllCerts();
 		
 		// set the atom feed url for an owner, consumer, or null
-		String url = String.format("https://%s:%s%s/atom", candlepinHostname, candlepinPort, candlepinPrefix);
-		if (ownerORconsumer!=null && key!=null) {
-			url = String.format("https://%s:%s%s/%s/%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, ownerORconsumer, key);
-		}
+		String url = String.format("https://%s:%s%s%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, path);
+//		if (ownerORconsumer!=null && key!=null) {
+//			url = String.format("https://%s:%s%s/%s/%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, ownerORconsumer, key);
+//		}
 		
         log.fine("SyndFeedUrl: "+url);
         String authString = candlepinUsername+":"+candlepinPassword;
@@ -786,27 +905,13 @@ schema generation failed
  		SyndFeed feed = null;
         URL feedUrl=null;
         URLConnection urlConnection=null;
-//		try {
-			feedUrl = new URL(url);
-			urlConnection = feedUrl.openConnection();
-            urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
-            SyndFeedInput input = new SyndFeedInput();
-            XmlReader xmlReader = new XmlReader(urlConnection);
-			feed = input.build(xmlReader);
 
-//		} catch (MalformedURLException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IllegalArgumentException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (FeedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		feedUrl = new URL(url);
+		urlConnection = feedUrl.openConnection();
+        urlConnection.setRequestProperty("Authorization", "Basic " + authStringEnc);
+        SyndFeedInput input = new SyndFeedInput();
+        XmlReader xmlReader = new XmlReader(urlConnection);
+		feed = input.build(xmlReader);
 			
 		// debug logging
 		log.finest("SyndFeed from "+feedUrl+":\n"+feed);
@@ -817,15 +922,15 @@ schema generation failed
 			log.fine(String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, ((SyndEntryImpl) feed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue()));
 		}
 
-
         return feed;
 	}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, String... providedProducts) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, String... providedProducts) throws JSONException{
 		JSONObject sub = new JSONObject();
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 		sub.put("startDate", sdf.format(startDate));
 		sub.put("contractNumber", contractNumber);
+		sub.put("accountNumber", accountNumber);
 		sub.put("endDate", sdf.format(endDate));
 		sub.put("quantity", quantity);
 
