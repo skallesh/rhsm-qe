@@ -5,20 +5,11 @@
         [error.handler :only (with-handlers handle ignore recover)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
-  (:import [org.testng.annotations Test BeforeClass DataProvider]
-           [com.redhat.qe.sm.cli.tasks CandlepinTasks]))
+  (:import [org.testng.annotations Test BeforeClass DataProvider]))
 
-(defn get-owners [username password]
-  (let [server (tasks/conf-file-value "hostname")
-        port (tasks/conf-file-value "port")
-        prefix (tasks/conf-file-value "prefix")]
-    (let [owners (seq (CandlepinTasks/getOrgsKeyValueForUser server
-                                                             port
-                                                             prefix
-                                                             username
-                                                             password
-                                                             "displayName"))]
-      (for [owner owners] (vector username password owner)))))
+(defn get-userlists [username password]
+  (let [owners (tasks/get-owners username password)]
+    (for [owner owners] (vector username password owner))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -61,8 +52,11 @@
 
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_]
-  (to-array-2d (into (get-owners (@config :username1) (@config :password1))
-                     (get-owners (@config :username) (@config :password)))))
+  (to-array-2d
+   (into (if (and (@config :username1) (@config :password1))
+           (get-userlists (@config :username1) (@config :password1)))
+         (if (and (@config :username) (@config :password))
+           (get-userlists (@config :username) (@config :password))))))
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}

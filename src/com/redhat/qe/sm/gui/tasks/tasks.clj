@@ -10,7 +10,8 @@
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
-  (:import [com.redhat.qe.tools RemoteFileTasks]))
+  (:import [com.redhat.qe.tools RemoteFileTasks]
+           [com.redhat.qe.sm.cli.tasks CandlepinTasks]))
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
@@ -407,6 +408,20 @@
     (RemoteFileTasks/markFile runner log marker)
     (f)
     (RemoteFileTasks/getTailFromMarkedFile runner log marker grep)))
+
+(defn get-owners
+  "Given a username and password, this function returns a list
+  of owners associated with that user"
+  [username password]
+  (let [server (conf-file-value "hostname")
+        port (conf-file-value "port")
+        prefix (conf-file-value "prefix")]
+    (seq (CandlepinTasks/getOrgsKeyValueForUser server
+                                                port
+                                                prefix
+                                                username
+                                                password
+                                                "displayName"))))
 
 (comment  
 (defn get-all-facts []
