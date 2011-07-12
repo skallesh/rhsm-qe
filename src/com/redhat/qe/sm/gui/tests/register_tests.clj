@@ -5,7 +5,7 @@
         [error.handler :only (with-handlers handle ignore recover)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
-  (:import [org.testng.annotations Test BeforeClass]
+  (:import [org.testng.annotations Test BeforeClass DataProvider]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]))
 
 (defn get-owners [username password]
