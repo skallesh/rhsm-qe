@@ -72,7 +72,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void ConsumerCreated_Test() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// start fresh by unregistering
@@ -88,7 +88,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
  
         // fire a register event
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
-		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
+		//String[] newEventTitles = new String[]{"CONSUMER CREATED"};	// RHEL57 RHEL61
+		String[] newEventTitles = new String[]{sm_clientUsername+" created new consumer "+clienttasks.hostname};
+
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// assert the consumer feed...
@@ -106,7 +108,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50403)
-	public void EnititlementCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void EnititlementCreated_Test() throws Exception {
 		
 		// test prerequisites
 
@@ -199,7 +201,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"EnititlementDeleted_Test"}, dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void EnititlementDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void EnititlementDeleted_Test() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
@@ -231,7 +233,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerModified_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void ConsumerModified_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -264,7 +266,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void ConsumerDeleted_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
@@ -291,7 +293,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void OwnerCreated_Test() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server.");
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 		
@@ -650,12 +652,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
+	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws JSONException, Exception {
 		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		//Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
