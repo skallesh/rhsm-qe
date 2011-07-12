@@ -29,7 +29,7 @@
                             :username "sm.client1.username"
                             :password "sm.client1.password"
                             :username1 "sm.client2.username"
-                            :username2 "sm.client2.password"
+                            :password1 "sm.client2.password"
                             :ssh-user (DefaultMapKey. "sm.ssh.user" "root")
                             :ssh-key-private (DefaultMapKey."sm.sshkey.private" ".ssh/id_auto_dsa")
                             :ssh-key-passphrase "sm.sshkey.passphrase"
