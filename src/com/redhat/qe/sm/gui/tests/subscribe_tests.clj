@@ -8,12 +8,17 @@
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
 
+(def ownername (tasks/get-owner-display-name (@config :username)
+                                             (@config :password)
+                                             (@config :owner-key)))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (with-handlers [(handle :already-registered [e]
                                (recover e :unregister-first))]
-    (tasks/register (@config :username) (@config :password))))
-
+    (tasks/register (@config :username)
+                    (@config :password)
+                    :owner ownername)))
 
 (defn subscribe_all
   "Subscribes to everything available"

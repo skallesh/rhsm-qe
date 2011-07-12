@@ -46,7 +46,9 @@
 
 (defn ^{Test {:groups ["registration"]}}
   unregister [_]
-  (tasks/register (@config :username) (@config :password))
+  (with-handlers [(handle :already-registered [e]
+                          (recover e :unregister-first))]
+    (tasks/register (@config :username) (@config :password)))
   (tasks/unregister)
   (verify (action exists? :register-system)))
 

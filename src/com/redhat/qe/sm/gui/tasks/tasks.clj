@@ -423,6 +423,19 @@
                                                 password
                                                 "displayName"))))
 
+(defn get-owner-display-name
+  "Given a owner key (org key) this returns the owner's display name"
+  [username password orgkey]
+  (let [server (conf-file-value "hostname")
+        port (conf-file-value "port")
+        prefix (conf-file-value "prefix")]
+    (seq (CandlepinTasks/getOrgDisplayName server
+                                           port
+                                           prefix
+                                           username
+                                           password
+                                           orgkey))))
+
 (comment  
 (defn get-all-facts []
    (ui click :view-system-facts)
