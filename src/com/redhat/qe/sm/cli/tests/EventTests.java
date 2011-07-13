@@ -127,7 +127,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
+		//String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};	// RHEL57 RHEL61
+		String[] newEventTitles = new String[]{clienttasks.hostname+" consumed a subscription for product "+pool.subscriptionName};
 
 
 		// assert the consumer feed...
@@ -173,14 +174,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-//		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 	
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
-		newEventTitles.add("ENTITLEMENT MODIFIED");
-		//assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, new String[]{"ENTITLEMENT MODIFIED"});
+		//newEventTitles.add("ENTITLEMENT MODIFIED");	// RHEL57 RHEL61
+		newEventTitles.add("Unknown event for user System and target "+pool.subscriptionName);
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
 		// assert the owner feed...
@@ -614,19 +614,46 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Protected Methods ***********************************************************************
+	
+	protected int getFeedGrowthCount(SyndFeed oldFeed, SyndFeed newFeed) {
+		
+		
+		int g=0;
 
-	protected void assertTheNewOwnerFeedContains(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+		int n=newFeed.getEntries().size()-1;
+		int o=oldFeed.getEntries().size()-1;
+		while (g<o+1) {
+			int c=0;
+			String oldFeedTitle = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle();
+			String newFeedTitle = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getTitle();
+			String oldFeedDescription = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue();
+			String newFeedDescription = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription().getValue();
+			while (o-c-g>=0 &&
+					newFeedTitle.equals(oldFeedTitle) &&
+					newFeedDescription.equals(oldFeedDescription) ) {
+				c++;
+			}
+			if (o-c-g<0) break;
+			g++;
+		}
+
+
+		return g;
+	}
+
+	protected void assertTheNewOwnerFeedContains(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws JSONException, Exception {
+//		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		int newOwnerFeedGrowthCount = newOwnerFeed.getEntries().size() - oldOwnerFeed_EntriesSize;
-		log.info("The event feed length for owner '"+ownerKey+"' has increased by "+newOwnerFeedGrowthCount+" entries.");
+//		int newOwnerFeedGrowthCount = newOwnerFeed.getEntries().size() - oldOwnerFeed_EntriesSize;
+		int newOwnerFeedGrowthCount = getFeedGrowthCount(newOwnerFeed,oldOwnerFeed);
+		log.info(newOwnerFeedGrowthCount+" new events for owner '"+ownerKey+"' have been pushed onto the atom feed stack.");
 		List<String> actualNewEventTitles = new ArrayList<String>();
 		for (int i=0; i<newOwnerFeedGrowthCount; i++) {
 			actualNewEventTitles.add(((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle());
@@ -634,17 +661,24 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(actualNewEventTitles.containsAll(newEventTitles), "The newest event feed entries for owner '"+ownerKey+"' contains (at a minimum) all of the expected new event titles.");
 	}
 	
-	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws JSONException, Exception {
+//		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.size(), "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.size()+" entries.");
+		//Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.size(), "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.size()+" entries.");
+//		if (oldOwnerFeed_EntriesSize+newEventTitles.size() <= feedLimit) {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.size(), "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.size()+" entries.");
+//		} else {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), feedLimit, "The event feed length for owner '"+ownerKey+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newOwnerFeed,oldOwnerFeed), newEventTitles.size(), +newEventTitles.size()+" new event feed entries for owner '"+ownerKey+"' has been pushed onto the stack.");
+
 		List<String> newEventTitlesCloned = new ArrayList<String>(); for (String newEventTitle : newEventTitles) newEventTitlesCloned.add(newEventTitle);
 		for (int i=0; i<newEventTitles.size(); i++) {
 			String actualEventTitle = ((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle();
@@ -653,11 +687,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws JSONException, Exception {
-		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+//		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		//Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
 		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 
 		
@@ -665,7 +698,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 		
-		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
+		//Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
+//		if (oldOwnerFeed_EntriesSize+newEventTitles.length <= feedLimit) {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
+//		} else {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), feedLimit, "The event feed length for owner '"+ownerKey+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newOwnerFeed,oldOwnerFeed), newEventTitles.length, newEventTitles.length+" new event feed entries for owner '"+ownerKey+"' has been pushed onto the stack.");
+
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle();
@@ -675,7 +715,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
+//		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
 		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -684,7 +724,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		log.info("Expecting the new feed for consumer ("+consumerUuid+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.size(), "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.size()+" entries.");
+		//Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.size(), "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.size()+" entries.");
+//		if (oldConsumerFeed_EntriesSize+newEventTitles.size() <= feedLimit) {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.size(), "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.size()+" entries.");
+//		} else {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), feedLimit, "The event feed length for consumer '"+consumerUuid+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newConsumerFeed,oldConsumerFeed), newEventTitles.size(), newEventTitles.size()+" new event feed entries for consumer '"+consumerUuid+"' has been pushed onto the stack.");
+
 		List<String> newEventTitlesCloned = new ArrayList<String>(); for (String newEventTitle : newEventTitles) newEventTitlesCloned.add(newEventTitle);
 		for (int i=0; i<newEventTitles.size(); i++) {
 			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
@@ -693,7 +740,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
+//		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
 		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -703,7 +750,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.length+" entries.");
+		//Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.length+" entries.");
+//		if (oldConsumerFeed_EntriesSize+newEventTitles.length <= feedLimit) {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.length+" entries.");
+//		} else {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), feedLimit, "The event feed length for consumer '"+consumerUuid+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newConsumerFeed,oldConsumerFeed), newEventTitles.length, newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' has been pushed onto the stack.");
+
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
@@ -713,7 +767,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewFeedContains(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+//		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
 		// assert the feed...
 		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
@@ -722,8 +776,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		log.info("Expecting the new feed to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		int newFeedGrowthCount = newFeed.getEntries().size() - oldFeed_EntriesSize;
-		log.info("The event feed length has increased by "+newFeedGrowthCount+" entries.");
+//		int newFeedGrowthCount = newFeed.getEntries().size() - oldFeed_EntriesSize;
+		int newFeedGrowthCount = getFeedGrowthCount(newFeed,oldFeed);
+		log.info(newFeedGrowthCount+" new events have been pushed onto the atom feed stack.");
 		List<String> actualNewEventTitles = new ArrayList<String>();
 		for (int i=0; i<newFeedGrowthCount; i++) {
 			actualNewEventTitles.add(((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle());
@@ -732,45 +787,59 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewFeed(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+//		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
 		// assert the feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
-		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
+		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
+		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
 
 		log.info("Expecting the new feed to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.size(), "The event feed entries has increased by "+newEventTitles.size());
+		//Assert.assertEquals(newFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.size(), "The event feed entries has increased by "+newEventTitles.size());
+//		if (oldFeed_EntriesSize+newEventTitles.size() <= feedLimit) {
+//			Assert.assertEquals(newFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.size(), "The event feed entries has increased by "+newEventTitles.size());
+//		} else {
+//			Assert.assertEquals(newFeed.getEntries().size(), feedLimit, "The event feed has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newFeed,oldFeed), newEventTitles.size(), newEventTitles.size()+" new event feed entries has been pushed onto the stack.");
+
 		List<String> newEventTitlesCloned = new ArrayList<String>(); for (String newEventTitle : newEventTitles) newEventTitlesCloned.add(newEventTitle);
 		for (int i=0; i<newEventTitles.size(); i++) {
-			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
+			String actualEventTitle = ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle();
 			Assert.assertTrue(newEventTitlesCloned.remove(actualEventTitle), "The next ("+i+") newest event feed entry ("+actualEventTitle+") is among the expected list of event titles.");
 		}
 	}
 	
 	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+//		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
 		// assert the feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
-		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
+		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
+		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
 
 		log.info("Expecting the new feed to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+		//Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+//		if (oldFeed_EntriesSize+newEventTitles.length <= feedLimit) {
+//			Assert.assertEquals(newFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+//		} else {
+//			Assert.assertEquals(newFeed.getEntries().size(), feedLimit, "The event feed has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newFeed,oldFeed), newEventTitles.length, newEventTitles.length+" new event feed entries has been pushed onto the stack.");
+
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
-			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
+			String actualEventTitle = ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle();
 			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry is '"+newEventTitle+"'.");
 			i++;
 		}
 	}
 	
 
-	
+	protected int feedLimit = 1000;
 	
 	
 	// Data Providers ***********************************************************************
