@@ -4,6 +4,7 @@
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.string :only (split-lines split)]
+        clojure.contrib.pprint
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             com.redhat.qe.sm.gui.tasks.ui)
@@ -37,7 +38,7 @@
 (defn ^{Test {:groups ["facts"]
               :dataProvider "guifacts"}}
   match_each_fact [_ fact value]
-  (verify (= (cli-facts fact) value)))
+  (verify (= (@cli-facts fact) value)))
 
 (defn ^{Test {:groups ["facts"]}}
   facts_parity [_]
@@ -49,5 +50,10 @@
   get_facts [_]
   (to-array-2d (vec @gui-facts)))
 
+(comment 
+  (defn printfact []
+    (println (str "cli-facts: " (count @cli-facts)))
+    (println (str "gui-facts: " (count @gui-facts)))
+    (println (str "fact: " (@cli-facts "uname.sysname")))))
 
 (gen-class-testng)
