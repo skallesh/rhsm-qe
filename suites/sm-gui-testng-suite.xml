@@ -82,6 +82,19 @@
 		</groups>
 	</test>
 	
+	<test name="GUI: Facts">
+		<packages>
+			<package name="com.redhat.qe.sm.gui.tests" />
+			<package name="com.redhat.qe.sm.base"></package>
+		</packages>		
+		<groups>
+			<run>
+				<include name="facts"/>
+				<include name="setup" />
+			</run>
+		</groups>
+	</test>
+
 	<test name="GUI: Interop">
 		<packages>
 			<package name="com.redhat.qe.sm.gui.tests" />

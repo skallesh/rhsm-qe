@@ -435,21 +435,25 @@
                                       username
                                       password
                                       orgkey)))
-
-(comment  
+  
 (defn get-all-facts []
-   (ui click :view-system-facts)
-   (ui waittillguiexist :facts-view)
-   (let [table (element :facts-view)
-	 rownums (range (ui getrowcount :facts-view))
-	 getcell (fn [row col] 
-		   (ui getcellvalue table row col))
-	 facts (into {} (mapcat (fn [rowid] 
-				  [(getcell rowid 0) (getcell rowid 1)])
-				rownums))]
-     (ui click :close-facts)
-     facts))
-)
+  (ui click :view-system-facts)
+  (ui waittillguiexist :facts-view)
+  (let [groups (get-table-elements :facts-view 0)
+        is-data? (fn [rownum]
+                   (try (ui getcellvalue :facts-view rownum 1) true
+                        (catch Exception e false)))
+        _ (doseq [item groups] (do (ui doubleclickrow :facts-view item)
+                                   (sleep 500)))
+        rownums (filter is-data? (range (ui getrowcount :facts-view)))
+        getcell (fn [row col] 
+                   (ui getcellvalue :facts-view row col))
+        facts (into {} (map (fn [rowid] 
+                              [(getcell rowid 0) (getcell rowid 1)])
+                               rownums))]
+    (ui click :close-facts)
+    facts))
+
 
 
 

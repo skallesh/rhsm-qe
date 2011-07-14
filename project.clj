@@ -29,7 +29,8 @@
       (require :reload-all '[com.redhat.qe.sm.gui.tests.proxy-tests :as ptest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.rhn-interop-tests :as ritest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.firstboot-tests :as ftest]))
+      (require :reload-all '[com.redhat.qe.sm.gui.tests.firstboot-tests :as fbtest])
+      (require :reload-all '[com.redhat.qe.sm.gui.tests.facts-tests :as ftest]))
 
     (do
       (config/init)
