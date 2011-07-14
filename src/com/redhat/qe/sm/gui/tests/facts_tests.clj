@@ -49,3 +49,5 @@
   get_facts [_]
   (to-array-2d (vec @gui-facts)))
 
+
+(gen-class-testng)
