@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -13,6 +14,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -58,13 +60,6 @@ A   3. Events should be consumable via RSS based on consumer
  */
 @Test(groups={"EventTests"})
 public class EventTests extends SubscriptionManagerCLITestScript{
-	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
-	protected JSONObject testOwner;
-	protected String testProductId = "newProduct"+System.currentTimeMillis();
-	protected JSONObject testProduct;
-	protected String testPoolId = "newPool"+System.currentTimeMillis();
-	protected JSONObject testPool;
-	
 
 	// Test methods ***********************************************************************
 	
@@ -79,18 +74,23 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
 		String ownerKey = sm_clientOrg;
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // fire a register event
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
-		//String[] newEventTitles = new String[]{"CONSUMER CREATED"};	// RHEL57 RHEL61
-		String[] newEventTitles = new String[]{sm_clientUsername+" created new consumer "+clienttasks.hostname};
+		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null, null, null, null, null, null);
+		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{sm_clientUsername+" created new consumer "+clienttasks.hostname};
+		}
+		// END OF WORKAROUND
+		
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// assert the consumer feed...
@@ -114,10 +114,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername, sm_serverAdminPassword);
@@ -125,12 +122,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire a subscribe event
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		//String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};	// RHEL57 RHEL61
-		String[] newEventTitles = new String[]{clienttasks.hostname+" consumed a subscription for product "+pool.subscriptionName};
+		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
+		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
 
-
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{clienttasks.hostname+" consumed a subscription for product "+testPool.subscriptionName};
+		}
+		// END OF WORKAROUND
+		
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
@@ -143,7 +147,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
@@ -151,17 +155,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
 
 		// get the number of subscriptions this owner owns
 		//JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
 			
         // find the first pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),sm_clientUsername,sm_clientPassword);
+		testPool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),sm_clientUsername,sm_clientPassword);
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -169,9 +170,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
-		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+pool+"' by subtracting one month from startdate...");
+		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+testPool+"' by subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
-		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
+		updateSubscriptionPoolDatesOnDatabase(testPool,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
@@ -179,8 +180,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
-		//newEventTitles.add("ENTITLEMENT MODIFIED");	// RHEL57 RHEL61
-		newEventTitles.add("Unknown event for user System and target "+pool.subscriptionName);
+		newEventTitles.add("ENTITLEMENT MODIFIED");
+//		newEventTitles.add("Unknown event for user System and target "+testPool.subscriptionName);
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
 		// assert the owner feed...
@@ -206,10 +207,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -217,6 +215,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire an unsubscribe event
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String[] newEventTitles = new String[]{"ENTITLEMENT DELETED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{clienttasks.hostname+" returned the subscription for "+testPool.subscriptionName};
+		}
+		// END OF WORKAROUND
 
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
@@ -230,17 +237,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Consumer Modified is sent over an RSS atom feed.",
-			groups={"ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
+			groups={"blockedByBug-721141","ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConsumerModified_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -270,10 +274,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
@@ -301,11 +302,20 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // do something that will fire a create owner event
-		testOwner = servertasks.createOwnerUsingCPC(testOwnerKey);
+		testJSONOwner = servertasks.createOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER CREATED"};
 		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{sm_serverAdminUsername+" created new owner "+testOwnerKey};
+		}
+		// END OF WORKAROUND
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(testOwner.getString("key"), null, newEventTitles);
+		assertTheNewOwnerFeed(testJSONOwner.getString("key"), null, newEventTitles);
 		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -323,7 +333,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 
         // do something that will fire a create product event
-		testProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");
+		testJSONProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 		
 		// WORKAROUND
@@ -348,15 +358,24 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire a create pool event
 		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
 			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
-			testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testProductId+" Test Product", testOwner.getString("id"), "99");
+			testJSONPool = servertasks.createPoolUsingCPC(testJSONProduct.getString("id"), testProductId+" Test Product", testJSONOwner.getString("id"), "99");
 		} else {
 			// candlepin branch 0.3+
-			testPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testProduct.getString("id"));
+			testJSONPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testJSONProduct.getString("id"));
 			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
 			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		}
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{"System created a pool for product "+testJSONProduct.getString("name")};
+		}
+		// END OF WORKAROUND
+		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 		
@@ -381,14 +400,23 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire a delete pool event
 		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
 			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
-			servertasks.deletePoolUsingCPC(testPool.getString("id"));
+			servertasks.deletePoolUsingCPC(testJSONPool.getString("id"));
 		} else {
 			// candlepin branch 0.3+
-			servertasks.deleteSubscriptionUsingCPC(testPool.getString("id"));
+			servertasks.deleteSubscriptionUsingCPC(testJSONPool.getString("id"));
 			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
 			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		}
 		String[] newEventTitles = new String[]{"POOL DELETED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{"System deleted a pool for product "+testJSONProduct.getString("name")};
+		}
+		// END OF WORKAROUND
 		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -439,16 +467,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
 		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,ConsumerType.candlepin,null,null, null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null);
+		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe(null, testPool.poolId, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -456,6 +481,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire a exported created event
 		CandlepinTasks.exportConsumerUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,consumerCert.consumerid,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"EXPORT CREATED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{ownerKey+" created an export for consumer "+consumerCert.name};
+		}
+		// END OF WORKAROUND
 		
 		// assert the consumer feed...
 		assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
@@ -475,19 +509,33 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void ImportCreated_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = testOwner.getString("key");
+		String ownerKey = testJSONOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         
         // do something that will fire an import created event
 		CandlepinTasks.importConsumerUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,ownerKey,"/tmp/export.zip");
-//		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{
+					sm_clientOrg+" imported a manifest for owner "+ownerKey,
+					sm_clientOrg+" created a pool for product "+testPool.subscriptionName,
+					sm_clientOrg+" created new subscription for product "+testPool.subscriptionName};
+		}
+		// END OF WORKAROUND
 		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 
 		// assert the feed...
-		assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
+		//assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -495,16 +543,27 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
+		String ownerKey = sm_clientOrg;
+		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
 		// do something that will fire a delete owner event
 		servertasks.deleteOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER DELETED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{ownerKey+" deleted the owner "+testOwnerKey};
+		}
+		// END OF WORKAROUND
 		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -615,28 +674,40 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 	
-	protected int getFeedGrowthCount(SyndFeed oldFeed, SyndFeed newFeed) {
+	protected int getFeedGrowthCount(SyndFeed newFeed, SyndFeed oldFeed) {
 		
+		int g=newFeed.getEntries().size();	// assume all of the entries represent new growth
 		
-		int g=0;
+		if (oldFeed!=null) {
+			// make sure we are not accidently comparing two feeds that represent two different stacks
+			if (!newFeed.getTitle().equals(oldFeed.getTitle())) Assert.fail("getFeedGrowthCount(oldFeed,newFeed) do not have equivalent SyndEntryImpl titles.  We should probably not be comparing these two feeds.");
 
-		int n=newFeed.getEntries().size()-1;
-		int o=oldFeed.getEntries().size()-1;
-		while (g<o+1) {
-			int c=0;
-			String oldFeedTitle = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle();
-			String newFeedTitle = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getTitle();
-			String oldFeedDescription = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue();
-			String newFeedDescription = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription().getValue();
-			while (o-c-g>=0 &&
-					newFeedTitle.equals(oldFeedTitle) &&
-					newFeedDescription.equals(oldFeedDescription) ) {
-				c++;
+			int n=newFeed.getEntries().size()-1;
+			int o=oldFeed.getEntries().size()-1;
+			g=0;
+			while (g<o+1) {
+				int c=0;
+//				String oldFeedTitle = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle();
+//				String newFeedTitle = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getTitle();
+//				String oldFeedDescription = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue();
+//				String newFeedDescription = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription().getValue();
+				while (o-c-g>=0 &&
+						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getTitle()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle()) &&
+						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription().getValue()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue()) ) {
+					c++;
+				}
+				if (o-c-g<0) {
+					g+=n-o;
+					break;
+				}
+				g++;
 			}
-			if (o-c-g<0) break;
-			g++;
 		}
-
+		
+		// log the newest feed entries pushed onto the stack
+		for (int i=0; i<g; i++) {
+			log.info(String.format("Newest %s entries[%d]: title='%s'  description='%s'", newFeed.getTitle(), i, ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) newFeed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(i)).getDescription().getValue()));
+		}
 
 		return g;
 	}
@@ -838,8 +909,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-
+	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
+	protected JSONObject testJSONOwner;
+	protected String testProductId = "newProduct"+System.currentTimeMillis();
+	protected JSONObject testJSONProduct;
+	protected String testPoolId = "newPool"+System.currentTimeMillis();
+	protected JSONObject testJSONPool;
 	protected int feedLimit = 1000;
+	SubscriptionPool testPool = null;
 	
 	
 	// Data Providers ***********************************************************************
