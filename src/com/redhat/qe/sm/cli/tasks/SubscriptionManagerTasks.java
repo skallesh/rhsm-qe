@@ -2182,8 +2182,8 @@ public class SubscriptionManagerTasks {
 		// assert results for a successful facts
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
-		if (list!=null && list)		regex=".*:.*";								// list
-		if (update!=null && update)	regex=getCurrentConsumerCert().consumerid;	// consumerid
+		if (list!=null && list)		regex=".*:.*";						// list of the current facts
+		if (update!=null && update)	regex="Facts sucessfully updated.";	// regex=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
 
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
