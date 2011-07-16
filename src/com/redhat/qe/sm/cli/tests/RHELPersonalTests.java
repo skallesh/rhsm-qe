@@ -591,7 +591,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 			Assert.assertNotNull(personSubscriptionPool,
 					"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
-			client1tasks.subscribe(null, personSubscriptionPool.poolId, null, null, null, null, null, null, null);
+			client1tasks.subscribe(null, personSubscriptionPool.poolId, null, null, null, null, null, null, null, null);
 	
 			log.info("Now register client2 under username '"+username+"' as a system and assert the subpool ProductId '"+systemProductId+"' is available...");
 			client2tasks.unregister(null, null, null);
@@ -642,7 +642,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is NOT listed in all available subscription pools to user '"+username+"' registered as a system.");
 			
 			// attempt to subscribe system consumer to personal pool
-			SSHCommandResult sshComandResult = client1tasks.subscribe(null, personalPool.poolId, null, null, null, null, null, null, null);
+			SSHCommandResult sshComandResult = client1tasks.subscribe(null, personalPool.poolId, null, null, null, null, null, null, null, null);
 			
 			// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'
 			Assert.assertContainsMatch(sshComandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",

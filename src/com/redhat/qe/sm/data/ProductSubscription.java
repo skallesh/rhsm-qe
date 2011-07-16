@@ -26,6 +26,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public BigInteger serialNumber;	// Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
 	public Integer contractNumber;
 	public BigInteger accountNumber;
+	public Integer quantityUsed;
 	public Boolean isActive;
 	public Calendar startDate;
 	public Calendar endDate;
@@ -78,6 +79,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 		if (productName != null)	string += String.format(" %s='%s'", "productName",productName);
 		if (serialNumber != null)	string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (contractNumber != null)	string += String.format(" %s='%s'", "contractNumber",contractNumber);
+		if (accountNumber != null)	string += String.format(" %s='%s'", "accountNumber",accountNumber);
+		if (quantityUsed != null)	string += String.format(" %s='%s'", "quantityUsed",quantityUsed);
 		if (isActive != null)		string += String.format(" %s='%s'", "isActive",isActive);
 		if (startDate != null)		string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)		string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
@@ -146,6 +149,15 @@ public class ProductSubscription extends AbstractCommandLineData {
 		Active:             	True                     
 		Begins:             	2011-04-07               
 		Expires:            	2011-04-08     
+		
+		ProductName:        	Awesome OS Server Bits   
+		ContractNumber:     	63                       
+		AccountNumber:      	12331131231              
+		SerialNumber:       	4575117615078692123      
+		Active:             	True                     
+		QuantityUsed:       	1                        
+		Begins:             	04/13/2011               
+		Expires:            	09/12/2012  
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -153,9 +165,10 @@ public class ProductSubscription extends AbstractCommandLineData {
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("productName",			"Name:(.*)");
-		regexes.put("serialNumber",			"SerialNumber:(.*)");
 		regexes.put("contractNumber",		"ContractNumber:(.*)");
 		regexes.put("accountNumber",		"AccountNumber:(.*)");
+		regexes.put("serialNumber",			"SerialNumber:(.*)");
+		regexes.put("quantityUsed",			"QuantityUsed:(.*)");
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("startDate",			"Begins:(.*)");
 		regexes.put("endDate",				"Expires:(.*)");

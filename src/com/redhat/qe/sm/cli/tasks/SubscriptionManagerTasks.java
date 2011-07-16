@@ -1551,13 +1551,14 @@ public class SubscriptionManagerTasks {
 	 * @param poolId TODO
 	 * @param productId TODO
 	 * @param regtoken TODO
+	 * @param quantity TODO
 	 * @param email TODO
 	 * @param locale TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;	command += " subscribe";
@@ -1565,6 +1566,7 @@ public class SubscriptionManagerTasks {
 		if (poolId!=null)				command += " --pool="+poolId;
 		if (productId!=null)			command += " --product="+productId;
 		if (regtoken!=null)				command += " --regtoken="+regtoken;
+		if (quantity!=null)				command += " --quantity="+quantity;
 		if (email!=null)				command += " --email="+email;
 		if (locale!=null)				command += " --locale="+locale;
 		if (proxy!=null)				command += " --proxy="+proxy;
@@ -1577,17 +1579,19 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe without asserting results
+	 * @param quantity TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;								command += " subscribe";	
 		if (poolIds!=null)		for (String poolId : poolIds)		command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)	command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)	command += " --regtoken="+regtoken;
+		if (quantity!=null)											command += " --quantity="+quantity;
 		if (email!=null)											command += " --email="+email;
 		if (locale!=null)											command += " --locale="+locale;
 		if (proxy!=null)											command += " --proxy="+proxy;
@@ -1598,9 +1602,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
-	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, quantity, email, locale, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		
@@ -1626,14 +1630,17 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
 		
 		// assert the exit code was a success
+		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe was reported as a success.");
+
+		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		
 		return sshCommandResult;
 	}
 	
-	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
 		
 		// assert results
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
@@ -1659,7 +1666,7 @@ public class SubscriptionManagerTasks {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
@@ -1929,7 +1936,7 @@ public class SubscriptionManagerTasks {
 		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
 		}
-		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null, null, null, null);
+		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
 		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {

@@ -64,6 +64,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 		if (virtualizationLimit != null)	string += String.format(" %s='%s'", "virtualizationLimit",virtualizationLimit);
 		if (socketLimit != null)			string += String.format(" %s='%s'", "socketLimit",socketLimit);
 		if (contractNumber != null)			string += String.format(" %s='%s'", "contractNumber",contractNumber);
+		if (quantity != null)				string += String.format(" %s='%s'", "quantity",quantity);
 		if (quantityUsed != null)			string += String.format(" %s='%s'", "quantityUsed",quantityUsed);
 		if (warningPeriod != null)			string += String.format(" %s='%s'", "warningPeriod",warningPeriod);
 		if (accountNumber != null)			string += String.format(" %s='%s'", "accountNumber",accountNumber);
