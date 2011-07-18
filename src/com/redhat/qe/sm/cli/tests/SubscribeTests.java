@@ -238,18 +238,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
-	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool){
-// non-dataProvided test procedure
-//		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-//		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-//		for(SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-//			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-//			clienttasks.subscribeToProduct(pool.subscriptionName);
-//		}
+	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
+
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
+		Boolean isPoolsProductMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
+		isPoolsProductMultiEntitleable = isPoolsProductMultiEntitleable==null? false : isPoolsProductMultiEntitleable;
+
+		if (!isPoolsProductMultiEntitleable) {
+			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "Successfully subscribed the system to Pool "+pool.poolId+"",
+				"subscribe command allows multi-entitleable pools to be subscribed to more than once.");		
+		}
 	}
 	
 	
