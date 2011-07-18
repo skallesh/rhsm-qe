@@ -28,6 +28,7 @@
   setup [_]
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
+  (tasks/sleep 5000)
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
@@ -37,34 +38,44 @@
 
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
-    (let [beforesubs (tasks/warn-count)]
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
-          (tasks/register (@config :username) (@config :password) :autosubscribe true)
-          (verify (<= (tasks/warn-count) beforesubs))
-          ))))
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (verify (<= (tasks/warn-count) beforesubs))))))
  
-(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForSomeProductsSubscribable"]
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
   (verify (dirsetup? somedir))
   )
 
 
-(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForAllProductsSubscribable"]
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
   (verify (dirsetup? alldir))
   )
 
-(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsSubscribable"]
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
   (verify (dirsetup? nodir))
   )
 
-(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsInstalled"]
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
   (verify (dirsetup? nonedir))
