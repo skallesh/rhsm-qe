@@ -3,7 +3,8 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-	       gnome.ldtp)
+        [clojure.contrib.string :only (trim)]
+        gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
@@ -12,7 +13,15 @@
 (def alldir "/tmp/sm-allProductsSubscribable")
 (def nodir "/tmp/sm-noProductsSubscribable")
 (def nonedir  "/tmp/sm-noProductsInstalled")
-  
+
+(defn dirsetup? [dir]
+  (and 
+   (= "exists" (trim
+                (.getStdout
+                 (.runCommandAndWait @clientcmd
+                                     (str  "test -d " dir " && echo exists")))))
+   (= dir (tasks/conf-file-value "productCertDir"))))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (with-handlers [(ignore :not-registered)]
@@ -31,31 +40,23 @@
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
-  (verify (= "exists" (.getStdout
-                       (.runCommandAndWait @clientcmd
-                                           (str  "test -d " somedir " && echo exists"))))))
+  (verify (dirsetup? somedir)))
 
 
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
-  (verify (= "exists" (.getStdout
-                       (.runCommandAndWait @clientcmd
-                                           (str  "test -d " alldir " && echo exists"))))))
+  (verify (dirsetup? alldir)))
 
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
-  (verify (= "exists" (.getStdout
-                       (.runCommandAndWait @clientcmd
-                                           (str  "test -d " nodir " && echo exists"))))))
+  (verify (dirsetup? nodir)))
 
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
-  (verify (= "exists" (.getStdout
-                       (.runCommandAndWait @clientcmd
-                                           (str  "test -d " nonedir " && echo exists"))))))
+   (verify (direxists? nonedir)))
 
 (gen-class-testng)
 
