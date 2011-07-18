@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
@@ -416,26 +415,26 @@ schema generation failed
 	 * @param port
 	 * @param prefix
 	 * @param authenticator  - must have superAdmin privileges to get the jsonOwner; username:password for consumerid is not enough
-	 * @param authenticatorPassword
+	 * @param password
 	 * @param consumerId
 	 * @return
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String consumerId) throws JSONException, Exception {
+	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String authenticator, String password, String consumerId) throws JSONException, Exception {
 		// determine this consumerId's owner
 		JSONObject jsonOwner = null;
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/consumers/"+consumerId));	
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/consumers/"+consumerId));	
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
-		// Warning: this authenticator, authenticatorPassword needs to be superAdmin
-		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,jsonOwner_.getString("href")));	
+		// Warning: this authenticator, password needs to be superAdmin
+		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,jsonOwner_.getString("href")));	
 
 		return jsonOwner;
 	}
 	
-	public static String getOwnerKeyOfConsumerId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String consumerId) throws JSONException, Exception {
+	public static String getOwnerKeyOfConsumerId(String server, String port, String prefix, String authenticator, String password, String consumerId) throws JSONException, Exception {
 		// determine this consumerId's owner
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/consumers/"+consumerId));	
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/consumers/"+consumerId));	
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// jsonOwner_.getString("href") takes the form /owners/6239231 where 6239231 is the key
 		File href = new File(jsonOwner_.getString("href")); // use a File to represent the path
@@ -475,13 +474,13 @@ schema generation failed
 		return values;
 	}
 
-	public static String getOrgDisplayName(String server, String port, String prefix, String authenticator, String authenticatorPassword, String orgKey) throws JSONException, Exception {
-		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/owners/"+orgKey));	
+	public static String getOrgDisplayName(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/owners/"+orgKey));	
 		return jsonOrg.getString("displayName");
 	}
 	
-	public static String getOrgId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String orgKey) throws JSONException, Exception {
-		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, authenticatorPassword,"/owners/"+orgKey));	
+	public static String getOrgId(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/owners/"+orgKey));	
 		return jsonOrg.getString("id");
 	}
 	
@@ -512,7 +511,7 @@ schema generation failed
 	}
 	
 	
-	public static List<String> findPoolIdsFromSubscriptionId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String ownerKey, String fromSubscriptionId) throws JSONException, Exception{
+	public static List<String> findPoolIdsFromSubscriptionId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromSubscriptionId) throws JSONException, Exception{
 		List<String> poolIds = new ArrayList<String>();
 		/* Example jsonPool:
 		  		{
@@ -567,7 +566,7 @@ schema generation failed
 			    "created": "2011-02-18T16:17:42.008+0000"
 			  }
 		*/
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/owners/"+ownerKey+"/pools"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String poolId = jsonPool.getString("id");
@@ -579,15 +578,15 @@ schema generation failed
 		return poolIds;
 	}
 	
-	public static String findSubscriptionIdFromPoolId(String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception{
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/pools/"+poolId));
+	public static String findSubscriptionIdFromPoolId(String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception{
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));
 		return jsonPool.getString("subscriptionId");
 	}
 	
-	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String authenticatorPassword, String poolId) throws JSONException, Exception {
+	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
 		
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,authenticatorPassword,"/pools/"+poolId));	
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
 		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
 		// loop through the attributes of this pool looking for the "virt_only" attribute
 		for (int j = 0; j < jsonAttributes.length(); j++) {

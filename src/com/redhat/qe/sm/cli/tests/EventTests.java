@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -13,6 +14,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -58,13 +60,6 @@ A   3. Events should be consumable via RSS based on consumer
  */
 @Test(groups={"EventTests"})
 public class EventTests extends SubscriptionManagerCLITestScript{
-	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
-	protected JSONObject testOwner;
-	protected String testProductId = "newProduct"+System.currentTimeMillis();
-	protected JSONObject testProduct;
-	protected String testPoolId = "newPool"+System.currentTimeMillis();
-	protected JSONObject testPool;
-	
 
 	// Test methods ***********************************************************************
 	
@@ -72,23 +67,30 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void ConsumerCreated_Test() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
 		String ownerKey = sm_clientOrg;
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // fire a register event
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null, null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
+
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{sm_clientUsername+" created new consumer "+clienttasks.hostname};
+		}
+		// END OF WORKAROUND
+		
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// assert the consumer feed...
@@ -106,16 +108,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50403)
-	public void EnititlementCreated_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void EnititlementCreated_Test() throws Exception {
 		
 		// test prerequisites
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername, sm_serverAdminPassword);
@@ -123,11 +122,19 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire a subscribe event
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
 		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
 
-
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{clienttasks.hostname+" consumed a subscription for product "+testPool.subscriptionName};
+		}
+		// END OF WORKAROUND
+		
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
@@ -140,7 +147,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
@@ -148,17 +155,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
 
 		// get the number of subscriptions this owner owns
 		//JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
 			
         // find the first pool id of a currently consumed product
         List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),sm_clientUsername,sm_clientPassword);
+		testPool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),sm_clientUsername,sm_clientPassword);
 		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
 
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -166,19 +170,18 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
-		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+pool+"' by subtracting one month from startdate...");
+		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+testPool+"' by subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
-		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,null);
+		updateSubscriptionPoolDatesOnDatabase(testPool,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-//		JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(ownerKey, true);
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 	
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
 		newEventTitles.add("ENTITLEMENT MODIFIED");
-		//assertTheNewConsumerFeed(consumerCert.consumerid, oldConsumerFeed, new String[]{"ENTITLEMENT MODIFIED"});
+//		newEventTitles.add("Unknown event for user System and target "+testPool.subscriptionName);
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
 		// assert the owner feed...
@@ -199,15 +202,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"EnititlementDeleted_Test"}, dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void EnititlementDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void EnititlementDeleted_Test() throws Exception {
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -215,6 +215,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // fire an unsubscribe event
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		String[] newEventTitles = new String[]{"ENTITLEMENT DELETED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{clienttasks.hostname+" returned the subscription for "+testPool.subscriptionName};
+		}
+		// END OF WORKAROUND
 
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
@@ -228,17 +237,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Consumer Modified is sent over an RSS atom feed.",
-			groups={"ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
+			groups={"blockedByBug-721141","ConsumerModified_Test"}, dependsOnGroups={"EnititlementDeleted_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerModified_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void ConsumerModified_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -264,14 +270,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"ConsumerDeleted_Test"}, dependsOnGroups={"ConsumerModified_Test","NegativeConsumerUserPassword_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void ConsumerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
+	public void ConsumerDeleted_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
@@ -291,7 +294,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"OwnerCreated_Test"}, dependsOnGroups={"ConsumerDeleted_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerCreated_Test() throws JSONException, IllegalArgumentException, IOException, FeedException {
+	public void OwnerCreated_Test() throws Exception {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server.");
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 		
@@ -299,11 +302,20 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // do something that will fire a create owner event
-		testOwner = servertasks.createOwnerUsingCPC(testOwnerKey);
+		testJSONOwner = servertasks.createOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER CREATED"};
 		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{sm_serverAdminUsername+" created new owner "+testOwnerKey};
+		}
+		// END OF WORKAROUND
+		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(testOwner.getString("key"), null, newEventTitles);
+		assertTheNewOwnerFeed(testJSONOwner.getString("key"), null, newEventTitles);
 		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -321,7 +333,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 
         // do something that will fire a create product event
-		testProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");
+		testJSONProduct = servertasks.createProductUsingCPC(testProductId, testProductId+" Test Product");
 		String[] newEventTitles = new String[]{"PRODUCT CREATED"};
 		
 		// WORKAROUND
@@ -346,15 +358,24 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire a create pool event
 		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
 			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
-			testPool = servertasks.createPoolUsingCPC(testProduct.getString("id"), testProductId+" Test Product", testOwner.getString("id"), "99");
+			testJSONPool = servertasks.createPoolUsingCPC(testJSONProduct.getString("id"), testProductId+" Test Product", testJSONOwner.getString("id"), "99");
 		} else {
 			// candlepin branch 0.3+
-			testPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testProduct.getString("id"));
+			testJSONPool = servertasks.createSubscriptionUsingCPC(testOwnerKey, testJSONProduct.getString("id"));
 			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
 			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		}
 		String[] newEventTitles = new String[]{"POOL CREATED"};
 
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{"System created a pool for product "+testJSONProduct.getString("name")};
+		}
+		// END OF WORKAROUND
+		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
 		
@@ -379,14 +400,23 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire a delete pool event
 		if (servertasks.branch.equals("ALPHA") || servertasks.branch.equals("BETA") || servertasks.branch.matches("^candlepin-0\\.[012]\\..*$")) {
 			// candlepin branch 0.2-  (createPoolUsingCPC was deprecated in candlepin branch 0.3+)
-			servertasks.deletePoolUsingCPC(testPool.getString("id"));
+			servertasks.deletePoolUsingCPC(testJSONPool.getString("id"));
 		} else {
 			// candlepin branch 0.3+
-			servertasks.deleteSubscriptionUsingCPC(testPool.getString("id"));
+			servertasks.deleteSubscriptionUsingCPC(testJSONPool.getString("id"));
 			JSONObject jobDetail = servertasks.refreshPoolsUsingCPC(testOwnerKey,true);
 			CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
 		}
 		String[] newEventTitles = new String[]{"POOL DELETED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{"System deleted a pool for product "+testJSONProduct.getString("name")};
+		}
+		// END OF WORKAROUND
 		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -437,16 +467,13 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
 		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,ConsumerType.candlepin,null,null, null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null);
+		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribe(null, testPool.poolId, null, null, null, null, null, null, null, null);
 		//String consumerKey = result.getStdout().split(" ")[0];
 		
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-//		RegistrationData registration = findRegistrationDataMatchingUsername(sm_clientUsername);
-//		if (registration==null || registration.ownerKey==null) throw new SkipException("Could not find registration data for username '"+sm_clientUsername+"'.");
-//		String ownerKey = registration.ownerKey;
-		String ownerKey = sm_clientOrg;
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -454,6 +481,15 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         // do something that will fire a exported created event
 		CandlepinTasks.exportConsumerUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,consumerCert.consumerid,"/tmp/export.zip");
 		String[] newEventTitles = new String[]{"EXPORT CREATED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{ownerKey+" created an export for consumer "+consumerCert.name};
+		}
+		// END OF WORKAROUND
 		
 		// assert the consumer feed...
 		assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
@@ -473,19 +509,33 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void ImportCreated_Test() throws Exception {
 		
 		// get the owner and consumer feeds before we test the firing of a new event
-		String ownerKey = testOwner.getString("key");
+		String ownerKey = testJSONOwner.getString("key");
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
         
         // do something that will fire an import created event
 		CandlepinTasks.importConsumerUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,ownerKey,"/tmp/export.zip");
-//		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		String[] newEventTitles = new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"};  // Note: the POOL CREATED comes from the subscribed pool
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{
+					sm_clientOrg+" imported a manifest for owner "+ownerKey,
+					sm_clientOrg+" created a pool for product "+testPool.subscriptionName,
+					sm_clientOrg+" created new subscription for product "+testPool.subscriptionName};
+		}
+		// END OF WORKAROUND
 		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
+		//assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, new String[]{"IMPORT CREATED", "POOL CREATED"});
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 
 		// assert the feed...
-		assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
+		//assertTheNewFeed(oldFeed, new String[]{"IMPORT CREATED", "POOL CREATED", "SUBSCRIPTION CREATED"});
+		assertTheNewFeed(oldFeed, newEventTitles);
 	}
 	
 	
@@ -493,16 +543,27 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			groups={"OwnerDeleted_Test"}, dependsOnGroups={"ImportCreated_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
-	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException {
+	public void OwnerDeleted_Test() throws IllegalArgumentException, IOException, FeedException, JSONException {
 		if (server==null) throw new SkipException("This test requires an SSH connection to the candlepin server."); 
 		if (sm_serverAdminUsername.equals("")||sm_serverAdminPassword.equals("")) throw new SkipException("This test requires the candlepin server admin username and password credentials.");
 
+		String ownerKey = sm_clientOrg;
+		
 		// get the owner and consumer feeds before we test the firing of a new event
 		SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
 		// do something that will fire a delete owner event
 		servertasks.deleteOwnerUsingCPC(testOwnerKey);
 		String[] newEventTitles = new String[]{"OWNER DELETED"};
+		
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="721136"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			newEventTitles = new String[]{ownerKey+" deleted the owner "+testOwnerKey};
+		}
+		// END OF WORKAROUND
 		
 		// assert the feed...
 		assertTheNewFeed(oldFeed, newEventTitles);
@@ -612,19 +673,58 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Protected Methods ***********************************************************************
+	
+	protected int getFeedGrowthCount(SyndFeed newFeed, SyndFeed oldFeed) {
+		
+		int g=newFeed.getEntries().size();	// assume all of the entries represent new growth
+		
+		if (oldFeed!=null) {
+			// make sure we are not accidently comparing two feeds that represent two different stacks
+			if (!newFeed.getTitle().equals(oldFeed.getTitle())) Assert.fail("getFeedGrowthCount(oldFeed,newFeed) do not have equivalent SyndEntryImpl titles.  We should probably not be comparing these two feeds.");
 
-	protected void assertTheNewOwnerFeedContains(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+			int n=newFeed.getEntries().size()-1;
+			int o=oldFeed.getEntries().size()-1;
+			g=0;
+			while (g<o+1) {
+				int c=0;
+//				String oldFeedTitle = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle();
+//				String newFeedTitle = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getTitle();
+//				String oldFeedDescription = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue();
+//				String newFeedDescription = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription().getValue();
+				while (o-c-g>=0 &&
+						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getTitle()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle()) &&
+						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription().getValue()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue()) ) {
+					c++;
+				}
+				if (o-c-g<0) {
+					g+=n-o;
+					break;
+				}
+				g++;
+			}
+		}
+		
+		// log the newest feed entries pushed onto the stack
+		for (int i=0; i<g; i++) {
+			log.info(String.format("Newest %s entries[%d]: title='%s'  description='%s'", newFeed.getTitle(), i, ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle(), ((SyndEntryImpl) newFeed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(i)).getDescription().getValue()));
+		}
+
+		return g;
+	}
+
+	protected void assertTheNewOwnerFeedContains(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws JSONException, Exception {
+//		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		int newOwnerFeedGrowthCount = newOwnerFeed.getEntries().size() - oldOwnerFeed_EntriesSize;
-		log.info("The event feed length for owner '"+ownerKey+"' has increased by "+newOwnerFeedGrowthCount+" entries.");
+//		int newOwnerFeedGrowthCount = newOwnerFeed.getEntries().size() - oldOwnerFeed_EntriesSize;
+		int newOwnerFeedGrowthCount = getFeedGrowthCount(newOwnerFeed,oldOwnerFeed);
+		log.info(newOwnerFeedGrowthCount+" new events for owner '"+ownerKey+"' have been pushed onto the atom feed stack.");
 		List<String> actualNewEventTitles = new ArrayList<String>();
 		for (int i=0; i<newOwnerFeedGrowthCount; i++) {
 			actualNewEventTitles.add(((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle());
@@ -632,17 +732,24 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(actualNewEventTitles.containsAll(newEventTitles), "The newest event feed entries for owner '"+ownerKey+"' contains (at a minimum) all of the expected new event titles.");
 	}
 	
-	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws JSONException, Exception {
+//		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.size(), "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.size()+" entries.");
+		//Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.size(), "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.size()+" entries.");
+//		if (oldOwnerFeed_EntriesSize+newEventTitles.size() <= feedLimit) {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.size(), "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.size()+" entries.");
+//		} else {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), feedLimit, "The event feed length for owner '"+ownerKey+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newOwnerFeed,oldOwnerFeed), newEventTitles.size(), +newEventTitles.size()+" new event feed entries for owner '"+ownerKey+"' has been pushed onto the stack.");
+
 		List<String> newEventTitlesCloned = new ArrayList<String>(); for (String newEventTitle : newEventTitles) newEventTitlesCloned.add(newEventTitle);
 		for (int i=0; i<newEventTitles.size(); i++) {
 			String actualEventTitle = ((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle();
@@ -650,18 +757,26 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
+	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles) throws JSONException, Exception {
+//		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+ownerKey);
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 		
-		Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
+		//Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
+//		if (oldOwnerFeed_EntriesSize+newEventTitles.length <= feedLimit) {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), oldOwnerFeed_EntriesSize+newEventTitles.length, "The event feed length for owner '"+ownerKey+"' has increased by "+newEventTitles.length+" entries.");
+//		} else {
+//			Assert.assertEquals(newOwnerFeed.getEntries().size(), feedLimit, "The event feed length for owner '"+ownerKey+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newOwnerFeed,oldOwnerFeed), newEventTitles.length, newEventTitles.length+" new event feed entries for owner '"+ownerKey+"' has been pushed onto the stack.");
+
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newOwnerFeed.getEntries().get(i)).getTitle();
@@ -671,7 +786,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
+//		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
 		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -680,7 +795,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		log.info("Expecting the new feed for consumer ("+consumerUuid+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.size(), "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.size()+" entries.");
+		//Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.size(), "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.size()+" entries.");
+//		if (oldConsumerFeed_EntriesSize+newEventTitles.size() <= feedLimit) {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.size(), "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.size()+" entries.");
+//		} else {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), feedLimit, "The event feed length for consumer '"+consumerUuid+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newConsumerFeed,oldConsumerFeed), newEventTitles.size(), newEventTitles.size()+" new event feed entries for consumer '"+consumerUuid+"' has been pushed onto the stack.");
+
 		List<String> newEventTitlesCloned = new ArrayList<String>(); for (String newEventTitle : newEventTitles) newEventTitlesCloned.add(newEventTitle);
 		for (int i=0; i<newEventTitles.size(); i++) {
 			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
@@ -689,7 +811,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
+//		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
 		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
@@ -699,7 +821,14 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.length+" entries.");
+		//Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.length+" entries.");
+//		if (oldConsumerFeed_EntriesSize+newEventTitles.length <= feedLimit) {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), oldConsumerFeed_EntriesSize+newEventTitles.length, "The event feed for consumer "+consumerUuid+" has increased by "+newEventTitles.length+" entries.");
+//		} else {
+//			Assert.assertEquals(newConsumerFeed.getEntries().size(), feedLimit, "The event feed length for consumer '"+consumerUuid+"' has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newConsumerFeed,oldConsumerFeed), newEventTitles.length, newEventTitles.length+" new event feed entries for consumer '"+consumerUuid+"' has been pushed onto the stack.");
+
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
 			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
@@ -709,7 +838,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewFeedContains(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+//		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
 		// assert the feed...
 		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
@@ -718,8 +847,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		log.info("Expecting the new feed to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		int newFeedGrowthCount = newFeed.getEntries().size() - oldFeed_EntriesSize;
-		log.info("The event feed length has increased by "+newFeedGrowthCount+" entries.");
+//		int newFeedGrowthCount = newFeed.getEntries().size() - oldFeed_EntriesSize;
+		int newFeedGrowthCount = getFeedGrowthCount(newFeed,oldFeed);
+		log.info(newFeedGrowthCount+" new events have been pushed onto the atom feed stack.");
 		List<String> actualNewEventTitles = new ArrayList<String>();
 		for (int i=0; i<newFeedGrowthCount; i++) {
 			actualNewEventTitles.add(((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle());
@@ -728,45 +858,65 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	protected void assertTheNewFeed(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+//		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
 		// assert the feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
-		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
+		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
+		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
 
 		log.info("Expecting the new feed to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.size(), "The event feed entries has increased by "+newEventTitles.size());
+		//Assert.assertEquals(newFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.size(), "The event feed entries has increased by "+newEventTitles.size());
+//		if (oldFeed_EntriesSize+newEventTitles.size() <= feedLimit) {
+//			Assert.assertEquals(newFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.size(), "The event feed entries has increased by "+newEventTitles.size());
+//		} else {
+//			Assert.assertEquals(newFeed.getEntries().size(), feedLimit, "The event feed has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newFeed,oldFeed), newEventTitles.size(), newEventTitles.size()+" new event feed entries has been pushed onto the stack.");
+
 		List<String> newEventTitlesCloned = new ArrayList<String>(); for (String newEventTitle : newEventTitles) newEventTitlesCloned.add(newEventTitle);
 		for (int i=0; i<newEventTitles.size(); i++) {
-			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
+			String actualEventTitle = ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle();
 			Assert.assertTrue(newEventTitlesCloned.remove(actualEventTitle), "The next ("+i+") newest event feed entry ("+actualEventTitle+") is among the expected list of event titles.");
 		}
 	}
 	
 	protected void assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles) throws IllegalArgumentException, IOException, FeedException {
-		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
+//		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
 		// assert the feed...
-		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
-		Assert.assertEquals(newConsumerFeed.getTitle(),"Event Feed");
+		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
+		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
 
 		log.info("Expecting the new feed to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
 
-		Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+		//Assert.assertEquals(newConsumerFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+//		if (oldFeed_EntriesSize+newEventTitles.length <= feedLimit) {
+//			Assert.assertEquals(newFeed.getEntries().size(), oldFeed_EntriesSize+newEventTitles.length, "The event feed entries has increased by "+newEventTitles.length);
+//		} else {
+//			Assert.assertEquals(newFeed.getEntries().size(), feedLimit, "The event feed has hit the max entry count as set by the Candlepin class AtomResource/ConsumerResource/OwnerResource hard-coded variable feedlimit.");			
+//		}
+		Assert.assertEquals(getFeedGrowthCount(newFeed,oldFeed), newEventTitles.length, newEventTitles.length+" new event feed entries has been pushed onto the stack.");
+
 		int i=0;
 		for (String newEventTitle : newEventTitles) {
-			String actualEventTitle = ((SyndEntryImpl) newConsumerFeed.getEntries().get(i)).getTitle();
+			String actualEventTitle = ((SyndEntryImpl) newFeed.getEntries().get(i)).getTitle();
 			Assert.assertEquals(actualEventTitle,newEventTitle, "The next ("+i+") newest event feed entry is '"+newEventTitle+"'.");
 			i++;
 		}
 	}
 	
-
-	
+	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
+	protected JSONObject testJSONOwner;
+	protected String testProductId = "newProduct"+System.currentTimeMillis();
+	protected JSONObject testJSONProduct;
+	protected String testPoolId = "newPool"+System.currentTimeMillis();
+	protected JSONObject testJSONPool;
+	protected int feedLimit = 1000;
+	SubscriptionPool testPool = null;
 	
 	
 	// Data Providers ***********************************************************************

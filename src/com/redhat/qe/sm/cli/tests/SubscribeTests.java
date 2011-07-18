@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -13,15 +14,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
@@ -241,7 +246,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 //			clienttasks.subscribeToProduct(pool.subscriptionName);
 //		}
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
 	}
@@ -268,7 +273,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to all pool ids
 		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
-		SSHCommandResult result = clienttasks.subscribe(poolIds, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe(poolIds, null, null, null, null, null, null, null, null);
 		
 		// assert the results
 		for (String poolId : poolIds) {
@@ -419,7 +424,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
 		
 		// autosubscribe
-		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null);
+		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
 		
 		// Example Results from register --autosubscribe
 		//		[root@jsefler-onprem03 ~]# subscription-manager register --username=testuser1 --password=password --autosubscribe
@@ -441,7 +446,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		//		   Awesome OS Modifier Bits - Subscribed
 	}
 	protected List<List<Object>> subscriptionPoolProductData;
-
+	
+	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={"AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
@@ -491,6 +497,142 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	SSHCommandResult sshCommandResultFromAutosubscribe;
 	
 	
+	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
+			groups={},
+			dataProvider="getSubscribeWithQuantityData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithQuantity_Test(Object meta, SubscriptionPool pool, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		log.info("Testing subscription-manager subscribe using various good and bad values for the --quantity option.");
+	
+		// start fresh by returning all subscriptions
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+		// subscribe with quantity
+		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,pool.poolId,null,null,quantity,null,null,null,null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after subscribe with quantity=\""+quantity+"\" option:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after subscribe with --quantity=\""+quantity+"\" option:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after subscribe with --quantity=\""+quantity+"\" option:");
+		
+		// when successful, assert that the quantity is correctly reported in the list of consumed subscriptions
+		List<ProductSubscription> subscriptionsConsumed = client1tasks.getCurrentlyConsumedProductSubscriptions();
+		List<EntitlementCert> entitlementCerts = client1tasks.getCurrentEntitlementCerts();
+		if (expectedExitCode==0 && expectedStdoutRegex!=null && expectedStdoutRegex.contains("Successful")) {
+			Assert.assertEquals(entitlementCerts.size(), 1, "One EntitlementCert should have been downloaded to "+client1tasks.hostname+" when the attempt to subscribe is successful.");
+			Assert.assertEquals(entitlementCerts.get(0).orderNamespace.quantityUsed, quantity, "The quantityUsed in the OrderNamespace of the downloaded EntitlementCert should match the quantity requested when we subscribed to pool '"+pool.poolId+"'.  OrderNamespace: "+entitlementCerts.get(0).orderNamespace);
+			for (ProductSubscription productSubscription : subscriptionsConsumed) {
+				Assert.assertEquals(productSubscription.quantityUsed, Integer.valueOf(quantity), "The quantityUsed reported in each consumed ProductSubscription should match the quantity requested when we subscribed to pool '"+pool.poolId+"'.  ProductSubscription: "+productSubscription);
+			}
+		} else {
+			Assert.assertEquals(subscriptionsConsumed.size(), 0, "No subscriptions should be consumed when the attempt to subscribe is not successful.");
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: subscribe using --quantity option and assert the available quantity is properly decremented/incremeneted as multiple consumers subscribe/unsubscribe.",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void MultiConsumerSubscribeWithQuantity_Test() {
+		
+		// start by calling SubscribeWithQuantity_Test with the row from the dataProvider where quantity=2
+		SubscriptionPool consumer1Pool = null;
+		int consumer1Quantity=0;
+		int totalPoolQuantity=0;
+		for (List<Object> row : getSubscribeWithQuantityDataAsListOfLists()) {
+			if (((String)(row.get(2))).equals("2")) {	// find the row where quantity.equals("2")
+				consumer1Pool = (SubscriptionPool) row.get(1);
+				totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
+				consumer1Quantity = Integer.valueOf((String) row.get(2));
+				SubscribeWithQuantity_Test(row.get(0), (SubscriptionPool)row.get(1), (String)row.get(2), (Integer)row.get(3), (String)row.get(4), (String)row.get(5));
+				break;
+			}
+		}
+		if (consumer1Pool==null) Assert.fail("Failed to initiate the first consumer for this test.");
+		
+		// remember the current consumerId
+		String consumer1Id = clienttasks.getCurrentConsumerId(); systemConsumerIds.add(consumer1Id);
+		
+		// clean the client and register a second consumer
+		clienttasks.clean(null,null,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, "SubscriptionQuantityConsumer2", null, null, false, null, null, null);
+		
+		// remember the second consumerId
+		String consumer2Id = clienttasks.getCurrentConsumerId(); systemConsumerIds.add(consumer2Id);
+		
+		// find the pool among the available pools
+		SubscriptionPool consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
+		Assert.assertNotNull(consumer2Pool,"Consumer2 found the same pool from which consumer1 subscribed a quantity of "+consumer1Quantity);
+
+		// assert that the quantity available to consumer2 is correct
+		int consumer2Quantity = totalPoolQuantity-consumer1Quantity;
+		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(consumer2Quantity),"The pool quantity available to consumer2 has been decremented by the quantity consumer1 consumed.");
+		
+		// assert that consumer2 can NOT oversubscribe
+		Assert.assertTrue(!clienttasks.subscribe(null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity+1),null,null,null,null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to oversubscribe using the remaining pool quantity+1 should NOT succeed.");
+
+		// assert that consumer2 can successfully consume all the remaining pool quantity
+		Assert.assertTrue(clienttasks.subscribe(null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null,null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
+		
+		// start rolling back the subscribes
+		
+		// restore consumer1, unsubscribe, and assert remaining quantities
+		clienttasks.clean(null,null,null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, consumer1Id, null, false, null, null, null);
+		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer1Pool.poolId+"' should NOT be available (because consumer1 is already subscribed to it).");
+		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null);
+		consumer1Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
+		Assert.assertEquals(consumer1Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer1 has incremented by the quantity consumer1 consumed.");
+		
+		// restore consumer2, unsubscribe, and assert remaining quantities
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, consumer2Id, null, true, null, null, null);
+		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be avilable (because consumer2 is already subscribed to it).");
+		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null);
+		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
+		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer1 has incremented by the quantity consumer2 consumed.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subscribe to multiple pools using --quantity that exceeds some pools and is under other pools.",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithQuantityToMultiplePools_Test() {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, null);
+		
+		// get all the available pools
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		List<String> poolIds = new ArrayList<String>();
+		
+		// find the poolIds and their quantities
+		List<Integer> quantities = new ArrayList<Integer>();
+		for (SubscriptionPool pool : pools) {
+			poolIds.add(pool.poolId);
+			quantities.add(Integer.valueOf(pool.quantity));
+		}
+		Collections.sort(quantities);
+		int quantity = quantities.get(quantities.size()/2);	// choose the median as the quantity to subscribe with
+		
+		// collectively subscribe to all pools with --quantity
+		SSHCommandResult result = clienttasks.subscribe(poolIds, null, null, String.valueOf(quantity), null, null, null, null, null);
+		
+		// assert that the expected pools were subscribed to based on quantity
+		for (SubscriptionPool pool : pools) {
+			if (quantity <= Integer.valueOf(pool.quantity)) {
+				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
+				Assert.assertTrue(result.getStdout().contains("Successfully subscribed the system to Pool "+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
+			} else {
+				//Assert.assertContainsMatch(result.getStdout(), "^No free entitlements are available for the pool with id '"+pool.poolId+"'$","Subscribe should NOT be successful when subscribing with --quantity greater than the pool's availability.");
+				Assert.assertTrue(result.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
+			}
+		}
+	}
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668032
@@ -499,11 +641,32 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=676377 - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	
 	
+	
+	
+	
+	
+	
 	// Configuration Methods ***********************************************************************
 	
+	@AfterClass(groups={"setup"})
+	public void unregisterAllSystemConsumerIds() {
+		if (clienttasks!=null) {
+			for (String systemConsumerId : systemConsumerIds) {
+				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,systemConsumerId, null, Boolean.TRUE, null, null, null);
+				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
+				clienttasks.unregister_(null, null, null);
+			}
+			systemConsumerIds.clear();
+		}
+	}
 	
+
+
 	
 	// Protected Methods ***********************************************************************
+
+	protected List<String> systemConsumerIds = new ArrayList<String>();
+	
 	
 
 	
@@ -538,4 +701,36 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		return ll;
 	}
+	
+	
+	@DataProvider(name="getSubscribeWithQuantityData")
+	public Object[][] getSubscribeWithQuantityDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithQuantityDataAsListOfLists());
+	}
+	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, "SubscriptionQuantityConsumer", null, null, true, null, null, null);
+		
+		// find a random testpool with a positive quantity
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool testPool;
+		int i = 1000;	// avoid an infinite loop
+		do {
+			testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		} while (!testPool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(testPool.quantity)<2 && /*avoid an infinite loop*/i-->0);
+
+		// Object meta, String poolId, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		ll.add(Arrays.asList(new Object[] {null,							testPool,	"Two",													Integer.valueOf(0),		"^Two is not a valid value for quantity$",	null}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	testPool,	"-1",													Integer.valueOf(0),		"^-1 is not a valid value for quantity$",	null}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	testPool,	"0",													Integer.valueOf(0),		"^0 is not a valid value for quantity$",	null}));
+		ll.add(Arrays.asList(new Object[] {null,							testPool,	"1",													Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+testPool.poolId+"$",	null}));
+		ll.add(Arrays.asList(new Object[] {null,							testPool,	"2",													Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+testPool.poolId+"$",	null}));
+		ll.add(Arrays.asList(new Object[] {null,							testPool,	testPool.quantity,										Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+testPool.poolId+"$",	null}));
+		ll.add(Arrays.asList(new Object[] {null,							testPool,	String.valueOf(Integer.valueOf(testPool.quantity)+1),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+testPool.poolId+"'$",	null}));
+		ll.add(Arrays.asList(new Object[] {null,							testPool,	String.valueOf(Integer.valueOf(testPool.quantity)*10),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+testPool.poolId+"'$",	null}));
+		return ll;
+	}
+	
 }

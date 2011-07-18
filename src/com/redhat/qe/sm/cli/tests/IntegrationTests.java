@@ -39,9 +39,11 @@ import com.redhat.qe.tools.SSHCommandResult;
  * References:
  * https://docspace.corp.redhat.com/docs/DOC-60198
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
- * https://docspace.corp.redhat.com/docs/DOC-63084
- * https://docspace.corp.redhat.com/docs/DOC-67214
- * https://docspace.corp.redhat.com/docs/DOC-68623
+ * https://docspace.corp.redhat.com/docs/DOC-63084	Stage Env Data Setup for Content Testing (automation)
+ * https://docspace.corp.redhat.com/docs/DOC-67214	Stage Env Data Setup for Content Testing (5.7 Beta Release)
+ * https://docspace.corp.redhat.com/docs/DOC-68623	RHEL 5.7 Content Re-validation Testing 2011-06-14
+ * 
+ * https://docspace.corp.redhat.com/docs/DOC-71135	Red Hat Product Certificates 
  *
  * 
  * Where to look when a product cert does not get installed:
