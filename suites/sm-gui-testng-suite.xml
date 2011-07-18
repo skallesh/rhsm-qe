@@ -3,126 +3,127 @@
 <!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
 <suite name="SM GUI TestSuite">
 
-	<!-- the hudson.groovy script already includes these listeners
-	<listeners>
-  		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
-  		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
-	</listeners>
-	-->
-	
-	
-	<!-- GUI TESTS -->
-	
-	<test name="GUI: Registration">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="registration"/>
-				<include name="setup" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI: Subscribe/Unsubscribe">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>			
-		</packages>	
-		<groups>
-			<run>
-				<include name="subscribe"/>
-				<include name="setup" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI: Autosubscribe">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-                        <package name="com.redhat.qe.sm.cli.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="autosubscribe"/>
-                                <include name="ComplianceTests" />
-				<include name="setup" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI: Subscription Assistant">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="subscription-assistant"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI: Proxy">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="proxy"/>
-				<include name="setup" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="GUI: Facts">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="facts"/>
-				<include name="setup" />
-			</run>
-		</groups>
-	</test>
-
-	<test name="GUI: Interop">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="interop"/>
-				<include name="setup" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-
-	<test name="GUI: Firstboot">
-		<packages>
-			<package name="com.redhat.qe.sm.gui.tests" />
-			<package name="com.redhat.qe.sm.base"></package>
-		</packages>		
-		<groups>
-			<run>
-				<include name="firstboot"/>
-				<include name="setup" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
+  <!-- the hudson.groovy script already includes these listeners
+       <listeners>
+       <listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+       <listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+       </listeners>
+  -->
+  
+  
+  <!-- GUI TESTS -->
+  
+  <test name="GUI: Registration">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="registration"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Subscribe/Unsubscribe">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>			
+    </packages>	
+    <groups>
+      <run>
+        <include name="subscribe"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Autosubscribe">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.cli.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="autosubscribe"/>
+        <include name="ComplianceTests" />
+        <exclude name="cli.tests" />
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Subscription Assistant">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="subscription-assistant"/>
+        <include name="setup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Proxy">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="proxy"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Facts">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="facts"/>
+        <include name="setup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Interop">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="interop"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+  <test name="GUI: Firstboot">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="firstboot"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
 </suite>
