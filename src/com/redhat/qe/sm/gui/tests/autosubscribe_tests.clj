@@ -28,7 +28,7 @@
   setup [_]
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
-  (tasks/sleep 5000)
+  (tasks/sleep 10000)
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
