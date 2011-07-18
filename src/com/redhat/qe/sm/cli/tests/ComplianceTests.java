@@ -31,7 +31,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
-			groups={"configureProductCertDirForSomeProductsSubscribable"},
+			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable() {
@@ -48,7 +48,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when some installed products are subscribable",
-			groups={"blockedbyBug-691480"},
+			groups={"blockedbyBug-691480","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -66,7 +66,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable",
-			groups={"configureProductCertDirForAllProductsSubscribable"},
+			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable() {
@@ -83,7 +83,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when all installed products are subscribable",
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable() {
@@ -96,7 +96,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
-			groups={"configureProductCertDirForNoProductsSubscribable"},
+			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
@@ -113,7 +113,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when no installed products are subscribable",
-			groups={"blockedbyBug-691480"},
+			groups={"blockedbyBug-691480","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -131,7 +131,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when no products are installed",
-			groups={"configureProductCertDirForNoProductsInstalled"},
+			groups={"configureProductCertDirForNoProductsInstalled","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled() {
@@ -148,7 +148,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when no products are installed",
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled() {
