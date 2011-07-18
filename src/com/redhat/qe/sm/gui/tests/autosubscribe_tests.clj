@@ -56,7 +56,7 @@
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
-   (verify (direxists? nonedir)))
+   (verify (dirsetup? nonedir)))
 
 (gen-class-testng)
 
