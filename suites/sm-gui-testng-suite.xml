@@ -44,11 +44,13 @@
 	<test name="GUI: Autosubscribe">
 		<packages>
 			<package name="com.redhat.qe.sm.gui.tests" />
+                        <package name="com.redhat.qe.sm.cli.tests" />
 			<package name="com.redhat.qe.sm.base"></package>
 		</packages>		
 		<groups>
 			<run>
 				<include name="autosubscribe"/>
+                                <include name="ComplianceTests" />
 				<include name="setup" />
 				<include name="cleanup" />
 			</run>

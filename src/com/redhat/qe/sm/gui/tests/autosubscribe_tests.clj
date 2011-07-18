@@ -8,6 +8,10 @@
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
 
+(def somedir  "/tmp/sm-someProductsSubscribable")
+(def alldir "/tmp/sm-allProductsSubscribable")
+(def nodir "/tmp/sm-noProductsSubscribable")
+(def nonedir  "/tmp/sm-noProductsInstalled")
   
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -23,6 +27,37 @@
           (tasks/register (@config :username) (@config :password) :autosubscribe true)
           (verify (<= (tasks/warn-count) beforesubs))
           ))))
-   
+
+(defn ^{Test {:groups ["configureProductCertDirForSomeProductsSubscribable"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  some_products_subscribable [_]
+  (verify (= "exists" (.getStdout
+                       (.runCommandAndWait @clientcmd
+                                           (str  "test -d " somedir " && echo exists"))))))
+
+
+(defn ^{Test {:groups ["configureProductCertDirForAllProductsSubscribable"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  all_products_subscribable [_]
+  (verify (= "exists" (.getStdout
+                       (.runCommandAndWait @clientcmd
+                                           (str  "test -d " alldir " && echo exists"))))))
+
+(defn ^{Test {:groups ["configureProductCertDirForNoProductsSubscribable"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  no_products_subscribable [_]
+  (verify (= "exists" (.getStdout
+                       (.runCommandAndWait @clientcmd
+                                           (str  "test -d " nodir " && echo exists"))))))
+
+(defn ^{Test {:groups ["configureProductCertDirForNoProductsInstalled"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  no_products_installed [_]
+  (verify (= "exists" (.getStdout
+                       (.runCommandAndWait @clientcmd
+                                           (str  "test -d " nonedir " && echo exists"))))))
+
+
+
 (gen-class-testng)
 
