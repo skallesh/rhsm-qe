@@ -27,8 +27,8 @@
           (tasks/register (@config :username) (@config :password) :autosubscribe true)
           (verify (<= (tasks/warn-count) beforesubs))
           ))))
-
-(defn ^{Test {:groups ["configureProductCertDirForSomeProductsSubscribable"]
+ 
+(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
   (verify (= "exists" (.getStdout
@@ -36,28 +36,26 @@
                                            (str  "test -d " somedir " && echo exists"))))))
 
 
-(defn ^{Test {:groups ["configureProductCertDirForAllProductsSubscribable"]
+(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
   (verify (= "exists" (.getStdout
                        (.runCommandAndWait @clientcmd
                                            (str  "test -d " alldir " && echo exists"))))))
 
-(defn ^{Test {:groups ["configureProductCertDirForNoProductsSubscribable"]
+(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
   (verify (= "exists" (.getStdout
                        (.runCommandAndWait @clientcmd
                                            (str  "test -d " nodir " && echo exists"))))))
 
-(defn ^{Test {:groups ["configureProductCertDirForNoProductsInstalled"]
+(defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
   (verify (= "exists" (.getStdout
                        (.runCommandAndWait @clientcmd
                                            (str  "test -d " nonedir " && echo exists"))))))
-
-
 
 (gen-class-testng)
 
