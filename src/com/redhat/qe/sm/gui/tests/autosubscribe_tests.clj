@@ -7,14 +7,16 @@
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
+  (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]
+           [com.redhat.qe.sm.cli.tests ComplianceTests]))
 
 (def somedir  "/tmp/sm-someProductsSubscribable")
 (def alldir "/tmp/sm-allProductsSubscribable")
 (def nodir "/tmp/sm-noProductsSubscribable")
 (def nonedir  "/tmp/sm-noProductsInstalled")
+(def complytests (atom nil))
 
-(defn dirsetup? [dir]
+(defn- dirsetup? [dir]
   (and 
    (= "exists" (trim
                 (.getStdout
@@ -24,8 +26,14 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  (reset! complytests (ComplianceTests. ))
+  (.setupProductCertDirsBeforeClass @complytests)
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
+
+(defn ^{AfterClass {:groups ["cleanup"]}}
+  cleanup [_]
+  (.configureProductCertDirAfterClass @complytests))
 
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
@@ -40,23 +48,29 @@
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
-  (verify (dirsetup? somedir)))
+  (verify (dirsetup? somedir))
+  )
 
 
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
-  (verify (dirsetup? alldir)))
+  (verify (dirsetup? alldir))
+  )
 
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
-  (verify (dirsetup? nodir)))
+  (verify (dirsetup? nodir))
+  )
 
 (defn ^{Test {:groups ["autosubscribe" "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
-   (verify (dirsetup? nonedir)))
+  (verify (dirsetup? nonedir))
+  )
+
+
 
 (gen-class-testng)
 
