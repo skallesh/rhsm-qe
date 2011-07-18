@@ -83,7 +83,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when all installed products are subscribable",
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable","cli.tests"},
+			groups={"cli.tests"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable() {
@@ -148,7 +149,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when no products are installed",
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled","cli.tests"},
+			groups={"cli.tests"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled() {
