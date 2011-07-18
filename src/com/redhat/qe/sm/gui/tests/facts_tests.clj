@@ -52,8 +52,10 @@
 
 (comment 
   (defn printfact []
+    (pprint (sort @gui-facts))
     (println (str "cli-facts: " (count @cli-facts)))
     (println (str "gui-facts: " (count @gui-facts)))
-    (println (str "fact: " (@cli-facts "uname.sysname")))))
+    (println (str "fact: " (@cli-facts "virt.is_guest")))
+    (println (str "fact: " (@gui-facts "virt.is_guest")))))
 
 (gen-class-testng)
