@@ -584,8 +584,109 @@ schema generation failed
 	}
 	
 	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
-		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
 		
+		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2bf39c0310 | python -mjson.tool
+		{
+		    "accountNumber": "12331131231", 
+		    "activeSubscription": true, 
+		    "attributes": [
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0311", 
+		            "name": "requires_consumer_type", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "system"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0312", 
+		            "name": "virt_limit", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "0"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0313", 
+		            "name": "virt_only", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "true"
+		        }
+		    ], 
+		    "consumed": 0, 
+		    "contractNumber": "62", 
+		    "created": "2011-07-18T16:54:53.084+0000", 
+		    "endDate": "2012-07-17T00:00:00.000+0000", 
+		    "href": "/pools/8a90f8c6313e2a7801313e2bf39c0310", 
+		    "id": "8a90f8c6313e2a7801313e2bf39c0310", 
+		    "owner": {
+		        "displayName": "Admin Owner", 
+		        "href": "/owners/admin", 
+		        "id": "8a90f8c6313e2a7801313e2aef9c0006", 
+		        "key": "admin"
+		    }, 
+		    "productAttributes": [
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0314", 
+		            "name": "virt_limit", 
+		            "productId": "awesomeos-virt-4", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "4"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0315", 
+		            "name": "type", 
+		            "productId": "awesomeos-virt-4", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "MKT"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0316", 
+		            "name": "arch", 
+		            "productId": "awesomeos-virt-4", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "ALL"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0317", 
+		            "name": "version", 
+		            "productId": "awesomeos-virt-4", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "6.1"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0318", 
+		            "name": "variant", 
+		            "productId": "awesomeos-virt-4", 
+		            "updated": "2011-07-18T16:54:53.085+0000", 
+		            "value": "ALL"
+		        }
+		    ], 
+		    "productId": "awesomeos-virt-4", 
+		    "productName": "Awesome OS with up to 4 virtual guests", 
+		    "providedProducts": [
+		        {
+		            "created": "2011-07-18T16:54:53.085+0000", 
+		            "id": "8a90f8c6313e2a7801313e2bf39d0319", 
+		            "productId": "37060", 
+		            "productName": "Awesome OS Server Bits", 
+		            "updated": "2011-07-18T16:54:53.085+0000"
+		        }
+		    ], 
+		    "quantity": 20, 
+		    "restrictedToUsername": null, 
+		    "sourceEntitlement": null, 
+		    "startDate": "2011-07-18T00:00:00.000+0000", 
+		    "subscriptionId": "8a90f8c6313e2a7801313e2be1c0022e", 
+		    "updated": "2011-07-18T16:54:53.084+0000"
+		}
+		*/
+		
+		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
 		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
 		// loop through the attributes of this pool looking for the "virt_only" attribute
@@ -600,6 +701,102 @@ schema generation failed
 		return virt_only;
 	}
 
+	public static Boolean isPoolsProductMultiEntitleable (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+		
+		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2c06f806ef | python -mjson.tool
+		{
+		    "accountNumber": "12331131231", 
+		    "activeSubscription": true, 
+		    "attributes": [], 
+		    "consumed": 0, 
+		    "contractNumber": "2", 
+		    "created": "2011-07-18T16:54:58.040+0000", 
+		    "endDate": "2012-07-17T00:00:00.000+0000", 
+		    "href": "/pools/8a90f8c6313e2a7801313e2c06f806ef", 
+		    "id": "8a90f8c6313e2a7801313e2c06f806ef", 
+		    "owner": {
+		        "displayName": "Admin Owner", 
+		        "href": "/owners/admin", 
+		        "id": "8a90f8c6313e2a7801313e2aef9c0006", 
+		        "key": "admin"
+		    }, 
+		    "productAttributes": [
+		        {
+		            "created": "2011-07-18T16:54:58.040+0000", 
+		            "id": "8a90f8c6313e2a7801313e2c06f806f0", 
+		            "name": "multi-entitlement", 
+		            "productId": "awesomeos-scalable-fs", 
+		            "updated": "2011-07-18T16:54:58.040+0000", 
+		            "value": "yes"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:58.040+0000", 
+		            "id": "8a90f8c6313e2a7801313e2c06f806f1", 
+		            "name": "type", 
+		            "productId": "awesomeos-scalable-fs", 
+		            "updated": "2011-07-18T16:54:58.040+0000", 
+		            "value": "MKT"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:58.040+0000", 
+		            "id": "8a90f8c6313e2a7801313e2c06f806f2", 
+		            "name": "arch", 
+		            "productId": "awesomeos-scalable-fs", 
+		            "updated": "2011-07-18T16:54:58.040+0000", 
+		            "value": "ALL"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:58.040+0000", 
+		            "id": "8a90f8c6313e2a7801313e2c06f806f3", 
+		            "name": "version", 
+		            "productId": "awesomeos-scalable-fs", 
+		            "updated": "2011-07-18T16:54:58.040+0000", 
+		            "value": "1.0"
+		        }, 
+		        {
+		            "created": "2011-07-18T16:54:58.040+0000", 
+		            "id": "8a90f8c6313e2a7801313e2c06f806f4", 
+		            "name": "variant", 
+		            "productId": "awesomeos-scalable-fs", 
+		            "updated": "2011-07-18T16:54:58.040+0000", 
+		            "value": "ALL"
+		        }
+		    ], 
+		    "productId": "awesomeos-scalable-fs", 
+		    "productName": "Awesome OS Scalable Filesystem", 
+		    "providedProducts": [
+		        {
+		            "created": "2011-07-18T16:54:58.040+0000", 
+		            "id": "8a90f8c6313e2a7801313e2c06f906f5", 
+		            "productId": "37090", 
+		            "productName": "Awesome OS Scalable Filesystem Bits", 
+		            "updated": "2011-07-18T16:54:58.040+0000"
+		        }
+		    ], 
+		    "quantity": 5, 
+		    "restrictedToUsername": null, 
+		    "sourceEntitlement": null, 
+		    "startDate": "2011-07-18T00:00:00.000+0000", 
+		    "subscriptionId": "8a90f8c6313e2a7801313e2b3e07007e", 
+		    "updated": "2011-07-18T16:54:58.040+0000"
+		}
+		*/
+		
+		Boolean multi_entitlement = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
+		JSONArray jsonProductAttributes = jsonPool.getJSONArray("productAttributes");
+		// loop through the productAttributes of this pool looking for the "multi-entitlement" attribute
+		for (int j = 0; j < jsonProductAttributes.length(); j++) {
+			JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+			String productAttributeName = jsonProductAttribute.getString("name");
+			if (productAttributeName.equals("multi-entitlement")) {
+				//multi_entitlement = jsonProductAttribute.getBoolean("value");
+				multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equals("1");
+				break;
+			}
+		}
+		return multi_entitlement;
+	}
 	
 	
 	/**

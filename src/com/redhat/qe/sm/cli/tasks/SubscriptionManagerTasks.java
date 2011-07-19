@@ -1663,15 +1663,35 @@ public class SubscriptionManagerTasks {
 	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions 
 	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
+		
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
-		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed to
+		// is this pool multi-entitleable?
+		Boolean isPoolsProductMultiEntitleable = null;
+		try {
+			isPoolsProductMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
+			isPoolsProductMultiEntitleable = isPoolsProductMultiEntitleable==null? false : isPoolsProductMultiEntitleable;
+		} catch (Exception e) {
+			e.printStackTrace();
+			Assert.fail(e.getMessage());
+		}
+
+		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		Assert.assertTrue(!afterSubscriptionPools.contains(pool),
-				"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+		if (!isPoolsProductMultiEntitleable || Integer.valueOf(pool.quantity)<=1) {
+			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+					"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+		} else {
+			Assert.assertTrue(afterSubscriptionPools.contains(pool),
+					"When the pool is multi-entitleable, the available subscription pools still contains the just subscribed to pool: "+pool);
+		}
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
 		log.warning("Due to subscription-manager design change, we will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
@@ -1734,9 +1754,6 @@ public class SubscriptionManagerTasks {
 		*/
 		File newCertFile = null;
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (File entitlementCertFile : afterEntitlementCertFiles) {
 			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);

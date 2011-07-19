@@ -26,6 +26,7 @@ import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -237,18 +238,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
-	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool){
-// non-dataProvided test procedure
-//		//sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-//		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-//		for(SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-//			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-//			clienttasks.subscribeToProduct(pool.subscriptionName);
-//		}
+	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
+
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
+		Boolean isPoolsProductMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
+		isPoolsProductMultiEntitleable = isPoolsProductMultiEntitleable==null? false : isPoolsProductMultiEntitleable;
+
+		if (!isPoolsProductMultiEntitleable) {
+			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
+		} else {
+			Assert.assertEquals(result.getStdout().trim(), "Successfully subscribed the system to Pool "+pool.poolId+"",
+				"subscribe command allows multi-entitleable pools to be subscribed to more than once.");		
+		}
 	}
 	
 	
@@ -504,6 +507,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithQuantity_Test(Object meta, SubscriptionPool pool, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		log.info("Testing subscription-manager subscribe using various good and bad values for the --quantity option.");
+		if(pool==null) throw new SkipException(expectedStderrRegex);	// special case in the dataProvider to identify when a test pool was not available; expectedStderrRegex contains a message for what kind of test pool was being searched for.
 	
 		// start fresh by returning all subscriptions
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -535,14 +539,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void MultiConsumerSubscribeWithQuantity_Test() {
+	public void MultiConsumerSubscribeWithQuantity_Test() throws NumberFormatException, JSONException, Exception {
 		
 		// start by calling SubscribeWithQuantity_Test with the row from the dataProvider where quantity=2
 		SubscriptionPool consumer1Pool = null;
 		int consumer1Quantity=0;
 		int totalPoolQuantity=0;
 		for (List<Object> row : getSubscribeWithQuantityDataAsListOfLists()) {
-			if (((String)(row.get(2))).equals("2")) {	// find the row where quantity.equals("2")
+			if (((String)(row.get(2))).equals("2") && ((String)(row.get(4))).startsWith("^Successful")) {	// find the row where quantity.equals("2")
 				consumer1Pool = (SubscriptionPool) row.get(1);
 				totalPoolQuantity = Integer.valueOf(consumer1Pool.quantity);
 				consumer1Quantity = Integer.valueOf((String) row.get(2));
@@ -588,10 +592,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// restore consumer2, unsubscribe, and assert remaining quantities
 		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, consumer2Id, null, true, null, null, null);
-		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be avilable (because consumer2 is already subscribed to it).");
+		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		//Assert.assertNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be available (because consumer2 is already subscribed to it).");
+		Assert.assertNotNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should be available even though consumer2 is already subscribed to it because it is multi-entitleable.");
+		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer2 is still decremented by the quantity consumer2 consumed.");
 		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
-		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer1 has incremented by the quantity consumer2 consumed.");
+		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(totalPoolQuantity),"The pool quantity available to consumer2 has been restored to its original total quantity");
 	}
 	
 	
@@ -704,32 +711,74 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@DataProvider(name="getSubscribeWithQuantityData")
-	public Object[][] getSubscribeWithQuantityDataAs2dArray() {
+	public Object[][] getSubscribeWithQuantityDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithQuantityDataAsListOfLists());
 	}
-	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() {
+	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, "SubscriptionQuantityConsumer", null, null, true, null, null, null);
 		
-		// find a random testpool with a positive quantity
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		SubscriptionPool testPool;
-		int i = 1000;	// avoid an infinite loop
-		do {
-			testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		} while (!testPool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(testPool.quantity)<2 && /*avoid an infinite loop*/i-->0);
+//		// find a random testpool with a positive quantity
+//		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+//		SubscriptionPool testPool;
+//		int i = 1000;	// avoid an infinite loop
+//		do {
+//			testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+//		} while (!testPool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(testPool.quantity)<2 && /*avoid an infinite loop*/i-->0);
 
+		
+		// find pools with a positive quantity that have a productAttribute set for "multi-entitlement"
+		SubscriptionPool poolWithMultiEntitlementNull = null;
+		SubscriptionPool poolWithMultiEntitlementYes = null;
+		SubscriptionPool poolWithMultiEntitlementNo = null;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			if (Integer.valueOf(pool.quantity)<2) continue;
+			Boolean isMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId);
+			if (isMultiEntitleable == null) {
+				poolWithMultiEntitlementNull = pool;
+			} else if (isMultiEntitleable) {
+				poolWithMultiEntitlementYes = pool;
+			} else {
+				poolWithMultiEntitlementNo = pool;
+			}
+		}
+		SubscriptionPool pool;
+		
+		
 		// Object meta, String poolId, String quantity, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[] {null,							testPool,	"Two",													Integer.valueOf(0),		"^Two is not a valid value for quantity$",	null}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	testPool,	"-1",													Integer.valueOf(0),		"^-1 is not a valid value for quantity$",	null}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	testPool,	"0",													Integer.valueOf(0),		"^0 is not a valid value for quantity$",	null}));
-		ll.add(Arrays.asList(new Object[] {null,							testPool,	"1",													Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+testPool.poolId+"$",	null}));
-		ll.add(Arrays.asList(new Object[] {null,							testPool,	"2",													Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+testPool.poolId+"$",	null}));
-		ll.add(Arrays.asList(new Object[] {null,							testPool,	testPool.quantity,										Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+testPool.poolId+"$",	null}));
-		ll.add(Arrays.asList(new Object[] {null,							testPool,	String.valueOf(Integer.valueOf(testPool.quantity)+1),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+testPool.poolId+"'$",	null}));
-		ll.add(Arrays.asList(new Object[] {null,							testPool,	String.valueOf(Integer.valueOf(testPool.quantity)*10),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+testPool.poolId+"'$",	null}));
+
+		pool= poolWithMultiEntitlementYes;
+		if (pool!=null) {
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",												Integer.valueOf(0),		"^Two is not a valid value for quantity$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",												Integer.valueOf(0),		"^-1 is not a valid value for quantity$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",												Integer.valueOf(0),		"^0 is not a valid value for quantity$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+pool.poolId+"'$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+pool.poolId+"'$",	null}));
+		} else {
+			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to yes."}));
+		}
+		
+		pool= poolWithMultiEntitlementNo;
+		if (pool!=null) {
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Subscription pool '"+pool.poolId+"' cannot be multi-entitled.$",	null}));
+		} else {
+			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
+		}
+		
+		pool= poolWithMultiEntitlementNull;
+		if (pool!=null) {
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Subscription pool '"+pool.poolId+"' cannot be multi-entitled.$",	null}));
+		} else {
+			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));
+		}
+		
 		return ll;
 	}
 	
