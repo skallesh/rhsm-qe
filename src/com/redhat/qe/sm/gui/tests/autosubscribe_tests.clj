@@ -8,7 +8,8 @@
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]
-           [com.redhat.qe.sm.cli.tests ComplianceTests]))
+           [com.redhat.qe.sm.cli.tests ComplianceTests]
+           [com.redhat.qe.auto.testng BzChecker]))
 
 (def somedir  "/tmp/sm-someProductsSubscribable")
 (def alldir "/tmp/sm-allProductsSubscribable")
@@ -26,6 +27,10 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
+  ;; this bug crashes everything, so fail the BeforeClass if this is open
+  (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
+  
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
   (tasks/sleep 10000)
