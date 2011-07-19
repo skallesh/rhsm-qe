@@ -177,14 +177,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 		// assert that there are two (one for the host and one for the guest)
 		log.info("Using the RESTful Candlepin API, let's find all the pools generated from subscription id: "+subscriptionId);
-		List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, ownerKey, subscriptionId);
+		List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, ownerKey, subscriptionId);
 		Assert.assertEquals(poolIds.size(), 2, "Exactly two pools should be derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// assert that one pool is for the host and the other is for the guest
 		guestPoolId = null;
 		hostPoolId = null;
 		for (String poolId : poolIds) {
-			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
+			if (CandlepinTasks.isSubscriptionPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
 				guestPoolId = poolId;
 			} else {
 				hostPoolId = poolId;
@@ -462,13 +462,13 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 					if (startDate.before(now) && endDate.after(now)) {
 
 						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
-						List<String> poolIds = CandlepinTasks.findPoolIdsFromSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, ownerKey, subscriptionId);
+						List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, ownerKey, subscriptionId);
 
 						// determine which pool is for the guest, the other must be for the host
 						String guestPoolId = null;
 						String hostPoolId = null;
 						for (String poolId : poolIds) {
-							if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
+							if (CandlepinTasks.isSubscriptionPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
 								guestPoolId = poolId;
 							} else {
 								hostPoolId = poolId;
