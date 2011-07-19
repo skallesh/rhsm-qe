@@ -47,8 +47,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant even after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when some installed products are subscribable",
-			groups={"blockedbyBug-691480","cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports an incompliant status when some installed products are subscribable",
+			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -82,8 +82,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when all installed products are subscribable",
-			groups={"cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable",
+			groups={"blockedbyBug-723336","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -113,8 +113,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when no installed products are subscribable",
-			groups={"blockedbyBug-691480","cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports an incompliant status when no installed products are subscribable",
+			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -148,8 +148,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when no products are installed",
-			groups={"cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed",
+			groups={"blockedbyBug-723336","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
