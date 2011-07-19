@@ -71,8 +71,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,Boolean.TRUE,null,null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installdProducts.isEmpty(),
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installedProducts.isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
@@ -102,8 +102,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,Boolean.TRUE,null,null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installdProducts.isEmpty(),
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installedProducts.isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
@@ -137,8 +137,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,Boolean.TRUE,null,null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertTrue(installdProducts.isEmpty(),
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertTrue(installedProducts.isEmpty(),
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Because no prodycts are currently installed, the system should inherently be compliant even without subscribing to any subscription pools.");

@@ -583,7 +583,7 @@ schema generation failed
 		return jsonPool.getString("subscriptionId");
 	}
 	
-	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+	public static boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2bf39c0310 | python -mjson.tool
 		{
@@ -698,10 +698,11 @@ schema generation failed
 				break;
 			}
 		}
+		virt_only = virt_only==null? false : virt_only;	// the absense of a "virt_only" attribute implies virt_only=false
 		return virt_only;
 	}
 
-	public static Boolean isPoolsProductMultiEntitleable (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+	public static boolean isPoolMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2c06f806ef | python -mjson.tool
 		{
@@ -791,10 +792,11 @@ schema generation failed
 			String productAttributeName = jsonProductAttribute.getString("name");
 			if (productAttributeName.equals("multi-entitlement")) {
 				//multi_entitlement = jsonProductAttribute.getBoolean("value");
-				multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equals("1");
+				multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equalsIgnoreCase("true") || jsonProductAttribute.getString("value").equals("1");
 				break;
 			}
 		}
+		multi_entitlement = multi_entitlement==null? false : multi_entitlement;	// the absense of a "multi-entitlement" productAttribute implies multi-entitlement=false
 		return multi_entitlement;
 	}
 	

@@ -1674,10 +1674,9 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
-		Boolean isPoolsProductMultiEntitleable = null;
+		boolean isPoolMultiEntitlement = false;
 		try {
-			isPoolsProductMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
-			isPoolsProductMultiEntitleable = isPoolsProductMultiEntitleable==null? false : isPoolsProductMultiEntitleable;
+			isPoolMultiEntitlement = CandlepinTasks.isPoolMultiEntitlement(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
@@ -1685,7 +1684,7 @@ public class SubscriptionManagerTasks {
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		if (!isPoolsProductMultiEntitleable || Integer.valueOf(pool.quantity)<=1) {
+		if (!isPoolMultiEntitlement || Integer.valueOf(pool.quantity)<=1) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"The available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else {
@@ -1937,7 +1936,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert
-		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after individually subscribing to them all.");
+		assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after individually subscribing to them all.");
 	}
 	
 	
@@ -1957,7 +1956,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert results when assumingRegisterType="system"
 		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {
-			assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+			assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 			return;
 		}
 		
@@ -1997,7 +1996,7 @@ public class SubscriptionManagerTasks {
 //		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 //	}
 	
-	public void assertNoAvailableSubscriptionPoolsToList(String assertMsg) {
+	public void assertNoAvailableSubscriptionPoolsToList(boolean ignoreMuliEntitlementSubscriptionPools, String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
@@ -2027,9 +2026,31 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
+		
+		// determine which available pools are multi-entitlement pools
+		List<SubscriptionPool> poolsAvailableExcludingMuliEntitlement = new ArrayList<SubscriptionPool>();
+		List<SubscriptionPool> poolsAvailable = getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : poolsAvailable) {
+			try {
+				if (!CandlepinTasks.isPoolMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
+					poolsAvailableExcludingMuliEntitlement.add(pool);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			}
+		}
+		
 		// assert
-		Assert.assertEquals(listAvailableSubscriptionPools().getStdout().trim(),
+		if (ignoreMuliEntitlementSubscriptionPools) {
+			Assert.assertEquals(poolsAvailableExcludingMuliEntitlement.size(),0,
+					assertMsg+" (muti-entitlement pools were excluded.)");
+		} else {
+			Assert.assertEquals(poolsAvailable.size(),0,
+					assertMsg+" (muti-entitlement pools were excluded.)");
+			Assert.assertEquals(listAvailableSubscriptionPools().getStdout().trim(),
 				"No Available subscription pools to list",assertMsg);
+		}
 	}
 	
 	

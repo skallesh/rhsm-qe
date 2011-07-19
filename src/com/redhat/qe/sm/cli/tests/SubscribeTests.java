@@ -242,15 +242,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
-		Boolean isPoolsProductMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
-		isPoolsProductMultiEntitleable = isPoolsProductMultiEntitleable==null? false : isPoolsProductMultiEntitleable;
+		boolean isPoolMultiEntitlement = CandlepinTasks.isPoolMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
 
-		if (!isPoolsProductMultiEntitleable) {
+		if (!isPoolMultiEntitlement) {
 			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
 				"subscribe command returns proper message when already subscribed to the requested pool");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "Successfully subscribed the system to Pool "+pool.poolId+"",
-				"subscribe command allows multi-entitleable pools to be subscribed to more than once.");		
+				"subscribe command allows multi-entitlement pools to be subscribed to more than once.");		
 		}
 	}
 	
@@ -285,7 +284,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId1+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
 		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId2+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
-		clienttasks.assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all including duplicates and bad pool ids.");
+		clienttasks.assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all including duplicates and bad pool ids.");
 	}
 	
 	
@@ -735,10 +734,24 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool poolWithMultiEntitlementNo = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if (Integer.valueOf(pool.quantity)<2) continue;
-			Boolean isMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId);
-			if (isMultiEntitleable == null) {
+			
+			Boolean isMultiEntitlementPool = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword,"/pools/"+pool.poolId));	
+			JSONArray jsonProductAttributes = jsonPool.getJSONArray("productAttributes");
+			// loop through the productAttributes of this pool looking for the "multi-entitlement" attribute
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {
+				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+				String productAttributeName = jsonProductAttribute.getString("name");
+				if (productAttributeName.equals("multi-entitlement")) {
+					//multi_entitlement = jsonProductAttribute.getBoolean("value");
+					isMultiEntitlementPool = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equals("1");
+					break;
+				}
+			}
+			
+			if (isMultiEntitlementPool == null) {
 				poolWithMultiEntitlementNull = pool;
-			} else if (isMultiEntitleable) {
+			} else if (isMultiEntitlementPool) {
 				poolWithMultiEntitlementYes = pool;
 			} else {
 				poolWithMultiEntitlementNo = pool;
