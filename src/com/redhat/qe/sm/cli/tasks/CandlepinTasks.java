@@ -583,7 +583,7 @@ schema generation failed
 		return jsonPool.getString("subscriptionId");
 	}
 	
-	public static String findPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
+	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
 
 		/* Example jsonPool:
 		  		{
