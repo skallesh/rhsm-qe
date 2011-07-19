@@ -23,8 +23,9 @@ public class InstalledProduct extends AbstractCommandLineData {
 	public String productName;
 	public String status;
 	public Calendar expires;
-	public BigInteger subscription;
+	public BigInteger serialNumber;	// subscription;	// name changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=712415
 	public Long contractNumber;
+	public BigInteger accountNumber;
 	
 	public InstalledProduct(Map<String, String> productData) {
 		super(productData);
@@ -34,17 +35,13 @@ public class InstalledProduct extends AbstractCommandLineData {
 	@Override
 	public String toString() {
 		
-//		public String productName;
-//		public String status;
-//		public Date expires;
-//		public Integer subscription;
-		
 		String string = "";
 		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
 		if (status != null)				string += String.format(" %s='%s'", "status",status);
 		if (expires != null)			string += String.format(" %s='%s'", "expires",formatDateString(expires));
-		if (subscription != null)		string += String.format(" %s='%s'", "subscription",subscription);
+		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (contractNumber != null)		string += String.format(" %s='%s'", "contractNumber",contractNumber);
+		if (accountNumber != null)		string += String.format(" %s='%s'", "accountNumber",accountNumber);
 
 		return string.trim();
 	}
@@ -88,6 +85,14 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Expires:            	2011-01-24               
 		Subscription:       	1151289234191548136      
 		ContractNumber:        	1970595  
+		
+		
+		ProductName:        	Awesome OS Scalable Filesystem Bits
+		Status:             	Subscribed               
+		Expires:            	07/17/2012               
+		SerialNumber:       	5945536885441836861      
+		ContractNumber:     	2                        
+		AccountNumber:      	12331131231 
 		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -96,9 +101,10 @@ public class InstalledProduct extends AbstractCommandLineData {
 		regexes.put("productName",			"ProductName:(.*)");
 		regexes.put("status",				"Status:(.*)");
 		regexes.put("expires",				"Expires:(.*)");
-		regexes.put("subscription",			"Subscription:(.*)");
+		regexes.put("serialNumber",			"SerialNumber:(.*)");
 		regexes.put("contractNumber",		"ContractNumber:(.*)");
-		
+		regexes.put("accountNumber",		"AccountNumber:(.*)");
+	
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);

@@ -160,7 +160,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				if (productCert!=null) {
 					Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
-					Assert.assertEquals(installedProduct.subscription, productSubscription.serialNumber, "Installed Product '"+productName+"' subscription matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
+					Assert.assertEquals(installedProduct.serialNumber, productSubscription.serialNumber, "Installed Product '"+productName+"' serialNumber matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
 				} else {
 					Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
 				}
