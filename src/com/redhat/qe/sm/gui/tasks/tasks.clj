@@ -429,7 +429,7 @@
   (let [server (conf-file-value "hostname")
         port (conf-file-value "port")
         prefix (conf-file-value "prefix")]
-    (CandlepinTasks/getOrgDisplayName server
+    (CandlepinTasks/getOrgDisplayNameForOrgKey server
                                       port
                                       prefix
                                       username
