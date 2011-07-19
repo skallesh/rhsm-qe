@@ -31,6 +31,7 @@ import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.Repo;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -65,6 +66,7 @@ public class SubscriptionManagerTasks {
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String caCertDir						= null; // "/etc/rhsm/ca";
+	public String baseurl						= null;
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
 
@@ -110,6 +112,7 @@ public class SubscriptionManagerTasks {
 			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir").replaceFirst("/$", "");
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
 			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
+			this.baseurl			= getConfFileParameter(rhsmConfFile, "baseurl").replaceFirst("/$", "");
 			this.consumerCertFile	= consumerCertDir+"/cert.pem";
 			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
@@ -373,6 +376,10 @@ public class SubscriptionManagerTasks {
 	
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
+	}
+	
+	public List<Repo> getCurrentlySubscribedRepos() {
+		return Repo.parse(listSubscribedRepos().getStdout());
 	}
 	
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
@@ -1475,6 +1482,9 @@ public class SubscriptionManagerTasks {
 	
 	
 
+	
+
+	
 	// redeem module tasks ************************************************************
 
 	/**
@@ -1542,7 +1552,34 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * @return SSHCommandResult from "subscription-manager repos --list"
+	 */
+	public SSHCommandResult listSubscribedRepos() {
 
+		SSHCommandResult sshCommandResult = repos_(Boolean.TRUE, null, null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
+		
+		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
+		List<EntitlementCert> entitlementCerts = getCurrentEntitlementCerts();
+		int numContentNamespaces = 0;
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				numContentNamespaces++;
+			}
+		}
+
+		if (numContentNamespaces==0) {
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories"), "The system is not entitled to use any repositories");
+		} else {
+			String title = "Entitled Repositories in "+redhatRepoFile;
+			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of repositories is entitled '"+title+"'.");
+		}
+
+		return sshCommandResult;
+	}
+	
+	
 	// subscribe module tasks ************************************************************
 
 	/**
