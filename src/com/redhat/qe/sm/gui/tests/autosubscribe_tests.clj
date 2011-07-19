@@ -3,26 +3,90 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-	       gnome.ldtp)
+        [clojure.contrib.string :only (trim)]
+        gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test]))
+  (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]
+           [com.redhat.qe.sm.cli.tests ComplianceTests]
+           [com.redhat.qe.auto.testng BzChecker]))
 
-  
+(def somedir  "/tmp/sm-someProductsSubscribable")
+(def alldir "/tmp/sm-allProductsSubscribable")
+(def nodir "/tmp/sm-noProductsSubscribable")
+(def nonedir  "/tmp/sm-noProductsInstalled")
+(def complytests (atom nil))
+
+(defn- dirsetup? [dir]
+  (and 
+   (= "exists" (trim
+                (.getStdout
+                 (.runCommandAndWait @clientcmd
+                                     (str  "test -d " dir " && echo exists")))))
+   (= dir (tasks/conf-file-value "productCertDir"))))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
+  ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
+  ;; this bug crashes everything, so fail the BeforeClass if this is open
+  (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
+  
+  (reset! complytests (ComplianceTests. ))
+  (.setupProductCertDirsBeforeClass @complytests)
+  (tasks/sleep 10000)
   (with-handlers [(ignore :not-registered)]
     (tasks/unregister)))
 
+(defn ^{AfterClass {:groups ["cleanup"]}}
+  cleanup [_]
+  (.configureProductCertDirAfterClass @complytests))
+
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
-    (let [beforesubs (tasks/warn-count)]
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
-          (tasks/register (@config :username) (@config :password) :autosubscribe true)
-          (verify (<= (tasks/warn-count) beforesubs))
-          ))))
-   
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (verify (<= (tasks/warn-count) beforesubs))))))
+ 
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForSomeProductsSubscribable"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  some_products_subscribable [_]
+  (verify (dirsetup? somedir))
+  )
+
+
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForAllProductsSubscribable"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  all_products_subscribable [_]
+  (verify (dirsetup? alldir))
+  )
+
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForNoProductsSubscribable"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  no_products_subscribable [_]
+  (verify (dirsetup? nodir))
+  )
+
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForNoProductsInstalled"]
+              :dependsOnMethods ["register_autosubscribe"]}}
+  no_products_installed [_]
+  (verify (dirsetup? nonedir))
+  )
+
+
+
 (gen-class-testng)
 
