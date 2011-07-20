@@ -98,12 +98,12 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("productName",			"ProductName:(.*)");
-		regexes.put("status",				"Status:(.*)");
-		regexes.put("expires",				"Expires:(.*)");
-		regexes.put("serialNumber",			"SerialNumber:(.*)");
-		regexes.put("contractNumber",		"ContractNumber:(.*)");
-		regexes.put("accountNumber",		"AccountNumber:(.*)");
+		regexes.put("productName",			"^ProductName:(.*)");
+		regexes.put("status",				"^Status:(.*)");
+		regexes.put("expires",				"^Expires:(.*)");
+		regexes.put("serialNumber",			"^SerialNumber:(.*)");
+		regexes.put("contractNumber",		"^ContractNumber:(.*)");
+		regexes.put("accountNumber",		"^AccountNumber:(.*)");
 	
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

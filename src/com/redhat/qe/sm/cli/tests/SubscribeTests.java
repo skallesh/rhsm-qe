@@ -428,24 +428,56 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// autosubscribe
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
 		
-		// Example Results from register --autosubscribe
-		//		[root@jsefler-onprem03 ~]# subscription-manager register --username=testuser1 --password=password --autosubscribe
-		//		9a63ba95-4f0f-47da-b645-69cc3915e2bd jsefler-onprem03.usersys.redhat.com
-		//		Installed Products:
-		//		   Multiplier Product Bits - Not Subscribed
-		//		   Load Balancing Bits - Subscribed
-		//		   Awesome OS Server Bits - Subscribed
-		//		   Management Bits - Subscribed
-		//		   Awesome OS Scalable Filesystem Bits - Subscribed
-		//		   Shared Storage Bits - Subscribed
-		//		   Large File Support Bits - Subscribed
-		//		   Awesome OS Workstation Bits - Subscribed
-		//		   Awesome OS Premium Architecture Bits - Not Subscribed
-		//		   Awesome OS for S390X Bits - Not Subscribed
-		//		   Awesome OS Developer Basic - Not Subscribed
-		//		   Clustering Bits - Subscribed
-		//		   Awesome OS Developer Bits - Not Subscribed
-		//		   Awesome OS Modifier Bits - Subscribed
+		/* RHEL57 RHEL61 Example Results...
+		# subscription-manager subscribe --auto
+		Installed Products:
+		   Multiplier Product Bits - Not Subscribed
+		   Load Balancing Bits - Subscribed
+		   Awesome OS Server Bits - Subscribed
+		   Management Bits - Subscribed
+		   Awesome OS Scalable Filesystem Bits - Subscribed
+		   Shared Storage Bits - Subscribed
+		   Large File Support Bits - Subscribed
+		   Awesome OS Workstation Bits - Subscribed
+		   Awesome OS Premium Architecture Bits - Not Subscribed
+		   Awesome OS for S390X Bits - Not Subscribed
+		   Awesome OS Developer Basic - Not Subscribed
+		   Clustering Bits - Subscribed
+		   Awesome OS Developer Bits - Not Subscribed
+		   Awesome OS Modifier Bits - Subscribed
+		*/
+		
+		/* Example Results...
+		# subscription-manager subscribe --auto
+		Installed Product Current Status:
+		
+		ProductName:         	Awesome OS for x86_64/ALL Bits for ZERO sockets
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for x86_64/ALL Bits
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for ppc64 Bits
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for i386 Bits 
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for x86 Bits  
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for ia64 Bits 
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS Scalable Filesystem Bits
+		Status:               	Subscribed               
+		*/
 	}
 	protected List<List<Object>> subscriptionPoolProductData;
 	
@@ -492,11 +524,44 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is "+expectedSubscribeStatus.toLowerCase()+".");
 
 		// assert that the sshCommandResultOfAutosubscribe showed the expected Subscribe Status for this productCert
-		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
+		// RHEL57 RHEL61		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
+		//		"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
+		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResultFromAutosubscribe.getStdout());
+		InstalledProduct autosubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productCert.productName, autosubscribedProductStatusList);
+		Assert.assertEquals(autosubscribedProduct.status,expectedSubscribeStatus,
 				"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
 	}
 //	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
 	SSHCommandResult sshCommandResultFromAutosubscribe;
+	
+	
+	@Test(	description="subscription-manager: autosubscribe consumer more than once and verify we are not duplicately subscribed",
+			groups={"blockedByBug-723044"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
+
+		// before testing, make sure all the expected subscriptionPoolProductId are available
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, null);
+		
+		// get the expected subscriptionPoolProductIdData
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
+		
+		// autosubscribe once
+		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
+		List<File> entitlementCertFiles1 = clienttasks.getCurrentEntitlementCertFiles();
+		List<InstalledProduct> autosubscribedProductStatusList1 = InstalledProduct.parse(result1.getStdout());
+		
+		// autosubscribe twice
+		SSHCommandResult result2 = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
+		List<File> entitlementCertFiles2 = clienttasks.getCurrentEntitlementCertFiles();
+		List<InstalledProduct> autosubscribedProductStatusList2 = InstalledProduct.parse(result2.getStdout());
+		
+		// assert results
+		Assert.assertEquals(entitlementCertFiles2.size(), entitlementCertFiles1.size(), "The number of granted entitlement certs is the same after a second autosubscribe.");
+		Assert.assertEquals(autosubscribedProductStatusList2.size(), autosubscribedProductStatusList1.size(), "The stdout from autosubscribe reports the same number of installed product status entries after a second autosubscribe.");
+		Assert.assertTrue(autosubscribedProductStatusList1.containsAll(autosubscribedProductStatusList2), "The list of installed product status entries from a second autosubscribe is the same as the first.");
+	}
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",

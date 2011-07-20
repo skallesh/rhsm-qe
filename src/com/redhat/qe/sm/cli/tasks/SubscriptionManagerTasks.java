@@ -1570,7 +1570,7 @@ public class SubscriptionManagerTasks {
 		}
 
 		if (numContentNamespaces==0) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories"), "The system is not entitled to use any repositories");
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories");
 		} else {
 			String title = "Entitled Repositories in "+redhatRepoFile;
 			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of repositories is entitled '"+title+"'.");
@@ -1642,7 +1642,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, quantity, email, locale, proxy, proxyuser, proxypassword);
-		
+		auto = auto==null? false:auto;	// set auto
 		// assert results...
 		
 		// if already subscribed, just return the result
@@ -1666,8 +1666,9 @@ public class SubscriptionManagerTasks {
 		// assert that the entitlement pool was found for subscribing
 		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
 		
-		// assert the exit code was a success
-		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe was reported as a success.");
+		// assert the stdout msg was a success
+		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe appears to be a success.");
+		else		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe was reported as a success.");
 
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
