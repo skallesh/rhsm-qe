@@ -329,6 +329,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Repos Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="ReposTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Integration Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
