@@ -642,10 +642,11 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is NOT listed in all available subscription pools to user '"+username+"' registered as a system.");
 			
 			// attempt to subscribe system consumer to personal pool
-			SSHCommandResult sshComandResult = client1tasks.subscribe(null, personalPool.poolId, null, null, null, null, null, null, null, null);
+			SSHCommandResult sshCommandResult = client1tasks.subscribe_(null, personalPool.poolId, null, null, null, null, null, null, null, null);
 			
 			// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'
-			Assert.assertContainsMatch(sshComandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
 					"Attempting to subscribe a system consumer to a personal pool is blocked.");
 			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),"No Consumed subscription pools to list",
 					"Because the subscribe attempt was blocked, there should still be 'No Consumed subscription pools to list'.");
