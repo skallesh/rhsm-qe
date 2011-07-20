@@ -429,12 +429,12 @@
   (let [server (conf-file-value "hostname")
         port (conf-file-value "port")
         prefix (conf-file-value "prefix")]
-    (CandlepinTasks/getOrgDisplayName server
-                                      port
-                                      prefix
-                                      username
-                                      password
-                                      orgkey)))
+    (CandlepinTasks/getOrgDisplayNameForOrgKey server
+                                               port
+                                               prefix
+                                               username
+                                               password
+                                               orgkey)))
   
 (defn get-all-facts []
   (ui click :view-system-facts)
