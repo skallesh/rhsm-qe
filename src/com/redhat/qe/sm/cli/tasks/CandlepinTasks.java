@@ -474,12 +474,12 @@ schema generation failed
 		return values;
 	}
 
-	public static String getOrgDisplayName(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
+	public static String getOrgDisplayNameForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
 		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/owners/"+orgKey));	
 		return jsonOrg.getString("displayName");
 	}
 	
-	public static String getOrgId(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
+	public static String getOrgIdForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
 		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/owners/"+orgKey));	
 		return jsonOrg.getString("id");
 	}
@@ -511,7 +511,7 @@ schema generation failed
 	}
 	
 	
-	public static List<String> findPoolIdsFromSubscriptionId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromSubscriptionId) throws JSONException, Exception{
+	public static List<String> getPoolIdsForSubscriptionId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String forSubscriptionId) throws JSONException, Exception{
 		List<String> poolIds = new ArrayList<String>();
 		/* Example jsonPool:
 		  		{
@@ -571,19 +571,87 @@ schema generation failed
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String poolId = jsonPool.getString("id");
 			String subscriptionId = jsonPool.getString("subscriptionId");
-			if (fromSubscriptionId.equals(subscriptionId)) {
+			if (forSubscriptionId.equals(subscriptionId)) {
 				poolIds.add(poolId);
 			}
 		}
 		return poolIds;
 	}
 	
-	public static String findSubscriptionIdFromPoolId(String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception{
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));
+	public static String getSubscriptionIdForPoolId(String server, String port, String prefix, String authenticator, String password, String forPoolId) throws JSONException, Exception{
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+forPoolId));
 		return jsonPool.getString("subscriptionId");
 	}
 	
-	public static Boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
+
+		/* Example jsonPool:
+		  		{
+			    "id": "8a90f8b42e398f7a012e399000780147",
+			    "attributes": [
+			      {
+			        "name": "requires_consumer_type",
+			        "value": "system",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_limit",
+			        "value": "0",
+			        "updated": "2011-02-18T16:17:42.008+0000",
+			        "created": "2011-02-18T16:17:42.008+0000"
+			      },
+			      {
+			        "name": "virt_only",
+			        "value": "true",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "owner": {
+			      "href": "/owners/admin",
+			      "id": "8a90f8b42e398f7a012e398f8d310005"
+			    },
+			    "providedProducts": [
+			      {
+			        "id": "8a90f8b42e398f7a012e39900079014b",
+			        "productName": "Awesome OS Server Bits",
+			        "productId": "37060",
+			        "updated": "2011-02-18T16:17:42.009+0000",
+			        "created": "2011-02-18T16:17:42.009+0000"
+			      }
+			    ],
+			    "endDate": "2012-02-18T00:00:00.000+0000",
+			    "startDate": "2011-02-18T00:00:00.000+0000",
+			    "productName": "Awesome OS with up to 4 virtual guests",
+			    "quantity": 20,
+			    "contractNumber": "39",
+			    "accountNumber": "12331131231",
+			    "consumed": 0,
+			    "subscriptionId": "8a90f8b42e398f7a012e398ff0ef0104",
+			    "productId": "awesomeos-virt-4",
+			    "sourceEntitlement": null,
+			    "href": "/pools/8a90f8b42e398f7a012e399000780147",
+			    "activeSubscription": true,
+			    "restrictedToUsername": null,
+			    "updated": "2011-02-18T16:17:42.008+0000",
+			    "created": "2011-02-18T16:17:42.008+0000"
+			  }
+		*/
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String poolId = jsonPool.getString("id");
+			String productName = jsonPool.getString("productName");
+			String contractNumber = jsonPool.getString("contractNumber");
+			if (productName.equals(fromProductName) && contractNumber.equals(fromContractNumber)) {
+				return poolId;
+			}
+		}
+		return null;
+	}
+	
+	public static boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2bf39c0310 | python -mjson.tool
 		{
@@ -698,10 +766,11 @@ schema generation failed
 				break;
 			}
 		}
+		virt_only = virt_only==null? false : virt_only;	// the absense of a "virt_only" attribute implies virt_only=false
 		return virt_only;
 	}
 
-	public static Boolean isPoolsProductMultiEntitleable (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2c06f806ef | python -mjson.tool
 		{
@@ -791,13 +860,16 @@ schema generation failed
 			String productAttributeName = jsonProductAttribute.getString("name");
 			if (productAttributeName.equals("multi-entitlement")) {
 				//multi_entitlement = jsonProductAttribute.getBoolean("value");
-				multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equals("1");
+				multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equalsIgnoreCase("true") || jsonProductAttribute.getString("value").equals("1");
 				break;
 			}
 		}
+		multi_entitlement = multi_entitlement==null? false : multi_entitlement;	// the absense of a "multi-entitlement" productAttribute implies multi-entitlement=false
 		return multi_entitlement;
 	}
 	
+	
+
 	
 	/**
 	 * @param server

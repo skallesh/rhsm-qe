@@ -47,8 +47,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant even after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when some installed products are subscribable",
-			groups={"blockedbyBug-691480","cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports an incompliant status when some installed products are subscribable",
+			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -71,8 +71,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,Boolean.TRUE,null,null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installdProducts.isEmpty(),
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installedProducts.isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
@@ -82,8 +82,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when all installed products are subscribable",
-			groups={"cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable",
+			groups={"blockedbyBug-723336","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -102,8 +102,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,Boolean.TRUE,null,null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installdProducts.isEmpty(),
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertFalse(installedProducts.isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
@@ -113,8 +113,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports an incompliant status when no installed products are subscribable",
-			groups={"blockedbyBug-691480","cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports an incompliant status when no installed products are subscribable",
+			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -137,8 +137,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,Boolean.TRUE,null,null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertTrue(installdProducts.isEmpty(),
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		Assert.assertTrue(installedProducts.isEmpty(),
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Because no prodycts are currently installed, the system should inherently be compliant even without subscribing to any subscription pools.");
@@ -148,8 +148,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced  -d -s reports a compliant status when no products are installed",
-			groups={"cli.tests"},
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed",
+			groups={"blockedbyBug-723336","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled"},
 			enabled=true)
 	//@ImplementsTCMS(id="")

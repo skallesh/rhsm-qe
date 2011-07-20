@@ -717,7 +717,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayNameForOrgKey(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
@@ -737,7 +737,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayNameForOrgKey(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
@@ -762,7 +762,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
-		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayName(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayNameForOrgKey(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
 
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by ("+newEventTitles.length+") events:");

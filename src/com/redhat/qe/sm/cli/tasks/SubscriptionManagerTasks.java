@@ -31,6 +31,7 @@ import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.Repo;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -65,6 +66,7 @@ public class SubscriptionManagerTasks {
 	public String entitlementCertDir			= null; // "/etc/pki/entitlement";
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String caCertDir						= null; // "/etc/rhsm/ca";
+	public String baseurl						= null;
 	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
 	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
 
@@ -110,6 +112,7 @@ public class SubscriptionManagerTasks {
 			this.entitlementCertDir	= getConfFileParameter(rhsmConfFile, "entitlementCertDir").replaceFirst("/$", "");
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
 			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
+			this.baseurl			= getConfFileParameter(rhsmConfFile, "baseurl").replaceFirst("/$", "");
 			this.consumerCertFile	= consumerCertDir+"/cert.pem";
 			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
@@ -373,6 +376,10 @@ public class SubscriptionManagerTasks {
 	
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
+	}
+	
+	public List<Repo> getCurrentlySubscribedRepos() {
+		return Repo.parse(listSubscribedRepos().getStdout());
 	}
 	
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
@@ -1475,6 +1482,9 @@ public class SubscriptionManagerTasks {
 	
 	
 
+	
+
+	
 	// redeem module tasks ************************************************************
 
 	/**
@@ -1542,7 +1552,34 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	/**
+	 * @return SSHCommandResult from "subscription-manager repos --list"
+	 */
+	public SSHCommandResult listSubscribedRepos() {
 
+		SSHCommandResult sshCommandResult = repos_(Boolean.TRUE, null, null, null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
+		
+		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
+		List<EntitlementCert> entitlementCerts = getCurrentEntitlementCerts();
+		int numContentNamespaces = 0;
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				numContentNamespaces++;
+			}
+		}
+
+		if (numContentNamespaces==0) {
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories"), "The system is not entitled to use any repositories");
+		} else {
+			String title = "Entitled Repositories in "+redhatRepoFile;
+			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of repositories is entitled '"+title+"'.");
+		}
+
+		return sshCommandResult;
+	}
+	
+	
 	// subscribe module tasks ************************************************************
 
 	/**
@@ -1674,10 +1711,9 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
-		Boolean isPoolsProductMultiEntitleable = null;
+		boolean isPoolMultiEntitlement = false;
 		try {
-			isPoolsProductMultiEntitleable = CandlepinTasks.isPoolsProductMultiEntitleable(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
-			isPoolsProductMultiEntitleable = isPoolsProductMultiEntitleable==null? false : isPoolsProductMultiEntitleable;
+			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
@@ -1685,7 +1721,7 @@ public class SubscriptionManagerTasks {
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		if (!isPoolsProductMultiEntitleable || Integer.valueOf(pool.quantity)<=1) {
+		if (!isPoolMultiEntitlement || Integer.valueOf(pool.quantity)<=1) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"The available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else {
@@ -1937,7 +1973,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert
-		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after individually subscribing to them all.");
+		assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after individually subscribing to them all.");
 	}
 	
 	
@@ -1957,7 +1993,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert results when assumingRegisterType="system"
 		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {
-			assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
+			assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 			return;
 		}
 		
@@ -1997,7 +2033,7 @@ public class SubscriptionManagerTasks {
 //		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 //	}
 	
-	public void assertNoAvailableSubscriptionPoolsToList(String assertMsg) {
+	public void assertNoAvailableSubscriptionPoolsToList(boolean ignoreMuliEntitlementSubscriptionPools, String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
@@ -2027,9 +2063,31 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
+		
+		// determine which available pools are multi-entitlement pools
+		List<SubscriptionPool> poolsAvailableExcludingMuliEntitlement = new ArrayList<SubscriptionPool>();
+		List<SubscriptionPool> poolsAvailable = getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : poolsAvailable) {
+			try {
+				if (!CandlepinTasks.isPoolProductMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
+					poolsAvailableExcludingMuliEntitlement.add(pool);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			}
+		}
+		
 		// assert
-		Assert.assertEquals(listAvailableSubscriptionPools().getStdout().trim(),
+		if (ignoreMuliEntitlementSubscriptionPools) {
+			Assert.assertEquals(poolsAvailableExcludingMuliEntitlement.size(),0,
+					assertMsg+" (muti-entitlement pools were excluded.)");
+		} else {
+			Assert.assertEquals(poolsAvailable.size(),0,
+					assertMsg+" (muti-entitlement pools were excluded.)");
+			Assert.assertEquals(listAvailableSubscriptionPools().getStdout().trim(),
 				"No Available subscription pools to list",assertMsg);
+		}
 	}
 	
 	
@@ -2207,7 +2265,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the facts command indicates a success.");
 		String regex = "";
 		if (list!=null && list)		regex=".*:.*";						// list of the current facts
-		if (update!=null && update)	regex="Facts sucessfully updated.";	// regex=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
+		if (update!=null && update)	regex="Successfully updated the system facts\\.";	// regex=getCurrentConsumerCert().consumerid;	// consumerid	// RHEL57 RHEL61
 
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
