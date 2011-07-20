@@ -25,17 +25,22 @@
                                      (str  "test -d " dir " && echo exists")))))
    (= dir (tasks/conf-file-value "productCertDir"))))
 
+(defn- kill-app []
+  (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
+  (tasks/ui waittillwindownotexist :main-window 30)
+)
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
   ;; this bug crashes everything, so fail the BeforeClass if this is open
   (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
   
+  (kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
-  (tasks/sleep 10000)
-  (with-handlers [(ignore :not-registered)]
-    (tasks/unregister)))
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (tasks/start-app))
 
 (defn ^{AfterClass {:groups ["cleanup"]}}
   cleanup [_]

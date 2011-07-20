@@ -435,7 +435,33 @@
                                                username
                                                password
                                                orgkey)))
-  
+
+(defn get-pool-id
+  "Get the pool ID for a given subscription/contract pair."
+  [username password orgkey subscription contract]
+  (let [server (conf-file-value "hostname")
+        port (conf-file-value "port")
+        prefix (conf-file-value "prefix")]
+    (CandlepinTasks/getPoolIdFromProductNameAndContractNumber server
+                                                              port
+                                                              prefix
+                                                              username
+                                                              password
+                                                              orgkey
+                                                              subscription
+                                                              contract)))
+(defn multi-entitlement?
+  "Returns true if the subscription can be entitled to multiple times."
+  [username password pool]
+  (let [server (conf-file-value "hostname")
+        port (conf-file-value "port")
+        prefix (conf-file-value "prefix")]
+    (CandlepinTasks/isPoolProductMultiEntitlement server
+                                                  port
+                                                  prefix
+                                                  username
+                                                  password
+                                                  pool)))
 (defn get-all-facts []
   (ui click :view-system-facts)
   (ui waittillguiexist :facts-view)
