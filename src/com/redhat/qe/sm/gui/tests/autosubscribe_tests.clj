@@ -27,8 +27,8 @@
 
 (defn- kill-app []
   (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
-  (tasks/ui waittillwindownotexist :main-window 30)
-)
+  (tasks/ui waittillwindownotexist :main-window 30))
+
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
