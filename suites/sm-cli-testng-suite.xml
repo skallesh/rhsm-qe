@@ -106,6 +106,20 @@
 	</test>
 	
 	
+	<test name="CLI: Repos Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="ReposTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+
 	<test name="CLI: Subscribe Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -324,19 +338,6 @@
 			<run>
 				<include name="setup" />
 				<include name="CRLTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="CLI: Repos Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="ReposTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
