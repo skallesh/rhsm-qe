@@ -242,7 +242,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
-		boolean isPoolMultiEntitlement = CandlepinTasks.isSubscriptionPoolMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
+		boolean isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
 
 		if (!isPoolMultiEntitlement) {
 			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",

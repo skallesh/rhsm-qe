@@ -1713,7 +1713,7 @@ public class SubscriptionManagerTasks {
 		// is this pool multi-entitleable?
 		boolean isPoolMultiEntitlement = false;
 		try {
-			isPoolMultiEntitlement = CandlepinTasks.isSubscriptionPoolMultiEntitlement(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
+			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
@@ -2069,7 +2069,7 @@ public class SubscriptionManagerTasks {
 		List<SubscriptionPool> poolsAvailable = getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : poolsAvailable) {
 			try {
-				if (!CandlepinTasks.isSubscriptionPoolMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
+				if (!CandlepinTasks.isPoolProductMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
 					poolsAvailableExcludingMuliEntitlement.add(pool);
 				}
 			} catch (Exception e) {

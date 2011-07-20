@@ -184,7 +184,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		guestPoolId = null;
 		hostPoolId = null;
 		for (String poolId : poolIds) {
-			if (CandlepinTasks.isSubscriptionPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
+			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
 				guestPoolId = poolId;
 			} else {
 				hostPoolId = poolId;
@@ -468,7 +468,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 						String guestPoolId = null;
 						String hostPoolId = null;
 						for (String poolId : poolIds) {
-							if (CandlepinTasks.isSubscriptionPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
+							if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
 								guestPoolId = poolId;
 							} else {
 								hostPoolId = poolId;
