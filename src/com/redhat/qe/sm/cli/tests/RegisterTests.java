@@ -226,32 +226,40 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, Boolean.TRUE, null, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
-		/* pre-fix for blockedByBug-678049 
-		 * Sample sshCommandResult.getStdout():
-		 * d67df9c8-f381-4449-9d17-56094ea58092 testuser1
-		 * Subscribed to Products:
-		 *      RHEL for Physical Servers SVC(37060)
-		 *      Red Hat Enterprise Linux High Availability (for RHEL Entitlement)(4)
-		 */
-		 /*
-		  * Sample sshCommandResult.getStdout():
-		  * cadf825a-6695-41e3-b9eb-13d7344159d3 jsefler-onprem03.usersys.redhat.com
-		  * Installed Products:
-		  *    Clustering Bits - Subscribed
-		  *    Awesome OS Server Bits - Not Installed
-		  *    Shared Storage Bits - Not Installed
-		  *    Management Bits - Not Installed
-		  *    Large File Support Bits - Not Installed
-		  *    Load Balancing Bits - Not Installed
-		  */
+		/* # subscription-manager register --username=testuser1 --password=password
+		d67df9c8-f381-4449-9d17-56094ea58092 testuser1
+		Subscribed to Products:
+		     RHEL for Physical Servers SVC(37060)
+		     Red Hat Enterprise Linux High Availability (for RHEL Entitlement)(4)
+		*/
+		
+		/* # subscription-manager register --username=testuser1 --password=password
+		cadf825a-6695-41e3-b9eb-13d7344159d3 jsefler-onprem03.usersys.redhat.com
+		Installed Products:
+		    Clustering Bits - Subscribed
+		    Awesome OS Server Bits - Not Installed
+		*/
+		
+		/* # subscription-manager register --username=testuser1 --password=password --org=admin --autosubscribe
+		The system has been registered with id: f95fd9bb-4cc8-428e-b3fd-d656b14bfb89 
+		Installed Product Current Status:
+
+		ProductName:         	Awesome OS for S390X Bits
+		Status:               	Subscribed  
+		*/
 
 		// assert that our fake product install appears to have been autosubscribed
 		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout()));
 		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
-		// FIXME The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
+		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
+		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product was autosubscribed."); 
+		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(fakeProductCert.productName,"Subscribed",null,null,null,null),
+				"As expected, ProductName '"+fakeProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
+
+		// WARNING The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.  This is why we search for an available pool that provides one product early in this test.
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
