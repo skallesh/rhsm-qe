@@ -29,6 +29,9 @@
   (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
   (tasks/ui waittillwindownotexist :main-window 30))
 
+(defn- restart-gui []
+  (kill-app)
+  (tasks/start-app))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -44,7 +47,9 @@
 
 (defn ^{AfterClass {:groups ["cleanup"]}}
   cleanup [_]
-  (.configureProductCertDirAfterClass @complytests))
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (.configureProductCertDirAfterClass @complytests)
+  (restart-gui))
 
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
@@ -66,6 +71,7 @@
                        "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
+  (restart-gui)
   (verify (dirsetup? somedir))
   )
 
@@ -74,6 +80,7 @@
                        "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
+  (restart-gui)
   (verify (dirsetup? alldir))
   )
 
@@ -81,6 +88,7 @@
                        "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
+  (restart-gui)
   (verify (dirsetup? nodir))
   )
 
@@ -88,6 +96,7 @@
                        "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
+  (restart-gui)
   (verify (dirsetup? nonedir))
   )
 
