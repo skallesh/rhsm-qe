@@ -1,11 +1,8 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -27,8 +23,6 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.ConsumerCert;
-import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -363,7 +357,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 	    
 	    // subscribe to all the available pools
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 	    
 	    // get all of the current entitlement certs and remember them
 	    List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
@@ -779,7 +773,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithQuantityDataAsListOfLists());
 	}
 	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, "SubscriptionQuantityConsumer", null, null, true, null, null, null);

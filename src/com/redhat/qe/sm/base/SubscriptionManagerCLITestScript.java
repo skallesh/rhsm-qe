@@ -28,7 +28,6 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
@@ -811,7 +810,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// then assemble a list of all consumed ProductSubscriptions
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
@@ -836,7 +835,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null);
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(null);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 
 		
 		// then assemble a list of all consumed ProductSubscriptions

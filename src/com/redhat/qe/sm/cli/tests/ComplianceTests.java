@@ -10,7 +10,6 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
-import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -41,7 +40,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.listInstalledProducts();
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which only SOME are covered by available subscription pools, the system should NOT become compliant even after having subscribed to every available subscription pool.");
@@ -76,7 +75,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.listInstalledProducts();
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant after having subscribed to every available subscription pool.");
@@ -107,7 +106,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be incompliant.");
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.listInstalledProducts();
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant after having subscribed to every available subscription pool.");
@@ -142,7 +141,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Because no prodycts are currently installed, the system should inherently be compliant even without subscribing to any subscription pools.");
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.listInstalledProducts();
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant.");

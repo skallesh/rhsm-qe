@@ -1,7 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -12,9 +12,9 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
-import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -150,7 +150,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		List <String> modules = new ArrayList<String>();
 //		modules.add("redeem");
 //		modules.add("orgs");
-//		modules.add("repos");
+		modules.add("repos");
 		modules.add("clean");
 		modules.add("facts");
 		modules.add("identity");
@@ -260,6 +260,20 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, listOptions}));
+		}
+		
+		// MODULE: repos
+		module = "repos";
+		List <String> reposOptions = new ArrayList<String>();
+		reposOptions.add("-h, --help");
+		reposOptions.add("--list");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, reposOptions}));
 		}
 		
 		// MODULE: refresh

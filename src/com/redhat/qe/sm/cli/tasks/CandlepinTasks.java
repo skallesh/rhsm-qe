@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -45,7 +44,6 @@ import com.redhat.qe.api.helper.TestHelper;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;

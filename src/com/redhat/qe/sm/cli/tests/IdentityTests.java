@@ -1,9 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
-import java.io.IOException;
 import java.util.List;
 
-import org.json.JSONException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;

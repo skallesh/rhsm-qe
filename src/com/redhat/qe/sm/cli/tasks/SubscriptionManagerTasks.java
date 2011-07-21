@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -80,6 +79,7 @@ public class SubscriptionManagerTasks {
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
 	protected String currentlyRegisteredOrg			= null;	// most recent owner used during register
+	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
 	public String redhatRelease	= null;
 	
@@ -236,6 +236,12 @@ public class SubscriptionManagerTasks {
 		}
 	}
 	
+	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
+		log.info("Updating yumrepo file '"+yumRepoFile+"' repoid '"+repoid+"' parameter '"+parameter+"' value to: "+value);
+		String command = "sed -i \"/\\["+repoid+"\\]/,/\\[/ s/^"+parameter+"\\s*=.*/"+parameter+"="+value+"/\" "+yumRepoFile;
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,Integer.valueOf(0));
+	}
+	
 	public void updateConfFileParameter(String confFile, String parameter, String value){
 		log.info("Updating config file '"+confFile+"' parameter '"+parameter+"' value to: "+value);
 		Assert.assertEquals(
@@ -246,6 +252,7 @@ public class SubscriptionManagerTasks {
 		if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
 		if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
 		if (parameter.equals("productCertDir"))		this.productCertDir = value;
+		if (parameter.equals("baseurl"))			this.baseurl = value;
 		if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
 	}
 	
@@ -365,23 +372,48 @@ public class SubscriptionManagerTasks {
 		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
 
-	
+	/**
+	 * @return list of objects representing the subscription-manager list --available
+	 */
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAvailableSubscriptionPools().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the subscription-manager list --all --available
+	 */
 	public List<SubscriptionPool> getCurrentlyAllAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAllAvailableSubscriptionPools().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the subscription-manager list --consumed
+	 */
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the subscription-manager repos --list
+	 */
 	public List<Repo> getCurrentlySubscribedRepos() {
 		return Repo.parse(listSubscribedRepos().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the Red Hat Repositories from /etc/yum.repos.d/redhat.repo
+	 */
+	public List<YumRepo> getCurrentlySubscribedYumRepos() {
+		// trigger a yum transaction so that subscription-manager plugin will refresh redhat.repo
+		//sshCommandRunner.runCommandAndWait("killall -9 yum"); // is this needed?
+		sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		
+		return YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
+	}
+	
+	/**
+	 * @return list of objects representing the subscription-manager list --installed
+	 */
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
 		return InstalledProduct.parse(listInstalledProducts().getStdout());
 	}
@@ -1004,6 +1036,7 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
+		this.currentlyRegisteredType = null;
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1026,6 +1059,7 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredUsername = username;
 		this.currentlyRegisteredPassword = password;
 		this.currentlyRegisteredOrg = org;
+		this.currentlyRegisteredType = type;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1157,6 +1191,7 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
+		this.currentlyRegisteredType = null;
 		
 		// assert that the entitlement cert directory is gone
 		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
@@ -1364,6 +1399,7 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
+		this.currentlyRegisteredType = null;
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
@@ -1547,6 +1583,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = repos_(list, proxy, proxyuser, proxypassword);
 		
 		// TODO assert results...
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
 		
 		return sshCommandResult;
 	}
@@ -1980,10 +2017,9 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * Collectively subscribe to all of the currently available subscription pools in one command call
-	 * @param assumingRegisterType - "system" or "candlepin"
 	 */
-	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType assumingRegisterType) {
-
+	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
+		
 		// assemble a list of all the available SubscriptionPool ids
 		List <String> poolIds = new ArrayList<String>();
 		List <SubscriptionPool> poolsBeforeSubscribe = getCurrentlyAvailableSubscriptionPools();
@@ -1993,13 +2029,13 @@ public class SubscriptionManagerTasks {
 		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
-		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {
+		if (currentlyRegisteredType==null || currentlyRegisteredType.equals(ConsumerType.system)) {
 			assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 			return;
 		}
 		
 		// assert results when assumingRegisterType="candlepin"
-		else if (assumingRegisterType.equals(ConsumerType.candlepin)) {
+		else if (currentlyRegisteredType.equals(ConsumerType.candlepin)) {
 			List <SubscriptionPool> poolsAfterSubscribe = getCurrentlyAvailableSubscriptionPools();
 			for (SubscriptionPool beforePool : poolsBeforeSubscribe) {
 				boolean foundPool = false;
@@ -2013,13 +2049,13 @@ public class SubscriptionManagerTasks {
 					}
 				}
 				if (!foundPool) {
-					Assert.fail("Could not find subscription pool "+beforePool+" listed after subscribing to it as a registered "+assumingRegisterType+" consumer.");
+					Assert.fail("Could not find subscription pool "+beforePool+" listed after subscribing to it as a registered "+currentlyRegisteredType+" consumer.");
 				}
 			}
 			return;
 		}
 		
-		Assert.fail("Do not know how to assert subscribeToAllOfTheCurrentlyAvailableSubscriptionPools assumingRegisterType="+assumingRegisterType);
+		Assert.fail("Do not know how to assert subscribeToAllOfTheCurrentlyAvailableSubscriptionPools when registered as type="+currentlyRegisteredType);
 	}
 //	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
 //
@@ -2476,7 +2512,7 @@ repolist: 3,394
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
-				List<YumRepo> yumRepoList =  YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
+				List<YumRepo> yumRepoList =   getCurrentlySubscribedYumRepos();
 				for (YumRepo yumRepo : yumRepoList) {
 					if		(options.equals("all"))													repos.add(yumRepo.id);
 					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
