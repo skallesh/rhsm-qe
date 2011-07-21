@@ -97,19 +97,21 @@
                                       contract)
               usedmax (tasks/ui getcellvalue :contract-selection-table row 1)
               default (tasks/ui getcellvalue :contract-selection-table row 4)
+              used (first (split #" / " usedmax))
               max (last (split #" / " usedmax))
+              available (str (- (Integer. max) (Integer. used)))
               cmd (fn [num]
                     (str  "<right> <right> <right> <right> <space> " num " <enter>"))]
           (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
             (do
               ;verify that the quantity can be changed
               (tasks/ui selectrowindex :contract-selection-table row)
-              (tasks/ui generatekeyevent (cmd max))
-              (verify (= max
+              (tasks/ui generatekeyevent (cmd available))
+              (verify (= available
                          (tasks/ui getcellvalue :contract-selection-table row 4)))
               ;verify that the quantity cannot exceed the max
-              (tasks/ui generatekeyevent (cmd (str (+ 1 (Integer. max)))))
-              (verify (>= (Integer. max)
+              (tasks/ui generatekeyevent (cmd (str (+ 1 (Integer. available)))))
+              (verify (>= (Integer. available)
                           (Integer. (tasks/ui getcellvalue :contract-selection-table row 4))))
               ;need to verify max and min values when bug has been resolved
               )
@@ -121,18 +123,33 @@
                         (tasks/ui getcellvalue :contract-selection-table row 4)))))
           (recur (dec row)))))
     (tasks/ui click :cancel-contract-selection)))
-
-(comment 
-  (defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
-                :dataProvider "multi-entitle"}}
-    check_quantity_subscribe
-    "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
-    [_ subscription contract]
-    (with-handlers [(ignore :subscription-not-available)
-                    (handle :wrong-consumer-type [e]
-                            (recover e :log-warning))]
-      (tasks/open-contract-selection subscription)
-      )))
+ 
+(defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
+              :dataProvider "multi-entitle"}}
+  check_quantity_subscribe
+  "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
+  [_ subscription contract]
+  (with-handlers [(ignore :subscription-not-available)
+                  (handle :wrong-consumer-type [e]
+                          (recover e :log-warning))]
+    (tasks/open-contract-selection subscription)
+    (tasks/ui selectrow :contract-selection-table contract)
+    (let [line (tasks/ui gettablerowindex :contract-selection-table contract)
+          usedmax (tasks/ui getcellvalue :contract-selection-table line 1)
+          used (first (split #" / " usedmax))
+          max (last (split #" / " usedmax))
+          available (str (- (Integer. max) (Integer. used)))
+          cmd (fn [num]
+                (str  "<right> <right> <right> <right> <space> " num " <enter>"))]
+      (tasks/ui generatekeyevent (cmd available))
+      (tasks/ui click :subscribe-contract-selection)
+      (tasks/checkforerror)
+      (tasks/wait-for-progress-bar)
+      (tasks/ui selecttab :my-subscriptions)
+      (let [row (tasks/ui gettablerowindex :my-subscriptions-view subscription)
+            count (tasks/ui getcellvalue :my-subscriptions-view row 3)]
+        (verify (= count available))))
+    (tasks/unsubscribe subscription)))
 
 
 (defn ^{DataProvider {:name "multi-entitle"}}
@@ -156,7 +173,8 @@
                                           contract)]
               (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
                 (swap! subs conj [s contract]))
-              (recur (dec row)))))))
+              (recur (dec row)))))
+        (tasks/ui click :cancel-contract-selection)))
     (to-array-2d @subs)))
 
 (defn ^{DataProvider {:name "subscriptions"}}
