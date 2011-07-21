@@ -73,8 +73,23 @@
   some_products_subscribable [_]
   (restart-gui)
   (verify (dirsetup? somedir))
-  )
-
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
+    (verify (= beforesubs
+               (trim (.getStdout
+                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+    (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (verify (<= (tasks/warn-count) beforesubs))
+          (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribable"]
@@ -82,7 +97,23 @@
   all_products_subscribable [_]
   (restart-gui)
   (verify (dirsetup? alldir))
-  )
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
+    (verify (= beforesubs
+               (trim (.getStdout
+                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+    (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (verify (= (tasks/warn-count) 0))
+          (verify (tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsSubscribable"]
@@ -90,7 +121,23 @@
   no_products_subscribable [_]
   (restart-gui)
   (verify (dirsetup? nodir))
-  )
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
+    (verify (= beforesubs
+               (trim (.getStdout
+                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+    (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (verify (= (tasks/warn-count) beforesubs))
+          (verify (not tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsInstalled"]
@@ -98,8 +145,8 @@
   no_products_installed [_]
   (restart-gui)
   (verify (dirsetup? nonedir))
-  )
-
+  (verify (= 0 (tasks/warn-count)))
+  (verify (tasks/compliance?)))
 
 
 (gen-class-testng)

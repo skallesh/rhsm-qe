@@ -111,8 +111,7 @@
               (tasks/ui generatekeyevent (cmd (str (+ 1 (Integer. max)))))
               (verify (>= (Integer. max)
                           (Integer. (tasks/ui getcellvalue :contract-selection-table row 4))))
-              ;need to add a case for seeing quantitiy subscribed = quantity selected
-              ;  possibly a completely separate test?
+              ;need to verify max and min values when bug has been resolved
               )
             (do
               ;verify that the quantity cannot be changed
@@ -123,7 +122,42 @@
           (recur (dec row)))))
     (tasks/ui click :cancel-contract-selection)))
 
+(comment 
+  (defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
+                :dataProvider "multi-entitle"}}
+    check_quantity_subscribe
+    "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
+    [_ subscription contract]
+    (with-handlers [(ignore :subscription-not-available)
+                    (handle :wrong-consumer-type [e]
+                            (recover e :log-warning))]
+      (tasks/open-contract-selection subscription)
+      )))
 
+
+(defn ^{DataProvider {:name "multi-entitle"}}
+  get_multi_entitle_subscriptions [_]
+  (register nil)
+  (tasks/search {})
+  (let [subs (atom [])
+        subscriptions (tasks/get-table-elements :all-subscriptions-view 0)]
+    (doseq [s subscriptions]
+      (with-handlers [(ignore :subscription-not-available)
+                      (handle :wrong-consumer-type [e]
+                              (recover e :log-warning))]
+        (tasks/open-contract-selection s)
+        (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
+          (if (>= row 0)
+            (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+                  pool (tasks/get-pool-id (@config :username)
+                                          (@config :password)
+                                          (@config :owner-key)
+                                          s
+                                          contract)]
+              (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
+                (swap! subs conj [s contract]))
+              (recur (dec row)))))))
+    (to-array-2d @subs)))
 
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_]
