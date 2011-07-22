@@ -91,7 +91,6 @@
 		</groups>
 	</test>
 	
-	
 	<test name="CLI: List Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -104,7 +103,6 @@
 			</run>
 		</groups>
 	</test>
-	
 	
 	<test name="CLI: Repos Tests">
 		<packages>
@@ -119,6 +117,18 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Orgs Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="OrgsTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
 
 	<test name="CLI: Subscribe Tests">
 		<packages>
@@ -133,7 +143,6 @@
 		</groups>
 	</test>
 	
-	
 	<test name="CLI: Unsubscribe Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -146,7 +155,6 @@
 			</run>
 		</groups>
 	</test>
-	
 	
 	<test name="CLI: Unregister Tests">
 		<packages>
@@ -338,6 +346,19 @@
 			<run>
 				<include name="setup" />
 				<include name="CRLTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Roles Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="RolesTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>

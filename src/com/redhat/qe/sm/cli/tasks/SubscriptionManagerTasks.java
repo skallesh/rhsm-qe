@@ -1010,7 +1010,23 @@ public class SubscriptionManagerTasks {
 
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// reset this.currentlyRegistered values
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {			// success
+			this.currentlyRegisteredUsername = username;
+			this.currentlyRegisteredPassword = password;
+			this.currentlyRegisteredOrg = org;
+			this.currentlyRegisteredType = type;
+		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already registered	
+		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {	// failure
+			this.currentlyRegisteredUsername = null;
+			this.currentlyRegisteredPassword = null;
+			this.currentlyRegisteredOrg = null;
+			this.currentlyRegisteredType = null;	
+		}
+		
+		return sshCommandResult;
 	}
 	
 	/**
@@ -1033,10 +1049,6 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult register(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = register_(username, password, org, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
-		this.currentlyRegisteredUsername = null;
-		this.currentlyRegisteredPassword = null;
-		this.currentlyRegisteredOrg = null;
-		this.currentlyRegisteredType = null;
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1056,10 +1068,6 @@ public class SubscriptionManagerTasks {
 		// assert certificate files are installed into /etc/pki/consumer
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
-		this.currentlyRegisteredUsername = username;
-		this.currentlyRegisteredPassword = password;
-		this.currentlyRegisteredOrg = org;
-		this.currentlyRegisteredType = type;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1342,14 +1350,18 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult sshCommandResult = orgs_(username, password, proxy, proxyuser, proxypassword);
 		
-		// assert results for a successful identify
-		/* Example sshCommandResult.getStdout():
-		 * orgs:
-		 * snowwhite
-		 * admin
-		 */
+		// assert results...
+		
+		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
-		String regex = "^orgs:";
+
+		// assert the expected banner
+		/*
+		+-------------------------------------------+
+			        testuser1 Organizations
+		+-------------------------------------------+
+		*/
+		String regex = username+" Organizations";
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
 		return sshCommandResult; // from the orgs command
@@ -1679,7 +1691,8 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, quantity, email, locale, proxy, proxyuser, proxypassword);
-		auto = auto==null? false:auto;	// set auto
+		auto = auto==null? false:auto;	// set auto to non-null default value
+
 		// assert results...
 		
 		// if already subscribed, just return the result

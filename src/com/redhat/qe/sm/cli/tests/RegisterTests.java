@@ -578,7 +578,7 @@ Expected Results:
 		// ensure we are unregistered
 		clienttasks.unregister(null,null,null);
 
-		// register while providing a valid username at the interactive prompt
+		// call register while providing a valid username at the interactive prompt
 		// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the register command
 		String echoUsername= promptedUsername==null?"":promptedUsername;
 		String echoPassword = promptedPassword==null?"":promptedPassword;
@@ -778,14 +778,15 @@ Expected Results:
 		if (clienttasks==null) return ll;
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
+		String x = String.valueOf(getRandInt());
 		// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,				null,							null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+getRandInt(),	null,							null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,							sm_clientPassword,				sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,							sm_clientPassword+getRandInt(),	sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,				sm_clientPassword,				null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+getRandInt(),	sm_clientPassword+getRandInt(),	null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,		"\n\n"+sm_clientPassword,		null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
 
 		return ll;
 	}
