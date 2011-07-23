@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -18,6 +19,7 @@ import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.Repo;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -36,10 +38,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListReportsGrantedContentNamespacesAfterSubscribing_Test(SubscriptionPool pool){
+	public void ReposListReportsGrantedContentNamespacesAfterSubscribing_Test(SubscriptionPool pool) throws JSONException, Exception{
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
 		
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);	// for this test, we can skip the exhaustive asserts done by this call to clienttasks.subscribeToSubscriptionPool(pool)
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);	Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath()),1, "Found the EntitlementCert file ("+entitlementCertFile+") that was granted after subscribing to pool id '"+pool.poolId+"'.");
+
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		List<Repo> actualRepos = clienttasks.getCurrentlySubscribedRepos();
@@ -72,7 +76,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(actualRepos.size(), priorRepos.size()+numNewRepos, "The number of entitled repos has increased by the number of NEW contentNamespaces ("+numNewRepos+") from the newly granted entitlementCert.");
 		
 		// randomly decide to unsubscribe from the pool only for the purpose of saving on accumulated logging and avoid a java heap memory error
-		if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null);
+		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null);
 	}
 	
 	

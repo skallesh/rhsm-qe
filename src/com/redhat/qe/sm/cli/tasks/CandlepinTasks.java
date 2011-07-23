@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -646,6 +648,68 @@ schema generation failed
 				return poolId;
 			}
 		}
+		log.warning("CandlepinTasks could not getPoolIdFromProductNameAndContractNumber.");
+		return null;
+	}
+	
+	
+	public static BigInteger getEntitlementSerialForSubscribedPoolId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String poolId) throws JSONException, Exception{
+
+		// get the org's entitlements for the authenticator
+		// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/entitlements | python -mjson.tool
+		JSONArray jsonEntitlements = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/entitlements"));	
+		for (int i = 0; i < jsonEntitlements.length(); i++) {
+			JSONObject jsonEntitlement = (JSONObject) jsonEntitlements.get(i);
+			/*  
+		    {
+		        "accountNumber": "12331131231", 
+		        "certificates": [
+		            {
+		                "cert": "-----BEGIN CERTIFICATE-----\nMIIKCzCCCELKgW/7sB5p/QnMGtc7H3JA==\n-----END CERTIFICATE-----\n", 
+		                "created": "2011-07-23T00:19:17.657+0000", 
+		                "id": "8a90f8c631544ebf0131545c421a08f4", 
+		                "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAghrtrapSj7ouE4CS++9pLx\n-----END RSA PRIVATE KEY-----\n", 
+		                "serial": {
+		                    "collected": false, 
+		                    "created": "2011-07-23T00:19:17.640+0000", 
+		                    "expiration": "2012-07-21T00:00:00.000+0000", 
+		                    "id": 9013269172175430736, 
+		                    "revoked": false, 
+		                    "serial": 9013269172175430736, 
+		                    "updated": "2011-07-23T00:19:17.640+0000"
+		                }, 
+		                "updated": "2011-07-23T00:19:17.657+0000"
+		            }
+		        ], 
+		        "contractNumber": "21", 
+		        "created": "2011-07-23T00:19:17.631+0000", 
+		        "endDate": "2012-07-21T00:00:00.000+0000", 
+		        "flexExpiryDays": 0, 
+		        "href": "/entitlements/8a90f8c631544ebf0131545c420008f3", 
+		        "id": "8a90f8c631544ebf0131545c420008f3", 
+		        "pool": {
+		            "href": "/pools/8a90f8c631544ebf0131545024da040f", 
+		            "id": "8a90f8c631544ebf0131545024da040f"
+		        }, 
+		        "quantity": 1, 
+		        "startDate": "2011-07-23T00:19:17.631+0000", 
+		        "updated": "2011-07-23T00:19:17.631+0000"
+		    }
+		    */
+			JSONObject jsonPool = jsonEntitlement.getJSONObject("pool");
+			if (poolId.equals(jsonPool.getString("id"))) {
+				JSONArray jsonCertificates = jsonEntitlement.getJSONArray("certificates");
+				for (int j = 0; j < jsonCertificates.length(); j++) {
+					JSONObject jsonCertificate = (JSONObject) jsonCertificates.get(j);
+					JSONObject jsonSerial = jsonCertificate.getJSONObject("serial");
+					if (!jsonSerial.getBoolean("revoked")) {
+						Long serial = jsonSerial.getLong("serial");
+						return BigInteger.valueOf(serial); // or BigInteger.valueOf(jsonSerial.getLong("id")); not sure which key is correct: serial or id
+					}
+				}
+			}
+		}
+		log.warning("CandlepinTasks could not getEntitlementSerialForSubscribedPoolId.");
 		return null;
 	}
 	

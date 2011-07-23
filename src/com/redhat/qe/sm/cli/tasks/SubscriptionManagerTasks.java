@@ -1963,6 +1963,32 @@ public class SubscriptionManagerTasks {
 		return newCertFile;
 	}
 	
+	/**
+	 * subscribe to the given SubscriptionPool without asserting results
+	 * @param pool
+	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions (null if there was a problem)
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	public File subscribeToSubscriptionPool_(SubscriptionPool pool) throws JSONException, Exception  {
+		
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		
+		log.info("Subscribing to subscription pool: "+pool);
+		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
+
+		// get the serial of the entitlement that was granted from this pool
+		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,this.currentlyRegisteredOrg,pool.poolId);
+		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
+		if (serialNumber==null) return null;
+		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
+		//Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serialPemFile.getPath()),1, "Found the EntitlementCert file ("+serialPemFile+") that was granted after subscribing to pool id '"+pool.poolId+"'.");
+
+		return serialPemFile;
+	}
+	
 	//@Deprecated
 	public File subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
 		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
