@@ -39,7 +39,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41696,fromPlan=2479)
-	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) {
+	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) throws JSONException, Exception {
 
 		// get the currently installed product certs to be used when checking for conditional content tagging
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -52,7 +52,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
 		
 		log.info("Subscribe to the pool and start testing that yum repolist reports the expected repo id/labels...");
-		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingProductId(pool));
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
 		// 1. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 1. Repolist contains repositories corresponding to your entitled products
@@ -106,8 +108,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "0");
 		
 		log.info("Again let's subscribe to the same pool and verify that yum repolist does NOT report any of the entitled repo id/labels since the plugin has been disabled...");
-		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingProductId(pool));
-		
+		entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+		entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+	
 		// 2. Run a 'yum repolist' and get a list of all of the available repositories corresponding to your entitled products
 		// 2. Repolist does not contain repositories corresponding to your entitled products
 		repolist = clienttasks.getYumRepolist("all");
@@ -207,12 +211,13 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
-	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool) {
+	public void InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (pkg==null) throw new SkipException("Could NOT find a unique available package from repo '"+repoLabel+"' after subscribing to SubscriptionPool: "+pool);
 		
 		// subscribe to this pool
-		clienttasks.subscribeToSubscriptionPool(pool);
-		
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
+
 		// install the package and assert that it is successfully installed
 		clienttasks.yumInstallPackageFromRepo(pkg, repoLabel, null); //pkgInstalled = true;
 		
@@ -226,7 +231,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionSubPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) {
+	public void InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test(String pkg, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		InstallAndRemovePackageFromEnabledRepoAfterSubscribingToPool_Test(pkg, repoLabel, pool);
 	}
 	
@@ -236,7 +241,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getYumGroupFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool) {
+	public void InstallAndRemoveYumGroupFromEnabledRepoAfterSubscribingToPool_Test(String availableGroup, String installedGroup, String repoLabel, SubscriptionPool pool) throws JSONException, Exception {
 		if (availableGroup==null && installedGroup==null) throw new SkipException("No yum groups corresponding to enabled repo '"+repoLabel+" were found after subscribing to pool: "+pool);
 				
 		// unsubscribe from this pool
@@ -248,7 +253,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// subscribe to this pool (and remember it)
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+		Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 		lastSubscribedEntitlementCertFile = entitlementCertFile;
 		lastSubscribedSubscriptionPool = pool;
 		
@@ -308,10 +314,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	@DataProvider(name="getPackageFromEnabledRepoAndSubscriptionPoolData")
-	public Object[][] getPackageFromEnabledRepoAndSubscriptionPoolDataAs2dArray() {
+	public Object[][] getPackageFromEnabledRepoAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() {
+	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
@@ -319,7 +325,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
-			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.enabled.equals("1")) {
@@ -347,10 +354,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@DataProvider(name="getYumGroupFromEnabledRepoAndSubscriptionPoolData")
-	public Object[][] getYumGroupFromEnabledRepoAndSubscriptionPoolDataAs2dArray() {
+	public Object[][] getYumGroupFromEnabledRepoAndSubscriptionPoolDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() {
+	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
@@ -358,7 +365,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, ConsumerType.system, null, null, null, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
-			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.enabled.equals("1")) {
@@ -384,10 +392,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@DataProvider(name="getPackageFromEnabledRepoAndSubscriptionSubPoolData")
-	public Object[][] getPackageFromEnabledRepoAndSubscriptionSubPoolDataAs2dArray() throws JSONException {
+	public Object[][] getPackageFromEnabledRepoAndSubscriptionSubPoolDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists());
 	}
-	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists() throws JSONException {
+	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionSubPoolDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (client1tasks==null) return ll;
 		if (client2tasks==null) return ll;
@@ -410,14 +418,17 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 			SubscriptionPool personPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
 			Assert.assertNotNull(personPool,"Personal productId '"+personProductId+"' is available to user '"+sm_rhpersonalUsername+"' registered as a person.");
-			client2tasks.subscribeToSubscriptionPool(personPool);
+			File entitlementCertFile = client2tasks.subscribeToSubscriptionPool_(personPool);
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to personal pool: "+personPool);
+
 			
 			// now the subpool is available to the system
 			SubscriptionPool systemPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client1tasks.getCurrentlyAvailableSubscriptionPools());
 			Assert.assertNotNull(systemPool,"Personal subPool productId'"+systemProductId+"' is available to user '"+sm_rhpersonalUsername+"' registered as a system.");
 			//client1tasks.subscribeToSubscriptionPool(systemPool);
 			
-			File entitlementCertFile = client1tasks.subscribeToSubscriptionPool(systemPool);
+			entitlementCertFile = client1tasks.subscribeToSubscriptionPool_(systemPool);
+			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to system pool: "+systemPool);
 			EntitlementCert entitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.enabled.equals("1")) {
