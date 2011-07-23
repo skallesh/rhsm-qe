@@ -100,13 +100,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
-	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
+	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
-		EntitlementCert  entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool));
+		EntitlementCert  entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool_(pool));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(!consumedProductSubscriptions.isEmpty(),"The list of Consumed Product Subscription is NOT empty after subscribing to a pool with ProductId '"+productId+"'.");
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
@@ -156,7 +156,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnsureListAndListInstalledAreTheSame_Test() {
+	public void EnsureListAndListInstalledAreTheSame_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 
@@ -174,7 +174,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.info("assert list [--installed] produce same results when subscribed to something...");
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPool(pool);
+		clienttasks.subscribeToSubscriptionPool_(pool);
 		listResult = clienttasks.list_(null, null, null, null, null, null, null);
 		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null);
 		
