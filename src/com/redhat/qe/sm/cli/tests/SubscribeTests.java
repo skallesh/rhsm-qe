@@ -252,7 +252,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
 			groups={"blockedByBug-622851"},
 			enabled=true)
-	public void SubscribeToMultipleDuplicateAndBadPools_Test() {
+	public void SubscribeToMultipleDuplicateAndBadPools_Test() throws JSONException, Exception {
 		
 		// begin the test with a cleanly registered system
 		clienttasks.unregister(null, null, null);
@@ -270,16 +270,36 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to all pool ids
 		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
-		SSHCommandResult result = clienttasks.subscribe(poolIds, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(poolIds, null, null, null, null, null, null, null, null);
 		
-		// assert the results
+		/*
+		No such entitlement pool: bad123
+		Successfully subscribed the system to Pool 8a90f8c63159ce55013159cfd6c40303
+		This consumer is already subscribed to the product matching pool with id '8a90f8c63159ce55013159cfd6c40303'.
+		Successfully subscribed the system to Pool 8a90f8c63159ce55013159cfea7a06ac
+		Successfully subscribed the system to Pool 8a90f8c63159ce55013159cfea7a06ac
+		No such entitlement pool: bad_POOLID
+		*/
+		
+		// assert the results...
 		for (String poolId : poolIds) {
-			if (poolId.equals(badPoolId1)) continue; if (poolId.equals(badPoolId2)) continue;
-			Assert.assertContainsMatch(result.getStdout(),"^This consumer is already subscribed to the product matching pool with id '"+poolId+"'\\.$","Asserting that already subscribed to pools is noted and skipped during a multiple pool binding.");
+			String subscribeResultMessage;
+			if (poolId.equals(badPoolId1) || poolId.equals(badPoolId2)) {
+				subscribeResultMessage = "No such entitlement pool: "+badPoolId1;
+				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The subscribe result for an invalid pool '"+poolId+"' contains: "+subscribeResultMessage);
+			}
+			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,poolId)) {
+				subscribeResultMessage = "Successfully subscribed the system to Pool "+poolId;
+				subscribeResultMessage += "\n"+subscribeResultMessage;
+				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for a multi-entitlement pool '"+poolId+"' contains: "+subscribeResultMessage);
+			} else if (false) {
+				// TODO case when there are no entiitlements remaining for the duplicate subscribe
+			} else {
+				subscribeResultMessage = "Successfully subscribed the system to Pool "+poolId;
+				subscribeResultMessage += "\n"+"This consumer is already subscribed to the product matching pool with id '"+poolId+"'.";
+				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for pool '"+poolId+"' contains: "+subscribeResultMessage);			
+			}
 		}
-		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId1+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
-		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId2+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
-		clienttasks.assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all including duplicates and bad pool ids.");
 	}
 	
 	
