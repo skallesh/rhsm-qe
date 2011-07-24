@@ -1291,7 +1291,8 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult identity(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, force, proxy, proxyuser, proxypassword);
-		
+		regenerate = regenerate==null? false:regenerate;	// the non-null default value for regenerate is false
+
 		// assert results for a successful identify
 		/* Example sshCommandResult.getStdout():
 		 * Current identity is: 8f4dd91a-2c41-4045-a937-e3c8554a5701 name: testuser1
@@ -1310,9 +1311,11 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		
 		
-		
-		String regex = "Current identity is: [a-f,0-9,\\-]{36}";			// consumerid regex
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+		if (regenerate) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Identity certificate has been regenerated.");
+		} else {
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Current identity is: [a-f,0-9,\\-]{36}");
+		}
 		
 		return sshCommandResult; // from the identity command
 	}
@@ -1691,7 +1694,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, quantity, email, locale, proxy, proxyuser, proxypassword);
-		auto = auto==null? false:auto;	// set auto to non-null default value
+		auto = auto==null? false:auto;	// the non-null default value for auto is false
 
 		// assert results...
 		
