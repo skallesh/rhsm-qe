@@ -709,7 +709,7 @@ schema generation failed
 				}
 			}
 		}
-		log.warning("CandlepinTasks could not getEntitlementSerialForSubscribedPoolId.");
+		log.warning("CandlepinTasks could not getEntitlementSerialForSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
 		return null;
 	}
 	
