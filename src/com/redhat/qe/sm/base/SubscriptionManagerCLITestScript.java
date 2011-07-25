@@ -489,12 +489,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey )&& !usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
 						finalRegistrationData.add(registrationDatum);
 					}
-				} else if ( !matchingOwnerKey ) {
-					if (!usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
+				} else if ( !matchingOwnerKey && matchingUsername) {					
+					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey) && username.equals(registrationDatum.username)) {
 						finalRegistrationData.add(registrationDatum);
 					}
-				} else if ( !matchingUsername ) {
-					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey)) {
+				} else if ( matchingOwnerKey && !matchingUsername ) {
+					if (ownersWithMatchingUsername.contains(registrationDatum.ownerKey) && !username.equals(registrationDatum.username)) {
 						finalRegistrationData.add(registrationDatum);
 					}
 				} else {

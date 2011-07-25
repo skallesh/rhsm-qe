@@ -440,7 +440,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
+	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
 		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile)!=1) {
@@ -453,7 +453,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return from the contents of the current /etc/pki/consumer/cert.pem
+	 * @return consumerid from the Subject CN of the current /etc/pki/consumer/cert.pem identity x509 certificate
 	 */
 	public String getCurrentConsumerId() {
 		ConsumerCert currentConsumerCert = getCurrentConsumerCert();

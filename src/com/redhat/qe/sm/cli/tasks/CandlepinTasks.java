@@ -428,6 +428,19 @@ schema generation failed
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// Warning: this authenticator, password needs to be superAdmin
 		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,jsonOwner_.getString("href")));	
+		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -mjson.tool
+			{
+			    "contentPrefix": null, 
+			    "created": "2011-07-25T00:05:24.301+0000", 
+			    "displayName": "Admin Owner", 
+			    "href": "/owners/admin", 
+			    "id": "8a90f8c6315e9bcf01315e9c42cd0006", 
+			    "key": "admin", 
+			    "parentOwner": null, 
+			    "updated": "2011-07-25T00:05:24.301+0000", 
+			    "upstreamUuid": null
+			}
+		*/
 
 		return jsonOwner;
 	}
