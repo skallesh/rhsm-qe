@@ -1699,11 +1699,11 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		
 		// if already subscribed, just return the result
-		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'
+		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
 
 		// if no free entitlements, just return the result
-		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'
+		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'.
 		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
 		
 		// if rule failed, just return the result
@@ -2004,7 +2004,7 @@ public class SubscriptionManagerTasks {
 		String stderr = sshCommandRunner.getStderr().trim();
 		
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
-		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'")) {
+		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'.")) {
 			Assert.assertTrue(after.size() == before.size() && after.size() > 0,
 					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   Note: The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
 		} else {

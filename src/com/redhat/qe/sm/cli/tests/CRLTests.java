@@ -77,8 +77,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 			log.info("Because the productId '"+pool.productId+"' from this pool has already been subscribed to via a previously available pool, it only makes sense to skip this iteration of the test.");
 			log.info("However, for the sake of testing, let's attempt to subscribe to it anyway and assert that our subscribe request is blocked with an appropriate message...");
 			SSHCommandResult sshCommandResult = clienttasks.subscribe(pool.poolId, null, null, null, null, null, null, null);
-			Assert.assertEquals(sshCommandResult.getStdout().trim(),"This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'");
-			throw new SkipException("Because this consumer is already subscribed to the product ("+pool.productId+") provided by this pool id '"+pool.poolId+"', this pool is unsubscribeable and therefore we must skip this test iteration.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(),"This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.");
+			throw new SkipException("Because this consumer is already subscribed to the product ("+pool.productId+") provided by this pool id '"+pool.poolId+".', this pool is unsubscribeable and therefore we must skip this test iteration.");
 		}
 		*/
 		List<ProductSubscription> originalConsumedProducts = clienttasks.getCurrentlyConsumedProductSubscriptions();

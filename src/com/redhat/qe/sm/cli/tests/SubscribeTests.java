@@ -712,8 +712,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
 				Assert.assertTrue(result.getStdout().contains("Successfully subscribed the system to Pool "+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
-				//Assert.assertContainsMatch(result.getStdout(), "^No free entitlements are available for the pool with id '"+pool.poolId+"'$","Subscribe should NOT be successful when subscribing with --quantity greater than the pool's availability.");
-				Assert.assertTrue(result.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
+				//Assert.assertContainsMatch(result.getStdout(), "^No free entitlements are available for the pool with id '"+pool.poolId+"'.$","Subscribe should NOT be successful when subscribing with --quantity greater than the pool's availability.");
+				Assert.assertTrue(result.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
 		}
 	}
