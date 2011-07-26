@@ -53,19 +53,20 @@
   (verify (action exists? :register-system)))
 
 (defn ^{DataProvider {:name "userowners"}}
-  get_userowners [_]
-  (to-array-2d
-   (vec
-    (conj (if (and (@config :username1) (@config :password1))
-            (get-userlists (@config :username1) (@config :password1)))
-          (if (and (@config :username) (@config :password))
-            (get-userlists (@config :username) (@config :password)))
-          ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
-          (if (and (@config :username) (@config :password))
-            [(str (@config :username) "   ") (@config :password) nil])
-          ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
-          (if (and (@config :username) (@config :password))
-            [(str "   " (@config :username)) (@config :password) nil])))))
+  get_userowners [_] 
+  (vec
+   (conj
+    (into 
+     (if (and (@config :username1) (@config :password1))
+       (get-userlists (@config :username1) (@config :password1)))
+     (if (and (@config :username) (@config :password))
+       (get-userlists (@config :username) (@config :password))))
+; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+    (if (and (@config :username) (@config :password))
+      [(str (@config :username) "   ") (@config :password) nil])
+; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+    (if (and (@config :username) (@config :password))
+      [(str "   " (@config :username)) (@config :password) nil]))))
 
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
