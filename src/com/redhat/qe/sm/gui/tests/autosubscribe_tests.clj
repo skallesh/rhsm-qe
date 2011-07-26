@@ -143,7 +143,7 @@
           (tasks/ui waittillwindownotexist :register-dialog 600)
           (tasks/sleep 10000)
           (verify (= (tasks/warn-count) beforesubs))
-          (verify (not tasks/compliance?))))))
+          (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsInstalled"]
