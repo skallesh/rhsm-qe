@@ -1622,7 +1622,7 @@ public class SubscriptionManagerTasks {
 		}
 
 		if (numContentNamespaces==0) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories");
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories.");
 		} else {
 			String title = "Entitled Repositories in "+redhatRepoFile;
 			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of repositories is entitled '"+title+"'.");
