@@ -78,7 +78,7 @@
         pass (@config :password)
         key  (@config :owner-key)
         ownername (tasks/get-owner-display-name user pass key)]
-    (verify (= beforesubs
+    (verify (= (str beforesubs)
                (trim (.getStdout
                       (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
     (if (= 0 beforesubs)
@@ -88,6 +88,8 @@
                           pass
                           :autosubscribe true
                           :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 20000)
           (verify (<= (tasks/warn-count) beforesubs))
           (verify (not (tasks/compliance?)))))))
 
@@ -102,9 +104,9 @@
         pass (@config :password)
         key  (@config :owner-key)
         ownername (tasks/get-owner-display-name user pass key)]
-    (verify (= beforesubs
+    (verify (= (str beforesubs)
                (trim (.getStdout
-                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+                      (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
@@ -112,6 +114,8 @@
                           pass
                           :autosubscribe true
                           :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 20000)
           (verify (= (tasks/warn-count) 0))
           (verify (tasks/compliance?))))))
 
@@ -126,9 +130,9 @@
         pass (@config :password)
         key  (@config :owner-key)
         ownername (tasks/get-owner-display-name user pass key)]
-    (verify (= beforesubs
+    (verify (= (str beforesubs)
                (trim (.getStdout
-                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+                      (.runCommandAndWait @clientcmd (str "ls " nodir " | wc -l"))))))
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
@@ -136,6 +140,8 @@
                           pass
                           :autosubscribe true
                           :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 10000)
           (verify (= (tasks/warn-count) beforesubs))
           (verify (not tasks/compliance?))))))
 
