@@ -61,7 +61,19 @@
   ([path]
      (ui launchapp path [] 10)
      (ui waittillwindowexist :main-window 30)))
-     
+
+(defn kill-app
+  "Kills the subscription-manager-gui"
+  []
+  (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
+  (ui waittillwindownotexist :main-window 30))
+
+(defn restart-app
+  "Restarts subscription-manager-gui"
+  []
+  (kill-app)
+  (start-app))
+
 (defn start-firstboot
   "Convenience function that calls start-app with the firstboot path."
   []

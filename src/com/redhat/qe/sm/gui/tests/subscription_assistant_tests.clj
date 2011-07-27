@@ -3,11 +3,14 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-	       gnome.ldtp)
+        gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
- 
+  (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]
+           [com.redhat.qe.sm.cli.tests ComplianceTests]))
+
+(def complytests (atom nil))
+
 (defn- check-product 
   ([product]
     (let [row (tasks/ui gettablerowindex :subscription-product-view product)]
@@ -18,15 +21,29 @@
         (tasks/ui checkrow :subscription-product-view row 0)
         (tasks/ui uncheckrow :subscription-product-view row 0)))))        
 
-(defn- check-all-products []
+(defn check-all-products []
   (tasks/do-to-all-rows-in :subscription-product-view 1
       (fn [product] (check-product product))))
 
-(defn ^{BeforeClass {:groups ["setup"]}}
-  register [_]
+(defn- register []
   (with-handlers [(handle :already-registered [e]
-                               (recover e :unregister-first))]
-    (tasks/register (@config :username) (@config :password))))
+                          (recover e :unregister-first))]
+    (let [user (@config :username)
+          pass (@config :password)
+          owner (tasks/get-owner-display-name user
+                                              pass
+                                              (@config :owner-key))]
+      (tasks/register user pass :owner owner))))
+
+
+(defn ^{BeforeClass {:groups ["setup"]}}
+  setup [_]
+  (tasks/kill-app)
+  (reset! complytests (ComplianceTests. ))
+  (.setupProductCertDirsBeforeClass @complytests)
+  (.runCommandAndWait @clientcmd "subscripton-manager unregister")
+  (tasks/start-app)
+  (register))
     
 (defn ^{AfterClass {:groups ["setup"]}}
   exit_subscription_assistant [_]
@@ -45,7 +62,7 @@
         
 (defn ^{Test {:groups ["subscription-assistant"]}}
   launch_assistant [_]
-  (register nil)
+  (register)
   (tasks/ui click :update-certificates)
   (tasks/ui waittillwindowexist :subscription-assistant-dialog 60)
   (tasks/wait-for-progress-bar)
@@ -63,6 +80,7 @@
   (tasks/ui click :update)
   (tasks/wait-for-progress-bar)
   (check-all-products)
+  (tasks/sleep 5000)
   (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 0)
         nocomply-count (atom (tasks/warn-count))]
     (doseq [item subscription-list]
@@ -75,10 +93,30 @@
         (check-all-products)))))
 
 (comment
-(defn ^{Test {:groups ["subscription-assistant" "SomeProductsSubscribable"]
+  (defn ^{Test {:groups ["subscription-assistant" "blockedByBug-703997"]
+                :dependsOnMethods ["launch_assistant"]
+                :dataProvider "multi-entitle"}}
+    check_quantities [_ subscription]
+    
+    (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 0)]
+      (doseq [item subscription-list]
+        )))
+
+  (defn ^{DataProvider {:name "multi-entitle"}}
+    get_multi_entitle_subscriptions [_]
+    (reset-assistant)
+    (tasks/ui click :first-date)
+    (tasks/ui click :update)
+    (tasks/wait-for-progress-bar)
+    (check-all-products)
+    (tasks/sleep 5000)
+    ))
+
+(defn ^{Test {:groups ["subscription-assistant"
+                       "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["launch_assistant"]}}
   some_products_subscribable [_]
-  (reset-assistant)
+  (tasks/restart-app)
   (let [beforedate (tasks/first-date-of-noncomply)]
     (subscribe_all_products nil)
     (verify (= (tasks/first-date-of-noncomply) beforedate))
@@ -86,28 +124,34 @@
     (verify (= 0 (tasks/ui getrowcount :assistant-subscription-view)))))
 
 
-(defn ^{Test {:groups ["subscription-assistant" "AllProductsSubscribable"]
+(defn ^{Test {:groups ["subscription-assistant"
+                       "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["launch_assistant"]}}
   all_products_subscribable [_]
-  (reset-assistant)
+  (tasks/restart-app)
   (let [beforedate (tasks/first-date-of-noncomply)]
     (subscribe_all_products nil)
     (verify tasks/compliance?)
     (verify (not (= (tasks/first-date-of-noncomply) beforedate)))))
 
-(defn ^{Test {:groups ["subscription-assistant" "NoProductsSubscribable"]
-              :dependsOnMethods ["launch_assistant"]}}
-  no_products_subscribable [_]
-  (reset-assistant)
-  (verify (< 0 (tasks/ui getrowcount :subscription-product-view)))
-  (check-all-products)
-  (verify (= 0 (tasks/ui getrowcount :assistant-subscription-view))))
+(comment 
+  (defn ^{Test {:groups ["subscription-assistant"
+                         "configureProductCertDirForNoProductsSubscribable"]
+                :dependsOnMethods ["launch_assistant"]}}
+    no_products_subscribable [_]
+    (tasks/restart-app)
+    (register)
+    (verify (< 0 (tasks/ui getrowcount :subscription-product-view)))
+    (check-all-products)
+    (verify (= 0 (tasks/ui getrowcount :assistant-subscription-view))))
 
-(defn ^{Test {:groups ["subscription-assistant" "NoProductsInstalled"]
-              :dependsOnMethods ["launch_assistant"]}}
-  no_products_installed [_]
-  (reset-assistant))
-)
+  
+  (defn ^{Test {:groups ["subscription-assistant"
+                         "configureProductCertDirForNoProductsInstalled"]
+                :dependsOnMethods ["launch_assistant"]}}
+    no_products_installed [_]
+    (reset-assistant)))
+
 
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=676371
 

@@ -25,21 +25,13 @@
                                      (str  "test -d " dir " && echo exists")))))
    (= dir (tasks/conf-file-value "productCertDir"))))
 
-(defn- kill-app []
-  (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
-  (tasks/ui waittillwindownotexist :main-window 30))
-
-(defn- restart-gui []
-  (kill-app)
-  (tasks/start-app))
-
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
   ;; this bug crashes everything, so fail the BeforeClass if this is open
   (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
   
-  (kill-app)
+  (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
@@ -49,7 +41,7 @@
   cleanup [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)
-  (restart-gui))
+  (tasks/restart-app))
 
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
@@ -71,7 +63,7 @@
                        "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
-  (restart-gui)
+  (tasks/restart-app)
   (verify (dirsetup? somedir))
   (let [beforesubs (tasks/warn-count)
         user (@config :username)
@@ -97,7 +89,7 @@
                        "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
-  (restart-gui)
+  (tasks/restart-app)
   (verify (dirsetup? alldir))
   (let [beforesubs (tasks/warn-count)
         user (@config :username)
@@ -123,7 +115,7 @@
                        "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
-  (restart-gui)
+  (tasks/restart-app)
   (verify (dirsetup? nodir))
   (let [beforesubs (tasks/warn-count)
         user (@config :username)
@@ -149,7 +141,7 @@
                        "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
-  (restart-gui)
+  (tasks/restart-app)
   (verify (dirsetup? nonedir))
   (verify (= 0 (tasks/warn-count)))
   (verify (tasks/compliance?)))
