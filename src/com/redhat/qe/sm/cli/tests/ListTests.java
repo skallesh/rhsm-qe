@@ -306,6 +306,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	// Candidates for an automated Test:
 	// TODO Bug 672562 - request for subscription-manager list --available --ondate option  (SEE CODE IN ExpirationTests.createTestPool(..) FOR EXAMPLE OF API GET WITH activeon PARAMETER)
 	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
+	// TODO Bug 725870 - some subscription-manager list commands should not require that the system be registered
 	
 	// Data Providers ***********************************************************************
 	

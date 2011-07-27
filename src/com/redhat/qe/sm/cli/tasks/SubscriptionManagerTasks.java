@@ -1202,7 +1202,11 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredType = null;
 		
 		// assert that the entitlement cert directory is gone
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
+		//Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
+		// assert that the entitlement cert directory is gone (or is empty)
+		if (RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1) {
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("ls "+entitlementCertDir).getStdout(), "", "The entitlement cert directory is empty after running clean.");
+		}
 
 		return sshCommandResult; // from the clean command
 	}
@@ -1697,6 +1701,7 @@ public class SubscriptionManagerTasks {
 		auto = auto==null? false:auto;	// the non-null default value for auto is false
 
 		// assert results...
+		String stdoutMessage;
 		
 		// if already subscribed, just return the result
 		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
@@ -1711,17 +1716,24 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
 		
 		// assert the subscribe does NOT report "The system is unable to complete the requested transaction"
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction");
-		
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction.");
+		stdoutMessage = "The system is unable to complete the requested transaction";
+		Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
+	
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
+		stdoutMessage = "Entitlement Certificate(s) update failed due to the following reasons:";
+		Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
 
 		// assert that the entitlement pool was found for subscribing
-		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(),"No such entitlement pool:", "The subscription pool was found.");
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Subscription pool .* does not exist.","The subscription pool was found.");
+		stdoutMessage = "Subscription pool "+(poolId==null?"null":poolId)+" does not exist.";	// Subscription pool {0} does not exist.
+		Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
 		
 		// assert the stdout msg was a success
-		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe appears to be a success.");
-		else		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe was reported as a success.");
+		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
+		else		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
 
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");

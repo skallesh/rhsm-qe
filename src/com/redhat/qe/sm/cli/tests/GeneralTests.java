@@ -52,7 +52,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	
 	// Candidates for an automated Test:
 	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment.
-	
+	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error
 	
 	
 	

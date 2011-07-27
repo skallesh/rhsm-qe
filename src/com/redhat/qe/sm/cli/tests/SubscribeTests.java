@@ -285,7 +285,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (String poolId : poolIds) {
 			String subscribeResultMessage;
 			if (poolId.equals(badPoolId1) || poolId.equals(badPoolId2)) {
-				subscribeResultMessage = "No such entitlement pool: "+badPoolId1;
+				//subscribeResultMessage = "No such entitlement pool: "+poolId;
+				subscribeResultMessage = "Subscription pool "+poolId+" does not exist.";
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The subscribe result for an invalid pool '"+poolId+"' contains: "+subscribeResultMessage);
 			}
 			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,poolId)) {
