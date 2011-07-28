@@ -105,7 +105,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={}, dependsOnGroups={},
+			groups={"blockedByBug-726440"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
 	public void VirtualizationFactsWhenClientIsAHost_Test() {
@@ -119,7 +119,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
 
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");
+		//Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");	// valid assertion prior to bug 726440/722248
+		Assert.assertEquals(virtHostType,"Not Applicable","subscription-manager facts list reports 'Not Applicable' for virt.host_type when run on bare metal ");
 	}
 	
 	
