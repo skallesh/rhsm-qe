@@ -334,6 +334,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 706552 - Wrong DMI structures length: 3263 bytes announced, structures occupy 3265 bytes.
 	// TODO Bug 707525 - Facts update command displays consumed uuid
 	// TODO Bug 722239 - subscription-manager cli does not show all facts
+	// TODO Bug 700821 - Update of consumer facts does not update the update timestamp
 	
 	// TODO create tests that overrides the facts, for example....  and the uses getSystemSubscriptionPoolProductDataAsListOfLists()
 	// see TODO MOVE THIS BLOCK OF TESTING INTO ITS OWN "RULES CHECK TEST" from SubscribeTests
