@@ -65,7 +65,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	// Configuration Methods ***********************************************************************
 	
 	@BeforeSuite(groups={"setup"},description="subscription manager set up")
-	public void setupBeforeSuite() throws IOException {
+	public void setupBeforeSuite() throws IOException, JSONException {
 		if (isSetupBeforeSuiteComplete) return;
 		
 		// create SSHCommandRunners to connect to the subscription-manager clients
@@ -172,45 +172,23 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			smt.installProductCerts(generatedProductCertFiles);
 		}
 		
-//		// transfer a copy of the CA Cert from the candlepin server to the clients so we can test in secure mode
-//		if (server!=null && servertasks.isOnPremises) {
-//			log.info("Copying Candlepin cert onto clients to enable certificate validation...");
-//			File localFile = new File("/tmp/"+servertasks.candlepinCACertFile.getName());
-//			RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),servertasks.candlepinCACertFile.getPath());
-//			
-//			for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
-//				if (smt==null) continue;
-//				smt.installRepoCaCert(localFile, serverHostname);
-//			}
-//
-//								RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.getConfFileParameter(client1tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-//								client1tasks.updateConfFileParameter(client1tasks.rhsmConfFile, "insecure", "0");
-//			if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.getConfFileParameter(client2tasks.rhsmConfFile,"ca_cert_dir").trim().replaceFirst("/$", "")+"/"+serverHostname.split("\\.")[0]+"-candlepin-ca.pem", "0644");
-//			if (client2!=null)	client2tasks.updateConfFileParameter(client2tasks.rhsmConfFile, "insecure", "0");
-//		}
-		
-//		// transfer a copy of the generated product certs from the candlepin server to the clients so we can test
-//		if (server!=null && servertasks.isOnPremises) {
-//			log.info("Copying Candlepin generated product certs onto clients to simulate installed products...");
-//			SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(server, "find "+serverInstallDir+servertasks.generatedProductsDir+" -name '*.pem'", 0);
-//			for (String remoteFileAsString : result.getStdout().trim().split("\\n")) {
-//				File remoteFile = new File(remoteFileAsString);
-//				File localFile = new File("/tmp/"+remoteFile.getName());
-//				RemoteFileTasks.getFile(server.getConnection(), localFile.getParent(),remoteFile.getPath());
-//				
-//									RemoteFileTasks.putFile(client1.getConnection(), localFile.getPath(), client1tasks.productCertDir+"/", "0644");
-//				if (client2!=null)	RemoteFileTasks.putFile(client2.getConnection(), localFile.getPath(), client2tasks.productCertDir+"/", "0644");
-//			}
-//		}
-		
 		
 		log.info("Installed version of candlepin...");
+		JSONObject jsonStatus =null;
 		try {
-			JSONObject jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
-			log.info("Candlepin server '"+sm_serverHostname+"' is running version: "+jsonStatus.get("version"));
+			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
+			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
+		} finally {
+			if (jsonStatus!=null) {
+				log.info("Candlepin server '"+sm_serverHostname+"' is running release '"+jsonStatus.getString("release")+"' version '"+jsonStatus.get("version")+"'.");
+				Assert.assertEquals(jsonStatus.getBoolean("result"), true,"Candlepin status result");
+				Assert.assertTrue(jsonStatus.getString("release").matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
+				Assert.assertTrue(jsonStatus.getString("version").matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
+			}
 		}
+
 		
 		log.info("Installed version of subscription-manager...");
 		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -q subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
