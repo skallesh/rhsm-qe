@@ -307,7 +307,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 672562 - request for subscription-manager list --available --ondate option  (SEE CODE IN ExpirationTests.createTestPool(..) FOR EXAMPLE OF API GET WITH activeon PARAMETER)
 	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
 	// TODO Bug 725870 - some subscription-manager list commands should not require that the system be registered
-	
+	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats
+
 	// Data Providers ***********************************************************************
 	
 	
