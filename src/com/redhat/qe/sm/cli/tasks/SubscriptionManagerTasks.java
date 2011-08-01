@@ -1374,6 +1374,51 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the orgs command
 	}
 	
+	
+	// environments module tasks ************************************************************
+
+	/**
+	 * environments without asserting results
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @return
+	 */
+	public SSHCommandResult environments_(String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " environments";
+		if (username!=null)				command += " --username="+username;
+		if (password!=null)				command += " --password="+password;
+		if (org!=null)					command += " --org="+org;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager environments"
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @return
+	 */
+	public SSHCommandResult environments(String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = environments_(username, password, org, proxy, proxyuser, proxypassword);
+		
+		// TODO assert results...
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the environments command indicates a success.");
+		
+		return sshCommandResult; // from the environments command
+	}
+	
+	
 	// unregister module tasks ************************************************************
 
 	/**
