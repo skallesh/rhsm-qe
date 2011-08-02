@@ -247,6 +247,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Redeem Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="RedeemTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Subscription Expiration Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
