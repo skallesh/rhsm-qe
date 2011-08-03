@@ -45,7 +45,7 @@ index ca0b6f8..331eedb 100644
 +                    dellAssetTag));            
 +        } else {
 +            throw new ServiceUnavailableException(
-                 i18n.tr("Standalone candlepin does not support activation."));
+                 i18n.tr("Standalone candlepin does not support redeeming a subscription."));
 +        }
      }
      

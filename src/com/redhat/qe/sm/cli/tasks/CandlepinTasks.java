@@ -144,7 +144,7 @@ public class CandlepinTasks {
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
 		String patchFileName = "onPremisesRedeemTesting.patch";
 		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), System.getProperty("automation.dir", null)+"/scripts/onPremisesRedeemTesting.patch", serverInstallDir+"/proxy/", "0644");
-//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+patchFileName, Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+patchFileName, Integer.valueOf(0), "patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java", null);
 
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS	
