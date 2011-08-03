@@ -70,10 +70,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" facts --update"}));  test moved to FactsTests.FactsWhenNotRegistered_Test()
 		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" identity"}));  test moved to IdentityTests.IdentityWhenNotRegistered_Test()
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list"}));
+		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" list"}));	restriction lifted by https://bugzilla.redhat.com/show_bug.cgi?id=725870
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --available --all"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --available"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --consumed"}));
+		//ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --consumed"}));	restriction lifted by https://bugzilla.redhat.com/show_bug.cgi?id=725870
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" refresh"}));
 // this functionality appears to have been removed: subscription-manager-0.71-1.el6.i686  - jsefler 7/21/2010
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --product=FOO"}));
@@ -87,6 +87,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO"}));
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO"}));
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" redeem"}));
 
 		return ll;
 	}
