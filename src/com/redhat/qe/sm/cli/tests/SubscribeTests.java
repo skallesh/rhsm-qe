@@ -683,10 +683,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe to multiple pools using --quantity that exceeds some pools and is under other pools.",
-			groups={},
+			groups={"blockedByBug-722975"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithQuantityToMultiplePools_Test() {
+	public void SubscribeWithQuantityToMultiplePools_Test() throws NumberFormatException, JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, null);
@@ -709,7 +709,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert that the expected pools were subscribed to based on quantity
 		for (SubscriptionPool pool : pools) {
-			if (quantity <= Integer.valueOf(pool.quantity)) {
+			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId)) {
+				Assert.assertTrue(result.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
+			} else if (quantity <= Integer.valueOf(pool.quantity)) {
 				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
 				Assert.assertTrue(result.getStdout().contains("Successfully subscribed the system to Pool "+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
@@ -860,7 +862,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		pool= poolWithMultiEntitlementNo;
 		if (pool!=null) {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Subscription pool '"+pool.poolId+"' cannot be multi-entitled.$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Multi-entitlement not supported for pool with id '"+pool.poolId+"'.$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
 		}
@@ -868,7 +870,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		pool= poolWithMultiEntitlementNull;
 		if (pool!=null) {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Subscription pool '"+pool.poolId+"' cannot be multi-entitled.$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Multi-entitlement not supported for pool with id '"+pool.poolId+"'.$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));
 		}
