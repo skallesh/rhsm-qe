@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,6 +25,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -51,7 +53,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"RegisterWithUsernameAndPassword_Test"},
+			groups={"myDevGroup","RegisterWithUsernameAndPassword_Test"},
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithCredentials_Test(String username, String password, String org) {
@@ -85,18 +87,30 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		registrationDataList.add(userData);
 		clienttasks.unregister_(null, null, null);
 		
-		// when no org was given by the dataprovider, then either:
-		// 1. the user has only READ_ONLY access to one org:
-		//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
-		// 2. the user has only READ_ONLY access to more than one org:
-		//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
-		// FIXME: Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
+		// when no org was given by the dataprovider, then this user must have READ_ONLY access to any one or more orgs
 		if (org==null) {
-			Assert.assertFalse(registerResult.getExitCode()==0, "The register command was NOT a success.");		
-			Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=718205 - jsefler 07/01/2011
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="718205"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				// When org==null, then this user has no access to any org/owner
+				// 1. the user has only READ_ONLY access to one org:
+				//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
+				// 2. the user has only READ_ONLY access to more than one org:
+				//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
+				// Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
+				Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
+				Assert.assertFalse(registerResult.getExitCode()==0, "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+				return;
+			}
+			// END OF WORKAROUND
+			
+			Assert.assertEquals(registerResult.getStderr().trim(), username+" cannot register to any organizations.", "Error message when READ_ONLY user attempts to register.");
+			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
 			return;
 		}
-		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
+		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that the register attempt was a success.");
 		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
 		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 	}
