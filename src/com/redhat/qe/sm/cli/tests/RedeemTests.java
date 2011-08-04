@@ -2,7 +2,9 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
@@ -93,7 +95,13 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		log.info(testDescription);
 
 		// create a facts file with a serialNumber that will clobber the true system facts
-		createMockAssetFactsFile("Dell Inc.",serialNumber);
+		Map<String,String> facts = new HashMap<String,String>();
+		facts.put("dmi.system.manufacturer", "Dell Inc.");
+		facts.put("dmi.system.serial_number", serialNumber);
+		clienttasks.createFactsFileWithOverridingValues(facts);
+		
+		// update the facts
+		clienttasks.facts(null,true, null, null, null);
 		
 		// attempt redeem
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
@@ -119,34 +127,12 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterGroups(value={"MockRedeemTests"}, groups={"setup"}, alwaysRun=true)
 	public void deleteMockAssetFactsFile () {
-		String systemManufacturerKey="dmi.system.manufacturer";
-		String systemSerialNumberKey="dmi.system.serial_number";
-		String command = String.format("rm -f %s", clienttasks.factsDir+"/"+mockAssetFactsFileName);
-        client.runCommandAndWait(command);	// delete the override for facts
-//		clienttasks.facts(null,true, null, null, null);	// update the facts
-//		String systemManufacturer = client.runCommandAndWait("dmidecode -s system-manufacturer").getStdout().trim();
-//		String systemSerialNumber = client.runCommandAndWait("dmidecode -s system-serial-number").getStdout().trim();
-//
-//		Assert.assertEquals(clienttasks.getFactValue(systemManufacturerKey), systemManufacturer, "Successfully reverted the mock fact for "+systemManufacturerKey);
-//		Assert.assertEquals(clienttasks.getFactValue(systemSerialNumberKey), systemSerialNumber, "Successfully reverted the mock fact for "+systemSerialNumberKey);
+		clienttasks.deleteFactsFileWithOverridingValues();
 	}
 	
 	
 	// Protected methods ***********************************************************************
 
-	protected String mockAssetFactsFileName = "mockAsset.facts";
-	
-	protected void createMockAssetFactsFile (String systemManufacturer, String systemSerialNumber) {
-		log.info("For the sakeof mock testing the system's seriial number, we will create a local facts file on the client to override the true system facts...");
-		String systemManufacturerKey="dmi.system.manufacturer";
-		String systemSerialNumberKey="dmi.system.serial_number";
-		String command = String.format("echo '{\"%s\": \"%s\", \"%s\": \"%s\"}' > %s", systemManufacturerKey, systemManufacturer, systemSerialNumberKey, systemSerialNumber, clienttasks.factsDir+"/"+mockAssetFactsFileName);
-        client.runCommandAndWait(command);	// create an override for facts
-		clienttasks.facts(null,true, null, null, null);	// update the facts
-		//Assert.assertEquals(clienttasks.getFactValue(systemManufacturerKey), systemManufacturer, "Successfully created and updated a mock fact for "+systemManufacturerKey);
-		Assert.assertEquals(clienttasks.getFactValue(systemSerialNumberKey), systemSerialNumber, "Successfully created and updated a mock fact for "+systemSerialNumberKey);
-	}
-	
 
 	
 	// Data Providers ***********************************************************************

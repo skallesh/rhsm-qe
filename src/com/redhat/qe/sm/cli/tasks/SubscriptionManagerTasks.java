@@ -54,6 +54,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
+	public final String factsOverrideFile	= factsDir+"/override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
@@ -541,6 +542,26 @@ public class SubscriptionManagerTasks {
 //			log.fine(matcher.group());
 //		} while (matcher.find());
 		return matcher.group(1).trim();	// return the contents of the first capturing group
+	}
+	
+
+	/**
+	 * @param factsMap - map of key/values pairs that will get written as JSON to a facts file that will override the true facts on the system.  Note: subscription-manager facts --update may need to be called after this method to realize the override.
+	 */
+	public void createFactsFileWithOverridingValues (Map<String,String> factsMap) {
+		
+		// assemble an echo command and run it to create a facts file
+		String keyvaluesString = "";
+		for (String key : factsMap.keySet()) {
+			keyvaluesString += String.format("\"%s\":\"%s\", ", key, factsMap.get(key));
+		}
+		keyvaluesString = keyvaluesString.replaceFirst(", *$", "");
+		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, factsOverrideFile);
+        sshCommandRunner.runCommandAndWait(echoCommand);	// create an override facts file
+	}
+	public void deleteFactsFileWithOverridingValues () {
+		String deleteCommand = String.format("rm -f %s", factsOverrideFile);
+		sshCommandRunner.runCommandAndWait(deleteCommand);	// delete the override facts file
 	}
 	
 	/**
