@@ -123,7 +123,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // fire a register event
-		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null, null, null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
@@ -513,7 +513,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,ConsumerType.candlepin,null,null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null, null, null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(null, testPool.poolId, null, null, null, null, null, null, null, null);

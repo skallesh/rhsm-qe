@@ -148,10 +148,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
-//		modules.add("redeem");
+		modules.add("redeem");
 		modules.add("orgs");
 		modules.add("repos");
 		modules.add("clean");
+		modules.add("environments");
 		modules.add("facts");
 		modules.add("identity");
 		modules.add("list");
@@ -233,6 +234,25 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("664581"), smHelpCommand, optionsRegex, cleanOptions}));
+		}
+		
+		// MODULE: environments
+		module = "environments";
+		List <String> environmentsOptions = new ArrayList<String>();
+		environmentsOptions.add("-h, --help");
+		environmentsOptions.add("--username=USERNAME");
+		environmentsOptions.add("--password=PASSWORD");
+		environmentsOptions.add("--org=ORG");
+		environmentsOptions.add("--proxy=PROXY_URL");
+		environmentsOptions.add("--proxyuser=PROXY_USER");
+		environmentsOptions.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, environmentsOptions}));
 		}
 		
 		// MODULE: facts
@@ -320,6 +340,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		registerOptions.add("--password=PASSWORD");
 		registerOptions.add("--consumerid=CONSUMERID");
 		registerOptions.add("--org=ORG");
+		registerOptions.add("--environment=ENVIRONMENT");
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
 		registerOptions.add("--proxy=PROXY_URL");

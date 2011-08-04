@@ -1497,6 +1497,26 @@ schema generation failed
 		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
 	}
 	
+	
+	public static boolean isEnvironmentsSupported (String server, String port, String prefix, String authenticator, String password) throws JSONException, Exception {
+	
+		// ask the candlepin server for all of its resources and search for a match to "environments"
+		boolean supportsEnvironments = false;  // assume not
+		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password, "/"));
+		for (int i = 0; i < jsonResources.length(); i++) {
+			JSONObject jsonResource = (JSONObject) jsonResources.get(i);
+			// {
+			//		"href": "/environments", 
+			//		"rel": "environments"
+			// }, 
+	
+			String rel = jsonResource.getString("rel");
+			if (rel.equals("environments")) supportsEnvironments=true;
+		}
+		
+		return supportsEnvironments;
+	}
+	
 	public static boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
 		
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2bf39c0310 | python -mjson.tool
