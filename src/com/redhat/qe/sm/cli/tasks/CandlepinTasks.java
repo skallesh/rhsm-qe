@@ -47,6 +47,7 @@ import com.redhat.qe.api.helper.TestHelper;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -259,6 +260,12 @@ schema generation failed
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
+	static public String deleteResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
+		DeleteMethod delete = new DeleteMethod("https://"+server+":"+port+prefix+path);
+		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request DELETE https://"+server+":"+port+prefix+path);
+		return getHTTPResponseAsString(client, delete, authenticator, password);
+	}
 	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
 		if (requestBody != null) {
@@ -324,7 +331,7 @@ schema generation failed
 		log.finer("Running HTTP request: " + method.getName() + " on " + method.getURI() + " with credentials for '"+username+"' on server '"+server+"'...");
 		if (method instanceof PostMethod){
 			RequestEntity entity =  ((PostMethod)method).getRequestEntity();
-			log.finer("HTTP Request entity: " + ((StringRequestEntity)entity).getContent());
+			log.finer("HTTP Request entity: " + (entity==null?"":((StringRequestEntity)entity).getContent()));
 		}
 		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", (Object[])method.getRequestHeaders()));
 		int responseCode = client.executeMethod(method);
@@ -1722,108 +1729,136 @@ schema generation failed
 	}
 	
 	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
-		Boolean multi_entitlement = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
+		String value = getPoolProductAttributeValue(server,port,prefix,authenticator,password,poolId,"multi-entitlement");
+		
+		// the absence of a "multi-entitlement" attribute means this pool is NOT a multi-entitlement pool
+		if (value==null) return false;
+		
+		return value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true") || value.equals("1");
+	}
+	
+	public static boolean isPoolProductConsumableByConsumerType (String server, String port, String prefix, String authenticator, String password, String poolId, ConsumerType consumerType) throws JSONException, Exception {
+		String value = getPoolProductAttributeValue(server,port,prefix,authenticator,password,poolId,"requires_consumer_type");
+		
+		// the absence of a "requires_consumer_type" implies requires_consumer_type is system
+		if (value==null) value = ConsumerType.system.toString();
+
+		return value.equalsIgnoreCase(consumerType.toString());
+	}
+	
+	public static String getPoolProductAttributeValue (String server, String port, String prefix, String authenticator, String password, String poolId, String productAttributeName) throws JSONException, Exception {
+		String productAttributeValue = null;	// indicates that the pool's product does NOT have the "productAttributeName" attribute
 
 		// get the pool for the authenticator
-		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2c06f806ef | python -mjson.tool
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
 
-		/*
-		{
-		    "accountNumber": "12331131231", 
-		    "activeSubscription": true, 
-		    "attributes": [], 
-		    "consumed": 0, 
-		    "contractNumber": "2", 
-		    "created": "2011-07-18T16:54:58.040+0000", 
-		    "endDate": "2012-07-17T00:00:00.000+0000", 
-		    "href": "/pools/8a90f8c6313e2a7801313e2c06f806ef", 
-		    "id": "8a90f8c6313e2a7801313e2c06f806ef", 
-		    "owner": {
-		        "displayName": "Admin Owner", 
-		        "href": "/owners/admin", 
-		        "id": "8a90f8c6313e2a7801313e2aef9c0006", 
-		        "key": "admin"
-		    }, 
-		    "productAttributes": [
-		        {
-		            "created": "2011-07-18T16:54:58.040+0000", 
-		            "id": "8a90f8c6313e2a7801313e2c06f806f0", 
-		            "name": "multi-entitlement", 
-		            "productId": "awesomeos-scalable-fs", 
-		            "updated": "2011-07-18T16:54:58.040+0000", 
-		            "value": "yes"
-		        }, 
-		        {
-		            "created": "2011-07-18T16:54:58.040+0000", 
-		            "id": "8a90f8c6313e2a7801313e2c06f806f1", 
-		            "name": "type", 
-		            "productId": "awesomeos-scalable-fs", 
-		            "updated": "2011-07-18T16:54:58.040+0000", 
-		            "value": "MKT"
-		        }, 
-		        {
-		            "created": "2011-07-18T16:54:58.040+0000", 
-		            "id": "8a90f8c6313e2a7801313e2c06f806f2", 
-		            "name": "arch", 
-		            "productId": "awesomeos-scalable-fs", 
-		            "updated": "2011-07-18T16:54:58.040+0000", 
-		            "value": "ALL"
-		        }, 
-		        {
-		            "created": "2011-07-18T16:54:58.040+0000", 
-		            "id": "8a90f8c6313e2a7801313e2c06f806f3", 
-		            "name": "version", 
-		            "productId": "awesomeos-scalable-fs", 
-		            "updated": "2011-07-18T16:54:58.040+0000", 
-		            "value": "1.0"
-		        }, 
-		        {
-		            "created": "2011-07-18T16:54:58.040+0000", 
-		            "id": "8a90f8c6313e2a7801313e2c06f806f4", 
-		            "name": "variant", 
-		            "productId": "awesomeos-scalable-fs", 
-		            "updated": "2011-07-18T16:54:58.040+0000", 
-		            "value": "ALL"
-		        }
-		    ], 
-		    "productId": "awesomeos-scalable-fs", 
-		    "productName": "Awesome OS Scalable Filesystem", 
-		    "providedProducts": [
-		        {
-		            "created": "2011-07-18T16:54:58.040+0000", 
-		            "id": "8a90f8c6313e2a7801313e2c06f906f5", 
-		            "productId": "37090", 
-		            "productName": "Awesome OS Scalable Filesystem Bits", 
-		            "updated": "2011-07-18T16:54:58.040+0000"
-		        }
-		    ], 
-		    "quantity": 5, 
-		    "restrictedToUsername": null, 
-		    "sourceEntitlement": null, 
-		    "startDate": "2011-07-18T00:00:00.000+0000", 
-		    "subscriptionId": "8a90f8c6313e2a7801313e2b3e07007e", 
-		    "updated": "2011-07-18T16:54:58.040+0000"
-		}
-		*/
+		//{
+		//    "accountNumber": "12331131231", 
+		//    "activeSubscription": true, 
+		//    "attributes": [], 
+		//    "consumed": 0, 
+		//    "contractNumber": "67", 
+		//    "created": "2011-08-04T21:39:20.466+0000", 
+		//    "endDate": "2012-08-03T00:00:00.000+0000", 
+		//    "href": "/pools/8a90f8c63196bb20013196bc7d120281", 
+		//    "id": "8a90f8c63196bb20013196bc7d120281", 
+		//    "owner": {
+		//        "displayName": "Admin Owner", 
+		//        "href": "/owners/admin", 
+		//        "id": "8a90f8c63196bb20013196bb9e210006", 
+		//        "key": "admin"
+		//    }, 
+		//    "productAttributes": [
+		//        {
+		//            "created": "2011-08-04T21:39:20.466+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d120282", 
+		//            "name": "multi-entitlement", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.466+0000", 
+		//            "value": "yes"
+		//        }, 
+		//        {
+		//            "created": "2011-08-04T21:39:20.466+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d120283", 
+		//            "name": "type", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.466+0000", 
+		//            "value": "MKT"
+		//        }, 
+		//        {
+		//            "created": "2011-08-04T21:39:20.466+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d120284", 
+		//            "name": "arch", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.466+0000", 
+		//            "value": "ALL"
+		//        }, 
+		//        {
+		//            "created": "2011-08-04T21:39:20.467+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d130285", 
+		//            "name": "version", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.467+0000", 
+		//            "value": "1.0"
+		//        }, 
+		//        {
+		//            "created": "2011-08-04T21:39:20.467+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d130288", 
+		//            "name": "variant", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.467+0000", 
+		//            "value": "ALL"
+		//        }, 
+		//        {
+		//            "created": "2011-08-04T21:39:20.467+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d130287", 
+		//            "name": "requires_consumer_type", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.467+0000", 
+		//            "value": "domain"
+		//        }, 
+		//        {
+		//            "created": "2011-08-04T21:39:20.467+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d130286", 
+		//            "name": "warning_period", 
+		//            "productId": "MKT-multiplier-client-50", 
+		//            "updated": "2011-08-04T21:39:20.467+0000", 
+		//            "value": "30"
+		//        }
+		//    ], 
+		//    "productId": "MKT-multiplier-client-50", 
+		//    "productName": "Multiplier Product Client Pack (50)", 
+		//    "providedProducts": [
+		//        {
+		//            "created": "2011-08-04T21:39:20.467+0000", 
+		//            "id": "8a90f8c63196bb20013196bc7d130289", 
+		//            "productId": "917571", 
+		//            "productName": "Multiplier Product Bits", 
+		//            "updated": "2011-08-04T21:39:20.467+0000"
+		//        }
+		//    ], 
+		//    "quantity": 500, 
+		//    "restrictedToUsername": null, 
+		//    "sourceEntitlement": null, 
+		//    "startDate": "2011-08-04T00:00:00.000+0000", 
+		//    "subscriptionId": "8a90f8c63196bb20013196bc782d0253", 
+		//    "updated": "2011-08-04T21:39:20.466+0000"
+		//}
 	
 		JSONArray jsonProductAttributes = jsonPool.getJSONArray("productAttributes");
-		// loop through the productAttributes of this pool looking for the "multi-entitlement" attribute
+		// loop through the productAttributes of this pool looking for the productAttributeName attribute
 		for (int j = 0; j < jsonProductAttributes.length(); j++) {
 			JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
-			String productAttributeName = jsonProductAttribute.getString("name");
-			if (productAttributeName.equals("multi-entitlement")) {
-				//multi_entitlement = jsonProductAttribute.getBoolean("value");
-				multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equalsIgnoreCase("true") || jsonProductAttribute.getString("value").equals("1");
+			if (jsonProductAttribute.getString("name").equals(productAttributeName)) {
+				productAttributeValue = jsonProductAttribute.getString("value");
 				break;
 			}
 		}
-		multi_entitlement = multi_entitlement==null? false : multi_entitlement;	// the absense of a "multi-entitlement" productAttribute implies multi-entitlement=false
-		return multi_entitlement;
+		return productAttributeValue;
 	}
 	
 	
-
 	
 	/**
 	 * @param server
