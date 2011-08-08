@@ -72,6 +72,7 @@ def schedule_job(url, variants, token):
         time.sleep(10)
 
 
+#### COMMENTING OUT THE LAUNCHING OF THE rhsm-beaker-on-premises-RHEL6.1 JOBS SINCE THIS PRODUCT HAS SHIPPED 5/18/2011
 #url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
 #token = "hudsonbeaker-remote"
 #variants = [['ppc64','Server','RedHatEnterpriseLinux6'],
@@ -86,14 +87,15 @@ def schedule_job(url, variants, token):
 #schedule_job(url, variants, token)
 
 
-URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"
-TOKEN = "hudsonbeaker-remote"
-VARIANTS = [['ppc64', '', 'RedHatEnterpriseLinuxServer5'],
-            ['s390x', '', 'RedHatEnterpriseLinuxServer5'],
-            ['ia64', '', 'RedHatEnterpriseLinuxServer5'],
-            ['i386', '', 'RedHatEnterpriseLinuxServer5'],
-            ['x86_64', '', 'RedHatEnterpriseLinuxServer5'],
-            ['i386', '', 'RedHatEnterpriseLinuxClient5'],
-            ['x86_64', '', 'RedHatEnterpriseLinuxClient5']]
-schedule_job(URL, VARIANTS, TOKEN)
+#### COMMENTING OUT THE LAUNCHING OF THE rhsm-beaker-on-premises-RHEL5.7 JOBS SINCE THIS PRODUCT HAS SHIPPED 7/21/2011
+#URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"
+#TOKEN = "hudsonbeaker-remote"
+#VARIANTS = [['ppc64', '', 'RedHatEnterpriseLinuxServer5'],
+#            ['s390x', '', 'RedHatEnterpriseLinuxServer5'],
+#            ['ia64', '', 'RedHatEnterpriseLinuxServer5'],
+#            ['i386', '', 'RedHatEnterpriseLinuxServer5'],
+#            ['x86_64', '', 'RedHatEnterpriseLinuxServer5'],
+#            ['i386', '', 'RedHatEnterpriseLinuxClient5'],
+#            ['x86_64', '', 'RedHatEnterpriseLinuxClient5']]
+#schedule_job(URL, VARIANTS, TOKEN)
 

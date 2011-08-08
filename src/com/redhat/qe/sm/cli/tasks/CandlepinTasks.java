@@ -4,15 +4,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,7 +47,6 @@ import com.redhat.qe.api.helper.TestHelper;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.RevokedCert;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -113,7 +114,7 @@ public class CandlepinTasks {
 	}
 	
 	
-	public void deploy() {
+	public void deploy() throws IOException {
 		String hostname = sshCommandRunner.getConnection().getHostname();
 
 		if (branch==null || branch.equals("")) {
@@ -123,9 +124,9 @@ public class CandlepinTasks {
 		
 		log.info("Upgrading the server to the latest git tag...");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serverInstallDir),1,"Found the server install directory "+serverInstallDir);
-
+		
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git checkout master; git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git reset --hard HEAD; git checkout master; git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
 		if (branch.equals("candlepin-latest-tag")) {  // see commented python code at the end of this file */
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git tag | grep candlepin-0.4 | sort -t . -k 3 -n | tail -1", Integer.valueOf(0), "^candlepin", null);
 			branch = sshCommandRunner.getStdout().trim();
@@ -139,6 +140,13 @@ public class CandlepinTasks {
 		if (!serverImportDir.equals("")) {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		}
+		
+		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
+		String patchFileName = "onPremisesRedeemTesting.patch";
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), System.getProperty("automation.dir", null)+"/scripts/onPremisesRedeemTesting.patch", serverInstallDir+"/proxy/", "0644");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+patchFileName, Integer.valueOf(0), "patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java", null);
+
+		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS	
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "installed", null);	// probably only needs to be run once
@@ -428,6 +436,19 @@ schema generation failed
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// Warning: this authenticator, password needs to be superAdmin
 		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,jsonOwner_.getString("href")));	
+		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -mjson.tool
+			{
+			    "contentPrefix": null, 
+			    "created": "2011-07-25T00:05:24.301+0000", 
+			    "displayName": "Admin Owner", 
+			    "href": "/owners/admin", 
+			    "id": "8a90f8c6315e9bcf01315e9c42cd0006", 
+			    "key": "admin", 
+			    "parentOwner": null, 
+			    "updated": "2011-07-25T00:05:24.301+0000", 
+			    "upstreamUuid": null
+			}
+		*/
 
 		return jsonOwner;
 	}
@@ -583,63 +604,811 @@ schema generation failed
 		return jsonPool.getString("subscriptionId");
 	}
 	
+	public static String getSubscriptionIdFromProductName(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName) throws JSONException, Exception{
+		// get the owner's subscriptions for the authenticator
+		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions | python -mjson.tool
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			/*
+		    {
+		        "accountNumber": "12331131231", 
+		        "certificate": null, 
+		        "contractNumber": "21", 
+		        "created": "2011-07-27T02:12:51.464+0000", 
+		        "endDate": "2012-08-24T04:00:00.000+0000", 
+		        "id": "8a90f8c631695cb30131695daa8800f5", 
+		        "modified": null, 
+		        "owner": {
+		            "displayName": "Admin Owner", 
+		            "href": "/owners/admin", 
+		            "id": "8a90f8c631695cb30131695d39b30006", 
+		            "key": "admin"
+		        }, 
+		        "product": {
+		            "attributes": [
+		                {
+		                    "created": "2011-07-27T02:12:51.168+0000", 
+		                    "name": "variant", 
+		                    "updated": "2011-07-27T02:12:51.168+0000", 
+		                    "value": "ALL"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.168+0000", 
+		                    "name": "sockets", 
+		                    "updated": "2011-07-27T02:12:51.168+0000", 
+		                    "value": "2"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.168+0000", 
+		                    "name": "arch", 
+		                    "updated": "2011-07-27T02:12:51.168+0000", 
+		                    "value": "ALL"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.168+0000", 
+		                    "name": "support_level", 
+		                    "updated": "2011-07-27T02:12:51.168+0000", 
+		                    "value": "Basic"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.168+0000", 
+		                    "name": "support_type", 
+		                    "updated": "2011-07-27T02:12:51.168+0000", 
+		                    "value": "L1-L3"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.168+0000", 
+		                    "name": "management_enabled", 
+		                    "updated": "2011-07-27T02:12:51.168+0000", 
+		                    "value": "1"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.169+0000", 
+		                    "name": "type", 
+		                    "updated": "2011-07-27T02:12:51.169+0000", 
+		                    "value": "MKT"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.169+0000", 
+		                    "name": "warning_period", 
+		                    "updated": "2011-07-27T02:12:51.169+0000", 
+		                    "value": "30"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:12:51.169+0000", 
+		                    "name": "version", 
+		                    "updated": "2011-07-27T02:12:51.169+0000", 
+		                    "value": "6.1"
+		                }
+		            ], 
+		            "created": "2011-07-27T02:12:51.168+0000", 
+		            "dependentProductIds": [], 
+		            "href": "/products/awesomeos-server-2-socket-bas", 
+		            "id": "awesomeos-server-2-socket-bas", 
+		            "multiplier": 1, 
+		            "name": "Awesome OS Server Bundled (2 Sockets, L1-L3, Basic Support)", 
+		            "productContent": [], 
+		            "updated": "2011-07-27T02:12:51.168+0000"
+		        }, 
+		        "providedProducts": [
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:30.020+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:30.020+0000", 
+		                        "value": "1.0"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:30.020+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:30.020+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:30.020+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:30.020+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:30.020+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:30.020+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:30.026+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:30.026+0000", 
+		                        "value": "SVC"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:30.019+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/37065", 
+		                "id": "37065", 
+		                "multiplier": 1, 
+		                "name": "Clustering Bits", 
+		                "productContent": [
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/never", 
+		                            "created": "2011-07-27T02:12:28.261+0000", 
+		                            "gpgUrl": "/foo/path/never/gpg", 
+		                            "id": "0", 
+		                            "label": "never-enabled-content", 
+		                            "metadataExpire": 600, 
+		                            "modifiedProductIds": [], 
+		                            "name": "never-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.261+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": false
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.381+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "1", 
+		                            "label": "always-enabled-content", 
+		                            "metadataExpire": 200, 
+		                            "modifiedProductIds": [], 
+		                            "name": "always-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.381+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }
+		                ], 
+		                "updated": "2011-07-27T02:12:30.019+0000"
+		            }, 
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:42.434+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:42.434+0000", 
+		                        "value": "1.0"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.434+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:42.434+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.434+0000", 
+		                        "name": "support_level", 
+		                        "updated": "2011-07-27T02:12:42.434+0000", 
+		                        "value": "Premium"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.435+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:42.435+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.434+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:42.434+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.435+0000", 
+		                        "name": "management_enabled", 
+		                        "updated": "2011-07-27T02:12:42.435+0000", 
+		                        "value": "1"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.435+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:42.435+0000", 
+		                        "value": "MKT"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.435+0000", 
+		                        "name": "warning_period", 
+		                        "updated": "2011-07-27T02:12:42.435+0000", 
+		                        "value": "30"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:42.435+0000", 
+		                        "name": "support_type", 
+		                        "updated": "2011-07-27T02:12:42.435+0000", 
+		                        "value": "Level 3"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:42.427+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/awesomeos-server", 
+		                "id": "awesomeos-server", 
+		                "multiplier": 1, 
+		                "name": "Awesome OS Server Bundled", 
+		                "productContent": [], 
+		                "updated": "2011-07-27T02:12:42.427+0000"
+		            }, 
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:35.789+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:35.789+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:35.789+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:35.789+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:35.789+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:35.789+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:35.789+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:35.789+0000", 
+		                        "value": "SVC"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:35.789+0000", 
+		                        "name": "warning_period", 
+		                        "updated": "2011-07-27T02:12:35.789+0000", 
+		                        "value": "30"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:35.789+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:35.789+0000", 
+		                        "value": "6.1"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:35.789+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/37060", 
+		                "id": "37060", 
+		                "multiplier": 1, 
+		                "name": "Awesome OS Server Bits", 
+		                "productContent": [
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/never", 
+		                            "created": "2011-07-27T02:12:28.261+0000", 
+		                            "gpgUrl": "/foo/path/never/gpg", 
+		                            "id": "0", 
+		                            "label": "never-enabled-content", 
+		                            "metadataExpire": 600, 
+		                            "modifiedProductIds": [], 
+		                            "name": "never-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.261+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": false
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.468+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "2", 
+		                            "label": "tagged-content", 
+		                            "metadataExpire": null, 
+		                            "modifiedProductIds": [], 
+		                            "name": "tagged-content", 
+		                            "requiredTags": "TAG1,TAG2", 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.468+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.381+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "1", 
+		                            "label": "always-enabled-content", 
+		                            "metadataExpire": 200, 
+		                            "modifiedProductIds": [], 
+		                            "name": "always-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.381+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path", 
+		                            "created": "2011-07-27T02:12:28.555+0000", 
+		                            "gpgUrl": "/foo/path/gpg/", 
+		                            "id": "1111", 
+		                            "label": "content-label", 
+		                            "metadataExpire": 0, 
+		                            "modifiedProductIds": [], 
+		                            "name": "content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.555+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }
+		                ], 
+		                "updated": "2011-07-27T02:12:35.789+0000"
+		            }, 
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:31.345+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:31.345+0000", 
+		                        "value": "1.0"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:31.345+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:31.345+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:31.346+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:31.346+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:31.346+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:31.346+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:31.346+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:31.346+0000", 
+		                        "value": "SVC"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:31.346+0000", 
+		                        "name": "warning_period", 
+		                        "updated": "2011-07-27T02:12:31.346+0000", 
+		                        "value": "30"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:31.345+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/37070", 
+		                "id": "37070", 
+		                "multiplier": 1, 
+		                "name": "Load Balancing Bits", 
+		                "productContent": [
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/never", 
+		                            "created": "2011-07-27T02:12:28.261+0000", 
+		                            "gpgUrl": "/foo/path/never/gpg", 
+		                            "id": "0", 
+		                            "label": "never-enabled-content", 
+		                            "metadataExpire": 600, 
+		                            "modifiedProductIds": [], 
+		                            "name": "never-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.261+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": false
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.381+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "1", 
+		                            "label": "always-enabled-content", 
+		                            "metadataExpire": 200, 
+		                            "modifiedProductIds": [], 
+		                            "name": "always-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.381+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }
+		                ], 
+		                "updated": "2011-07-27T02:12:31.345+0000"
+		            }, 
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:33.469+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:33.469+0000", 
+		                        "value": "1.0"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:33.469+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:33.469+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:33.469+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:33.469+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:33.469+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:33.469+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:33.469+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:33.469+0000", 
+		                        "value": "SVC"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:33.469+0000", 
+		                        "name": "warning_period", 
+		                        "updated": "2011-07-27T02:12:33.469+0000", 
+		                        "value": "30"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:33.469+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/37068", 
+		                "id": "37068", 
+		                "multiplier": 1, 
+		                "name": "Large File Support Bits", 
+		                "productContent": [
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/never", 
+		                            "created": "2011-07-27T02:12:28.261+0000", 
+		                            "gpgUrl": "/foo/path/never/gpg", 
+		                            "id": "0", 
+		                            "label": "never-enabled-content", 
+		                            "metadataExpire": 600, 
+		                            "modifiedProductIds": [], 
+		                            "name": "never-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.261+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": false
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.381+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "1", 
+		                            "label": "always-enabled-content", 
+		                            "metadataExpire": 200, 
+		                            "modifiedProductIds": [], 
+		                            "name": "always-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.381+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }
+		                ], 
+		                "updated": "2011-07-27T02:12:33.469+0000"
+		            }, 
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:32.964+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:32.964+0000", 
+		                        "value": "1.0"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:32.964+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:32.964+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:32.964+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:32.964+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:32.964+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:32.964+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:32.964+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:32.964+0000", 
+		                        "value": "SVC"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:32.964+0000", 
+		                        "name": "warning_period", 
+		                        "updated": "2011-07-27T02:12:32.964+0000", 
+		                        "value": "30"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:32.963+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/37067", 
+		                "id": "37067", 
+		                "multiplier": 1, 
+		                "name": "Shared Storage Bits", 
+		                "productContent": [
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/never", 
+		                            "created": "2011-07-27T02:12:28.261+0000", 
+		                            "gpgUrl": "/foo/path/never/gpg", 
+		                            "id": "0", 
+		                            "label": "never-enabled-content", 
+		                            "metadataExpire": 600, 
+		                            "modifiedProductIds": [], 
+		                            "name": "never-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.261+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": false
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.381+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "1", 
+		                            "label": "always-enabled-content", 
+		                            "metadataExpire": 200, 
+		                            "modifiedProductIds": [], 
+		                            "name": "always-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.381+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }
+		                ], 
+		                "updated": "2011-07-27T02:12:32.963+0000"
+		            }, 
+		            {
+		                "attributes": [
+		                    {
+		                        "created": "2011-07-27T02:12:34.320+0000", 
+		                        "name": "version", 
+		                        "updated": "2011-07-27T02:12:34.320+0000", 
+		                        "value": "1.0"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:34.321+0000", 
+		                        "name": "variant", 
+		                        "updated": "2011-07-27T02:12:34.321+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:34.321+0000", 
+		                        "name": "sockets", 
+		                        "updated": "2011-07-27T02:12:34.321+0000", 
+		                        "value": "2"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:34.321+0000", 
+		                        "name": "arch", 
+		                        "updated": "2011-07-27T02:12:34.321+0000", 
+		                        "value": "ALL"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:34.321+0000", 
+		                        "name": "type", 
+		                        "updated": "2011-07-27T02:12:34.321+0000", 
+		                        "value": "SVC"
+		                    }, 
+		                    {
+		                        "created": "2011-07-27T02:12:34.321+0000", 
+		                        "name": "warning_period", 
+		                        "updated": "2011-07-27T02:12:34.321+0000", 
+		                        "value": "30"
+		                    }
+		                ], 
+		                "created": "2011-07-27T02:12:34.320+0000", 
+		                "dependentProductIds": [], 
+		                "href": "/products/37069", 
+		                "id": "37069", 
+		                "multiplier": 1, 
+		                "name": "Management Bits", 
+		                "productContent": [
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/never", 
+		                            "created": "2011-07-27T02:12:28.261+0000", 
+		                            "gpgUrl": "/foo/path/never/gpg", 
+		                            "id": "0", 
+		                            "label": "never-enabled-content", 
+		                            "metadataExpire": 600, 
+		                            "modifiedProductIds": [], 
+		                            "name": "never-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.261+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": false
+		                    }, 
+		                    {
+		                        "content": {
+		                            "contentUrl": "/foo/path/always", 
+		                            "created": "2011-07-27T02:12:28.381+0000", 
+		                            "gpgUrl": "/foo/path/always/gpg", 
+		                            "id": "1", 
+		                            "label": "always-enabled-content", 
+		                            "metadataExpire": 200, 
+		                            "modifiedProductIds": [], 
+		                            "name": "always-enabled-content", 
+		                            "requiredTags": null, 
+		                            "type": "yum", 
+		                            "updated": "2011-07-27T02:12:28.381+0000", 
+		                            "vendor": "test-vendor"
+		                        }, 
+		                        "enabled": true
+		                    }
+		                ], 
+		                "updated": "2011-07-27T02:12:34.320+0000"
+		            }
+		        ], 
+		        "quantity": 10, 
+		        "startDate": "2011-06-25T04:00:00.000+0000", 
+		        "updated": "2011-07-27T02:12:51.464+0000", 
+		        "upstreamPoolId": null
+		    }
+		    */
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			String subscriptionId = jsonSubscription.getString("id");
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String productName = jsonProduct.getString("name");
+			if (productName.equals(fromProductName)) {
+				return subscriptionId;
+			}
+		}
+		log.warning("CandlepinTasks could not getSubscriptionIdFromProductName.");
+		return null;
+	}
+	
 	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
 
-		/* Example jsonPool:
-		  		{
-			    "id": "8a90f8b42e398f7a012e399000780147",
-			    "attributes": [
-			      {
-			        "name": "requires_consumer_type",
-			        "value": "system",
-			        "updated": "2011-02-18T16:17:42.008+0000",
-			        "created": "2011-02-18T16:17:42.008+0000"
-			      },
-			      {
-			        "name": "virt_limit",
-			        "value": "0",
-			        "updated": "2011-02-18T16:17:42.008+0000",
-			        "created": "2011-02-18T16:17:42.008+0000"
-			      },
-			      {
-			        "name": "virt_only",
-			        "value": "true",
-			        "updated": "2011-02-18T16:17:42.009+0000",
-			        "created": "2011-02-18T16:17:42.009+0000"
-			      }
-			    ],
-			    "owner": {
-			      "href": "/owners/admin",
-			      "id": "8a90f8b42e398f7a012e398f8d310005"
-			    },
-			    "providedProducts": [
-			      {
-			        "id": "8a90f8b42e398f7a012e39900079014b",
-			        "productName": "Awesome OS Server Bits",
-			        "productId": "37060",
-			        "updated": "2011-02-18T16:17:42.009+0000",
-			        "created": "2011-02-18T16:17:42.009+0000"
-			      }
-			    ],
-			    "endDate": "2012-02-18T00:00:00.000+0000",
-			    "startDate": "2011-02-18T00:00:00.000+0000",
-			    "productName": "Awesome OS with up to 4 virtual guests",
-			    "quantity": 20,
-			    "contractNumber": "39",
-			    "accountNumber": "12331131231",
-			    "consumed": 0,
-			    "subscriptionId": "8a90f8b42e398f7a012e398ff0ef0104",
-			    "productId": "awesomeos-virt-4",
-			    "sourceEntitlement": null,
-			    "href": "/pools/8a90f8b42e398f7a012e399000780147",
-			    "activeSubscription": true,
-			    "restrictedToUsername": null,
-			    "updated": "2011-02-18T16:17:42.008+0000",
-			    "created": "2011-02-18T16:17:42.008+0000"
-			  }
-		*/
+		// get the owner's pools for the authenticator
+		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/pools | python -mjson.tool
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
+			/*
+		    {
+		        "accountNumber": "12331131231", 
+		        "activeSubscription": true, 
+		        "attributes": [
+		            {
+		                "created": "2011-07-27T02:13:34.090+0000", 
+		                "id": "8a90f8c631695cb30131695e510a030b", 
+		                "name": "requires_consumer_type", 
+		                "updated": "2011-07-27T02:13:34.090+0000", 
+		                "value": "system"
+		            }, 
+		            {
+		                "created": "2011-07-27T02:13:34.090+0000", 
+		                "id": "8a90f8c631695cb30131695e510a030c", 
+		                "name": "virt_limit", 
+		                "updated": "2011-07-27T02:13:34.090+0000", 
+		                "value": "0"
+		            }, 
+		            {
+		                "created": "2011-07-27T02:13:34.091+0000", 
+		                "id": "8a90f8c631695cb30131695e510b030d", 
+		                "name": "virt_only", 
+		                "updated": "2011-07-27T02:13:34.091+0000", 
+		                "value": "true"
+		            }
+		        ], 
+		        "consumed": 1, 
+		        "contractNumber": "65", 
+		        "created": "2011-07-27T02:13:34.089+0000", 
+		        "endDate": "2012-09-24T04:00:00.000+0000", 
+		        "href": "/pools/8a90f8c631695cb30131695e5109030a", 
+		        "id": "8a90f8c631695cb30131695e5109030a", 
+		        "owner": {
+		            "displayName": "Admin Owner", 
+		            "href": "/owners/admin", 
+		            "id": "8a90f8c631695cb30131695d39b30006", 
+		            "key": "admin"
+		        }, 
+		        "productAttributes": [
+		            {
+		                "created": "2011-07-27T02:13:34.095+0000", 
+		                "id": "8a90f8c631695cb30131695e510f030e", 
+		                "name": "virt_limit", 
+		                "productId": "awesomeos-virt-4", 
+		                "updated": "2011-07-27T02:13:34.095+0000", 
+		                "value": "4"
+		            }, 
+		            {
+		                "created": "2011-07-27T02:13:34.095+0000", 
+		                "id": "8a90f8c631695cb30131695e510f030f", 
+		                "name": "type", 
+		                "productId": "awesomeos-virt-4", 
+		                "updated": "2011-07-27T02:13:34.095+0000", 
+		                "value": "MKT"
+		            }, 
+		            {
+		                "created": "2011-07-27T02:13:34.095+0000", 
+		                "id": "8a90f8c631695cb30131695e510f0310", 
+		                "name": "arch", 
+		                "productId": "awesomeos-virt-4", 
+		                "updated": "2011-07-27T02:13:34.095+0000", 
+		                "value": "ALL"
+		            }, 
+		            {
+		                "created": "2011-07-27T02:13:34.095+0000", 
+		                "id": "8a90f8c631695cb30131695e510f0311", 
+		                "name": "version", 
+		                "productId": "awesomeos-virt-4", 
+		                "updated": "2011-07-27T02:13:34.095+0000", 
+		                "value": "6.1"
+		            }, 
+		            {
+		                "created": "2011-07-27T02:13:34.096+0000", 
+		                "id": "8a90f8c631695cb30131695e51100312", 
+		                "name": "variant", 
+		                "productId": "awesomeos-virt-4", 
+		                "updated": "2011-07-27T02:13:34.096+0000", 
+		                "value": "ALL"
+		            }
+		        ], 
+		        "productId": "awesomeos-virt-4", 
+		        "productName": "Awesome OS with up to 4 virtual guests", 
+		        "providedProducts": [
+		            {
+		                "created": "2011-07-27T02:13:34.096+0000", 
+		                "id": "8a90f8c631695cb30131695e51100313", 
+		                "productId": "37060", 
+		                "productName": "Awesome OS Server Bits", 
+		                "updated": "2011-07-27T02:13:34.096+0000"
+		            }
+		        ], 
+		        "quantity": 40, 
+		        "restrictedToUsername": null, 
+		        "sourceEntitlement": null, 
+		        "startDate": "2011-05-25T04:00:00.000+0000", 
+		        "subscriptionId": "8a90f8c631695cb30131695e41f2023c", 
+		        "updated": "2011-07-27T10:49:32.171+0000"
+		    }
+		    */
+			
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String poolId = jsonPool.getString("id");
 			String productName = jsonPool.getString("productName");
@@ -648,7 +1417,84 @@ schema generation failed
 				return poolId;
 			}
 		}
+		log.warning("CandlepinTasks could not getPoolIdFromProductNameAndContractNumber.");
 		return null;
+	}
+	
+	
+	public static BigInteger getEntitlementSerialForSubscribedPoolId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String poolId) throws JSONException, Exception{
+
+		JSONObject jsonSerialCandidate = null;	// the newest serial object corresponding to the subscribed pool id (in case the user subscribed to a multi-entitlement pool we probably want the newest serial)
+
+		// get the org's entitlements for the authenticator
+		// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/entitlements | python -mjson.tool
+		JSONArray jsonEntitlements = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/entitlements"));	
+		for (int i = 0; i < jsonEntitlements.length(); i++) {
+			JSONObject jsonEntitlement = (JSONObject) jsonEntitlements.get(i);
+			/*  
+		    {
+		        "accountNumber": "12331131231", 
+		        "certificates": [
+		            {
+		                "cert": "-----BEGIN CERTIFICATE-----\nMIIKCzCCCELKgW/7sB5p/QnMGtc7H3JA==\n-----END CERTIFICATE-----\n", 
+		                "created": "2011-07-23T00:19:17.657+0000", 
+		                "id": "8a90f8c631544ebf0131545c421a08f4", 
+		                "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAghrtrapSj7ouE4CS++9pLx\n-----END RSA PRIVATE KEY-----\n", 
+		                "serial": {
+		                    "collected": false, 
+		                    "created": "2011-07-23T00:19:17.640+0000", 
+		                    "expiration": "2012-07-21T00:00:00.000+0000", 
+		                    "id": 9013269172175430736, 
+		                    "revoked": false, 
+		                    "serial": 9013269172175430736, 
+		                    "updated": "2011-07-23T00:19:17.640+0000"
+		                }, 
+		                "updated": "2011-07-23T00:19:17.657+0000"
+		            }
+		        ], 
+		        "contractNumber": "21", 
+		        "created": "2011-07-23T00:19:17.631+0000", 
+		        "endDate": "2012-07-21T00:00:00.000+0000", 
+		        "flexExpiryDays": 0, 
+		        "href": "/entitlements/8a90f8c631544ebf0131545c420008f3", 
+		        "id": "8a90f8c631544ebf0131545c420008f3", 
+		        "pool": {
+		            "href": "/pools/8a90f8c631544ebf0131545024da040f", 
+		            "id": "8a90f8c631544ebf0131545024da040f"
+		        }, 
+		        "quantity": 1, 
+		        "startDate": "2011-07-23T00:19:17.631+0000", 
+		        "updated": "2011-07-23T00:19:17.631+0000"
+		    }
+		    */
+			JSONObject jsonPool = jsonEntitlement.getJSONObject("pool");
+			if (poolId.equals(jsonPool.getString("id"))) {
+				JSONArray jsonCertificates = jsonEntitlement.getJSONArray("certificates");
+				for (int j = 0; j < jsonCertificates.length(); j++) {
+					JSONObject jsonCertificate = (JSONObject) jsonCertificates.get(j);
+					JSONObject jsonSerial = jsonCertificate.getJSONObject("serial");
+					if (!jsonSerial.getBoolean("revoked")) {
+						
+						if (jsonSerialCandidate==null) jsonSerialCandidate=jsonSerial;	// set the first found serial as the candidate
+						
+						// determine if this is the newest serial object that has been created
+						DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
+						java.util.Date dateSerialCandidateCreated = iso8601DateFormat.parse(jsonSerialCandidate.getString("created"));
+						java.util.Date dateSerialCreated = iso8601DateFormat.parse(jsonSerial.getString("created"));
+						if (dateSerialCreated.after(dateSerialCandidateCreated)) {
+							jsonSerialCandidate = jsonSerial;
+						}
+					}
+				}
+			}
+		}
+		
+		if (jsonSerialCandidate==null) {
+			log.warning("CandlepinTasks could not getEntitlementSerialForSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
+			return null;
+		}
+		
+		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
 	}
 	
 	public static boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
@@ -770,9 +1616,119 @@ schema generation failed
 		return virt_only;
 	}
 
-	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+	public static boolean isSubscriptionMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String ownerKey, String subscriptionId) throws JSONException, Exception {
+
+		Boolean multi_entitlement = null;	// indicates that the subscription's product does NOT have the "multi-entitlement" attribute
 		
-		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2c06f806ef | python -mjson.tool
+		// get the owner's subscriptions for the authenticator
+		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions | python -mjson.tool
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			/*			
+		    {
+		        "accountNumber": "12331131231", 
+		        "certificate": null, 
+		        "contractNumber": "72", 
+		        "created": "2011-07-27T02:13:32.462+0000", 
+		        "endDate": "2012-08-24T04:00:00.000+0000", 
+		        "id": "8a90f8c631695cb30131695e4aae026c", 
+		        "modified": null, 
+		        "owner": {
+		            "displayName": "Admin Owner", 
+		            "href": "/owners/admin", 
+		            "id": "8a90f8c631695cb30131695d39b30006", 
+		            "key": "admin"
+		        }, 
+		        "product": {
+		            "attributes": [
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "version", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "1.0"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "variant", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "ALL"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "arch", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "ALL"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "management_enabled", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "1"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "warning_period", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "90"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "type", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "MKT"
+		                }, 
+		                {
+		                    "created": "2011-07-27T02:13:32.350+0000", 
+		                    "name": "multi-entitlement", 
+		                    "updated": "2011-07-27T02:13:32.350+0000", 
+		                    "value": "no"
+		                }
+		            ], 
+		            "created": "2011-07-27T02:13:32.349+0000", 
+		            "dependentProductIds": [], 
+		            "href": "/products/management-100", 
+		            "id": "management-100", 
+		            "multiplier": 100, 
+		            "name": "Management Add-On", 
+		            "productContent": [], 
+		            "updated": "2011-07-27T02:13:32.349+0000"
+		        }, 
+		        "providedProducts": [], 
+		        "quantity": 5, 
+		        "startDate": "2011-06-25T04:00:00.000+0000", 
+		        "updated": "2011-07-27T02:13:32.462+0000", 
+		        "upstreamPoolId": null
+		    }
+		    */
+			
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			if (!jsonSubscription.getString("id").equals(subscriptionId)) continue;
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
+			// loop through the productAttributes of this subscription looking for the "multi-entitlement" attribute
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {
+				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+				String productAttributeName = jsonProductAttribute.getString("name");
+				if (productAttributeName.equals("multi-entitlement")) {
+					//multi_entitlement = jsonProductAttribute.getBoolean("value");
+					multi_entitlement = jsonProductAttribute.getString("value").equalsIgnoreCase("yes") || jsonProductAttribute.getString("value").equalsIgnoreCase("true") || jsonProductAttribute.getString("value").equals("1");
+					break;
+				}
+			}
+		}
+		
+		multi_entitlement = multi_entitlement==null? false : multi_entitlement;	// the absense of a "multi-entitlement" productAttribute implies multi-entitlement=false
+		return multi_entitlement;
+	}
+	
+	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+		Boolean multi_entitlement = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
+
+		// get the pool for the authenticator
+		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2c06f806ef | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
+
+		/*
 		{
 		    "accountNumber": "12331131231", 
 		    "activeSubscription": true, 
@@ -850,9 +1806,7 @@ schema generation failed
 		    "updated": "2011-07-18T16:54:58.040+0000"
 		}
 		*/
-		
-		Boolean multi_entitlement = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
+	
 		JSONArray jsonProductAttributes = jsonPool.getJSONArray("productAttributes");
 		// loop through the productAttributes of this pool looking for the "multi-entitlement" attribute
 		for (int j = 0; j < jsonProductAttributes.length(); j++) {

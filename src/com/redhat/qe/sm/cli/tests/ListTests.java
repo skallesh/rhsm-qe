@@ -6,7 +6,6 @@ import java.util.List;
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
@@ -22,7 +21,6 @@ import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -102,13 +100,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41679)
-	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
+	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
-		EntitlementCert  entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool));
+		EntitlementCert  entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool_(pool));
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(!consumedProductSubscriptions.isEmpty(),"The list of Consumed Product Subscription is NOT empty after subscribing to a pool with ProductId '"+productId+"'.");
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
@@ -158,7 +156,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void EnsureListAndListInstalledAreTheSame_Test() {
+	public void EnsureListAndListInstalledAreTheSame_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 
@@ -176,7 +174,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		log.info("assert list [--installed] produce same results when subscribed to something...");
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPool(pool);
+		clienttasks.subscribeToSubscriptionPool_(pool);
 		listResult = clienttasks.list_(null, null, null, null, null, null, null);
 		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null);
 		
@@ -305,10 +303,67 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 
+	
+	
+	@Test(	description="subscription-manager: susbcription manager list consumed should be permitted without being registered",
+			groups={"blockedByBug-725870"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListConsumedWithoutBeingRegistered_Test() {
+		
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult listResult = clienttasks.listConsumedProductSubscriptions();
+		
+		// assert redemption results
+		Assert.assertEquals(listResult.getStdout().trim(), "No Consumed subscription pools to list","List consumed should NOT require that the system be registered.");
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0),"Exit code from list consumed when executed without being registered.");
+	}
+	
+	@Test(	description="subscription-manager: susbcription manager list installed should be permitted without being registered",
+			groups={"blockedByBug-725870"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListInstalledWithoutBeingRegistered_Test() {
+		
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult listResult = clienttasks.listInstalledProducts();
+	}
+	
+	@Test(	description="subscription-manager: susbcription manager list should be permitted without being registered",
+			groups={"blockedByBug-725870"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListWithoutBeingRegistered_Test() {
+		
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null);
+		
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
+	}
+	
+	@Test(	description="subscription-manager: susbcription manager list available should require being registered",
+			groups={},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void AttemptListAvailableWithoutBeingRegistered_Test() {
+		SSHCommandResult listResult;
+		clienttasks.unregister(null,null,null);
+		
+		listResult = clienttasks.list_(null,true,null,null,null,null,null);
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
+		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
+
+		listResult = clienttasks.list_(true,true,null,null,null,null,null);
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
+		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
+
+	}
+	
 	// Candidates for an automated Test:
 	// TODO Bug 672562 - request for subscription-manager list --available --ondate option  (SEE CODE IN ExpirationTests.createTestPool(..) FOR EXAMPLE OF API GET WITH activeon PARAMETER)
 	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
-	
+	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats
+
 	// Data Providers ***********************************************************************
 	
 	

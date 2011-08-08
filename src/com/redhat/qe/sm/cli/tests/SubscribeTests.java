@@ -1,11 +1,8 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,7 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -27,8 +23,6 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.ConsumerCert;
-import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -240,16 +234,17 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41897)
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
 
-		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+		//clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
+		Assert.assertNull(CandlepinTasks.getEntitlementSerialForSubscribedPoolId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, sm_clientOrg, pool.poolId),"Authenticator '"+sm_clientUsername+"' has not been granted any entitlements from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
+		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
-		boolean isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId);
 
-		if (!isPoolMultiEntitlement) {
-			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'",
-				"subscribe command returns proper message when already subscribed to the requested pool");
+		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId)) {
+			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.",
+				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "Successfully subscribed the system to Pool "+pool.poolId+"",
-				"subscribe command allows multi-entitlement pools to be subscribed to more than once.");		
+				"subscribe command allows multi-entitlement pools to be subscribed to by the same consumer more than once.");		
 		}
 	}
 	
@@ -257,7 +252,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to multiple/duplicate/bad pools in one call",
 			groups={"blockedByBug-622851"},
 			enabled=true)
-	public void SubscribeToMultipleDuplicateAndBadPools_Test() {
+	public void SubscribeToMultipleDuplicateAndBadPools_Test() throws JSONException, Exception {
 		
 		// begin the test with a cleanly registered system
 		clienttasks.unregister(null, null, null);
@@ -275,16 +270,37 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to all pool ids
 		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
-		SSHCommandResult result = clienttasks.subscribe(poolIds, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(poolIds, null, null, null, null, null, null, null, null);
 		
-		// assert the results
+		/*
+		No such entitlement pool: bad123
+		Successfully subscribed the system to Pool 8a90f8c63159ce55013159cfd6c40303
+		This consumer is already subscribed to the product matching pool with id '8a90f8c63159ce55013159cfd6c40303'.
+		Successfully subscribed the system to Pool 8a90f8c63159ce55013159cfea7a06ac
+		Successfully subscribed the system to Pool 8a90f8c63159ce55013159cfea7a06ac
+		No such entitlement pool: bad_POOLID
+		*/
+		
+		// assert the results...
 		for (String poolId : poolIds) {
-			if (poolId.equals(badPoolId1)) continue; if (poolId.equals(badPoolId2)) continue;
-			Assert.assertContainsMatch(result.getStdout(),"^This consumer is already subscribed to the product matching pool with id '"+poolId+"'$","Asserting that already subscribed to pools is noted and skipped during a multiple pool binding.");
+			String subscribeResultMessage;
+			if (poolId.equals(badPoolId1) || poolId.equals(badPoolId2)) {
+				//subscribeResultMessage = "No such entitlement pool: "+poolId;
+				subscribeResultMessage = "Subscription pool "+poolId+" does not exist.";
+				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The subscribe result for an invalid pool '"+poolId+"' contains: "+subscribeResultMessage);
+			}
+			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,poolId)) {
+				subscribeResultMessage = "Successfully subscribed the system to Pool "+poolId;
+				subscribeResultMessage += "\n"+subscribeResultMessage;
+				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for a multi-entitlement pool '"+poolId+"' contains: "+subscribeResultMessage);
+			} else if (false) {
+				// TODO case when there are no entiitlements remaining for the duplicate subscribe
+			} else {
+				subscribeResultMessage = "Successfully subscribed the system to Pool "+poolId;
+				subscribeResultMessage += "\n"+"This consumer is already subscribed to the product matching pool with id '"+poolId+"'.";
+				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for pool '"+poolId+"' contains: "+subscribeResultMessage);			
+			}
 		}
-		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId1+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
-		Assert.assertContainsMatch(result.getStdout(),"^No such entitlement pool: "+badPoolId2+"$","Asserting that an invalid pool is noted and skipped during a multiple pool binding.");
-		clienttasks.assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all including duplicates and bad pool ids.");
 	}
 	
 	
@@ -363,7 +379,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null);
 	    
 	    // subscribe to all the available pools
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 	    
 	    // get all of the current entitlement certs and remember them
 	    List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
@@ -428,24 +444,56 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// autosubscribe
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
 		
-		// Example Results from register --autosubscribe
-		//		[root@jsefler-onprem03 ~]# subscription-manager register --username=testuser1 --password=password --autosubscribe
-		//		9a63ba95-4f0f-47da-b645-69cc3915e2bd jsefler-onprem03.usersys.redhat.com
-		//		Installed Products:
-		//		   Multiplier Product Bits - Not Subscribed
-		//		   Load Balancing Bits - Subscribed
-		//		   Awesome OS Server Bits - Subscribed
-		//		   Management Bits - Subscribed
-		//		   Awesome OS Scalable Filesystem Bits - Subscribed
-		//		   Shared Storage Bits - Subscribed
-		//		   Large File Support Bits - Subscribed
-		//		   Awesome OS Workstation Bits - Subscribed
-		//		   Awesome OS Premium Architecture Bits - Not Subscribed
-		//		   Awesome OS for S390X Bits - Not Subscribed
-		//		   Awesome OS Developer Basic - Not Subscribed
-		//		   Clustering Bits - Subscribed
-		//		   Awesome OS Developer Bits - Not Subscribed
-		//		   Awesome OS Modifier Bits - Subscribed
+		/* RHEL57 RHEL61 Example Results...
+		# subscription-manager subscribe --auto
+		Installed Products:
+		   Multiplier Product Bits - Not Subscribed
+		   Load Balancing Bits - Subscribed
+		   Awesome OS Server Bits - Subscribed
+		   Management Bits - Subscribed
+		   Awesome OS Scalable Filesystem Bits - Subscribed
+		   Shared Storage Bits - Subscribed
+		   Large File Support Bits - Subscribed
+		   Awesome OS Workstation Bits - Subscribed
+		   Awesome OS Premium Architecture Bits - Not Subscribed
+		   Awesome OS for S390X Bits - Not Subscribed
+		   Awesome OS Developer Basic - Not Subscribed
+		   Clustering Bits - Subscribed
+		   Awesome OS Developer Bits - Not Subscribed
+		   Awesome OS Modifier Bits - Subscribed
+		*/
+		
+		/* Example Results...
+		# subscription-manager subscribe --auto
+		Installed Product Current Status:
+		
+		ProductName:         	Awesome OS for x86_64/ALL Bits for ZERO sockets
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for x86_64/ALL Bits
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for ppc64 Bits
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for i386 Bits 
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for x86 Bits  
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS for ia64 Bits 
+		Status:               	Subscribed               
+		
+		
+		ProductName:         	Awesome OS Scalable Filesystem Bits
+		Status:               	Subscribed               
+		*/
 	}
 	protected List<List<Object>> subscriptionPoolProductData;
 	
@@ -492,11 +540,44 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is "+expectedSubscribeStatus.toLowerCase()+".");
 
 		// assert that the sshCommandResultOfAutosubscribe showed the expected Subscribe Status for this productCert
-		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
+		// RHEL57 RHEL61		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
+		//		"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
+		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResultFromAutosubscribe.getStdout());
+		InstalledProduct autosubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productCert.productName, autosubscribedProductStatusList);
+		Assert.assertEquals(autosubscribedProduct.status,expectedSubscribeStatus,
 				"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
 	}
 //	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
 	SSHCommandResult sshCommandResultFromAutosubscribe;
+	
+	
+	@Test(	description="subscription-manager: autosubscribe consumer more than once and verify we are not duplicately subscribed",
+			groups={"blockedByBug-723044"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
+
+		// before testing, make sure all the expected subscriptionPoolProductId are available
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, null);
+		
+		// get the expected subscriptionPoolProductIdData
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
+		
+		// autosubscribe once
+		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
+		List<File> entitlementCertFiles1 = clienttasks.getCurrentEntitlementCertFiles();
+		List<InstalledProduct> autosubscribedProductStatusList1 = InstalledProduct.parse(result1.getStdout());
+		
+		// autosubscribe twice
+		SSHCommandResult result2 = clienttasks.subscribe(Boolean.TRUE,null,null,null,null,null,null,null,null, null);
+		List<File> entitlementCertFiles2 = clienttasks.getCurrentEntitlementCertFiles();
+		List<InstalledProduct> autosubscribedProductStatusList2 = InstalledProduct.parse(result2.getStdout());
+		
+		// assert results
+		Assert.assertEquals(entitlementCertFiles2.size(), entitlementCertFiles1.size(), "The number of granted entitlement certs is the same after a second autosubscribe.");
+		Assert.assertEquals(autosubscribedProductStatusList2.size(), autosubscribedProductStatusList1.size(), "The stdout from autosubscribe reports the same number of installed product status entries after a second autosubscribe.");
+		Assert.assertTrue(autosubscribedProductStatusList1.containsAll(autosubscribedProductStatusList2), "The list of installed product status entries from a second autosubscribe is the same as the first.");
+	}
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
@@ -602,10 +683,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe to multiple pools using --quantity that exceeds some pools and is under other pools.",
-			groups={},
+			groups={"blockedByBug-722975"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithQuantityToMultiplePools_Test() {
+	public void SubscribeWithQuantityToMultiplePools_Test() throws NumberFormatException, JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, null);
@@ -628,12 +709,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert that the expected pools were subscribed to based on quantity
 		for (SubscriptionPool pool : pools) {
-			if (quantity <= Integer.valueOf(pool.quantity)) {
+			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId)) {
+				Assert.assertTrue(result.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
+			} else if (quantity <= Integer.valueOf(pool.quantity)) {
 				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
 				Assert.assertTrue(result.getStdout().contains("Successfully subscribed the system to Pool "+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
-				//Assert.assertContainsMatch(result.getStdout(), "^No free entitlements are available for the pool with id '"+pool.poolId+"'$","Subscribe should NOT be successful when subscribing with --quantity greater than the pool's availability.");
-				Assert.assertTrue(result.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
+				//Assert.assertContainsMatch(result.getStdout(), "^No free entitlements are available for the pool with id '"+pool.poolId+"'.$","Subscribe should NOT be successful when subscribing with --quantity greater than the pool's availability.");
+				Assert.assertTrue(result.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
 		}
 	}
@@ -714,7 +797,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithQuantityDataAsListOfLists());
 	}
 	protected List<List<Object>>getSubscribeWithQuantityDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, "SubscriptionQuantityConsumer", null, null, true, null, null, null);
@@ -764,14 +847,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		pool= poolWithMultiEntitlementYes;
 		if (pool!=null) {
-			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",												Integer.valueOf(0),		"^Two is not a valid value for quantity$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",												Integer.valueOf(0),		"^-1 is not a valid value for quantity$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",												Integer.valueOf(0),		"^0 is not a valid value for quantity$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+pool.poolId+"'$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+pool.poolId+"'$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+pool.poolId+"'.$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(0),		"^No free entitlements are available for the pool with id '"+pool.poolId+"'.$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to yes."}));
 		}
@@ -779,7 +862,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		pool= poolWithMultiEntitlementNo;
 		if (pool!=null) {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Subscription pool '"+pool.poolId+"' cannot be multi-entitled.$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Multi-entitlement not supported for pool with id '"+pool.poolId+"'.$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
 		}
@@ -787,7 +870,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		pool= poolWithMultiEntitlementNull;
 		if (pool!=null) {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^Successfully subscribed the system to Pool "+pool.poolId+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Subscription pool '"+pool.poolId+"' cannot be multi-entitled.$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^Multi-entitlement not supported for pool with id '"+pool.poolId+"'.$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));
 		}

@@ -31,6 +31,15 @@ public class InstalledProduct extends AbstractCommandLineData {
 		super(productData);
 	}
 	
+	public InstalledProduct(String productName, String status, Calendar expires, BigInteger serialNumber, Long contractNumber, BigInteger accountNumber) {
+		super(null);
+		this.productName = productName;
+		this.status = status;
+		this.expires = expires;
+		this.serialNumber = serialNumber;
+		this.contractNumber = contractNumber;
+		this.accountNumber = accountNumber;
+	}
 	
 	@Override
 	public String toString() {
@@ -44,6 +53,37 @@ public class InstalledProduct extends AbstractCommandLineData {
 		if (accountNumber != null)		string += String.format(" %s='%s'", "accountNumber",accountNumber);
 
 		return string.trim();
+	}
+	
+	@Override
+	public boolean equals(Object obj){
+		InstalledProduct that = (InstalledProduct) obj;
+		
+		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
+		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
+		
+		if (that.status!=null && !that.status.equals(this.status)) return false;
+		if (this.status!=null && !this.status.equals(that.status)) return false;
+		
+		if (that.expires!=null && !that.expires.equals(this.expires)) return false;
+		if (this.expires!=null && !this.expires.equals(that.expires)) return false;
+		
+		if (that.serialNumber!=null && !that.serialNumber.equals(this.serialNumber)) return false;
+		if (this.serialNumber!=null && !this.serialNumber.equals(that.serialNumber)) return false;
+		
+		if (that.contractNumber!=null && !that.contractNumber.equals(this.contractNumber)) return false;
+		if (this.contractNumber!=null && !this.contractNumber.equals(that.contractNumber)) return false;
+		
+		if (that.accountNumber!=null && !that.accountNumber.equals(this.accountNumber)) return false;
+		if (this.accountNumber!=null && !this.accountNumber.equals(that.accountNumber)) return false;
+		
+		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
+		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
+		
+		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
+		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
+		
+		return true;
 	}
 	
 	@Override
@@ -98,12 +138,12 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("productName",			"ProductName:(.*)");
-		regexes.put("status",				"Status:(.*)");
-		regexes.put("expires",				"Expires:(.*)");
-		regexes.put("serialNumber",			"SerialNumber:(.*)");
-		regexes.put("contractNumber",		"ContractNumber:(.*)");
-		regexes.put("accountNumber",		"AccountNumber:(.*)");
+		regexes.put("productName",			"^ProductName:(.*)");
+		regexes.put("status",				"^Status:(.*)");
+		regexes.put("expires",				"^Expires:(.*)");
+		regexes.put("serialNumber",			"^SerialNumber:(.*)");
+		regexes.put("contractNumber",		"^ContractNumber:(.*)");
+		regexes.put("accountNumber",		"^AccountNumber:(.*)");
 	
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

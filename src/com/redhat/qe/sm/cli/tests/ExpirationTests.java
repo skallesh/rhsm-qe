@@ -4,11 +4,9 @@ import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -16,15 +14,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -279,26 +272,14 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 5*1000, 1);
 		
-		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id
+		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
+		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
+		String iso8601FormatedDateString = iso8601DateFormat.format(startDate);
+		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");				// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
+		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(iso8601FormatedDateString, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
+
+		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
 		String poolId = null;
-		
-		String iso8601format = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2012-02-08T00:00:00.000+0000"
-		DateFormat dateFormat = new SimpleDateFormat(iso8601format);
-		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(dateFormat.format(startDate), "UTF-8");
-		
-		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=720493 - jsefler 07/11/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="720493"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			 dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");	// the Z time zone was stripped	// "2012-02-08T00:00:00.000"
-			 //dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-			 urlEncodedActiveOnDate = java.net.URLEncoder.encode(dateFormat.format(startDate), "UTF-8");
-		}
-		// END OF WORKAROUND
-		
-		
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);

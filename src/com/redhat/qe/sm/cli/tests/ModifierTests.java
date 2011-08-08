@@ -38,7 +38,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
-	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListWhenProvidingPoolsAreSubscribed(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools) {
+	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListWhenProvidingPoolsAreSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools) {
 		
 		// make sure we are not subscribed to anything
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();

@@ -57,7 +57,49 @@ A   3. Events should be consumable via RSS based on consumer
    4. AMQP
          1. It should be possible to enable each message type to be published to an AMQP Bus.
          2. It should be possible to publish no messages to the AMQP bus. 
+
+
+jsefler 7/26/2011
+TODO CREATE A TEST TO TRIGGER ALL OF THESE EVENTS.  MANY ARE NEWER THAN WHEN THIS SCRIPT WAS ORIGINALLY WRITTEN
+EVENTS FOUND IN /candlepin/proxy/src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java
+
+MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new consumer {1}"));
+MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modified the consumer {1}"));
+MESSAGES.put("CONSUMERDELETED", I18n.marktr("{0} deleted the consumer {1}"));
+MESSAGES.put("OWNERCREATED", I18n.marktr("{0} created new owner {1}"));
+MESSAGES.put("OWNERMODIFIED", I18n.marktr("{0} modified the owner {1}"));
+MESSAGES.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));
+MESSAGES.put("ENTITLEMENTCREATED",
+    I18n.marktr("{0} consumed a subscription for product {1}"));
+MESSAGES.put("ENTITLEMENTMODIFIED",
+    I18n.marktr("{0} modified a subscription for product {1}"));
+MESSAGES.put("ENTITLEMENTDELETED",
+    I18n.marktr("{0} returned the subscription for {1}"));
+MESSAGES.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
+MESSAGES.put("POOLMODIFIED", I18n.marktr("{0} modified a pool for product {1}"));
+MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
+MESSAGES.put("EXPORTCREATED",
+    I18n.marktr("{0} created an export for consumer {1}"));
+MESSAGES.put("IMPORTCREATED", I18n.marktr("{0} imported a manifest for owner {1}"));
+MESSAGES.put("USERCREATED", I18n.marktr("{0} created new user {1}"));
+MESSAGES.put("USERMODIFIED", I18n.marktr("{0} modified the user {1}"));
+MESSAGES.put("USERDELETED", I18n.marktr("{0} deleted the user {1}"));
+MESSAGES.put("ROLECREATED", I18n.marktr("{0} created new role {1}"));
+MESSAGES.put("ROLEMODIFIED", I18n.marktr("{0} modified the role {1}"));
+MESSAGES.put("ROLEDELETED", I18n.marktr("{0} deleted the role {1}"));
+MESSAGES.put("SUBSCRIPTIONCREATED",
+    I18n.marktr("{0} created new subscription for product {1}"));
+MESSAGES.put("SUBSCRIPTIONMODIFIED",
+    I18n.marktr("{0} modified a subscription for product {1}"));
+MESSAGES.put("SUBSCRIPTIONDELETED",
+    I18n.marktr("{0} deleted a subscription for product {1}"));
+MESSAGES.put("ACTIVATIONKEYCREATED",
+    I18n.marktr("{0} created the activation key {1}"));
+MESSAGES.put("ACTIVATIONKEYDELETED",
+    I18n.marktr("{0} deleted the activation key {1}"));
  */
+
+
 @Test(groups={"EventTests"})
 public class EventTests extends SubscriptionManagerCLITestScript{
 
@@ -687,12 +729,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			g=0;
 			while (g<o+1) {
 				int c=0;
-//				String oldFeedTitle = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle();
-//				String newFeedTitle = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getTitle();
-//				String oldFeedDescription = ((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue();
-//				String newFeedDescription = ((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c  )).getDescription().getValue();
 				while (o-c-g>=0 &&
+						// newFeedTitle == oldFeedTitle
 						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getTitle()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getTitle()) &&
+						// newFeedDescription == oldFeedDescription
 						(((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription()==null?"null":((SyndEntryImpl) newFeed.getEntries().get(n-c)).getDescription().getValue()).equals(((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription()==null?"null":((SyndEntryImpl) oldFeed.getEntries().get(o-c-g)).getDescription().getValue()) ) {
 					c++;
 				}
@@ -718,6 +758,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayNameForOrgKey(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+		assertFeedContainsNoUnknownEvents(newOwnerFeed);
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
@@ -738,6 +779,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayNameForOrgKey(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
+		assertFeedContainsNoUnknownEvents(newOwnerFeed);
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
@@ -763,7 +805,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the owner feed...
 		SyndFeed newOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		Assert.assertEquals(newOwnerFeed.getTitle(),"Event feed for owner "+CandlepinTasks.getOrgDisplayNameForOrgKey(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey));
-
+		assertFeedContainsNoUnknownEvents(newOwnerFeed);
 		
 		log.info("Expecting the new feed for owner ("+ownerKey+") to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
@@ -791,7 +833,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerUuid);
-
+		assertFeedContainsNoUnknownEvents(newConsumerFeed);
+		
 		log.info("Expecting the new feed for consumer ("+consumerUuid+") to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 
@@ -816,7 +859,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the consumer feed...
 		SyndFeed newConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey, consumerUuid, sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
 		Assert.assertEquals(newConsumerFeed.getTitle(),"Event feed for consumer "+consumerUuid);
-
+		assertFeedContainsNoUnknownEvents(newConsumerFeed);
+		
 		log.info("Expecting the new feed for consumer ("+consumerUuid+") to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
 		for (String newEventTitle : newEventTitles) log.info(String.format("  Expecting entry[%d].title %s",e++,newEventTitle));
@@ -843,7 +887,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
 		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
-
+		assertFeedContainsNoUnknownEvents(newFeed);
+		
 		log.info("Expecting the new feed to have grown by events that contain (at a minimum) the following events: ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
 		
@@ -863,6 +908,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
 		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
+		assertFeedContainsNoUnknownEvents(newFeed);
 
 		log.info("Expecting the new feed to have grown by the following "+newEventTitles.size()+" events (in no particular order): ");
 		for (String newEventTitle : newEventTitles) log.info("    "+newEventTitle);
@@ -888,6 +934,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the feed...
 		SyndFeed newFeed = CandlepinTasks.getSyndFeed(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);		
 		Assert.assertEquals(newFeed.getTitle(),"Event Feed");
+		assertFeedContainsNoUnknownEvents(newFeed);
 
 		log.info("Expecting the new feed to have grown by ("+newEventTitles.length+") events:");
 		int e=0;
@@ -908,6 +955,25 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 			i++;
 		}
 	}
+	
+	protected void assertFeedContainsNoUnknownEvents(SyndFeed feed) {
+	
+		// assert that there are no "Unknown event"s in the feed - reference https://bugzilla.redhat.com/show_bug.cgi?id=721141
+		for (int i=0;  i<feed.getEntries().size(); i++) {
+			String entryTitle = ((SyndEntryImpl) feed.getEntries().get(i)).getTitle();
+			String entryDescription = ((SyndEntryImpl) feed.getEntries().get(i)).getDescription()==null?"null":((SyndEntryImpl) feed.getEntries().get(i)).getDescription().getValue();
+			String entryAsString = String.format("%s entries[%d].title=%s   description=%s", feed.getTitle(), i, entryTitle, entryDescription);
+			
+			if (entryDescription.toLowerCase().contains("unknown event")) {
+				Assert.fail("Encountered an atom feed entry with an unknown event: "+entryAsString);
+			}
+			if (entryDescription.equalsIgnoreCase("null")) {
+				Assert.fail("Encountered an atom feed entry with a null description: "+entryAsString);			
+			}
+		}
+		Assert.assertTrue(true,"None of the entries in feed '"+feed.getTitle()+"' contain an unknown event description.");
+	}
+	
 	
 	protected String testOwnerKey = "newOwner"+System.currentTimeMillis();
 	protected JSONObject testJSONOwner;

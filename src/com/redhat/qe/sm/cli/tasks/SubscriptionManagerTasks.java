@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -80,6 +79,7 @@ public class SubscriptionManagerTasks {
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register
 	protected String currentlyRegisteredOrg			= null;	// most recent owner used during register
+	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
 	public String redhatRelease	= null;
 	
@@ -236,6 +236,12 @@ public class SubscriptionManagerTasks {
 		}
 	}
 	
+	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
+		log.info("Updating yumrepo file '"+yumRepoFile+"' repoid '"+repoid+"' parameter '"+parameter+"' value to: "+value);
+		String command = "sed -i \"/\\["+repoid+"\\]/,/\\[/ s/^"+parameter+"\\s*=.*/"+parameter+"="+value+"/\" "+yumRepoFile;
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command,Integer.valueOf(0));
+	}
+	
 	public void updateConfFileParameter(String confFile, String parameter, String value){
 		log.info("Updating config file '"+confFile+"' parameter '"+parameter+"' value to: "+value);
 		Assert.assertEquals(
@@ -246,6 +252,7 @@ public class SubscriptionManagerTasks {
 		if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
 		if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
 		if (parameter.equals("productCertDir"))		this.productCertDir = value;
+		if (parameter.equals("baseurl"))			this.baseurl = value;
 		if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
 	}
 	
@@ -365,23 +372,48 @@ public class SubscriptionManagerTasks {
 		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
 
-	
+	/**
+	 * @return list of objects representing the subscription-manager list --available
+	 */
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAvailableSubscriptionPools().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the subscription-manager list --all --available
+	 */
 	public List<SubscriptionPool> getCurrentlyAllAvailableSubscriptionPools() {
 		return SubscriptionPool.parse(listAllAvailableSubscriptionPools().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the subscription-manager list --consumed
+	 */
 	public List<ProductSubscription> getCurrentlyConsumedProductSubscriptions() {
 		return ProductSubscription.parse(listConsumedProductSubscriptions().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the subscription-manager repos --list
+	 */
 	public List<Repo> getCurrentlySubscribedRepos() {
 		return Repo.parse(listSubscribedRepos().getStdout());
 	}
 	
+	/**
+	 * @return list of objects representing the Red Hat Repositories from /etc/yum.repos.d/redhat.repo
+	 */
+	public List<YumRepo> getCurrentlySubscribedYumRepos() {
+		// trigger a yum transaction so that subscription-manager plugin will refresh redhat.repo
+		//sshCommandRunner.runCommandAndWait("killall -9 yum"); // is this needed?
+		sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		
+		return YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
+	}
+	
+	/**
+	 * @return list of objects representing the subscription-manager list --installed
+	 */
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
 		return InstalledProduct.parse(listInstalledProducts().getStdout());
 	}
@@ -408,7 +440,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return a ConsumerCert object corresponding to the current: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
+	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
 		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile)!=1) {
@@ -421,7 +453,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * @return from the contents of the current /etc/pki/consumer/cert.pem
+	 * @return consumerid from the Subject CN of the current /etc/pki/consumer/cert.pem identity x509 certificate
 	 */
 	public String getCurrentConsumerId() {
 		ConsumerCert currentConsumerCert = getCurrentConsumerCert();
@@ -978,7 +1010,23 @@ public class SubscriptionManagerTasks {
 
 		
 		// run command without asserting results
-		return sshCommandRunner.runCommandAndWait(command);
+		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
+		
+		// reset this.currentlyRegistered values
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {			// success
+			this.currentlyRegisteredUsername = username;
+			this.currentlyRegisteredPassword = password;
+			this.currentlyRegisteredOrg = org;
+			this.currentlyRegisteredType = type;
+		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already registered	
+		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {	// failure
+			this.currentlyRegisteredUsername = null;
+			this.currentlyRegisteredPassword = null;
+			this.currentlyRegisteredOrg = null;
+			this.currentlyRegisteredType = null;	
+		}
+		
+		return sshCommandResult;
 	}
 	
 	/**
@@ -1001,9 +1049,6 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult register(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = register_(username, password, org, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
-		this.currentlyRegisteredUsername = null;
-		this.currentlyRegisteredPassword = null;
-		this.currentlyRegisteredOrg = null;
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1023,9 +1068,6 @@ public class SubscriptionManagerTasks {
 		// assert certificate files are installed into /etc/pki/consumer
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
-		this.currentlyRegisteredUsername = username;
-		this.currentlyRegisteredPassword = password;
-		this.currentlyRegisteredOrg = org;
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -1157,9 +1199,14 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
+		this.currentlyRegisteredType = null;
 		
 		// assert that the entitlement cert directory is gone
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
+		//Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
+		// assert that the entitlement cert directory is gone (or is empty)
+		if (RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1) {
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("ls "+entitlementCertDir).getStdout(), "", "The entitlement cert directory is empty after running clean.");
+		}
 
 		return sshCommandResult; // from the clean command
 	}
@@ -1248,7 +1295,8 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult identity(String username, String password, Boolean regenerate, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = identity_(username, password, regenerate, force, proxy, proxyuser, proxypassword);
-		
+		regenerate = regenerate==null? false:regenerate;	// the non-null default value for regenerate is false
+
 		// assert results for a successful identify
 		/* Example sshCommandResult.getStdout():
 		 * Current identity is: 8f4dd91a-2c41-4045-a937-e3c8554a5701 name: testuser1
@@ -1267,9 +1315,11 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		
 		
-		
-		String regex = "Current identity is: [a-f,0-9,\\-]{36}";			// consumerid regex
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
+		if (regenerate) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Identity certificate has been regenerated.");
+		} else {
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Current identity is: [a-f,0-9,\\-]{36}");
+		}
 		
 		return sshCommandResult; // from the identity command
 	}
@@ -1307,18 +1357,67 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult sshCommandResult = orgs_(username, password, proxy, proxyuser, proxypassword);
 		
-		// assert results for a successful identify
-		/* Example sshCommandResult.getStdout():
-		 * orgs:
-		 * snowwhite
-		 * admin
-		 */
+		// assert results...
+		
+		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
-		String regex = "^orgs:";
+
+		// assert the expected banner
+		/*
+		+-------------------------------------------+
+			        testuser1 Organizations
+		+-------------------------------------------+
+		*/
+		String regex = username+" Organizations";
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
 		
 		return sshCommandResult; // from the orgs command
 	}
+	
+	
+	// environments module tasks ************************************************************
+
+	/**
+	 * environments without asserting results
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @return
+	 */
+	public SSHCommandResult environments_(String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " environments";
+		if (username!=null)				command += " --username="+username;
+		if (password!=null)				command += " --password="+password;
+		if (org!=null)					command += " --org="+org;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager environments"
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @return
+	 */
+	public SSHCommandResult environments(String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = environments_(username, password, org, proxy, proxyuser, proxypassword);
+		
+		// TODO assert results...
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the environments command indicates a success.");
+		
+		return sshCommandResult; // from the environments command
+	}
+	
 	
 	// unregister module tasks ************************************************************
 
@@ -1364,6 +1463,7 @@ public class SubscriptionManagerTasks {
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
+		this.currentlyRegisteredType = null;
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
@@ -1547,6 +1647,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = repos_(list, proxy, proxyuser, proxypassword);
 		
 		// TODO assert results...
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
 		
 		return sshCommandResult;
 	}
@@ -1570,7 +1671,7 @@ public class SubscriptionManagerTasks {
 		}
 
 		if (numContentNamespaces==0) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories"), "The system is not entitled to use any repositories");
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories.");
 		} else {
 			String title = "Entitled Repositories in "+redhatRepoFile;
 			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of repositories is entitled '"+title+"'.");
@@ -1642,32 +1743,42 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		SSHCommandResult sshCommandResult = subscribe_(auto, poolId, productId, regtoken, quantity, email, locale, proxy, proxyuser, proxypassword);
-		
+		auto = auto==null? false:auto;	// the non-null default value for auto is false
+
 		// assert results...
+		String stdoutMessage;
 		
 		// if already subscribed, just return the result
-		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'
+		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
 		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
 
 		// if no free entitlements, just return the result
-		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'
+		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'.
 		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
 		
 		// if rule failed, just return the result
-		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
+		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
 		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
 		
 		// assert the subscribe does NOT report "The system is unable to complete the requested transaction"
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction");
-		
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction.");
+		stdoutMessage = "The system is unable to complete the requested transaction";
+		Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
+	
 		// assert the subscribe does NOT report "Entitlement Certificate\\(s\\) update failed due to the following reasons:"
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Entitlement Certificate\\(s\\) update failed due to the following reasons:","Entitlement Certificate updates should be successful when subscribing.");
+		stdoutMessage = "Entitlement Certificate(s) update failed due to the following reasons:";
+		Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
 
 		// assert that the entitlement pool was found for subscribing
-		Assert.assertTrue(!sshCommandResult.getStdout().startsWith("No such entitlement pool:"), "The subscription pool was found.");
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(),"No such entitlement pool:", "The subscription pool was found.");
+		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Subscription pool .* does not exist.","The subscription pool was found.");
+		stdoutMessage = "Subscription pool "+(poolId==null?"null":poolId)+" does not exist.";	// Subscription pool {0} does not exist.
+		Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
 		
-		// assert the exit code was a success
-		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe was reported as a success.");
+		// assert the stdout msg was a success
+		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
+		else		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
 
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
@@ -1912,6 +2023,32 @@ public class SubscriptionManagerTasks {
 		return newCertFile;
 	}
 	
+	/**
+	 * subscribe to the given SubscriptionPool without asserting results
+	 * @param pool
+	 * @return the newly installed EntitlementCert file to the newly consumed ProductSubscriptions (null if there was a problem)
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	public File subscribeToSubscriptionPool_(SubscriptionPool pool) throws JSONException, Exception  {
+		
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		
+		log.info("Subscribing to subscription pool: "+pool);
+		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
+
+		// get the serial of the entitlement that was granted from this pool
+		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,this.currentlyRegisteredOrg,pool.poolId);
+		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
+		if (serialNumber==null) return null;
+		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
+		//Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serialPemFile.getPath()),1, "Found the EntitlementCert file ("+serialPemFile+") that was granted after subscribing to pool id '"+pool.poolId+"'.");
+
+		return serialPemFile;
+	}
+	
 	//@Deprecated
 	public File subscribeToSubscriptionPoolUsingProductId(SubscriptionPool pool) {
 		log.warning("Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.  Forwarding this subscribe request to use --pool Id...");
@@ -1924,7 +2061,7 @@ public class SubscriptionManagerTasks {
 		String stderr = sshCommandRunner.getStderr().trim();
 		
 		List<ProductSubscription> after = getCurrentlyConsumedProductSubscriptions();
-		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'")) {
+		if (stderr.equals("This consumer is already subscribed to the product '"+pool.productId+"'.")) {
 			Assert.assertTrue(after.size() == before.size() && after.size() > 0,
 					"The list of currently consumed product subscriptions has remained the same (from "+before.size()+" to "+after.size()+") after subscribing (using productID="+pool.productId+") to pool: "+pool+"   Note: The list of consumed product subscriptions can remain the same when this product is already a subset from a previously subscribed pool.");
 		} else {
@@ -1979,10 +2116,9 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * Collectively subscribe to all of the currently available subscription pools in one command call
-	 * @param assumingRegisterType - "system" or "candlepin"
 	 */
-	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType assumingRegisterType) {
-
+	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
+		
 		// assemble a list of all the available SubscriptionPool ids
 		List <String> poolIds = new ArrayList<String>();
 		List <SubscriptionPool> poolsBeforeSubscribe = getCurrentlyAvailableSubscriptionPools();
@@ -1992,13 +2128,13 @@ public class SubscriptionManagerTasks {
 		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
-		if (assumingRegisterType==null || assumingRegisterType.equals(ConsumerType.system)) {
+		if (currentlyRegisteredType==null || currentlyRegisteredType.equals(ConsumerType.system)) {
 			assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
 			return;
 		}
 		
 		// assert results when assumingRegisterType="candlepin"
-		else if (assumingRegisterType.equals(ConsumerType.candlepin)) {
+		else if (currentlyRegisteredType.equals(ConsumerType.candlepin)) {
 			List <SubscriptionPool> poolsAfterSubscribe = getCurrentlyAvailableSubscriptionPools();
 			for (SubscriptionPool beforePool : poolsBeforeSubscribe) {
 				boolean foundPool = false;
@@ -2012,13 +2148,13 @@ public class SubscriptionManagerTasks {
 					}
 				}
 				if (!foundPool) {
-					Assert.fail("Could not find subscription pool "+beforePool+" listed after subscribing to it as a registered "+assumingRegisterType+" consumer.");
+					Assert.fail("Could not find subscription pool "+beforePool+" listed after subscribing to it as a registered "+currentlyRegisteredType+" consumer.");
 				}
 			}
 			return;
 		}
 		
-		Assert.fail("Do not know how to assert subscribeToAllOfTheCurrentlyAvailableSubscriptionPools assumingRegisterType="+assumingRegisterType);
+		Assert.fail("Do not know how to assert subscribeToAllOfTheCurrentlyAvailableSubscriptionPools when registered as type="+currentlyRegisteredType);
 	}
 //	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
 //
@@ -2475,7 +2611,7 @@ repolist: 3,394
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
-				List<YumRepo> yumRepoList =  YumRepo.parse(sshCommandRunner.runCommandAndWait("cat "+redhatRepoFile).getStdout());
+				List<YumRepo> yumRepoList =   getCurrentlySubscribedYumRepos();
 				for (YumRepo yumRepo : yumRepoList) {
 					if		(options.equals("all"))													repos.add(yumRepo.id);
 					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);

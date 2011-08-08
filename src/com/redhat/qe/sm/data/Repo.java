@@ -48,10 +48,21 @@ public class Repo extends AbstractCommandLineData {
 	@Override
 	public boolean equals(Object obj){
 
-		return	((Repo)obj).repoName.equals(this.repoName) &&
-				((Repo)obj).repoId.equals(this.repoId) &&
-				((Repo)obj).repoUrl.equals(this.repoUrl) &&
-				((Repo)obj).enabled.equals(this.enabled);
+		Repo that = (Repo) obj;
+		
+		if (that.repoName!=null && !that.repoName.equals(this.repoName)) return false;
+		if (this.repoName!=null && !this.repoName.equals(that.repoName)) return false;
+		
+		if (that.repoId!=null && !that.repoId.equals(this.repoId)) return false;
+		if (this.repoId!=null && !this.repoId.equals(that.repoId)) return false;
+		
+		if (that.repoUrl!=null && !that.repoUrl.equals(this.repoUrl)) return false;
+		if (this.repoUrl!=null && !this.repoUrl.equals(that.repoUrl)) return false;
+		
+		if (that.enabled!=null && !that.enabled.equals(this.enabled)) return false;
+		if (this.enabled!=null && !this.enabled.equals(that.enabled)) return false;
+		
+		return true;
 	}
 	
 	/**

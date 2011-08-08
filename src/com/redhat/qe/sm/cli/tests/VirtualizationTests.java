@@ -64,11 +64,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 	
-	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type",
+	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VirtualizationFactsReportedOnThisClient_Test() {
+	public void VirtFactsReportedOnThisClient_Test() {
 		
 		// make sure the original virt-what is in place 
 		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
@@ -76,88 +76,135 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		log.info("Running virt-what version: "+client.runCommandAndWait("rpm -q virt-what").getStdout().trim());
 		
+		// virt.is_guest
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),result.getStdout().trim().equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-manager returns stdout.");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),result.getStdout().trim().equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-what returns stdout.");
 		
+		// virt.host_type
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
 		Assert.assertEquals(virtHostType,result.getStdout().trim(),"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
+		
+		// virt.uuid
+		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
+		String virtUuid = clienttasks.getFactValue("virt.uuid");
+		if (Boolean.parseBoolean(virtIsGuest)) {
+			if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) {
+				Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
+			} else {
+				String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
+				Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
+			}
+		} else {
+			Assert.assertNull(virtUuid,"subscription-manager facts list should NOT report virt.uuid when on a host machine.");		
+		}
 	}
 	
 	
-	@Test(	description="subscription-manager: facts list reports the host hypervisor type on which the guest client is running",
+	@Test(	description="subscription-manager: facts list reports the host hypervisor type and uuid on which the guest client is running",
 			dataProvider="getVirtWhatData",
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
-	public void VirtualizationFactsWhenClientIsAGuest_Test(String host_type) {
+	public void VirtFactsWhenClientIsAGuest_Test(String host_type) {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
 		forceVirtWhatToReturnGuest(host_type);
 
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
+		// virt.is_guest
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
 		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when the client is running on a '"+host_type+"' hypervisor.");
 
+		// virt.host_type
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
 		Assert.assertEquals(virtHostType,host_type,"subscription-manager facts list reports the same virt.host_type value of as returned by "+virtWhatFile);
+
+		// virt.uuid
+		String virtUuid = clienttasks.getFactValue("virt.uuid");
+		if (host_type.contains("ibm_systemz") || host_type.contains("xen-dom0") || host_type.contains("powervm")) {
+			Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
+		} else {
+			String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
+			Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
+		}
 	}
 	
 	
 	@Test(	description="subscription-manager: facts list reports when the client is running on bare metal",
-			groups={}, dependsOnGroups={},
+			groups={"blockedByBug-726440"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70203)
-	public void VirtualizationFactsWhenClientIsAHost_Test() {
+	public void VirtFactsWhenClientIsAHost_Test() {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
 		forceVirtWhatToReturnHost();
 
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
+		// virt.is_guest
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
 		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
 
+		// virt.host_type
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");
+		//Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");	// valid assertion prior to bug 726440/722248
+		Assert.assertEquals(virtHostType,"Not Applicable","subscription-manager facts list reports 'Not Applicable' for virt.host_type when run on bare metal ");
+		
+		// virt.uuid
+		String virtUuid = clienttasks.getFactValue("virt.uuid");
+		Assert.assertNull(virtUuid,"subscription-manager facts list should NOT report virt.uuid when run on bare metal.");
 	}
 	
 	
-	@Test(	description="subscription-manager: facts list should not crash when virt-what fails",
+	@Test(	description="subscription-manager: facts list should not crash on virt facts when virt-what fails",
 			groups={"blockedByBug-668936"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VirtualizationFactsWhenVirtWhatFails_Test() {
+	public void VirtFactsWhenVirtWhatFails_Test() {
 		
 		log.info("We will fail virt-what by forcing it to return a non-zero value...");
 		forceVirtWhatToFail();
 		
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
+		// virt.is_guest
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager fails.");
+		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when the hypervisor is undeterminable (virt-what fails).");
 
+		// virt.host_type
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
+		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable (virt-what fails).");
+		
+		// virt.uuid
+		String virtUuid = clienttasks.getFactValue("virt.uuid");
+		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is undeterminable (virt-what fails).");
 	}
 	
 	
-	@Test(	description="subscription-manager: facts list should report is_guest as Unknown when virt-what is not installed",
+	@Test(	description="subscription-manager: facts list should report is_guest and uuid as Unknown when virt-what is not installed",
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VirtualizationFactsWhenVirtWhatIsNotInstalled_Test() {
+	public void VirtFactsWhenVirtWhatIsNotInstalled_Test() {
 		
 		log.info("We will remove virt-what for this test...");
 		
 		RemoteFileTasks.runCommandAndWait(client,"rm -f "+virtWhatFile, LogMessageUtil.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
+		// virt.is_guest
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-manager in not installed.");
+		Assert.assertEquals(virtIsGuest,"Unknown","subscription-manager facts list reports virt.is_guest as Unknown when virt-what in not installed.");
 		
+		// virt.host_type
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when the hypervisor is undeterminable." );
+		Assert.assertNull(virtHostType,"subscription-manager facts list should NOT report a virt.host_type when virt-what in not installed.");
+		
+		// virt.uuid
+		String virtUuid = clienttasks.getFactValue("virt.uuid");
+		Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when virt-what in not installed.");
+
 	}
 	
 	
@@ -327,8 +374,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 		// attempt to subscribe to the guestPoolId (should be blocked)
 		SSHCommandResult result = clienttasks.subscribe(null,guestPoolId,null,null,null,null,null,null, null, null);
-		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e': rulefailed.virt.only
-		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"':");
+		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
+		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"'.:");
 	}
 	
 
@@ -388,7 +435,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	protected void forceVirtWhatToReturnGuest(String hypervisorType) {
 		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo "+hypervisorType+"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo -e 'echo -e \""+hypervisorType+"\"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
 	}
 	
 	protected void forceVirtWhatToReturnHost() {
@@ -412,18 +459,25 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getVirtWhatDataAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 
-		// man virt-what  (virt-what-1.3) shows support for the following hypervisors
-		ll.add(Arrays.asList(new Object[]{"openvz"}));
+		// man virt-what (virt-what-1.3-4.4.el6.x86_64) shows support for the following hypervisors
+
+		ll.add(Arrays.asList(new Object[]{"hyperv"}));
+		ll.add(Arrays.asList(new Object[]{"ibm_systemz\nibm_systemz-direct"}));
+		ll.add(Arrays.asList(new Object[]{"ibm_systemz\nibm_systemz-lpar"}));
+		ll.add(Arrays.asList(new Object[]{"ibm_systemz\nibm_systemz-zvm"}));
 		ll.add(Arrays.asList(new Object[]{"kvm"}));
+		ll.add(Arrays.asList(new Object[]{"openvz"}));
+		ll.add(Arrays.asList(new Object[]{"powervm_lx86"}));
 		ll.add(Arrays.asList(new Object[]{"qemu"}));
 		ll.add(Arrays.asList(new Object[]{"uml"}));
+		ll.add(Arrays.asList(new Object[]{"virtualage"}));
 		ll.add(Arrays.asList(new Object[]{"virtualbox"}));
 		ll.add(Arrays.asList(new Object[]{"virtualpc"}));
 		ll.add(Arrays.asList(new Object[]{"vmware"}));
-		ll.add(Arrays.asList(new Object[]{"xen"}));
-		ll.add(Arrays.asList(new Object[]{"xen-dom0"}));
-		ll.add(Arrays.asList(new Object[]{"xen-domU"}));
-		ll.add(Arrays.asList(new Object[]{"xen-hvm"}));
+		ll.add(Arrays.asList(new Object[]{"xen\nxen-dom0"}));
+		ll.add(Arrays.asList(new Object[]{"xen\nxen-domU"}));
+		ll.add(Arrays.asList(new Object[]{"xen\nxen-hvm"}));
+
 
 		return ll;
 	}

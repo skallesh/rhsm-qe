@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,6 +25,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -85,18 +87,30 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		registrationDataList.add(userData);
 		clienttasks.unregister_(null, null, null);
 		
-		// when no org was given by the dataprovider, then either:
-		// 1. the user has only READ_ONLY access to one org:
-		//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
-		// 2. the user has only READ_ONLY access to more than one org:
-		//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
-		// FIXME: Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
+		// when no org was given by the dataprovider, then this user must have READ_ONLY access to any one or more orgs
 		if (org==null) {
-			Assert.assertFalse(registerResult.getExitCode()==0, "The register command was NOT a success.");		
-			Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=718205 - jsefler 07/01/2011
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="718205"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				// When org==null, then this user has no access to any org/owner
+				// 1. the user has only READ_ONLY access to one org:
+				//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
+				// 2. the user has only READ_ONLY access to more than one org:
+				//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
+				// Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
+				Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
+				Assert.assertFalse(registerResult.getExitCode()==0, "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+				return;
+			}
+			// END OF WORKAROUND
+			
+			Assert.assertEquals(registerResult.getStderr().trim(), username+" cannot register to any organizations.", "Error message when READ_ONLY user attempts to register.");
+			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
 			return;
 		}
-		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The register command was a success.");
+		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that the register attempt was a success.");
 		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
 		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 	}
@@ -226,32 +240,40 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, Boolean.TRUE, null, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
-		/* pre-fix for blockedByBug-678049 
-		 * Sample sshCommandResult.getStdout():
-		 * d67df9c8-f381-4449-9d17-56094ea58092 testuser1
-		 * Subscribed to Products:
-		 *      RHEL for Physical Servers SVC(37060)
-		 *      Red Hat Enterprise Linux High Availability (for RHEL Entitlement)(4)
-		 */
-		 /*
-		  * Sample sshCommandResult.getStdout():
-		  * cadf825a-6695-41e3-b9eb-13d7344159d3 jsefler-onprem03.usersys.redhat.com
-		  * Installed Products:
-		  *    Clustering Bits - Subscribed
-		  *    Awesome OS Server Bits - Not Installed
-		  *    Shared Storage Bits - Not Installed
-		  *    Management Bits - Not Installed
-		  *    Large File Support Bits - Not Installed
-		  *    Load Balancing Bits - Not Installed
-		  */
+		/* # subscription-manager register --username=testuser1 --password=password
+		d67df9c8-f381-4449-9d17-56094ea58092 testuser1
+		Subscribed to Products:
+		     RHEL for Physical Servers SVC(37060)
+		     Red Hat Enterprise Linux High Availability (for RHEL Entitlement)(4)
+		*/
+		
+		/* # subscription-manager register --username=testuser1 --password=password
+		cadf825a-6695-41e3-b9eb-13d7344159d3 jsefler-onprem03.usersys.redhat.com
+		Installed Products:
+		    Clustering Bits - Subscribed
+		    Awesome OS Server Bits - Not Installed
+		*/
+		
+		/* # subscription-manager register --username=testuser1 --password=password --org=admin --autosubscribe
+		The system has been registered with id: f95fd9bb-4cc8-428e-b3fd-d656b14bfb89 
+		Installed Product Current Status:
+
+		ProductName:         	Awesome OS for S390X Bits
+		Status:               	Subscribed  
+		*/
 
 		// assert that our fake product install appears to have been autosubscribed
 		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout()));
 		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
-		// FIXME The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
+		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
+		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product was autosubscribed."); 
+		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(fakeProductCert.productName,"Subscribed",null,null,null,null),
+				"As expected, ProductName '"+fakeProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
+
+		// WARNING The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.  This is why we search for an available pool that provides one product early in this test.
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
@@ -491,7 +513,7 @@ Expected Results:
 		//List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools(ConsumerType.system);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 
 		// list the consumed subscriptions and remember them
 		List <ProductSubscription> originalConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -570,7 +592,7 @@ Expected Results:
 		// ensure we are unregistered
 		clienttasks.unregister(null,null,null);
 
-		// register while providing a valid username at the interactive prompt
+		// call register while providing a valid username at the interactive prompt
 		// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the register command
 		String echoUsername= promptedUsername==null?"":promptedUsername;
 		String echoPassword = promptedPassword==null?"":promptedPassword;
@@ -770,14 +792,15 @@ Expected Results:
 		if (clienttasks==null) return ll;
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
+		String x = String.valueOf(getRandInt());
 		// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,				null,							null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+getRandInt(),	null,							null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,							sm_clientPassword,				sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,							sm_clientPassword+getRandInt(),	sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,				sm_clientPassword,				null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+getRandInt(),	sm_clientPassword+getRandInt(),	null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,		"\n\n"+sm_clientPassword,		null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+		ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
 
 		return ll;
 	}
