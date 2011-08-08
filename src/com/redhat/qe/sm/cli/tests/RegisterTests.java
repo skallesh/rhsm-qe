@@ -913,6 +913,9 @@ Expected Results:
 		}
 	}
 	
+	// TODO RegisterWithActivationKeyBoundToPoolWithQuantity_Test
+	// TODO RegisterWithActivationKeyBoundToPoolWithQuantityExceedingAvailableQuantity_Test
+	// TODO RegisterWithMultipleActivationKeysBoundToPool_Test
 	// Protected Class Variables ***********************************************************************
 	
 	protected final String tmpProductCertDir = "/tmp/productCertDir";

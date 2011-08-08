@@ -1052,9 +1052,11 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult register(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		SSHCommandResult sshCommandResult = register_(username, password, org, type, name, consumerId, autosubscribe, activationKey, force, proxy, proxyuser, proxypassword);
-		
+	
+		// when already registered, just return without any assertions
+		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
+
 		// assert results for a successful registration
-		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
