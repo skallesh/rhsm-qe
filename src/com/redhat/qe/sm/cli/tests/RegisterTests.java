@@ -9,7 +9,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -60,7 +62,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
 		
 		// determine this user's ability to register
-		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, null, null, null);
 			
 		// determine this user's available subscriptions
 		List<SubscriptionPool> allAvailableSubscriptionPools=null;
@@ -128,7 +130,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 //DO NOT		clienttasks.unregister();
 		
 		// attempt the registration
-		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, owner, null, type, name, consumerId, autosubscribe, force, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, owner, null, type, name, consumerId, autosubscribe, null, force, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
@@ -201,7 +203,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
 		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autosubscribe should NOT list the status of installed products when there are no installed products.");
 		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed Products to list",
@@ -237,7 +239,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// reregister with autosubscribe and assert that the product is bound
 		clienttasks.unregister(null, null, null);
-		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
 		/* # subscription-manager register --username=testuser1 --password=password
@@ -288,7 +290,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// make sure you are first registered
-		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, null, null, null);
 		String firstConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// subscribe to a random pool (so as to consume an entitlement)
@@ -298,11 +300,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
-		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, null, null, null);
 		Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting: This system is already registered.");
 		
 		// register with force
-		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, Boolean.TRUE, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, Boolean.TRUE, null, null, null);
 		String secondConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// assert the stdout reflects a new consumer
@@ -328,7 +330,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,name, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,name,null, null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name=\""+name+"\" option:");
@@ -354,7 +356,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
@@ -385,7 +387,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null,null,null,null,null, null));
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,null,null,null));
 		
 		// take note of your identity cert before reregister
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -443,7 +445,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,null,null,null);
 		
 		// take note of your identity cert
 		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
@@ -464,7 +466,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// reregister w/ username, password, and consumerid
 		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
 		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null, consumerCertBefore.consumerid, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerCertBefore.consumerid, null, null, Boolean.TRUE, null, null, null);
 		
 		// assert that the identity cert has not changed
 		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
@@ -506,7 +508,7 @@ Expected Results:
 		
 		// register with username and password and remember the consumerid
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, null, null, null));
 		
 		// subscribe to one or more subscriptions
 		//// subscribe to a random pool
@@ -529,7 +531,7 @@ Expected Results:
 		
 		// register with same username, password and existing consumerid
 		// Note: no need to register with force as running clean wipes system of all local registration data
-		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null, consumerId, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerId, null, null, null, null, null, null);
 
 		// assert that originally consumed subscriptions are once again being consumed
 		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -560,7 +562,7 @@ Expected Results:
 		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
 		
 		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
 	
@@ -576,7 +578,7 @@ Expected Results:
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
 		
 		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, Boolean.TRUE, null, null, null);
 	}
 	
 	
@@ -637,14 +639,14 @@ Expected Results:
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
 		log.info("Attempt to register while already registered via RHN Classic...");
-		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, true, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, true, null, null, null);
 		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
 		Assert.assertContainsMatch(result.getStdout(),"^"+interoperabilityWarningMessage, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
 
 		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
 		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==0, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
-		result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, true, null, null, null);
+		result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, true, null, null, null);
 		
 		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
 		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessage, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
@@ -661,7 +663,7 @@ Expected Results:
 		// skip this test when candlepin supports environments
 		if (supportsEnvironments) throw new SkipException("Candlepin server '"+sm_serverHostname+"' appears to support environments, therefore this test is not applicable.");
 
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,"foo",null,null,null,null,true,null,null, null);
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,"foo",null,null,null,null,null,true,null,null, null);
 		
 		// assert results
 		Assert.assertEquals(result.getStderr().trim(), "ERROR: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
@@ -674,7 +676,7 @@ Expected Results:
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRegisterToEnvironmentWithoutOrg_Test() {
 		
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo",null,null,null,null,true,null,null, null);
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo",null,null,null,null,null,true,null,null, null);
 		
 		// assert results
 		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
@@ -701,8 +703,259 @@ Expected Results:
 	// TODO Bug 719378 - White space in user name causes error 
 	
 	
-	
+	@Test(	description="use the candlepin api to create valid activation keys",
+			groups={},
+			dataProvider="getRegisterCredentialsExcludingNullOrgData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void ActivationKeyCreationDeletion_Test(String username, String password, String org) throws JSONException, Exception {
+		// generate a unique name for this test
+		String name = String.format("%s_%s-ActivationKey%s", username,org,System.currentTimeMillis());
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, username, password, "/owners/" + org + "/activation_keys",  jsonActivationKeyRequest.toString()));
+
+		// assert that the creation was successful (does not contain a displayMessage)
+		try {
+			String displayMessage = jsonActivationKey.getString("displayMessage");
+			Assert.fail("The creation of an activation key appears to have failed: "+displayMessage);
+		} catch (JSONException e) {
+			Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
+		}
+		// assert that the created key is listed
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/owners/"+org+"/activation_keys"));	
+		JSONObject jsonActivationKeyI = null;
+		for (int i = 0; i < jsonActivationKeys.length(); i++) {
+			jsonActivationKeyI = (JSONObject) jsonActivationKeys.get(i);
+			//{
+			//    "created": "2011-08-04T21:38:23.902+0000", 
+			//    "id": "8a90f8c63196bb20013196bba01e0008", 
+			//    "name": "default_key", 
+			//    "owner": {
+			//        "displayName": "Admin Owner", 
+			//        "href": "/owners/admin", 
+			//        "id": "8a90f8c63196bb20013196bb9e210006", 
+			//        "key": "admin"
+			//    }, 
+			//    "pools": [], 
+			//    "updated": "2011-08-04T21:38:23.902+0000"
+			//}
+			
+			// break out when the created activation key is found
+			if (jsonActivationKeyI.getString("name").equals(name)) break;
+		}
+		Assert.assertNotNull(jsonActivationKeyI, "Successfully listed keys for owner '"+org+"'.");
+		Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyI.toString(), "Successfully found newly created activation key with credentials '"+username+"'/'"+password+"' under /owners/"+org+"/activation_keys .");
+		
+		// now assert that the activation key is found under /candlepin/activation_keys/<id>
+		JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys/"+jsonActivationKey.getString("id")));
+		Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
+
+		// now attempt to delete the key
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, username, password, "/activation_keys/"+jsonActivationKey.getString("id"));
+		// assert that it is no longer found under /activation_keys
+		jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys"));
+		jsonActivationKeyI = null;
+		for (int i = 0; i < jsonActivationKeys.length(); i++) {
+			jsonActivationKeyI = (JSONObject) jsonActivationKeys.get(i);
+			if (jsonActivationKeyI.getString("id").equals(jsonActivationKey.getString("id"))) {
+				Assert.fail("After attempting to delete activation key id '"+jsonActivationKey.getString("id")+"', it was still found in the /activation_keys list.");
+			}
+		}
+		Assert.assertTrue(true,"Deleted activation key with id '"+jsonActivationKey.getString("id")+"' is no longer found in the /activation_keys list.");
+	}
+
+	@Test(	description="use the candlepin api to attempt creation of an activation key with a bad name",
+			groups={},
+			dataProvider="getActivationKeyCreationWithBadNameData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void AttemptActivationKeyCreationWithBadNameData_Test(Object blockedByBug, String badName) throws JSONException, Exception {
+		
+		// create a JSON object to represent the request body (with bad data)
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", badName);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+
+		// assert that the creation was NOT successful (contains a displayMessage)
+		try {
+			String displayMessage = jsonActivationKey.getString("displayMessage");
+			Assert.assertEquals(displayMessage, "Activation key names must be alphanumeric or the characters '-' or '_'. ["+badName+"]","Expected the creation of this activation key named '"+badName+"' to fail.");
+		} catch (JSONException e) {
+			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an invalid name '"+badName+"'.");
+			Assert.assertFalse (badName.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with badName '"+badName+"': "+jsonActivationKey);
+		}
+	}
+	
+	@Test(	description="use the candlepin api to attempt to create a duplicate activation key",
+			groups={/*"blockedByBug-728636"*/},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void AttemptActivationKeyCreationInDuplicate_Test() throws JSONException, Exception {
+
+		// generate a unique name for this test
+		String name = String.format("%s_%s-DuplicateActivationKey%s", sm_clientUsername,sm_clientOrg,System.currentTimeMillis());
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		Assert.assertEquals(jsonActivationKey.getString("name"), name, "First activation key creation attempt appears successful.  Activation key: "+jsonActivationKey);
+
+		// attempt to create another key by the same name
+		jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		
+		// assert that the creation was NOT successful (contains a displayMessage)
+		try {
+			String displayMessage = jsonActivationKey.getString("displayMessage");
+			Assert.assertTrue(displayMessage.startsWith("Runtime Error org.hibernate.exception.ConstraintViolationException: Could not execute JDBC batch update at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:"),"Expected the creation of a duplicate activation key named '"+name+"' to fail.");
+		} catch (JSONException e) {
+			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to a duplicate name '"+name+"'.");
+			Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with a duplicate name '"+name+"': "+jsonActivationKey);
+		}
+	}
+	
+	@Test(	description="use the candlepin api to attempt to create a duplicate activation key",
+			groups={},
+			dataProvider="getAllJSONPoolsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithActivationKeyBoundToPool_Test(JSONObject jsonPool) throws JSONException, Exception {
+		String poolId = jsonPool.getString("id");
+				
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=728721 - jsefler 8/6/2011
+		if (CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, ConsumerType.person)) {
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="728721"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open. (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
+			}
+		}
+		// END OF WORKAROUND
+		
+		// generate a unique activation key name for this test
+		String name = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), poolId);
+		
+		// create a JSON object to represent the request body
+		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+		mapActivationKeyRequest.put("name", name);
+		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+		
+		// call the candlepin api to create an activation key
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		Assert.assertEquals(jsonActivationKey.getString("name"), name, "Activation key creation attempt appears successful.  Activation key: "+jsonActivationKey);
+
+		// bind the activation key to the pool (?quantity=1)
+		int bindQuantity = 1;
+		JSONObject jsonBoundPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId, null));
+
+		// assert the pool is bound
+		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys/"+jsonActivationKey.getString("id")));
+		//# curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c63196bb2001319f66afa83cb4 | python -mjson.tool
+		//{
+		//    "created": "2011-08-06T14:02:12.264+0000", 
+		//    "id": "8a90f8c63196bb2001319f66afa83cb4", 
+		//    "name": "ActivationKey1312639332183_ForPool8a90f8c63196bb20013196bc7f6302dc", 
+		//    "owner": {
+		//        "displayName": "Admin Owner", 
+		//        "href": "/owners/admin", 
+		//        "id": "8a90f8c63196bb20013196bb9e210006", 
+		//        "key": "admin"
+		//    }, 
+		//    "pools": [
+		//        {
+		//            "created": "2011-08-06T14:02:12.419+0000", 
+		//            "id": "8a90f8c63196bb2001319f66b0433cb6", 
+		//            "pool": {
+		//                "href": "/pools/8a90f8c63196bb20013196bc7f6302dc", 
+		//                "id": "8a90f8c63196bb20013196bc7f6302dc"
+		//            }, 
+		//            "quantity": 1, 
+		//            "updated": "2011-08-06T14:02:12.419+0000"
+		//        }
+		//    ], 
+		//    "updated": "2011-08-06T14:02:12.264+0000"
+		//}
+		String boundPoolId = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getJSONObject("pool").getString("id");	// get(0) since there should only be one pool bound
+		Assert.assertEquals(boundPoolId, poolId, "The activation key appears to be successfully bound to poolId '"+poolId+"'.  Activation Key: "+jsonActivationKey);
+		int boundQuantity = ((JSONObject) jsonActivationKey.getJSONArray("pools").get(0)).getInt("quantity");	// get(0) since there should only be one pool bound
+		Assert.assertEquals(boundQuantity, bindQuantity, "The activation key appears to be successfully bound to poolId '"+poolId+"' ready to consume a quantity of '"+bindQuantity+"'.  Activation Key: "+jsonActivationKey);
+
+		// register with the activation key
+		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null);
+		
+		// handle the case when "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'."
+		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, ConsumerType.system)) {
+			Assert.assertEquals(registerResult.getStderr().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'.", "Registering a system consumer using an activationKey bound to a pool that requires a non-system consumer type should fail.");
+			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering a system consumer using an activationKey bound to a pool that requires a non-system consumer type should fail.");
+			// now register with the same activation key using the needed ConsumerType
+			registerResult = clienttasks.register(null, null, sm_clientOrg, null, ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, "requires_consumer_type")), null, null, null, jsonActivationKey.getString("name"), false /*was already unregistered by force above*/, null, null, null);
+		}
+		
+		// assert that only the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
+		JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+		// pluck out the providedProducts that have an atttribute type=MKT products
+		for (int j = 0; j < jsonProvidedProducts.length(); j++) {
+			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(j);
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/products/"+jsonProvidedProduct.getString("productId")));
+			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
+			for (int k = 0; k < jsonAttributes.length(); k++) {
+				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(k);
+				if (jsonAttribute.getString("name").equals("type")) {
+					if (jsonAttribute.getString("value").equals("MKT")) {
+						log.info("Found a providedProduct '"+jsonProvidedProduct.getString("productName")+"' from the pool bound to the activation key that is actually a Marketing product (type=\"MKT\").  Therefore this provided product will be excluded from the expected consumed ProductSubscriptions assertions that will follow...");
+						jsonProvidedProduct/*Plucked*/ = (JSONObject) jsonProvidedProducts.remove(j--);
+						break;
+					}
+				}
+			}
+		}
+		
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if (jsonProvidedProducts.length()>0) { 
+			Assert.assertEquals(consumedProductSubscriptions.size(), jsonProvidedProducts.length(), "The number of providedProducts from the pool bound to the activation key should match the number of consumed product subscriptions.");
+			for (int j = 0; j < jsonProvidedProducts.length(); j++) {
+				JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(j);
+				//{
+				//    "created": "2011-08-04T21:39:21.059+0000", 
+				//    "id": "8a90f8c63196bb20013196bc7f6402e7", 
+				//    "productId": "37060", 
+				//    "productName": "Awesome OS Server Bits", 
+				//    "updated": "2011-08-04T21:39:21.059+0000"
+				//}
+				String providedProductName = jsonProvidedProduct.getString("productName");
+				ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", providedProductName, consumedProductSubscriptions);
+				Assert.assertNotNull(consumedProductSubscription,"Found a consumed product subscription whose productName '"+providedProductName+"' is included in the providedProducts bound in the activation key.");
+				Assert.assertEquals(consumedProductSubscription.accountNumber.longValue(), jsonPool.getLong("accountNumber"), "The consumed product subscription comes from the same accountNumber as the pool bound in the activation key.");
+				Assert.assertEquals(consumedProductSubscription.contractNumber.intValue(), jsonPool.getInt("contractNumber"), "The consumed product subscription comes from the same contractNumber as the pool bound in the activation key.");
+				Assert.assertEquals(consumedProductSubscription.quantityUsed.intValue(), bindQuantity, "The consumed product subscription is using the same quantity as requested by the pool bound in the activation key.");
+			}
+		} else {	// this pool provides a subscription to a Management AddOn product (indicated by no providedProducts)
+			Assert.assertEquals(consumedProductSubscriptions.size(), 1, "When a ManagementAddOn product is bound to the activation key, then the number of consumed product subscriptions should be one.");
+			ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", jsonPool.getString("productName"), consumedProductSubscriptions);
+			Assert.assertNotNull(consumedProductSubscription,"Found a consumed product subscription whose productName '"+jsonPool.getString("productName")+"' matches the pool's productName bound in the activation key.");
+			Assert.assertEquals(consumedProductSubscription.accountNumber.longValue(), jsonPool.getLong("accountNumber"), "The consumed product subscription comes from the same accountNumber as the pool bound in the activation key.");
+			Assert.assertEquals(consumedProductSubscription.contractNumber.intValue(), jsonPool.getInt("contractNumber"), "The consumed product subscription comes from the same contractNumber as the pool bound in the activation key.");
+			Assert.assertEquals(consumedProductSubscription.quantityUsed.intValue(), bindQuantity, "The consumed product subscription is using the same quantity as requested by the pool bound in the activation key.");
+		}
+	}
+	
+	// TODO RegisterWithActivationKeyBoundToPoolWithQuantity_Test
+	// TODO RegisterWithActivationKeyBoundToPoolWithQuantityExceedingAvailableQuantity_Test
+	// TODO RegisterWithMultipleActivationKeysBoundToPool_Test
 	// Protected Class Variables ***********************************************************************
 	
 	protected final String tmpProductCertDir = "/tmp/productCertDir";
@@ -1080,6 +1333,54 @@ Expected Results:
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
 
 
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getActivationKeyCreationWithBadNameData")
+	public Object[][] getActivationKeyCreationWithBadNameDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getActivationKeyCreationWithBadNameDataAsListOfLists());
+	}
+	protected List<List<Object>> getActivationKeyCreationWithBadNameDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String name;
+		
+		name = ".period.";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		
+		name = "[openingBracket[";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "]closingBracket]";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "{openingBrace{";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "}closingBrace}";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "(openingParenthesis(";	ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ")closingParenthesis)";	ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "?questionMark?";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "@at@";					ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "!exclamationPoint!";	ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "`backTick`";			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "'singleQuote'";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "pound#sign";			ll.add(Arrays.asList(new Object[] {null,	name}));
+
+		name = "\"doubleQuotes\"";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "$dollarSign$";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "^caret^";				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "<lessThan<";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ">greaterThan>";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "|verticalBar|";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "+plus+";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "%percent%";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "/slash/";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ";semicolon;";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ":colon:";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ",comma,";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "\\backslash\\";			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "*asterisk*";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "=equal=";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "~tilde~";				ll.add(Arrays.asList(new Object[] {null,	name}));
+
+		name = "s p a c e s";			ll.add(Arrays.asList(new Object[] {null,	name}));
+
+		name = "#poundSign";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		
 		return ll;
 	}
 }

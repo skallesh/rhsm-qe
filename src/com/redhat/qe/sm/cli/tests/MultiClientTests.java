@@ -116,10 +116,10 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		//personIdForMultiClientRegisterAsPerson_Test = client1tasks.getCurrentConsumerId(client1tasks.register(clientusername, clientpassword, ConsumerType.person, null, null, null, null, null, null, null));
-		client1tasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, null, null);
+		client1tasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, null, null, null);
 		
 		// attempt to register a second person consumer using the same username
-		SSHCommandResult sshCommandResult = client2tasks.register_(username, password, owner, null, ConsumerType.person, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = client2tasks.register_(username, password, owner, null, ConsumerType.person, null, null, null, null, null, null, null, null);
 
 		// assert the sshCommandResult here
 		// User testuser1 has already registered a personal consumer

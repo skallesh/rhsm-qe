@@ -34,7 +34,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable() {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,Boolean.TRUE,null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
@@ -69,7 +69,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable() {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,Boolean.TRUE,null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installedProducts.isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
@@ -100,7 +100,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,Boolean.TRUE,null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installedProducts.isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
@@ -135,7 +135,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled() {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,Boolean.TRUE,null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertTrue(installedProducts.isEmpty(),
 				"No products are currently installed.");
@@ -198,7 +198,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// autosubscribe
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, Boolean.TRUE, null, null, null);
 		
 		// distribute a copy of the product certs amongst the productCertDirs
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();

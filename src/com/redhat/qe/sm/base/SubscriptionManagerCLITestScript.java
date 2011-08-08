@@ -648,11 +648,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// assure we are registered
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);
 			if (!sm_client2Username.equals("") && !sm_client2Password.equals(""))
-				client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, null, null);
+				client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, null, null, null);
 		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
@@ -717,9 +717,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //		
 //		return ll;
 //	}
+
 	@DataProvider(name="getRegisterCredentialsData")
 	public Object[][] getRegisterCredentialsDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterCredentialsDataAsListOfLists());
+	}
+	@DataProvider(name="getRegisterCredentialsExcludingNullOrgData")
+	public Object[][] getRegisterCredentialsExcludingNullOrgDataAs2dArray() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		for (List<Object> l : getRegisterCredentialsDataAsListOfLists()) {
+			// l contains: String username, String password, String owner
+			if (l.get(2) !=null) ll.add(l);
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
 	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
@@ -787,7 +798,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		
 		// then assemble a list of all consumed ProductSubscriptions
@@ -812,7 +823,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null, null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, null, null, null);
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 
 		
@@ -860,7 +871,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, Boolean.TRUE, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, Boolean.TRUE, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		Calendar now = new GregorianCalendar();
@@ -1017,7 +1028,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, Boolean.TRUE, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, Boolean.TRUE, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		Calendar now = new GregorianCalendar();
@@ -1817,7 +1828,26 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	*/
 	
+	
+	@DataProvider(name="getAllJSONPoolsData")
+	public Object[][] getAllJSONPoolsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllJSONPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllJSONPoolsDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 
+		// process all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String id = jsonPool.getString("id");
+			
+			ll.add(Arrays.asList(new Object[]{jsonPool}));
+		}
+		
+		return ll;
+		
+	}
 
 
 }

@@ -1008,13 +1008,14 @@ public class SubscriptionManagerTasks {
 	 * @param name
 	 * @param consumerId
 	 * @param autosubscribe
+	 * @param activationKey TODO
 	 * @param force
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;				command += " register";
@@ -1026,6 +1027,7 @@ public class SubscriptionManagerTasks {
 		if (name!=null)								command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
 		if (autosubscribe!=null && autosubscribe)	command += " --autosubscribe";
+		if (activationKey!=null)					command += " --activationkey="+activationKey;
 		if (force!=null && force)					command += " --force";
 		if (proxy!=null)							command += " --proxy="+proxy;
 		if (proxyuser!=null)						command += " --proxyuser="+proxyuser;
@@ -1065,17 +1067,20 @@ public class SubscriptionManagerTasks {
 	 * @param name TODO
 	 * @param consumerId
 	 * @param autosubscribe
+	 * @param activationKey TODO
 	 * @param force
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, org, null, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
-		
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKey, force, proxy, proxyuser, proxypassword);
+	
+		// when already registered, just return without any assertions
+		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
+
 		// assert results for a successful registration
-		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
@@ -1179,7 +1184,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,null,null, consumerId, null, null, null, null, null);
+		return register(username,password,null,null,null,null,consumerId, null, null, null, null, null, null);
 	}
 	
 	
