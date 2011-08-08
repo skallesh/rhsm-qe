@@ -3,7 +3,9 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -121,7 +123,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // fire a register event
-		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null, null, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,ownerKey,null,null,null, null, null, null, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER CREATED"};
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
@@ -292,8 +294,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword);
  
         // fire an facts update event by overriding a fact in /etc/rhsm/facts/event_tests.facts
-        String factsFile = clienttasks.factsDir+"/eventTests.facts";
-        client.runCommandAndWait("echo '{\"events.test.description\": \"Testing CONSUMER MODIFIED event fires on facts update.\", \"events.test.currentTimeMillis\": \""+System.currentTimeMillis()+"\"}' > "+factsFile);	// create an override for facts
+//        String factsFile = clienttasks.factsDir+"/eventTests.facts";
+//        client.runCommandAndWait("echo '{\"events.test.description\": \"Testing CONSUMER MODIFIED event fires on facts update.\", \"events.test.currentTimeMillis\": \""+System.currentTimeMillis()+"\"}' > "+factsFile);	// create an override for facts
+		Map<String,String> eventFacts = new HashMap<String,String>();
+		eventFacts.put("events.test.description", "Testing CONSUMER MODIFIED event fires on facts update.");
+		eventFacts.put("events.test.currentTimeMillis", String.valueOf(System.currentTimeMillis()));
+		clienttasks.createFactsFileWithOverridingValues(eventFacts);
 		clienttasks.facts(null,true, null, null, null);
 		String[] newEventTitles = new String[]{"CONSUMER MODIFIED"};
 
@@ -507,7 +513,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// register a type=candlepin consumer and subscribe to get an entitlement
 		// NOTE: Without the subscribe, this bugzilla is thrown: 
-		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,ConsumerType.candlepin,null,null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,ConsumerType.candlepin,null, null, null, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribe(null, testPool.poolId, null, null, null, null, null, null, null, null);

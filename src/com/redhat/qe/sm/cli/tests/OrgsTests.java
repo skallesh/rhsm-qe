@@ -95,7 +95,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 				commandLineUsername==null?"":"--username="+commandLineUsername,
 				commandLinePassword==null?"":"--password="+commandLinePassword);
 		
-		// attempt to register with the interactive credentials
+		// attempt orgs with the interactive credentials
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
 		
 		// assert the sshCommandResult here

@@ -54,6 +54,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String factsDir			= "/etc/rhsm/facts";
+	public final String factsOverrideFile	= factsDir+"/override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
@@ -543,6 +544,26 @@ public class SubscriptionManagerTasks {
 		return matcher.group(1).trim();	// return the contents of the first capturing group
 	}
 	
+
+	/**
+	 * @param factsMap - map of key/values pairs that will get written as JSON to a facts file that will override the true facts on the system.  Note: subscription-manager facts --update may need to be called after this method to realize the override.
+	 */
+	public void createFactsFileWithOverridingValues (Map<String,String> factsMap) {
+		
+		// assemble an echo command and run it to create a facts file
+		String keyvaluesString = "";
+		for (String key : factsMap.keySet()) {
+			keyvaluesString += String.format("\"%s\":\"%s\", ", key, factsMap.get(key));
+		}
+		keyvaluesString = keyvaluesString.replaceFirst(", *$", "");
+		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, factsOverrideFile);
+        sshCommandRunner.runCommandAndWait(echoCommand);	// create an override facts file
+	}
+	public void deleteFactsFileWithOverridingValues () {
+		String deleteCommand = String.format("rm -f %s", factsOverrideFile);
+		sshCommandRunner.runCommandAndWait(deleteCommand);	// delete the override facts file
+	}
+	
 	/**
 	 * @return a map of serialNumber to SubscriptionPool pairs.  The SubscriptionPool is the source from where the serialNumber for the currentlyConsumedProductSubscriptions came from.
 	 * @throws Exception 
@@ -982,6 +1003,7 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param org TODO
+	 * @param environment TODO
 	 * @param type
 	 * @param name
 	 * @param consumerId
@@ -992,13 +1014,14 @@ public class SubscriptionManagerTasks {
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult register_(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;				command += " register";
 		if (username!=null)							command += " --username="+username;
 		if (password!=null)							command += " --password="+password;
 		if (org!=null)								command += " --org="+org;
+		if (environment!=null)						command += " --environment="+environment;
 		if (type!=null)								command += " --type="+type;
 		if (name!=null)								command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerId!=null)						command += " --consumerid="+consumerId;
@@ -1033,6 +1056,7 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param org TODO
+	 * @param environment TODO
 	 * @param type <br>
 	 * <i>system</i>		Used for example registering a plain RHEL machine (Default)<br>
 	 * <i>person</i>		Used for registering as a RH Personal<br>
@@ -1046,9 +1070,9 @@ public class SubscriptionManagerTasks {
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult register(String username, String password, String org, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, org, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, null, type, name, consumerId, autosubscribe, force, proxy, proxyuser, proxypassword);
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1155,7 +1179,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,null,consumerId, null, null, null, null, null);
+		return register(username,password,null,null,null,null, consumerId, null, null, null, null, null);
 	}
 	
 	
