@@ -31,15 +31,17 @@
   ;; this bug crashes everything, so fail the BeforeClass if this is open
   (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
   
+  (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
-  (tasks/sleep 10000)
-  (with-handlers [(ignore :not-registered)]
-    (tasks/unregister)))
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (tasks/start-app))
 
 (defn ^{AfterClass {:groups ["cleanup"]}}
   cleanup [_]
-  (.configureProductCertDirAfterClass @complytests))
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (.configureProductCertDirAfterClass @complytests)
+  (tasks/restart-app))
 
 (defn ^{Test {:groups ["autosubscribe"]}}
   register_autosubscribe [_]
@@ -61,31 +63,88 @@
                        "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
+  (tasks/restart-app)
   (verify (dirsetup? somedir))
-  )
-
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
+    (verify (= (str beforesubs)
+               (trim (.getStdout
+                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+    (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 20000)
+          (verify (<= (tasks/warn-count) beforesubs))
+          (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
+  (tasks/restart-app)
   (verify (dirsetup? alldir))
-  )
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
+    (verify (= (str beforesubs)
+               (trim (.getStdout
+                      (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
+    (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 20000)
+          (verify (= (tasks/warn-count) 0))
+          (verify (tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
+  (tasks/restart-app)
   (verify (dirsetup? nodir))
-  )
+  (let [beforesubs (tasks/warn-count)
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (tasks/get-owner-display-name user pass key)]
+    (verify (= (str beforesubs)
+               (trim (.getStdout
+                      (.runCommandAndWait @clientcmd (str "ls " nodir " | wc -l"))))))
+    (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :autosubscribe true
+                          :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 10000)
+          (verify (= (tasks/warn-count) beforesubs))
+          (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
+  (tasks/restart-app)
   (verify (dirsetup? nonedir))
-  )
-
+  (verify (= 0 (tasks/warn-count)))
+  (verify (tasks/compliance?)))
 
 
 (gen-class-testng)

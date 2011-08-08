@@ -55,18 +55,27 @@
 (defn ^{DataProvider {:name "userowners"}}
   get_userowners [_]
   (to-array-2d
-   (into (if (and (@config :username1) (@config :password1))
-           (get-userlists (@config :username1) (@config :password1)))
-         (if (and (@config :username) (@config :password))
-           (get-userlists (@config :username) (@config :password))))))
+   (vec
+    (conj
+     (into 
+      (if (and (@config :username1) (@config :password1))
+        (get-userlists (@config :username1) (@config :password1)))
+      (if (and (@config :username) (@config :password))
+        (get-userlists (@config :username) (@config :password))))
+ ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+     (if (and (@config :username) (@config :password))
+       [(str (@config :username) "   ") (@config :password) nil])
+ ; https://bugzilla.redhat.com/show_bug.cgi?id=719378
+     (if (and (@config :username) (@config :password))
+       [(str "   " (@config :username)) (@config :password) nil])))))
+
 
 (data-driven register_bad_credentials {Test {:groups ["registration"]}}
   [^{Test {:groups ["blockedByBug-718045"]}}
    ["sdf" "sdf" :invalid-credentials]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str (@config :username) "  ") (@config :password) :invalid-credentials]
-   ^{Test {:groups ["blockedByBug-719378"]}}
-   [(str "   " (@config :username)) (@config :password) :invalid-credentials]
+   ;need to add a case with a space in the middle re: 719378
+   ;^{Test {:groups ["blockedByBug-719378"]}}
+   ;["test user" :invalid-credentials]
    ["" "" :no-username]
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
@@ -75,7 +84,11 @@
 (data-driven simple_register {Test {:groups ["registration"]}}
   [[(@config :username) (@config :password) "Admin Owner"]
    [(@config :username) (@config :password) "Snow White"]
-   [(@config :username1) (@config :password1) nil]])
+   [(@config :username1) (@config :password1) nil]
+   ^{Test {:groups ["blockedByBug-719378"]}}
+   [(str (@config :username) "   ") (@config :password) nil]
+   ^{Test {:groups ["blockedByBug-719378"]}}
+   [(str "   " (@config :username)) (@config :password) nil]])
 )
 
 (gen-class-testng)
