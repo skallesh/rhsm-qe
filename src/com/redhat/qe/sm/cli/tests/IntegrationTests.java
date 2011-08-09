@@ -27,7 +27,7 @@ import com.redhat.qe.sm.data.ProductNamespace;
  * References:
  * https://docspace.corp.redhat.com/docs/DOC-60198
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
- * https://docspace.corp.redhat.com/docs/DOC-63084	Stage Env Data Setup for Content Testing (automation)
+ * https://docspace.corp.redhat.com/docs/DOC-63084	Stage Env Data Setup for Content Testing (automation) - rows highlighted in yellow do not exist to date
  * https://docspace.corp.redhat.com/docs/DOC-67214	Stage Env Data Setup for Content Testing (5.7 Beta Release)
  * https://docspace.corp.redhat.com/docs/DOC-68623	RHEL 5.7 Content Re-validation Testing 2011-06-14
  * 
