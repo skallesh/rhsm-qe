@@ -134,23 +134,27 @@
     (verify tasks/compliance?)
     (verify (not (= (tasks/first-date-of-noncomply) beforedate)))))
 
-(comment 
-  (defn ^{Test {:groups ["subscription-assistant"
-                         "configureProductCertDirForNoProductsSubscribable"]
-                :dependsOnMethods ["launch_assistant"]}}
-    no_products_subscribable [_]
-    (tasks/restart-app)
-    (register)
-    (verify (< 0 (tasks/ui getrowcount :subscription-product-view)))
-    (check-all-products)
-    (verify (= 0 (tasks/ui getrowcount :assistant-subscription-view))))
 
-  
-  (defn ^{Test {:groups ["subscription-assistant"
-                         "configureProductCertDirForNoProductsInstalled"]
-                :dependsOnMethods ["launch_assistant"]}}
-    no_products_installed [_]
-    (reset-assistant)))
+(defn ^{Test {:groups ["subscription-assistant"
+                       "configureProductCertDirForNoProductsSubscribable"]
+              :dependsOnMethods ["launch_assistant"]}}
+  no_products_subscribable [_]
+  (tasks/restart-app)
+  (launch_assistant nil)
+  (verify (< 0 (tasks/ui getrowcount :subscription-product-view)))
+  (check-all-products)
+  (verify (= 0 (tasks/ui getrowcount :assistant-subscription-view))))
+
+
+(defn ^{Test {:groups ["subscription-assistant" 
+                       "configureProductCertDirForNoProductsInstalled"
+                       "blockedByBug-710149"]}}
+  no_products_installed [_]
+  (tasks/restart-app)
+  (verify (= 1 (tasks/ui guiexist
+                         :main-window
+                         "Product entitlement certificates valid*")))
+  (verify (tasks/ui showing? :update-certificates)))
 
 
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=676371
