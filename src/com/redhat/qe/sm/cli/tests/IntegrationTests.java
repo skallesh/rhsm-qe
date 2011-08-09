@@ -32,7 +32,7 @@ import com.redhat.qe.sm.data.ProductNamespace;
  * https://docspace.corp.redhat.com/docs/DOC-68623	RHEL 5.7 Content Re-validation Testing 2011-06-14
  * 
  * https://docspace.corp.redhat.com/docs/DOC-71135	Red Hat Product Certificates 
- *
+ * https://docspace.corp.redhat.com/docs/DOC-70016#Config_sku_model
  * 
  * Where to look when a product cert does not get installed:
  * e.g.
