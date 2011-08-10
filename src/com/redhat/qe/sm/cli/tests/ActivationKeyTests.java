@@ -16,6 +16,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -408,7 +409,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
-		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, true, null, null, null));
+		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, nullString, true, null, null, null));
 		clienttasks.subscribe(null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
@@ -456,7 +457,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 
-			// skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
+			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername, sm_clientPassword,jsonPool.getString("id"),ConsumerType.system)) continue;
 			
 			// add the pool to the activation key
@@ -473,10 +474,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"MultiplePools have been added to the activation key: "+jsonActivationKey);
 		
 		
-		
 		// register with the activation key
 		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null);
-
+		
+		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		for (int i = 0; i < jsonPoolsAddedToActivationKey.length(); i++) {
 			JSONObject jsonPoolAdded = (JSONObject) jsonPoolsAddedToActivationKey.get(i);
@@ -484,13 +485,113 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// assert that the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
 			assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity(jsonPoolAdded, consumedProductSubscriptions, addQuantity, false);
 		}
+		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), jsonActivationKey.getJSONArray("pools").length(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the pools added to the activation key.");
 	}
 	
-	// TODO RegisterWithMultipleActivationKeysContainingPool_Test
+	
+	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
+		
+		// get all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
+		
+		// process each of the pools adding them to an individual activation key
+		List<String> activationKeyNames = new ArrayList<String>();
+		Integer addQuantity=null;
+		JSONArray jsonPoolsAddedToActivationKey = new JSONArray();
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+
+			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
+			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername, sm_clientPassword,jsonPool.getString("id"),ConsumerType.system)) continue;
+
+			// create an activation key
+			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
+			Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+			mapActivationKeyRequest.put("name", activationKeyName);
+			JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername,sm_serverAdminPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+			
+			// add the pool to the activation key
+			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+
+			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
+			activationKeyNames.add(activationKeyName);
+		}
+		if (addQuantity==null) addQuantity=1;
+
+		// assemble the comma separated list of activation key names
+		String commaSeparatedActivationKeyNames = "";
+		for (String activationKeyName : activationKeyNames) commaSeparatedActivationKeyNames+=activationKeyName+",";
+		commaSeparatedActivationKeyNames = commaSeparatedActivationKeyNames.replaceFirst(",$", ""); // strip off trailing comma
+		
+		// register with the activation key specified as a single string
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, commaSeparatedActivationKeyNames, true, null, null, null);
+		
+		// assert that all the pools were consumed
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (int i = 0; i < jsonPoolsAddedToActivationKey.length(); i++) {
+			JSONObject jsonPoolAdded = (JSONObject) jsonPoolsAddedToActivationKey.get(i);
+						
+			// assert that the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
+			assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity(jsonPoolAdded, consumedProductSubscriptions, addQuantity, false);
+		}
+		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), activationKeyNames.size(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the single pooled activation keys used during register.");
+	}
 	
 	
-	
-	
+	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
+		
+		// get all of the pools belonging to ownerKey
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
+		
+		// process each of the pools adding them to an individual activation key
+		List<String> activationKeyNames = new ArrayList<String>();
+		Integer addQuantity=null;
+		JSONArray jsonPoolsAddedToActivationKey = new JSONArray();
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+
+			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
+			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername, sm_clientPassword,jsonPool.getString("id"),ConsumerType.system)) continue;
+
+			// create an activation key
+			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
+			Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
+			mapActivationKeyRequest.put("name", activationKeyName);
+			JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
+			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername,sm_serverAdminPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+			
+			// add the pool to the activation key
+			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+
+			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
+			activationKeyNames.add(activationKeyName);
+		}
+		if (addQuantity==null) addQuantity=1;
+		
+		// register with the activation key specified as a single string
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, activationKeyNames, true, null, null, null);
+		
+		// assert that all the pools were consumed
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (int i = 0; i < jsonPoolsAddedToActivationKey.length(); i++) {
+			JSONObject jsonPoolAdded = (JSONObject) jsonPoolsAddedToActivationKey.get(i);
+						
+			// assert that the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
+			assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity(jsonPoolAdded, consumedProductSubscriptions, addQuantity, false);
+		}
+		Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles().size(), activationKeyNames.size(), "Expecting a new entitlement cert file in '"+clienttasks.entitlementCertDir+"' for each of the single pooled activation keys used during register.");
+	}
 	
 	
 	// Candidates for an automated Test:
@@ -505,7 +606,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void unregisterAllSystemConsumerIds() {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
-				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, Boolean.TRUE, null, null, null);
+				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, nullString, Boolean.TRUE, null, null, null);
 				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
 				clienttasks.unregister_(null, null, null);
 			}
@@ -517,7 +618,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 
 	protected List<String> systemConsumerIds = new ArrayList<String>();
-	
 	
 	protected void assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity (JSONObject jsonPool, List<ProductSubscription> consumedProductSubscriptions, Integer addQuantity, boolean assertConsumptionIsLimitedToThisPoolOnly) throws Exception {
 
@@ -589,15 +689,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	// Data Providers ***********************************************************************
-
 	
+	
+	
+	// Data Providers ***********************************************************************
 	
 	@DataProvider(name="getAllMultiEntitlementJSONPoolsData")
 	public Object[][] getAllMultiEntitlementJSONPoolsDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllMultiEntitlementJSONPoolsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAllMultiEntitlementJSONPoolsDataAsListOfLists() throws Exception {
+		clienttasks.unregister_(null,null,null);	// so as to return all entitlements consumed by the current consumer
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
@@ -643,4 +745,52 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		return ll;
 	}
+	
+	@DataProvider(name="getActivationKeyCreationWithBadNameData")
+	public Object[][] getActivationKeyCreationWithBadNameDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getActivationKeyCreationWithBadNameDataAsListOfLists());
+	}
+	protected List<List<Object>> getActivationKeyCreationWithBadNameDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String name;
+		
+		name = ".period.";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		
+		name = "[openingBracket[";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "]closingBracket]";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "{openingBrace{";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "}closingBrace}";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "(openingParenthesis(";	ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ")closingParenthesis)";	ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "?questionMark?";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "@at@";					ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "!exclamationPoint!";	ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "`backTick`";			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "'singleQuote'";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "pound#sign";			ll.add(Arrays.asList(new Object[] {null,	name}));
+
+		name = "\"doubleQuotes\"";		ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "$dollarSign$";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "^caret^";				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "<lessThan<";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ">greaterThan>";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "|verticalBar|";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "+plus+";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "%percent%";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "/slash/";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ";semicolon;";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ":colon:";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = ",comma,";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "\\backslash\\";			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("728624"),	name}));
+		name = "*asterisk*";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "=equal=";				ll.add(Arrays.asList(new Object[] {null,	name}));
+		name = "~tilde~";				ll.add(Arrays.asList(new Object[] {null,	name}));
+
+		name = "s p a c e s";			ll.add(Arrays.asList(new Object[] {null,	name}));
+
+		name = "#poundSign";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		
+		return ll;
+	}
+	
 }

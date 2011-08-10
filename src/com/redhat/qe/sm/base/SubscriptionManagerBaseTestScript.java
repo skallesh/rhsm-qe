@@ -116,7 +116,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected JSONArray sm_integrationTestData = null;
 	
 	
-	
+	public static final String nullString = null;
+	public static final String nullList = null;
 
 	
 	public SubscriptionManagerBaseTestScript() {

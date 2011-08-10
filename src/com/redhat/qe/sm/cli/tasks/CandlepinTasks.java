@@ -250,19 +250,19 @@ schema generation failed
 		}
 		// END OF WORKAROUND
 				
-		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
 	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+path);
-		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
 	static public String deleteResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		DeleteMethod delete = new DeleteMethod("https://"+server+":"+port+prefix+path);
-		String credentials = authenticator.equals("")? "":"-u "+authenticator+":"+password;
+		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request DELETE https://"+server+":"+port+prefix+path);
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
@@ -278,7 +278,7 @@ schema generation failed
 		String headers = "";
 		for ( org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
 
-		log.info("SSH alternative to HTTP request: curl -k --request POST "+credentials+" "+data+" "+headers+" https://"+server+":"+port+prefix+path);
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST "+data+" "+headers+" https://"+server+":"+port+prefix+path);
 
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}

@@ -55,7 +55,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void Subscribe_Test(String username, String password, String productId) {
-		clienttasks.register(username, password, null, null, null, null, null, null, null, true, null, null, null);
+		clienttasks.register(username, password, null, null, null, null, null, null, nullString, true, null, null, null);
 		File entitlementCertFile = clienttasks.subscribeToProductId(productId);
 
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -75,7 +75,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //if(true) throw new SkipException("debugging");
 		// register
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
-			clienttasks.register(username, password, null, null, null, null, null, null, null, true, null, null, null);
+			clienttasks.register(username, password, null, null, null, null, null, null, nullString, true, null, null, null);
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {
@@ -138,7 +138,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
-			clienttasks.register(username, password, null, null, null, null, null, null, null, true, null, null, null);
+			clienttasks.register(username, password, null, null, null, null, null, null, nullString, true, null, null, null);
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {
