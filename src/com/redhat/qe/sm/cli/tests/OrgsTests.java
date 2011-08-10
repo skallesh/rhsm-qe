@@ -105,6 +105,8 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	// Candidates for an automated Test:
+	// TODO Bug 729780 - Candlepin returns 403 instead of 404 for superadmin
 	
 	// Configuration methods ***********************************************************************
 	
