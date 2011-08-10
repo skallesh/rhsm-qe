@@ -78,7 +78,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                              :no ]))
     (define-elements (windows :facts-dialog)
       {:facts-view "facts_view"
-       :close-facts "close_button"} )
+       :close-facts "close_button"
+       :update-facts "Update Facts"})
     (define-elements (windows :error-dialog)
       {:ok-error "OK"
        :error-msg "lbl[A-Za-z]*"})

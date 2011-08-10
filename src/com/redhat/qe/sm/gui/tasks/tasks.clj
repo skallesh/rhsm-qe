@@ -39,6 +39,7 @@
                    :no-username #"You must enter a login"
                    :no-password #"You must enter a password"
                    :wrong-consumer-type #"Consumers of this type are not allowed"
+                   :network-error #"Network error, unable to connect to server.*"
                    })
 
 (defn matching-error
