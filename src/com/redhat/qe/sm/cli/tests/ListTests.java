@@ -1,11 +1,17 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
@@ -14,6 +20,7 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.OrderNamespace;
@@ -162,8 +169,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
-		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null);
-		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null);
+		SSHCommandResult listResult = clienttasks.list_(null, null, null, null, null, null, null, null);
+		SSHCommandResult listInstalledResult = clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -175,8 +182,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPool_(pool);
-		listResult = clienttasks.list_(null, null, null, null, null, null, null);
-		listInstalledResult = clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null);
+		listResult = clienttasks.list_(null, null, null, null, null, null, null, null);
+		listInstalledResult = clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null);
 		
 		Assert.assertEquals(listResult.getStdout(), listInstalledResult.getStdout(), "'list' and 'list --installed' produce the same stdOut results.");
 		Assert.assertEquals(listResult.getStderr(), listInstalledResult.getStderr(), "'list' and 'list --installed' produce the same stdErr results.");
@@ -305,7 +312,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	
 	
-	@Test(	description="subscription-manager: susbcription manager list consumed should be permitted without being registered",
+	@Test(	description="subscription-manager: subcription manager list consumed should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -319,7 +326,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0),"Exit code from list consumed when executed without being registered.");
 	}
 	
-	@Test(	description="subscription-manager: susbcription manager list installed should be permitted without being registered",
+	@Test(	description="subscription-manager: subcription manager list installed should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -329,19 +336,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult = clienttasks.listInstalledProducts();
 	}
 	
-	@Test(	description="subscription-manager: susbcription manager list should be permitted without being registered",
+	@Test(	description="subscription-manager: subcription manager list should be permitted without being registered",
 			groups={"blockedByBug-725870"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void AttemptListWithoutBeingRegistered_Test() {
 		
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null);
+		SSHCommandResult listResult = clienttasks.list_(null,null,null,null,null,null,null, null);
 		
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 	}
 	
-	@Test(	description="subscription-manager: susbcription manager list available should require being registered",
+	@Test(	description="subscription-manager: subcription manager list available should require being registered",
 			groups={},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
@@ -349,14 +356,98 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult;
 		clienttasks.unregister(null,null,null);
 		
-		listResult = clienttasks.list_(null,true,null,null,null,null,null);
+		listResult = clienttasks.list_(null,true,null,null,null,null,null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
 		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
 
-		listResult = clienttasks.list_(true,true,null,null,null,null,null);
+		listResult = clienttasks.list_(true,true,null,null,null,null,null, null);
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
 		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
 
+	}
+	
+	
+	
+	
+	
+	@Test(	description="subscription-manager: subcription manager list future subscription pools",
+			groups={"myDevGroup","blockedByBug-672562"},
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ListAvailableWithFutureOnDate_Test() throws Exception {
+		
+		List<List<Object>> allFutureJSONPoolsDataAsListOfLists = getAllFutureJSONPoolsDataAsListOfLists();
+		if (allFutureJSONPoolsDataAsListOfLists.size()<1) throw new SkipException("Cannot find any future subscriptions to test");
+		
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		List<String> onDatesTested = new ArrayList<String>();
+		
+		
+		// assemble a list of onDateStrings to test
+		List<String> onDatesToList = new ArrayList<String>();
+		for (List<Object> l : allFutureJSONPoolsDataAsListOfLists) {
+			JSONObject jsonSubscription = (JSONObject) l.get(0);
+			
+			String startDate = jsonSubscription.getString("startDate");
+			
+			// add one day to this start date to use for subscription-manager list --ondate test
+			Calendar onDate = parse_iso8601DateString(startDate); onDate.add(Calendar.HOUR, 24);
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			String onDateString = dateFormat.format(onDate.getTime());
+			
+			if (!onDatesToList.contains(onDateString)) onDatesToList.add(onDateString);
+		}
+		
+		// assemble a list of future subscription poolIds to find in the lists
+		List<String> futurePoolIds = new ArrayList<String>();
+		for (List<Object> l : allFutureJSONPoolsDataAsListOfLists) {
+			JSONObject jsonPool = (JSONObject) l.get(0);
+			String id = jsonPool.getString("id");
+			futurePoolIds.add(id);
+		}
+		
+		
+		List<String>poolIdsListedOnDate = new ArrayList<String>();
+		
+		for (List<Object> l : allFutureJSONPoolsDataAsListOfLists) {
+			JSONObject jsonSubscription = (JSONObject) l.get(0);
+			
+			// add one day to this start date to use for subscription-manager list --ondate test
+			Calendar onDate = parse_iso8601DateString(jsonSubscription.getString("startDate")); onDate.add(Calendar.HOUR, 24);
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			String onDateString = dateFormat.format(onDate.getTime());
+			
+			// if we already tested with this onDateString, then continue
+			if (onDatesTested.contains(onDateString)) continue;
+			
+			// list all available onDate
+			SSHCommandResult listResult = clienttasks.list_(true,true,onDateString,null,null,null,null, null);
+			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --ondate command indicates a success.");
+
+			List<SubscriptionPool> subscriptionPools = SubscriptionPool.parse(listResult.getStdout());
+			Assert.assertTrue(subscriptionPools.size()>=1,"A list of SubscriptionPools was returned from the list module using a valid ondate option.");
+			
+			// assert that each of the SubscriptionPools listed is indeed active on the date
+			for (SubscriptionPool subscriptionPool : subscriptionPools) {
+				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+subscriptionPool.poolId));
+				Calendar startDate = parse_iso8601DateString(jsonPool.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+				Calendar endDate = parse_iso8601DateString(jsonPool.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+				Assert.assertTrue(startDate.before(onDate)&&endDate.after(onDate),"This expected SubscriptionPool '"+subscriptionPool.poolId+"' is available ondate='"+onDateString+"' ");
+				
+				if (!poolIdsListedOnDate.contains(subscriptionPool.poolId)) poolIdsListedOnDate.add(subscriptionPool.poolId);
+			}
+			
+			onDatesTested.add(onDateString);
+		}
+		
+		Assert.assertEquals(poolIdsListedOnDate.size(), futurePoolIds.size(),"The expected count of all of the expected future subscription pools was listed on future dates.");
+		for (String futurePoolId : futurePoolIds) poolIdsListedOnDate.remove(futurePoolId);
+		Assert.assertTrue(poolIdsListedOnDate.isEmpty(),"All of the expected future subscription pools were listed on future dates.");
+			
+			
+
+		
 	}
 	
 	// Candidates for an automated Test:

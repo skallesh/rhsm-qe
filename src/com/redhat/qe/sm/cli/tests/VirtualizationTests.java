@@ -302,7 +302,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			if (jsonSubscription.getString("id").equals(subscriptionId)) {break;} else {jsonSubscription=null;}
 		}
-		Calendar startDate = parseDateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+		Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
 		Calendar newStartDate = (Calendar) startDate.clone(); newStartDate.add(Calendar.MONTH, -1);	// subtract a month
 		updateSubscriptionDatesOnDatabase(subscriptionId,newStartDate,null);
 
@@ -497,8 +497,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String subscriptionId = jsonSubscription.getString("id");
-			Calendar startDate = parseDateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
-			Calendar endDate = parseDateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
 			int quantity = jsonSubscription.getInt("quantity");
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
 			String productName = jsonProduct.getString("name");

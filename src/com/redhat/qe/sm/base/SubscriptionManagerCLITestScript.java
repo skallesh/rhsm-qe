@@ -2,6 +2,7 @@ package com.redhat.qe.sm.base;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -597,20 +598,34 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 
-	protected Calendar parseDateString(String dateString) {
-		String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; //"2012-02-08T00:00:00.000+0000"
+	final String iso8601DateString = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; 								//"2012-02-08T00:00:00.000+0000"
+	final DateFormat iso8601DateFormat = new SimpleDateFormat(iso8601DateString);				//"2012-02-08T00:00:00.000+0000"
+	protected Calendar parse_iso8601DateString(String dateString) {
 		try{
-			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+			DateFormat dateFormat = new SimpleDateFormat(iso8601DateString);
 			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 			Calendar calendar = new GregorianCalendar();
 			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
 			return calendar;
 		}
 		catch (ParseException e){
-			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
+			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+iso8601DateString+"':\n"+e.getMessage());
 			return null;
 		}
 	}
+	protected String format_iso8601DateString(Calendar date) throws UnsupportedEncodingException {
+		String iso8601FormatedDateString = iso8601DateFormat.format(date.getTime());
+		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");		// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
+		return iso8601FormatedDateString;
+	}
+	protected String urlEncode(String formattedDate) throws UnsupportedEncodingException {
+		String urlEncodedDate = java.net.URLEncoder.encode(formattedDate, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
+		return urlEncodedDate;
+	}
+
+
+	
+
 	
 	
 	
@@ -883,8 +898,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			
 			// skip subscriptions that are not valid today (at this time now)
-			Calendar startDate = parseDateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
-			Calendar endDate = parseDateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
 			if (!(startDate.before(now) && endDate.after(now))) continue;
 			
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
@@ -1849,5 +1864,72 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 	}
 
+	
+	
+	@DataProvider(name="getAllFutureJSONPoolsData")
+	public Object[][] getAllFutureJSONPoolsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllJSONPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllFutureJSONPoolsDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// get the owner key for clientusername, clientpassword
+		String consumerId = clienttasks.getCurrentConsumerId();
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+
+		for (List<Object> l : getAllFutureJSONSubscriptionsDataAsListOfLists()) {
+			JSONObject jsonSubscription = (JSONObject) l.get(0);
+			String subscriptionId = jsonSubscription.getString("id");			
+			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+
+			// process all of the pools belonging to ownerKey that are activeon startDate
+			JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/pools" +"?activeon="+urlEncode(format_iso8601DateString(startDate))));
+			for (int j = 0; j < jsonPools.length(); j++) {
+				JSONObject jsonPool = (JSONObject) jsonPools.get(j);
+				
+				// remember all the jsonPools that come from subscriptionId
+				if (jsonPool.getString("subscriptionId").equals(subscriptionId)) {
+
+					// JSONObject jsonPool
+					ll.add(Arrays.asList(new Object[]{jsonPool}));
+				}
+			}
+
+		}
+		
+		return ll;
+	}
+	
+	protected List<List<Object>> getAllFutureJSONSubscriptionsDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
+
+		// get the owner key for clientusername, clientpassword
+		String consumerId = clienttasks.getCurrentConsumerId();
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, Boolean.TRUE, null, null, null));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			String id = jsonSubscription.getString("id");			
+			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+
+			// process subscriptions that are in the future
+			if (startDate.after(now)) {
+			
+				// JSONObject jsonSubscription
+				ll.add(Arrays.asList(new Object[]{jsonSubscription}));
+			}
+		}
+		
+		return ll;
+	}
 
 }
