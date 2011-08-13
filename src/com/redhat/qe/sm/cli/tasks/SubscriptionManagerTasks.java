@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -960,6 +962,29 @@ public class SubscriptionManagerTasks {
 		return entitlementCerts.get(0);
 	}
 	
+	
+	public EntitlementCert getEntitlementCertCorrespondingToSubscribedPool(SubscriptionPool subscribedPool) {
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		
+		for (File entitlementCertFile : getCurrentEntitlementCertFiles("-t")) {
+			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+			try {
+				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,entitlementCert.id);
+				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
+				if (jsonPool.getString("id").equals(subscribedPool.poolId)) {
+					return entitlementCert;
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			}
+		}
+		return null;	// not found
+	}
+	
+	
 	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+serialPemFile.getPath());
 		String certificates = sshCommandRunner.getStdout();
@@ -994,6 +1019,11 @@ public class SubscriptionManagerTasks {
 	public File getEntitlementCertFileFromEntitlementCert(EntitlementCert entitlementCert) {
 		File serialPemFile = new File(entitlementCertDir+File.separator+entitlementCert.serialNumber+".pem");
 		return serialPemFile;
+	}
+	
+	public File getEntitlementCertKeyFileFromEntitlementCert(EntitlementCert entitlementCert) {
+		File serialKeyPemFile = new File(entitlementCertDir+File.separator+entitlementCert.serialNumber+"-key.pem");
+		return serialKeyPemFile;
 	}
 	
 	// register module tasks ************************************************************
@@ -1683,6 +1713,9 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listSubscribedRepos() {
 
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
 		SSHCommandResult sshCommandResult = repos_(Boolean.TRUE, null, null, null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
@@ -1690,6 +1723,10 @@ public class SubscriptionManagerTasks {
 		List<EntitlementCert> entitlementCerts = getCurrentEntitlementCerts();
 		int numContentNamespaces = 0;
 		for (EntitlementCert entitlementCert : entitlementCerts) {
+			
+			// we should NOT count contentNamespaces from entitlement certs that are not valid now
+			if (entitlementCert.validityNotBefore.after(now) || entitlementCert.validityNotAfter.before(now)) continue;
+
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				numContentNamespaces++;
 			}
@@ -1893,7 +1930,7 @@ public class SubscriptionManagerTasks {
 		} 
 		
 		// figure out which entitlement cert file has been newly installed into /etc/pki/entitlement after attempting to subscribe to pool
-		/* OLD WAY - THIS ALGORITHM BREAKS DOWN WHEN MODIFIER ENTITLEMENTS ARE IN PLAY
+		/* OLD - THIS ALGORITHM BREAKS DOWN WHEN MODIFIER ENTITLEMENTS ARE IN PLAY
 		File newCertFile = null;
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		for (File file : afterEntitlementCertFiles) {
@@ -1919,8 +1956,9 @@ public class SubscriptionManagerTasks {
 			}
 		}
 		*/
+		// NOTE: this block of code is somewhat duplicated in getEntitlementCertCorrespondingToSubscribedPool(...)
 		File newCertFile = null;
-		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
+		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles("-t");
 		for (File entitlementCertFile : afterEntitlementCertFiles) {
 			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -2029,10 +2067,14 @@ public class SubscriptionManagerTasks {
 			} else {
 			// END OF WORKAROUND
 			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
+			File newCertKeyFile = getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
 			Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
 					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
 					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
+			Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, newCertFile.getPath()), 1,"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+			Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, newCertKeyFile.getPath()), 1,"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
 			}
+
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
 			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
@@ -2286,8 +2328,11 @@ public class SubscriptionManagerTasks {
 	 */
 	public boolean unsubscribeFromSerialNumber(BigInteger serialNumber) {
 		String certFilePath = entitlementCertDir+"/"+serialNumber+".pem";
+		String certKeyFilePath = entitlementCertDir+"/"+serialNumber+"-key.pem";
 		File certFile = new File(certFilePath);
 		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==1? true:false;
+		if (certFileExists) Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==1,
+				"Entitlement Certificate file with serial '"+serialNumber+"' ("+certFilePath+") and corresponding key file ("+certKeyFilePath+") exist before unsubscribing.");
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 
 		log.info("Unsubscribing from certificate serial: "+ serialNumber);
@@ -2315,6 +2360,8 @@ public class SubscriptionManagerTasks {
 		// assert the certFileExists is removed
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
 				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
+		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
+				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
 
 		// assert that only ONE entitlement cert file was removed
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();

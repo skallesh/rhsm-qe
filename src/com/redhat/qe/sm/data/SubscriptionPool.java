@@ -77,7 +77,8 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	
-	public SubscriptionPool(Calendar startDate,
+	public SubscriptionPool(String subscriptionName,
+			Calendar startDate,
 			Calendar endDate,
 			Boolean activeSubscription,
 			Integer consumed,
@@ -86,13 +87,15 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			String productId){
 		super(null);
 		
+		this.subscriptionName = subscriptionName;
 		this.startDate = startDate;
 		this.endDate = endDate;
 		this.activeSubscription = activeSubscription;
 		this.consumed = consumed;
 		this.quantity = quantity;
 		this.poolId = id;
-		this.subscriptionName = productId;
+		this.productId = productId;
+
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}
 	

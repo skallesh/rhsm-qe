@@ -3,7 +3,9 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.xmlrpc.XmlRpcException;
@@ -721,7 +723,27 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
-	
+		
+	@Test(	description="subscription-manager: subscribe to future subscription pool",
+			groups={},
+			dataProvider="getAllFutureSystemSubscriptionPoolsData",
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void SubscribeToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
+		
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
+		// subscribe to the future subscription pool
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,pool.poolId,null,null,null,null,null,null,null,null);
+
+		// assert that the granted entitlement cert begins in the future
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		Assert.assertNotNull(entitlementCert,"Found the newly granted EntitlementCert on the client after subscribing to future subscription pool '"+pool.poolId+"'.");
+		Assert.assertTrue(entitlementCert.validityNotBefore.after(now), "The newly granted EntitlementCert is not valid until the future.  EntitlementCert: "+entitlementCert);
+		Assert.assertTrue(entitlementCert.orderNamespace.startDate.after(now), "The newly granted EntitlementCert's OrderNamespace starts in the future.  OrderNamespace: "+entitlementCert.orderNamespace);	
+	}
+		
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668032

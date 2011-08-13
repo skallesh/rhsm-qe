@@ -3,10 +3,13 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.json.JSONException;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -16,6 +19,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.Repo;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
@@ -38,7 +42,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
-	public void ReposListReportsGrantedContentNamespacesAfterSubscribing_Test(SubscriptionPool pool) throws JSONException, Exception{
+	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);	// for this test, we can skip the exhaustive asserts done by this call to clienttasks.subscribeToSubscriptionPool(pool)
@@ -78,6 +82,30 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// randomly decide to unsubscribe from the pool only for the purpose of saving on accumulated logging and avoid a java heap memory error
 		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null);
+	}
+	
+	
+	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
+			groups={"unsubscribeAllBeforeThisTest"},
+			dataProvider="getAllFutureSystemSubscriptionPoolsData",
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void ReposListReportsNoContentNamespacesAfterSubscribingToFuturePool_Test(SubscriptionPool pool) throws Exception {
+		
+		// subscribe to the future SubscriptionPool
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,pool.poolId,null,null,null,null,null,null,null,null);
+
+		// assert that the granted EntitlementCert and its corresponding key exist
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		File entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
+		File entitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath()), 1,"EntitlementCert file exists after subscribing to future SubscriptionPool.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertKeyFile.getPath()), 1,"EntitlementCert key file exists after subscribing to future SubscriptionPool.");
+		
+		// assuming that we are not subscribed to a non-future subscription pool, assert that there are NO subscribed repos 
+		Assert.assertEquals(clienttasks.getCurrentlySubscribedRepos().size(),0,"Assuming that we are not currently subscribed to a non-future subscription pool, then there should NOT be any repos reported after subscribing to future subscription pool '"+pool.poolId+"'.");
+		
+		// TODO we may want to randomly unsubscribe from serial number without asserting to save some computation of the accumulating entitlement certs
 	}
 	
 	
@@ -130,6 +158,11 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
+	}
+	
+	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
+	public void unsubscribeAllBeforeGroups() {
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
 	
 	

@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -370,13 +371,13 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
-	@Test(	description="subscription-manager: subcription manager list future subscription pools",
-			groups={"myDevGroup","blockedByBug-672562"},
+	@Test(	description="subscription-manager: subcription manager list future subscription pools for a system",
+			groups={"blockedByBug-672562"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
-	public void ListAvailableWithFutureOnDate_Test() throws Exception {
+	public void ListAllAvailableWithFutureOnDate_Test() throws Exception {
 		
-		List<List<Object>> allFutureJSONPoolsDataAsListOfLists = getAllFutureJSONPoolsDataAsListOfLists();
+		List<List<Object>> allFutureJSONPoolsDataAsListOfLists = getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system);
 		if (allFutureJSONPoolsDataAsListOfLists.size()<1) throw new SkipException("Cannot find any future subscriptions to test");
 		
 		Calendar now = new GregorianCalendar();
@@ -384,22 +385,22 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<String> onDatesTested = new ArrayList<String>();
 		
 		
-		// assemble a list of onDateStrings to test
-		List<String> onDatesToList = new ArrayList<String>();
+		// assemble a list of ondate strings to test
+		List<String> onDatesToTest = new ArrayList<String>();
 		for (List<Object> l : allFutureJSONPoolsDataAsListOfLists) {
-			JSONObject jsonSubscription = (JSONObject) l.get(0);
+			JSONObject futureJSONPool = (JSONObject) l.get(0);
 			
-			String startDate = jsonSubscription.getString("startDate");
+			String startDate = futureJSONPool.getString("startDate");
 			
-			// add one day to this start date to use for subscription-manager list --ondate test
-			Calendar onDate = parse_iso8601DateString(startDate); onDate.add(Calendar.HOUR, 24);
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			String onDateString = dateFormat.format(onDate.getTime());
+			// add one day to this start date to use for subscription-manager list --ondate test (ASSUMPTION: these subscriptions last longer than one day)
+			Calendar onDate = parse_iso8601DateString(startDate); onDate.add(Calendar.DATE, 1);
+			DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
 			
-			if (!onDatesToList.contains(onDateString)) onDatesToList.add(onDateString);
+			if (!onDatesToTest.contains(onDateToTest)) onDatesToTest.add(onDateToTest);
 		}
 		
-		// assemble a list of future subscription poolIds to find in the lists
+		// assemble a list of future subscription poolIds to verify in the subscription-manager list --available --ondate
 		List<String> futurePoolIds = new ArrayList<String>();
 		for (List<Object> l : allFutureJSONPoolsDataAsListOfLists) {
 			JSONObject jsonPool = (JSONObject) l.get(0);
@@ -407,54 +408,86 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			futurePoolIds.add(id);
 		}
 		
-		
-		List<String>poolIdsListedOnDate = new ArrayList<String>();
+		// use this list to store all of the poolIds found on a future date listing
+		List<String>futurePoolIdsListedOnDate = new ArrayList<String>();
 		
 		for (List<Object> l : allFutureJSONPoolsDataAsListOfLists) {
-			JSONObject jsonSubscription = (JSONObject) l.get(0);
+			JSONObject futureJSONPool = (JSONObject) l.get(0);
 			
 			// add one day to this start date to use for subscription-manager list --ondate test
-			Calendar onDate = parse_iso8601DateString(jsonSubscription.getString("startDate")); onDate.add(Calendar.HOUR, 24);
-			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			String onDateString = dateFormat.format(onDate.getTime());
+			Calendar onDate = parse_iso8601DateString(futureJSONPool.getString("startDate")); onDate.add(Calendar.DATE, 1);
+			DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+			String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
 			
-			// if we already tested with this onDateString, then continue
-			if (onDatesTested.contains(onDateString)) continue;
+			// if we already tested with this ondate string, then continue
+			if (onDatesTested.contains(onDateToTest)) continue;
 			
-			// list all available onDate
-			SSHCommandResult listResult = clienttasks.list_(true,true,onDateString,null,null,null,null, null);
+			// list all available onDateToTest
+			SSHCommandResult listResult = clienttasks.list_(true,true,onDateToTest,null,null,null,null, null);
 			Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available --ondate command indicates a success.");
 
 			List<SubscriptionPool> subscriptionPools = SubscriptionPool.parse(listResult.getStdout());
 			Assert.assertTrue(subscriptionPools.size()>=1,"A list of SubscriptionPools was returned from the list module using a valid ondate option.");
 			
-			// assert that each of the SubscriptionPools listed is indeed active on the date
+			// assert that each of the SubscriptionPools listed is indeed active on the requested date
 			for (SubscriptionPool subscriptionPool : subscriptionPools) {
 				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+subscriptionPool.poolId));
 				Calendar startDate = parse_iso8601DateString(jsonPool.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
 				Calendar endDate = parse_iso8601DateString(jsonPool.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
-				Assert.assertTrue(startDate.before(onDate)&&endDate.after(onDate),"This expected SubscriptionPool '"+subscriptionPool.poolId+"' is available ondate='"+onDateString+"' ");
-				
-				if (!poolIdsListedOnDate.contains(subscriptionPool.poolId)) poolIdsListedOnDate.add(subscriptionPool.poolId);
+				Boolean activeSubscription = jsonPool.getBoolean("activeSubscription");	// TODO I don't yet understand how to test this property.  I'm assuming it is true
+				Assert.assertTrue(startDate.before(onDate)&&endDate.after(onDate)&&activeSubscription,"SubscriptionPool '"+subscriptionPool.poolId+"' is indeed active and listed as available ondate='"+onDateToTest+"'.");
+							
+				// for follow-up assertions keep a list of all the futurePoolIds that are found on the listing date (excluding pools that are active now since they are not considered future pools)
+				if (startDate.after(now)) {
+					if (!futurePoolIdsListedOnDate.contains(subscriptionPool.poolId)) futurePoolIdsListedOnDate.add(subscriptionPool.poolId);
+				}
 			}
 			
-			onDatesTested.add(onDateString);
+			// remember that this date was just tested
+			onDatesTested.add(onDateToTest);
 		}
 		
-		Assert.assertEquals(poolIdsListedOnDate.size(), futurePoolIds.size(),"The expected count of all of the expected future subscription pools was listed on future dates.");
-		for (String futurePoolId : futurePoolIds) poolIdsListedOnDate.remove(futurePoolId);
-		Assert.assertTrue(poolIdsListedOnDate.isEmpty(),"All of the expected future subscription pools were listed on future dates.");
-			
-			
-
-		
+		Assert.assertEquals(futurePoolIdsListedOnDate.size(), futurePoolIds.size(),"The expected count of all of the expected future subscription pools for systems was listed on future dates.");
+		for (String futurePoolId : futurePoolIds) futurePoolIdsListedOnDate.remove(futurePoolId);
+		Assert.assertTrue(futurePoolIdsListedOnDate.isEmpty(),"All of the expected future subscription pools for systems were listed on future dates.");
 	}
 	
 	// Candidates for an automated Test:
-	// TODO Bug 672562 - request for subscription-manager list --available --ondate option  (SEE CODE IN ExpirationTests.createTestPool(..) FOR EXAMPLE OF API GET WITH activeon PARAMETER)
 	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
 	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats
 
+	
+	
+	
+	
+	
+	// Configuration methods ***********************************************************************
+	
+	
+	
+	@BeforeClass(groups="setup")
+	public void registerBeforeClass() {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, null, null, null, null);
+	}
+	
+	// NOTE: This method is not necessary, but adds a little more spice to ListAvailableWithFutureOnDate_Test
+	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
+	public void createFutureSubscriptionPoolBeforeClass() throws Exception {
+		// don't bother attempting to create a subscription unless onPremises
+		if (!sm_isServerOnPremises) return;
+
+		// find a randomly available product id
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		String randomAvailableProductId = pool.productId;
+		
+		// create a future subscription and refresh pools for it
+		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId);
+	}
+	
+	
+	
+	
 	// Data Providers ***********************************************************************
 	
 	

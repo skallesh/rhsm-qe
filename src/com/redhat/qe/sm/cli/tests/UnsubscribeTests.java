@@ -2,6 +2,8 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.testng.annotations.Test;
@@ -13,6 +15,7 @@ import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author ssalevan
@@ -55,52 +58,6 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
 	}
 	
-	
-// FIXME DELETEME This test was re-designed as a data-provided test below
-//	@Test(description="Copy entitlement certificates into /etc/pki/entitlement/product after unsubscribe",
-//			dependsOnGroups={"sm_stage4"},
-//			groups={"sm_stage5", "blockedByBug-584137", "blockedByBug-602852"})
-//	@ImplementsTCMS(id="41903")
-//	public void UnsubscribeAndReplaceCert_Test(){
-//		sshCommandRunner.runCommandAndWait("killall -9 yum");
-//		String randDir = "/tmp/sm-certs-"+Integer.toString(this.getRandInt());
-//		
-//		// make sure we are registered and then subscribe to each available subscription pool
-//		sm.register(username,password,null,null,null,null);
-//		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
-//		
-//		// copy certs to temp dir
-//		sshCommandRunner.runCommandAndWait("rm -rf "+randDir);
-//		sshCommandRunner.runCommandAndWait("mkdir -p "+randDir);
-//		sshCommandRunner.runCommandAndWait("cp /etc/pki/entitlement/product/* "+randDir);
-//		
-////		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
-//		sm.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-//		
-//		sshCommandRunner.runCommandAndWait("cp -f "+randDir+"/* /etc/pki/entitlement/product");
-//		RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,
-//				"yum repolist");
-//		
-//		/* FIXME Left off development here:
-//201007152042:41.317 - FINE: ssh root@jsefler-rhel6-clientpin.usersys.redhat.com yum repolist (com.redhat.qe.tools.SSHCommandRunner.run)
-//201007152042:42.353 - FINE: Stdout: 
-//Loaded plugins: refresh-packagekit, rhnplugin, rhsmplugin
-//Updating Red Hat repositories.
-//repo id                              repo name                            status
-//never-enabled-content                never-enabled-content                0
-//rhel-latest                          Latest RHEL 6                        0
-//repolist: 0
-// (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-//201007152042:42.354 - FINE: Stderr: 
-//This system is not registered with RHN.
-//RHN support will be disabled.
-//http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
-//Trying other mirror.
-// (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-//201007152042:42.360 - SEVERE: Test Failed: UnsubscribeAndReplaceCert_Test (com.redhat.qe.auto.testng.TestNGListener.onTestFailure)
-//java.lang.AssertionError: Command 'yum repolist' returns nonzero error code: 0 expected:<true> but was:<false>
-//		 */
-//	}
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
 			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
@@ -155,6 +112,41 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		client.runCommandAndWait("rm -rf "+randDir);
 	}
 
+	
+	@Test(	description="subscription-manager: subscribe and then unsubscribe from a future subscription pool",
+			groups={"blockedByBug-727970"},
+			dataProvider="getAllFutureSystemSubscriptionPoolsData",
+			enabled=true)
+			//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeAfterSubscribingToFutureSubscriptionPool_Test(SubscriptionPool pool) throws Exception {
+		
+		Calendar now = new GregorianCalendar();
+		now.setTimeInMillis(System.currentTimeMillis());
+		
+		// subscribe to the future SubscriptionPool
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,pool.poolId,null,null,null,null,null,null,null,null);
+
+		// assert that the granted EntitlementCert and its corresponding key exist
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		File entitlementCertFile = clienttasks.getEntitlementCertFileFromEntitlementCert(entitlementCert);
+		File entitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileFromEntitlementCert(entitlementCert);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath()), 1,"EntitlementCert file exists after subscribing to future SubscriptionPool.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertKeyFile.getPath()), 1,"EntitlementCert key file exists after subscribing to future SubscriptionPool.");
+
+		// find the consumed ProductSubscription from the future SubscriptionPool
+		ProductSubscription productSubscription =  ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber",entitlementCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
+		Assert.assertNotNull(productSubscription,"Found the newly consumed ProductSubscription after subscribing to future subscription pool '"+pool.poolId+"'.");
+		
+		// unsubscribe
+		clienttasks.unsubscribeFromProductSubscription(productSubscription);
+		
+		// assert that the EntitlementCert file and its key are removed.
+		// NOTE: this assertion is probably already built into the unsubscribe task above
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath()), 0,"EntitlementCert file has been removed after unsubscribing to future SubscriptionPool.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertKeyFile.getPath()), 0,"EntitlementCert key file has been removed after unsubscribing to future SubscriptionPool.");
+	}
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 706889 - “-1” displayed on console while unsubscribe invalid serial
 	// TODO Bug 727970 - Unsubscribe Is Not Removing Future Dated Entitlement Certificates Or Keys 

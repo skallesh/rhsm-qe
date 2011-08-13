@@ -1865,12 +1865,30 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 
 	
-	
 	@DataProvider(name="getAllFutureJSONPoolsData")
 	public Object[][] getAllFutureJSONPoolsDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getAllJSONPoolsDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getAllFutureJSONPoolsDataAsListOfLists(null));
 	}
-	protected List<List<Object>> getAllFutureJSONPoolsDataAsListOfLists() throws Exception {
+	@DataProvider(name="getAllFutureSystemJSONPoolsData")
+	public Object[][] getAllFutureSystemJSONPoolsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system));
+	}
+	@DataProvider(name="getAllFutureSystemSubscriptionPoolsData")
+	public Object[][] getAllFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
+			JSONObject jsonPool = (JSONObject) l.get(0);
+			
+			DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			Calendar endDate = new GregorianCalendar();
+			endDate.setTimeInMillis(dateFormat.parse(jsonPool.getString("endDate")).getTime());
+
+			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), jsonPool.getString("quantity"), SubscriptionPool.formatDateString(endDate))}));
+		}
+		return TestNGUtils.convertListOfListsTo2dArray(ll);
+	}
+	protected List<List<Object>> getAllFutureJSONPoolsDataAsListOfLists(ConsumerType consumerType) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// get the owner key for clientusername, clientpassword
@@ -1878,7 +1896,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, Boolean.TRUE, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
-		for (List<Object> l : getAllFutureJSONSubscriptionsDataAsListOfLists()) {
+		for (List<Object> l : getAllFutureJSONSubscriptionsDataAsListOfLists(consumerType)) {
 			JSONObject jsonSubscription = (JSONObject) l.get(0);
 			String subscriptionId = jsonSubscription.getString("id");			
 			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
@@ -1893,6 +1911,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 					// JSONObject jsonPool
 					ll.add(Arrays.asList(new Object[]{jsonPool}));
+					
+					// minimize the number of dataProvided rows (useful during automated testcase development)
+					if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 				}
 			}
 
@@ -1901,9 +1922,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-	protected List<List<Object>> getAllFutureJSONSubscriptionsDataAsListOfLists() throws Exception {
+	protected List<List<Object>> getAllFutureJSONSubscriptionsDataAsListOfLists(ConsumerType consumerType) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
 
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -1921,6 +1941,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
 			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
 
+			// skip subscriptions to a product that doesn't satisfy the requested consumerType
+			JSONObject jsonProduct = jsonSubscription.getJSONObject("product");
+			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
+			String requires_consumer_type = null;
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {
+				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
+				if (jsonProductAttribute.getString("name").equals("requires_consumer_type")) {
+					requires_consumer_type = jsonProductAttribute.getString("value");
+					break;
+				}
+			}
+			if (requires_consumer_type==null) requires_consumer_type = ConsumerType.system.toString();	// the absence of a "requires_consumer_type" implies requires_consumer_type is system
+			if (!ConsumerType.valueOf(requires_consumer_type).equals(consumerType)) continue;
+			
 			// process subscriptions that are in the future
 			if (startDate.after(now)) {
 			

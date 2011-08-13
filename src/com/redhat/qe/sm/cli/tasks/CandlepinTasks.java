@@ -2227,6 +2227,90 @@ schema generation failed
 		return sub;
 	}
 	
+	
+	
+	
+	
+	/**
+	 * @param startingMinutesFromNow
+	 * @param endingMinutesFromNow
+	 * @return JSONObject representing the pool corresponding to the subscription
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static JSONObject createSubscriptionAndRefreshPools(String server, String port, String prefix, String authenticator, String password, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProducts) throws JSONException, Exception  {
+		
+		// set the start and end dates
+		Calendar endCalendar = new GregorianCalendar();
+		endCalendar.add(Calendar.MINUTE, endingMinutesFromNow);
+		Date endDate = endCalendar.getTime();
+		Calendar startCalendar = new GregorianCalendar();
+		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
+		Date startDate = startCalendar.getTime();
+
+		
+		// randomly choose a contract number
+		//Integer contractNumber = Integer.valueOf(getRandInt());
+		
+		// randomly choose an account number
+		//Integer accountNumber = Integer.valueOf(getRandInt());
+		
+		// choose a product id for the subscription
+		//String productId =  "MKT-rhel-server";  // too hard coded
+		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
+		//String productId = null;
+		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
+		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
+		//} while (getPersonProductIds().contains(productId));
+		//String productId = randomAvailableProductId;
+
+		// choose providedProducts for the subscription
+		//String[] providedProducts = {"37068", "37069", "37060"};
+		//String[] providedProducts = {
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
+		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
+		//};
+		//String[] providedProducts = {};
+		
+		// create the subscription
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
+		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(server,port,prefix,authenticator,password, "/owners/" + ownerKey + "/subscriptions", requestBody));
+		
+		// refresh the pools
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(server,port,prefix,authenticator,password, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(server,port,prefix,authenticator,password, jobDetail, "FINISHED", 5*1000, 1);
+		
+		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
+		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
+		String iso8601FormatedDateString = iso8601DateFormat.format(startDate);
+		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");				// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
+		String urlEncodedActiveOnDate = java.net.URLEncoder.encode(iso8601FormatedDateString, "UTF-8");	// "2012-02-08T00%3A00%3A00.000%2B00%3A00"	encode the string to escape the colons and plus signs so it can be passed as a parameter on an http call
+
+		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
+		String poolId = null;
+		JSONObject jsonPool = null;
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			jsonPool = (JSONObject) jsonPools.get(i);
+			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {
+			if (jsonPool.getString("subscriptionId").equals(jsonSubscription.getString("id"))) {
+				poolId = jsonPool.getString("id");
+				break;
+			}
+		}
+		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
+		log.info("The newly created subscription pool with id '"+poolId+"' will start in '"+startingMinutesFromNow+"' minutes from now.");
+		log.info("The newly created subscription pool with id '"+poolId+"' will expire in '"+endingMinutesFromNow+"' minutes from now.");
+		return jsonPool; // return json pool to the newly available SubscriptionPool
+		
+	}
+	
+	
+	
+	
+	
+	
 	public String invalidCredentialsRegexMsg() {
 		return isOnPremises? "^Invalid Credentials$":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
 	}
