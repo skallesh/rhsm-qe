@@ -23,8 +23,8 @@
 (defn subscribe_all
   "Subscribes to everything available"
   []
-  (tasks/search {})
-  (tasks/do-to-all-rows-in :all-subscriptions-view 0
+  (tasks/search)
+  (tasks/do-to-all-rows-in :all-subscriptions-view 1
                            (fn [subscription]
                                 (with-handlers [(ignore :subscription-not-available)
                                                 (handle :wrong-consumer-type [e]
@@ -155,9 +155,9 @@
 (defn ^{DataProvider {:name "multi-entitle"}}
   get_multi_entitle_subscriptions [_]
   (register nil)
-  (tasks/search {})
+  (tasks/search)
   (let [subs (atom [])
-        subscriptions (tasks/get-table-elements :all-subscriptions-view 0)]
+        subscriptions (tasks/get-table-elements :all-subscriptions-view 1)]
     (doseq [s subscriptions]
       (with-handlers [(ignore :subscription-not-available)
                       (handle :wrong-consumer-type [e]
@@ -179,8 +179,8 @@
 
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_]
-  (tasks/search {})
-  (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 0))))
+  (tasks/search)
+  (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1))))
 
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_]
@@ -191,8 +191,23 @@
         (tasks/ui selecttab :my-subscriptions)
         (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
 
+(defn ^{DataProvider {:name "multi-contract"}}
+  get_multi_contract_subscriptions [_]
+  (tasks/search {:do-not-overlap? false})
+  (let [subs (atom [])
+        allsubs (tasks/get-table-elements :all-subscriptions-view 1)]
+    (doseq [s allsubs]
+      (with-handlers [(ignore :subscription-not-available)
+                      (handle :contract-selection-not-available [e]
+                              (tasks/unsubscribe s))]
+        (tasks/open-contract-selection s)
+        (tasks/ui click :cancel-contract-selection)
+        (swap! subs conj [s])))
+    subs))
+
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
+  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=727631
 
 (gen-class-testng)

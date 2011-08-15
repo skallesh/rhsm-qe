@@ -81,7 +81,7 @@
   (tasks/wait-for-progress-bar)
   (check-all-products)
   (tasks/sleep 5000)
-  (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 0)
+  (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 1)
         nocomply-count (atom (tasks/warn-count))]
     (doseq [item subscription-list]
       (with-handlers  [(ignore :subscription-not-available)] 
@@ -98,7 +98,7 @@
                 :dataProvider "multi-entitle"}}
     check_quantities [_ subscription]
     
-    (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 0)]
+    (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 1)]
       (doseq [item subscription-list]
         )))
 
