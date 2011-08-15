@@ -70,8 +70,8 @@
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
-        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 2)
-              enddate (tasks/ui getcellvalue :contract-selection-table row 3)]
+        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
+              enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
           (recur (dec row)))))
@@ -89,30 +89,30 @@
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
-        (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+        (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
               pool (tasks/get-pool-id (@config :username)
                                       (@config :password)
                                       (@config :owner-key)
                                       subscription
                                       contract)
-              usedmax (tasks/ui getcellvalue :contract-selection-table row 1)
-              default (tasks/ui getcellvalue :contract-selection-table row 4)
+              usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
+              default (tasks/ui getcellvalue :contract-selection-table row 5)
               used (first (split #" / " usedmax))
               max (last (split #" / " usedmax))
               available (str (- (Integer. max) (Integer. used)))
               cmd (fn [num]
-                    (str  "<right> <right> <right> <right> <space> " num " <enter>"))]
+                    (str  "<right> <right> <right> <right> <right> <space> " num " <enter>"))]
           (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
             (do
               ;verify that the quantity can be changed
               (tasks/ui selectrowindex :contract-selection-table row)
               (tasks/ui generatekeyevent (cmd available))
               (verify (= available
-                         (tasks/ui getcellvalue :contract-selection-table row 4)))
+                         (tasks/ui getcellvalue :contract-selection-table row 5)))
               ;verify that the quantity cannot exceed the max
               (tasks/ui generatekeyevent (cmd (str (+ 1 (Integer. available)))))
               (verify (>= (Integer. available)
-                          (Integer. (tasks/ui getcellvalue :contract-selection-table row 4))))
+                          (Integer. (tasks/ui getcellvalue :contract-selection-table row 5))))
               ;need to verify max and min values when bug has been resolved
               )
             (do
@@ -120,7 +120,7 @@
               (tasks/ui selectrowindex :contract-selection-table row)
               (tasks/ui generatekeyevent (cmd max))
               (verify (= default
-                        (tasks/ui getcellvalue :contract-selection-table row 4)))))
+                        (tasks/ui getcellvalue :contract-selection-table row 5)))))
           (recur (dec row)))))
     (tasks/ui click :cancel-contract-selection)))
  
@@ -135,12 +135,12 @@
     (tasks/open-contract-selection subscription)
     (tasks/ui selectrow :contract-selection-table contract)
     (let [line (tasks/ui gettablerowindex :contract-selection-table contract)
-          usedmax (tasks/ui getcellvalue :contract-selection-table line 1)
+          usedmax (tasks/ui getcellvalue :contract-selection-table line 2)
           used (first (split #" / " usedmax))
           max (last (split #" / " usedmax))
           available (str (- (Integer. max) (Integer. used)))
           cmd (fn [num]
-                (str  "<right> <right> <right> <right> <space> " num " <enter>"))]
+                (str  "<right> <right> <right> <right> <right> <space> " num " <enter>"))]
       (tasks/ui generatekeyevent (cmd available))
       (tasks/ui click :subscribe-contract-selection)
       (tasks/checkforerror)
@@ -165,7 +165,7 @@
         (tasks/open-contract-selection s)
         (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
           (if (>= row 0)
-            (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+            (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
                   pool (tasks/get-pool-id (@config :username)
                                           (@config :password)
                                           (@config :owner-key)
@@ -203,7 +203,7 @@
         (tasks/open-contract-selection s)
         (tasks/ui click :cancel-contract-selection)
         (swap! subs conj [s])))
-    subs))
+    (to-array-2d @subs)))
 
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
