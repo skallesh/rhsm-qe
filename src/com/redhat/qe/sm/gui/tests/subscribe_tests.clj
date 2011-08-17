@@ -152,8 +152,13 @@
     (tasks/unsubscribe subscription)))
 
 
+;; you can test data providers in a REPL the following way:
+;; (doseq [s (stest/get_subscriptions nil :debug true)]
+;;   (stest/subscribe_each nil (peek s)))
+
 (defn ^{DataProvider {:name "multi-entitle"}}
-  get_multi_entitle_subscriptions [_]
+  get_multi_entitle_subscriptions [_ & {:keys [debug]
+                                        :or {debug false}}]
   (register nil)
   (tasks/search)
   (let [subs (atom [])
@@ -175,24 +180,33 @@
                 (swap! subs conj [s contract]))
               (recur (dec row)))))
         (tasks/ui click :cancel-contract-selection)))
-    (to-array-2d @subs)))
+    (if-not debug
+      (to-array-2d @subs)
+      @subs)))
 
 (defn ^{DataProvider {:name "subscriptions"}}
-  get_subscriptions [_]
+  get_subscriptions [_ & {:keys [debug]
+                          :or {debug false}}]
   (tasks/search)
-  (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1))))
+  (if-not debug
+    (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1)))
+    (map vector (tasks/get-table-elements :all-subscriptions-view 1))))
 
 (defn ^{DataProvider {:name "subscribed"}}
-  get_subscribed [_]
+  get_subscribed [_ & {:keys [debug]
+                       :or {debug false}}]
   (tasks/ui selecttab :my-subscriptions)
   (if (> 0 (tasks/ui getrowcount :my-subscriptions-view)) 
     (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
     (do (subscribe_all)
         (tasks/ui selecttab :my-subscriptions)
-        (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
+        (if-not debug
+          (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
+          (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
 
 (defn ^{DataProvider {:name "multi-contract"}}
-  get_multi_contract_subscriptions [_]
+  get_multi_contract_subscriptions [_ & {:keys [debug]
+                                         :or {debug false}}]
   (tasks/search {:do-not-overlap? false})
   (let [subs (atom [])
         allsubs (tasks/get-table-elements :all-subscriptions-view 1)]
@@ -203,7 +217,9 @@
         (tasks/open-contract-selection s)
         (tasks/ui click :cancel-contract-selection)
         (swap! subs conj [s])))
-    (to-array-2d @subs)))
+    (if-not debug
+      (to-array-2d @subs)
+      @subs)))
 
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
