@@ -343,6 +343,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		registerOptions.add("--environment=ENVIRONMENT");
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
+		registerOptions.add("--activationkey=ACTIVATION_KEYS");
 		registerOptions.add("--proxy=PROXY_URL");
 		registerOptions.add("--proxyuser=PROXY_USER");
 		registerOptions.add("--proxypassword=PROXY_PASSWORD");

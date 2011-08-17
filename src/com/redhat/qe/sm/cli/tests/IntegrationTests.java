@@ -27,12 +27,12 @@ import com.redhat.qe.sm.data.ProductNamespace;
  * References:
  * https://docspace.corp.redhat.com/docs/DOC-60198
  * http://gibson.usersys.redhat.com:9000/Integration-Testing-Issues
- * https://docspace.corp.redhat.com/docs/DOC-63084	Stage Env Data Setup for Content Testing (automation)
+ * https://docspace.corp.redhat.com/docs/DOC-63084	Stage Env Data Setup for Content Testing (automation) - rows highlighted in yellow do not exist to date
  * https://docspace.corp.redhat.com/docs/DOC-67214	Stage Env Data Setup for Content Testing (5.7 Beta Release)
  * https://docspace.corp.redhat.com/docs/DOC-68623	RHEL 5.7 Content Re-validation Testing 2011-06-14
  * 
  * https://docspace.corp.redhat.com/docs/DOC-71135	Red Hat Product Certificates 
- *
+ * https://docspace.corp.redhat.com/docs/DOC-70016#Config_sku_model
  * 
  * Where to look when a product cert does not get installed:
  * e.g.
@@ -55,7 +55,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void Subscribe_Test(String username, String password, String productId) {
-		clienttasks.register(username, password, null, null, null, null, null, null, true, null, null, null);
+		clienttasks.register(username, password, null, null, null, null, null, null, nullString, true, null, null, null);
 		File entitlementCertFile = clienttasks.subscribeToProductId(productId);
 
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -75,7 +75,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //if(true) throw new SkipException("debugging");
 		// register
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
-			clienttasks.register(username, password, null, null, null, null, null, null, true, null, null, null);
+			clienttasks.register(username, password, null, null, null, null, null, null, nullString, true, null, null, null);
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {
@@ -138,7 +138,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
 		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
-			clienttasks.register(username, password, null, null, null, null, null, null, true, null, null, null);
+			clienttasks.register(username, password, null, null, null, null, null, null, nullString, true, null, null, null);
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {

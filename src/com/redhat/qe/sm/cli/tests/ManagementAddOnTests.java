@@ -72,7 +72,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 		
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, Boolean.TRUE, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, Boolean.TRUE, null, null, null));
 //		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(serverHostname, serverPort, serverPrefix, clientusername, clientpassword, consumerId);
 	}
 	
@@ -102,7 +102,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
-		// iterate through all available pools looking for those that contain no provided products
+		// iterate through all available pools looking for those that contain no provided products (A Management AddOn Subscription contains no products)
 		for (SubscriptionPool pool : allAvailablePools) {
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
@@ -116,40 +116,92 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-/*
-Example jsonPool:
-[root@jsefler-onprem03 ~]# curl -u testuser1:password -k https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8b42ec1fd09012ec1fdaaf40125 | python -mjson.tool
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-106   641    0   641    0     0   3014      0 --:--:-- --:--:-- --:--:--  6474
-{
-    "accountNumber": "12331131231", 
-    "activeSubscription": true, 
-    "attributes": [], 
-    "consumed": 0, 
-    "contractNumber": "45", 
-    "created": "2011-03-17T04:05:50.452+0000", 
-    "endDate": "2012-03-16T00:00:00.000+0000", 
-    "href": "/pools/8a90f8b42ec1fd09012ec1fdaaf40125", 
-    "id": "8a90f8b42ec1fd09012ec1fdaaf40125", 
-    "owner": {
-        "href": "/owners/admin", 
-        "id": "8a90f8b42ec1fd09012ec1fd34e10005"
-    }, 
-    "productId": "management-100", 
-    "productName": "Management Add-On", 
-    "providedProducts": [], 
-    "quantity": 500, 
-    "restrictedToUsername": null, 
-    "sourceEntitlement": null, 
-    "startDate": "2011-03-17T00:00:00.000+0000", 
-    "subscriptionId": "8a90f8b42ec1fd09012ec1fda8b2011f", 
-    "updated": "2011-03-17T04:05:50.452+0000"
-}
-
-
-		  
-*/
+	// Example Management AddOn jsonPool:
+	//# curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7c5d0268 | python -mjson.tool
+	//{
+	//    "accountNumber": "12331131231", 
+	//    "activeSubscription": true, 
+	//    "attributes": [], 
+	//    "consumed": 0, 
+	//    "contractNumber": "69", 
+	//    "created": "2011-08-04T21:39:20.285+0000", 
+	//    "endDate": "2012-09-02T04:00:00.000+0000", 
+	//    "href": "/pools/8a90f8c63196bb20013196bc7c5d0268", 
+	//    "id": "8a90f8c63196bb20013196bc7c5d0268", 
+	//    "owner": {
+	//        "displayName": "Admin Owner", 
+	//        "href": "/owners/admin", 
+	//        "id": "8a90f8c63196bb20013196bb9e210006", 
+	//        "key": "admin"
+	//    }, 
+	//    "productAttributes": [
+	//        {
+	//            "created": "2011-08-04T21:39:20.286+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5e026b", 
+	//            "name": "management_enabled", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.286+0000", 
+	//            "value": "1"
+	//        }, 
+	//        {
+	//            "created": "2011-08-04T21:39:20.286+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5e026a", 
+	//            "name": "type", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.286+0000", 
+	//            "value": "MKT"
+	//        }, 
+	//        {
+	//            "created": "2011-08-04T21:39:20.286+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5e0269", 
+	//            "name": "multi-entitlement", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.286+0000", 
+	//            "value": "no"
+	//        }, 
+	//        {
+	//            "created": "2011-08-04T21:39:20.286+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5e026d", 
+	//            "name": "arch", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.286+0000", 
+	//            "value": "ALL"
+	//        }, 
+	//        {
+	//            "created": "2011-08-04T21:39:20.286+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5e026c", 
+	//            "name": "warning_period", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.286+0000", 
+	//            "value": "90"
+	//        }, 
+	//        {
+	//            "created": "2011-08-04T21:39:20.286+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5e026e", 
+	//            "name": "version", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.286+0000", 
+	//            "value": "1.0"
+	//        }, 
+	//        {
+	//            "created": "2011-08-04T21:39:20.287+0000", 
+	//            "id": "8a90f8c63196bb20013196bc7c5f026f", 
+	//            "name": "variant", 
+	//            "productId": "management-100", 
+	//            "updated": "2011-08-04T21:39:20.287+0000", 
+	//            "value": "ALL"
+	//        }
+	//    ], 
+	//    "productId": "management-100", 
+	//    "productName": "Management Add-On", 
+	//    "providedProducts": [], 
+	//    "quantity": 1000, 
+	//    "restrictedToUsername": null, 
+	//    "sourceEntitlement": null, 
+	//    "startDate": "2011-07-03T04:00:00.000+0000", 
+	//    "subscriptionId": "8a90f8c63196bb20013196bc7a1f025d", 
+	//    "updated": "2011-08-05T07:29:20.043+0000"
+	//}
 	
 
 }
