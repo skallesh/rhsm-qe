@@ -187,6 +187,7 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (register nil)
   (tasks/search)
   (if-not debug
     (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1)))
@@ -207,6 +208,7 @@
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
                                          :or {debug false}}]
+  (register nil)
   (tasks/search {:do-not-overlap? false})
   (let [subs (atom [])
         allsubs (tasks/get-table-elements :all-subscriptions-view 1)]
