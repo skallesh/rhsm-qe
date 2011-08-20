@@ -23,8 +23,8 @@
 (defn subscribe_all
   "Subscribes to everything available"
   []
-  (tasks/search {})
-  (tasks/do-to-all-rows-in :all-subscriptions-view 0
+  (tasks/search)
+  (tasks/do-to-all-rows-in :all-subscriptions-view 1
                            (fn [subscription]
                                 (with-handlers [(ignore :subscription-not-available)
                                                 (handle :wrong-consumer-type [e]
@@ -70,8 +70,8 @@
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
-        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 2)
-              enddate (tasks/ui getcellvalue :contract-selection-table row 3)]
+        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
+              enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
           (recur (dec row)))))
@@ -89,30 +89,30 @@
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
-        (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+        (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
               pool (tasks/get-pool-id (@config :username)
                                       (@config :password)
                                       (@config :owner-key)
                                       subscription
                                       contract)
-              usedmax (tasks/ui getcellvalue :contract-selection-table row 1)
-              default (tasks/ui getcellvalue :contract-selection-table row 4)
+              usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
+              default (tasks/ui getcellvalue :contract-selection-table row 5)
               used (first (split #" / " usedmax))
               max (last (split #" / " usedmax))
               available (str (- (Integer. max) (Integer. used)))
               cmd (fn [num]
-                    (str  "<right> <right> <right> <right> <space> " num " <enter>"))]
+                    (str  "<right> <right> <right> <right> <right> <space> " num " <enter>"))]
           (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
             (do
               ;verify that the quantity can be changed
               (tasks/ui selectrowindex :contract-selection-table row)
               (tasks/ui generatekeyevent (cmd available))
               (verify (= available
-                         (tasks/ui getcellvalue :contract-selection-table row 4)))
+                         (tasks/ui getcellvalue :contract-selection-table row 5)))
               ;verify that the quantity cannot exceed the max
               (tasks/ui generatekeyevent (cmd (str (+ 1 (Integer. available)))))
               (verify (>= (Integer. available)
-                          (Integer. (tasks/ui getcellvalue :contract-selection-table row 4))))
+                          (Integer. (tasks/ui getcellvalue :contract-selection-table row 5))))
               ;need to verify max and min values when bug has been resolved
               )
             (do
@@ -120,7 +120,7 @@
               (tasks/ui selectrowindex :contract-selection-table row)
               (tasks/ui generatekeyevent (cmd max))
               (verify (= default
-                        (tasks/ui getcellvalue :contract-selection-table row 4)))))
+                        (tasks/ui getcellvalue :contract-selection-table row 5)))))
           (recur (dec row)))))
     (tasks/ui click :cancel-contract-selection)))
  
@@ -135,12 +135,12 @@
     (tasks/open-contract-selection subscription)
     (tasks/ui selectrow :contract-selection-table contract)
     (let [line (tasks/ui gettablerowindex :contract-selection-table contract)
-          usedmax (tasks/ui getcellvalue :contract-selection-table line 1)
+          usedmax (tasks/ui getcellvalue :contract-selection-table line 2)
           used (first (split #" / " usedmax))
           max (last (split #" / " usedmax))
           available (str (- (Integer. max) (Integer. used)))
           cmd (fn [num]
-                (str  "<right> <right> <right> <right> <space> " num " <enter>"))]
+                (str  "<right> <right> <right> <right> <right> <space> " num " <enter>"))]
       (tasks/ui generatekeyevent (cmd available))
       (tasks/ui click :subscribe-contract-selection)
       (tasks/checkforerror)
@@ -152,12 +152,17 @@
     (tasks/unsubscribe subscription)))
 
 
+;; you can test data providers in a REPL the following way:
+;; (doseq [s (stest/get_subscriptions nil :debug true)]
+;;   (stest/subscribe_each nil (peek s)))
+
 (defn ^{DataProvider {:name "multi-entitle"}}
-  get_multi_entitle_subscriptions [_]
+  get_multi_entitle_subscriptions [_ & {:keys [debug]
+                                        :or {debug false}}]
   (register nil)
-  (tasks/search {})
+  (tasks/search)
   (let [subs (atom [])
-        subscriptions (tasks/get-table-elements :all-subscriptions-view 0)]
+        subscriptions (tasks/get-table-elements :all-subscriptions-view 1)]
     (doseq [s subscriptions]
       (with-handlers [(ignore :subscription-not-available)
                       (handle :wrong-consumer-type [e]
@@ -165,7 +170,7 @@
         (tasks/open-contract-selection s)
         (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
           (if (>= row 0)
-            (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
+            (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
                   pool (tasks/get-pool-id (@config :username)
                                           (@config :password)
                                           (@config :owner-key)
@@ -175,24 +180,52 @@
                 (swap! subs conj [s contract]))
               (recur (dec row)))))
         (tasks/ui click :cancel-contract-selection)))
-    (to-array-2d @subs)))
+    (if-not debug
+      (to-array-2d @subs)
+      @subs)))
 
 (defn ^{DataProvider {:name "subscriptions"}}
-  get_subscriptions [_]
-  (tasks/search {})
-  (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 0))))
+  get_subscriptions [_ & {:keys [debug]
+                          :or {debug false}}]
+  (register nil)
+  (tasks/search)
+  (if-not debug
+    (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1)))
+    (map vector (tasks/get-table-elements :all-subscriptions-view 1))))
 
 (defn ^{DataProvider {:name "subscribed"}}
-  get_subscribed [_]
+  get_subscribed [_ & {:keys [debug]
+                       :or {debug false}}]
   (tasks/ui selecttab :my-subscriptions)
   (if (> 0 (tasks/ui getrowcount :my-subscriptions-view)) 
     (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
     (do (subscribe_all)
         (tasks/ui selecttab :my-subscriptions)
-        (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
+        (if-not debug
+          (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
+          (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
+
+(defn ^{DataProvider {:name "multi-contract"}}
+  get_multi_contract_subscriptions [_ & {:keys [debug]
+                                         :or {debug false}}]
+  (register nil)
+  (tasks/search {:do-not-overlap? false})
+  (let [subs (atom [])
+        allsubs (tasks/get-table-elements :all-subscriptions-view 1)]
+    (doseq [s allsubs]
+      (with-handlers [(ignore :subscription-not-available)
+                      (handle :contract-selection-not-available [e]
+                              (tasks/unsubscribe s))]
+        (tasks/open-contract-selection s)
+        (tasks/ui click :cancel-contract-selection)
+        (swap! subs conj [s])))
+    (if-not debug
+      (to-array-2d @subs)
+      @subs)))
 
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
+  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=727631
 
 (gen-class-testng)

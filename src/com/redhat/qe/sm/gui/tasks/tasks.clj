@@ -39,6 +39,7 @@
                    :no-username #"You must enter a login"
                    :no-password #"You must enter a password"
                    :wrong-consumer-type #"Consumers of this type are not allowed"
+                   :network-error #"Network error, unable to connect to server.*"
                    })
 
 (defn matching-error
@@ -247,7 +248,10 @@
   (ui selectrow :all-subscriptions-view s)
   (ui click :subscribe)
   (checkforerror)
-  (ui waittillwindowexist :contract-selection-dialog 5))
+  (if-not (= 1 (ui waittillwindowexist :contract-selection-dialog 5))
+    (raise {:type :contract-selection-not-available
+            :name s
+            :msg (str s " Does not have multiple contracts.")})))
 
 (defn subscribe
   "Subscribes to a given subscription, s."
@@ -474,6 +478,7 @@
                                                   username
                                                   password
                                                   pool)))
+
 (defn get-all-facts []
   (ui click :view-system-facts)
   (ui waittillguiexist :facts-view)
