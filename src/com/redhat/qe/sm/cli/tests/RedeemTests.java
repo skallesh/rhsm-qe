@@ -13,6 +13,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -81,11 +82,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem against an onpremises candlepin server that has been patched for mock testing",
-			groups={"MockRedeemTests"},
+			groups={"MockRedeemTests", "blockedByBug-727978"},
 			dataProvider="getOnPremisesMockAttemptToRedeemData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void onPremisesMockAttemptToRedeem_Test(String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+	public void onPremisesMockAttemptToRedeem_Test(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		String warning = "This mock test was authored for execution against an on-premises candlepin server.";
 		if (sm_isServerOnPremises) {
 			log.warning(warning);
@@ -109,7 +110,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		// assert the redeemResult here
 		if (expectedExitCode!=null) Assert.assertEquals(redeemResult.getExitCode(), expectedExitCode);
 		if (expectedStdout!=null) Assert.assertEquals(redeemResult.getStdout().trim(), expectedStdout.replaceFirst("\\{0\\}", serialNumber));
-		if (expectedStderr!=null) Assert.assertEquals(redeemResult.getStderr().trim(), expectedStderr);
+		if (expectedStderr!=null) Assert.assertEquals(redeemResult.getStderr().trim(), expectedStderr.replaceFirst("\\{0\\}", serialNumber));
 
 	}
 	
@@ -148,24 +149,14 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, true, null, null, null);
 		
 		
-		Integer expectedExitCode = new Integer(0);
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=727978 - jsefler 8/03/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="727978"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			expectedExitCode = new Integer(255);
-		}
-		// END OF WORKAROUND
-		
 		// String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",										"0ABCDEF",	expectedExitCode,	"Standalone candlepin does not support redeeming a subscription.",	null}));
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription when the system's asset tag has already been used to redeem a subscription.",	"1ABCDEF",	expectedExitCode,	"The Dell service tag: {0}, has already been used to activate a subscription",	null}));
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription for which the system's asset tag will not be found for redemption.",			"2ABCDEF",	expectedExitCode,	"A subscription was not found for the given Dell service tag: {0}",	null}));
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription for which the system's  service tag is expired.",								"3ABCDEF",	expectedExitCode,	"The Dell service tag: {0}, is expired",	null}));
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription at a time when the system is unable to process the request.",					"4ABCDEF",	expectedExitCode,	"The system is unable to process the requested subscription activation {0}",	null}));
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription from a system with a valid asset tag.",										"5ABCDEF",	expectedExitCode,	"Your subscription activation is being processed and should be available soon. You will be notified via email once it is available. If you have any questions, additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.",	null}));
-		ll.add(Arrays.asList(new Object[]{"This mocked redeem test attempts to redeem a subscription at a time when the system is unable to process the request.",					"6ABCDEF",	expectedExitCode,	"The system is unable to process the requested subscription activation {0}",	null}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription against a standalone candlepin server.",											"0ABCDEF",	new Integer(255),	"Standalone candlepin does not support redeeming a subscription.",	null}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription when the system's asset tag has already been used to redeem a subscription.",	"1ABCDEF",	new Integer(0),		null,	"The Dell service tag: {0}, has already been used to activate a subscription"}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription for which the system's asset tag will not be found for redemption.",				"2ABCDEF",	new Integer(0),		null,	"A subscription was not found for the given Dell service tag: {0}"}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription for which the system's  service tag is expired.",								"3ABCDEF",	new Integer(0),		null,	"The Dell service tag: {0}, is expired"}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription at a time when the system is unable to process the request.",					"4ABCDEF",	new Integer(0),		null,	"The system is unable to process the requested subscription activation {0}"}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription from a system with a valid asset tag.",											"5ABCDEF",	new Integer(0),		null,	"Your subscription activation is being processed and should be available soon. You will be notified via email once it is available. If you have any questions, additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864."}));
+		ll.add(Arrays.asList(new Object[]{null,	"This mocked redeem test attempts to redeem a subscription at a time when the system is unable to process the request.",					"6ABCDEF",	new Integer(0),		null,	"The system is unable to process the requested subscription activation {0}"}));
 
 		return ll;
 	}
