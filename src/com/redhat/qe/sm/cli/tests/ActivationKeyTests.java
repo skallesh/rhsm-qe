@@ -212,10 +212,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			}
 			// END OF WORKAROUND
 			
-			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage)
+			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			try {
-				String displayMessage = jsonActivationKey.getString("displayMessage");
-				Assert.assertTrue(displayMessage.equals("FIXME: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one."),"Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to fail.");
+				String displayMessage = jsonAddedPool.getString("displayMessage");
+				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to fail.");
 			} catch (JSONException e) {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to greater than one quantity '"+addQuantity+"'.");
 				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Non multi-entitlement pool '"+poolId+"' should NOT have been added to the following activation key with a quantity '"+addQuantity+"' greater than one: "+jsonActivationKey);
@@ -282,11 +282,22 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null);
 		
 		// handle the case when "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'."
+		ConsumerType type = null;
 		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, ConsumerType.system)) {
 			Assert.assertEquals(registerResult.getStderr().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'.", "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			// now register with the same activation key using the needed ConsumerType
-			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, "requires_consumer_type")), null, null, null, jsonActivationKey.getString("name"), false /*was already unregistered by force above*/, null, null, null);
+			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, "requires_consumer_type"));
+			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, jsonActivationKey.getString("name"), false /*was already unregistered by force above*/, null, null, null);
+		}
+		
+		// handle the case when "A consumer type of 'person' cannot be used with activation keys"
+		// resolution to: Bug 728721 - NullPointerException thrown when registering with an activation key bound to a pool that requires_consumer_type person
+		if (ConsumerType.person.equals(type)) {
+			Assert.assertEquals(registerResult.getStderr().trim(), "A consumer type of 'person' cannot be used with activation keys", "Registering a with an activationKey containing a pool that requires a person consumer type should fail.");
+			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool that requires a person consumer should fail.");
+			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0,"No subscriptions should be consumed after attempting to register with an activationKey containing a pool that requires a person consumer type.");
+			return;
 		}
 		
 		// handle the case when our quantity request exceeds the quantityAvail and there are no Entitlement Certs avail
@@ -319,7 +330,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add it to a pool (without specifying a quantity), and then register with the activation key",
-			groups={},
+			groups={"myDevGroup"},
 			dataProvider="getRegisterWithActivationKeyContainingPool_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
