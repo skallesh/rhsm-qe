@@ -2314,6 +2314,9 @@ schema generation failed
 	public String invalidCredentialsRegexMsg() {
 		return isOnPremises? "^Invalid Credentials$":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
 	}
+	public String invalidCredentialsMsg() {
+		return isOnPremises? "Invalid Credentials":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
+	}
 	
 	public static void main (String... args) throws Exception {
 		

@@ -24,6 +24,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 "subscription-manager config --remove [section.name]" will remove the value for a specific section and name. If there is no default value for a named attribute, the attribute will be retained with an empty string. This allows for future changes to the attribute. If there is a default value for the attribute, then the config file attribute is removed so the default can be expressed. This again allows future changes to the attribute.
 
 "subscription-manager config --[section.name] [value]" sets the value for an attribute by the section. Only existing attribute names are allowed. Adding new attribute names would not be useful anyway as the python code would be in need of altering to use it.
+
+
+ * Reference: https://bugzilla.redhat.com/show_bug.cgi?id=730020
  */
 @Test(groups={"ConfigTests"})
 public class ConfigTests extends SubscriptionManagerCLITestScript {
