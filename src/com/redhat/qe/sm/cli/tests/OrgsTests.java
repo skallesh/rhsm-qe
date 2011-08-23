@@ -105,8 +105,33 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: attempt to get a bogus owner via the candlepin api",
+			groups={"blockedByBug-729780"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptToGetABogusOwnerViaCandlepinApi_Test() throws Exception {
+		String bogusOwner = "bogusOwner";
+		JSONObject jsonResponse = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, "/owners/"+bogusOwner));
+		
+		Assert.assertEquals(jsonResponse.getString("displayMessage"), "Owner with id "+bogusOwner+" could not be found", "The JSON returned from the candlepin API call should contain a displayMessage stating that the owner could not be found.");
+		
+		// TODO could also use the RemoteFileTasks to mark the catalina.out file and assert that it contains a 404 response instead of the 403 response as reported in:
+		// https://bugzilla.redhat.com/show_bug.cgi?id=729780
+		// https://bugzilla.redhat.com/attachment.cgi?id=517680
+//		2011-08-10 18:00:31,106 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.guice.I18nProvider - Getting i18n engine for locale en_US
+//		2011-08-10 18:00:31,154 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter -
+//		====Response====
+//		  Status: 403
+//		  Content-type: application/json
+//		====Response====
+//		2011-08-10 18:00:31,154 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter - ====ResponseBody====
+//		2011-08-10 18:00:31,154 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter - {"displayMessage":"Insufficient permissions"}
+	}
+
+	
+		
 	// Candidates for an automated Test:
-	// TODO Bug 729780 - Candlepin returns 403 instead of 404 for superadmin
+	
 	
 	// Configuration methods ***********************************************************************
 	

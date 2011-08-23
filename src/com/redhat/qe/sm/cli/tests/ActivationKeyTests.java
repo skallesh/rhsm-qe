@@ -330,7 +330,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add it to a pool (without specifying a quantity), and then register with the activation key",
-			groups={"myDevGroup"},
+			groups={},
 			dataProvider="getRegisterWithActivationKeyContainingPool_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
