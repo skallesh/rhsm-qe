@@ -33,6 +33,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.Org;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -178,7 +179,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		JSONObject jsonStatus =null;
 		try {
 			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"anybody","password","/status")); // seems to work no matter what credentials are passed		
-			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
+			//jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,"","","/status"));
+			//The above call works against onpremises, but causes the following againsta stage
+			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (com.redhat.qe.sm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
+			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
+			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
+			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/status"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
 		} finally {
@@ -699,6 +705,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		return ll;
 	}
+
 	
 // DELETEME
 //	@DataProvider(name="getUsernameAndPasswordData")
@@ -749,6 +756,28 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// when the candlepin server is not onPremises, then we usually don't have access to the candlepin api paths to quesry the users, so let's use the input parameters 
+		if (!sm_isServerOnPremises) {
+			for (String username : sm_clientUsernames) {
+				String password = sm_clientPasswordDefault;
+			
+				// get the orgs for this username/password
+				List<Org> orgs = clienttasks.getOrgs(username,password);
+				//if (orgs.size()==1) {orgs.clear(); orgs.add(new Org(null,null));}	// when a user belongs to only one org, then we don't really need to know the orgKey for registration
+			
+				// append a username and password for each org the user belongs to
+				for (Org org : orgs) {
+					ll.add(Arrays.asList(new Object[]{username,password,org.orgKey}));
+				}
+			}
+			return ll;
+		}
+		
+		
+		
+		
+		
 		// Notes...
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool

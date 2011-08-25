@@ -65,7 +65,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_clientPassword				= sm_client1Password;
 	public String sm_clientOrg					= sm_client1Org;
 
-//DELETEME
+// TODO RE-IMPLEMENT AS AN ALTERNATIVE FOR USE DURING STAGE TESTING
 //	public String sm_clientUsernames			= getProperty("sm.client.usernames","");
 //	public String sm_clientPasswords			= getProperty("sm.client.passwords","");
 	public String sm_clientPasswordDefault		= getProperty("sm.client.passwordDefault","redhat");
@@ -107,6 +107,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_noauthproxyPort			= getProperty("sm.noauthproxy.port", "");
 	public String sm_noauthproxyLog				= getProperty("sm.noauthproxy.log", "");
 	
+	protected List<String> sm_clientUsernames	= null;
 	protected List<String> sm_rpmUrls			= null;
 	protected List<String> sm_repoCaCertUrls	= null;
 	protected List<String> sm_consumerTypes		= null;
@@ -128,6 +129,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
 		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
+		if (getProperty("sm.client.usernames", "").equals("")) 		sm_clientUsernames	= new ArrayList<String>();	else sm_clientUsernames	= Arrays.asList(getProperty("sm.client.usernames", "").trim().split(" *, *"));
 		if (getProperty("sm.rpm.urls", "").equals("")) 				sm_rpmUrls			= new ArrayList<String>();	else sm_rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
 		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types

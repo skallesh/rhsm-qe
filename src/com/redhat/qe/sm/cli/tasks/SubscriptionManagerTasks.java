@@ -29,6 +29,7 @@ import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.Org;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
@@ -467,14 +468,16 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return from the contents of the current /etc/pki/consumer/cert.pem
 	 */
-	public List<String> getOrgs(String username, String password) {
-		List<String> orgs = new ArrayList<String>();
-		SSHCommandResult result = orgs(username, password, null, null, null);
-		for (String line : result.getStdout().split("\n")) {
-			orgs.add(line);
-		}
-		if (orgs.size()>0) orgs.remove(0); // exclude the first title line of output...  orgs:
-		return orgs;
+	public List<Org> getOrgs(String username, String password) {
+//		List<String> orgs = new ArrayList<String>();
+//		SSHCommandResult result = orgs(username, password, null, null, null);
+//		for (String line : result.getStdout().split("\n")) {
+//			orgs.add(line);
+//		}
+//		if (orgs.size()>0) orgs.remove(0); // exclude the first title line of output...  orgs:
+//		return orgs;
+		
+		return Org.parse(orgs(username, password, null, null, null).getStdout());
 	}
 	
 	/**
@@ -2367,6 +2370,8 @@ public class SubscriptionManagerTasks {
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()-1,
 				"Only ONE entitlement certificate has been removed (count was '"+beforeEntitlementCertFiles.size()+"'; is now '"+afterEntitlementCertFiles.size()+"') after unsubscribing from serial: "+serialNumber);
+		
+		// TODO ? Bug 708362 - Serial-key.pem is not getting removed after product unsubscribe 
 
 		// assert that the other cert files remain unchanged
 		/* CANNOT MAKE THIS ASSERT/ASSUMPTION ANYMORE BECAUSE REMOVAL OF AN ENTITLEMENT CAN AFFECT A MODIFIER PRODUCT THAT PROVIDES EXTRA CONTENT FOR THIS SERIAL (A MODIFIER PRODUCT IS ALSO CALLED EUS) 2/21/2011 jsefler
