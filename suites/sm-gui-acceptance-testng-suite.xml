@@ -1,0 +1,30 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="SM GUI TestSuite">
+
+  <!-- the hudson.groovy script already includes these listeners
+       <listeners>
+       <listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+       <listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+       </listeners>
+  -->
+  
+  
+  <!-- GUI TESTS -->
+  
+  <test name="GUI: Acceptance">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="acceptance"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
+</suite>
