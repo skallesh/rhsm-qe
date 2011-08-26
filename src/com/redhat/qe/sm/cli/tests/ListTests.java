@@ -63,7 +63,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that satisfy the hardware are listed as available",
-			groups={"blockedByBugzilla-712502"},
+			groups={"AcceptanceTests", "blockedByBugzilla-712502"},
 			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
@@ -77,7 +77,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that do NOT satisfy the hardware are NOT listed as available",
-			groups={"blockedByBugzilla-712502"},
+			groups={"AcceptanceTests", "blockedByBugzilla-712502"},
 			dataProvider="getNonAvailableSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)

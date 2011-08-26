@@ -30,6 +30,7 @@ import com.redhat.qe.sm.data.ProductNamespace;
  * https://docspace.corp.redhat.com/docs/DOC-63084	Stage Env Data Setup for Content Testing (automation) - rows highlighted in yellow do not exist to date
  * https://docspace.corp.redhat.com/docs/DOC-67214	Stage Env Data Setup for Content Testing (5.7 Beta Release)
  * https://docspace.corp.redhat.com/docs/DOC-68623	RHEL 5.7 Content Re-validation Testing 2011-06-14
+ * https://docspace.corp.redhat.com/docs/DOC-75443  RHEL6.2 Content Testing On Stage Env (Internal Beta)
  * 
  * https://docspace.corp.redhat.com/docs/DOC-71135	Red Hat Product Certificates 
  * https://docspace.corp.redhat.com/docs/DOC-70016#Config_sku_model

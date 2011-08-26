@@ -28,7 +28,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 
-	@Test(description="subscription-manager-cli: unsubscribe consumer to an entitlement using product ID",
+	@Test(description="subscription-manager-cli: unsubscribe consumer from an entitlement using product ID",
 			groups={"blockedByBug-584137", "blockedByBug-602852"},
 			dataProvider="getAllConsumedProductSubscriptionsData")
 	@ImplementsNitrateTest(caseId=41688)
@@ -60,7 +60,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
+			groups={"AcceptanceTests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=41903)
 	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){

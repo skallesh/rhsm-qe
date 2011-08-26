@@ -23,7 +23,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: refresh and verify entitlements are updated",
-			groups={"RefreshEntitlements_Test"},
+			groups={"AcceptanceTests","RefreshEntitlements_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64182)	// http://gibson.usersys.redhat.com/agilo/ticket/4022
 	public void RefreshEntitlements_Test() {

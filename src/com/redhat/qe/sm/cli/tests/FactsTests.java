@@ -84,7 +84,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
-			groups={}, dependsOnGroups={},
+			groups={"AcceptanceTests"}, dependsOnGroups={},
 			dataProvider="getClientsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56386)

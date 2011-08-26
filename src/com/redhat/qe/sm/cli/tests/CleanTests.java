@@ -22,7 +22,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
-			groups={"Clean_Test","blockedByBug-654429"},
+			groups={"AcceptanceTests","Clean_Test","blockedByBug-654429"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64178)	// http://gibson.usersys.redhat.com/agilo/ticket/4020
 	public void Clean_Test() {

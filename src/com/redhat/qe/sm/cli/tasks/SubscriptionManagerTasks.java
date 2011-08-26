@@ -465,6 +465,17 @@ public class SubscriptionManagerTasks {
 		return currentConsumerCert.consumerid;
 	}
 	
+
+	public String getCurrentlyRegisteredOwnerKey() throws JSONException, Exception {
+		if (this.currentlyRegisteredOrg!=null) return this.currentlyRegisteredOrg;
+		
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		
+		return (CandlepinTasks.getOwnerKeyOfConsumerId(hostname, port, prefix, this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, getCurrentConsumerId()));
+	}
+	
 	/**
 	 * @return from the contents of the current /etc/pki/consumer/cert.pem
 	 */
@@ -2100,12 +2111,13 @@ public class SubscriptionManagerTasks {
 		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
 		String port = getConfFileParameter(rhsmConfFile, "port");
 		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		String ownerKey = getCurrentlyRegisteredOwnerKey();
 		
 		log.info("Subscribing to subscription pool: "+pool);
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
-		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,this.currentlyRegisteredOrg,pool.poolId);
+		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,ownerKey,pool.poolId);
 		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
 		if (serialNumber==null) return null;
 		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
@@ -2360,9 +2372,19 @@ public class SubscriptionManagerTasks {
 			return false;
 		}
 		
-		// assert the certFileExists is removed
+		// assert the certFilePath is removed
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
 				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
+
+		// assert the certKeyFilePath is removed
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=708362 - jsefler 08/25/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="708362"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		boolean assertCertKeyFilePathIsRemoved = true;
+		if (invokeWorkaroundWhileBugIsOpen) assertCertKeyFilePathIsRemoved = false;
+		if (assertCertKeyFilePathIsRemoved)
+		// END OF WORKAROUND
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
 				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
 
@@ -2371,8 +2393,6 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(afterEntitlementCertFiles.size()==beforeEntitlementCertFiles.size()-1,
 				"Only ONE entitlement certificate has been removed (count was '"+beforeEntitlementCertFiles.size()+"'; is now '"+afterEntitlementCertFiles.size()+"') after unsubscribing from serial: "+serialNumber);
 		
-		// TODO ? Bug 708362 - Serial-key.pem is not getting removed after product unsubscribe 
-
 		// assert that the other cert files remain unchanged
 		/* CANNOT MAKE THIS ASSERT/ASSUMPTION ANYMORE BECAUSE REMOVAL OF AN ENTITLEMENT CAN AFFECT A MODIFIER PRODUCT THAT PROVIDES EXTRA CONTENT FOR THIS SERIAL (A MODIFIER PRODUCT IS ALSO CALLED EUS) 2/21/2011 jsefler
 		if (!beforeEntitlementCertFiles.remove(certFile)) Assert.fail("Failed to remove certFile '"+certFile+"' from list.  This could be an automation logic error.");

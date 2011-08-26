@@ -47,7 +47,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSystemSubscriptionPoolProductData",
-			groups={"blockedByBug-660713"},
+			groups={"AcceptanceTests","blockedByBug-660713"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException {
@@ -401,7 +401,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: make sure the available pools come from subscriptions that pass the hardware rules for availability.",
-			groups={},
+			groups={"AcceptanceTests"},
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -430,7 +430,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AutoSubscribeAndVerify", "blockedByBug-680399"},
+			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399"},
 			dependsOnMethods={"VerifyAvailablePoolsPassTheHardwareRulesCheck_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -501,7 +501,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049"},
+			groups={"AcceptanceTests","AutoSubscribeAndVerify","blockedByBug-672438","blockedByBug-678049"},
 			dependsOnMethods={"InititiateAutoSubscribe_Test"},
 			dataProvider="getInstalledProductCertsData",
 			enabled=true)
@@ -583,7 +583,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="getSubscribeWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

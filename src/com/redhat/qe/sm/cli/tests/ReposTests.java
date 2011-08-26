@@ -39,7 +39,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
 			enabled=true,
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{

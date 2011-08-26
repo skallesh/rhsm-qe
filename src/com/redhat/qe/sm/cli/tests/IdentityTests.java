@@ -116,7 +116,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate",
-			groups={},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64179)
 	public void IdentityRegenerate_Test() {

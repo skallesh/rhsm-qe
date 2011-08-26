@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -625,6 +626,14 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
+	@BeforeClass(groups="setup")
+	public void setupBeforeClass() throws Exception {
+		if (sm_clientOrg!=null) return;
+		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
+		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
+		// This also allows us to individually run this Test Class on Hudson.
+		RegisterWithCredentials_Test(); // needed to populate registrationDataList
+	}
 	
 	// Protected methods ***********************************************************************
 
@@ -747,8 +756,16 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
+			int quantity = jsonPool.getInt("quantity");
+			
+			// does this pool provide an unlimited quantity of entitlements?
+			if (quantity==-1) {
+				log.info("Assuming that pool '"+jsonPool.getString("id")+"' provides an unlimited quantity of entitlements.");
+				quantity = jsonPool.getInt("consumed") + 10;	// assume any quantity greater than what is currently consumed
+			}
+			
 			// choose a random valid pool quantity (1<=quantity<=totalPoolQuantity)
-			int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
+			int quantityAvail = quantity-jsonPool.getInt("consumed");
 			int addQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a addQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
 
 			// Object blockedByBug, JSONObject jsonPool

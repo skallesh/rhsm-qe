@@ -230,40 +230,36 @@ schema generation failed
 	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+path);
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=684350 - jsefler 03/29/2011
+		// WORKAROUND WHEN EXECUTING TESTS AGAINST THE IT STAGE ENVIRONMENT CANDLEPIN
+		// RELATED BUGZILLA: https://bugzilla.redhat.com/show_bug.cgi?id=684350 - jsefler 03/29/2011
 		if (server.equals("subscription.rhn.stage.redhat.com")) {
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="684350"; 
-			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				/* THIS WORKAROUND CAME FROM Brenton AND IS TEMPRARY AGAINST STAGE ENV.
-				 * stage:
-				 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
-				 * webqa:
-				 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
-				 */
-				server = "rubyvip.web.stage.ext.phx2.redhat.com";
-				port = "80";
-				prefix = "/clonepin/candlepin";
-				get = new GetMethod("http://"+server+":"+port+prefix+path);
-			}
+			/* THIS WORKAROUND CAME FROM Brenton AND IS TEMPRARY AGAINST STAGE ENV.
+			 * stage:
+			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
+			 * webqa:
+			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
+			 */
+			server = "rubyvip.web.stage.ext.phx2.redhat.com";
+			port = "80";
+			prefix = "/clonepin/candlepin";
+			get = new GetMethod("http://"+server+":"+port+prefix+path);
 		}
 		// END OF WORKAROUND
-				
+		
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET https://"+server+":"+port+prefix+path);
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET "+get.getURI());
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
 	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+path);
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT https://"+server+":"+port+prefix+path);
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT "+put.getURI());
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
 	static public String deleteResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
 		DeleteMethod delete = new DeleteMethod("https://"+server+":"+port+prefix+path);
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request DELETE https://"+server+":"+port+prefix+path);
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request DELETE "+delete.getURI());
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
 	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
@@ -278,8 +274,7 @@ schema generation failed
 		String headers = "";
 		for ( org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
 
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST "+data+" "+headers+" https://"+server+":"+port+prefix+path);
-
+		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST "+data+" "+headers+" "+post.getURI());
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
@@ -375,11 +370,12 @@ schema generation failed
 	
 	static public void exportConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
 		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
-		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export > "+intoExportZipFile);
+//		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export > "+intoExportZipFile);
 		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
 	
 		boolean validzip = false;
 		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export");
+		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" --request GET "+get.getURI()+" > "+intoExportZipFile);
 		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
 		File zipFile = new File(intoExportZipFile);
 		FileOutputStream fos = new FileOutputStream(zipFile);
@@ -409,12 +405,13 @@ schema generation failed
 	
 	static public void importConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
 		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
-		//log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
-		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");
+//		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
+//		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");
 		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 
 		//PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");	// candlepin branch 0.2-
 		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");		// candlepin branch 0.3+ (/import changed to /imports)
+		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" --request POST "+post.getURI());
 		File f = new File(fromExportZipFile);
 		Part[] parts = {
 			      new FilePart(f.getName(), f)

@@ -1,0 +1,432 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="SM CLI TestSuite">
+
+	<!-- the hudson.groovy script already includes these listeners
+	<listeners>
+  		<listener class-name="com.redhat.qe.auto.testng.TestNGListener" />
+  		<listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
+	</listeners>
+	-->
+	
+	
+	<!-- CLI ACCEPTANCE TESTS -->
+		
+	<test name="CLI: Help Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.HelpTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: General Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.GeneralTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Register Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.RegisterTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: ActivationKey Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ActivationKeyTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Proxy Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ProxyTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+
+	<test name="CLI: Event Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.EventTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+
+	<test name="CLI: Identity Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.IdentityTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: List Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ListTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Repos Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ReposTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Orgs Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.OrgsTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+
+	<test name="CLI: Subscribe Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.SubscribeTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Unsubscribe Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.UnsubscribeTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Unregister Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.UnregisterTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Multi-client Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.MultiClientTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+		
+	<test name="CLI: Management Add-On Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ManagementAddOnTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: RHEL Personal Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.RHELPersonalTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Facts Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.FactsTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Clean Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.CleanTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Refresh Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.RefreshTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Redeem Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.RedeemTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Environments Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.EnvironmentsTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Subscription Expiration Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ExpirationTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Certificate Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.CertificateTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Compliance Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ComplianceTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Content Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ContentTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Virtualization Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.VirtualizationTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Modifier Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ModifierTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Overconsumption Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.OverconsumptionTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Certificate Revocation List (CRL) Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.CRLTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Roles Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.RolesTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Integration Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.IntegrationTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: SELinux Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.SELinuxTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+</suite>

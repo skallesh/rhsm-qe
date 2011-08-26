@@ -17,7 +17,7 @@ public class SELinuxTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="assert that no SELinux denials were logged during this TestSuite",
-			groups={/*"blockedByBug-694879"*/},
+			groups={"AcceptanceTests"/*, "blockedByBug-694879"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void verifyNoSELinuxDenialsWereLogged_Test() {

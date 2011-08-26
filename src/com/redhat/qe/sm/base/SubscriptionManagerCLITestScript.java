@@ -22,6 +22,7 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
@@ -450,7 +451,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<RegistrationData> goodRegistrationData = new ArrayList<RegistrationData>();
 		List<String> ownersWithMatchingUsername = new ArrayList<String>();
 		List<String> usernamesWithMatchingOwnerKey = new ArrayList<String>();
-		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
 		for (RegistrationData registrationDatum : registrationDataList) {
 			if (registrationDatum.registerResult.getExitCode().intValue()==0) {
 				if (registrationDatum.ownerKey.equals(ownerKey)) usernamesWithMatchingOwnerKey.add(registrationDatum.username);
@@ -470,21 +471,32 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 		for (RegistrationData registrationDatum : goodRegistrationData) {
-				if ( !matchingOwnerKey &&  !matchingUsername) {
-					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey )&& !usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
+				if (ownerKey==null && !matchingOwnerKey &&  !matchingUsername) {
+					if (!registrationDatum.username.equals(username)) {
 						finalRegistrationData.add(registrationDatum);
 					}
-				} else if ( !matchingOwnerKey && matchingUsername) {					
-					if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey) && username.equals(registrationDatum.username)) {
+				} else if (ownerKey==null && !matchingOwnerKey && matchingUsername) {					
+					if (registrationDatum.username.equals(username)) {
 						finalRegistrationData.add(registrationDatum);
 					}
-				} else if ( matchingOwnerKey && !matchingUsername ) {
-					if (ownersWithMatchingUsername.contains(registrationDatum.ownerKey) && !username.equals(registrationDatum.username)) {
-						finalRegistrationData.add(registrationDatum);
-					}
-				} else {
+				}
+		}
+		for (RegistrationData registrationDatum : goodRegistrationData) {
+			if ( !matchingOwnerKey &&  !matchingUsername) {
+				if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey )&& !usernamesWithMatchingOwnerKey.contains(registrationDatum.username)) {
 					finalRegistrationData.add(registrationDatum);
 				}
+			} else if ( !matchingOwnerKey && matchingUsername) {					
+				if (!ownersWithMatchingUsername.contains(registrationDatum.ownerKey) && username.equals(registrationDatum.username)) {
+					finalRegistrationData.add(registrationDatum);
+				}
+			} else if ( matchingOwnerKey && !matchingUsername ) {
+				if (ownersWithMatchingUsername.contains(registrationDatum.ownerKey) && !username.equals(registrationDatum.username)) {
+					finalRegistrationData.add(registrationDatum);
+				}
+			} else {
+				finalRegistrationData.add(registrationDatum);
+			}
 		}
 		return finalRegistrationData;
 	}
@@ -1005,7 +1017,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
 							if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
 							if (!productSupportedArches.containsAll(supportedArches)) {
-								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' ARCH ATTRIBUTE '"+attributeValue+"' IS NOT A SUBSET OF THE BASE SUBSCRIPTION PRODUCT '"+productId+"' ARCH ATTRIBUTE '"+productSupportedArches+"'.");
+								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' ARCH ATTRIBUTE '"+attributeValue+"' IS NOT A SUBSET OF THE TOP LEVEL PRODUCT '"+productId+"' ARCH ATTRIBUTE '"+productSupportedArches+"'.");
 							}
 							if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch.toUpperCase())) {
 								//providedProductAttributesPassRulesCheck = false;
@@ -1879,9 +1891,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	protected List<List<Object>> getAllJSONPoolsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-
+		
+		// who is the owner of sm_clientUsername
+		String clientOrg = sm_clientOrg;
+		if (clientOrg==null) {
+			List<RegistrationData> registrationData = findGoodRegistrationData(true,sm_clientUsername,false,clientOrg);
+			if (registrationData.isEmpty() || registrationData.size()>1) throw new SkipException("Could not determine unique owner for username '"+sm_clientUsername+"'.  It is needed for a candlepin API call get pools by owner.");
+			clientOrg = registrationData.get(0).ownerKey;
+		}
+		
 		// process all of the pools belonging to ownerKey
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+clientOrg+"/pools?listall=true"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String id = jsonPool.getString("id");
@@ -1890,7 +1910,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		return ll;
-		
 	}
 
 	

@@ -50,7 +50,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	// REGISTER Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager : register using a proxy server (Positive and Negative Variations)",
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="getRegisterAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
