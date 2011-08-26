@@ -5,9 +5,9 @@
         [error.handler :only (with-handlers handle ignore recover)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
-            [com.redhat.qe.sm.gui.tests.register-tests :as retst]
-            [com.redhat.qe.sm.gui.tests.subscribe-tests :as setst]
-            [com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as saetst])
+            [com.redhat.qe.sm.gui.tests.register-tests :as rtest]
+            [com.redhat.qe.sm.gui.tests.subscribe-tests :as stest]
+            [com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
   (:import [org.testng.annotations Test BeforeClass DataProvider]))
 
 
@@ -27,12 +27,12 @@
     (register nil)))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  subscribe-all [_]
+  subscribe_all [_]
   (check-register)
   (stest/subscribe_all))
 
 (defn ^{Test {:groups ["acceptance"]}}
-  unsubscribe-all [_]
+  unsubscribe_all [_]
   (check-register)
   (stest/unsubscribe_all))
 
