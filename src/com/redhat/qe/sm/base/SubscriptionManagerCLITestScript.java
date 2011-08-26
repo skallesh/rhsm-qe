@@ -748,7 +748,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
 	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		// Notes...
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
