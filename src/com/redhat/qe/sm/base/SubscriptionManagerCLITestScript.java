@@ -778,6 +778,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//List<Org> orgs = clienttasks.getOrgs(username,password);	// fails when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
 				List<Org> orgs = Org.parse(clienttasks.orgs_(username, password, null, null, null).getStdout());
 				//if (orgs.size()==1) {orgs.clear(); orgs.add(new Org(null,null));}	// when a user belongs to only one org, then we don't really need to know the orgKey for registration
+				if (orgs.isEmpty()) orgs.add(new Org(null,null));	// reveals when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
 			
 				// append a username and password for each org the user belongs to
 				for (Org org : orgs) {
@@ -787,10 +788,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			return ll;
 		}
 		
-		
-		
-		
-		
+				
 		// Notes...
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1 | python -mjson.tool
