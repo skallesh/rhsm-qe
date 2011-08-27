@@ -61,6 +61,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithCredentials_Test(String username, String password, String org) {
 		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
 		
+		// cleanup from last test when needed
+		clienttasks.unregister_(null, null, null);
+		
 		// determine this user's ability to register
 		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, nullString, null, null, null, null);
 			
