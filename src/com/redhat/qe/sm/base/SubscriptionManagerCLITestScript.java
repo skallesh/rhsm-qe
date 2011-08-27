@@ -775,7 +775,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String password = sm_clientPasswordDefault;
 			
 				// get the orgs for this username/password
-				List<Org> orgs = clienttasks.getOrgs(username,password);
+				//List<Org> orgs = clienttasks.getOrgs(username,password);	// fails when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
+				List<Org> orgs = Org.parse(clienttasks.orgs_(username, password, null, null, null).getStdout());
 				//if (orgs.size()==1) {orgs.clear(); orgs.add(new Org(null,null));}	// when a user belongs to only one org, then we don't really need to know the orgKey for registration
 			
 				// append a username and password for each org the user belongs to
