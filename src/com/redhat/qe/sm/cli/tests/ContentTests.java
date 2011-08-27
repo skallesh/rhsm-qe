@@ -163,7 +163,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={},
+			groups={"AcceptanceTests"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
 	public void VerifyYumRepoListsEnabledContent(){
@@ -207,7 +207,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41695,fromPlan=2479)
@@ -303,10 +303,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// first, unregister client1 since it is a personal subpool consumer
 		client1tasks.unregister_(null,null,null);
 		// second, unregister client2 since it is a personal consumer
-//		client2tasks.unregister_(null,null,null);
-		client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, nullString, Boolean.TRUE, null, null, null);
-		client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
-		client2tasks.unregister_(null,null,null);
+		if (client2tasks!=null) {
+			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, nullString, Boolean.TRUE, null, null, null);
+			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
+			client2tasks.unregister_(null,null,null);
+		}
 	}
 
 	
@@ -325,6 +326,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
+		// get the currently installed product certs to be used when checking for conditional content tagging
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, nullString, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
@@ -333,7 +337,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-				if (contentNamespace.enabled.equals("1")) {
+
+				if (contentNamespace.enabled.equals("1") && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 					String repoLabel = contentNamespace.label;
 					
 					// find an available package that is uniquely provided by repo
@@ -365,6 +370,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
+		// get the currently installed product certs to be used when checking for conditional content tagging
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
 		// assure we are freshly registered and process all available subscription pools
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, nullString, Boolean.TRUE, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
@@ -373,7 +381,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-				if (contentNamespace.enabled.equals("1")) {
+				if (contentNamespace.enabled.equals("1") && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 					String repoLabel = contentNamespace.label;
 
 					// find first available group provided by this repo

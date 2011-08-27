@@ -3,6 +3,7 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -11,8 +12,10 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -23,7 +26,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 
 
-@Test(groups={"ComplianceTests"})
+@Test(groups={"ComplianceTests","AcceptanceTests"})
 public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
@@ -200,18 +203,40 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// autosubscribe
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, nullString, Boolean.TRUE, null, null, null);
 		
+//		// distribute a copy of the product certs amongst the productCertDirs
+//		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+//		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+//			ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
+//			// TODO WORKAROUND NEEDED FOR Bug 733805 - the name in the subscription-manager installed product listing is changing after a valid subscribe is performed (https://bugzilla.redhat.com/show_bug.cgi?id=733805)
+//			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productCert.productName, installedProducts);
+//			if (installedProduct.status.equalsIgnoreCase("Not Subscribed")) {
+//				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForNoProductsSubscribable, 0);
+//				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
+//			} else if (installedProduct.status.equalsIgnoreCase("Subscribed")) {
+//				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForAllProductsSubscribable, 0);
+//				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
+//			}
+//		}
+		
 		// distribute a copy of the product certs amongst the productCertDirs
-		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
 			ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
-			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productCert.productName, installedProducts);
-			if (installedProduct.status.equalsIgnoreCase("Not Subscribed")) {
+			
+			// WORKAROUND NEEDED FOR Bug 733805 - the name in the subscription-manager installed product listing is changing after a valid subscribe is performed (https://bugzilla.redhat.com/show_bug.cgi?id=733805)
+			List<EntitlementCert> correspondingEntitlementCerts = clienttasks.getEntitlementCertsCorrespondingToProductCert(productCert);
+			
+			if (correspondingEntitlementCerts.isEmpty()) {
+				// "Not Subscribed" case...
 				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForNoProductsSubscribable, 0);
 				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
-			} else if (installedProduct.status.equalsIgnoreCase("Subscribed")) {
+			} else {
+				// "Subscribed" case...
 				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForAllProductsSubscribable, 0);
 				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
 			}
+			// TODO "Partially Subscribed" case
+			//InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToEntitlementCert(correspondingEntitlementCert);
 		}
 		
 		this.productCertDir = clienttasks.productCertDir;
@@ -231,6 +256,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult r0 = client.runCommandAndWait("ls -1 "+productCertDirForSomeProductsSubscribable+" | wc -l");
 		SSHCommandResult r1 = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
 		SSHCommandResult r2 = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsSubscribable+" | wc -l");
+		if (Integer.valueOf(r1.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are subscribable based on the currently available subscriptions.");
+		if (Integer.valueOf(r2.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are non-subscribable based on the currently available subscriptions.");
 		Assert.assertTrue(Integer.valueOf(r0.getStdout().trim())>0 && Integer.valueOf(r1.getStdout().trim())>0 && Integer.valueOf(r2.getStdout().trim())>0,
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains some subscribable products based on the currently available subscriptions.");
 	}
@@ -239,6 +266,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribable);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
+		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are subscribable based on the currently available subscriptions.");
 		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all subscribable products based on the currently available subscriptions.");
 	}
@@ -247,6 +275,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsSubscribable);
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsSubscribable+" | wc -l");
+		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are non-subscribable based on the currently available subscriptions.");
 		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all non-subscribable products based on the currently available subscriptions.");
 	}

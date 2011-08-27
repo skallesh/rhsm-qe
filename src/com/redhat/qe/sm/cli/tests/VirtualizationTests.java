@@ -65,7 +65,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: facts list should report virt.is_guest and virt.host_type and virt.uuid",
-			groups={}, dependsOnGroups={},
+			groups={"AcceptanceTests"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsReportedOnThisClient_Test() {
@@ -214,7 +214,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools are generated from a virtualization-aware subscription.",
-			groups={},
+			groups={"AcceptanceTests"},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
@@ -243,7 +243,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools quantities generated from a virtualization-aware subscription",
-			groups={}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
+			groups={"AcceptanceTests"}, // "blockedByBug-679617" indirectly when this script is run as part of the full TestNG suite since this is influenced by other scripts calling refresh pools
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
@@ -259,15 +259,24 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+hostPool);
 
 		// assert hostPoolId quantity
-		Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity), "Assuming that nobody else is consuming from this host pool '"+hostPool.poolId+"', the maximum quantity of available entitlements should be "+quantity+".");
+		JSONObject jsonHostPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+hostPool.poolId));	
+		int hostPoolQuantityConsumed = jsonHostPool.getInt("consumed");
+		Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity-hostPoolQuantityConsumed), "Assuming '"+hostPoolQuantityConsumed+"' entitlements are currently being consumed from this host pool '"+hostPool.poolId+"', the quantity of available entitlements should be '"+quantity+"' minus '"+hostPoolQuantityConsumed+"'.");
 		
 		// get the guestPool
 		SubscriptionPool guestPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", guestPoolId, allAvailablePools);
 		Assert.assertNotNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+guestPool);
 
 		// assert guestPoolId quantity
-		Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf(quantity*Integer.valueOf(virtLimit)), "Assuming that nobody else is consuming from this guest pool '"+guestPool.poolId+"', the maximum quantity of available entitlements should be the virt_limit of '"+virtLimit+"' times the host quantity '"+quantity+"'.");
+		JSONObject jsonGuestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+guestPool.poolId));	
+		int guestPoolQuantityConsumed = jsonGuestPool.getInt("consumed");
+		if (virtLimit.equals("unlimited")) {
+			Assert.assertEquals(guestPool.quantity, virtLimit, "When the subscription product has a virt_limit of 'unlimited', then the guest pool's quantity should be 'unlimited'.");
+		} else {
+			Assert.assertEquals(Integer.valueOf(guestPool.quantity), Integer.valueOf(quantity*Integer.valueOf(virtLimit)-guestPoolQuantityConsumed), "Assuming '"+guestPoolQuantityConsumed+"' entitlements are currently being consumed from this guest pool '"+guestPool.poolId+"', the quantity of available entitlements should be the virt_limit of '"+virtLimit+"' times the host quantity '"+quantity+"' minus '"+guestPoolQuantityConsumed+"'.");
+		}
 	}
+		
 	
 	
 	@Test(	description="Verify the virt_limit multiplier on guest pool quantity is not clobbered by refresh pools",

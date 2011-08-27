@@ -23,10 +23,10 @@ import com.redhat.qe.sm.data.ProductCert;
 @Test(groups={"CertificateTests"})
 public class CertificateTests extends SubscriptionManagerCLITestScript {
 
-	
+	// Test methods ***********************************************************************
 	
 	@Test(	description="candidate product cert validity dates",
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="getProductCertFilesData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64656)

@@ -998,6 +998,17 @@ public class SubscriptionManagerTasks {
 		return null;	// not found
 	}
 	
+	public List <EntitlementCert> getEntitlementCertsCorrespondingToProductCert(ProductCert productCert) {
+		List<EntitlementCert> correspondingEntitlementCerts = new ArrayList<EntitlementCert>();
+		ProductNamespace productNamespaceMatchingProductCert = null;
+		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
+			productNamespaceMatchingProductCert = ProductNamespace.findFirstInstanceWithMatchingFieldFromList("id", productCert.productId, entitlementCert.productNamespaces);	
+			if (productNamespaceMatchingProductCert!=null) {
+				correspondingEntitlementCerts.add(entitlementCert);
+			}
+		}
+		return correspondingEntitlementCerts;
+	}
 	
 	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+serialPemFile.getPath());
