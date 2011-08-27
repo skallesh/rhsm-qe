@@ -55,7 +55,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"RegisterWithUsernameAndPassword_Test", "AcceptanceTests"},
+			groups={"RegisterWithUsernameAndPassword_Test", "AcceptanceTests","debugTest"},
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithCredentials_Test(String username, String password, String org) {
@@ -735,20 +735,20 @@ Expected Results:
 			// write out the rows of the table
 			output.write("<html>\n");
 			output.write("<table border=1>\n");
-			output.write("<h2>Candlepin Registration Report</h2>");
+			output.write("<h2>Candlepin Registration Report</h2>\n");
 			//output.write("<h3>(generated on "+dateFormat.format(System.currentTimeMillis())+")</h3>");
-			output.write("Candlepin hostname= <b>"+sm_serverHostname+"</b>\n");
-			output.write("(generated on "+dateFormat.format(System.currentTimeMillis())+")\n");
-			output.write("<tr><th>Owner</th><th>Username/<BR>Password</th><th>Registration Output</th><th>All Available Subscriptions (to system consumers)</th></tr>\n");
+			output.write("Candlepin hostname= <b>"+sm_serverHostname+"</b><br>\n");
+			output.write(dateFormat.format(System.currentTimeMillis())+"\n");
+			output.write("<tr><th>Username/<BR>Password</th><th>OrgKey</th><th>Register Result</th><th>All Available Subscriptions<BR>(to system consumers)</th></tr>\n");
 			for (RegistrationData registeredConsumer : registrationDataList) {
 				if (registeredConsumer.ownerKey==null) {
 					output.write("<tr bgcolor=#F47777>");
 				} else {output.write("<tr>");}
-				if (registeredConsumer.ownerKey!=null) {
-					output.write("<td valign=top>"+registeredConsumer.ownerKey+"</td>");
-				} else {output.write("<td/>");};
 				if (registeredConsumer.username!=null) {
 					output.write("<td valign=top>"+registeredConsumer.username+"/<BR>"+registeredConsumer.password+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.ownerKey!=null) {
+					output.write("<td valign=top>"+registeredConsumer.ownerKey+"</td>");
 				} else {output.write("<td/>");};
 				if (registeredConsumer.registerResult!=null) {
 					output.write("<td valign=top>"+registeredConsumer.registerResult.getStdout()+registeredConsumer.registerResult.getStderr()+"</td>");
