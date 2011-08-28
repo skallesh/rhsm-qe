@@ -72,17 +72,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		// make sure the original virt-what is in place 
 		RemoteFileTasks.runCommandAndAssert(client, "cp -f "+virtWhatFileBackup+" "+virtWhatFile, 0);
-		SSHCommandResult result = client.runCommandAndWait("virt-what");
+		String virtWhatStdout = client.runCommandAndWait("virt-what").getStdout().trim();
 		
 		log.info("Running virt-what version: "+client.runCommandAndWait("rpm -q virt-what").getStdout().trim());
 		
 		// virt.is_guest
 		String virtIsGuest = clienttasks.getFactValue("virt.is_guest");
-		Assert.assertEquals(Boolean.valueOf(virtIsGuest),result.getStdout().trim().equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-what returns stdout.");
+		Assert.assertEquals(Boolean.valueOf(virtIsGuest),virtWhatStdout.equals("")?Boolean.FALSE:Boolean.TRUE,"subscription-manager facts list reports virt.is_guest as true when virt-what returns stdout.");
 		
 		// virt.host_type
 		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		Assert.assertEquals(virtHostType,result.getStdout().trim(),"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
+		Assert.assertEquals(virtHostType,virtWhatStdout.equals("")?"Not Applicable":virtWhatStdout,"subscription-manager facts list reports the same virt.host_type as what is returned by the virt-what installed on the client.");
 		
 		// virt.uuid
 		// dev note: calculation for uuid is done in /usr/share/rhsm/subscription_manager/hwprobe.py def _getVirtUUID(self):
