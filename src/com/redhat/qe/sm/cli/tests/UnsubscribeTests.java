@@ -149,7 +149,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Candidates for an automated Test:
 	// TODO Bug 706889 - “-1” displayed on console while unsubscribe invalid serial
-	// TODO Bug 727970 - Unsubscribe Is Not Removing Future Dated Entitlement Certificates Or Keys 
+
 	
 	// Data Providers ***********************************************************************
 	
