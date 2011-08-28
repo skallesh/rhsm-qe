@@ -133,7 +133,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="use the candlepin api to attempt to create a duplicate activation key",
-			groups={/*"blockedByBug-728636"*/},
+			groups={"blockedByBug-728636"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void AttemptActivationKeyCreationInDuplicate_Test() throws JSONException, Exception {
@@ -156,7 +156,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// assert that the creation was NOT successful (contains a displayMessage)
 		try {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
-			Assert.assertTrue(displayMessage.startsWith("Runtime Error org.hibernate.exception.ConstraintViolationException: Could not execute JDBC batch update at org.postgresql.jdbc2.AbstractJdbc2Statement$BatchResultHandler.handleError:"),"Expected the creation of a duplicate activation key named '"+name+"' to fail.");
+			// Activation key name [dupkey] is already in use for owner [admin]
+			Assert.assertEquals(displayMessage,"Activation key name ["+name+"] is already in use for owner ["+sm_clientOrg+"]","Expected the attempted creation of a duplicate activation key named '"+name+"' for owner '"+sm_clientOrg+"' to fail.");
 		} catch (JSONException e) {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to a duplicate name '"+name+"'.");
 			Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with a duplicate name '"+name+"': "+jsonActivationKey);
@@ -216,7 +217,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			try {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
-				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to fail.");
+				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
 			} catch (JSONException e) {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to greater than one quantity '"+addQuantity+"'.");
 				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Non multi-entitlement pool '"+poolId+"' should NOT have been added to the following activation key with a quantity '"+addQuantity+"' greater than one: "+jsonActivationKey);
@@ -224,25 +225,30 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
-		// handle the case when the quantity is excessive or less than one
-		if (addQuantity > jsonPool.getInt("quantity") || addQuantity < 1) {
+		// handle the case when the quantity is excessive
+		if (addQuantity > jsonPool.getInt("quantity")) {
 
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=729125 - jsefler 8/8/2011
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="729125"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				throw new SkipException("Skipping this test while bug '"+bugId+"' is open. (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
-			}
-			// END OF WORKAROUND
-			
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
 			try {
-				String displayMessage = jsonActivationKey.getString("displayMessage");
-				Assert.assertTrue(displayMessage.equals("FIXME: Quantity is outside of acceptable range."),"Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with an out-of-range quantity '"+addQuantity+"' to fail.");
+				String displayMessage = jsonAddedPool.getString("displayMessage");
+				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
 			} catch (JSONException e) {
-				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an out-of-range quantity '"+addQuantity+"'.");
-				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an out-of-range quantity '"+addQuantity+"': "+jsonActivationKey);
+				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
+				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
+			}
+			return;
+		}
+		
+		// handle the case when the quantity is insufficient (less than one)
+		if (addQuantity < 1) {
+
+			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
+			try {
+				String displayMessage = jsonAddedPool.getString("displayMessage");
+				Assert.assertEquals(displayMessage,"The quantity must be greater than 0", "Expected the addition of pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' less than one be blocked.");
+			} catch (JSONException e) {
+				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to insufficient quantity '"+addQuantity+"'.");
+				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with insufficient quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
 			return;
 		}
@@ -314,7 +320,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key, add it to a pool with an quantity outside the total possible available range",
-			groups={},
+			groups={"blockedByBug-729125"},
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
