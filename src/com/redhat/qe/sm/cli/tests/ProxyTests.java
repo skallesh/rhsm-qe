@@ -1052,15 +1052,35 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerData")
 	public Object[][] getFactsAttemptsUsingProxyServerDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getFactsAttemptsUsingProxyServerDataAsListOfLists());
 	}
-	
+	protected List<List<Object>> getFactsAttemptsUsingProxyServerDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
+			if (l.get(8)!=null) {
+				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details."}));
+			} else {
+				ll.add(l);
+			}
+		}
+		return ll;
+	}
 	
 	@DataProvider(name="getFactsAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getFactsAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
 	}
-	
+	protected List<List<Object>> getFactsAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
+			if (l.get(12)!=null) {
+				ll.add(Arrays.asList(new Object[]{	l.get(0),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	null,	"Error updating system data, see /var/log/rhsm/rhsm.log for more details.",	l.get(14),	l.get(15),	l.get(16)}));
+			} else {
+				ll.add(l);
+			}
+		}
+		return ll;
+	}
 	
 	@DataProvider(name="getRefreshAttemptsUsingProxyServerData")
 	public Object[][] getRefreshAttemptsUsingProxyServerDataAs2dArray() {
