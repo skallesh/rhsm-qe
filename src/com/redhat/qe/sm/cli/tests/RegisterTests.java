@@ -55,7 +55,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
-			groups={"RegisterWithUsernameAndPassword_Test", "AcceptanceTests"},
+			groups={"RegisterWithCredentials_Test", "AcceptanceTests"},
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithCredentials_Test(String username, String password, String org) {
@@ -202,6 +202,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// create a clean temporary productCertDir and change the rhsm.conf to point to it
 		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+tmpProductCertDir, Integer.valueOf(0)); // incase something was leftover from a prior run
 		RemoteFileTasks.runCommandAndAssert(client, "mkdir "+tmpProductCertDir, Integer.valueOf(0));
+		this.productCertDir = clienttasks.productCertDir;	// store the original productCertDir
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 
 		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary
@@ -704,27 +705,27 @@ Expected Results:
 	
 	// Configuration methods ***********************************************************************
 
-	@BeforeGroups(value={"RegisterWithAutosubscribe_Test"})
-	public void storeProductCertDir() {
-		this.productCertDir = clienttasks.productCertDir;
-	}
 	@AfterGroups(value={"RegisterWithAutosubscribe_Test"},alwaysRun=true)
 	@AfterClass (alwaysRun=true)
 	public void cleaupAfterClass() {
 		if (clienttasks==null) return;
+		
+		// restore the originally configured productCertDir
 		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
+		
+		// delete temporary files and directories
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
 		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
 	}
 
 	
-	@BeforeGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
-	public void unregisterBeforeRegisterWithUsernameAndPassword_Test() {
+	@BeforeGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
+	public void unregisterBeforeRegisterWithCredentials_Test() {
 		if (clienttasks==null) return;
 		clienttasks.unregister_(null, null, null);
 	}
-	@AfterGroups(value={"RegisterWithUsernameAndPassword_Test"},alwaysRun=true)
-	public void generateRegistrationReportTableAfterRegisterWithUsernameAndPassword_Test() {
+	@AfterGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
+	public void generateRegistrationReportTableAfterRegisterWithCredentials_Test() {
 		
 		// now dump out the list of userData to a file
 	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)

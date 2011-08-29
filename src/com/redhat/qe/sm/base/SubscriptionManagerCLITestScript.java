@@ -416,7 +416,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 	}
 	
-	// this list will be populated by subclass ResisterTests.RegisterWithUsernameAndPassword_Test
+	// this list will be populated by subclass ResisterTests.RegisterWithCredentials_Test
 	protected static List<RegistrationData> registrationDataList = new ArrayList<RegistrationData>();	
 
 //	/**
@@ -426,7 +426,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataNotMatchingOwnerKey(String key) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.ownerKey!=null) {
 //				if (!registration.ownerKey.equals(key)) {
@@ -509,7 +509,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(String key, String username) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.ownerKey!=null) {
 //				if (registration.ownerKey.equals(key)) {
@@ -530,7 +530,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //	 * @throws JSONException
 //	 */
 //	protected RegistrationData findRegistrationDataMatchingUsername(String username) throws JSONException {
-//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithUsernameAndPassword_Test has been executed thereby populating the registrationDataList with content for testing."); 
+//		Assert.assertTrue (!registrationDataList.isEmpty(), "The RegisterWithCredentials_Test has been executed thereby populating the registrationDataList with content for testing."); 
 //		for (RegistrationData registration : registrationDataList) {
 //			if (registration.username.equals(username)) {
 //				return registration;
