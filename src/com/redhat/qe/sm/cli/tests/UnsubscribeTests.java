@@ -141,9 +141,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromProductSubscription(productSubscription);
 		
 		// assert that the EntitlementCert file and its key are removed.
-		// NOTE: this assertion is probably already built into the unsubscribe task above
+		/* NOTE: this assertion is already built into the unsubscribeFromProductSubscription task above
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath()), 0,"EntitlementCert file has been removed after unsubscribing to future SubscriptionPool.");
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertKeyFile.getPath()), 0,"EntitlementCert key file has been removed after unsubscribing to future SubscriptionPool.");
+		*/
 	}
 	
 	
