@@ -272,7 +272,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to all pool ids
 		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null, poolIds, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, poolIds, null, null, null, null, null, null, null, null);
 		
 		/*
 		No such entitlement pool: bad123
@@ -284,6 +284,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		*/
 		
 		// assert the results...
+		Assert.assertEquals(subscribeResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		for (String poolId : poolIds) {
 			String subscribeResultMessage;
 			if (poolId.equals(badPoolId1) || poolId.equals(badPoolId2)) {
@@ -296,7 +297,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				subscribeResultMessage += "\n"+subscribeResultMessage;
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for a multi-entitlement pool '"+poolId+"' contains: "+subscribeResultMessage);
 			} else if (false) {
-				// TODO case when there are no entiitlements remaining for the duplicate subscribe
+				// TODO case when there are no entitlements remaining for the duplicate subscribe
 			} else {
 				subscribeResultMessage = "Successfully subscribed the system to Pool "+poolId;
 				subscribeResultMessage += "\n"+"This consumer is already subscribed to the product matching pool with id '"+poolId+"'.";
@@ -707,18 +708,30 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int quantity = quantities.get(quantities.size()/2);	// choose the median as the quantity to subscribe with
 		
 		// collectively subscribe to all pools with --quantity
-		SSHCommandResult result = clienttasks.subscribe(null, poolIds, null, null, String.valueOf(quantity), null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, poolIds, null, null, String.valueOf(quantity), null, null, null, null, null);
+		
+		/*
+		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be0e20480'.
+		Successfully subscribed the system to Pool 8a90f8c6320e9a4401320e9be196049e
+		No free entitlements are available for the pool with id '8a90f8c6320e9a4401320e9be1d404a8'.
+		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be24004be'.
+		Successfully subscribed the system to Pool 8a90f8c6320e9a4401320e9be2e304dd
+		No free entitlements are available for the pool with id '8a90f8c6320e9a4401320e9be30c04e8'.
+		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be3b80505'.
+		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be4660520'.
+		*/
 		
 		// assert that the expected pools were subscribed to based on quantity
+		Assert.assertEquals(subscribeResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		for (SubscriptionPool pool : pools) {
 			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId)) {
-				Assert.assertTrue(result.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
+				Assert.assertTrue(subscribeResult.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
 			} else if (quantity <= Integer.valueOf(pool.quantity)) {
 				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
-				Assert.assertTrue(result.getStdout().contains("Successfully subscribed the system to Pool "+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
+				Assert.assertTrue(subscribeResult.getStdout().contains("Successfully subscribed the system to Pool "+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
 				//Assert.assertContainsMatch(result.getStdout(), "^No free entitlements are available for the pool with id '"+pool.poolId+"'.$","Subscribe should NOT be successful when subscribing with --quantity greater than the pool's availability.");
-				Assert.assertTrue(result.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
+				Assert.assertTrue(subscribeResult.getStdout().contains("No free entitlements are available for the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
 		}
 	}

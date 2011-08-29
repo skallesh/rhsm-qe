@@ -1806,6 +1806,9 @@ public class SubscriptionManagerTasks {
 
 
 	
+	/**
+	 * subscribe and assert all results are successful
+	 */
 	public SSHCommandResult subscribe(Boolean auto, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		SSHCommandResult sshCommandResult = subscribe_(auto, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
@@ -1858,6 +1861,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult;
 	}
 	
+	/**
+	 * subscribe and assert all results are successful
+	 */
 	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
