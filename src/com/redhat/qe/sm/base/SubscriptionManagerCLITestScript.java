@@ -954,6 +954,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			boolean productAttributesPassRulesCheck = true; // assumed
 			String productAttributeSocketsValue = "";
 			List<String> productSupportedArches = new ArrayList<String>();
+			String productAttributeStackingIdValue = null;
+			for (int j = 0; j < jsonProductAttributes.length(); j++) {	// loop product attributes to find a stacking_id
+				if (((JSONObject) jsonProductAttributes.get(j)).getString("name").equals("stacking_id")) {
+					productAttributeStackingIdValue = ((JSONObject) jsonProductAttributes.get(j)).getString("value");
+					break;
+				}
+			}
 			for (int j = 0; j < jsonProductAttributes.length(); j++) {
 				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
 				String attributeName = jsonProductAttribute.getString("name");
@@ -973,6 +980,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				if (attributeName.equals("type")) {
 
 				}
+				if (attributeName.equals("multi-entitlement")) {
+
+				}
+				if (attributeName.equals("warning_period")) {
+
+				}
 				if (attributeName.equals("version")) {
 //					if (!attributeValue.equalsIgnoreCase(clienttasks.version)) {
 //						productAttributesPassRulesCheck = false;
@@ -983,8 +996,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						productAttributesPassRulesCheck = false;
 					}
 				}
+				if (attributeName.equals("stacking_id")) {
+					// productAttributeStackingIdValue = attributeValue; // was already searched for above
+				}
 				if (attributeName.equals("sockets")) {
 					productAttributeSocketsValue = attributeValue;
+					
+					// before checking if the socket count on this client exceeds the sockets attribute, check if this subscription is stackable by looking for a stacking_id attribute (if exists, then this subscription should be available despite the sockets value)
+					if (productAttributeStackingIdValue!=null) break;	// no need to check sockets value when this subscription is stackable.
+					
+					// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
 					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
 						if (matchSystem) productAttributesPassRulesCheck = false;
 					}
@@ -1011,7 +1032,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						 * You will get ALL of its provided product even if they don't make arch/socket sense.
 						 * In this case you could argue that it is not subscription-manager's job to question the meaningfulness of the subscription and its provided products.
 						 * For this reason, I am commenting out all the providedProductAttributesPassRulesCheck = false; ... (except "type")
-						 * */
+						 */
 						if (attributeName.equals("arch")) {
 							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
 							if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
