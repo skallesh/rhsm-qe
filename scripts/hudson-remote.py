@@ -53,11 +53,11 @@ def schedule_job(url, variants, token):
     for variant in variants:
         print variant
         for item in value_list:
-            if item['name'] == 'CLIENT1_ARCH':
+            if item['name'] == 'BEAKER_ARCH':
                 item['value'] = variant[0]
-            if item['name'] == 'CLIENT1_VARIANT':
+            if item['name'] == 'BEAKER_VARIANT':
                 item['value'] = variant[1]
-            if item['name'] == 'CLIENT1_DistroFamily':
+            if item['name'] == 'BEAKER_DISTROFAMILY':
                 item['value'] = variant[2]
         output_dict = dict()
         output_dict['parameter'] = value_list
@@ -73,9 +73,10 @@ def schedule_job(url, variants, token):
 
 
 #### COMMENTING OUT THE LAUNCHING OF THE rhsm-beaker-on-premises-RHEL6.1 JOBS SINCE THIS PRODUCT HAS SHIPPED 5/18/2011
-#url = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
-#token = "hudsonbeaker-remote"
-#variants = [['ppc64','Server','RedHatEnterpriseLinux6'],
+#URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL6.1"
+#URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager%20%28OnPremises%29%20RHEL6.1%20Beaker"
+#TOKEN = "hudsonbeaker-remote"
+#VARIANTS = [['ppc64','Server','RedHatEnterpriseLinux6'],
 #            ['s390x','Server','RedHatEnterpriseLinux6'],
 #            ['x86_64','ComputeNode','RedHatEnterpriseLinux6'],
 #            ['x86_64','Server','RedHatEnterpriseLinux6'],
@@ -84,11 +85,12 @@ def schedule_job(url, variants, token):
 #            ['i386','Client','RedHatEnterpriseLinux6'],
 #            ['i386','Server','RedHatEnterpriseLinux6'],
 #            ['i386','Workstation','RedHatEnterpriseLinux6']]
-#schedule_job(url, variants, token)
+#schedule_job(URL, VARIANTS, TOKEN)
 
 
 #### COMMENTING OUT THE LAUNCHING OF THE rhsm-beaker-on-premises-RHEL5.7 JOBS SINCE THIS PRODUCT HAS SHIPPED 7/21/2011
 #URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/rhsm-beaker-on-premises-RHEL5.7"
+#URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager%20%28OnPremises%29%20RHEL5.7%20Beaker"
 #TOKEN = "hudsonbeaker-remote"
 #VARIANTS = [['ppc64', '', 'RedHatEnterpriseLinuxServer5'],
 #            ['s390x', '', 'RedHatEnterpriseLinuxServer5'],
@@ -98,4 +100,18 @@ def schedule_job(url, variants, token):
 #            ['i386', '', 'RedHatEnterpriseLinuxClient5'],
 #            ['x86_64', '', 'RedHatEnterpriseLinuxClient5']]
 #schedule_job(URL, VARIANTS, TOKEN)
+
+
+URL = "http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager%20%28OnPremises%29%20RHEL6.2%20Beaker"
+TOKEN = "hudsonbeaker-remote"
+VARIANTS = [['ppc64','Server','RedHatEnterpriseLinux6'],
+            ['s390x','Server','RedHatEnterpriseLinux6'],
+            ['x86_64','ComputeNode','RedHatEnterpriseLinux6'],
+            ['x86_64','Server','RedHatEnterpriseLinux6'],
+            ['x86_64','Client','RedHatEnterpriseLinux6'],
+            ['x86_64','Workstation','RedHatEnterpriseLinux6'],
+            ['i386','Client','RedHatEnterpriseLinux6'],
+            ['i386','Server','RedHatEnterpriseLinux6'],
+            ['i386','Workstation','RedHatEnterpriseLinux6']]
+schedule_job(URL, VARIANTS, TOKEN)
 
