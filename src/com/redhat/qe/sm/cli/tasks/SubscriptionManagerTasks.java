@@ -1281,6 +1281,58 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+	// import module tasks ************************************************************
+
+	/**
+	 * import without asserting results
+	 * @param certificate - path fo certificate file to be imported
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
+	 */
+	public SSHCommandResult importCertificate_(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+
+		// assemble the command
+		String command = this.command;	command += " import";
+		if (certificate!=null)			command += " --certificate="+certificate;
+//		if (proxy!=null)				command += " --proxy="+proxy;
+//		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+//		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * import with assert that the results are a success"
+	 * @param certificate - path fo certificate file to be imported
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
+	 */
+	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+		
+		SSHCommandResult sshCommandResult = importCertificate_(certificate/*, proxy, proxyuser, proxypassword*/);
+		
+		// assert results for a successful import
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the clean command indicates a success.");
+		
+		//TODO
+//		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data removed");
+		
+		// assert that the entitlement certificate has been extracted to /etc/pki/entitlement
+		//Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
+
+		// assert that the key has been extracted to /etc/pki/entitlement
+		//Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
+
+		return sshCommandResult; // from the import command
+	}
+	
+	
+	
 	// refresh module tasks ************************************************************
 
 	/**
