@@ -40,9 +40,14 @@ def schedule_job(url, variants, token):
     """
     json_data = urllib.urlopen(url + "/api/json").read()
     data = json.loads(json_data)
+    #pretty prints the jason data
+    #print json.dumps(data, sort_keys=True, indent=4) 
 
     value_list = []
-    for value in data['property'][1]['parameterDefinitions']:
+
+    #element data['property'][1] was valid in older version of hudson
+    #for value in data['property'][1]['parameterDefinitions']:
+    for value in data['property'][2]['parameterDefinitions']:
         if value['type'] == 'PasswordParameterDefinition':
             continue
         if value['defaultParameterValue'] == None:
