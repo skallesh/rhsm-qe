@@ -149,15 +149,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (!sm_serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", sm_serverPort);									else sm_serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
 			if (!sm_serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", sm_serverInsecure);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
 			if (!sm_serverSslVerifyDepth.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "ssl_verify_depth", sm_serverSslVerifyDepth);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
-			if (!sm_serverCaCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", sm_serverCaCertDir);						else sm_serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
+			if (!sm_serverCaCertDir.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", sm_serverCaCertDir);						else sm_serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
 
 			// rhsm.conf [rhsm] configurations
-			if (!sm_rhsmBaseUrl.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", sm_rhsmBaseUrl);								else sm_rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
+			if (!sm_rhsmBaseUrl.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", sm_rhsmBaseUrl);								else sm_rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
 			if (!sm_rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", sm_rhsmRepoCaCert);						else sm_rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
 			//if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
 			if (!sm_rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", sm_rhsmProductCertDir);				else sm_rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
 			if (!sm_rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", sm_rhsmEntitlementCertDir);		else sm_rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
-			if (!sm_rhsmConsumerCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", sm_rhsmConsumerCertDir);				else sm_rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
+			if (!sm_rhsmConsumerCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", sm_rhsmConsumerCertDir);				else sm_rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
 
 			// rhsm.conf [rhsmcertd] configurations
 			if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");

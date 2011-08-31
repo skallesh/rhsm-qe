@@ -589,16 +589,16 @@ public class SubscriptionManagerTasks {
 //		String certificates = sshCommandRunner.getStdout();
 //		return SubscriptionPool.parseCerts(certificates);
 //	}
-	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String owner, String password) throws Exception  {
+	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String username, String password) throws Exception  {
 		
 		Map<BigInteger, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<BigInteger, SubscriptionPool>();
 		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
 		String port = getConfFileParameter(rhsmConfFile, "port");
 		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,owner,password,entitlementCert.id);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,username,password,entitlementCert.id);
 			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,owner,password,poolHref));
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,username,password,poolHref));
 			String subscriptionName = jsonPool.getString("productName");
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
@@ -725,17 +725,17 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * @param productSubscription
-	 * @param owner	- owner of the subscription pool (will be used in a REST api call to the candlepin server)
+	 * @param username	- owner of the subscription pool (will be used in a REST api call to the candlepin server)
 	 * @param password
 	 * @return the SubscriptionPool from which this consumed ProductSubscription came from
 	 * @throws Exception
 	 */
-	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription, String owner, String password) throws Exception {
+	public SubscriptionPool getSubscriptionPoolFromProductSubscription(ProductSubscription productSubscription, String username, String password) throws Exception {
 		
 		// if already known, return the SubscriptionPool from which ProductSubscription came
 		if (productSubscription.fromSubscriptionPool != null) return productSubscription.fromSubscriptionPool;
 		
-		productSubscription.fromSubscriptionPool = getCurrentSerialMapToSubscriptionPools(owner, password).get(productSubscription.serialNumber);
+		productSubscription.fromSubscriptionPool = getCurrentSerialMapToSubscriptionPools(username, password).get(productSubscription.serialNumber);
 
 		return productSubscription.fromSubscriptionPool;
 	}
@@ -1051,6 +1051,15 @@ public class SubscriptionManagerTasks {
 		return serialKeyPemFile;
 	}
 	
+	public File getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(File entitlementCertFile) {
+		// 239223656620993791.pem  => 239223656620993791-key.pem
+		String serialKeyPem = entitlementCertFile.getPath().replaceAll("(\\.\\w*)$", "-key$1");
+		// 239223656620993791      => 239223656620993791-key
+		if (!serialKeyPem.contains("-key.")) serialKeyPem += "-key";
+
+		return new File(serialKeyPem);
+	}
+	
 	// register module tasks ************************************************************
 	
 	/**
@@ -1317,10 +1326,12 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = importCertificate_(certificate/*, proxy, proxyuser, proxypassword*/);
 		
 		// assert results for a successful import
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the clean command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the import command indicates a success.");
 		
-		//TODO
-//		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data removed");
+		// Successfully imported certificate {0}
+		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Successfully imported certificate "+(new File(certificate)).getName());
+
+		// {0} is not a valid certificate file. Please use a valid certificate.
 		
 		// assert that the entitlement certificate has been extracted to /etc/pki/entitlement
 		//Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");

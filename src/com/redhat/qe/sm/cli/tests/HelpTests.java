@@ -148,6 +148,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
+		modules.add("import");
 		modules.add("redeem");
 		modules.add("orgs");
 		modules.add("repos");
@@ -169,6 +170,23 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
 		}
 		
+		// MODULE: import
+		module = "import";
+		List <String> importOptions = new ArrayList<String>();
+		importOptions.add("-h, --help");
+		importOptions.add("--certificate=CERTIFICATE_FILES");
+//		importOptions.add("--proxy=PROXY_URL");
+//		importOptions.add("--proxyuser=PROXY_USER");
+//		importOptions.add("--proxypassword=PROXY_PASSWORD");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, importOptions}));
+		}
+
 		// MODULE: redeem
 		module = "redeem";
 		List <String> redeemOptions = new ArrayList<String>();
