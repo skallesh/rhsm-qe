@@ -31,7 +31,9 @@
       (require :reload-all '[com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.firstboot-tests :as fbtest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.facts-tests :as ftest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.acceptance-tests :as actest]))
+      (require :reload-all '[com.redhat.qe.sm.gui.tests.acceptance-tests :as actest])
+      (require :reload-all '[com.redhat.qe.sm.gui.tests.import-tests :as itest])
+      )
 
     (do
       (config/init)
