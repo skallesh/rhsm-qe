@@ -1284,18 +1284,19 @@ public class SubscriptionManagerTasks {
 	// import module tasks ************************************************************
 
 	/**
-	 * import without asserting results
-	 * @param certificate - path fo certificate file to be imported
+	 * import WITHOUT asserting results
+	 * @param certificates - list of paths to certificate files to be imported
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult importCertificate_(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+	public SSHCommandResult importCertificate_(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
 
 		// assemble the command
-		String command = this.command;	command += " import";
-		if (certificate!=null)			command += " --certificate="+certificate;
+		String command = this.command;									command += " import";
+		if (certificates!=null)	for (String certificate : certificates)	command += " --certificate="+certificate;
+
 //		if (proxy!=null)				command += " --proxy="+proxy;
 //		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 //		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -1305,16 +1306,26 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * import with assert that the results are a success"
-	 * @param certificate - path fo certificate file to be imported
+	 * import WITHOUT asserting results.
+	 */
+	public SSHCommandResult importCertificate_(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+		
+		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
+
+		return importCertificate_(certificates/*, proxy, proxyuser, proxypassword*/);
+	}
+	
+	/**
+	 * import with assertions that the results are a success"
+	 * @param certificates - list of paths to certificates file to be imported
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+	public SSHCommandResult importCertificate(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
 		
-		SSHCommandResult sshCommandResult = importCertificate_(certificate/*, proxy, proxyuser, proxypassword*/);
+		SSHCommandResult sshCommandResult = importCertificate_(certificates/*, proxy, proxyuser, proxypassword*/);
 		
 		// assert results for a successful import
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the clean command indicates a success.");
@@ -1331,7 +1342,12 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the import command
 	}
 	
-	
+	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+		
+		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
+
+		return importCertificate(certificates/*, proxy, proxyuser, proxypassword*/);
+	}
 	
 	// refresh module tasks ************************************************************
 
