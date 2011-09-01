@@ -1340,8 +1340,10 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the import command indicates a success.");
 		
 		// Successfully imported certificate {0}
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Successfully imported certificate "+(new File(certificate)).getName());
-
+		for (String certificate: certificates) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Successfully imported certificate "+(new File(certificate)).getName());		
+		}
+	
 		// {0} is not a valid certificate file. Please use a valid certificate.
 		
 		// assert that the entitlement certificate has been extracted to /etc/pki/entitlement
