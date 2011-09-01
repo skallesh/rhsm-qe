@@ -199,7 +199,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		
 		log.info("Installed version of subscription-manager...");
-		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -qa | grep subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
+		log.info("Client1 '"+sm_client1Hostname+"' is running version: "+client1.runCommandAndWait("rpm -qa | egrep ^subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 		if (client2!=null) log.info("Client2 '"+sm_client2Hostname+"' is running version: "+client2.runCommandAndWait("rpm -qa | grep subscription-manager").getStdout()); // subscription-manager-0.63-1.el6.i686
 
 		log.info("Installed version of python-rhsm...");
