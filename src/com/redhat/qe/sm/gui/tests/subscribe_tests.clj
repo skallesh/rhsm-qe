@@ -70,8 +70,8 @@
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
-        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
-              enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
+        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 4)
+              enddate (tasks/ui getcellvalue :contract-selection-table row 5)]
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
           (recur (dec row)))))
