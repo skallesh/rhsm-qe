@@ -184,7 +184,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementCertAndKeyFromFileInCurrentDirectoty_Test() {
+	public void ImportAnEntitlementCertAndKeyFromFileInCurrentDirectory_Test() {
 		
 		// assemble a valid bundled cert/key certificate file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
@@ -446,6 +446,31 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: unsubscribe from an imported entitlement (while not registered)",
+			groups={"blockedByBug-735338"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ImportACertificateAndUnsubscribeWhileNotRegistered_Test() {
+		
+		// make sure we are NOT registered
+		clienttasks.unregister(null,null,null);
+		
+		// make sure we are not consuming
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(productSubscriptions.size(), 0, "We should NOT be consuming any entitlements.");
+
+		// import from a valid certificate
+		clienttasks.importCertificate(getValidImportCertificate().getPath());
+		
+		// get one of the now consumed ProductSubscriptions
+		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(productSubscriptions.size()>0, "We should now be consuming an entitlement.");
+
+		// attempt to unsubscribe from it
+		clienttasks.unsubscribe((Boolean)null, productSubscriptions.get(0).serialNumber, null,null,null);
+		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(productSubscriptions.size(), 0, "We should no longer be consuming the imported entitlement after unsubscribing (while not registered).");
+	}
 	
 	
 	// Protected Class Variables ***********************************************************************
