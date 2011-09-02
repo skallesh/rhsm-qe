@@ -226,49 +226,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 
 	
-	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing the cert only",
-			groups={"blockedByBug-735226"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void ImportAnEntitlementCertFromFile_Test() {
-		
-		// choose an entitlement cert file
-		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
 
-		//TODO UNCOMMENT THIS LINE, BLOCK TEST WITH blockedByBug-735226 AND DELETE THE REST OF THIS METHOD AFTER BUG IS RESOLVED
-		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementCertFile);
-		if (true) return;
-		
-		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
-		
-		// once imported, what should the entitlement cert file be?
-		File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importEntitlementCertFile.getName());
-		File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
-		
-		// make sure the expected entitlement files do not exist before our test
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement cert file does NOT yet exist ("+expectedEntitlementCertFile+").");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement key file does NOT yet exist ("+expectedEntitlementKeyFile+").");
-
-		// show the contents of the file about to be imported
-		log.info("Following is the contents of the certificate file about to be imported...");
-		client.runCommandAndWait("cat "+importEntitlementCertFile);
-		
-		// attempt an entitlement cert import from a file containing the cert only
-		clienttasks.importCertificate(importEntitlementCertFile.getPath());
-		
-		// verify that the expectedEntitlementCertFile now exists
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting the import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
-
-		// verify that the expectedEntitlementKeyFile does NOT exist
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"After attempting the import, the expected destination for the entitlement key file should NOT exist ("+expectedEntitlementKeyFile+") since there was no key in the import file.");
-		
-		// assert that the contents of the imported files match the originals
-		log.info("Asserting that the imported entitlement cert file contents match the original...");
-		RemoteFileTasks.runCommandAndAssert(client, "diff -w "+expectedEntitlementCertFile+" "+importEntitlementCertFile, 0);
-		
-		// finally verify that we are still NOT consuming subscriptions
-		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0, "After importing a certificate that is missing a key, there should be no consuming subscriptions listed.");
-	}
 	
 	
 	@Test(	description="subscription-manager: import a certificate for a future entitlement",
@@ -325,11 +283,56 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing the cert only (negative test)",
+			groups={"blockedByBug-735226"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptAnEntitlementImportFromACertOnlyFile_Test() {
+		
+		// choose an entitlement cert file
+		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
+
+		//TODO UNCOMMENT THIS LINE, BLOCK TEST WITH blockedByBug-735226 AND DELETE THE REST OF THIS METHOD AFTER BUG IS RESOLVED
+		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementCertFile);
+		if (true) return;
+		
+		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
+		
+		// once imported, what should the entitlement cert file be?
+		File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importEntitlementCertFile.getName());
+		File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
+		
+		// make sure the expected entitlement files do not exist before our test
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement cert file does NOT yet exist ("+expectedEntitlementCertFile+").");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement key file does NOT yet exist ("+expectedEntitlementKeyFile+").");
+
+		// show the contents of the file about to be imported
+		log.info("Following is the contents of the certificate file about to be imported...");
+		client.runCommandAndWait("cat "+importEntitlementCertFile);
+		
+		// attempt an entitlement cert import from a file containing the cert only
+		clienttasks.importCertificate(importEntitlementCertFile.getPath());
+		
+		// verify that the expectedEntitlementCertFile now exists
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting the import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
+
+		// verify that the expectedEntitlementKeyFile does NOT exist
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"After attempting the import, the expected destination for the entitlement key file should NOT exist ("+expectedEntitlementKeyFile+") since there was no key in the import file.");
+		
+		// assert that the contents of the imported files match the originals
+		log.info("Asserting that the imported entitlement cert file contents match the original...");
+		RemoteFileTasks.runCommandAndAssert(client, "diff -w "+expectedEntitlementCertFile+" "+importEntitlementCertFile, 0);
+		
+		// finally verify that we are still NOT consuming subscriptions
+		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0, "After importing a certificate that is missing a key, there should be no consuming subscriptions listed.");
+	}
+	
+	
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing only a key (negative test)",
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportFromAKeyFile_Test() {
+	public void AttemptAnEntitlementImportFromAKeyOnlyFile_Test() {
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
 		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
 		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementKeyFile);
@@ -340,8 +343,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void AttemptAnEntitlementImportFromAnIdentityCertFile_Test() {
-		attemptAnEntitlementImportFromAnInvalidFile_Test(new File(clienttasks.consumerCertFile));
+	public void AttemptAnEntitlementImportFromAConsumerCertFile_Test() {
+		File invalidCertificate = consumerCertFile;
+		attemptAnEntitlementImportFromAnInvalidFile_Test(invalidCertificate);
 	}
 	
 	
@@ -350,25 +354,95 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptAnEntitlementImportFromNonExistentFile_Test() {
-		String invalidCertificate = "/tmp/NonExistentFile.pem";
+		String invalidCertificate = "/tmp/nonExistentFile.pem";
 		attemptAnEntitlementImportFromAnInvalidFile_Test(new File(invalidCertificate));
 	}
 	
 	
 	@Test(	description="subscription-manager: import multiple valid certificates and verify subscriptions are consumed",
-			groups={"debugTest"},
-			enabled=false)
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportMultipleCertificates_Test() {
-		//TODO
+		
+		// create a list of valid import certificate files
+		List<String> importCertificates = new ArrayList<String>();
+		for (File entitlementCertFile : entitlementCertFiles) {
+			File entitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile);
+			File importCertificateFile = new File(importCertificatesDir+File.separator+entitlementCertFile.getName());
+			client.runCommandAndWait("cat "+entitlementCertFile+" "+entitlementKeyFile+" > "+importCertificateFile);
+			importCertificates.add(importCertificateFile.getPath());
+		}
+		
+		// import all the certificates at once
+		SSHCommandResult importResult = clienttasks.importCertificate(importCertificates);
+		
+		// assert that all of the actual imported certificates were extracted
+		for (String importCertificate : importCertificates) {
+			File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+new File(importCertificate).getName());
+			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
+
+			// verify that the expectedEntitlementCertFile now exists
+			Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
+
+			// verify that the expectedEntitlementKeyFile also exists
+			Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
+		}
 	}
 	
 	@Test(	description="subscription-manager: import multiple certificates including invalid ones",
-			groups={"debugTest"},
-			enabled=false)
+			groups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportMultipleCertificatesIncludingInvalidCertificates_Test() {
-		//TODO
+		
+		// create a list of valid import certificate files
+		List<String> importCertificates = new ArrayList<String>();
+		for (File entitlementCertFile : entitlementCertFiles) {
+			File entitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile);
+			File importCertificateFile = new File(importCertificatesDir+File.separator+entitlementCertFile.getName());
+			client.runCommandAndWait("cat "+entitlementCertFile+" "+entitlementKeyFile+" > "+importCertificateFile);
+			importCertificates.add(importCertificateFile.getPath());
+		}
+		// insert some invalid certificates to the list
+		List<String> invalidCertificates = new ArrayList<String>();
+		invalidCertificates.add("/tmp/nonExistentFile.pem");
+		invalidCertificates.add(consumerCertFile.getPath());
+		invalidCertificates.add(clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFiles.get(0)).getPath());
+		importCertificates.remove(importCertificates.indexOf(new File(importCertificatesDir+File.separator+entitlementCertFiles.get(0).getName()).getPath()));
+		for (String invalidCertificate : invalidCertificates) {
+			importCertificates.add(randomGenerator.nextInt(importCertificates.size()), invalidCertificate);
+		}
+		
+		// import all the certificates at once without asserting the success
+		SSHCommandResult importResult = clienttasks.importCertificate_(importCertificates);
+		
+		// assert that all of the actual imported certificates were extracted (or not)
+		for (String importCertificate : importCertificates) {
+			File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+new File(importCertificate).getName());
+			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
+
+			if (invalidCertificates.contains(importCertificate)) {
+				String errorMsg = new File(importCertificate).getName()+" is not a valid certificate file. Please use a valid certificate.";
+				Assert.assertTrue(importResult.getStdout()/*TODO CHANGE TO stderr after open bz fix */.contains(errorMsg),"The result from the import command contains expected message: "+errorMsg);		
+
+				// verify that the expectedEntitlementCertFile does not exist
+				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"After attempting multiple certificate import, the expected destination for the invalid entitlement cert file should NOT exist ("+expectedEntitlementCertFile+").");
+				
+				// verify that the expectedEntitlementKeyFile  does not exist
+				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"After attempting multiple certificate import, the expected destination for the invalid entitlement key file should NOT exist ("+expectedEntitlementKeyFile+").");
+
+			} else {
+				String successMsg = "Successfully imported certificate "+new File(importCertificate).getName();
+				Assert.assertTrue(importResult.getStdout().contains(successMsg),"The result from the import command contains expected message: "+successMsg);		
+				
+				// verify that the expectedEntitlementCertFile now exists
+				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
+				
+				// verify that the expectedEntitlementKeyFile also exists
+				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
+			}
+		}
 	}
 	
 	
@@ -381,6 +455,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	protected String originalEntitlementCertDir = null;
 	List<File> entitlementCertFiles = new ArrayList<File>();	// valid entitlement cert files that can be used for import testing (contains cert only, no key)
 	File futureEntitlementCertFile = null;
+	File consumerCertFile = new File(importCertificatesDir+File.separator+"cert.pem");	// a file containing a valid consumer cert.pem and its key.pem concatenated together
 	
 	// Protected methods ***********************************************************************
 	
@@ -441,7 +516,8 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeMethod(groups={"setup"})
 	public void removeAllEntitlementCertsBeforeEachTest() {
-		clienttasks.removeAllCerts(false, true);
+		//clienttasks.removeAllCerts(false, true);
+		clienttasks.clean(null,null,null);
 	}
 	
 	@AfterClass(groups={"setup"}, alwaysRun=true)
@@ -464,6 +540,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", importEntitlementsDir);
+		clienttasks.removeAllCerts(false, true);
 		
 		// create a directory where we can create bundled entitlement/key certtificates for import
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+importCertificatesDir,Integer.valueOf(0));
@@ -471,10 +548,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		
-		// assemble a list of entitlements that we can use for import
-		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
-		
-		
+//		// assemble a list of entitlements that we can use for import
+//		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
+				
 		// generate a future entitlement for the ImportACertificateForAFutureEntitlement_Test
 		Object[][] futureSystemSubscriptionPoolsData = getAllFutureSystemSubscriptionPoolsDataAs2dArray();
 		if (futureSystemSubscriptionPoolsData.length>0) {
@@ -498,9 +574,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			log.warning("Could not find a pool to a future system subscription.");
 		}
 		
-		
+		// assemble a list of entitlements that we can use for import (excluding the future cert)
+		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
+		entitlementCertFiles.remove(entitlementCertFiles.indexOf(futureEntitlementCertFile));
+
+		// create a bundled consumer cert/key file for a negative import test
+		client.runCommandAndWait("cat "+clienttasks.consumerCertFile+" "+clienttasks.consumerKeyFile+" > "+consumerCertFile);
+
 		// restore the entitlementCertDir
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
+
+		// unregister client so as to test imports while not registered
+		clienttasks.unregister(null,null,null);
 		
 		// assert that we have some valid entitlement certs for import testing
 		if (entitlementCertFiles.size()<1) throw new SkipException("Could not generate valid entitlement certs for these ImportTests.");
