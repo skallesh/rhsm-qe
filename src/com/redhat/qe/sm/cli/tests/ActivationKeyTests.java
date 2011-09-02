@@ -427,7 +427,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
-		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, nullString, true, null, null, null));
+		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, (String)null, true, null, null, null));
 		clienttasks.subscribe(null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
@@ -624,7 +624,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void unregisterAllSystemConsumerIds() {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
-				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, nullString, Boolean.TRUE, null, null, null);
+				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, (String)null, Boolean.TRUE, null, null, null);
 				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
 				clienttasks.unregister_(null, null, null);
 			}

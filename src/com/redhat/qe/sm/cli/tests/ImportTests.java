@@ -467,7 +467,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(productSubscriptions.size()>0, "We should now be consuming an entitlement.");
 
 		// attempt to unsubscribe from it
-		clienttasks.unsubscribe((Boolean)null, productSubscriptions.get(0).serialNumber, null,null,null);
+		clienttasks.unsubscribe(null, productSubscriptions.get(0).serialNumber, null,null,null);
 		productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertEquals(productSubscriptions.size(), 0, "We should no longer be consuming the imported entitlement after unsubscribing (while not registered).");
 	}
@@ -478,9 +478,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	protected final String importCertificatesDir = "/tmp/sm-importCertificatesDir";
 	protected final String importEntitlementsDir = "/tmp/sm-importEntitlementsDir";
 	protected String originalEntitlementCertDir = null;
-	List<File> entitlementCertFiles = new ArrayList<File>();	// valid entitlement cert files that can be used for import testing (contains cert only, no key)
-	File futureEntitlementCertFile = null;
-	File consumerCertFile = new File(importCertificatesDir+File.separator+"cert.pem");	// a file containing a valid consumer cert.pem and its key.pem concatenated together
+	protected List<File> entitlementCertFiles = new ArrayList<File>();	// valid entitlement cert files that can be used for import testing (contains cert only, no key)
+	protected File futureEntitlementCertFile = null;
+	protected File consumerCertFile = new File(importCertificatesDir+File.separator+"cert.pem");	// a file containing a valid consumer cert.pem and its key.pem concatenated together
 	
 	// Protected methods ***********************************************************************
 	
@@ -560,7 +560,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		
 		// register
 		//clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
 
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
