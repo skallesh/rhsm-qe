@@ -40,7 +40,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import a valid entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"blockedByBug-730380","blockedByBug-712980"},
+			groups={"blockedByBug-730380","blockedByBug-712980","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementCertAndKeyFromFile_Test() {
@@ -601,7 +601,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		
 		// assemble a list of entitlements that we can use for import (excluding the future cert)
 		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
-		entitlementCertFiles.remove(entitlementCertFiles.indexOf(futureEntitlementCertFile));
+		if (futureEntitlementCertFile!=null) entitlementCertFiles.remove(entitlementCertFiles.indexOf(futureEntitlementCertFile));
 
 		// create a bundled consumer cert/key file for a negative import test
 		client.runCommandAndWait("cat "+clienttasks.consumerCertFile+" "+clienttasks.consumerKeyFile+" > "+consumerCertFile);

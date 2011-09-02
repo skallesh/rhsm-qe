@@ -286,6 +286,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Import Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.ImportTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Subscription Expiration Tests">
 		<classes>
 			<class name="com.redhat.qe.sm.cli.tests.ExpirationTests" />
