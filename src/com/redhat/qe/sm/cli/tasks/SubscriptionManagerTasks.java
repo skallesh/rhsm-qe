@@ -275,11 +275,61 @@ public class SubscriptionManagerTasks {
 	}
 	
 
-	
+	/**
+	 * This method should be deleted and replaced with calls to getConfFileParameter(String confFile, String section, String parameter)
+	 * @param confFile
+	 * @param parameter
+	 * @return
+	 */
 	public String getConfFileParameter(String confFile, String parameter){
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+confFile, 0, "^"+parameter, null);
+		// Note: parameter can be case insensitive
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
+	}
+	public String getConfFileParameter(String confFile, String section, String parameter){
+
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "egrep -v  \"^\\s*(#|$)\" "+confFile, 0);
+		
+		//	[root@jsefler-onprem-62server ~]# egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
+		//	[server]
+		//	hostname=jsefler-onprem-62candlepin.usersys.redhat.com
+		//	prefix=/candlepin
+		//	port=8443
+		//	insecure=0
+		//	ssl_verify_depth = 3
+		//	ca_cert_dir=/etc/rhsm/ca/
+		//	proxy_hostname =
+		//	proxy_port = 
+		//	proxy_user =
+		//	proxy_password =
+		//	[rhsm]
+		//	baseurl=https://cdn.redhat.com
+		//	repo_ca_cert=%(ca_cert_dir)sredhat-uep.pem
+		//	productCertDir=/etc/pki/product
+		//	entitlementCertDir=/etc/pki/entitlement
+		//	consumercertdir=/etc/pki/consumer
+		//	certfrequency=2400
+		//	proxy_port = BAR
+		//	[rhsmcertd]
+		//	certFrequency=240
+		
+		// ^\[rhsm\](?:\n.*?)+^certFrequency\s*[=:]\s*(.*)
+		// ^\[rhsm\](?:\n.*?)+^(?:certFrequency|certfrequency)\s*[=:]\s*(.*)
+		String parameterRegex = "(?:"+parameter+"|"+parameter.toLowerCase()+")";	// note: python may write and tolerate all lowercase parameter names
+		String regex = "^\\["+section+"\\](?:\\n.*?)+^"+parameterRegex+"\\s*[=:]\\s*(.*)";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.warning("Did not find section '"+section+"' parameter '"+parameter+"' in conf file '"+confFile+"'.");
+			return null;
+		}
+
+//		log.fine("Matches: ");
+//		do {
+//			log.fine(matcher.group());
+//		} while (matcher.find());
+		return matcher.group(1).trim();	// return the contents of the first capturing group
 	}
 	
 //	public void updateSMConfigFile(String hostname, String port){
@@ -1524,6 +1574,107 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the orgs command
 	}
 	
+	
+	// config module tasks ************************************************************
+
+	/**
+	 * config without asserting results
+	 */
+	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+
+		// assemble the command
+		String command = this.command;				command += " config";
+		if (list!=null && list)						command += " --list";
+		for (String[] section_name_value : listOfSectionNameValues) {
+			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
+			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
+		}
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager config"
+	 */
+	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+		
+		SSHCommandResult sshCommandResult = config_(list, remove, set, listOfSectionNameValues);
+		
+		// assert results...
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
+
+		/*
+		[root@jsefler-onprem-62server ~]# subscription-manager config --list
+		[server]
+		   ca_cert_dir = [/etc/rhsm/ca/]
+		   hostname = jsefler-onprem-62candlepin.usersys.redhat.com
+		   insecure = [0]
+		   port = [8443]
+		   prefix = [/candlepin]
+		   proxy_hostname = []
+		   proxy_password = []
+		   proxy_port = []
+		   proxy_user = []
+		   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		   ssl_verify_depth = [3]
+
+		[rhsm]
+		   baseurl = https://cdn.redhat.com
+		   ca_cert_dir = [/etc/rhsm/ca/]
+		   certfrequency = 2400
+		   consumercertdir = /etc/pki/consumer
+		   entitlementcertdir = /etc/pki/entitlement
+		   hostname = [localhost]
+		   insecure = [0]
+		   port = [8443]
+		   prefix = [/candlepin]
+		   productcertdir = /etc/pki/product
+		   proxy_hostname = []
+		   proxy_password = []
+		   proxy_port = BAR
+		   proxy_user = []
+		   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		   ssl_verify_depth = [3]
+
+		[rhsmcertd]
+		   ca_cert_dir = [/etc/rhsm/ca/]
+		   certfrequency = 240
+		   hostname = [localhost]
+		   insecure = [0]
+		   port = [8443]
+		   prefix = [/candlepin]
+		   proxy_hostname = []
+		   proxy_password = []
+		   proxy_port = []
+		   proxy_user = []
+		   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		   ssl_verify_depth = [3]
+
+		[] - Default value in use
+
+		[root@jsefler-onprem-62server ~]# echo $?
+		0
+		[root@jsefler-onprem-62server ~]# subscription-manager config --remove=rhsmcertd.certfrequency
+		You have removed the value for section rhsmcertd and name certfrequency.
+		[root@jsefler-onprem-62server ~]# echo $?
+		0
+		[root@jsefler-onprem-62server ~]# subscription-manager config --rhsmcertd.certfrequency=240
+		[root@jsefler-onprem-62server ~]# echo $?
+		0
+		[root@jsefler-onprem-62server ~]# 
+		 */
+		
+		return sshCommandResult; // from the orgs command
+	}
+	
+	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(section_name_value);
+		return config(list, remove, set, listOfSectionNameValues);
+	}
 	
 	// environments module tasks ************************************************************
 
