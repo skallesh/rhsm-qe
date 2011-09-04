@@ -1604,7 +1604,7 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		
 		// assert the exit code was a success
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the config command indicates a success.");
 
 		/*
 		[root@jsefler-onprem-62server ~]# subscription-manager config --list

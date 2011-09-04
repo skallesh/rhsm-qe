@@ -127,7 +127,6 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"baseurl",					"https://baseurl.redhat.com"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"ca_cert_dir",				"/tmp/rhsm/ca_cert_dir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"certFrequency",			"100"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"consumerCertDir",			"/tmp/rhsm/consumercertdir"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"entitlementCertDir",		"/tmp/rhsm/entitlementcertdir"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"hostname",					"rhsm.hostname.redhat.com"}));
