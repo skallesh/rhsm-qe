@@ -429,6 +429,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Config Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="ConfigTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
