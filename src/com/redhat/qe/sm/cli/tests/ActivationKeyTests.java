@@ -202,18 +202,23 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonAddedPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId +(addQuantity==null?"":"?quantity="+addQuantity), null));
 		if (addQuantity==null) addQuantity=1;
 
+		// handle the case when the pool productAttributes contain name:"requires_consumer_type" value:"person"
+		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, "requires_consumer_type"))) {
+
+			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
+			try {
+				String displayMessage = jsonAddedPool.getString("displayMessage");
+				Assert.assertEquals(displayMessage,"Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
+			} catch (JSONException e) {
+				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail since we should be blocked from adding pools that require consumer type person to an activation key.");
+				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' which requires a consumer type 'person' should NOT have been added to the following activation key with any quantity: "+jsonActivationKey);
+			}
+			return;
+		}
+		
 		// handle the case when the pool is NOT multi_entitlement and we tried to add the pool to the key with a quantity > 1
 		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId) && addQuantity>1) {
 
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=729070 - jsefler 8/8/2011
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="729070"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				throw new SkipException("Skipping this test while bug '"+bugId+"' is open. (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");
-			}
-			// END OF WORKAROUND
-			
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			try {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
@@ -774,8 +779,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			int quantityAvail = quantity-jsonPool.getInt("consumed");
 			int addQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a addQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
 
+			// is this pool known to be blocked by any actication key bugs?
+			BlockedByBzBug blockedByBugs = null;
+			List<String> bugids = new ArrayList<String>();
+			if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id"), "requires_consumer_type")))
+				bugids.add("732538");
+			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id")) && addQuantity>1)
+				bugids.add("729070");			
+			if (!bugids.isEmpty()) blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
+				
 			// Object blockedByBug, JSONObject jsonPool
-			ll.add(Arrays.asList(new Object[] {null,	jsonPool,	addQuantity}));
+			ll.add(Arrays.asList(new Object[] {blockedByBugs,	jsonPool,	addQuantity}));
 		}
 		return ll;
 	}
