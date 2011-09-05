@@ -473,6 +473,11 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
+	// Candidates for an automated Test:
+	
+	
+	
 	// Protected Class Variables ***********************************************************************
 		
 	protected final String importCertificatesDir = "/tmp/sm-importCertificatesDir";

@@ -287,6 +287,12 @@ public class SubscriptionManagerTasks {
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
 	}
+	/**
+	 * @param confFile
+	 * @param section
+	 * @param parameter
+	 * @return value of the section.parameter config (null when not found)
+	 */
 	public String getConfFileParameter(String confFile, String section, String parameter){
 
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "egrep -v  \"^\\s*(#|$)\" "+confFile, 0);
@@ -317,7 +323,8 @@ public class SubscriptionManagerTasks {
 		// ^\[rhsm\](?:\n.*?)+^certFrequency\s*[=:]\s*(.*)
 		// ^\[rhsm\](?:\n.*?)+^(?:certFrequency|certfrequency)\s*[=:]\s*(.*)
 		String parameterRegex = "(?:"+parameter+"|"+parameter.toLowerCase()+")";	// note: python may write and tolerate all lowercase parameter names
-		String regex = "^\\["+section+"\\](?:\\n.*?)+^"+parameterRegex+"\\s*[=:]\\s*(.*)";
+		//String regex = "^\\["+section+"\\](?:\\n.*?)+^"+parameterRegex+"\\s*[=:]\\s*(.*)";
+		String regex = "^\\["+section+"\\](?:\\n[^\\[]*?)+^"+parameterRegex+"\\s*[=:]\\s*(.*)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		if (!matcher.find()) {
@@ -1666,6 +1673,20 @@ public class SubscriptionManagerTasks {
 		0
 		[root@jsefler-onprem-62server ~]# 
 		 */
+		
+		// assert remove stdout indicates a success
+		if (remove!=null && remove) {
+			for (String[] section_name_value : listOfSectionNameValues) {
+				String section	= section_name_value[0];
+				String name		= section_name_value[1];
+				String value	= section_name_value[2];
+				//# subscription-manager config --remove rhsmcertd.port
+				//You have removed the value for section rhsmcertd and name port.
+				//The default value for port will now be used.
+				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+			}
+		}
+
 		
 		return sshCommandResult; // from the orgs command
 	}

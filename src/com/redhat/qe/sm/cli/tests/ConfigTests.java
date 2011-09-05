@@ -4,10 +4,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -41,30 +44,114 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
-	@Test(	description="subscription-manager: ",
-			groups={},
+	@Test(	description="subscription-manager: use config to set each of the rhsm.conf parameter values and verify it is persisted to /etc/rhsm.rhsm.conf",
+			groups={"AcceptanceTests"},
 			dataProvider="getConfigSectionNameData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigSetSectionNameValue_Test(Object bugzilla, String section, String name, String value) {
+	public void ConfigSetSectionNameValue_Test(Object bugzilla, String section, String name, String setValue) {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), value});	// the config options require lowercase for --section.name=value, but the value written to conf.file may not be lowercase
+		listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), setValue});	// the config options require lowercase for --section.name=value, but the value written to conf.file may not be lowercase
 		clienttasks.config(null,null,true,listOfSectionNameValues);
 		
 		// assert that the value was written to the config file
-		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), value, "After executing subscription-manager config to set '"+section+"."+name+"', the value is saved to config file '"+clienttasks.rhsmConfFile+"'.");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), setValue, "After executing subscription-manager config to set '"+section+"."+name+"', the value is saved to config file '"+clienttasks.rhsmConfFile+"'.");
 		
 	}
 	
-	@Test(	description="subscription-manager: ",
+	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
 			groups={},
 			dataProvider="getConfigSectionNameData",
-			dependsOnMethods={"ConfigSetSectionNameValue_Test"},
-			enabled=false)
+			dependsOnMethods={"ConfigSetSectionNameValue_Test"}, alwaysRun=true,
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ConfigGetSectionNameValue_Test(Object bugzilla, String section, String name, String value) {
+	public void ConfigGetSectionNameValue_Test(Object bugzilla, String section, String name, String expectedValue) {
+
+		// get a the config list
+		SSHCommandResult configResult = clienttasks.config(true,null,null,(String[])null);
 		
+		//[root@jsefler-onprem-62server ~]# subscription-manager config --list
+		//[server]
+		//   ca_cert_dir = [/etc/rhsm/ca/]
+		//   hostname = jsefler-onprem-62candlepin.usersys.redhat.com
+		//   insecure = [0]
+		//   port = [8443]
+		//   prefix = [/candlepin]
+		//   proxy_hostname = []
+		//   proxy_password = []
+		//   proxy_port = []
+		//   proxy_user = []
+		//   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		//   ssl_verify_depth = [3]
+		//
+		//[rhsm]
+		//   baseurl = https://cdn.redhat.com
+		//   ca_cert_dir = [/etc/rhsm/ca/]
+		//   consumercertdir = /etc/pki/consumer
+		//   entitlementcertdir = /etc/pki/entitlement
+		//   hostname = [localhost]
+		//   insecure = [0]
+		//   port = [8443]
+		//   prefix = [/candlepin]
+		//   productcertdir = /etc/pki/product
+		//   proxy_hostname = []
+		//   proxy_password = []
+		//   proxy_port = []
+		//   proxy_user = []
+		//   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		//   ssl_verify_depth = [3]
+		//
+		//[rhsmcertd]
+		//   ca_cert_dir = [/etc/rhsm/ca/]
+		//   certfrequency = 240
+		//   hostname = [localhost]
+		//   insecure = [0]
+		//   port = [8443]
+		//   prefix = [/candlepin]
+		//   proxy_hostname = []
+		//   proxy_password = []
+		//   proxy_port = []
+		//   proxy_user = []
+		//   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		//   ssl_verify_depth = [3]
+		//
+		//[] - Default value in use
+
+		// assert that the section name's expectedValue was listed
+		String regexForName = "(?:"+name+"|"+name.toLowerCase()+")";	// note: python will write and tolerate all lowercase parameter names
+		String regexForValue = "(?:"+expectedValue+"|\\["+expectedValue+"\\])";	// note: the value will be surrounded in square braces if it is identical to the hard-coded dev default
+		String regexForSectionNameExpectedValue = "^\\["+section+"\\](?:\\n.*?)+^   "+regexForName+"\\s*[=:]\\s*"+regexForValue+"$";
+		log.info("Using regex \""+regexForSectionNameExpectedValue+"\"to assert the expectedValue was listed by config.");	
+		Pattern pattern = Pattern.compile(regexForSectionNameExpectedValue, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(configResult.getStdout());
+
+		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"', calling config --list includes the value just set.");
 	}
+	
+	
+	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
+			groups={},
+			dataProvider="getConfigSectionNameData",
+			dependsOnMethods={"ConfigGetSectionNameValue_Test"}, alwaysRun=true,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigRemoveSectionNameValue_Test(Object bugzilla, String section, String name, String value) {
+
+		// use config to remove the section name value
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), value});	// the config options require lowercase for --remove=section.name  (note the value is not needed in the remove)
+
+		SSHCommandResult configResult = clienttasks.config(null,true,null,listOfSectionNameValues);
+		
+		// assert that the parameter was removed from the config file
+		Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+
+	}
+
+
+	// Candidates for an automated Test:
+	// TODO Bug 735695 - subscription-manager config --remove option is not operating on multiple option requests
+	
 	
 	// Protected Class Variables ***********************************************************************
 	
@@ -87,8 +174,6 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		// backup the current rhsm.conf file
 		log.info("Backing up the current rhsm config file before executing this test class...");
 		client.runCommandAndWait("cat "+clienttasks.rhsmConfFile+" | tee "+rhsmConfigBackupFile);
-
-		
 	}
 	
 	@AfterClass(groups={"setup"}, alwaysRun=true)
@@ -102,7 +187,6 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
-	
 	// Data Providers ***********************************************************************
 	
 	@DataProvider(name="getConfigSectionNameData")
