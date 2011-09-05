@@ -201,8 +201,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// autosubscribe
-		clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, Boolean.TRUE, null, null, null);
+//		clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, (String)null, true, null, null, null);
 		
 //		// distribute a copy of the product certs amongst the productCertDirs
 //		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();

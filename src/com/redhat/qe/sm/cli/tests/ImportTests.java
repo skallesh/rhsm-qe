@@ -555,6 +555,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		if (originalEntitlementCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
 		clienttasks.unregister_(null,null,null);
+		clienttasks.clean_(null,null,null);
 	}
 	
 	@BeforeClass(groups={"setup"})
