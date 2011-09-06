@@ -36,8 +36,6 @@ import com.redhat.qe.tools.SSHCommandResult;
 
 "subscription-manager config --[section.name] [value]" sets the value for an attribute by the section. Only existing attribute names are allowed. Adding new attribute names would not be useful anyway as the python code would be in need of altering to use it.
 
-
- * Reference: https://bugzilla.redhat.com/show_bug.cgi?id=730020
  */
 @Test(groups={"ConfigTests"})
 public class ConfigTests extends SubscriptionManagerCLITestScript {
@@ -59,6 +57,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
+	
 	@Test(	description="subscription-manager: use config module to list all of the currently set rhsm.conf parameter values",
 			groups={},
 			dataProvider="getConfigSectionNameData",
@@ -67,8 +66,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigGetSectionNameValue_Test(Object bugzilla, String section, String name, String expectedValue) {
 
-		// get a the config list
-		SSHCommandResult configResult = clienttasks.config(true,null,null,(String[])null);
+		// get a the config list (only once to save some unnecessary logging)
+		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
+		if (sshCommandResultFromConfigGetSectionNameValue_Test == null) {
+			sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
+		}
 		
 		//[root@jsefler-onprem-62server ~]# subscription-manager config --list
 		//[server]
@@ -123,10 +125,11 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String regexForSectionNameExpectedValue = "^\\["+section+"\\](?:\\n.*?)+^   "+regexForName+"\\s*[=:]\\s*"+regexForValue+"$";
 		log.info("Using regex \""+regexForSectionNameExpectedValue+"\"to assert the expectedValue was listed by config.");	
 		Pattern pattern = Pattern.compile(regexForSectionNameExpectedValue, Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(configResult.getStdout());
+		Matcher matcher = pattern.matcher(sshCommandResultFromConfigGetSectionNameValue_Test.getStdout());
 
 		Assert.assertTrue(matcher.find(),"After executing subscription-manager config to set '"+section+"."+name+"', calling config --list includes the value just set.");
 	}
+	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = null;
 	
 	
 	@Test(	description="subscription-manager: use config module to remove each of the rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
@@ -143,13 +146,73 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 		SSHCommandResult configResult = clienttasks.config(null,true,null,listOfSectionNameValues);
 		
-		// assert that the parameter was removed from the config file
-		Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
-		
-		// TODO
-		// once removed, assert that the config --list shows the default values are in use  ([] - Default value in use)
-
+		// assert that the parameter was removed from the config file (only for names in defaultConfFileParameterNames) otherwise the value is blanked
+		String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
+		if (clienttasks.defaultConfFileParameterNames().contains(name.toLowerCase())) {
+			Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+		} else {
+			Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
+		}
 	}
+	
+	
+	@Test(	description="subscription-manager: after having removed all the config parameters using the config module, assert that the config list shows the default values in use by wrapping them in [] and the others are simply blanked.",
+			groups={},
+			dataProvider="getConfigSectionNameData",
+			dependsOnMethods={"ConfigRemoveSectionNameValue_Test"}, alwaysRun=true,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigGetSectionNameValueAndVerifyDefault_Test(Object bugzilla, String section, String name, String ignoreValue) {
+
+		// get a the config list (only once to save some unnecessary logging)
+		// SSHCommandResult sshCommandResultFromConfigGetSectionNameValue_Test = clienttasks.config(true,null,null,(String[])null);
+		if (sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test == null) {
+			sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = clienttasks.config(true,null,null,(String[])null);
+		}
+		
+		//[root@jsefler-onprem-62server ~]# subscription-manager config --list
+		//[server]
+		//   ca_cert_dir = [/etc/rhsm/ca/]
+		//   hostname =
+		//   insecure = [0]
+		//   port = [8443]
+		//   prefix = [/candlepin]
+		//   proxy_hostname = []
+		//   proxy_password = []
+		//   proxy_port = []
+		//   proxy_user = []
+		//   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		//   ssl_verify_depth = [3]
+		//
+		//[] - Default value in use
+
+		// there are two cases to test
+		// 1. there is a default value hard-coded for the parameter that will be used after having called config --remove section.name
+		// 2. there is not a default value for the parameter yet it was set in the rhsm.conf file and is not set to "" after having called config --remove section.name
+
+		// assert that the section name's expectedValue was listed
+		String regexForName = "("+name+"|"+name.toLowerCase()+")";	// note: python will write and tolerate all lowercase parameter names
+		String regexForValue = null;
+		String assertMsg = "";
+		if (clienttasks.defaultConfFileParameterNames().contains(name)) {	// case 1:
+			// value listed for name after having removed a parameter that has a default defined
+			//   ca_cert_dir = [/etc/rhsm/ca/]
+			regexForValue = "\\[.*\\]";
+			assertMsg = "After executing subscription-manager config to remove '"+section+"."+name+"', calling config --list shows the default value for the parameter surrounded by square brackets[].";
+		} else {	// case 2:
+			// value listed for name after having removed a parameter that does NOT have a default defined
+			//   hostname =
+			regexForValue = "";
+			assertMsg = "After executing subscription-manager config to remove '"+section+"."+name+"', calling config --list shows the default value as an empty string when since this parameter has no default.";
+		}
+		String regexForSectionNameExpectedValue = "^\\["+section+"\\](\\n.*?)+^   "+regexForName+" = "+regexForValue+"$";
+		log.info("Using regex \""+regexForSectionNameExpectedValue+"\"to assert the default value was listed by config after having removed the parameter name.");	
+		Pattern pattern = Pattern.compile(regexForSectionNameExpectedValue, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test.getStdout());
+
+		Assert.assertTrue(matcher.find(),assertMsg);
+	}
+	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
 
 
 	// Candidates for an automated Test:
@@ -200,46 +263,46 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// Object bugzilla,	String section,	String name, String testValue
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"ca_cert_dir",			"/tmp/server/ca_cert_dir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"hostname",				"server.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"insecure",				"0"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"port",					"2000"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"prefix",				"/server/prefix"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"proxy_hostname",		"server.proxy.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"proxy_port",			"200"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"proxy_password",		"server_proxy_password"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"proxy_user",			"server_proxy_user"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"repo_ca_cert",			"/tmp/server/repo_ca_cert.pem"}));
-		ll.add(Arrays.asList(new Object[]{null,	"server",	"ssl_verify_depth",		"2"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"ca_cert_dir",			"/tmp/server/ca_cert_dir"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"hostname",				"server.hostname.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"insecure",				"0"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"port",					"2000"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"prefix",				"/server/prefix"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"proxy_hostname",		"server.proxy.hostname.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"proxy_port",			"200"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"proxy_password",		"server_proxy_password"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"proxy_user",			"server_proxy_user"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"repo_ca_cert",			"/tmp/server/repo_ca_cert.pem"}));
+		ll.add(Arrays.asList(new Object[]{null,	"server",		"ssl_verify_depth",		"2"}));
 		
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"baseurl",					"https://baseurl.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"ca_cert_dir",				"/tmp/rhsm/ca_cert_dir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"consumerCertDir",			"/tmp/rhsm/consumercertdir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"entitlementCertDir",		"/tmp/rhsm/entitlementcertdir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"hostname",					"rhsm.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"insecure",					"1"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"port",						"1000"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"prefix",					"/rhsm/prefix"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"productCertDir",			"/tmp/rhsm/productcertdir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"proxy_hostname",			"rhsm.proxy.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"proxy_password",			"rhsm_proxy_password"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"proxy_port",				"100"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"proxy_user",				"rhsm_proxy_user"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"repo_ca_cert",				"/tmp/rhsm/repo_ca_cert.pem"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsm",	"ssl_verify_depth",			"1"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"baseurl",				"https://baseurl.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"ca_cert_dir",			"/tmp/rhsm/ca_cert_dir"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"consumerCertDir",		"/tmp/rhsm/consumercertdir"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"entitlementCertDir",	"/tmp/rhsm/entitlementcertdir"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"hostname",				"rhsm.hostname.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"insecure",				"1"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"port",					"1000"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"prefix",				"/rhsm/prefix"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"productCertDir",		"/tmp/rhsm/productcertdir"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"proxy_hostname",		"rhsm.proxy.hostname.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"proxy_password",		"rhsm_proxy_password"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"proxy_port",			"100"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"proxy_user",			"rhsm_proxy_user"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"repo_ca_cert",			"/tmp/rhsm/repo_ca_cert.pem"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"ssl_verify_depth",		"1"}));
 
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"ca_cert_dir",		"/tmp/rhsmcertd/ca_cert_dir"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"certFrequency",	"300"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"hostname",			"rhsmcertd.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"insecure",			"0"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"port",				"3000"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"prefix",			"/rhsmcertd/prefix"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_hostname",	"rhsmcertd.proxy.hostname.redhat.com"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_password",	"rhsmcertd_proxy_password"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_port",		"300"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_user",		"rhsmcertd_proxy_user"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"repo_ca_cert",		"/tmp/rhsmcertd/repo_ca_cert.pem"}));
-		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"ssl_verify_depth",	"3"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"certFrequency",		"300"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"hostname",				"rhsmcertd.hostname.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"insecure",				"0"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"port",					"3000"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"prefix",				"/rhsmcertd/prefix"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_hostname",		"rhsmcertd.proxy.hostname.redhat.com"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_password",		"rhsmcertd_proxy_password"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_port",			"300"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"proxy_user",			"rhsmcertd_proxy_user"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"repo_ca_cert",			"/tmp/rhsmcertd/repo_ca_cert.pem"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"ssl_verify_depth",		"3"}));
 
 		
 		return ll;
