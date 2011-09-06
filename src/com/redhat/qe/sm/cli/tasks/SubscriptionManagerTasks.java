@@ -320,11 +320,9 @@ public class SubscriptionManagerTasks {
 		//	[rhsmcertd]
 		//	certFrequency=240
 		
-		// ^\[rhsm\](?:\n.*?)+^certFrequency\s*[=:]\s*(.*)
-		// ^\[rhsm\](?:\n.*?)+^(?:certFrequency|certfrequency)\s*[=:]\s*(.*)
+		// ^\[rhsm\](?:\n[^\[]*?)+^(?:consumerCertDir|consumercertdir)\s*[=:](.*)
 		String parameterRegex = "(?:"+parameter+"|"+parameter.toLowerCase()+")";	// note: python may write and tolerate all lowercase parameter names
-		//String regex = "^\\["+section+"\\](?:\\n.*?)+^"+parameterRegex+"\\s*[=:]\\s*(.*)";
-		String regex = "^\\["+section+"\\](?:\\n[^\\[]*?)+^"+parameterRegex+"\\s*[=:]\\s*(.*)";
+		String regex = "^\\["+section+"\\](?:\\n[^\\[]*?)+^"+parameterRegex+"\\s*[=:](.*)";
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		if (!matcher.find()) {
@@ -1685,7 +1683,7 @@ public class SubscriptionManagerTasks {
 				//The default value for port will now be used.
 				//Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
 				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertTrue(sshCommandResult.getStdout().contains("The default value for "+name+" will now be used."), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name+" will now be used."), defaultConfFileParameterNames().contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 			}
 		}
 
@@ -1697,6 +1695,42 @@ public class SubscriptionManagerTasks {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(section_name_value);
 		return config(list, remove, set, listOfSectionNameValues);
+	}
+	
+	public List<String> defaultConfFileParameterNames() {
+		
+		// hard-coded list of parameter called DEFAULTS in /usr/lib/python2.6/site-packages/rhsm/config.py
+		// this list of hard-coded parameter names have a hard-coded value (not listed here) that will be used
+		// after a user calls subscription-manager --remove section.name otherwise the remove will set the value to ""
+		List<String> defaultNames = new ArrayList<String>();
+
+		// initialize defaultNames (will appear in all config sections and have a default value)
+		//	DEFAULTS = {
+		//	        'hostname': 'localhost',
+		//	        'prefix': '/candlepin',
+		//	        'port': '8443',
+		//	        'ca_cert_dir': '/etc/rhsm/ca/',
+		//	        'repo_ca_cert': '/etc/rhsm/ca/redhat-uep.pem',
+		//	        'ssl_verify_depth': '3',
+		//	        'proxy_hostname': '',
+		//	        'proxy_port': '',
+		//	        'proxy_user': '',
+		//	        'proxy_password': '',
+		//	        'insecure': '0'
+		//	        }
+		defaultNames.add("hostname");
+		defaultNames.add("prefix");
+		defaultNames.add("port");
+		defaultNames.add("ca_cert_dir");
+		defaultNames.add("repo_ca_cert");
+		defaultNames.add("ssl_verify_depth");
+		defaultNames.add("proxy_hostname");
+		defaultNames.add("proxy_port");
+		defaultNames.add("proxy_user");
+		defaultNames.add("proxy_password");
+		defaultNames.add("insecure");
+		
+		return defaultNames;
 	}
 	
 	// environments module tasks ************************************************************
