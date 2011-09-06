@@ -145,6 +145,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the parameter was removed from the config file
 		Assert.assertNull(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name), "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+		
+		// TODO
+		// once removed, assert that the config --list shows the default values are in use  ([] - Default value in use)
 
 	}
 

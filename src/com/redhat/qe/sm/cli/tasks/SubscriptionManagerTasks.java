@@ -1683,7 +1683,9 @@ public class SubscriptionManagerTasks {
 				//# subscription-manager config --remove rhsmcertd.port
 				//You have removed the value for section rhsmcertd and name port.
 				//The default value for port will now be used.
-				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				//Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().contains("The default value for "+name+" will now be used."), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 			}
 		}
 
