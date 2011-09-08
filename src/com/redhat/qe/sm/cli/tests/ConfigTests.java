@@ -217,7 +217,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 	// Candidates for an automated Test:
 	// TODO Bug 735695 - subscription-manager config --remove option is not operating on multiple option requests
-	
+	// TODO Bug 736784 - subscription-manager config --remove adds config property to rhsm.conf if it doesn't exist
 	
 	// Protected Class Variables ***********************************************************************
 	
