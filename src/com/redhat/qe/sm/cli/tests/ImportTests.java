@@ -101,7 +101,8 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" > "+importCertificateFile);
 			
 			// once imported, what should the entitlement cert file be?
-			File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importCertificateFile.getName());
+			//File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importCertificateFile.getName());	// applicable prior to fix for Bug 734606
+			File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importEntitlementCertFile.getName());	// applicable post fix for Bug 734606
 			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
 			
 			// make sure the expected entitlement files do not exist before our test and that no subscriptions are consumed
