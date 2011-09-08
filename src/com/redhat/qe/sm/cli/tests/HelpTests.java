@@ -143,11 +143,19 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// String command, String stdoutRegex, List<String> expectedOptions
 		String module;
 		String modulesRegex = "^	\\w+";
-		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
-		
+//DELETEME		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
+		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*\\, --\\w+(=\\w+)*";
+		/* EXAMPLE FOR optionsRegex
+		  -h, --help            show this help message and exit
+		  --list                list the configuration for this system
+		  --remove=REMOVE       remove configuration entry by section.name
+		  --server.hostname=SERVER.HOSTNAME
+		*/
+
 		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
+		modules.add("config");
 		modules.add("import");
 		modules.add("redeem");
 		modules.add("orgs");
@@ -168,6 +176,59 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
+		}
+		
+		// MODULE: config
+		module = "config";
+		List <String> configOptions = new ArrayList<String>();
+		configOptions.add("-h, --help");
+		configOptions.add("--list");
+		configOptions.add("--remove=REMOVE");
+		configOptions.add("--server.ca_cert_dir=SERVER.CA_CERT_DIR");
+		configOptions.add("--server.hostname=SERVER.HOSTNAME");
+		configOptions.add("--server.insecure=SERVER.INSECURE");
+		configOptions.add("--server.port=SERVER.PORT");
+		configOptions.add("--server.prefix=SERVER.PREFIX");
+		configOptions.add("--server.proxy_hostname=SERVER.PROXY_HOSTNAME");
+		configOptions.add("--server.proxy_password=SERVER.PROXY_PASSWORD");
+		configOptions.add("--server.proxy_port=SERVER.PROXY_PORT");
+		configOptions.add("--server.proxy_user=SERVER.PROXY_USER");
+		configOptions.add("--server.repo_ca_cert=SERVER.REPO_CA_CERT");
+		configOptions.add("--server.ssl_verify_depth=SERVER.SSL_VERIFY_DEPTH");
+		configOptions.add("--rhsm.baseurl=RHSM.BASEURL");
+		configOptions.add("--rhsm.ca_cert_dir=RHSM.CA_CERT_DIR");
+		configOptions.add("--rhsm.consumercertdir=RHSM.CONSUMERCERTDIR");
+		configOptions.add("--rhsm.entitlementcertdir=RHSM.ENTITLEMENTCERTDIR");
+		configOptions.add("--rhsm.hostname=RHSM.HOSTNAME");
+		configOptions.add("--rhsm.insecure=RHSM.INSECURE");
+		configOptions.add("--rhsm.port=RHSM.PORT");
+		configOptions.add("--rhsm.prefix=RHSM.PREFIX");
+		configOptions.add("--rhsm.productcertdir=RHSM.PRODUCTCERTDIR");
+		configOptions.add("--rhsm.proxy_hostname=RHSM.PROXY_HOSTNAME");
+		configOptions.add("--rhsm.proxy_password=RHSM.PROXY_PASSWORD");
+		configOptions.add("--rhsm.proxy_port=RHSM.PROXY_PORT");
+		configOptions.add("--rhsm.proxy_user=RHSM.PROXY_USER");
+		configOptions.add("--rhsm.repo_ca_cert=RHSM.REPO_CA_CERT");
+		configOptions.add("--rhsm.ssl_verify_depth=RHSM.SSL_VERIFY_DEPTH");
+		configOptions.add("--rhsmcertd.ca_cert_dir=RHSMCERTD.CA_CERT_DIR");
+		configOptions.add("--rhsmcertd.certfrequency=RHSMCERTD.CERTFREQUENCY");
+		configOptions.add("--rhsmcertd.hostname=RHSMCERTD.HOSTNAME");
+		configOptions.add("--rhsmcertd.insecure=RHSMCERTD.INSECURE");
+		configOptions.add("--rhsmcertd.port=RHSMCERTD.PORT");
+		configOptions.add("--rhsmcertd.prefix=RHSMCERTD.PREFIX");
+		configOptions.add("--rhsmcertd.proxy_hostname=RHSMCERTD.PROXY_HOSTNAME");
+		configOptions.add("--rhsmcertd.proxy_password=RHSMCERTD.PROXY_PASSWORD");
+		configOptions.add("--rhsmcertd.proxy_port=RHSMCERTD.PROXY_PORT");
+		configOptions.add("--rhsmcertd.proxy_user=RHSMCERTD.PROXY_USER");
+		configOptions.add("--rhsmcertd.repo_ca_cert=RHSMCERTD.REPO_CA_CERT");
+		configOptions.add("--rhsmcertd.ssl_verify_depth=RHSMCERTD.SSL_VERIFY_DEPTH");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, configOptions}));
 		}
 		
 		// MODULE: import

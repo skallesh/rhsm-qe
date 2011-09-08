@@ -49,7 +49,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmail_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null);
 		
 		// assert redemption results
@@ -71,7 +71,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 			throw new SkipException(warning);
 		}
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
 		
 		// assert redemption results
@@ -146,7 +146,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, nullString, true, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
 		
 		
 		// String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr

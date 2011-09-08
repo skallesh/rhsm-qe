@@ -227,7 +227,7 @@ public class SubscriptionManagerTasks {
 			//certDir = getConfigFileParameter("consumerCertDir");
 			certDir = this.consumerCertDir;
 			log.info("Cleaning out certs from consumerCertDir: "+certDir);
-			if (!certDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
+			if (!certDir.startsWith("/etc/pki/") && !certDir.startsWith("/tmp/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
 			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
 		}
 		
@@ -235,7 +235,7 @@ public class SubscriptionManagerTasks {
 			//certDir = getConfigFileParameter("entitlementCertDir");
 			certDir = this.entitlementCertDir;
 			log.info("Cleaning out certs from entitlementCertDir: "+certDir);
-			if (!certDir.startsWith("/etc/pki/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
+			if (!certDir.startsWith("/etc/pki/") && !certDir.startsWith("/tmp/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
 			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
 		}
 	}
@@ -275,11 +275,66 @@ public class SubscriptionManagerTasks {
 	}
 	
 
-	
+	/**
+	 * This method should be deleted and replaced with calls to getConfFileParameter(String confFile, String section, String parameter)
+	 * @param confFile
+	 * @param parameter
+	 * @return
+	 */
 	public String getConfFileParameter(String confFile, String parameter){
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -E ^"+parameter+" "+confFile, 0, "^"+parameter, null);
+		// Note: parameter can be case insensitive
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
+	}
+	/**
+	 * @param confFile
+	 * @param section
+	 * @param parameter
+	 * @return value of the section.parameter config (null when not found)
+	 */
+	public String getConfFileParameter(String confFile, String section, String parameter){
+
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "egrep -v  \"^\\s*(#|$)\" "+confFile, 0);
+		
+		//	[root@jsefler-onprem-62server ~]# egrep -v  "^\s*(#|$)" /etc/rhsm/rhsm.conf
+		//	[server]
+		//	hostname=jsefler-onprem-62candlepin.usersys.redhat.com
+		//	prefix=/candlepin
+		//	port=8443
+		//	insecure=0
+		//	ssl_verify_depth = 3
+		//	ca_cert_dir=/etc/rhsm/ca/
+		//	proxy_hostname =
+		//	proxy_port = 
+		//	proxy_user =
+		//	proxy_password =
+		//	[rhsm]
+		//	baseurl=https://cdn.redhat.com
+		//	repo_ca_cert=%(ca_cert_dir)sredhat-uep.pem
+		//	productCertDir=/etc/pki/product
+		//	entitlementCertDir=/etc/pki/entitlement
+		//	consumercertdir=/etc/pki/consumer
+		//	certfrequency=2400
+		//	proxy_port = BAR
+		//	[rhsmcertd]
+		//	certFrequency=240
+		
+		// ^\[rhsm\](?:\n[^\[]*?)+^(?:consumerCertDir|consumercertdir)\s*[=:](.*)
+		String parameterRegex = "(?:"+parameter+"|"+parameter.toLowerCase()+")";	// note: python may write and tolerate all lowercase parameter names
+		String regex = "^\\["+section+"\\](?:\\n[^\\[]*?)+^"+parameterRegex+"\\s*[=:](.*)";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.warning("Did not find section '"+section+"' parameter '"+parameter+"' in conf file '"+confFile+"'.");
+			return null;
+		}
+
+//		log.fine("Matches: ");
+//		do {
+//			log.fine(matcher.group());
+//		} while (matcher.find());
+		return matcher.group(1).trim();	// return the contents of the first capturing group
 	}
 	
 //	public void updateSMConfigFile(String hostname, String port){
@@ -1293,18 +1348,19 @@ public class SubscriptionManagerTasks {
 	// import module tasks ************************************************************
 
 	/**
-	 * import without asserting results
-	 * @param certificate - path fo certificate file to be imported
+	 * import WITHOUT asserting results
+	 * @param certificates - list of paths to certificate files to be imported
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult importCertificate_(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+	public SSHCommandResult importCertificate_(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
 
 		// assemble the command
-		String command = this.command;	command += " import";
-		if (certificate!=null)			command += " --certificate="+certificate;
+		String command = this.command;									command += " import";
+		if (certificates!=null)	for (String certificate : certificates)	command += " --certificate="+certificate;
+
 //		if (proxy!=null)				command += " --proxy="+proxy;
 //		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 //		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -1314,23 +1370,36 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * import with assert that the results are a success"
-	 * @param certificate - path fo certificate file to be imported
+	 * import WITHOUT asserting results.
+	 */
+	public SSHCommandResult importCertificate_(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+		
+		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
+
+		return importCertificate_(certificates/*, proxy, proxyuser, proxypassword*/);
+	}
+	
+	/**
+	 * import with assertions that the results are a success"
+	 * @param certificates - list of paths to certificates file to be imported
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+	public SSHCommandResult importCertificate(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
 		
-		SSHCommandResult sshCommandResult = importCertificate_(certificate/*, proxy, proxyuser, proxypassword*/);
+		SSHCommandResult sshCommandResult = importCertificate_(certificates/*, proxy, proxyuser, proxypassword*/);
 		
 		// assert results for a successful import
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the import command indicates a success.");
 		
 		// Successfully imported certificate {0}
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), "Successfully imported certificate "+(new File(certificate)).getName());
-
+		for (String certificate: certificates) {
+			String successMsg = "Successfully imported certificate "+(new File(certificate)).getName();
+			Assert.assertTrue(sshCommandResult.getStdout().contains(successMsg),"The stdout from the import command contains expected message: "+successMsg);		
+		}
+	
 		// {0} is not a valid certificate file. Please use a valid certificate.
 		
 		// assert that the entitlement certificate has been extracted to /etc/pki/entitlement
@@ -1342,7 +1411,12 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the import command
 	}
 	
-	
+	public SSHCommandResult importCertificate(String certificate/*, String proxy, String proxyuser, String proxypassword*/) {
+		
+		List<String> certificates = certificate==null?null:Arrays.asList(new String[]{certificate});
+
+		return importCertificate(certificates/*, proxy, proxyuser, proxypassword*/);
+	}
 	
 	// refresh module tasks ************************************************************
 
@@ -1505,6 +1579,159 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the orgs command
 	}
 	
+	
+	// config module tasks ************************************************************
+
+	/**
+	 * config without asserting results
+	 */
+	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+
+		// assemble the command
+		String command = this.command;				command += " config";
+		if (list!=null && list)						command += " --list";
+		for (String[] section_name_value : listOfSectionNameValues) {
+			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
+			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
+		}
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager config"
+	 */
+	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
+		
+		SSHCommandResult sshCommandResult = config_(list, remove, set, listOfSectionNameValues);
+		
+		// assert results...
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the config command indicates a success.");
+
+		/*
+		[root@jsefler-onprem-62server ~]# subscription-manager config --list
+		[server]
+		   ca_cert_dir = [/etc/rhsm/ca/]
+		   hostname = jsefler-onprem-62candlepin.usersys.redhat.com
+		   insecure = [0]
+		   port = [8443]
+		   prefix = [/candlepin]
+		   proxy_hostname = []
+		   proxy_password = []
+		   proxy_port = []
+		   proxy_user = []
+		   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		   ssl_verify_depth = [3]
+
+		[rhsm]
+		   baseurl = https://cdn.redhat.com
+		   ca_cert_dir = [/etc/rhsm/ca/]
+		   certfrequency = 2400
+		   consumercertdir = /etc/pki/consumer
+		   entitlementcertdir = /etc/pki/entitlement
+		   hostname = [localhost]
+		   insecure = [0]
+		   port = [8443]
+		   prefix = [/candlepin]
+		   productcertdir = /etc/pki/product
+		   proxy_hostname = []
+		   proxy_password = []
+		   proxy_port = BAR
+		   proxy_user = []
+		   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		   ssl_verify_depth = [3]
+
+		[rhsmcertd]
+		   ca_cert_dir = [/etc/rhsm/ca/]
+		   certfrequency = 240
+		   hostname = [localhost]
+		   insecure = [0]
+		   port = [8443]
+		   prefix = [/candlepin]
+		   proxy_hostname = []
+		   proxy_password = []
+		   proxy_port = []
+		   proxy_user = []
+		   repo_ca_cert = [/etc/rhsm/ca/redhat-uep.pem]
+		   ssl_verify_depth = [3]
+
+		[] - Default value in use
+
+		[root@jsefler-onprem-62server ~]# echo $?
+		0
+		[root@jsefler-onprem-62server ~]# subscription-manager config --remove=rhsmcertd.certfrequency
+		You have removed the value for section rhsmcertd and name certfrequency.
+		[root@jsefler-onprem-62server ~]# echo $?
+		0
+		[root@jsefler-onprem-62server ~]# subscription-manager config --rhsmcertd.certfrequency=240
+		[root@jsefler-onprem-62server ~]# echo $?
+		0
+		[root@jsefler-onprem-62server ~]# 
+		 */
+		
+		// assert remove stdout indicates a success
+		if (remove!=null && remove) {
+			for (String[] section_name_value : listOfSectionNameValues) {
+				String section	= section_name_value[0];
+				String name		= section_name_value[1];
+				String value	= section_name_value[2];
+				//# subscription-manager config --remove rhsmcertd.port
+				//You have removed the value for section rhsmcertd and name port.
+				//The default value for port will now be used.
+				//Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name+" will now be used."), defaultConfFileParameterNames().contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+			}
+		}
+
+		
+		return sshCommandResult; // from the orgs command
+	}
+	
+	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(section_name_value);
+		return config(list, remove, set, listOfSectionNameValues);
+	}
+	
+	public List<String> defaultConfFileParameterNames() {
+		
+		// hard-coded list of parameter called DEFAULTS in /usr/lib/python2.6/site-packages/rhsm/config.py
+		// this list of hard-coded parameter names have a hard-coded value (not listed here) that will be used
+		// after a user calls subscription-manager --remove section.name otherwise the remove will set the value to ""
+		List<String> defaultNames = new ArrayList<String>();
+
+		// initialize defaultNames (will appear in all config sections and have a default value)
+		//	DEFAULTS = {
+		//	        'hostname': 'localhost',
+		//	        'prefix': '/candlepin',
+		//	        'port': '8443',
+		//	        'ca_cert_dir': '/etc/rhsm/ca/',
+		//	        'repo_ca_cert': '/etc/rhsm/ca/redhat-uep.pem',
+		//	        'ssl_verify_depth': '3',
+		//	        'proxy_hostname': '',
+		//	        'proxy_port': '',
+		//	        'proxy_user': '',
+		//	        'proxy_password': '',
+		//	        'insecure': '0'
+		//	        }
+		defaultNames.add("hostname");
+		defaultNames.add("prefix");
+		defaultNames.add("port");
+		defaultNames.add("ca_cert_dir");
+		defaultNames.add("repo_ca_cert");
+		defaultNames.add("ssl_verify_depth");
+		defaultNames.add("proxy_hostname");
+		defaultNames.add("proxy_port");
+		defaultNames.add("proxy_user");
+		defaultNames.add("proxy_password");
+		defaultNames.add("insecure");
+		
+		return defaultNames;
+	}
 	
 	// environments module tasks ************************************************************
 
