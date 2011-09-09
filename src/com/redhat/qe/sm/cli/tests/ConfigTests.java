@@ -215,6 +215,46 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
 
 
+	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigRemoveNonExistingSectionName_Test() {
+		String section = "non-existing-section";
+		String name = "parameter";
+		String value = "value";
+
+		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
+
+		// assert results...
+		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		Assert.assertEquals(configResult.getStderr().trim(), "No section: '"+section+"'", "Stderr message");
+		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-parameter from a valid section in /etc/rhsm/rhsm.conf (negative test)",
+			groups={"blockedByBug-736784"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigRemoveNonExistingParameterFromValidSection_Test() {
+		String section = "server";
+		String name = "non-existing-parameter";
+		String value = "value";
+
+		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
+		
+		// assert results...
+		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		Assert.assertEquals(configResult.getStderr().trim(), "FIXME", "Stderr message");
+		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
+		
+		// assert that an empty parameter was not added to the config (bug 736784)
+		String setValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
+		Assert.assertNull(setValue, "After executing a negative test to subscription-manager config to remove '"+section+"."+name+"', the parameter has not present in config file '"+clienttasks.rhsmConfFile+"'.");
+
+	}
+	
 	// Candidates for an automated Test:
 	// TODO Bug 735695 - subscription-manager config --remove option is not operating on multiple option requests
 	
