@@ -235,7 +235,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "import";
 		List <String> importOptions = new ArrayList<String>();
 		importOptions.add("-h, --help");
-		importOptions.add("--certificate=CERTIFICATE_FILES");
+		//importOptions.add("--certificate=CERTIFICATE_FILES");	// prior to fix for Bug 735212
+		importOptions.add("--certificate=CERTIFICATE_FILE");
 //		importOptions.add("--proxy=PROXY_URL");
 //		importOptions.add("--proxyuser=PROXY_USER");
 //		importOptions.add("--proxypassword=PROXY_PASSWORD");

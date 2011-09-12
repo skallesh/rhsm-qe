@@ -1600,6 +1600,15 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * config without asserting results
+	 */
+	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(section_name_value);
+		return config_(list, remove, set, listOfSectionNameValues);
+	}
+	
+	/**
 	 * "subscription-manager config"
 	 */
 	public SSHCommandResult config(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {

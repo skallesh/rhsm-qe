@@ -574,8 +574,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", importEntitlementsDir);
 		clienttasks.removeAllCerts(false, true);
 		
-		// create a directory where we can create bundled entitlement/key certtificates for import
+		// create a directory where we can create bundled entitlement/key certificates for import
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+importCertificatesDir,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+importCertificatesDir+"/*",Integer.valueOf(0));
 		
 		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
