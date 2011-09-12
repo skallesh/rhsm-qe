@@ -621,7 +621,7 @@ Expected Results:
 	
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={},
+			groups={"AcceptanceTests", "blockedByBug-730018"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
@@ -632,10 +632,17 @@ Expected Results:
 			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
 			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
 			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after message change from bug 730018...
+		interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
+			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
 		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
 		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
 			interoperabilityWarningMessage = clienttasks.getBrandingString("REGISTERED_TO_OTHER_WARNING");
 		}
+		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
 		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The interoperability message starts with \"WARNING\".");
 		
 		log.info("Simulating registration by RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
@@ -645,7 +652,7 @@ Expected Results:
 		log.info("Attempt to register while already registered via RHN Classic...");
 		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
 		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
-		Assert.assertContainsMatch(result.getStdout(),"^"+interoperabilityWarningMessage, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
+		Assert.assertContainsMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
 
 		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
 		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
@@ -653,7 +660,7 @@ Expected Results:
 		result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
 		
 		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
-		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessage, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
+		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 	}
 	
 	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
