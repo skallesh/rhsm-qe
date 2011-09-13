@@ -22,7 +22,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- *
+ * Note: This scribe depends on register with --autosubscribe working properly
  */
 
 
@@ -99,7 +99,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
-			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests"},
+			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests", "blockedByBug-737762"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
