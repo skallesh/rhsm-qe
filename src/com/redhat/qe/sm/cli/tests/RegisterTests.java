@@ -621,7 +621,7 @@ Expected Results:
 	
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"AcceptanceTests", "blockedByBug-730018"},
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
@@ -712,7 +712,7 @@ Expected Results:
 	
 	// Configuration methods ***********************************************************************
 
-	@AfterGroups(value={"RegisterWithAutosubscribe_Test"},alwaysRun=true)
+	@AfterGroups(value={"RegisterWithAutosubscribe_Test","InteroperabilityRegister_Test"}, alwaysRun=true)
 	@AfterClass (alwaysRun=true)
 	public void cleaupAfterClass() {
 		if (clienttasks==null) return;
