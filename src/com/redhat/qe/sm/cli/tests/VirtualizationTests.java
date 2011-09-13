@@ -393,6 +393,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=683459
+	// TODO Bug 736436 - virtual subscriptions are not included when the certificates are downloaded 
 	
 	
 	

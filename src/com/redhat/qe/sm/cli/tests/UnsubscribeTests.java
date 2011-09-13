@@ -171,7 +171,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(description="Attempt to unsubscribe when from an invalid serial number",
-			groups={"debugTest","blockedByBug-706889"},
+			groups={"blockedByBug-706889"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAnInvalidSerial_Test() {
