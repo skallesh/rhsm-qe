@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -147,9 +148,45 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		*/
 	}
 	
+	@Test(description="Attempt to unsubscribe when not registered",
+			groups={"blockedByBug-735338"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
+	
+		// first make sure we are subscribed to a pool
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(List)null,true,null,null,null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool pool = pools.get(0);
+		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
+		
+		// now remove the consumer cert to simulate an unregister
+		clienttasks.removeAllCerts(true,false);
+		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),"Consumer not registered. Please register using --username and --password");
+		
+		// now unsubscribe from the serial number (while not registered)
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
+		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "We should not be consuming any entitlements after unsubscribing (while not registered)");
+	}
+	
+	@Test(description="Attempt to unsubscribe when from an invalid serial number",
+			groups={"debugTest","blockedByBug-706889"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeFromAnInvalidSerial_Test() {
+	
+		SSHCommandResult result = clienttasks.unsubscribe_(null, BigInteger.valueOf(-123), null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
+		Assert.assertEquals(result.getStderr().trim(), "'-123' is not a valid serial number");
+		Assert.assertEquals(result.getStdout().trim(), "");
+
+	}
+	
+	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 706889 - “-1” displayed on console while unsubscribe invalid serial
+
 
 	
 	// Data Providers ***********************************************************************
