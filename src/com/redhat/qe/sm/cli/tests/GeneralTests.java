@@ -81,9 +81,10 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 // this functionality appears to have been removed: subscription-manager-0.93.14-1.el6.x86_64 - jsefler 1/21/2011
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --regtoken=FOO"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=FOO"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --all"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --serial=FOO"}));
+// ability to unsubscribe without being registered was added after fix for bug 735338  jsefler 9/13/2011
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe"}));
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --all"}));
+//		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --serial=FOO"}));
 // this functionality appears to have been removed: subscription-manager-0.68-1.el6.i686  - jsefler 7/12/2010
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO"}));
 //		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO"}));

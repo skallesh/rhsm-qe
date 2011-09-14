@@ -51,6 +51,29 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		
+		
+		// the following block of code was added to account for prior subscribed modifier pools that could provide more repos than expected once this pool is subscribed
+		// check the modifierSubscriptionData for SubscriptionPools that may already have been subscribed too and will modify this pool thereby enabling more repos than expected 
+		for (List<Object> row : modifierSubscriptionData) {
+			// ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
+			SubscriptionPool modifierPool = (SubscriptionPool)row.get(0);
+			String label = (String)row.get(1);
+			List<String> modifiedProductIds = (List<String>)row.get(2);
+			String requiredTags = (String)row.get(3);
+			List<SubscriptionPool> providingPools = (List<SubscriptionPool>)row.get(4);
+			if (providingPools.contains(pool)) {
+				if (priorSubscribedPools.contains(modifierPool)) {
+					// the modifier's content should now be available in the repos too
+					EntitlementCert modifierEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(modifierPool);						
+
+					// simply add the contentNamespaces from the modifier to the entitlement cert's contentNamespaces so they will be accounted for in the repos list test below
+					entitlementCert.contentNamespaces.addAll(modifierEntitlementCert.contentNamespaces);
+				}
+			}
+		}
+		priorSubscribedPools.add(pool);
+		
+			
 		List<Repo> actualRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		// assert that the new contentNamespaces from the entitlementCert are listed in repos
@@ -76,13 +99,15 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				Assert.assertFalse(actualRepos.contains(expectedRepo),"The newly entitled contentNamespace '"+contentNamespace+"' is NOT represented in the subscription-manager repos --list because it requires tags ("+contentNamespace.requiredTags+") that are not provided by the currently installed product certs.");
 			}
 		}
+
 		
 		// assert that the number of repos reported has increased by the number of contentNamespaces in the new entitlementCert (unless the 
 		Assert.assertEquals(actualRepos.size(), priorRepos.size()+numNewRepos, "The number of entitled repos has increased by the number of NEW contentNamespaces ("+numNewRepos+") from the newly granted entitlementCert.");
 		
 		// randomly decide to unsubscribe from the pool only for the purpose of saving on accumulated logging and avoid a java heap memory error
-		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null);
+		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null); AND ALSO REMOVE pool FROM priorSubscribedPools
 	}
+	protected List<SubscriptionPool> priorSubscribedPools=new ArrayList<SubscriptionPool>();
 	
 	
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
@@ -156,8 +181,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 
 	@BeforeClass(groups={"setup"})
-	public void setupBeforeClass() {
+	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
+		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists();
 	}
 	
 	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
@@ -169,6 +195,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 
 	List<ProductCert> currentProductCerts=new ArrayList<ProductCert>();
+	List<List<Object>> modifierSubscriptionData = null;
 
 	
 	// Data Providers ***********************************************************************

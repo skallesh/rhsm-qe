@@ -101,7 +101,8 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" > "+importCertificateFile);
 			
 			// once imported, what should the entitlement cert file be?
-			File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importCertificateFile.getName());
+			//File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importCertificateFile.getName());	// applicable prior to fix for Bug 734606
+			File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importEntitlementCertFile.getName());	// applicable post fix for Bug 734606
 			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
 			
 			// make sure the expected entitlement files do not exist before our test and that no subscriptions are consumed
@@ -573,8 +574,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", importEntitlementsDir);
 		clienttasks.removeAllCerts(false, true);
 		
-		// create a directory where we can create bundled entitlement/key certtificates for import
+		// create a directory where we can create bundled entitlement/key certificates for import
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+importCertificatesDir,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+importCertificatesDir+"/*",Integer.valueOf(0));
 		
 		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();

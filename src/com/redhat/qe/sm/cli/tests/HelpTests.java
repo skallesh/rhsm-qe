@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -14,6 +15,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -143,7 +145,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// String command, String stdoutRegex, List<String> expectedOptions
 		String module;
 		String modulesRegex = "^	\\w+";
-//DELETEME		String optionsRegex = "^  --\\w+[(?:=\\w)]*|^  -\\w[(?:=\\w)]*\\, --\\w+[(?:=\\w)]*";
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*\\, --\\w+(=\\w+)*";
 		/* EXAMPLE FOR optionsRegex
 		  -h, --help            show this help message and exit
@@ -212,6 +213,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		configOptions.add("--rhsm.ssl_verify_depth=RHSM.SSL_VERIFY_DEPTH");
 		configOptions.add("--rhsmcertd.ca_cert_dir=RHSMCERTD.CA_CERT_DIR");
 		configOptions.add("--rhsmcertd.certfrequency=RHSMCERTD.CERTFREQUENCY");
+		configOptions.add("--rhsmcertd.healfrequency=RHSMCERTD.HEALFREQUENCY");
 		configOptions.add("--rhsmcertd.hostname=RHSMCERTD.HOSTNAME");
 		configOptions.add("--rhsmcertd.insecure=RHSMCERTD.INSECURE");
 		configOptions.add("--rhsmcertd.port=RHSMCERTD.PORT");
@@ -235,10 +237,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "import";
 		List <String> importOptions = new ArrayList<String>();
 		importOptions.add("-h, --help");
-		importOptions.add("--certificate=CERTIFICATE_FILES");
-//		importOptions.add("--proxy=PROXY_URL");
-//		importOptions.add("--proxyuser=PROXY_USER");
-//		importOptions.add("--proxypassword=PROXY_PASSWORD");
+		//importOptions.add("--certificate=CERTIFICATE_FILES");	// prior to fix for Bug 735212
+		importOptions.add("--certificate=CERTIFICATE_FILE");
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=733873
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="733873"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			importOptions.add("--proxy=PROXY_URL");
+			importOptions.add("--proxyuser=PROXY_USER");
+			importOptions.add("--proxypassword=PROXY_PASSWORD");
+		}
+		// END OF WORKAROUND
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
@@ -442,9 +452,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		subscribeOptions.add("--pool=POOL");
 		subscribeOptions.add("--quantity=QUANTITY");
 		subscribeOptions.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
-//		subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
-//		subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
-//		subscribeOptions.add("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+		//subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+		//subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+		//subscribeOptions.add("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 		subscribeOptions.add("--proxy=PROXY_URL");
 		subscribeOptions.add("--proxyuser=PROXY_USER");
 		subscribeOptions.add("--proxypassword=PROXY_PASSWORD");

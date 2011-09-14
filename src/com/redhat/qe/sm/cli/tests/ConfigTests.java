@@ -144,7 +144,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), value});	// the config options require lowercase for --remove=section.name  (note the value is not needed in the remove)
 
-		SSHCommandResult configResult = clienttasks.config(null,true,null,listOfSectionNameValues);
+		clienttasks.config(null,true,null,listOfSectionNameValues);
 		
 		// assert that the parameter was removed from the config file (only for names in defaultConfFileParameterNames) otherwise the value is blanked
 		String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
@@ -215,13 +215,98 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult sshCommandResultFromConfigGetSectionNameValueAndVerifyDefault_Test = null;
 
 
+	@Test(	description="subscription-manager: use config module to simultaneously remove multiple rhsm.conf parameter values from /etc/rhsm/rhsm.conf",
+			groups={"blockedByBug-735695"},
+			dependsOnMethods={"ConfigGetSectionNameValueAndVerifyDefault_Test"}, alwaysRun=true,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigRemoveMultipleSectionNameValues_Test() {
+		
+		// not necessary but adds a little more to the test
+		// restore the backup rhsm.conf file
+		if (RemoteFileTasks.testFileExists(client,rhsmConfigBackupFile.getPath())==1) {
+			log.info("Restoring the original rhsm config file...");
+			client.runCommandAndWait("cat "+rhsmConfigBackupFile+" | tee "+clienttasks.rhsmConfFile);
+		}
+		
+		// use config to remove the section name value all in one call
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		for (List<Object> row : getConfigSectionNameDataAsListOfLists()) {
+			String section	= (String) row.get(1);
+			String name		= (String) row.get(2);
+			String value	= (String) row.get(3);
+			listOfSectionNameValues.add(new String[]{section, name.toLowerCase(), value});	// the config options require lowercase for --remove=section.name  (note the value is not needed in the remove)
+		}
+
+		clienttasks.config(null,true,null,listOfSectionNameValues);
+		
+		// assert that the parameter was removed from the config file (only for names in defaultConfFileParameterNames) otherwise the value is blanked
+		for (List<Object> row : getConfigSectionNameDataAsListOfLists()) {
+			String section	= (String) row.get(1);
+			String name		= (String) row.get(2);
+			String value	= (String) row.get(3);
+			String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
+			if (clienttasks.defaultConfFileParameterNames().contains(name.toLowerCase())) {
+				Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+			} else {
+				Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
+			}
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigRemoveNonExistingSectionName_Test() {
+		String section = "non-existing-section";
+		String name = "parameter";
+		String value = "value";
+
+		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
+
+		// assert results...
+		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		Assert.assertEquals(configResult.getStderr().trim(), "No section: '"+section+"'", "Stderr message");
+		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-parameter from a valid section in /etc/rhsm/rhsm.conf (negative test)",
+			groups={"blockedByBug-736784"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigRemoveNonExistingParameterFromValidSection_Test() {
+		String section = "server";
+		String name = "non-existing-parameter";
+		String value = "value";
+
+		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
+		
+		// assert results...
+		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
+		Assert.assertEquals(configResult.getStderr().trim(), "FIXME", "Stderr message");
+		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
+		
+		// assert that an empty parameter was not added to the config (bug 736784)
+		String setValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
+		Assert.assertNull(setValue, "After executing a negative test to subscription-manager config to remove '"+section+"."+name+"', the parameter has not present in config file '"+clienttasks.rhsmConfFile+"'.");
+
+	}
+	
+	
+	
 	// Candidates for an automated Test:
-	// TODO Bug 735695 - subscription-manager config --remove option is not operating on multiple option requests
+	
+	
 	
 	
 	// Protected Class Variables ***********************************************************************
 	
 	protected File rhsmConfigBackupFile = new File("/tmp/rhsm.conf.backup");
+	
+	
 	
 	// Protected methods ***********************************************************************
 	
@@ -231,7 +316,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	// Configuration methods ***********************************************************************
 	
 	@BeforeClass(groups={"setup"})
-	public void setupBeforeClass() throws Exception {
+	public void setupBeforeClass() {
 		if (client==null) return;
 		
 		// unregister
@@ -243,7 +328,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@AfterClass(groups={"setup"}, alwaysRun=true)
-	public void cleanupAfterClass() throws Exception {
+	public void cleanupAfterClass() {
 		if (client==null) return;
 		
 		// restore the backup rhsm.conf file
@@ -252,7 +337,9 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("cat "+rhsmConfigBackupFile+" | tee "+clienttasks.rhsmConfFile+"; rm -f "+rhsmConfigBackupFile);
 		}
 	}
-
+	
+	
+	
 	// Data Providers ***********************************************************************
 	
 	@DataProvider(name="getConfigSectionNameData")
@@ -293,6 +380,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"certFrequency",		"300"}));
+		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"healFrequency",		"3000"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"hostname",				"rhsmcertd.hostname.redhat.com"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"insecure",				"0"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"port",					"3000"}));

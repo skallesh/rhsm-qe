@@ -131,77 +131,78 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	public Object[][] getModifierSubscriptionDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getModifierSubscriptionDataAsListOfLists());
 	}
-	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
-		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-		
-		// iterate through all available pools looking for those that contain products with content that modify other products
-		for (SubscriptionPool modifierPool : allAvailablePools) {
-			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+modifierPool.poolId));	
-			
-			// iterate through each of the providedProducts
-			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
-			for (int i = 0; i < jsonModifierProvidedProducts.length(); i++) {
-				JSONObject jsonModifierProvidedProduct = (JSONObject) jsonModifierProvidedProducts.get(i);
-				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
-				
-				// get the productContents
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/products/"+modifierProvidedProductId));	
-				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
-				for (int j = 0; j < jsonProductContents.length(); j++) {
-					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
-					JSONObject jsonContent = jsonProductContent.getJSONObject("content");
-					
-					// get the label and modifiedProductIds for each of the productContents
-					String label = jsonContent.getString("label");
-					String requiredTags = jsonContent.getString("requiredTags"); // comma separated string
-					if (requiredTags.equals("null")) requiredTags = null;
-					JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
-					List<String> modifiedProductIds = new ArrayList<String>();
-					for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
-						String modifiedProductId = (String) jsonModifiedProductIds.get(k);
-						modifiedProductIds.add(modifiedProductId);
-					}
-					
-					// does this pool contain productContents that modify other products?
-					if (modifiedProductIds.size()>0) {
-						
-						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
-						// yes, now its time to find the subscriptions that provide the modifiedProductIds
-						for (SubscriptionPool providingPool : allAvailablePools) {
-							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+providingPool.poolId));	
-							
-							// iterate through each of the providedProducts
-							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");
-							for (int l = 0; l < jsonProvidingProvidedProducts.length(); l++) {
-								JSONObject jsonProvidingProvidedProduct = (JSONObject) jsonProvidingProvidedProducts.get(l);
-								String providingProvidedProductId = jsonProvidingProvidedProduct.getString("productId");
-								if (modifiedProductIds.contains(providingProvidedProductId)) {
-									
-									// NOTE: This test takes a long time to run when there are many providingPools.
-									// To reduce the execution time, let's simply limit the number of providing pools tested to 2,
-									// otherwise this block of code could be commented out for a more thorough test.
-									boolean thisPoolProductIdIsAlreadyInProvidingPools = false;
-									for (SubscriptionPool providedPool : providingPools) {
-										if (providedPool.productId.equals(providingPool.productId)) {
-											thisPoolProductIdIsAlreadyInProvidingPools=true; break;
-										}
-									}
-									if (thisPoolProductIdIsAlreadyInProvidingPools||providingPools.size()>=2) break;
-									
-									providingPools.add(providingPool); break;
-								}
-							}
-						}
-										
-						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
-					}
-				}
-			}
-		}
-				
-		return ll;
-	}
+// MOVED UP TO SUPERCLASS
+//	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
+//		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
+//		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+//		
+//		// iterate through all available pools looking for those that contain products with content that modify other products
+//		for (SubscriptionPool modifierPool : allAvailablePools) {
+//			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+modifierPool.poolId));	
+//			
+//			// iterate through each of the providedProducts
+//			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
+//			for (int i = 0; i < jsonModifierProvidedProducts.length(); i++) {
+//				JSONObject jsonModifierProvidedProduct = (JSONObject) jsonModifierProvidedProducts.get(i);
+//				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
+//				
+//				// get the productContents
+//				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/products/"+modifierProvidedProductId));	
+//				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+//				for (int j = 0; j < jsonProductContents.length(); j++) {
+//					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+//					JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+//					
+//					// get the label and modifiedProductIds for each of the productContents
+//					String label = jsonContent.getString("label");
+//					String requiredTags = jsonContent.getString("requiredTags"); // comma separated string
+//					if (requiredTags.equals("null")) requiredTags = null;
+//					JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+//					List<String> modifiedProductIds = new ArrayList<String>();
+//					for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+//						String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+//						modifiedProductIds.add(modifiedProductId);
+//					}
+//					
+//					// does this pool contain productContents that modify other products?
+//					if (modifiedProductIds.size()>0) {
+//						
+//						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
+//						// yes, now its time to find the subscriptions that provide the modifiedProductIds
+//						for (SubscriptionPool providingPool : allAvailablePools) {
+//							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+providingPool.poolId));	
+//							
+//							// iterate through each of the providedProducts
+//							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");
+//							for (int l = 0; l < jsonProvidingProvidedProducts.length(); l++) {
+//								JSONObject jsonProvidingProvidedProduct = (JSONObject) jsonProvidingProvidedProducts.get(l);
+//								String providingProvidedProductId = jsonProvidingProvidedProduct.getString("productId");
+//								if (modifiedProductIds.contains(providingProvidedProductId)) {
+//									
+//									// NOTE: This test takes a long time to run when there are many providingPools.
+//									// To reduce the execution time, let's simply limit the number of providing pools tested to 2,
+//									// otherwise this block of code could be commented out for a more thorough test.
+//									boolean thisPoolProductIdIsAlreadyInProvidingPools = false;
+//									for (SubscriptionPool providedPool : providingPools) {
+//										if (providedPool.productId.equals(providingPool.productId)) {
+//											thisPoolProductIdIsAlreadyInProvidingPools=true; break;
+//										}
+//									}
+//									if (thisPoolProductIdIsAlreadyInProvidingPools||providingPools.size()>=2) break;
+//									
+//									providingPools.add(providingPool); break;
+//								}
+//							}
+//						}
+//										
+//						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
+//					}
+//				}
+//			}
+//		}
+//				
+//		return ll;
+//	}
 	
 /*
 Example jsonPool:
