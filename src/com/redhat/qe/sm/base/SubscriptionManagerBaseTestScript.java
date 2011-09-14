@@ -40,7 +40,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	// rhsm.conf [rhsmcertd] configurations
 	public static String sm_rhsmcertdCertFrequency	= null;
-
+	public static String sm_rhsmcertdHealFrequency	= null;
 	
 	public String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
 	public String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
@@ -148,7 +148,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		
 		// rhsm.conf [rhsmcertd] configurations
 		sm_rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
-
+		sm_rhsmcertdHealFrequency		= getProperty("sm.rhsmcertd.healFrequency","");
 	
 		try {
 //			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
