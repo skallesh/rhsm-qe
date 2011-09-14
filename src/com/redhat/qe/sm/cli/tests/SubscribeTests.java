@@ -50,7 +50,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"AcceptanceTests","blockedByBug-660713"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException {
+	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
 //if (!productId.equals("awesomeos-server")) throw new SkipException("debugging");
 		
 		// begin test with a fresh register
@@ -154,7 +154,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				//ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
 				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productNamespace.id, currentlyInstalledProductCerts);
 				if (productCert!=null) {
-					Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
+					
+					// decide what the status should be...  "Subscribed" or "Partially Subscribed"
+					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "sockets");
+					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets)) {
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+productName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
+					} else {
+						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
+					}
 					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
 					Assert.assertEquals(installedProduct.serialNumber, productSubscription.serialNumber, "Installed Product '"+productName+"' serialNumber matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
 				} else {
