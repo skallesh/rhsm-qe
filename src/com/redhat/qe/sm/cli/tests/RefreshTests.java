@@ -35,7 +35,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// make sure the certFrequency will not affect the results of this test
 		log.info("Change the certFrequency to a large value to assure the rhsmcertd does not interfere with this test.");
-		clienttasks.restart_rhsmcertd(60, false);
+		clienttasks.rhsmcertdServiceRestart(60, null, false);
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");

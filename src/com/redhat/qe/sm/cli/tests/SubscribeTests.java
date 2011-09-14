@@ -318,7 +318,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("First test with an unregistered user and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
 		clienttasks.unregister(null, null, null);
-		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
+		clienttasks.rhsmcertdServiceRestart(minutes, null, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		String marker = "Testing rhsm.conf certFrequency="+minutes+" when unregistered..."; // https://tcms.engineering.redhat.com/case/41692/
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
@@ -332,7 +332,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
-		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
+		clienttasks.rhsmcertdServiceRestart(minutes, null, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when identity is corrupted...";
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
@@ -344,7 +344,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Finally test with a registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, (String)null, Boolean.TRUE, null, null, null);
-		clienttasks.restart_rhsmcertd(minutes, false); sleep(10000); // allow 10sec for the initial update
+		clienttasks.rhsmcertdServiceRestart(minutes, null, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
@@ -393,7 +393,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    		"All the entitlement certs have been deleted.");
 		
 	    // restart the rhsmcertd to run every 1 minute and wait for a refresh
-		clienttasks.restart_rhsmcertd(1, true);
+		clienttasks.rhsmcertdServiceRestart(1, null, true);
 		
 		// assert that rhsmcertd has refreshed the entitlement certs back to the original
 	    Assert.assertEquals(clienttasks.getCurrentEntitlementCertFiles(), entitlementCertFiles,
