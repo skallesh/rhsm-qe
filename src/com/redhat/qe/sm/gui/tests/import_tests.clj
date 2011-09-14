@@ -7,16 +7,41 @@
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
+  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]
+           [com.redhat.qe.sm.cli.tests ImportTests]))
 
+(def importtests (atom nil))
 
-(comment 
-  (defn ^{BeforeClass {:groups ["setup"]}}
-    create_certs [_]
-    ))
+(defn ^{BeforeClass {:groups ["setup"]}}
+  create_certs [_]
+  (reset! importtests (ImportTests.))
+  (.setupBeforeClass @importtests))
 
+(defn ^{Test {:groups ["import"]}}
+  import_cert [_]
+  (let [certlocation (str (.getValidImportCertificate @importtests))]
+    (tasks/ui click :import-certificate)
+    (tasks/ui click :choose-cert)
+    (tasks/ui waittillguiexist :file-chooser)
+    (tasks/ui check :text-entry-toggle)
+    (tasks/ui generatekeyevent certlocation)
+    (tasks/ui click :file-open)
+    (tasks/ui click :import-cert)
+    (tasks/checkforerror)
+    (verify (= 1 (tasks/ui guiexist
+                           :information-dialog
+                           "Certificate import was successful.")))
+    (tasks/ui click :info-ok)))
 
+(gen-class-testng)
 
+(comment
+  ;; to run this in the REPL, do this:
+  (do
+    (import '[com.redhat.qe.sm.cli.tests ImportTests])
+    (def importtests (atom nil))
+    (reset! importtests (ImportTests.))
+    (.setupBeforeSuite @importtests)
+    (.setupBeforeClass @importtests))
 
-(comment 
-  (gen-class-testng))
+  )

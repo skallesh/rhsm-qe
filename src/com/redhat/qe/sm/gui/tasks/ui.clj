@@ -34,7 +34,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :information-dialog "Information"
                 :warning-dialog "Warning"
                 :firstboot-window "frm0"
-                :firstboot-proxy-dialog "Advanced Network Configuration"}))
+                :firstboot-proxy-dialog "Advanced Network Configuration"
+                :import-window "Provide a Subscription Certificate"
+                :file-chooser "Select A File"}))
 
 
 (def elements
@@ -43,7 +45,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
       (merge (same-name capitalize [:registration-settings
                                     :register-system
                                     :unregister-system
-                                    :add-subscription
+                                    :import-certificate
                                     :view-system-facts
                                     :glossary
                                     :update-certificates
@@ -130,7 +132,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :firstboot-auth-checkbox "Use Authentication*"
        :firstboot-proxy-user "proxy user field"
        :firstboot-proxy-pass "proxy password field"
-       :firstboot-proxy-close "Close"}) ))
+       :firstboot-proxy-close "Close"})
+    (define-elements (windows :import-window)
+      {:choose-cert "btn(None)"
+       :import-cert "Import Certificate"
+       :import-cancel "import_cancel_button"})
+    (define-elements (windows :file-chooser)
+      {:text-entry-toggle "Type a file name"
+       :file-cancel "Cancel"
+       :file-open "Open"}) ))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
