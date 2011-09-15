@@ -33,6 +33,13 @@
                            "Certificate import was successful.")))
     (tasks/ui click :info-ok)))
 
+(comment 
+  (defn ^{Test {:groups ["import"]
+                :dependsOnMethods ["import_cert"]}}
+    check_import [_]
+    ))
+
+
 (gen-class-testng)
 
 (comment
