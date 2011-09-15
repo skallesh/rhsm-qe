@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.zip.ZipFile;
 
@@ -47,6 +48,7 @@ import com.redhat.qe.api.helper.TestHelper;
 import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.RevokedCert;
@@ -208,6 +210,21 @@ schema generation failed
 		 * # gem install buildr
 		 * # bundle install  (in the proxy dir)
 		 */
+	}
+	
+	public void reportAPI() throws IOException {
+		
+		/*
+		 * cd /root/candlepin/proxy
+		 * buildr candlepin:apicrawl
+		 * cat target/candlepin_methods.json | python -mjson.tool
+		 */
+		
+		// run the buildr API script to see a report of the current API
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
+		log.info("Following is a report of all the candlepin API urls:");
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -mjson.tool | grep url",LogMessageUtil.action());
 	}
 	
 	public void cleanOutCRL() {
