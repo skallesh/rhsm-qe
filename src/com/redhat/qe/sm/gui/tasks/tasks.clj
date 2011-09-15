@@ -237,15 +237,32 @@
      (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
   ([] (search {})))
 
+(defn skip-dropdown
+  "Skips dropdown items in a table."
+  [table item]
+  (if-not (ui rowexist? table item)
+    (raise {:type :item-not-available
+            :name item
+            :msg (str "Not found in " table ": " item)}))
+  (let [row (ui gettablerowindex table item)
+        is-item? (fn [rownum]
+                  (try (ui getcellvalue table rownum 2) true
+                       (catch Exception e false)))]
+    (if (is-item? row)
+      (ui selectrow table item)
+      (do
+        (if (and (is-item? (+ 1 row))
+                 (= item (ui getcellvalue table (+ 1 row) 0)))
+          (ui selectrowindex table (+ 1 row))
+          (raise {:type :invalid-item
+                  :name item
+                  :msg (str "Invalid item:" item)}))))))
+
 (defn open-contract-selection
   "Opens the contract selection dialog for a given subscription." 
   [s]
   (ui selecttab :all-available-subscriptions)
-  (if-not (ui rowexist? :all-subscriptions-view s)
-    (raise {:type :subscription-not-available
-            :name s
-            :msg (str "Not found in 'All Available Subscriptions':" s)}))
-  (ui selectrow :all-subscriptions-view s)
+  (skip-dropdown :all-subscriptions-view s)
   (ui click :subscribe)
   (checkforerror)
   (if-not (= 1 (ui waittillwindowexist :contract-selection-dialog 5))
@@ -255,18 +272,9 @@
 
 (defn subscribe
   "Subscribes to a given subscription, s."
-  [s & {:keys [row?]
-        :or {row? false}}] 
+  [s] 
   (ui selecttab :all-available-subscriptions)
-  (if-not row?
-    (do
-      (if-not (ui rowexist? :all-subscriptions-view s)
-        (raise {:type :subscription-not-available
-                :name s
-                :msg (str "Not found in 'All Available Subscriptions':" s)}))
-      (ui selectrow :all-subscriptions-view s))
-    ;; else
-    (ui selectrowindex :all-subscriptions-view s))
+  (skip-dropdown :all-subscriptions-view s)
   (ui click :subscribe)
   (checkforerror)
   (ui waittillwindowexist :contract-selection-dialog 5)
@@ -395,14 +403,28 @@
 
 (defn get-table-elements
   "Returns a vector containing all elements in a given table and column."
-  [view col]
-  (for [row (range (action getrowcount view))]
-    (ui getcellvalue view row col))) 
+  [view col & {:keys [skip-dropdowns?]
+               :or {skip-dropdowns? false}}]
+  (if-not skip-dropdowns?
+    (do
+      (for [row (range (action getrowcount view))]
+        (ui getcellvalue view row col)))
+    (do
+      (let [allitems (get-table-elements view 0)
+            is-item? (fn [rownum]
+                      (try (ui getcellvalue view rownum 2) true
+                           (catch Exception e false)))
+            rownums (filter is-item? (range (ui getrowcount view)))
+            items (map (fn [rowid]
+                         (ui getcellvalue view rowid 0))
+                       rownums)]
+        items)))) 
   
 (defn do-to-all-rows-in
   "Perferms a given function on all elements in a given table and column."
-  [view col f]
-  (let [item-list (get-table-elements view col)]
+  [view col f & {:keys [skip-dropdowns?]
+                 :or {skip-dropdowns? false}}]
+  (let [item-list (get-table-elements view col :skip-dropdowns? skip-dropdowns?)]
     (doseq [item item-list]
       (f item))))
 
