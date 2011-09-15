@@ -383,12 +383,22 @@ public class SubscriptionManagerTasks {
 	/**
 	 * Update the minutes value for the certFrequency setting in the
 	 * default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
-	 * @param certFrequency - Frequency of certificate refresh (in minutes)
-	 * @param waitForMinutes - after restarting, should we wait for the next refresh?
+	 * @param certFrequency - Frequency of certificate refresh (in minutes) (passing null will not change the current value)
+	 * @param healFrequency - Frequency of subscription auto healing (in minutes) (passing null will not change the current value)
+	 * @param waitForMinutes - after restarting, should we wait for the next certFrequency refresh?
 	 */
-	public void restart_rhsmcertd (int certFrequency, boolean waitForMinutes){
-		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
-				
+	public void rhsmcertdServiceRestart (Integer certFrequency, Integer healFrequency, boolean waitForMinutes){
+//		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
+//		updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
+		
+		// use config to set the certFrequency and healFrequency in one call
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		if (certFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "certFrequency".toLowerCase(), String.valueOf(certFrequency)});
+		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "certFrequency"));
+		if (healFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "healFrequency".toLowerCase(), String.valueOf(healFrequency)});
+		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "healFrequency"));
+		config(null,null,true,listOfSectionNameValues);
+		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=691137 - jsefler 03/26/2011
 		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -397,16 +407,17 @@ public class SubscriptionManagerTasks {
 			if (invokeWorkaroundWhileBugIsOpen) {
 				RemoteFileTasks.runCommandAndWait(sshCommandRunner,"service rhsmcertd restart", LogMessageUtil.action());
 			} else {
-				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);	
+				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
 			}
 		} else {
 		// END OF WORKAROUND
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);	
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
 		}
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -2 "+rhsmcertdLogFile,Integer.valueOf(0),"started: interval = "+certFrequency+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(started: interval = "+healFrequency+" minutes|started: interval = "+certFrequency+" minutes)",null);
 
-		if (waitForMinutes) {
+		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		}
 		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd chance to make its initial check in with the candlepin server and update the certs
@@ -1201,7 +1212,7 @@ public class SubscriptionManagerTasks {
 		String bugId="639417"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			restart_rhsmcertd(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), false);
+			rhsmcertdServiceRestart(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), null, false);
 		}
 		// END OF WORKAROUND
 		
