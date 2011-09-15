@@ -189,9 +189,17 @@
                           :or {debug false}}]
   (register nil)
   (tasks/search)
-  (if-not debug
-    (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1)))
-    (map vector (tasks/get-table-elements :all-subscriptions-view 1))))
+  (let [allitems (tasks/get-table-elements :all-subscriptions-view 0)
+        is-sub? (fn [rownum]
+                   (try (tasks/ui getcellvalue :all-subscriptions-view rownum 1) true
+                        (catch Exception e false)))
+        rownums (filter is-sub? (range (tasks/ui getrowcount :all-subscriptions-view)))
+        subs (into [] (map (fn [rowid]
+                              [(tasks/ui getcellvalue :all-subscriptions-view rowid 0)])
+                           rownums))]
+    (if-not debug
+      (to-array-2d subs)
+      subs)))
 
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]

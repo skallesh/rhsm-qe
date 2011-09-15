@@ -255,13 +255,18 @@
 
 (defn subscribe
   "Subscribes to a given subscription, s."
-  [s]
+  [s & {:keys [row?]
+        :or {row? false}}] 
   (ui selecttab :all-available-subscriptions)
-  (if-not (ui rowexist? :all-subscriptions-view s)
-    (raise {:type :subscription-not-available
-            :name s
-            :msg (str "Not found in 'All Available Subscriptions':" s)}))
-  (ui selectrow :all-subscriptions-view s)
+  (if-not row?
+    (do
+      (if-not (ui rowexist? :all-subscriptions-view s)
+        (raise {:type :subscription-not-available
+                :name s
+                :msg (str "Not found in 'All Available Subscriptions':" s)}))
+      (ui selectrow :all-subscriptions-view s))
+    ;; else
+    (ui selectrowindex :all-subscriptions-view s))
   (ui click :subscribe)
   (checkforerror)
   (ui waittillwindowexist :contract-selection-dialog 5)
@@ -270,6 +275,7 @@
         (ui click :subscribe-contract-selection)))
   (checkforerror)
   (wait-for-progress-bar))
+  
 
 (defn unsubscribe
   "Unsubscribes from a given subscription, s"
