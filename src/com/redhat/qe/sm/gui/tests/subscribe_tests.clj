@@ -70,14 +70,16 @@
                   (handle :wrong-consumer-type [e]
                           (recover e :log-warning))]
     (tasks/open-contract-selection subscription)
-    (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
-      (if (>= row 0)
-        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
-              enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
-          (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
-          (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
-          (recur (dec row)))))
-    (tasks/ui click :cancel-contract-selection)))
+    (try
+      (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
+        (if (>= row 0)
+          (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
+                enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
+            (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
+            (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
+            (recur (dec row)))))
+      (finally 
+       (tasks/ui click :cancel-contract-selection)))))
 
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]

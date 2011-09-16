@@ -109,7 +109,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :update "Update"
        :assistant-subscribe "subscribe button"
        :subscription-product-view "Invalid Product List"
-       :assistant-subscription-view "Subscription List"})
+       :assistant-subscription-view "Subscription List"
+       :check-all "Check/uncheck all products"})
     (define-elements (windows :firstboot-window)
       {:firstboot-back "Back"
        :firstboot-forward "Forward"

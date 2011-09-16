@@ -21,9 +21,15 @@
         (tasks/ui checkrow :subscription-product-view row 0)
         (tasks/ui uncheckrow :subscription-product-view row 0)))))        
 
-(defn check-all-products []
-  (tasks/do-to-all-rows-in :subscription-product-view 1
-      (fn [product] (check-product product))))
+(defn check-all-products
+  ([]
+     (tasks/ui check :check-all)
+     (tasks/sleep 3000))
+  ([manual?]
+     (if manual? 
+       (tasks/do-to-all-rows-in :subscription-product-view 1
+                                (fn [product] (check-product product)))
+       (check-all-products))))
 
 (defn- register []
   (with-handlers [(handle :already-registered [e]
@@ -81,10 +87,10 @@
   (tasks/wait-for-progress-bar)
   (check-all-products)
   (tasks/sleep 5000)
-  (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 1)
+  (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 1 :skip-dropdowns? true)
         nocomply-count (atom (tasks/warn-count))]
     (doseq [item subscription-list]
-      (with-handlers  [(ignore :subscription-not-available)] 
+      (with-handlers  [(ignore :item-not-available)] 
         (tasks/assistant-subscribe item)
         (let [warn-count (tasks/warn-count)]
           (if-not (= 0 @nocomply-count)

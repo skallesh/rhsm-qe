@@ -392,11 +392,7 @@
 (defn assistant-subscribe
   "Subscribes to a given subscription from within the subscription assistant."
   [s]
-  (if-not (ui rowexist? :assistant-subscription-view s)
-    (raise {:type :subscription-not-available
-            :name s
-            :msg (str "Not found in 'Subscription Assistant Subscriptions':" s)}))
-  (ui selectrow :assistant-subscription-view s)
+  (skip-dropdown :assistant-subscription-view s)
   (ui click :assistant-subscribe)
   (checkforerror)
   (wait-for-progress-bar))  
