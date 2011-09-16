@@ -297,7 +297,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
-			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal"/*TODO UNCOMMENT, "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473"*/},
+			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58898)

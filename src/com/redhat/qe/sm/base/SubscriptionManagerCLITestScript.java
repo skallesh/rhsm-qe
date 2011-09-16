@@ -109,7 +109,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
-
+			servertasks.reportAPI();
+			
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
 			

@@ -639,9 +639,11 @@ Expected Results:
 			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
 			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
 		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
+		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011
 		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
 			interoperabilityWarningMessage = clienttasks.getBrandingString("REGISTERED_TO_OTHER_WARNING");
 		}
+		*/
 		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
 		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The interoperability message starts with \"WARNING\".");
 		
@@ -810,9 +812,9 @@ Expected Results:
 		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"You must specify an organization/owner for new consumers."}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"Organization/Owner "+randomString+" does not exist."}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		"Organization/Owner "+"foo bar"+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+randomString+" does not exist."*/"Organization "+randomString+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
 
 		// force a successful registration, and then...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
@@ -871,12 +873,12 @@ Expected Results:
 		if (sm_isServerOnPremises) {
 			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Invalid Credentials"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),		"de_DE.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));
-			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenciales inválidos"}));
+			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenciales inválidas"}));
 			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Informations d’identification invalides"}));
 			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenziali invalide"}));
 			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無効な識別情報"}));
 			ll.add(Arrays.asList(new Object[]{null,								"ko_KR.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "잘못된 인증 정보"}));
-			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenciais inválidos"}));
+			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenciais inválidas"}));
 			ll.add(Arrays.asList(new Object[]{null,								"ru_RU.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Недопустимые реквизиты"}));
 			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "无效证书"}));
 			ll.add(Arrays.asList(new Object[]{null,								"zh_TW.UTF8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無效的認證"}));
