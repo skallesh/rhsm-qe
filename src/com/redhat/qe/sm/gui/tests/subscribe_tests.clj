@@ -66,14 +66,14 @@
   check_contract_selection_dates
   "https://bugzilla.redhat.com/show_bug.cgi?id=703920"
   [_ subscription]
-  (with-handlers [(ignore :subscription-not-available)
+  (with-handlers [(ignore :item-not-available)
                   (handle :wrong-consumer-type [e]
                           (recover e :log-warning))]
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
-        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 4)
-              enddate (tasks/ui getcellvalue :contract-selection-table row 5)]
+        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
+              enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
           (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
           (recur (dec row)))))
@@ -161,6 +161,7 @@
 (defn ^{DataProvider {:name "multi-entitle"}}
   get_multi_entitle_subscriptions [_ & {:keys [debug]
                                         :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/search)
   (let [subs (atom [])
@@ -192,6 +193,7 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/search)
   (let [subs (into [] (map vector (tasks/get-table-elements
@@ -205,6 +207,7 @@
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]
                        :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/ui selecttab :my-subscriptions)
   (subscribe_all)
@@ -220,6 +223,7 @@
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
                                          :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/search {:do-not-overlap? false})
   (let [subs (atom [])
