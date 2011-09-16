@@ -3188,15 +3188,20 @@ repolist: 3,394
 		}
 		
 		// Example result.getStdout()
+		//  Loaded plugins: product-id, refresh-packagekit, subscription-manager
+		//  No plugin match for: rhnplugin
+		//  Updating certificate-based repositories.
+		//  Available Packages
 		//	xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//	xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//	xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//	xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
 		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
-		String regex="^(\\S+) +(\\S+) +(\\S+)$";
+		String regex="^(\\S+) +(\\S+) +(\\S+)$";	// assume all the packages are on a line with three words
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(result.getStdout());
+		String stdout = result.getStdout().replaceAll("Updating certificate-based repositories.", "").replaceAll("Loaded plugins:", "Loaded list of yum plugins:");	// strip these messages from stdout since they could break the three word regex assumption for packages.
+		Matcher matcher = pattern.matcher(stdout);
 		if (!matcher.find()) {
 			log.info("Did NOT find any available packages from: "+command);
 			return packages;
