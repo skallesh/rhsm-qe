@@ -27,8 +27,9 @@ public class ProductCert extends AbstractCommandLineData {
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
 		
-	public List<ProductNamespace> productNamespaces;
-
+	public ProductNamespace productNamespace;
+	
+	// TODO get rid of these since they are in productNamespace
 	public String productName;	// comes from the ProductNamespace
 	public String productId;	// comes from the ProductNamespace
 
@@ -36,10 +37,11 @@ public class ProductCert extends AbstractCommandLineData {
 	public ProductCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
 		this.serialNumber = serialNumber;
-		productNamespaces = ProductNamespace.parse(this.rawCertificate);
+		List<ProductNamespace> productNamespaces = ProductNamespace.parse(this.rawCertificate);
 		// TODO we should assert that there was only one ProductNamespace parsed!
-		productName = productNamespaces.get(0).name;	// extract the product name
-		productId = productNamespaces.get(0).id;			// extract the hash
+		productNamespace = productNamespaces.get(0);
+		productName = productNamespace.name;	// extract the product name
+		productId = productNamespace.id;		// extract the hash
 	}
 
 	
@@ -48,8 +50,9 @@ public class ProductCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
-		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
+		if (productNamespace != null)	string += String.format(" %s",		productNamespace);
+//		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
+//		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (cn != null)					string += String.format(" %s='%s'", "cn",cn);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
