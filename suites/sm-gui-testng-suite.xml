@@ -126,4 +126,18 @@
     </groups>
   </test>
   
+    <test name="GUI: Import">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>		
+    <groups>
+      <run>
+        <include name="import"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+  
 </suite>

@@ -140,6 +140,16 @@
     (verify tasks/compliance?)
     (verify (not (= (tasks/first-date-of-noncomply) beforedate)))))
 
+;; https://bugzilla.redhat.com/show_bug.cgi?id=676371
+(defn ^{Test {:groups ["subscription-assistant"
+                       "configureProductCertDirForAllProductsSubscribable"
+                        "blockedByBug-676371"]
+              :dependsOnMethods ["launch_assistant"]}}
+  check_persistant_manager [_]
+  (tasks/restart-app)
+  (subscribe_all_products nil)
+  (verify (= 1 (tasks/ui guiexist :subscription-assistant-dialog))))
+
 
 (defn ^{Test {:groups ["subscription-assistant"
                        "configureProductCertDirForNoProductsSubscribable"]
@@ -163,7 +173,4 @@
   (verify (tasks/ui showing? :update-certificates)))
 
 
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=676371
-
-        
 (gen-class-testng)
