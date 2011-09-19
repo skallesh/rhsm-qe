@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -20,13 +22,14 @@ public class ProductCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields
+	public File file;
 	public BigInteger serialNumber;	// this is the key
 	public String rawCertificate;
 	public String cn;
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-		
+	
 	public ProductNamespace productNamespace;
 	
 	// TODO get rid of these since they are in productNamespace
@@ -50,6 +53,7 @@ public class ProductCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
+		if (file != null)				string += String.format(" %s='%s'", "file",file);
 		if (productNamespace != null)	string += String.format(" %s",		productNamespace);
 //		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
 //		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
@@ -83,9 +87,19 @@ public class ProductCert extends AbstractCommandLineData {
 				((ProductCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
 				((ProductCert)obj).productName.equals(this.productName);
 	}
+
+// THIS IDEA WAS TRUMPED BY ADDING A NEW ABSTRACT file FIELD AND THEN INCLUDING A REGEX FOR IT IN THE parse METHOD
+//	static public ProductCert parse(SSHCommandRunner sshCommandRunner, File productCertFile) {
+//		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -in "+productCertFile+" -noout -text");
+//		String certificate = sshCommandRunner.getStdout();
+//		ProductCert productCert = parse(certificate).get(0);
+//		productCert.file = productCertFile;
+//		return productCert;
+//	}
 	
 	/**
-	 * @param certificates - stdout from "find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"
+	 * @param certificates - OLD WAY: stdout from: find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text
+	 * @param certificates - stdout from: find /etc/pki/product/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
 	 * @return
 	 */
 	static public List<ProductCert> parse(String certificates) {
@@ -182,15 +196,83 @@ public class ProductCert extends AbstractCommandLineData {
 		-----END CERTIFICATE-----
 		*/
 		
+		/* [root@jsefler-onprem-62server ~]# find /tmp/sm-stackingProductDir/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
+		Certificate:
+		    Data:
+		        Version: 3 (0x2)
+		        Serial Number: 168296333 (0xa07ff8d)
+		        Signature Algorithm: sha1WithRSAEncryption
+		        Issuer: CN=jsefler-onprem-62candlepin.usersys.redhat.com, C=US, L=Raleigh
+		        Validity
+		            Not Before: Sep 19 17:35:27 2011 GMT
+		            Not After : Sep 19 17:35:27 2021 GMT
+		        Subject: CN=100000000000002
+		        Subject Public Key Info:
+		            Public Key Algorithm: rsaEncryption
+		                Public-Key: (2048 bit)
+		                Modulus:
+		                    00:8b:2c:36:0d:17:ce:fd:e6:8d:4d:5a:ee:6e:40:
+		                    57:11:2d:89:37:b2:bb:10:52:e3:8a:0b:41:13:82:
+		                    33:60:85:3f:b4:aa:4b:81:54:71:42:fd:e4:55:c9:
+		                    ce:20:47:aa:8c:07:25:1d:f6:34:f1:49:3a:ec:d6:
+		                    48:52:bf:51:f2:ca:23:c3:ef:f1:c2:c5:e8:4e:14:
+		                    8f:b8:7b:c0:ed:d0:f1:d4:d4:b4:08:d7:75:c2:94:
+		                    d3:58:c2:88:f5:98:a6:86:f2:6d:ab:42:a8:e8:a6:
+		                    59:a8:84:54:7e:b9:ba:cf:78:e5:81:0d:39:42:1f:
+		                    38:a1:65:a0:a7:e2:33:79:ae:21:58:29:3c:ad:f0:
+		                    b4:a8:63:2c:78:f2:0a:e4:94:1a:05:0f:cd:22:f3:
+		                    40:40:94:00:47:5e:49:13:31:10:67:e5:f6:58:66:
+		                    2d:cc:5d:e1:44:84:8f:98:a8:2d:94:97:42:0d:fe:
+		                    54:d7:66:1a:7e:84:74:bc:84:5c:fe:20:78:35:06:
+		                    67:75:bd:35:29:9c:c3:62:50:01:59:a0:e3:9a:85:
+		                    87:37:02:95:94:07:6b:72:e2:d3:bc:5e:36:fb:31:
+		                    73:3b:af:23:da:e8:c7:45:e9:45:dd:f6:58:13:48:
+		                    15:94:23:7b:d9:d3:a2:d9:15:45:ca:ba:36:46:5d:
+		                    06:a1
+		                Exponent: 65537 (0x10001)
+		        X509v3 extensions:
+		            Netscape Cert Type: 
+		                SSL Client, S/MIME
+		            X509v3 Key Usage: 
+		                Digital Signature, Key Encipherment, Data Encipherment
+		            X509v3 Authority Key Identifier: 
+		                keyid:82:7C:66:96:9E:DB:01:A9:01:A4:32:EE:97:80:26:6D:1F:AC:03:66
+		                DirName:/CN=jsefler-onprem-62candlepin.usersys.redhat.com/C=US/L=Raleigh
+		                serial:BC:92:AE:6A:DE:86:B6:D6
+
+		            X509v3 Subject Key Identifier: 
+		                50:15:87:24:A3:FB:E4:A0:31:E6:70:E4:C2:06:70:82:92:0C:39:51
+		            X509v3 Extended Key Usage: 
+		                TLS Web Client Authentication
+		            1.3.6.1.4.1.2312.9.1.100000000000002.1: 
+		                ..Awesome OS for x86_64 Bits
+		            1.3.6.1.4.1.2312.9.1.100000000000002.3: 
+		                ..x86_64
+		            1.3.6.1.4.1.2312.9.1.100000000000002.2: 
+		                ..3.11
+		    Signature Algorithm: sha1WithRSAEncryption
+		        24:35:5d:c3:02:73:80:37:4e:e1:20:17:87:82:d2:32:6e:8b:
+		        33:7b:de:f5:eb:ec:e8:06:03:6d:c1:70:12:ca:d7:4d:1d:a5:
+		        54:4d:37:0e:fd:94:69:55:a5:57:e7:f6:cb:24:1e:c6:8f:98:
+		        d6:92:a8:af:a4:bd:0b:5f:bf:e7:46:ec:d6:63:56:d7:8d:15:
+		        13:7b:1d:60:3f:66:88:db:45:e0:a1:1f:38:e9:77:71:55:41:
+		        96:f5:76:47:c8:02:9c:38:a0:54:92:7c:c6:26:db:59:04:ec:
+		        e4:9d:63:8b:5d:4c:e4:c2:29:63:fc:27:40:e3:fc:42:ab:cf:
+		        48:de
+		    File: /tmp/sm-stackingProductDir/100000000000002_.pem
+		[root@jsefler-onprem-62server ~]# 
+		*/
+		
+		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*File: (.*)");
 		regexes.put("cn",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");	// FIXME not quite right
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*)Signature Algorithm:.*\\s+(?:([a-f]|[\\d]){2}:){10}");	// FIXME THIS IS ONLY PART OF THE CERT
-
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);

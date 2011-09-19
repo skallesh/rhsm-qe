@@ -504,9 +504,22 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
+		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE FILE IN THE OBJECT
 		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+productCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
 		return ProductCert.parse(certificates);
+		*/
+		/*
+		List<ProductCert> productCerts = new ArrayList<ProductCert>();
+		for (File productCertFile : getCurrentProductCertFiles()) {
+			productCerts.add(ProductCert.parse(sshCommandRunner, productCertFile));
+		}
+		return productCerts;
+		*/
+		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+productCertDir+" -name '*.pem' -exec openssl x509 -in '{}' -noout -text \\; -exec echo \"    File: {}\" \\;");
+		String certificates = sshCommandRunner.getStdout();
+		return ProductCert.parse(certificates);
+		
 	}
 	
 	/**
@@ -1034,8 +1047,8 @@ public class SubscriptionManagerTasks {
 	 * @return
 	 */
 	public EntitlementCert getEntitlementCertCorrespondingToProductSubscription(ProductSubscription productSubscription) {
-		String certFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
-		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in '"+certFile+"'");
+		String serialPemFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in "+serialPemFile+"; echo \"    File: "+serialPemFile+"\"");	// openssl x509 -text -noout -in /etc/pki/entitlement/5066044962491605926.pem; echo "    File: /etc/pki/entitlement/5066044962491605926.pem"
 		String certificate = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificate);
 		Assert.assertEquals(entitlementCerts.size(), 1,"Only one EntitlementCert corresponds to ProductSubscription: "+productSubscription);
@@ -1097,7 +1110,7 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
-		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+serialPemFile.getPath());
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in "+serialPemFile+"; echo \"    File: "+serialPemFile+"\"");	// openssl x509 -text -noout -in /etc/pki/entitlement/5066044962491605926.pem; echo "    File: /etc/pki/entitlement/5066044962491605926.pem"
 		String certificates = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		
@@ -2776,7 +2789,7 @@ public class SubscriptionManagerTasks {
 				"No Consumed subscription pools to list","Successfully unsubscribed from all consumed products.");
 		
 		// assert that there are no entitlement cert files
-		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name *.pem | grep -v key.pem").getStdout().equals(""),
+		Assert.assertTrue(sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem").getStdout().equals(""),
 				"No entitlement cert files exist after unsubscribing from all subscription pools.");
 
 		// assert that the yum redhat repo file is gone
@@ -3405,7 +3418,195 @@ repolist: 3,394
 		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 		//	201104051837:18.182 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 
-				
+		// EXAMPLE FROM RHEL62
+		//	ssh root@tyan-gt24-03.rhts.eng.bos.redhat.com yum install gfs-pcmk.x86_64 --enablerepo=rhel-rs-for-rhel-6-server-rpms --disableplugin=rhnplugin -y
+		//	Stdout:
+		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating certificate-based repositories.
+		//	Setting up Install Process
+		//	Package gfs-pcmk is obsoleted by cman, trying to install cman-3.0.12.1-19.el6.x86_64 instead
+		//	Resolving Dependencies
+		//	--> Running transaction check
+		//	---> Package cman.x86_64 0:3.0.12.1-19.el6 will be installed
+		//	--> Processing Dependency: clusterlib = 3.0.12.1-19.el6 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: modcluster >= 0.15.0-3 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: fence-virt >= 0.2.3-1 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: fence-agents >= 3.1.5-1 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: openais >= 1.1.1-1 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: ricci >= 0.15.0-4 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: corosync >= 1.4.1-3 for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libcpg.so.4(COROSYNC_CPG_1.0)(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libconfdb.so.4(COROSYNC_CONFDB_1.0)(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libSaCkpt.so.3(OPENAIS_CKPT_B.01.01)(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libcman.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libfenced.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: liblogthread.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libdlm.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libfence.so.4()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libccs.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libcpg.so.4()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libconfdb.so.4()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libdlmcontrol.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Processing Dependency: libSaCkpt.so.3()(64bit) for package: cman-3.0.12.1-19.el6.x86_64
+		//	--> Running transaction check
+		//	---> Package clusterlib.x86_64 0:3.0.12.1-19.el6 will be installed
+		//	---> Package corosync.x86_64 0:1.4.1-3.el6 will be installed
+		//	--> Processing Dependency: libnetsnmp.so.20()(64bit) for package: corosync-1.4.1-3.el6.x86_64
+		//	---> Package corosynclib.x86_64 0:1.4.1-3.el6 will be installed
+		//	--> Processing Dependency: librdmacm.so.1(RDMACM_1.0)(64bit) for package: corosynclib-1.4.1-3.el6.x86_64
+		//	--> Processing Dependency: libibverbs.so.1(IBVERBS_1.0)(64bit) for package: corosynclib-1.4.1-3.el6.x86_64
+		//	--> Processing Dependency: libibverbs.so.1(IBVERBS_1.1)(64bit) for package: corosynclib-1.4.1-3.el6.x86_64
+		//	--> Processing Dependency: libibverbs.so.1()(64bit) for package: corosynclib-1.4.1-3.el6.x86_64
+		//	--> Processing Dependency: librdmacm.so.1()(64bit) for package: corosynclib-1.4.1-3.el6.x86_64
+		//	---> Package fence-agents.x86_64 0:3.1.5-9.el6 will be installed
+		//	--> Processing Dependency: perl(Net::Telnet) for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: /usr/bin/ipmitool for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: perl-Net-Telnet for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: pexpect for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: python-suds for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: telnet for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: net-snmp-utils for package: fence-agents-3.1.5-9.el6.x86_64
+		//	--> Processing Dependency: sg3_utils for package: fence-agents-3.1.5-9.el6.x86_64
+		//	---> Package fence-virt.x86_64 0:0.2.3-4.el6 will be installed
+		//	---> Package modcluster.x86_64 0:0.16.2-13.el6 will be installed
+		//	--> Processing Dependency: oddjob for package: modcluster-0.16.2-13.el6.x86_64
+		//	---> Package openais.x86_64 0:1.1.1-7.el6 will be installed
+		//	---> Package openaislib.x86_64 0:1.1.1-7.el6 will be installed
+		//	---> Package ricci.x86_64 0:0.16.2-42.el6 will be installed
+		//	--> Processing Dependency: nss-tools for package: ricci-0.16.2-42.el6.x86_64
+		//	--> Running transaction check
+		//	---> Package ipmitool.x86_64 0:1.8.11-12.el6 will be installed
+		//	---> Package libibverbs.x86_64 0:1.1.5-3.el6 will be installed
+		//	---> Package librdmacm.x86_64 0:1.0.14.1-3.el6 will be installed
+		//	---> Package net-snmp-libs.x86_64 1:5.5-37.el6 will be installed
+		//	--> Processing Dependency: libsensors.so.4()(64bit) for package: 1:net-snmp-libs-5.5-37.el6.x86_64
+		//	---> Package net-snmp-utils.x86_64 1:5.5-37.el6 will be installed
+		//	---> Package nss-tools.x86_64 0:3.12.10-4.el6 will be installed
+		//	---> Package oddjob.x86_64 0:0.30-5.el6 will be installed
+		//	---> Package perl-Net-Telnet.noarch 0:3.03-11.el6 will be installed
+		//	---> Package pexpect.noarch 0:2.3-6.el6 will be installed
+		//	---> Package python-suds.noarch 0:0.4.1-3.el6 will be installed
+		//	---> Package sg3_utils.x86_64 0:1.28-4.el6 will be installed
+		//	---> Package telnet.x86_64 1:0.17-47.el6 will be installed
+		//	--> Running transaction check
+		//	---> Package lm_sensors-libs.x86_64 0:3.1.1-10.el6 will be installed
+		//	--> Finished Dependency Resolution
+		//	
+		//	Dependencies Resolved
+		//	
+		//	================================================================================
+		//	Package Arch Version Repository Size
+		//	================================================================================
+		//	Installing:
+		//	cman x86_64 3.0.12.1-19.el6 beaker-HighAvailability 427 k
+		//	Installing for dependencies:
+		//	clusterlib x86_64 3.0.12.1-19.el6 beaker-HighAvailability 92 k
+		//	corosync x86_64 1.4.1-3.el6 beaker-HighAvailability 185 k
+		//	corosynclib x86_64 1.4.1-3.el6 beaker-HighAvailability 169 k
+		//	fence-agents x86_64 3.1.5-9.el6 beaker-HighAvailability 147 k
+		//	fence-virt x86_64 0.2.3-4.el6 beaker-HighAvailability 34 k
+		//	ipmitool x86_64 1.8.11-12.el6 beaker-Server 323 k
+		//	libibverbs x86_64 1.1.5-3.el6 beaker-Server 43 k
+		//	librdmacm x86_64 1.0.14.1-3.el6 beaker-Server 26 k
+		//	lm_sensors-libs x86_64 3.1.1-10.el6 beaker-Server 36 k
+		//	modcluster x86_64 0.16.2-13.el6 beaker-HighAvailability 184 k
+		//	net-snmp-libs x86_64 1:5.5-37.el6 beaker-Server 1.5 M
+		//	net-snmp-utils x86_64 1:5.5-37.el6 beaker-Server 168 k
+		//	nss-tools x86_64 3.12.10-4.el6 beaker-Server 747 k
+		//	oddjob x86_64 0.30-5.el6 beaker-Server 59 k
+		//	openais x86_64 1.1.1-7.el6 beaker-HighAvailability 191 k
+		//	openaislib x86_64 1.1.1-7.el6 beaker-HighAvailability 81 k
+		//	perl-Net-Telnet noarch 3.03-11.el6 beaker-HighAvailability 54 k
+		//	pexpect noarch 2.3-6.el6 beaker-Server 146 k
+		//	python-suds noarch 0.4.1-3.el6 beaker-HighAvailability 217 k
+		//	ricci x86_64 0.16.2-42.el6 beaker-HighAvailability 614 k
+		//	sg3_utils x86_64 1.28-4.el6 beaker-Server 470 k
+		//	telnet x86_64 1:0.17-47.el6 beaker-Server 57 k
+		//	
+		//	Transaction Summary
+		//	================================================================================
+		//	Install 23 Package(s)
+		//	
+		//	Total download size: 5.9 M
+		//	Installed size: 19 M
+		//	Downloading Packages:
+		//	--------------------------------------------------------------------------------
+		//	Total 8.2 MB/s | 5.9 MB 00:00
+		//	Running rpm_check_debug
+		//	Running Transaction Test
+		//	Transaction Test Succeeded
+		//	Running Transaction
+		//	
+		//	Installing : libibverbs-1.1.5-3.el6.x86_64 1/23
+		//	
+		//	Installing : oddjob-0.30-5.el6.x86_64 2/23
+		//	
+		//	Installing : librdmacm-1.0.14.1-3.el6.x86_64 3/23
+		//	
+		//	Installing : fence-virt-0.2.3-4.el6.x86_64 4/23
+		//	
+		//	Installing : lm_sensors-libs-3.1.1-10.el6.x86_64 5/23
+		//	
+		//	Installing : 1:net-snmp-libs-5.5-37.el6.x86_64 6/23
+		//	
+		//	Installing : corosync-1.4.1-3.el6.x86_64 7/23
+		//	
+		//	Installing : corosynclib-1.4.1-3.el6.x86_64 8/23
+		//	
+		//	Installing : openais-1.1.1-7.el6.x86_64 9/23
+		//	
+		//	Installing : openaislib-1.1.1-7.el6.x86_64 10/23
+		//	
+		//	Installing : clusterlib-3.0.12.1-19.el6.x86_64 11/23
+		//	
+		//	Installing : modcluster-0.16.2-13.el6.x86_64 12/23
+		//	
+		//	Installing : 1:net-snmp-utils-5.5-37.el6.x86_64 13/23
+		//	
+		//	Installing : pexpect-2.3-6.el6.noarch 14/23
+		//	
+		//	Installing : perl-Net-Telnet-3.03-11.el6.noarch 15/23
+		//	
+		//	Installing : 1:telnet-0.17-47.el6.x86_64 16/23
+		//	
+		//	Installing : python-suds-0.4.1-3.el6.noarch 17/23
+		//	
+		//	Installing : nss-tools-3.12.10-4.el6.x86_64 18/23
+		//	
+		//	Installing : ricci-0.16.2-42.el6.x86_64 19/23
+		//	
+		//	Installing : sg3_utils-1.28-4.el6.x86_64 20/23
+		//	
+		//	Installing : ipmitool-1.8.11-12.el6.x86_64 21/23
+		//	
+		//	Installing : fence-agents-3.1.5-9.el6.x86_64 22/23
+		//	Stopping kdump:[ OK ]
+		//	Starting kdump:[ OK ]
+		//	
+		//	Installing : cman-3.0.12.1-19.el6.x86_64 23/23
+		//	
+		//	Installed:
+		//	cman.x86_64 0:3.0.12.1-19.el6
+		//	
+		//	Dependency Installed:
+		//	clusterlib.x86_64 0:3.0.12.1-19.el6 corosync.x86_64 0:1.4.1-3.el6
+		//	corosynclib.x86_64 0:1.4.1-3.el6 fence-agents.x86_64 0:3.1.5-9.el6
+		//	fence-virt.x86_64 0:0.2.3-4.el6 ipmitool.x86_64 0:1.8.11-12.el6
+		//	libibverbs.x86_64 0:1.1.5-3.el6 librdmacm.x86_64 0:1.0.14.1-3.el6
+		//	lm_sensors-libs.x86_64 0:3.1.1-10.el6 modcluster.x86_64 0:0.16.2-13.el6
+		//	net-snmp-libs.x86_64 1:5.5-37.el6 net-snmp-utils.x86_64 1:5.5-37.el6
+		//	nss-tools.x86_64 0:3.12.10-4.el6 oddjob.x86_64 0:0.30-5.el6
+		//	openais.x86_64 0:1.1.1-7.el6 openaislib.x86_64 0:1.1.1-7.el6
+		//	perl-Net-Telnet.noarch 0:3.03-11.el6 pexpect.noarch 0:2.3-6.el6
+		//	python-suds.noarch 0:0.4.1-3.el6 ricci.x86_64 0:0.16.2-42.el6
+		//	sg3_utils.x86_64 0:1.28-4.el6 telnet.x86_64 1:0.17-47.el6
+		//	
+		//	Complete!
+		//	Stderr: Installed products updated.
+		//	ExitCode: 0
+
+
 		// check if the package was obsoleted:
 		// Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
 		String regex="Package "+pkg.split("\\.")[0]+".* is obsoleted by (.+), trying to install .+ instead";
@@ -3414,7 +3615,7 @@ repolist: 3,394
 		String obsoletedByPkg = null;
 		if (matcher.find()) {
 			obsoletedByPkg = matcher.group(1);
-			log.warning("Package '"+pkg+"' was obsoleted by '"+obsoletedByPkg+"'.");
+			log.warning("Package '"+pkg+"' was obsoleted by '"+obsoletedByPkg+"'. The replacement package may NOT get installed from repository '"+repoLabel+"'.");
 			pkg = obsoletedByPkg;
 		}
 		
@@ -3422,6 +3623,7 @@ repolist: 3,394
 		
 		// assert the installed package came from repoLabel
 		//	spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
+		//  cman x86_64 3.0.12.1-19.el6 beaker-HighAvailability 427 k
 		regex=pkg.split("\\.")[0]+"\\n? +(\\w*) +([\\w\\.-]*) +"+repoLabel;
 		pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		matcher = pattern.matcher(sshCommandRunner.getStdout());
