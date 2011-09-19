@@ -31,7 +31,7 @@ public class ProductCert extends AbstractCommandLineData {
 	
 	// TODO get rid of these since they are in productNamespace
 	public String productName;	// comes from the ProductNamespace
-	public String productId;	// comes from the ProductNamespace
+	public String productId;	// comes from the ProductNamespace (this is the hash for example the 69 in 69.pem)
 
 
 	public ProductCert(BigInteger serialNumber, Map<String, String> certData){

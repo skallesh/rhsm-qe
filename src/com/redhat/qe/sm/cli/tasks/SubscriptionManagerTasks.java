@@ -1064,6 +1064,26 @@ public class SubscriptionManagerTasks {
 		return null;	// not found
 	}
 	
+	public List<ProductCert> getCurrentProductCertsCorrespondingToSubscriptionPool(SubscriptionPool pool) throws JSONException, Exception {
+		List<ProductCert> currentProductCertsCorrespondingToSubscriptionPool = new ArrayList<ProductCert>();
+		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+		String port = getConfFileParameter(rhsmConfFile, "port");
+		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+		List<ProductCert> currentProductCerts = getCurrentProductCerts();
+
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,"/pools/"+pool.poolId));
+		JSONArray jsonProvidedProducts = (JSONArray) jsonPool.getJSONArray("providedProducts");
+		for (int k = 0; k < jsonProvidedProducts.length(); k++) {
+			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
+			String providedProductId = jsonProvidedProduct.getString("productId");
+			
+			// is this productId among the installed ProductCerts? if so, add them all to the currentProductCertsCorrespondingToSubscriptionPool
+			currentProductCertsCorrespondingToSubscriptionPool.addAll(ProductCert.findAllInstancesWithMatchingFieldFromList("productId", providedProductId, currentProductCerts));
+		}
+		
+		return currentProductCertsCorrespondingToSubscriptionPool;
+	}
+	
 	public List <EntitlementCert> getEntitlementCertsCorrespondingToProductCert(ProductCert productCert) {
 		List<EntitlementCert> correspondingEntitlementCerts = new ArrayList<EntitlementCert>();
 		ProductNamespace productNamespaceMatchingProductCert = null;
