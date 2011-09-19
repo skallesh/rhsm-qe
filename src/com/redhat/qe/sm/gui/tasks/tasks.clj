@@ -507,6 +507,7 @@
 (defn get-all-facts []
   (ui click :view-system-facts)
   (ui waittillguiexist :facts-view)
+  (sleep 5000)
   (let [groups (get-table-elements :facts-view 0)
         is-data? (fn [rownum]
                    (try (ui getcellvalue :facts-view rownum 1) true
