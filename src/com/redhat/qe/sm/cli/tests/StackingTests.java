@@ -9,16 +9,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -45,7 +49,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
-			groups={},
+			groups={/*"blockedByBug-739671"*/},
 			dataProvider="getAvailableStackableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void StackEachPoolToAchieveCompliance(List<SubscriptionPool> stackableSubscriptionPools) throws JSONException, Exception{
@@ -58,6 +62,10 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// override the system facts setting the socket count to a value for which all the stackable subscriptions are needed to achieve compliance
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(minimumSockets));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.facts(null,true,null,null,null);
 		
 		// loop through the stackable pools until we find the first one that covers product certs that are currently installed (put that subscription at the front of the list) (remember the installed product certs)
 		List<ProductCert> installedProductCerts = new ArrayList<ProductCert>();
@@ -73,76 +81,40 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		if (installedProductCerts.size()==0) throw new SkipException("Could not find any installed products for which stacking these pools would achieve compliance.");
 
 		// reconfigure such that only these product certs are installed (copy them to a /tmp/sm-stackingProductDir)
+		for (ProductCert productCert : installedProductCerts) {
+			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForStacking, 0);
+		}
+		clienttasks.config(null,null,true,new String[]{"rhsm","productCertDir".toLowerCase(),productCertDirForStacking});
 		
-		// subscribe to each pool and assert "Partially Subscribe" status and overall incompliance untill the final pool is subscribed
-
+		// subscribe to each pool and assert "Partially Subscribe" status and overall incompliance until the final pool is subscribed
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
+			"Prior to subscribing to any of the stackable subscription pools, the overall system entitlement status should NOT be valid/compliant.");
+		int i=0;
+		for (SubscriptionPool pool : stackableSubscriptionPools) {
+			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+			if (i++<stackableSubscriptionPools.size()) {
+				
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=739671
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="739671"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.info("Skipping the value assertion for fact '"+factNameForSystemCompliance+"' while bug '"+bugId+"' is open.");
+				} else {
+				// END OF WORKAROUND
+				
+				Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
+					"The overall system entitlement status should NOT be valid/compliant until we have subscribed to enough stackable subscription pools to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"'.");		
+				}
+			}
+			
+			// TODO assert partially subscribed
+		}
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
+			"After having subscribed to all the stackable subscription pools needed to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"', the overall system entitlement status should be valid/compliant.");
 
 		
-//		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
-//		
-//		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);	// for this test, we can skip the exhaustive asserts done by this call to clienttasks.subscribeToSubscriptionPool(pool)
-//		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
-//		Assert.assertEquals(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath()),1, "Found the EntitlementCert file ("+entitlementCertFile+") that was granted after subscribing to pool id '"+pool.poolId+"'.");
-//
-//		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-//		
-//		
-//		// the following block of code was added to account for prior subscribed modifier pools that could provide more repos than expected once this pool is subscribed
-//		// check the modifierSubscriptionData for SubscriptionPools that may already have been subscribed too and will modify this pool thereby enabling more repos than expected 
-//		for (List<Object> row : modifierSubscriptionData) {
-//			// ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
-//			SubscriptionPool modifierPool = (SubscriptionPool)row.get(0);
-//			String label = (String)row.get(1);
-//			List<String> modifiedProductIds = (List<String>)row.get(2);
-//			String requiredTags = (String)row.get(3);
-//			List<SubscriptionPool> providingPools = (List<SubscriptionPool>)row.get(4);
-//			if (providingPools.contains(pool)) {
-//				if (priorSubscribedPools.contains(modifierPool)) {
-//					// the modifier's content should now be available in the repos too
-//					EntitlementCert modifierEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(modifierPool);						
-//
-//					// simply add the contentNamespaces from the modifier to the entitlement cert's contentNamespaces so they will be accounted for in the repos list test below
-//					entitlementCert.contentNamespaces.addAll(modifierEntitlementCert.contentNamespaces);
-//				}
-//			}
-//		}
-//		priorSubscribedPools.add(pool);
-//		
-//			
-//		List<Repo> actualRepos = clienttasks.getCurrentlySubscribedRepos();
-//		
-//		// assert that the new contentNamespaces from the entitlementCert are listed in repos
-//		int numNewRepos=0;
-//		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-//			
-//			// instantiate the expected Repo that represents this contentNamespace
-//			String expectedRepoUrl;	// the expected RepoUrl is set by joining the rhsm.conf baseurl with the downloadUrl in the contentNamespace which is usually a relative path.  When it is already a full path, leave it!
-//			if (contentNamespace.downloadUrl.contains("://")) {
-//				expectedRepoUrl = contentNamespace.downloadUrl;
-//			} else {
-//				expectedRepoUrl = clienttasks.baseurl.replaceFirst("//+$","//")+contentNamespace.downloadUrl.replaceFirst("^//+","");	// join baseurl to downloadUrl with "/"
-//			}
-//			Repo expectedRepo = new Repo(contentNamespace.name,contentNamespace.label,expectedRepoUrl,contentNamespace.enabled.trim().equals("1")?true:false);
-//			
-//			// assert the subscription-manager repos --list reports the expectedRepo (unless it requires tags that are not found in the installed product certs)
-//			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts)) {
-//				Assert.assertTrue(actualRepos.contains(expectedRepo),"The newly entitled contentNamespace '"+contentNamespace+"' is represented in the subscription-manager repos --list by: "+expectedRepo);
-//				
-//				if (!priorRepos.contains(expectedRepo)) numNewRepos++;	// also count the number of NEW contentNamespaces
-//				
-//			} else {
-//				Assert.assertFalse(actualRepos.contains(expectedRepo),"The newly entitled contentNamespace '"+contentNamespace+"' is NOT represented in the subscription-manager repos --list because it requires tags ("+contentNamespace.requiredTags+") that are not provided by the currently installed product certs.");
-//			}
-//		}
-//
-//		
-//		// assert that the number of repos reported has increased by the number of contentNamespaces in the new entitlementCert (unless the 
-//		Assert.assertEquals(actualRepos.size(), priorRepos.size()+numNewRepos, "The number of entitled repos has increased by the number of NEW contentNamespaces ("+numNewRepos+") from the newly granted entitlementCert.");
-//		
-//		// randomly decide to unsubscribe from the pool only for the purpose of saving on accumulated logging and avoid a java heap memory error
-//		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null); AND ALSO REMOVE pool FROM priorSubscribedPools
 	}
-	protected List<SubscriptionPool> priorSubscribedPools=new ArrayList<SubscriptionPool>();
 	
 	
 
@@ -150,22 +122,31 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		
 	// Configuration methods ***********************************************************************
 
-//	@BeforeClass(groups={"setup"})
-//	public void setupBeforeClass() throws JSONException, Exception {
-//		currentProductCerts = clienttasks.getCurrentProductCerts();
-//		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists();
-//	}
-//	
-//	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
-//	public void unsubscribeAllBeforeGroups() {
-//		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-//	}
 	
+	@BeforeClass(groups={"setup"})
+	public void setupBeforeClass() {
+		
+		// clean out the productCertDirs
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+productCertDirForStacking, 0);
+		RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDirForStacking, 0);
+		
+		this.productCertDir = clienttasks.productCertDir;
+	}
+	
+	@BeforeMethod(groups={"setup"})
+	@AfterClass(groups={"setup"},alwaysRun=true)
+	public void cleanupAfterClass() {
+		if (clienttasks==null) return;
+		clienttasks.deleteFactsFileWithOverridingValues();
+		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
+
+	}
 	
 	// Protected methods ***********************************************************************
 
-//	List<ProductCert> currentProductCerts=new ArrayList<ProductCert>();
-//	List<List<Object>> modifierSubscriptionData = null;
+	protected final String productCertDirForStacking = "/tmp/sm-stackingProductDir";
+	protected String productCertDir = null;
+	protected final String factNameForSystemCompliance = "system.entitlements_valid"; // "system.compliant"; // changed with the removal of the word "compliance" 3/30/2011
 
 	
 	// Data Providers ***********************************************************************
@@ -199,22 +180,6 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
-//		// who is the owner of sm_clientUsername
-//		String clientOrg = sm_clientOrg;
-//		if (clientOrg==null) {
-//			List<RegistrationData> registrationData = findGoodRegistrationData(true,sm_clientUsername,false,clientOrg);
-//			if (registrationData.isEmpty() || registrationData.size()>1) throw new SkipException("Could not determine unique owner for username '"+sm_clientUsername+"'.  It is needed for a candlepin API call get pools by owner.");
-//			clientOrg = registrationData.get(0).ownerKey;
-//		}
-//		
-//		// process all of the pools belonging to ownerKey
-//		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+clientOrg+"/pools?listall=true"));	
-//		for (int i = 0; i < jsonPools.length(); i++) {
-//			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-//			String id = jsonPool.getString("id");
-//			
-//			ll.add(Arrays.asList(new Object[]{jsonPool}));
-//		}
 		
 		for (String stacking_id : stackableJSONPoolsMap.keySet()) {
 			List<JSONObject> stackableJSONPools = stackableJSONPoolsMap.get(stacking_id);
