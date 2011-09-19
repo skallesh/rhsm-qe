@@ -159,7 +159,7 @@
   (tasks/restart-app)
   (verify (= 1 (tasks/ui guiexist
                          :main-window
-                         "Product entitlement certificates valid*")))
+                         "No product certificates installed*")))
   (verify (tasks/ui showing? :update-certificates)))
 
 
