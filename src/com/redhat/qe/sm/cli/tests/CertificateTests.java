@@ -25,6 +25,29 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
+	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
+			groups={"AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyBaseRHELProductCertIsInstalled_Test() {
+		
+		// check each of the installed product certs in search of one that matches the /etc/redhat-release
+		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
+		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+			log.info(productCert.toString());
+			
+			// strip out numbers from the product cert name before checking for a match...  e.g name='Red Hat Enterprise Linux 6 Server' => 'Red Hat Enterprise Linux Server'
+			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
+			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"
+			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCert.productNamespace.name.replaceAll("\\d", "").replaceAll(" {2,}", " "), productCert.productNamespace.version))) {
+				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
+				return;
+			}
+		}
+		Assert.fail("Could NOT find an installed installed product cert that matches /etc/redhat-release ("+clienttasks.redhatRelease+").");
+	}
+	
+	
 	@Test(	description="candidate product cert validity dates",
 			groups={"AcceptanceTests"},
 			dataProvider="getProductCertFilesData",
@@ -56,10 +79,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=706518
-	// TODO Create a test to assert that the base server/client/desktop/workstation cert is installed.  Probbably need to compare /etc/redhat-release with the provides-tags in the product cert oid 
 	
 	// Configuration methods ***********************************************************************
 

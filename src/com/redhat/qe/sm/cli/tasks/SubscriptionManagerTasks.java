@@ -2874,11 +2874,16 @@ public class SubscriptionManagerTasks {
 		// get all of the provided tags from the productCerts
 		List<String> providedTags = new ArrayList<String>();
 		for (ProductCert productCert : productCerts) {
-			for (ProductNamespace productNamespace : productCert.productNamespaces) {
-				if (productNamespace.providedTags!=null) {
-					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
-						providedTags.add(providedTag);
-					}
+//			for (ProductNamespace productNamespace : productCert.productNamespaces) {
+//				if (productNamespace.providedTags!=null) {
+//					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
+//						providedTags.add(providedTag);
+//					}
+//				}
+//			}
+			if (productCert.productNamespace.providedTags!=null) {
+				for (String providedTag : productCert.productNamespace.providedTags.split("\\s*,\\s*")) {
+					providedTags.add(providedTag);
 				}
 			}
 		}
@@ -3188,15 +3193,20 @@ repolist: 3,394
 		}
 		
 		// Example result.getStdout()
+		//  Loaded plugins: product-id, refresh-packagekit, subscription-manager
+		//  No plugin match for: rhnplugin
+		//  Updating certificate-based repositories.
+		//  Available Packages
 		//	xmltex.noarch                             20020625-16.el6                      red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//	xmlto.x86_64                              0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//	xmlto-tex.noarch                          0.0.23-3.el6                         red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//	xorg-x11-apps.x86_64                      7.4-10.el6                           red-hat-enterprise-linux-6-entitlement-alpha-rpms
 		//if (enablerepo==null||enablerepo.equals("*")) enablerepo="(\\S+)";
 		//String regex="^(\\S+) +(\\S+) +"+enablerepo+"$";
-		String regex="^(\\S+) +(\\S+) +(\\S+)$";
+		String regex="^(\\S+) +(\\S+) +(\\S+)$";	// assume all the packages are on a line with three words
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(result.getStdout());
+		String stdout = result.getStdout().replaceAll("Updating certificate-based repositories.", "").replaceAll("Loaded plugins:", "Loaded list of yum plugins:");	// strip these messages from stdout since they could break the three word regex assumption for packages.
+		Matcher matcher = pattern.matcher(stdout);
 		if (!matcher.find()) {
 			log.info("Did NOT find any available packages from: "+command);
 			return packages;
@@ -3206,7 +3216,12 @@ repolist: 3,394
 		do {
 			packages.add(matcher.group(1)); // group(1) is the pkg,  group(2) is the version,  group(3) is the repo
 		} while (matcher.find());
-		return packages;		
+		
+		// flip the packages since the ones at the end of the list are usually easier to install 
+		ArrayList<String> packagesCloned = (ArrayList<String>) packages.clone(); packages.clear();
+		for (int p=packagesCloned.size()-1; p>=0; p--) packages.add(packagesCloned.get(p));
+
+		return packages;
 	}
 	
 	public ArrayList<String> yumGroupList (String Installed_or_Available, String options) {
@@ -3306,7 +3321,15 @@ repolist: 3,394
 		if (installOptions==null) installOptions=""; installOptions = installOptions.replaceFirst("-y", "");
 		String command = "echo N | yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 1);
-		return result.getStdout().contains("Complete!");
+
+		//	Total download size: 2.1 M
+		//	Installed size: 4.8 M
+		//	Is this ok [y/N]: N
+		//	Exiting on user Command
+		//	Complete!			// NOTE: THIS LINE ORF STDOUT WAS REMOVED IN RHEL62 WHEN USER TYPES N
+
+		//return result.getStdout().contains("Complete!");
+		return result.getStdout().contains("Is this ok [y/N]:");
 	}
 	
 	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
@@ -3316,51 +3339,51 @@ repolist: 3,394
 		String command = "yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
 		
-//		201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
-//		201104051837:18.156 - FINE: Stdout: 
-//		Loaded plugins: product-id, refresh-packagekit, subscription-manager
-//		No plugin match for: rhnplugin
-//		Updating Red Hat repositories.
-//		Setting up Install Process
-//		Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
-//		Resolving Dependencies
-//		--> Running transaction check
-//		---> Package spice-server.x86_64 0:0.7.3-2.el6 will be installed
-//		--> Finished Dependency Resolution
-//
-//		Dependencies Resolved
-//
-//		================================================================================
-//		 Package          Arch       Version          Repository                   Size
-//		================================================================================
-//		Installing:
-//		 spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
-//
-//		Transaction Summary
-//		================================================================================
-//		Install       1 Package(s)
-//
-//		Total download size: 245 k
-//		Installed size: 913 k
-//		Downloading Packages:
-//		Running rpm_check_debug
-//		Running Transaction Test
-//		Transaction Test Succeeded
-//		Running Transaction
-//
-//		  Installing : spice-server-0.7.3-2.el6.x86_64                              1/1 
-//		duration: 205(ms)
-//
-//		Installed:
-//		  spice-server.x86_64 0:0.7.3-2.el6                                             
-//
-//		Complete!
-//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-//		201104051837:18.180 - FINE: Stderr: 
-//		INFO:rhsm-app.repolib:repos updated: 63
-//		Installed products updated.
-//		 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
-//		201104051837:18.182 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201104051837:18.156 - FINE: Stdout: 
+		//	Loaded plugins: product-id, refresh-packagekit, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating Red Hat repositories.
+		//	Setting up Install Process
+		//	Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
+		//	Resolving Dependencies
+		//	--> Running transaction check
+		//	---> Package spice-server.x86_64 0:0.7.3-2.el6 will be installed
+		//	--> Finished Dependency Resolution
+		//
+		//	Dependencies Resolved
+		//
+		//	================================================================================
+		//	 Package          Arch       Version          Repository                   Size
+		//	================================================================================
+		//	Installing:
+		//	 spice-server     x86_64     0.7.3-2.el6      rhel-6-server-beta-rpms     245 k
+		//
+		//	Transaction Summary
+		//	================================================================================
+		//	Install       1 Package(s)
+		//
+		//	Total download size: 245 k
+		//	Installed size: 913 k
+		//	Downloading Packages:
+		//	Running rpm_check_debug
+		//	Running Transaction Test
+		//	Transaction Test Succeeded
+		//	Running Transaction
+		//
+		//	  Installing : spice-server-0.7.3-2.el6.x86_64                              1/1 
+		//	duration: 205(ms)
+		//
+		//	Installed:
+		//	  spice-server.x86_64 0:0.7.3-2.el6                                             
+		//
+		//	Complete!
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201104051837:18.180 - FINE: Stderr: 
+		//	INFO:rhsm-app.repolib:repos updated: 63
+		//	Installed products updated.
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201104051837:18.182 - FINE: ExitCode: 0 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 
 				
 		// check if the package was obsoleted:
