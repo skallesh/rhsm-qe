@@ -44,7 +44,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
 	
-
 	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
 			dataProvider="getSystemSubscriptionPoolProductData",
 			groups={"AcceptanceTests","blockedByBug-660713"},
@@ -162,15 +161,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 					}
-					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.expires), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
-					Assert.assertEquals(installedProduct.serialNumber, productSubscription.serialNumber, "Installed Product '"+productName+"' serialNumber matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
+					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
+//FIXME	DEPRECATED AFTER FIX FOR BUG 736424				Assert.assertEquals(installedProduct.serialNumber, productSubscription.serialNumber, "Installed Product '"+productName+"' serialNumber matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
 				} else {
 					Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
 				}
 			}
 		}
 	}
-
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",

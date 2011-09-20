@@ -21,17 +21,18 @@ public class EntitlementCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";			// Aug 23 08:42:00 2010 GMT   validityNotBefore
 
 	// abstraction fields
-	public File file;
 	public BigInteger serialNumber;	// this is the key
 	public String id;			// entitlement uuid on the candlepin server
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
+	public File file;
 	
 	public OrderNamespace orderNamespace;
 	public List<ProductNamespace> productNamespaces;
 	public List<ContentNamespace> contentNamespaces;
 	public String rawCertificate;
+
 
 	public EntitlementCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
@@ -47,12 +48,12 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (file != null)					string += String.format(" %s='%s'", "file",file);
 		if (serialNumber != null)			string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (id != null)						string += String.format(" %s='%s'", "id",id);
 		if (issuer != null)					string += String.format(" %s='%s'", "issuer",issuer);
 		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
+		if (file != null)					string += String.format(" %s='%s'", "file",file);
 	
 		return string.trim();
 	}
@@ -402,11 +403,11 @@ public class EntitlementCert extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
 		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Subject: CN=(.+)");
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
 
 		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");

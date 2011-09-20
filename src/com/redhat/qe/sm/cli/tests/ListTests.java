@@ -144,19 +144,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// assert the number of installed product matches the product certs installed
 		Assert.assertEquals(installedProducts.size(), productCerts.size(), "A single product is reported as installed for each product cert found in "+clienttasks.productCertDir);
 
-		// assert that each of the installed product certs are listed in installedProducts as "Not Subscribed"
-		for (InstalledProduct installedProduct : installedProducts) {
-			boolean foundInstalledProductMatchingProductCert=false;
-			for (ProductCert productCert : productCerts) {
-				if (installedProduct.productName.equals(productCert.productName)) {
-					foundInstalledProductMatchingProductCert = true;
-					break;
-				}
-			}
-			Assert.assertTrue(foundInstalledProductMatchingProductCert, "The installed product cert for '"+installedProduct.productName+"' is reported by subscription-manager as installed.");
-			Assert.assertEquals(installedProduct.status, "Not Subscribed", "A newly registered system should not be subscribed to installed product '"+installedProduct.productName+"'.");
+		// assert that each of the installed ProductCerts are listed as InstalledProducts with status "Not Subscribed"
+		for (ProductCert productCert : productCerts) {
+			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+			Assert.assertNotNull(installedProduct, "The following installed product cert is included by subscription-manager in the list --installed: "+(installedProduct==null?"null":installedProduct));	
+			Assert.assertEquals(installedProduct.status, "Not Subscribed", "The status of installed product when newly registered: "+installedProduct);
 		}
-
 	}
 	
 	

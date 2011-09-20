@@ -31,7 +31,10 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	public String productId;	// public String productSku;	// productSku was replaced by productId in subscription-manager-0.68-1.el6.i686  jsefler 7/13/2010
 	public String poolId;
 	public String quantity;	// public Integer quantity;	// can be "unlimited"
+	public Boolean multiEntitlement;
 	public Calendar endDate;
+	public String machineType;
+
 	
 	public Calendar startDate;
 	public Boolean activeSubscription;
@@ -132,24 +135,17 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	@Override
 	public String toString() {
 		
-//		public Date startDate;
-//		public Date endDate;
-//		public Boolean activeSubscription;
-//		public Integer consumed;
-//		public Integer quantity;
-//		public String poolId;
-//		public String subscriptionName;
-//		public String productId;
-		
 		String string = "";
 		if (subscriptionName != null)	string += String.format(" %s='%s'", "subscriptionName",subscriptionName);
 		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
 		if (poolId != null)				string += String.format(" %s='%s'", "poolId",poolId);
 		if (quantity != null)			string += String.format(" %s='%s'", "quantity",quantity);
 		if (consumed != null)			string += String.format(" %s='%s'", "consumed",consumed);
+		if (multiEntitlement != null)	string += String.format(" %s='%s'", "multiEntitlement",multiEntitlement);
 		if (activeSubscription != null)	string += String.format(" %s='%s'", "activeSubscription",activeSubscription);
 		if (startDate != null)			string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)			string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
+		if (machineType != null)		string += String.format(" %s='%s'", "machineType",machineType);
 
 
 		return string.trim();
@@ -202,18 +198,39 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		PoolId:            	8a9b90882da9ac9f012da9e5e991000e
 		Quantity:          	9                        
 		Expires:           	2011-07-19   
+		
+
+
+		ProductName:       	Awesome OS Scalable Filesystem
+		ProductId:         	awesomeos-scalable-fs    
+		PoolId:            	8a90f8c632878dd10132878f98390702
+		Quantity:          	10                       
+		Multi-Entitlement: 	Yes                      
+		Expires:           	09/18/2012               
+		MachineType:       	physical                 
+		
+		
+		ProductName:       	Awesome OS Modifier      
+		ProductId:         	awesomeos-modifier       
+		PoolId:            	8a90f8c632878dd10132878f99020719
+		Quantity:          	10                       
+		Multi-Entitlement: 	No                       
+		Expires:           	09/18/2012               
+		MachineType:       	physical  
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		//regexes.put("subscriptionName",			"ProductName:(.*)");	// FIXME: truncates subscriptionName value when it spans multiple lines
-		regexes.put("subscriptionName",			"ProductName:(.*(\\n.*?)+)^\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+: represents the start of the next property
+		//regexes.put("subscriptionName",			"ProductName:(.*)");	// FIXME: truncates subscriptionName value when it spans multiple lines FIXED below
+		regexes.put("subscriptionName",			"ProductName:(.*(\\n.*?)+)^\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+: represents the start of the next property so as to capture a multi-line value
 		regexes.put("productId",				"ProductId:(.*)");
 		regexes.put("poolId",					"PoolId:(.*)");
+		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
 		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
 		regexes.put("endDate",					"Expires:(.*)");
-		
+		regexes.put("machineType",				"MachineType:(.*)");
+	
 		List<Map<String,String>> listOfAvailableSubscriptionMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);

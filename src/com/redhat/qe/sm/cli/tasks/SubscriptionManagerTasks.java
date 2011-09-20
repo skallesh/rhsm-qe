@@ -1055,6 +1055,25 @@ public class SubscriptionManagerTasks {
 		return entitlementCerts.get(0);
 	}
 	
+	/**
+	 * For the given ProductCert installed in /etc/pki/product, get the corresponding InstalledProduct from subscription-manager list --installed
+	 * @param productCert
+	 * @return instance of InstalledProduct (null if not found)
+	 */
+	public InstalledProduct getInstalledProductCorrespondingToProductCert(ProductCert productCert) {
+		return getInstalledProductCorrespondingToProductCert(productCert,getCurrentlyInstalledProducts());
+	}
+	public InstalledProduct getInstalledProductCorrespondingToProductCert(ProductCert productCert, List<InstalledProduct> fromInstalledProducts) {
+		for (InstalledProduct installedProduct : fromInstalledProducts) {
+			if (installedProduct.productName.equals(productCert.productNamespace.name) &&
+				installedProduct.version.equals(productCert.productNamespace.version) &&
+				installedProduct.arch.equals(productCert.productNamespace.arch)) {
+				return installedProduct;
+			}
+		}
+		return null; // not found
+	}
+	
 	
 	public EntitlementCert getEntitlementCertCorrespondingToSubscribedPool(SubscriptionPool subscribedPool) {
 		String hostname = getConfFileParameter(rhsmConfFile, "hostname");

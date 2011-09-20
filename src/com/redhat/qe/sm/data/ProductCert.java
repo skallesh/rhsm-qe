@@ -22,13 +22,13 @@ public class ProductCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields
-	public File file;
 	public BigInteger serialNumber;	// this is the key
 	public String rawCertificate;
 	public String cn;
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
+	public File file;
 	
 	public ProductNamespace productNamespace;
 	
@@ -53,7 +53,6 @@ public class ProductCert extends AbstractCommandLineData {
 	public String toString() {
 		
 		String string = "";
-		if (file != null)				string += String.format(" %s='%s'", "file",file);
 		if (productNamespace != null)	string += String.format(" %s",		productNamespace);
 //		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
 //		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
@@ -62,7 +61,8 @@ public class ProductCert extends AbstractCommandLineData {
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
 		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
-	
+		if (file != null)				string += String.format(" %s='%s'", "file",file);
+
 		return string.trim();
 	}
 	
@@ -267,12 +267,12 @@ public class ProductCert extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*File: (.*)");
 		regexes.put("cn",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");	// FIXME not quite right
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
 		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*)Signature Algorithm:.*\\s+(?:([a-f]|[\\d]){2}:){10}");	// FIXME THIS IS ONLY PART OF THE CERT
+		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*File: (.*)");
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
