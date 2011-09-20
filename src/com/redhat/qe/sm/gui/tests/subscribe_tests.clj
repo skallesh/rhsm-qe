@@ -26,10 +26,11 @@
   (tasks/search)
   (tasks/do-to-all-rows-in :all-subscriptions-view 1
                            (fn [subscription]
-                                (with-handlers [(ignore :subscription-not-available)
+                                (with-handlers [(ignore :item-not-available)
                                                 (handle :wrong-consumer-type [e]
                                                         (recover e :log-warning))]
-                                  (tasks/subscribe subscription)))))
+                                  (tasks/subscribe subscription)))
+                           :skip-dropdowns? true))
 
 (defn unsubscribe_all 
   "Unsubscribes from everything available"
@@ -38,13 +39,14 @@
   (tasks/do-to-all-rows-in :my-subscriptions-view 0
                            (fn [subscription] (with-handlers [(ignore :not-subscribed)]
                                                (tasks/unsubscribe subscription)
-                                               (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))))
+                                               (verify (= (tasks/ui rowexist? :my-subscriptions-view subscription) false))))
+                           :skip-dropdowns? true))
 
 
 (defn ^{Test {:groups ["subscribe"]
               :dataProvider "subscriptions"}}
   subscribe_each [_ subscription]
-  (with-handlers [(ignore :subscription-not-available)
+  (with-handlers [(ignore :item-not-available)
                   (handle :wrong-consumer-type [e]
                           (recover e :log-warning))]
     (tasks/subscribe subscription)))
@@ -64,18 +66,20 @@
   check_contract_selection_dates
   "https://bugzilla.redhat.com/show_bug.cgi?id=703920"
   [_ subscription]
-  (with-handlers [(ignore :subscription-not-available)
+  (with-handlers [(ignore :item-not-available)
                   (handle :wrong-consumer-type [e]
                           (recover e :log-warning))]
     (tasks/open-contract-selection subscription)
-    (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
-      (if (>= row 0)
-        (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
-              enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
-          (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
-          (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
-          (recur (dec row)))))
-    (tasks/ui click :cancel-contract-selection)))
+    (try
+      (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
+        (if (>= row 0)
+          (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
+                enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
+            (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
+            (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
+            (recur (dec row)))))
+      (finally 
+       (tasks/ui click :cancel-contract-selection)))))
 
 
 (defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
@@ -159,12 +163,16 @@
 (defn ^{DataProvider {:name "multi-entitle"}}
   get_multi_entitle_subscriptions [_ & {:keys [debug]
                                         :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/search)
   (let [subs (atom [])
-        subscriptions (tasks/get-table-elements :all-subscriptions-view 1)]
+        subscriptions (tasks/get-table-elements
+                       :all-subscriptions-view
+                       0
+                       :skip-dropdowns? true)]
     (doseq [s subscriptions]
-      (with-handlers [(ignore :subscription-not-available)
+      (with-handlers [(ignore :item-not-available)
                       (handle :wrong-consumer-type [e]
                               (recover e :log-warning))]
         (tasks/open-contract-selection s)
@@ -187,36 +195,46 @@
 (defn ^{DataProvider {:name "subscriptions"}}
   get_subscriptions [_ & {:keys [debug]
                           :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/search)
-  (if-not debug
-    (to-array-2d (map vector (tasks/get-table-elements :all-subscriptions-view 1)))
-    (map vector (tasks/get-table-elements :all-subscriptions-view 1))))
+  (let [subs (into [] (map vector (tasks/get-table-elements
+                                   :all-subscriptions-view
+                                   0
+                                   :skip-dropdowns? true)))] 
+    (if-not debug
+      (to-array-2d subs)
+      subs)))
 
 (defn ^{DataProvider {:name "subscribed"}}
   get_subscribed [_ & {:keys [debug]
                        :or {debug false}}]
+  (tasks/restart-app)
+  (register nil)
   (tasks/ui selecttab :my-subscriptions)
-  (if (> 0 (tasks/ui getrowcount :my-subscriptions-view)) 
-    (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
-    (do (subscribe_all)
-        (tasks/ui selecttab :my-subscriptions)
-        (if-not debug
-          (to-array-2d (map vector (tasks/get-table-elements :my-subscriptions-view 0)))
-          (map vector (tasks/get-table-elements :my-subscriptions-view 0))))))
+  (subscribe_all)
+  (tasks/ui selecttab :my-subscriptions)
+  (let [subs (into [] (map vector (tasks/get-table-elements
+                                   :my-subscriptions-view
+                                   0
+                                   :skip-dropdowns? true)))]
+    (if-not debug
+      (to-array-2d subs)
+      subs)))
 
 (defn ^{DataProvider {:name "multi-contract"}}
   get_multi_contract_subscriptions [_ & {:keys [debug]
                                          :or {debug false}}]
+  (tasks/restart-app)
   (register nil)
   (tasks/search {:do-not-overlap? false})
   (let [subs (atom [])
-        allsubs (tasks/get-table-elements :all-subscriptions-view 1)]
+        allsubs (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true)]
     (doseq [s allsubs]
-      (with-handlers [(ignore :subscription-not-available)
+      (with-handlers [(ignore :item-not-available)
                       (handle :contract-selection-not-available [e]
                               (tasks/unsubscribe s))]
-        (tasks/open-contract-selection s)
+        (tasks/open-contract-selection s)0
         (tasks/ui click :cancel-contract-selection)
         (swap! subs conj [s])))
     (if-not debug

@@ -105,13 +105,13 @@
         port      "666"]
     (tasks/enableproxy-noauth hostname port)
     (tasks/verify-conf-proxies hostname port "" ""))
-  (let [thrown-error (with-handlers [(handle :network-error [e]
+  (let [thrown-error (with-handlers [(handle :error-updating [e]
                                              (:type e))]
                        (tasks/ui click :view-system-facts)
                        (tasks/ui waittillguiexist :facts-view)
                        (tasks/ui click :update-facts)
                        (tasks/checkforerror))]
-    (verify (= thrown-error :network-error)))
+    (verify (= thrown-error :error-updating)))
   (tasks/ui click :close-facts)
   (disable_proxy nil))
 
