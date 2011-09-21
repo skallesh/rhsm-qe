@@ -37,9 +37,10 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public EntitlementCert(BigInteger serialNumber, Map<String, String> certData){
 		super(certData);
 		this.serialNumber = serialNumber;
-		orderNamespace = OrderNamespace.parse(this.rawCertificate);
-		productNamespaces = ProductNamespace.parse(this.rawCertificate);
-		contentNamespaces = ContentNamespace.parse(this.rawCertificate);
+		//FIXME this is the best place for this initialization - should be moved out of parse
+		//FIXME orderNamespace = OrderNamespace.parse(this.rawCertificate);
+		//FIXME productNamespaces = ProductNamespace.parse(this.rawCertificate);
+		//FIXME contentNamespaces = ContentNamespace.parse(this.rawCertificate);
 	}
 
 	
@@ -407,10 +408,11 @@ public class EntitlementCert extends AbstractCommandLineData {
 		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
 		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
 		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
+		//FIXME would like to add this back regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
 
 		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
-		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
+		//FIXME would like to add this back regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
+
 		
 
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
@@ -426,7 +428,13 @@ public class EntitlementCert extends AbstractCommandLineData {
 			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
 			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
 			
-			entitlementCerts.add(new EntitlementCert(serialNumber, productMap.get(key)));
+			EntitlementCert entitlementCert = new EntitlementCert(serialNumber, productMap.get(key));
+			// FIXME ...  this ONLY works when there is ONLY ONE rawCertificate in rawCertificates but this imple avoids a stack overflow
+			entitlementCert.orderNamespace = OrderNamespace.parse(rawCertificates);
+			entitlementCert.productNamespaces = ProductNamespace.parse(rawCertificates);
+			entitlementCert.contentNamespaces = ContentNamespace.parse(rawCertificates);
+			// ...FIXME
+			entitlementCerts.add(entitlementCert);
 		}
 		return entitlementCerts;
 	}
