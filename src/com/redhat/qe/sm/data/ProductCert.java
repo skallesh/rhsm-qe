@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.tools.SSHCommandRunner;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
@@ -23,28 +24,30 @@ public class ProductCert extends AbstractCommandLineData {
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
-	public String rawCertificate;
-	public String cn;
+	public String id;
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
 	public File file;
 	
+	public String serialString;
 	public ProductNamespace productNamespace;
+	protected String rawCertificate;
 	
 	// TODO get rid of these since they are in productNamespace
 	public String productName;	// comes from the ProductNamespace
 	public String productId;	// comes from the ProductNamespace (this is the hash for example the 69 in 69.pem)
 
 
-	public ProductCert(BigInteger serialNumber, Map<String, String> certData){
+	public ProductCert(String rawCertificate, Map<String, String> certData){
 		super(certData);
-		this.serialNumber = serialNumber;
+		this.serialNumber = new BigInteger(serialString.replaceAll(":", ""),16);	// strip out the colons and convert to a number
+		this.rawCertificate = rawCertificate;
 		List<ProductNamespace> productNamespaces = ProductNamespace.parse(this.rawCertificate);
-		// TODO we should assert that there was only one ProductNamespace parsed!
-		productNamespace = productNamespaces.get(0);
-		productName = productNamespace.name;	// extract the product name
-		productId = productNamespace.id;		// extract the hash
+		if (productNamespaces.size()!=1) Assert.fail("Error: expected only one ProductNamespace when parsing raw ceritificate for ProductCert.");
+		this.productNamespace = productNamespaces.get(0);
+		this.productName = productNamespace.name;	// extract the product name
+		this.productId = productNamespace.id;		// extract the hash
 	}
 
 	
@@ -54,10 +57,10 @@ public class ProductCert extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productNamespace != null)	string += String.format(" %s",		productNamespace);
-//		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
-//		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
+		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
+		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
-		if (cn != null)					string += String.format(" %s='%s'", "cn",cn);
+		if (id != null)					string += String.format(" %s='%s'", "id",id);
 		if (issuer != null)				string += String.format(" %s='%s'", "issuer",issuer);
 		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
@@ -81,7 +84,7 @@ public class ProductCert extends AbstractCommandLineData {
 	public boolean equals(Object obj){
 
 		return	((ProductCert)obj).serialNumber.equals(this.serialNumber) &&
-				((ProductCert)obj).cn.equals(this.cn) &&
+				((ProductCert)obj).id.equals(this.id) &&
 				((ProductCert)obj).issuer.equals(this.issuer) &&
 				((ProductCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
 				((ProductCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
@@ -98,11 +101,11 @@ public class ProductCert extends AbstractCommandLineData {
 //	}
 	
 	/**
-	 * @param certificates - OLD WAY: stdout from: find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text
-	 * @param certificates - stdout from: find /etc/pki/product/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
+	 * @param rawCertificates - OLD WAY: stdout from: find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text
+	 * @param rawCertificates - stdout from: find /etc/pki/product/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
 	 * @return
 	 */
-	static public List<ProductCert> parse(String certificates) {
+	static public List<ProductCert> parse(String rawCertificates) {
 		
 		/* [root@jsefler-itclient01 ~]# openssl x509 -noout -text -in /etc/pki/product/2156.pem 
 		Certificate:
@@ -214,17 +217,6 @@ public class ProductCert extends AbstractCommandLineData {
 		                    00:8b:2c:36:0d:17:ce:fd:e6:8d:4d:5a:ee:6e:40:
 		                    57:11:2d:89:37:b2:bb:10:52:e3:8a:0b:41:13:82:
 		                    33:60:85:3f:b4:aa:4b:81:54:71:42:fd:e4:55:c9:
-		                    ce:20:47:aa:8c:07:25:1d:f6:34:f1:49:3a:ec:d6:
-		                    48:52:bf:51:f2:ca:23:c3:ef:f1:c2:c5:e8:4e:14:
-		                    8f:b8:7b:c0:ed:d0:f1:d4:d4:b4:08:d7:75:c2:94:
-		                    d3:58:c2:88:f5:98:a6:86:f2:6d:ab:42:a8:e8:a6:
-		                    59:a8:84:54:7e:b9:ba:cf:78:e5:81:0d:39:42:1f:
-		                    38:a1:65:a0:a7:e2:33:79:ae:21:58:29:3c:ad:f0:
-		                    b4:a8:63:2c:78:f2:0a:e4:94:1a:05:0f:cd:22:f3:
-		                    40:40:94:00:47:5e:49:13:31:10:67:e5:f6:58:66:
-		                    2d:cc:5d:e1:44:84:8f:98:a8:2d:94:97:42:0d:fe:
-		                    54:d7:66:1a:7e:84:74:bc:84:5c:fe:20:78:35:06:
-		                    67:75:bd:35:29:9c:c3:62:50:01:59:a0:e3:9a:85:
 		                    87:37:02:95:94:07:6b:72:e2:d3:bc:5e:36:fb:31:
 		                    73:3b:af:23:da:e8:c7:45:e9:45:dd:f6:58:13:48:
 		                    15:94:23:7b:d9:d3:a2:d9:15:45:ca:ba:36:46:5d:
@@ -253,8 +245,6 @@ public class ProductCert extends AbstractCommandLineData {
 		    Signature Algorithm: sha1WithRSAEncryption
 		        24:35:5d:c3:02:73:80:37:4e:e1:20:17:87:82:d2:32:6e:8b:
 		        33:7b:de:f5:eb:ec:e8:06:03:6d:c1:70:12:ca:d7:4d:1d:a5:
-		        54:4d:37:0e:fd:94:69:55:a5:57:e7:f6:cb:24:1e:c6:8f:98:
-		        d6:92:a8:af:a4:bd:0b:5f:bf:e7:46:ec:d6:63:56:d7:8d:15:
 		        13:7b:1d:60:3f:66:88:db:45:e0:a1:1f:38:e9:77:71:55:41:
 		        96:f5:76:47:c8:02:9c:38:a0:54:92:7c:c6:26:db:59:04:ec:
 		        e4:9d:63:8b:5d:4c:e4:c2:29:63:fc:27:40:e3:fc:42:ab:cf:
@@ -264,30 +254,63 @@ public class ProductCert extends AbstractCommandLineData {
 		*/
 		
 		
-		Map<String,String> regexes = new HashMap<String,String>();
-		
-		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("cn",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");	// FIXME not quite right
-		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
-		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
-		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*)Signature Algorithm:.*\\s+(?:([a-f]|[\\d]){2}:){10}");	// FIXME THIS IS ONLY PART OF THE CERT
-		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*File: (.*)");
-		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToMap(pat, certificates, productMap, field);
-		}
-		
 		List<ProductCert> productCerts = new ArrayList<ProductCert>();
-		for(String key : productMap.keySet()) {
-			
-			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
-			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
-			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
 		
-			productCerts.add(new ProductCert(serialNumber, productMap.get(key)));
+		// begin by splitting the rawCertificates and processing each certificate individually
+		for (String rawCertificate : rawCertificates.split("Certificate:")) {
+			if (rawCertificate.trim().length()==0) continue;
+	
+			Map<String,String> regexes = new HashMap<String,String>();
+
+			// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+			regexes.put("serialString",			"Serial Number:\\s*([\\d\\w:]+)");
+			regexes.put("id",					"Subject: CN=(.+)");
+			regexes.put("issuer",				"Issuer:\\s*(.*)");
+			regexes.put("validityNotBefore",	"Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
+			regexes.put("validityNotAfter",		"Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+			regexes.put("file",					"File: (.+)");
+
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+			}
+			
+			// assert that there is only one group of certData found in the map
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificates.");
+			Map<String,String> certData = certDataList.get(0);
+			
+			// create a new EntitlementCert
+			productCerts.add(new ProductCert(rawCertificate, certData));
 		}
+		
 		return productCerts;
+
+// OLD PARSING - prone to stack overflows when calling addRegexMatchesToMap
+//		Map<String,String> regexes = new HashMap<String,String>();
+//		
+//		// abstraction field				regex pattern (with a capturing group)
+//		regexes.put("cn",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");	// FIXME not quite right
+//		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
+//		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
+//		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+//		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*)Signature Algorithm:.*\\s+(?:([a-f]|[\\d]){2}:){10}");	// FIXME THIS IS ONLY PART OF THE CERT
+//		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*File: (.*)");
+//		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			addRegexMatchesToMap(pat, rawCertificates, productMap, field);
+//		}
+//		
+//		List<ProductCert> productCerts = new ArrayList<ProductCert>();
+//		for(String key : productMap.keySet()) {
+//			
+//			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
+//			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
+//			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
+//		
+//			productCerts.add(new ProductCert(serialNumber, productMap.get(key)));
+//		}
+//		return productCerts;
 	}
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -22,25 +23,26 @@ public class EntitlementCert extends AbstractCommandLineData {
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
-	public String id;			// entitlement uuid on the candlepin server
+	public String id;				// entitlement uuid on the candlepin server
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
 	public File file;
 	
+	public String serialString;
 	public OrderNamespace orderNamespace;
 	public List<ProductNamespace> productNamespaces;
 	public List<ContentNamespace> contentNamespaces;
-	public String rawCertificate;
+	protected String rawCertificate;
 
 
-	public EntitlementCert(BigInteger serialNumber, Map<String, String> certData){
+	public EntitlementCert(String rawCertificate, Map<String, String> certData){
 		super(certData);
-		this.serialNumber = serialNumber;
-		//FIXME this is the best place for this initialization - should be moved out of parse
-		//FIXME orderNamespace = OrderNamespace.parse(this.rawCertificate);
-		//FIXME productNamespaces = ProductNamespace.parse(this.rawCertificate);
-		//FIXME contentNamespaces = ContentNamespace.parse(this.rawCertificate);
+		this.serialNumber = new BigInteger(serialString.replaceAll(":", ""),16);	// strip out the colons and convert to a number
+		this.rawCertificate = rawCertificate;
+		this.orderNamespace = OrderNamespace.parse(rawCertificate);
+		this.productNamespaces = ProductNamespace.parse(rawCertificate);
+		this.contentNamespaces = ContentNamespace.parse(rawCertificate);
 	}
 
 	
@@ -400,43 +402,77 @@ public class EntitlementCert extends AbstractCommandLineData {
 		[root@jsefler-onprem-62server ~]# 
 		*/
 		
-		
-		Map<String,String> regexes = new HashMap<String,String>();
-		
-		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Subject: CN=(.+)");
-		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
-		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
-		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-		//FIXME would like to add this back regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
-
-		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
-		//FIXME would like to add this back regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
-
-		
-
-		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToMap(pat, rawCertificates, productMap, field);
-		}
-		
+	
 		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
-		for(String key : productMap.keySet()) {
+		
+		// begin by splitting the rawCertificates and processing each certificate individually
+		for (String rawCertificate : rawCertificates.split("Certificate:")) {
+			if (rawCertificate.trim().length()==0) continue;
+	
+			Map<String,String> regexes = new HashMap<String,String>();
+
+			// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+			regexes.put("serialString",			"Serial Number:\\s*([\\d\\w:]+)");
+			regexes.put("id",					"Subject: CN=(.+)");
+			regexes.put("issuer",				"Issuer:\\s*(.*)");
+			regexes.put("validityNotBefore",	"Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
+			regexes.put("validityNotAfter",		"Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+			regexes.put("file",					"File: (.+)");
+
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+			}
 			
-			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
-			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
-			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
+			// assert that there is only one group of certData found in the map
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificates.");
+			Map<String,String> certData = certDataList.get(0);
 			
-			EntitlementCert entitlementCert = new EntitlementCert(serialNumber, productMap.get(key));
-			// FIXME ...  this ONLY works when there is ONLY ONE rawCertificate in rawCertificates but this imple avoids a stack overflow
-			entitlementCert.orderNamespace = OrderNamespace.parse(rawCertificates);
-			entitlementCert.productNamespaces = ProductNamespace.parse(rawCertificates);
-			entitlementCert.contentNamespaces = ContentNamespace.parse(rawCertificates);
-			// ...FIXME
-			entitlementCerts.add(entitlementCert);
+			// create a new EntitlementCert
+			entitlementCerts.add(new EntitlementCert(rawCertificate, certData));
 		}
+		
 		return entitlementCerts;
+		
+// OLD PARSING - prone to stack overflows when calling addRegexMatchesToMap		
+//		Map<String,String> regexes = new HashMap<String,String>();
+//		
+//		// abstraction field				regex pattern (with a capturing group)
+//		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Subject: CN=(.+)");
+//		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
+//		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
+//		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
+//		//FIXME would like to add this back regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
+//
+//		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
+//		//FIXME would like to add this back regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
+//
+//		
+//
+//		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			addRegexMatchesToMap(pat, rawCertificates, productMap, field);
+//		}
+//		
+//		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+//		for(String key : productMap.keySet()) {
+//			
+//			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
+//			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
+//			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
+//			
+//			EntitlementCert entitlementCert = new EntitlementCert(serialNumber, productMap.get(key));
+//			// FIXME ...  this ONLY works when there is ONLY ONE rawCertificate in rawCertificates but this imple avoids a stack overflow
+//			entitlementCert.orderNamespace = OrderNamespace.parse(rawCertificates);
+//			entitlementCert.productNamespaces = ProductNamespace.parse(rawCertificates);
+//			entitlementCert.contentNamespaces = ContentNamespace.parse(rawCertificates);
+//			// ...FIXME
+//			entitlementCerts.add(entitlementCert);
+//		}
+//		return entitlementCerts;
+
 	}
 }
 
