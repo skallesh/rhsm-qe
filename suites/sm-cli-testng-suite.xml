@@ -156,6 +156,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Stacking Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="StackingTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Unsubscribe Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />

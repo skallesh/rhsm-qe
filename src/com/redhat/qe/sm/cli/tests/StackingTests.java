@@ -3,8 +3,6 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +14,6 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -26,16 +23,10 @@ import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.ContentNamespace;
-import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
-import com.redhat.qe.sm.data.ProductSubscription;
-import com.redhat.qe.sm.data.Repo;
 import com.redhat.qe.sm.data.SubscriptionPool;
-import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
-import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -50,7 +41,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to each pool with the same stacking_id to achieve compliance",
 			enabled=true,
-			groups={/*"blockedByBug-739671"*/},
+			groups={"blockedByBug-739671", "blockedByBug-740377"},
 			dataProvider="getAvailableStackableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void StackEachPoolToAchieveCompliance(List<SubscriptionPool> stackableSubscriptionPools) throws JSONException, Exception{
@@ -61,10 +52,12 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 			String sockets = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "sockets");
 			minimumSockets+=Integer.valueOf(sockets);
 		}
+		minimumSockets*=4;
 		
 		// override the system facts setting the socket count to a value for which all the stackable subscriptions are needed to achieve compliance
 		Map<String,String> factsMap = new HashMap<String,String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(minimumSockets));
+		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(minimumSockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null,true,null,null,null);
 		
