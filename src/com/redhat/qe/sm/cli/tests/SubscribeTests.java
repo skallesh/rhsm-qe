@@ -67,14 +67,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert the installed status of the bundled products
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
-			String productName = bundledProductAsJSONObject.getString("productName");
+//			String bundledProductName = bundledProductAsJSONObject.getString("productName");
+			String bundledProductId = bundledProductAsJSONObject.getString("productId");
 			
-			// assert the status of the installed product
-			ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
-			if (productCert!=null) {
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProducts);
-				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
-				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Not Subscribed.");
+			// assert the status of the installed products listed
+			for (ProductCert productCert : ProductCert.findAllInstancesWithMatchingFieldFromList("productId", bundledProductId, currentlyInstalledProductCerts)) {
+				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productCert.productName, currentlyInstalledProducts);
+				Assert.assertNotNull(installedProduct, "The status of installed product cert with ProductName '"+productCert.productName+"' is reported in the list of installed products.");
+				Assert.assertEquals(installedProduct.status, "Not Subscribed", "Before subscribing to pool for ProductId '"+productId+"', the status of Installed Product '"+productCert.productName+"' is Not Subscribed.");
 			}
 		}
 		
@@ -88,10 +88,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert the expected products are consumed
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
-			String productName = bundledProductAsJSONObject.getString("productName");
+			String bundledProductName = bundledProductAsJSONObject.getString("productName");
+			String bundledProductId = bundledProductAsJSONObject.getString("productId");
 			
-			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyConsumedProductSubscriptions);
-			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+productName+"' is consumed after subscribing to pool with ProductId '"+productId+"'.");
+			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, currentlyConsumedProductSubscriptions);
+			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+bundledProductName+"' is consumed after subscribing to pool for ProductId '"+productId+"'.");
 
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
 			Boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -101,70 +102,54 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			} else {
 			// END OF WORKAROUND
 				
-				// OLD CODE THAT I THINK WAS WRONG  jsefler 12/2/2010
-//				// assert the dates match
-//				Calendar dayBeforeEndDate = (Calendar) entitlementCert.validityNotAfter.clone(); dayBeforeEndDate.add(Calendar.DATE, -1);
-////				Calendar dayBeforeStartDate = (Calendar) entitlementCert.validityNotBefore.clone(); dayBeforeStartDate.add(Calendar.DATE, -1);
-//				//Assert.assertEquals(productSubscription.endDate, entitlementCert.validityNotAfter, "Consumed ProductSubscription Expires on the same end date as the given entitlement: "+entitlementCert);
-//				Assert.assertTrue(productSubscription.endDate.before(entitlementCert.validityNotAfter) && productSubscription.endDate.after(dayBeforeEndDate), "Consumed ProductSubscription Expires on the same end date as the new entitlement: "+entitlementCert);
-//				Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
-//				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), SubscriptionPool.formatDateString(pool.endDate), "Consumed ProductSubscription Expires on the same date as the originating subscription pool: "+pool);
-
-				// assert the dates match
-				//FIXME https://bugzilla.redhat.com/show_bug.cgi?id=660713 UNCOMMENT WHEN YOU GET AN EXPLANATION FROM DEVELOPMENT
-//				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate),ProductSubscription.formatDateString(entitlementCert.startDate),
-//						"Consumed ProductSubscription Begins on the same DAY as the new entitlement.");
-//				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(entitlementCert.endDate),
-//						"Consumed ProductSubscription Expires on the same DAY as the new entitlement.");
-				Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
-						"Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
-				//FIXME		Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+			// assert the dates match
+			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
+					"Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
+			//FIXME	Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
 			}
 			
 			// find the corresponding productNamespace from the entitlementCert
 			ProductNamespace productNamespace = null;
 			for (ProductNamespace pn : entitlementCert.productNamespaces) {
-				if (pn.name.equals(productName)) productNamespace = pn;
+				if (pn.id.equals(bundledProductId)) productNamespace = pn;
 			}
 			
 			// assert the installed status of the corresponding product
 			if (entitlementCert.productNamespaces.isEmpty()) {
-				log.warning("This product '"+productId+"' ("+productName+") does not appear to grant entitlement to any client side content.  This must be a server side management add-on product. Asserting as such...");
+				log.warning("This product '"+productId+"' ("+bundledProductName+") does not appear to grant entitlement to any client side content.  This must be a server side management add-on product. Asserting as such...");
 
 				Assert.assertEquals(entitlementCert.contentNamespaces.size(),0,
 						"When there are no productNamespaces in the entitlementCert, there should not be any contentNamespaces.");
 
 				// when there is no corresponding product, then there better not be an installed product status by the same product name
-				Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProducts),
-						"Should not find any installed product status matching a server side management add-on productName: "+ productName);
+				Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, currentlyInstalledProducts),
+						"Should not find any installed product status matching a server side management add-on productName: "+ bundledProductName);
 
 				// when there is no corresponding product, then there better not be an installed product cert by the same product name
-				Assert.assertNull(ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts),
-						"Should not find any installed product certs matching a server side management add-on productName: "+ productName);
+				Assert.assertNull(ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, currentlyInstalledProductCerts),
+						"Should not find any installed product certs matching a server side management add-on productName: "+ bundledProductName);
 
 			} else {
-				Assert.assertNotNull(productNamespace, "The new entitlement cert's product namespace corresponding to this expected ProductSubscription with ProductName '"+productName+"' was found.");
-
-				// assert whether or not the product is installed			
-				InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProducts);
-				Assert.assertNotNull(installedProduct, "The status of product with ProductName '"+productName+"' is reported in the list of installed products.");
-	
-				// assert the status of the installed product
-				//ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productName", productName, currentlyInstalledProductCerts);
-				ProductCert productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productNamespace.id, currentlyInstalledProductCerts);
-				if (productCert!=null) {
+				Assert.assertNotNull(productNamespace, "The new entitlement cert's product namespace corresponding to this expected ProductSubscription with ProductName '"+bundledProductName+"' was found.");
+				
+				// assert the status of the installed products listed
+				List <ProductCert> productCerts = ProductCert.findAllInstancesWithMatchingFieldFromList("productId", productNamespace.id, currentlyInstalledProductCerts);  // should be a list of one or empty
+				for (ProductCert productCert : productCerts) {
+					List <InstalledProduct> installedProducts = InstalledProduct.findAllInstancesWithMatchingFieldFromList("productName", productCert.productName, currentlyInstalledProducts);
+					Assert.assertEquals(installedProducts.size(),1, "The status of installed product '"+productCert.productName+"' should only be reported once in the list of installed products.");
+					InstalledProduct installedProduct = installedProducts.get(0);
 					
 					// decide what the status should be...  "Subscribed" or "Partially Subscribed"
 					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "sockets");
 					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets)) {
-						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+productName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
+						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
 					} else {
-						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to ProductId '"+productId+"', the status of Installed Product '"+productName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
+						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 					}
-					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+productName+"' expires on the same date as the consumed ProductSubscription: "+productSubscription);
-//FIXME	DEPRECATED AFTER FIX FOR BUG 736424				Assert.assertEquals(installedProduct.serialNumber, productSubscription.serialNumber, "Installed Product '"+productName+"' serialNumber matches the serialNumber of the consumed ProductSubscription: "+productSubscription);
-				} else {
-					Assert.assertEquals(installedProduct.status, "Not Installed", "The status of Entitled Product '"+productName+"' is Not Installed since a corresponding product cert was not found in "+clienttasks.productCertDir);
+					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+bundledProductName+"' expires on the same DAY as the consumed ProductSubscription: "+productSubscription);
+				}
+				if (productCerts.isEmpty()) {
+					Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, currentlyInstalledProducts),"There should NOT be an installed status report for '"+bundledProductName+"' since a corresponding product cert was not found in "+clienttasks.productCertDir);
 				}
 			}
 		}
