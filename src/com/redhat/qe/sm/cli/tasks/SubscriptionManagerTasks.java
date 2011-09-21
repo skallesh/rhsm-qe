@@ -489,18 +489,24 @@ public class SubscriptionManagerTasks {
 	}
 
 	public List<EntitlementCert> getCurrentEntitlementCerts() {
-		/*
+
 		// THIS ORIGINAL IMPLEMENTATION HAS BEEN THROWING A	java.lang.StackOverflowError
 		// REIMPLEMENTING THIS METHOD TO HELP BREAK THE PROBLEM DOWN INTO SMALLER PIECES - jsefler 11/23/2010
-		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+//		sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+//		String certificates = sshCommandRunner.getStdout();
+//		return EntitlementCert.parse(certificates);
+
+		// STACK OVERFLOW PROBLEM FIXED
+//		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+//		for (File entitlementCertFile : getCurrentEntitlementCertFiles()) {
+//			entitlementCerts.add(getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
+//		}
+//		return entitlementCerts;
+		
+		//sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+entitlementCertDir+" -regex \".*/[0-9]+.pem\" -exec openssl x509 -in '{}' -noout -text \\; -exec echo \"    File: {}\" \\;");
 		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
-		 */
-		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
-		for (File entitlementCertFile : getCurrentEntitlementCertFiles()) {
-			entitlementCerts.add(getEntitlementCertFromEntitlementCertFile(entitlementCertFile));
-		}
-		return entitlementCerts;
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
