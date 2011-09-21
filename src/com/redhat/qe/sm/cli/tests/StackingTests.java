@@ -52,12 +52,11 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 			String sockets = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "sockets");
 			minimumSockets+=Integer.valueOf(sockets);
 		}
-		minimumSockets*=4;
 		
 		// override the system facts setting the socket count to a value for which all the stackable subscriptions are needed to achieve compliance
 		Map<String,String> factsMap = new HashMap<String,String>();
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(minimumSockets));
-		factsMap.put("lscpu.cpu_socket(s)", String.valueOf(minimumSockets));
+		//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(minimumSockets));
 		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts(null,true,null,null,null);
 		
