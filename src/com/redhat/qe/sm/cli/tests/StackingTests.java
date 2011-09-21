@@ -28,6 +28,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.Repo;
@@ -108,11 +109,21 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			
-			// TODO assert partially subscribed
+			// assert installed products are Partially Subscribed
+			for (ProductCert installedProductCert : installedProductCerts) {
+				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
+				Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to stackable subscription pool for ProductId '"+pool.productId+"', the status of Installed Product '"+installedProduct.productName+"' should be Partially Subscribed.");
+			}
+			
 		}
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 			"After having subscribed to all the stackable subscription pools needed to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"', the overall system entitlement status should be valid/compliant.");
 
+		// assert installed products are fully Subscribed
+		for (ProductCert installedProductCert : installedProductCerts) {
+			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
+			Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to enough stackable subscription pools to cover the systems sockets count ("+minimumSockets+"), the status of Installed Product '"+installedProduct.productName+"' should be fully Subscribed.");
+		}
 		
 	}
 	
