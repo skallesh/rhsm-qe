@@ -196,7 +196,8 @@ public class SubscriptionManagerTasks {
 		if (rpmUrls.size() > 0) {
 			log.info("Uninstalling existing subscription-manager RPMs...");
 			for (String pkg : new String[]{"subscription-manager-firstboot","subscription-manager-gnome","subscription-manager","python-rhsm"}) {
-				sshCommandRunner.runCommandAndWait("rpm -e "+pkg);
+				//sshCommandRunner.runCommandAndWait("rpm -e "+pkg);
+				sshCommandRunner.runCommandAndWait("yum remove -y "+pkg);
 				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
 			}
 		}
