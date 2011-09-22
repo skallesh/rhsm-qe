@@ -286,7 +286,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// assert results...
 		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
-		Assert.assertEquals(configResult.getStderr().trim(), "FIXME", "Stderr message");
+		Assert.assertEquals(configResult.getStderr().trim(), "Error: Section "+section+" and name "+name+" does not exist.");
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
 		
 		// assert that an empty parameter was not added to the config (bug 736784)
