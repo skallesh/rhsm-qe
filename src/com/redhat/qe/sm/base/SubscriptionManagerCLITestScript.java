@@ -938,7 +938,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			
-			// skip subscriptions that are not valid today (at this time now)
+			// skip future subscriptions that are not valid today (at this time now)
 			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
 			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
 			if (!(startDate.before(now) && endDate.after(now))) continue;
@@ -949,7 +949,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// skip subscriptions that have already been added to SystemSubscriptionPoolProductData
 			if (productIdsAddedToSystemSubscriptionPoolProductData.contains(productId)) continue;
-			
+
 			// process this subscription productId
 			JSONArray jsonProductAttributes = jsonProduct.getJSONArray("attributes");
 			boolean productAttributesPassRulesCheck = true; // assumed
@@ -1003,12 +1003,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				if (attributeName.equals("sockets")) {
 					productAttributeSocketsValue = attributeValue;
 					
-					// before checking if the socket count on this client exceeds the sockets attribute, check if this subscription is stackable by looking for a stacking_id attribute (if exists, then this subscription should be available despite the sockets value)
-					if (productAttributeStackingIdValue!=null) break;	// no need to check sockets value when this subscription is stackable.
+					// if this subscription is stackable (indicated by the presence of a stacking_id attribute)
+					// then there is no need to check the system's sockets to see if this subscription should be available 
+					// Because this subscription is stackable, it better not be filtered out from availability based on the system's sockets.
+					if (productAttributeStackingIdValue==null) {
 					
-					// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
-					if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-						if (matchSystem) productAttributesPassRulesCheck = false;
+						// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
+						if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+							if (matchSystem) productAttributesPassRulesCheck = false;
+						}
 					}
 				}
 			}
