@@ -40,4 +40,5 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister
+	// TODO Bug 706853 - SM Gui “unregister” button deletes “consumer” folder for non network host.
 }
