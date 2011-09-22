@@ -34,12 +34,21 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// check each of the installed product certs in search of one that matches the /etc/redhat-release
 		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
 		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-			log.info(productCert.toString());
+			log.info("Found installed product cert: "+productCert);
+			String productCertName = productCert.productName;
 			
 			// strip out numbers from the product cert name before checking for a match...  e.g name='Red Hat Enterprise Linux 6 Server' => 'Red Hat Enterprise Linux Server'
 			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
 			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"
-			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCert.productNamespace.name.replaceAll("\\d", "").replaceAll(" {2,}", " "), productCert.productNamespace.version))) {
+			productCertName = productCertName.replaceAll("\\d", "").replaceAll(" {2,}", " ");
+			// adjust the product cert name "for Scientific Computing" => "ComputeNode"
+			productCertName = productCertName.replaceFirst("for Scientific Computing","ComputeNode");
+			// adjust the product cert name "for IBM POWER" => "Server"
+			productCertName = productCertName.replaceFirst("for IBM POWER","Server");
+			// adjust the product cert name "Desktop" => "Client"
+			productCertName = productCertName.replaceFirst("Desktop","Client");
+
+			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCertName, productCert.productNamespace.version))) {
 				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
 				return;
 			}
