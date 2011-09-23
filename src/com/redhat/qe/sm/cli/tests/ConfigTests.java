@@ -296,6 +296,24 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: attempt to use config module to list together with set and/or remove option(s) for config parameters",
+			groups={"blockedByBug-730020"},
+			dataProvider="getNegativeConfigListSetRemoveData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigAttemptListWithSetAndRemoveOptions_Test(Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value) {
+		
+		SSHCommandResult configResult = clienttasks.config_(list,remove,set,section_name_value);
+
+		// assert results...
+		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to combine list with set/remove options.");
+		Assert.assertEquals(configResult.getStderr().trim(), "Error: --list should not be used with any other options for setting or removing configurations.", "Stderr message");
+		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
+	}
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	
@@ -342,13 +360,33 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	// Data Providers ***********************************************************************
 	
+
+	@DataProvider(name="getNegativeConfigListSetRemoveData")
+	public Object[][] getNegativeConfigListSetRemoveDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getNegativeConfigListSetRemoveDataAsListOfLists());
+	}
+	protected List<List<Object>> getNegativeConfigListSetRemoveDataAsListOfLists(){
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// Object blockedByBug, Boolean list, Boolean remove, Boolean set, String[] section_name_value
+		ll.add(Arrays.asList(new Object[]{null,	true,	true,	true,	new String[]{"rhsmcertd", "insecure", "1"}}));
+		ll.add(Arrays.asList(new Object[]{null,	true,	false,	true,	new String[]{"rhsmcertd", "insecure", "1"}}));
+		ll.add(Arrays.asList(new Object[]{null,	true,	true,	false,	new String[]{"rhsmcertd", "insecure", "1"}}));
+		
+		return ll;
+	}
+	
+	
+	
+
+		
 	@DataProvider(name="getConfigSectionNameData")
 	public Object[][] getConfigSectionNameDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getConfigSectionNameDataAsListOfLists());
 	}
 	protected List<List<Object>> getConfigSectionNameDataAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		
+			
 		// Object bugzilla,	String section,	String name, String testValue
 		ll.add(Arrays.asList(new Object[]{null,	"server",		"ca_cert_dir",			"/tmp/server/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{null,	"server",		"hostname",				"server.hostname.redhat.com"}));
