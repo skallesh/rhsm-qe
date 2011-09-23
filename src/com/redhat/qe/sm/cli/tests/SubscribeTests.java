@@ -421,7 +421,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867"},
+			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
 			dependsOnMethods={"VerifyAvailablePoolsPassTheHardwareRulesCheck_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
