@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -297,6 +298,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 	
+	@BeforeClass(groups={"setup"})
+	public void removeYumBeakerRepos() {
+		client.runCommandAndWait("mkdir -p /tmp/beaker.repos; mv -f /etc/yum.repos.d/beaker*.repo /tmp/beaker.repos");
+	}
+	
+	@AfterClass(groups={"setup"})
+	public void restoreYumBeakerRepos() {
+		client.runCommandAndWait("mv -f /tmp/beaker.repos/beaker*.repo /etc/yum.repos.d");
+	}
+	
 	@AfterClass(groups={"setup"})
 	@AfterGroups(groups={"setup"},value="InstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test", alwaysRun=true)
 	public void unregisterAfterGroupsInstallAndRemovePackageAfterSubscribingToPersonalSubPool_Test() {
@@ -309,6 +320,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			client2tasks.unregister_(null,null,null);
 		}
 	}
+
 
 	
 	// Protected Methods ***********************************************************************
