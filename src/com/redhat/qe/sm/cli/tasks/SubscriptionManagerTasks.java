@@ -3372,7 +3372,7 @@ repolist: 3,394
 	 * @param repoLabel
 	 * @param installOptions
 	 * @return true - when pkg can be cleanly installed from repolLabel with installOptions. <br>
-	 *         false - when the install will not successfully "Complete!" 
+	 *         false - when the user is not prompted with "Is this ok [y/N]:" to Complete! the install
 	 */
 	public boolean yumCanInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
 		
@@ -3381,13 +3381,32 @@ repolist: 3,394
 		String command = "echo N | yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 1);
 
+		// disregard the package if it was obsoleted...
+		
+		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating certificate-based repositories.
+		//	Setting up Install Process
+		//	Package gfs-pcmk is obsoleted by cman, trying to install cman-3.0.12.1-21.el6.x86_64 instead
+		//	Resolving Dependencies
+		//	--> Running transaction check
+		//	---> Package cman.x86_64 0:3.0.12.1-21.el6 will be installed
+		String regex="Package "+pkg.split("\\.")[0]+".* is obsoleted by (.+), trying to install .+ instead";
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(sshCommandRunner.getStdout());
+		String obsoletedByPkg = null;
+		if (matcher.find()) {
+			obsoletedByPkg = matcher.group(1);
+			// can the obsoletedByPkg be installed from repoLabel instead? 
+			//return yumCanInstallPackageFromRepo (obsoletedByPkg, repoLabel, installOptions);
+			log.fine("Disregarding package '"+pkg+"' as installable from repo '"+repoLabel+"' because it has been obsoleted.");
+			return false;
+		}
+		
 		//	Total download size: 2.1 M
 		//	Installed size: 4.8 M
 		//	Is this ok [y/N]: N
 		//	Exiting on user Command
-		//	Complete!			// NOTE: THIS LINE ORF STDOUT WAS REMOVED IN RHEL62 WHEN USER TYPES N
-
-		//return result.getStdout().contains("Complete!");
 		return result.getStdout().contains("Is this ok [y/N]:");
 	}
 	
