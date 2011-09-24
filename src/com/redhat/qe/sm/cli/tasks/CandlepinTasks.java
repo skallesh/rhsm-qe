@@ -219,7 +219,10 @@ schema generation failed
 		 * buildr candlepin:apicrawl
 		 * cat target/candlepin_methods.json | python -mjson.tool
 		 */
-		
+		if (serverInstallDir.equals("")) {
+			log.info("Skipping report of candlepin API server since no serverInstallDir was specified.");
+			return;
+		}
 		// run the buildr API script to see a report of the current API
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
