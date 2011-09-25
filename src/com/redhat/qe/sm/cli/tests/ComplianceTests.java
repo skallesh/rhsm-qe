@@ -167,7 +167,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	// Candidates for an automated Test:
 	// TODO Bug 649068 - Certs with entitlement start date in the future are treated as Expired
 	// TODO Bug 737553 - should not be compliant for a future subscription
-	
+	// TODO Bug 727967 - Compliance Assistant Valid Until Date Detection Not Working
 	
 	
 	
