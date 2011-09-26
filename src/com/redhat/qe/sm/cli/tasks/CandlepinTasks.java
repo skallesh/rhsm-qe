@@ -2220,6 +2220,18 @@ schema generation failed
 	}
 		
 	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, String... providedProducts) throws JSONException{
+		
+		/*
+		[root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST
+		--data '{"product":{"id":"awesomeos-server-basic"},"startDate":"Tue, 13 Sep
+		2016 01:00:00 -0400","accountNumber":123456,"quantity":20,"endDate":"Wed, 13
+		Sep 2017 01:00:00
+		-0400","contractNumber":123,"providedProducts":[{"id":"37060"}]}' --header
+		'accept: application/json' --header 'content-type: application/json' 
+		https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions
+		| python -mjson.tool
+		 */
+		
 		JSONObject sub = new JSONObject();
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
 		sub.put("startDate", sdf.format(startDate));
@@ -2255,7 +2267,7 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject createSubscriptionAndRefreshPools(String server, String port, String prefix, String authenticator, String password, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProducts) throws JSONException, Exception  {
+	public static JSONObject createSubscriptionAndRefreshPools(String server, String port, String prefix, String authenticator, String password, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProductIds) throws JSONException, Exception  {
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -2291,7 +2303,7 @@ schema generation failed
 		//String[] providedProducts = {};
 		
 		// create the subscription
-		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
+		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(server,port,prefix,authenticator,password, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		
 		// refresh the pools

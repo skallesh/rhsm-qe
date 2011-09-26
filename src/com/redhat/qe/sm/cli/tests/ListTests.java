@@ -474,7 +474,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String randomAvailableProductId = pool.productId;
 		
 		// create a future subscription and refresh pools for it
-		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId);
+		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId /*, providedProductIds none */);
 	}
 	
 	
