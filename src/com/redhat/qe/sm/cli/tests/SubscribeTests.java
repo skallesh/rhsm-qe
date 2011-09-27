@@ -421,7 +421,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
-			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867"},
+			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
 			dependsOnMethods={"VerifyAvailablePoolsPassTheHardwareRulesCheck_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -749,12 +749,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 	
 	// Candidates for an automated Test:
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668032
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=670831
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=664847#3
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=676377 - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
+	// TODO Bug 668032 - rhsm not logging subscriptions and products properly
+	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date
+	// TODO Bug 664847 - Autobind logic should respect the architecture attribute
+	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
-	
+	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
 	
 	
 	

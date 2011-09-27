@@ -800,15 +800,31 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/users"));	
 		for (int i = 0; i < jsonUsers.length(); i++) {
 			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
-			// {
-			//   "created": "2011-07-01T06:40:00.951+0000", 
-			//   "hashedPassword": "05557a2aaec7cb676df574d2eb080691949a6752", 
-			//   "id": "8a90f8c630e46c7e0130e46ce9b70020", 
-			//   "superAdmin": false, 
-			//   "updated": "2011-07-01T06:40:00.951+0000", 
-			//   "username": "minnie"
-			// }
-			Boolean isSuperAdmin = jsonUser.getBoolean("superAdmin");
+
+			// Candlepin Users
+			//    {
+			//        "created": "2011-09-23T14:42:25.924+0000", 
+			//        "hashedPassword": "e3e80f61a902ceca245e22005dffb4219ac1c5f7", 
+			//        "id": "8a90f8c63296bc55013296bcc4040005", 
+			//        "superAdmin": true, 
+			//        "updated": "2011-09-23T14:42:25.924+0000", 
+			//        "username": "admin"
+			//    }, 
+			
+			// Katello Users...
+			//    {
+			//        "created_at": "2011-09-24T01:29:02Z", 
+			//        "disabled": false, 
+			//        "helptips_enabled": true, 
+			//        "id": 1, 
+			//        "own_role_id": 4, 
+			//        "page_size": 25, 
+			//        "password": "07a1dacc4f283e817c0ba353bd1452de49ce5723b2b7f56f6ee2f1f400a974b360f98acb90b630c7fa411f692bdb4c5cdd0f4b916efcf3c77e7cd0453446b185TS0YtS0uRjY0UznEsx7JqGIpEM1vEfIrBSNGdnXkFdkxsDhjmyFINBJVvkCTxeC7", 
+			//        "updated_at": "2011-09-24T01:29:02Z", 
+			//        "username": "admin"
+			//    }, 
+			
+			//Boolean isSuperAdmin = jsonUser.getBoolean("superAdmin");
 			String username = jsonUser.getString("username");
 			String password = sm_clientPasswordDefault;
 			if (username.equals(sm_serverAdminUsername)) password = sm_serverAdminPassword;
