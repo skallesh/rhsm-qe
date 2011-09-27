@@ -56,18 +56,42 @@ public class ContentNamespace extends AbstractCommandLineData {
 	
 	@Override
 	public boolean equals(Object obj){
-
-		return	((ContentNamespace)obj).hash.equals(this.hash) &&
-				((ContentNamespace)obj).label.equals(this.label) &&
-				((ContentNamespace)obj).name.equals(this.name) &&
-				((ContentNamespace)obj).physicalEntitlement.equals(this.physicalEntitlement) &&
-				((ContentNamespace)obj).flexGuestEntitlement.equals(this.flexGuestEntitlement) &&
-				((ContentNamespace)obj).vendorId.equals(this.vendorId) &&
-				((ContentNamespace)obj).downloadUrl.equals(this.downloadUrl) &&
-				((ContentNamespace)obj).gpgKeyUrl.equals(this.gpgKeyUrl) &&
-				((ContentNamespace)obj).enabled.equals(this.enabled) &&
-				((ContentNamespace)obj).metadataExpire.equals(this.metadataExpire) &&
-				((ContentNamespace)obj).requiredTags.equals(this.requiredTags);
+		ContentNamespace that = (ContentNamespace)obj;
+		
+		if (that.hash!=null && !that.hash.equals(this.hash)) return false;
+		if (this.hash!=null && !this.hash.equals(that.hash)) return false;
+		
+		if (that.label!=null && !that.label.equals(this.label)) return false;
+		if (this.label!=null && !this.label.equals(that.label)) return false;
+		
+		if (that.name!=null && !that.name.equals(this.name)) return false;
+		if (this.name!=null && !this.name.equals(that.name)) return false;
+		
+		if (that.physicalEntitlement!=null && !that.physicalEntitlement.equals(this.physicalEntitlement)) return false;
+		if (this.physicalEntitlement!=null && !this.physicalEntitlement.equals(that.physicalEntitlement)) return false;
+		
+		if (that.flexGuestEntitlement!=null && !that.flexGuestEntitlement.equals(this.flexGuestEntitlement)) return false;
+		if (this.flexGuestEntitlement!=null && !this.flexGuestEntitlement.equals(that.flexGuestEntitlement)) return false;
+		
+		if (that.vendorId!=null && !that.vendorId.equals(this.vendorId)) return false;
+		if (this.vendorId!=null && !this.vendorId.equals(that.vendorId)) return false;
+		
+		if (that.downloadUrl!=null && !that.downloadUrl.equals(this.downloadUrl)) return false;
+		if (this.downloadUrl!=null && !this.downloadUrl.equals(that.downloadUrl)) return false;
+		
+		if (that.gpgKeyUrl!=null && !that.gpgKeyUrl.equals(this.gpgKeyUrl)) return false;
+		if (this.gpgKeyUrl!=null && !this.gpgKeyUrl.equals(that.gpgKeyUrl)) return false;
+		
+		if (that.enabled!=null && !that.enabled.equals(this.enabled)) return false;
+		if (this.enabled!=null && !this.enabled.equals(that.enabled)) return false;
+		
+		if (that.metadataExpire!=null && !that.metadataExpire.equals(this.metadataExpire)) return false;
+		if (this.metadataExpire!=null && !this.metadataExpire.equals(that.metadataExpire)) return false;
+		
+		if (that.requiredTags!=null && !that.requiredTags.equals(this.requiredTags)) return false;
+		if (this.requiredTags!=null && !this.requiredTags.equals(that.requiredTags)) return false;
+		
+		return true;
 	}
 	
 	/**

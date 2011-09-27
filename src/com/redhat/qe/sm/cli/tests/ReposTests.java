@@ -66,8 +66,12 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 					// the modifier's content should now be available in the repos too
 					EntitlementCert modifierEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(modifierPool);						
 
-					// simply add the contentNamespaces from the modifier to the entitlement cert's contentNamespaces so they will be accounted for in the repos list test below
-					entitlementCert.contentNamespaces.addAll(modifierEntitlementCert.contentNamespaces);
+					// simply add the contentNamespaces (if not already there) from the modifier to the entitlement cert's contentNamespaces so they will be accounted for in the repos list test below
+					for (ContentNamespace contentNamespace : modifierEntitlementCert.contentNamespaces) {
+						if (!entitlementCert.contentNamespaces.contains(contentNamespace)) {
+							entitlementCert.contentNamespaces.add(contentNamespace);
+						}
+					}
 				}
 			}
 		}
