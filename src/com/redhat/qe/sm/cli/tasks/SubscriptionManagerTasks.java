@@ -52,6 +52,7 @@ public class SubscriptionManagerTasks {
 	public final String redhatRepoFile		= "/etc/yum.repos.d/redhat.repo";
 	public final String rhsmConfFile		= "/etc/rhsm/rhsm.conf";
 	public final String rhsmcertdLogFile	= "/var/log/rhsm/rhsmcertd.log";
+	public final String rhsmUpdateFile		= "/var/run/rhsm/update";
 	public final String rhsmLogFile			= "/var/log/rhsm/rhsm.log";
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
@@ -398,7 +399,7 @@ public class SubscriptionManagerTasks {
 		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "certFrequency"));
 		if (healFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "healFrequency".toLowerCase(), String.valueOf(healFrequency)});
 		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "healFrequency"));
-		config(null,null,true,listOfSectionNameValues);
+		if (listOfSectionNameValues.size()>0) config(null,null,true,listOfSectionNameValues);
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=691137 - jsefler 03/26/2011
 		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
@@ -421,7 +422,7 @@ public class SubscriptionManagerTasks {
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		}
-		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd chance to make its initial check in with the candlepin server and update the certs
+		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
 	}
 	public void stop_rhsmcertd (){
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
