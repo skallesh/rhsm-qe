@@ -841,7 +841,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SubscriptionPool poolWithMultiEntitlementYes = null;
 		SubscriptionPool poolWithMultiEntitlementNo = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (Integer.valueOf(pool.quantity)<2) continue;
+			if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<2) continue;	// skip pools that don't have enough quantity left to consume
 			
 			Boolean isMultiEntitlementPool = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword,"/pools/"+pool.poolId));	
