@@ -387,12 +387,54 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"'.:");
 	}
 	
+	
+	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: virtual",
+			groups={},
+			dependsOnGroups={},
+			enabled=true)
+	public void VerifyVirtualMachineTypeIsReportedInListAvailablePools_Test() throws JSONException, Exception {
+
+		// trick this system into believing it is a virt guest
+		forceVirtWhatToReturnGuest("kvm");
+		
+		boolean poolFound = false;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, pool.poolId)) {
+				Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
+				poolFound = true;
+			} else {
+				//Assert.assertEquals(pool.machineType, "physical", "MachineType:physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);
+			}
+		}
+		if (!poolFound) throw new SkipException("Could not find an available pool with which to verify the MachineType:virtual is reported in the Subscription Pool listing.");
+	}
+	
+	@Test(	description="Verify the subscription-manager list --avail appropriately displays pools with MachineType: physical",
+			groups={},
+			dependsOnGroups={},
+			enabled=true)
+	public void VerifyPhysicalMachineTypeValuesInListAvailablePools_Test() throws JSONException, Exception {
+
+		// trick this system into believing it is a host
+		forceVirtWhatToReturnHost();
+		
+		boolean poolFound = false;
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, pool.poolId)) {
+				//Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
+			} else {
+				Assert.assertEquals(pool.machineType, "physical", "MachineType:physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);
+				poolFound = true;
+			}
+		}
+		if (!poolFound) throw new SkipException("Could not find an available pool with which to verify the MachineType:physical is reported in the Subscription Pool listing.");
+	}
 
 
 	
 	
 	// Candidates for an automated Test:
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=683459
+	// TODO Bug 683459 - Virt only skus creating two pools
 	// TODO Bug 736436 - virtual subscriptions are not included when the certificates are downloaded 
 	
 	
