@@ -78,7 +78,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		if (registerResult.getExitCode()==0) {
 			String consumerId = clienttasks.getCurrentConsumerId(registerResult);	// c48dc3dc-be1d-4b8d-8814-e594017d63c1 testuser1
 			try {
-				ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password, consumerId);
+				ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(username,password,sm_serverUrl,consumerId);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -227,7 +227,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the first available pool that provides one product
 		File entitlementCertFile = null;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+pool.poolId));	
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==1) {
 				entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
@@ -671,7 +671,7 @@ Expected Results:
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRegisterToEnvironmentWhenCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
 		// ask the candlepin server if it supports environment
-		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword);
+		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		
 		// skip this test when candlepin supports environments
 		if (supportsEnvironments) throw new SkipException("Candlepin server '"+sm_serverHostname+"' appears to support environments, therefore this test is not applicable.");

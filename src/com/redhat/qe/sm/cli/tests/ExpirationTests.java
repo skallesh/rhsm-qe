@@ -163,7 +163,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null));
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
@@ -231,7 +231,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
 		
-		if (true) return CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId).getString("id");
+		if (true) return CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId).getString("id");
 // TODO DELETE THE REST OF THIS METHOD'S CODE WHEN WE KNOW THE ABOVE CANDLEPIN TASK IS WORKING 8/12/2011
 		
 		// set the start and end dates
@@ -269,11 +269,11 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, "/owners/" + ownerKey + "/subscriptions", requestBody));
+		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + ownerKey + "/subscriptions", requestBody));
 		
 		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 5*1000, 1);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 5*1000, 1);
 		
 		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
 		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
@@ -283,7 +283,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 
 		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
 		String poolId = null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {

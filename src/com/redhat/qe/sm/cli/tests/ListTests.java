@@ -424,7 +424,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			
 			// assert that each of the SubscriptionPools listed is indeed active on the requested date
 			for (SubscriptionPool subscriptionPool : subscriptionPools) {
-				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+subscriptionPool.poolId));
+				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+subscriptionPool.poolId));
 				Calendar startDate = parse_iso8601DateString(jsonPool.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
 				Calendar endDate = parse_iso8601DateString(jsonPool.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
 				Boolean activeSubscription = jsonPool.getBoolean("activeSubscription");	// TODO I don't yet understand how to test this property.  I'm assuming it is true
@@ -474,7 +474,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String randomAvailableProductId = pool.productId;
 		
 		// create a future subscription and refresh pools for it
-		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId /*, providedProductIds none */);
+		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId /*, providedProductIds none */);
 	}
 	
 	

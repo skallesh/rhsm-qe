@@ -34,8 +34,8 @@ public class MultiClientTests extends SubscriptionManagerCLITestScript{
 	public void MultiClientSubscribeToSameSubscriptionPool_Test(SubscriptionPool pool) throws JSONException, Exception {
 		// test prerequisites
 		if (client2tasks==null) throw new SkipException("This multi-client test requires a second client.");
-		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_client1Username, sm_client1Password, client1tasks.getCurrentConsumerId());
-		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_client2Username, sm_client2Password, client2tasks.getCurrentConsumerId());
+		String client1OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client1Username, sm_client1Password, sm_serverUrl, client1tasks.getCurrentConsumerId());
+		String client2OwnerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_client2Username, sm_client2Password, sm_serverUrl, client2tasks.getCurrentConsumerId());
 		if (!client1OwnerKey.equals(client2OwnerKey)) throw new SkipException("This multi-client test requires that both client registerers belong to the same owner. (client1: username="+sm_client1Username+" ownerkey="+client1OwnerKey+") (client2: username="+sm_client2Username+" ownerkey="+client2OwnerKey+")");
 		
 		String client1RedhatRelease = client1tasks.getRedhatRelease();

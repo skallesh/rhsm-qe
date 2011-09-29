@@ -74,7 +74,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(pool, "The test pool is no longer in the --available list after having consumed all of its available subscriptions.");
 		
 		// assert the consumed quantity
-		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
 				"Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 
@@ -85,7 +85,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// try again
 		Assert.assertEquals(client1tasks.subscribe_(null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'.");
 		// assert the consumed quantity again
-		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
+		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
 				"Asserting the test pool's consumed attribute has not overconsumed it's total quantity after attempting a basic overconsumption of its entitlements.");
 
@@ -159,7 +159,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
-		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 
 		// make sure both clients got individualized entitlement certs
@@ -221,7 +221,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", testPool.poolId, client2tasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(pool, "The test pool is no longer in the --all --available list after having consumed all of its available subscriptions.");
-		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+testPool.poolId));
+		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 		
 		// one of these command should have succeeded and one should have failed with "No free entitlements..."

@@ -192,7 +192,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//201108251644:10.040 - INFO: SSH alternative to HTTP request: curl -k  --request GET https://rubyvip.web.stage.ext.phx2.redhat.com:80/clonepin/candlepin/status (com.redhat.qe.sm.cli.tasks.CandlepinTasks.getResourceUsingRESTfulAPI)
 			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
-			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/status"));
+			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/status"));
 		} catch (Exception e) {
 			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
 		} finally {
@@ -810,7 +810,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// get all of the candlepin users
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
-		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/users"));	
+		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/users"));	
 		for (int i = 0; i < jsonUsers.length(); i++) {
 			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
 
@@ -857,7 +857,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// get the user's owners
 			// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
-			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/users/"+username+"/owners"));	
+			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/users/"+username+"/owners"));	
 			for (int j = 0; j < jsonUserOwners.length(); j++) {
 				JSONObject jsonOwner = (JSONObject) jsonUserOwners.get(j);
 				// {
@@ -970,13 +970,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			
@@ -1151,13 +1151,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			
@@ -1967,7 +1967,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// process all of the pools belonging to ownerKey
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+clientOrg+"/pools?listall=true"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+clientOrg+"/pools?listall=true"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String id = jsonPool.getString("id");
@@ -2008,7 +2008,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		for (List<Object> l : getAllFutureJSONSubscriptionsDataAsListOfLists(consumerType)) {
 			JSONObject jsonSubscription = (JSONObject) l.get(0);
@@ -2016,7 +2016,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
 
 			// process all of the pools belonging to ownerKey that are activeon startDate
-			JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/pools" +"?activeon="+urlEncode(format_iso8601DateString(startDate))));
+			JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools" +"?activeon="+urlEncode(format_iso8601DateString(startDate))));
 			for (int j = 0; j < jsonPools.length(); j++) {
 				JSONObject jsonPool = (JSONObject) jsonPools.get(j);
 				
@@ -2042,13 +2042,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String id = jsonSubscription.getString("id");			
@@ -2096,7 +2096,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// iterate through all available pools looking for those that contain products with content that modify other products
 		for (SubscriptionPool modifierPool : allAvailablePools) {
-			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+modifierPool.poolId));	
+			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
 			
 			// iterate through each of the providedProducts
 			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
@@ -2105,7 +2105,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
 				
 				// get the productContents
-				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/products/"+modifierProvidedProductId));	
+				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
 				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
 				for (int j = 0; j < jsonProductContents.length(); j++) {
 					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
@@ -2128,7 +2128,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
 						// yes, now its time to find the subscriptions that provide the modifiedProductIds
 						for (SubscriptionPool providingPool : allAvailablePools) {
-							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+providingPool.poolId));	
+							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+providingPool.poolId));	
 							
 							// iterate through each of the providedProducts
 							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");

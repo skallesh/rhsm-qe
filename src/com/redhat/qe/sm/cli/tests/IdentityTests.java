@@ -88,7 +88,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^name: "+clienttasks.hostname);
 		
 		// also assert additional output from the new multi-owner function
-		JSONObject owner = CandlepinTasks.getOwnerOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername,sm_clientPassword, consumerId);
+		JSONObject owner = CandlepinTasks.getOwnerOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^org name: "+owner.getString("displayName"));
 		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^org id: "+owner.getString("id"));
 	}
@@ -154,7 +154,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
 		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, null, null, null);
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, clienttasks.getCurrentConsumerId(registerResult));
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentConsumerId(registerResult));
 
 		// regenerate the identity using the same username and password as used during register... and assert
 		log.info("Regenerating identity with the same username and password as used during register...");
@@ -193,7 +193,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		// find a different username from the registrationDataList whose owner does not match the registerer of this client
 //		RegistrationData registrationData = findRegistrationDataNotMatchingOwnerKey(ownerKey);

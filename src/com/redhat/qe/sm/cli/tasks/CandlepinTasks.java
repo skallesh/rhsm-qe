@@ -247,54 +247,54 @@ schema generation failed
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	
-	static public String getResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
-		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+path);
+	static public String getResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
+		GetMethod get = new GetMethod(url+path);
 		
-		// WORKAROUND WHEN EXECUTING TESTS AGAINST THE IT STAGE ENVIRONMENT CANDLEPIN
-		// RELATED BUGZILLA: https://bugzilla.redhat.com/show_bug.cgi?id=684350 - jsefler 03/29/2011
-		if (server.equals("subscription.rhn.stage.redhat.com")) {
-			/* THIS WORKAROUND CAME FROM Brenton AND IS TEMPRARY AGAINST STAGE ENV.
-			 * stage:
-			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
-			 * webqa:
-			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
-			 */
-			server = "rubyvip.web.stage.ext.phx2.redhat.com";
-			port = "80";
-			prefix = "/clonepin/candlepin";
-			get = new GetMethod("http://"+server+":"+port+prefix+path);
-		}
-		if (server.equals("katello-test-f15-1.usersys.redhat.com")) {
-			/* THIS WORKAROUND CAME FROM jweiss AGAINST KATELLO.
-			 * stage:
-			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
-			 * webqa:
-			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
-			 */
-			port = "8443";
-			prefix = "/candlepin";
-			get = new GetMethod("https://"+server+":"+port+prefix+path);
-		}
-		// END OF WORKAROUND
+//		// WORKAROUND WHEN EXECUTING TESTS AGAINST THE IT STAGE ENVIRONMENT CANDLEPIN
+//		// RELATED BUGZILLA: https://bugzilla.redhat.com/show_bug.cgi?id=684350 - jsefler 03/29/2011
+//		if (server.equals("subscription.rhn.stage.redhat.com")) {
+//			/* THIS WORKAROUND CAME FROM Brenton AND IS TEMPRARY AGAINST STAGE ENV.
+//			 * stage:
+//			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
+//			 * webqa:
+//			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
+//			 */
+//			server = "rubyvip.web.stage.ext.phx2.redhat.com";
+//			port = "80";
+//			prefix = "/clonepin/candlepin";
+//			get = new GetMethod("http://"+server+":"+port+prefix+path);
+//		}
+//		if (server.equals("katello-test-f15-1.usersys.redhat.com")) {
+//			/* THIS WORKAROUND CAME FROM jweiss AGAINST KATELLO.
+//			 * stage:
+//			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
+//			 * webqa:
+//			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
+//			 */
+//			port = "8443";
+//			prefix = "/candlepin";
+//			get = new GetMethod("https://"+server+":"+port+prefix+path);
+//		}
+//		// END OF WORKAROUND
 		
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET "+get.getURI());
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
-	static public String putResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
-		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+path);
+	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
+		PutMethod put = new PutMethod(url+path);
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT "+put.getURI());
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
-	static public String deleteResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path) throws Exception {
-		DeleteMethod delete = new DeleteMethod("https://"+server+":"+port+prefix+path);
+	static public String deleteResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
+		DeleteMethod delete = new DeleteMethod(url+path);
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request DELETE "+delete.getURI());
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
-	static public String postResourceUsingRESTfulAPI(String server, String port, String prefix, String authenticator, String password, String path, String requestBody) throws Exception {
-		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+path);
+	static public String postResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String requestBody) throws Exception {
+		PostMethod post = new PostMethod(url+path);
 		if (requestBody != null) {
 			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));
 			post.addRequestHeader("accept", "application/json");
@@ -309,8 +309,8 @@ schema generation failed
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
-	static public JSONObject getEntitlementUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String dbid) throws Exception {
-		return new JSONObject(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/entitlements/"+dbid));
+	static public JSONObject getEntitlementUsingRESTfulAPI(String owner, String password, String url, String dbid) throws Exception {
+		return new JSONObject(getResourceUsingRESTfulAPI(owner, password, url, "/entitlements/"+dbid));
 	}
 
 //	static public JSONObject curl_hateoas_ref_ASJSONOBJECT(SSHCommandRunner runner, String server, String port, String prefix, String owner, String password, String ref) throws JSONException {
@@ -373,11 +373,9 @@ schema generation failed
 	        );
 	}
 	/**
-	 * @param server
-	 * @param port
-	 * @param prefix
-	 * @param owner
 	 * @param password
+	 * @param url TODO
+	 * @param owner
 	 * @return a JSONObject representing the jobDetail.  Example:<br>
 	 * 	{
 	 * 	  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
@@ -391,21 +389,21 @@ schema generation failed
 	 * 	}
 	 * @throws Exception
 	 */
-	static public JSONObject refreshPoolsUsingRESTfulAPI(String server, String port, String prefix, String user, String password, String owner) throws Exception {
+	static public JSONObject refreshPoolsUsingRESTfulAPI(String user, String password, String url, String owner) throws Exception {
 //		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
 //		String response = getHTTPResponseAsString(client, put, owner, password);
 //				
 //		return new JSONObject(response);
-		return new JSONObject(putResourceUsingRESTfulAPI(server, port, prefix, user, password, "/owners/"+owner+"/subscriptions"));
+		return new JSONObject(putResourceUsingRESTfulAPI(user, password, url, "/owners/"+owner+"/subscriptions"));
 	}
 	
-	static public void exportConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String consumerKey, String intoExportZipFile) throws Exception {
-		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"' on candlepin server '"+server+"'...");
+	static public void exportConsumerUsingRESTfulAPI(String owner, String password, String url, String consumerKey, String intoExportZipFile) throws Exception {
+		log.info("Exporting the consumer '"+consumerKey+"' for owner '"+owner+"'...");
 //		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export > "+intoExportZipFile);
 		// CURL EXAMPLE: /usr/bin/curl -k -u admin:admin https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/consumers/0283ba29-1d48-40ab-941f-2d5d2d8b222d/export > /tmp/export.zip
 	
 		boolean validzip = false;
-		GetMethod get = new GetMethod("https://"+server+":"+port+prefix+"/consumers/"+consumerKey+"/export");
+		GetMethod get = new GetMethod(url+"/consumers/"+consumerKey+"/export");
 		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" --request GET "+get.getURI()+" > "+intoExportZipFile);
 		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
 		File zipFile = new File(intoExportZipFile);
@@ -434,14 +432,14 @@ schema generation failed
 		Assert.assertTrue(validzip, "Response is a valid zip file.");
 	}
 	
-	static public void importConsumerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String ownerKey, String fromExportZipFile) throws Exception {
-		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server '"+server+"'...");
+	static public void importConsumerUsingRESTfulAPI(String owner, String password, String url, String ownerKey, String fromExportZipFile) throws Exception {
+		log.info("Importing consumer to owner '"+ownerKey+"' on candlepin server.");
 //		log.info("SSH alternative to HTTP request: curl -k -u "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");
 //		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");
 		// CURL EXAMPLE: curl -u admin:admin -k -F export=@/tmp/export.zip https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/owners/dopey/import
 
 		//PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");	// candlepin branch 0.2-
-		PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/imports");		// candlepin branch 0.3+ (/import changed to /imports)
+		PostMethod post = new PostMethod(url+"/owners/"+ownerKey+"/imports");		// candlepin branch 0.3+ (/import changed to /imports)
 		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" --request POST "+post.getURI());
 		File f = new File(fromExportZipFile);
 		Part[] parts = {
@@ -454,23 +452,21 @@ schema generation failed
 	}
 	
 	/**
-	 * @param server
-	 * @param port
-	 * @param prefix
 	 * @param authenticator  - must have superAdmin privileges to get the jsonOwner; username:password for consumerid is not enough
 	 * @param password
+	 * @param url TODO
 	 * @param consumerId
 	 * @return
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject getOwnerOfConsumerId(String server, String port, String prefix, String authenticator, String password, String consumerId) throws JSONException, Exception {
+	public static JSONObject getOwnerOfConsumerId(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
 		// determine this consumerId's owner
 		JSONObject jsonOwner = null;
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/consumers/"+consumerId));	
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerId));	
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// Warning: this authenticator, password needs to be superAdmin
-		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,jsonOwner_.getString("href")));	
+		jsonOwner = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, jsonOwner_.getString("href")));	
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -mjson.tool
 			{
 			    "contentPrefix": null, 
@@ -488,9 +484,9 @@ schema generation failed
 		return jsonOwner;
 	}
 	
-	public static String getOwnerKeyOfConsumerId(String server, String port, String prefix, String authenticator, String password, String consumerId) throws JSONException, Exception {
+	public static String getOwnerKeyOfConsumerId(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
 		// determine this consumerId's owner
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/consumers/"+consumerId));	
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerId));	
 		JSONObject jsonOwner_ = (JSONObject) jsonConsumer.getJSONObject("owner");
 		// jsonOwner_.getString("href") takes the form /owners/6239231 where 6239231 is the key
 		File href = new File(jsonOwner_.getString("href")); // use a File to represent the path
@@ -498,20 +494,18 @@ schema generation failed
 	}
 	
 	/**
-	 * @param server
-	 * @param port
-	 * @param prefix
 	 * @param username
 	 * @param password
+	 * @param url TODO
 	 * @param key - name of the key whose value you want to get (e.g. "displayName", "key", "id")
 	 * @return - a list of all the key values corresponding to each of the orgs that this username belongs to
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
+	public static List<String> getOrgsKeyValueForUser(String username, String password, String url, String key) throws JSONException, Exception {
 
 		List<String> values = new ArrayList<String>();
-		JSONArray jsonUsersOrgs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, username, password,"/users/"+username+"/owners"));	
+		JSONArray jsonUsersOrgs = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username, password, url, "/users/"+username+"/owners"));	
 		for (int j = 0; j < jsonUsersOrgs.length(); j++) {
 			JSONObject jsonOrg = (JSONObject) jsonUsersOrgs.get(j);
 			// {
@@ -530,33 +524,33 @@ schema generation failed
 		return values;
 	}
 
-	public static String getOrgDisplayNameForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
-		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/owners/"+orgKey));	
+	public static String getOrgDisplayNameForOrgKey(String authenticator, String password, String url, String orgKey) throws JSONException, Exception {
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+orgKey));	
 		return jsonOrg.getString("displayName");
 	}
 	
-	public static String getOrgIdForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
-		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password,"/owners/"+orgKey));	
+	public static String getOrgIdForOrgKey(String authenticator, String password, String url, String orgKey) throws JSONException, Exception {
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+orgKey));	
 		return jsonOrg.getString("id");
 	}
 	
-	public static void dropAllConsumers(final String server, final String port, final String prefix, final String owner, final String password) throws Exception{
-		JSONArray consumers = new JSONArray(getResourceUsingRESTfulAPI(server, port, prefix, owner, password, "consumers"));
-		List<String> refs = new ArrayList<String>();
+	public static void dropAllConsumers(final String owner, final String password, final String url) throws Exception{
+		JSONArray consumers = new JSONArray(getResourceUsingRESTfulAPI(owner, password, url, "consumers"));
+		List<String> consumerRefs = new ArrayList<String>();
 		for (int i=0;i<consumers.length();i++) {
 			JSONObject o = consumers.getJSONObject(i);
-			refs.add(o.getString("href"));
+			consumerRefs.add(o.getString("href"));
 		}
 		final ExecutorService service = Executors.newFixedThreadPool(4);  //run 4 concurrent deletes
-		for (final String consumer: refs) {
+		for (final String consumerRef: consumerRefs) {
 			service.submit(new Runnable() {
 				public void run() {
 					try {
-						HttpMethod m = new DeleteMethod("https://"+server+":"+port+prefix + consumer);
+						HttpMethod m = new DeleteMethod(url + consumerRef);
 						doHTTPRequest(client, m, owner, password);
 						m.releaseConnection();
 					}catch (Exception e) {
-						log.log(Level.SEVERE, "Could not delete consumer: " + consumer, e);
+						log.log(Level.SEVERE, "Could not delete consumer: " + consumerRef, e);
 					}
 				}
 			});
@@ -567,7 +561,7 @@ schema generation failed
 	}
 	
 	
-	public static List<String> getPoolIdsForSubscriptionId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String forSubscriptionId) throws JSONException, Exception{
+	public static List<String> getPoolIdsForSubscriptionId(String authenticator, String password, String url, String ownerKey, String forSubscriptionId) throws JSONException, Exception{
 		List<String> poolIds = new ArrayList<String>();
 		/* Example jsonPool:
 		  		{
@@ -622,7 +616,7 @@ schema generation failed
 			    "created": "2011-02-18T16:17:42.008+0000"
 			  }
 		*/
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 			String poolId = jsonPool.getString("id");
@@ -634,15 +628,15 @@ schema generation failed
 		return poolIds;
 	}
 	
-	public static String getSubscriptionIdForPoolId(String server, String port, String prefix, String authenticator, String password, String forPoolId) throws JSONException, Exception{
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+forPoolId));
+	public static String getSubscriptionIdForPoolId(String authenticator, String password, String url, String forPoolId) throws JSONException, Exception{
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+forPoolId));
 		return jsonPool.getString("subscriptionId");
 	}
 	
-	public static String getSubscriptionIdFromProductName(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName) throws JSONException, Exception{
+	public static String getSubscriptionIdFromProductName(String authenticator, String password, String url, String ownerKey, String fromProductName) throws JSONException, Exception{
 		// get the owner's subscriptions for the authenticator
 		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions | python -mjson.tool
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			/*
 		    {
@@ -1337,11 +1331,11 @@ schema generation failed
 		return null;
 	}
 	
-	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
+	public static String getPoolIdFromProductNameAndContractNumber(String authenticator, String password, String url, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
 
 		// get the owner's pools for the authenticator
 		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/pools | python -mjson.tool
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			/*
 		    {
@@ -1457,13 +1451,13 @@ schema generation failed
 	}
 	
 	
-	public static BigInteger getEntitlementSerialForSubscribedPoolId(String server, String port, String prefix, String authenticator, String password, String ownerKey, String poolId) throws JSONException, Exception{
+	public static BigInteger getEntitlementSerialForSubscribedPoolId(String authenticator, String password, String url, String ownerKey, String poolId) throws JSONException, Exception{
 
 		JSONObject jsonSerialCandidate = null;	// the newest serial object corresponding to the subscribed pool id (in case the user subscribed to a multi-entitlement pool we probably want the newest serial)
 
 		// get the org's entitlements for the authenticator
 		// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/entitlements | python -mjson.tool
-		JSONArray jsonEntitlements = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/entitlements"));	
+		JSONArray jsonEntitlements = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/entitlements"));	
 		for (int i = 0; i < jsonEntitlements.length(); i++) {
 			JSONObject jsonEntitlement = (JSONObject) jsonEntitlements.get(i);
 			/*  
@@ -1533,11 +1527,11 @@ schema generation failed
 	}
 	
 	
-	public static boolean isEnvironmentsSupported (String server, String port, String prefix, String authenticator, String password) throws JSONException, Exception {
+	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 	
 		// ask the candlepin server for all of its resources and search for a match to "environments"
 		boolean supportsEnvironments = false;  // assume not
-		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(server, port, prefix, authenticator, password, "/"));
+		JSONArray jsonResources = new JSONArray(getResourceUsingRESTfulAPI(authenticator, password, url, "/"));
 		for (int i = 0; i < jsonResources.length(); i++) {
 			JSONObject jsonResource = (JSONObject) jsonResources.get(i);
 			// {
@@ -1552,7 +1546,7 @@ schema generation failed
 		return supportsEnvironments;
 	}
 	
-	public static boolean isPoolVirtOnly (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+	public static boolean isPoolVirtOnly (String authenticator, String password, String poolId, String url) throws JSONException, Exception {
 		
 		/* # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c6313e2a7801313e2bf39c0310 | python -mjson.tool
 		{
@@ -1656,7 +1650,7 @@ schema generation failed
 		*/
 		
 		Boolean virt_only = null;	// indicates that the pool does not specify virt_only attribute
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
 		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
 		// loop through the attributes of this pool looking for the "virt_only" attribute
 		for (int j = 0; j < jsonAttributes.length(); j++) {
@@ -1671,13 +1665,13 @@ schema generation failed
 		return virt_only;
 	}
 
-	public static boolean isSubscriptionMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String ownerKey, String subscriptionId) throws JSONException, Exception {
+	public static boolean isSubscriptionMultiEntitlement (String authenticator, String password, String url, String ownerKey, String subscriptionId) throws JSONException, Exception {
 
 		Boolean multi_entitlement = null;	// indicates that the subscription's product does NOT have the "multi-entitlement" attribute
 		
 		// get the owner's subscriptions for the authenticator
 		// # curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/admin/subscriptions | python -mjson.tool
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			/*			
 		    {
@@ -1776,8 +1770,8 @@ schema generation failed
 		return multi_entitlement;
 	}
 	
-	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
-		String value = getPoolProductAttributeValue(server,port,prefix,authenticator,password,poolId,"multi-entitlement");
+	public static boolean isPoolProductMultiEntitlement (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		String value = getPoolProductAttributeValue(authenticator,password,url,poolId,"multi-entitlement");
 		
 		// the absence of a "multi-entitlement" attribute means this pool is NOT a multi-entitlement pool
 		if (value==null) return false;
@@ -1785,8 +1779,8 @@ schema generation failed
 		return value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("true") || value.equals("1");
 	}
 	
-	public static boolean isPoolProductConsumableByConsumerType (String server, String port, String prefix, String authenticator, String password, String poolId, ConsumerType consumerType) throws JSONException, Exception {
-		String value = getPoolProductAttributeValue(server,port,prefix,authenticator,password,poolId,"requires_consumer_type");
+	public static boolean isPoolProductConsumableByConsumerType (String authenticator, String password, String url, String poolId, ConsumerType consumerType) throws JSONException, Exception {
+		String value = getPoolProductAttributeValue(authenticator,password,url,poolId,"requires_consumer_type");
 		
 		// the absence of a "requires_consumer_type" implies requires_consumer_type is system
 		if (value==null) value = ConsumerType.system.toString();
@@ -1794,12 +1788,12 @@ schema generation failed
 		return value.equalsIgnoreCase(consumerType.toString());
 	}
 	
-	public static String getPoolProductAttributeValue (String server, String port, String prefix, String authenticator, String password, String poolId, String productAttributeName) throws JSONException, Exception {
+	public static String getPoolProductAttributeValue (String authenticator, String password, String url, String poolId, String productAttributeName) throws JSONException, Exception {
 		String productAttributeValue = null;	// indicates that the pool's product does NOT have the "productAttributeName" attribute
 
 		// get the pool for the authenticator
 		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/pools/"+poolId));	
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
 
 		//{
 		//    "accountNumber": "12331131231", 
@@ -1909,11 +1903,9 @@ schema generation failed
 	
 	
 	/**
-	 * @param server
-	 * @param port
-	 * @param prefix
 	 * @param owner
 	 * @param password
+	 * @param url TODO
 	 * @param jobDetail - JSONObject of a jobDetail. Example:<br>
 	 * 	{
 	 * 	  "id" : "refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
@@ -1931,7 +1923,7 @@ schema generation failed
 	 * @return
 	 * @throws Exception
 	 */
-	static public JSONObject waitForJobDetailStateUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, JSONObject jobDetail, String state, int retryMilliseconds, int timeoutMinutes) throws Exception {
+	static public JSONObject waitForJobDetailStateUsingRESTfulAPI(String owner, String password, String url, JSONObject jobDetail, String state, int retryMilliseconds, int timeoutMinutes) throws Exception {
 		String statusPath = jobDetail.getString("statusPath");
 		int t = 0;
 		
@@ -1941,7 +1933,7 @@ schema generation failed
 			SubscriptionManagerCLITestScript.sleep(retryMilliseconds); t++;	
 			
 			// get the updated job detail
-			jobDetail = new JSONObject(getResourceUsingRESTfulAPI(server,port,prefix,owner,password,statusPath));
+			jobDetail = new JSONObject(getResourceUsingRESTfulAPI(owner,password,url,statusPath));
 		} while (!jobDetail.getString("state").equalsIgnoreCase(state) || (t*retryMilliseconds >= timeoutMinutes*60*1000));
 		
 		// assert that the state was achieved within the timeout
@@ -2023,9 +2015,9 @@ schema generation failed
 
 	}
 	
-	static public JSONObject createOwnerUsingRESTfulAPI(String server, String port, String prefix, String owner, String password, String owner_name) throws Exception {
+	static public JSONObject createOwnerUsingRESTfulAPI(String owner, String password, String url, String owner_name) throws Exception {
 // NOT TESTED
-		return new JSONObject(postResourceUsingRESTfulAPI(server, port, prefix, owner, password, "/owners", owner_name));
+		return new JSONObject(postResourceUsingRESTfulAPI(owner, password, url, "/owners", owner_name));
 	}
 	
 	public SSHCommandResult deleteOwnerUsingCPC(String owner_name) {
@@ -2168,19 +2160,19 @@ schema generation failed
 //
 //        return feed;
 //	}
-	public static SyndFeed getSyndFeedForOwner(String org, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("/owners/"+org,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeedForOwner(String org, String candlepinUsername, String candlepinPassword, String url) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor(candlepinUsername,candlepinPassword,url,"/owners/"+org);
 	}
 	
-	public static SyndFeed getSyndFeedForConsumer(String org, String uuid, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("/owners/"+org+"/consumers/"+uuid,candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeedForConsumer(String org, String uuid, String candlepinUsername, String candlepinPassword, String url) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor(candlepinUsername,candlepinPassword,url,"/owners/"+org+"/consumers/"+uuid);
 	}
 	
-	public static SyndFeed getSyndFeed(String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IllegalArgumentException, IOException, FeedException {
-		return getSyndFeedFor("",candlepinHostname,candlepinPort,candlepinPrefix,candlepinUsername,candlepinPassword);
+	public static SyndFeed getSyndFeed(String candlepinUsername, String candlepinPassword, String url) throws IllegalArgumentException, IOException, FeedException {
+		return getSyndFeedFor(candlepinUsername,candlepinPassword,url,"");
 	}
 	
-	protected static SyndFeed getSyndFeedFor(String path, String candlepinHostname, String candlepinPort, String candlepinPrefix, String candlepinUsername, String candlepinPassword) throws IOException, IllegalArgumentException, FeedException {
+	protected static SyndFeed getSyndFeedFor(String candlepinUsername, String candlepinPassword, String url, String path) throws IOException, IllegalArgumentException, FeedException {
 			
 		/* References:
 		 * http://www.exampledepot.com/egs/javax.net.ssl/TrustAll.html
@@ -2195,11 +2187,12 @@ schema generation failed
 		SSLCertificateTruster.trustAllCerts();
 		
 		// set the atom feed url for an owner, consumer, or null
-		String url = String.format("https://%s:%s%s%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, path);
+//		String url = String.format("https://%s:%s%s%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, path);
+		url = url+path+"/atom";
 //		if (ownerORconsumer!=null && key!=null) {
 //			url = String.format("https://%s:%s%s/%s/%s/atom", candlepinHostname, candlepinPort, candlepinPrefix, ownerORconsumer, key);
 //		}
-		
+
         log.fine("SyndFeedUrl: "+url);
         String authString = candlepinUsername+":"+candlepinPassword;
         log.finer("SyndFeedAuthenticationString: "+authString);
@@ -2272,13 +2265,14 @@ schema generation failed
 	
 	
 	/**
+	 * @param url TODO
 	 * @param startingMinutesFromNow
 	 * @param endingMinutesFromNow
 	 * @return JSONObject representing the pool corresponding to the subscription
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject createSubscriptionAndRefreshPools(String server, String port, String prefix, String authenticator, String password, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProductIds) throws JSONException, Exception  {
+	public static JSONObject createSubscriptionAndRefreshPools(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProductIds) throws JSONException, Exception  {
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -2315,11 +2309,11 @@ schema generation failed
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
-		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(server,port,prefix,authenticator,password, "/owners/" + ownerKey + "/subscriptions", requestBody));
+		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
 		
 		// refresh the pools
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(server,port,prefix,authenticator,password, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(server,port,prefix,authenticator,password, jobDetail, "FINISHED", 5*1000, 1);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);
 		
 		// assemble an activeon parameter set to the start date so we can pass it on to the REST API call to find the created pool
 		DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
@@ -2330,7 +2324,7 @@ schema generation failed
 		// loop through all pools available to owner and find the newly created poolid corresponding to the new subscription id activeon startDate
 		String poolId = null;
 		JSONObject jsonPool = null;
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(server,port,prefix,authenticator,password,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools"+"?activeon="+urlEncodedActiveOnDate));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			jsonPool = (JSONObject) jsonPools.get(i);
 			//if (contractNumber.equals(jsonPool.getInt("contractNumber"))) {

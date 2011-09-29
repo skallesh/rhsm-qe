@@ -128,8 +128,8 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		updateSubscriptionPoolDatesOnDatabase(pool,newStartDate,newEndDate);
 		
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		log.info("Refresh to make sure the latest entitlement certs are on the client...");
 		clienttasks.refresh(null, null, null); // makes sure the new entitlement is downloaded
 
@@ -203,7 +203,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="ChangeSubscriptionPoolStartEndDatesAndRefreshSubscriptionPools_Test")
 	protected void getClientOwnerBeforeGroups() throws JSONException, Exception {
 		String consumerId = clienttasks.getCurrentConsumerId();
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 	}
 
