@@ -193,19 +193,24 @@
 
 (defn firstboot-register
   "Subscribes subscription-manager from within firstboot."
-  [username password & {:keys [system-name-input, autosubscribe]
-                          :or {system-name-input nil, autosubscribe false}}]
+  [username password & {:keys [system-name-input, autosubscribe?, org]
+                          :or {system-name-input nil, autosubscribe? false, org nil}}]
   (assert  (or (fbshowing? :firstboot-user)
                (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration"))))
   (ui settextvalue :firstboot-user username)
   (ui settextvalue :firstboot-pass password)
   (when system-name-input
     (ui settextvalue :firstboot-system-name system-name-input))
-  (if autosubscribe
+  (if autosubscribe?
     (ui check :firstboot-autosubscribe)
     (ui uncheck :firstboot-autosubscribe))
-    (ui click :firstboot-forward)
-    (checkforerror))
+  (ui click :firstboot-forward)
+  (checkforerror)
+  (if (ui showing? :firstboot-window "Organization Selection")
+    (do 
+      (if org (ui selectrow :firstboot-owner-table org))
+      (ui click :firstboot-forward)))
+  (checkforerror))
   
 
 (defn wait-for-progress-bar
