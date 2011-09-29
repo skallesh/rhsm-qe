@@ -502,7 +502,6 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-
 	public static List<String> getOrgsKeyValueForUser(String username, String password, String url, String key) throws JSONException, Exception {
 
 		List<String> values = new ArrayList<String>();
