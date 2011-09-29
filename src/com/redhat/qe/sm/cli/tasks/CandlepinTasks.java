@@ -502,6 +502,10 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
+		// FIXME DELETE THIS METHOD AFTER UPDATING tasks.clj:460
+		return getOrgsKeyValueForUser(username, password, SubscriptionManagerCLITestScript.sm_serverUrl, key);
+	}
 	public static List<String> getOrgsKeyValueForUser(String username, String password, String url, String key) throws JSONException, Exception {
 
 		List<String> values = new ArrayList<String>();
