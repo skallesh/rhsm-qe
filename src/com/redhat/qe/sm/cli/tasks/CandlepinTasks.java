@@ -502,6 +502,7 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
+
 	public static List<String> getOrgsKeyValueForUser(String username, String password, String url, String key) throws JSONException, Exception {
 
 		List<String> values = new ArrayList<String>();
@@ -2374,6 +2375,17 @@ schema generation failed
 		//jo.put("john", ja);
 		//System.out.println(jo.toString());
 	}
+	
+	
+	
+	
+	// FIXME DEPRECATED METHODS TO BE DELETED AFTER UPDATING CLOJURE TESTS
+	public static List<String> getOrgsKeyValueForUser(String server, String port, String prefix, String username, String password, String key) throws JSONException, Exception {
+		return getOrgsKeyValueForUser(username, password, SubscriptionManagerCLITestScript.sm_serverUrl, key);
+	}
+	public static String getOrgDisplayNameForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
+		return getOrgDisplayNameForOrgKey(authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl,orgKey);
+	}
 }
 
 
@@ -2433,3 +2445,5 @@ for version in versions:
 for path in paths(topnode):
   print ".".join([str(elem) for elem in path])
 */
+
+
