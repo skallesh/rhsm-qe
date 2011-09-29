@@ -105,7 +105,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :subscription-assistant-dialog)
       {:first-date "*first date of invalid entitlements*"
        :different-date "A different date:"
-       :date-entry "date-entry"
+       :assistant-date-entry "date-entry"
        :update "Update"
        :assistant-subscribe "subscribe button"
        :subscription-product-view "Invalid Product List"

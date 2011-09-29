@@ -17,7 +17,8 @@
   (reset! importtests (ImportTests.))
   (.setupBeforeClass @importtests))
 
-(defn ^{Test {:groups ["import"]}}
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-737675"]}}
   import_cert [_]
   (let [certlocation (str (.getValidImportCertificate @importtests))]
     (tasks/ui click :import-certificate)

@@ -41,6 +41,7 @@
                    :wrong-consumer-type #"Consumers of this type are not allowed"
                    :network-error #"Network error, unable to connect to server.*"
                    :error-updating #"Error updating system data*"
+                   :date-error #"Invalid date format. Please re-enter a valid date*"
                    })
 
 (defn matching-error
