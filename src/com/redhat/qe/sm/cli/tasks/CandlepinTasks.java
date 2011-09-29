@@ -264,6 +264,17 @@ schema generation failed
 			prefix = "/clonepin/candlepin";
 			get = new GetMethod("http://"+server+":"+port+prefix+path);
 		}
+		if (server.equals("katello-test-f15-1.usersys.redhat.com")) {
+			/* THIS WORKAROUND CAME FROM jweiss AGAINST KATELLO.
+			 * stage:
+			 *  curl -k -u stage_test_6:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/entitlements/8a99f9812eddbd5c012f0343c0576c99
+			 * webqa:
+			 *  curl -k -u foo:bar --request GET http://rubyvip.web.qa.ext.phx1.redhat.com/clonepin/candlepin/status
+			 */
+			port = "8443";
+			prefix = "/candlepin";
+			get = new GetMethod("https://"+server+":"+port+prefix+path);
+		}
 		// END OF WORKAROUND
 		
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.TimeZone;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
@@ -176,6 +178,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			smt.installProductCerts(generatedProductCertFiles);
 		}
 		
+		// determine the server URL that will be used for candlepin API calls
+		if (sm_serverUrl.equals("")) {
+			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
+		}
 		
 		log.info("Installed version of candlepin...");
 		JSONObject jsonStatus =null;
@@ -292,6 +298,13 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 	
 	// Protected Methods ***********************************************************************
+
+	protected String getServerUrl(String hostname, String port, String prefix) {
+		// https://hostname:port/prefix
+		if (!port.equals("")) port=(":"+port).replaceFirst("^:+", ":");
+		if (!prefix.equals("")) prefix=("/"+prefix).replaceFirst("^/+", "/");
+		return "https://"+hostname+port+prefix;	
+	}
 	
 	protected Connection connectToDatabase() {
 		/* Notes on setting up the db for a connection:
@@ -828,6 +841,19 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			String username = jsonUser.getString("username");
 			String password = sm_clientPasswordDefault;
 			if (username.equals(sm_serverAdminUsername)) password = sm_serverAdminPassword;
+			
+			
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=741961 - jsefler 9/29/2011
+			if (username.equals("anonymous")) {
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="741961"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					log.warning("Ignoring the presence of user '"+username+"'.  No automated testing with this user will be executed.");
+					continue;
+				}
+			}
+			// END OF WORKAROUND
 			
 			// get the user's owners
 			// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool

@@ -100,7 +100,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 //			dataProvider="getEnvironmentsForOrgsData",
 //			enabled=true)
 //	//@ImplementsNitrateTest(caseId=)
-//	public void EnvironmnetsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
+//	public void EnvironmentsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
 //		log.info("Testing subscription-manager environments module using username="+username+" password="+password+" org="+org+" and expecting environmnets="+expectedEnvironments+" ...");
 //		
 //		// use subscription-manager to get the organizations for which the user has access
