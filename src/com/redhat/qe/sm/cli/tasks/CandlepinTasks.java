@@ -502,7 +502,6 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-
 	public static List<String> getOrgsKeyValueForUser(String username, String password, String url, String key) throws JSONException, Exception {
 
 		List<String> values = new ArrayList<String>();
@@ -2385,6 +2384,9 @@ schema generation failed
 	}
 	public static String getOrgDisplayNameForOrgKey(String server, String port, String prefix, String authenticator, String password, String orgKey) throws JSONException, Exception {
 		return getOrgDisplayNameForOrgKey(authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl,orgKey);
+	}
+	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
+		return getPoolIdFromProductNameAndContractNumber(authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, ownerKey, fromProductName, fromContractNumber);
 	}
 }
 
