@@ -43,6 +43,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
+		log.info("Following is a list of previously subscribed repos...");
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);	// for this test, we can skip the exhaustive asserts done by this call to clienttasks.subscribeToSubscriptionPool(pool)
@@ -69,6 +70,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 					// simply add the contentNamespaces (if not already there) from the modifier to the entitlement cert's contentNamespaces so they will be accounted for in the repos list test below
 					for (ContentNamespace contentNamespace : modifierEntitlementCert.contentNamespaces) {
 						if (!entitlementCert.contentNamespaces.contains(contentNamespace)) {
+							log.warning("Due to a previously subscribed modifier subscription pool ("+modifierPool.subscriptionName+"), the new repos listed should also include ContentNamespace: "+contentNamespace);
 							entitlementCert.contentNamespaces.add(contentNamespace);
 						}
 					}
@@ -77,7 +79,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		priorSubscribedPools.add(pool);
 		
-			
+		log.info("Following is the new list of subscribed repos after subscribing to pool: "+pool);			
 		List<Repo> actualRepos = clienttasks.getCurrentlySubscribedRepos();
 		
 		// assert that the new contentNamespaces from the entitlementCert are listed in repos

@@ -306,7 +306,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// handle the case when "A consumer type of 'person' cannot be used with activation keys"
 		// resolution to: Bug 728721 - NullPointerException thrown when registering with an activation key bound to a pool that requires_consumer_type person
 		if (ConsumerType.person.equals(type)) {
-			Assert.assertEquals(registerResult.getStderr().trim(), "A consumer type of 'person' cannot be used with activation keys", "Registering a with an activationKey containing a pool that requires a person consumer type should fail.");
+			Assert.assertEquals(registerResult.getStderr().trim(), "A consumer type of 'person' cannot be used with activation keys", "Registering with an activationKey containing a pool that requires_consumer_type=person should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool that requires a person consumer should fail.");
 			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0,"No subscriptions should be consumed after attempting to register with an activationKey containing a pool that requires a person consumer type.");
 			return;
@@ -314,7 +314,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// handle the case when our quantity request exceeds the quantityAvail and there are no Entitlement Certs avail
 		if (addQuantity > quantityAvail) {
-			Assert.assertEquals(registerResult.getStderr().trim(), "No free entitlements are available for the pool with id '"+poolId+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
+			Assert.assertEquals(registerResult.getStderr().trim(), "No free entitlements are available for the pool with id '"+poolId+"'.", "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			return;
 		}
