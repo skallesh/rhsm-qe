@@ -2388,6 +2388,10 @@ schema generation failed
 	public static String getPoolIdFromProductNameAndContractNumber(String server, String port, String prefix, String authenticator, String password, String ownerKey, String fromProductName, String fromContractNumber) throws JSONException, Exception{
 		return getPoolIdFromProductNameAndContractNumber(authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, ownerKey, fromProductName, fromContractNumber);
 	}
+	public static boolean isPoolProductMultiEntitlement (String server, String port, String prefix, String authenticator, String password, String poolId) throws JSONException, Exception {
+		return isPoolProductMultiEntitlement (authenticator, password, SubscriptionManagerCLITestScript.sm_serverUrl, poolId);
+	}
+
 }
 
 
