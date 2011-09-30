@@ -140,7 +140,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					InstalledProduct installedProduct = installedProducts.get(0);
 					
 					// decide what the status should be...  "Subscribed" or "Partially Subscribed"
-					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "sockets");
+					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
 					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets)) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
 					} else {
@@ -227,11 +227,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
 
 		//clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-		Assert.assertNull(CandlepinTasks.getEntitlementSerialForSubscribedPoolId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, sm_clientOrg, pool.poolId),"Authenticator '"+sm_clientUsername+"' has not been granted any entitlements from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
+		Assert.assertNull(CandlepinTasks.getEntitlementSerialForSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, pool.poolId),"Authenticator '"+sm_clientUsername+"' has not been granted any entitlements from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
 
-		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,pool.poolId)) {
+		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
 			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.",
 				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
 		} else {
@@ -282,7 +282,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				subscribeResultMessage = "Subscription pool "+poolId+" does not exist.";
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The subscribe result for an invalid pool '"+poolId+"' contains: "+subscribeResultMessage);
 			}
-			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,poolId)) {
+			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,poolId)) {
 				subscribeResultMessage = "Successfully subscribed the system to Pool "+poolId;
 				subscribeResultMessage += "\n"+subscribeResultMessage;
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for a multi-entitlement pool '"+poolId+"' contains: "+subscribeResultMessage);
@@ -714,7 +714,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that the expected pools were subscribed to based on quantity
 		Assert.assertEquals(subscribeResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 		for (SubscriptionPool pool : pools) {
-			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId)) {
+			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				Assert.assertTrue(subscribeResult.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
 			} else if (quantity <= Integer.valueOf(pool.quantity)) {
 				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
@@ -844,7 +844,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<2) continue;	// skip pools that don't have enough quantity left to consume
 			
 			Boolean isMultiEntitlementPool = null;	// indicates that the pool's product does NOT have the "multi-entitlement" attribute
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword,"/pools/"+pool.poolId));	
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pool.poolId));	
 			JSONArray jsonProductAttributes = jsonPool.getJSONArray("productAttributes");
 			// loop through the productAttributes of this pool looking for the "multi-entitlement" attribute
 			for (int j = 0; j < jsonProductAttributes.length(); j++) {

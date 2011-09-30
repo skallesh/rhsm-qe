@@ -37,7 +37,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	public void VerifyThatCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
 		
 		// ask the candlepin server if it supports environment
-		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword);
+		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
 		
 		// skip this test when candlepin supports environments
 		if (supportsEnvironments) throw new SkipException("Candlepin server '"+sm_serverHostname+"' appears to support environments, therefore this test is not applicable.");
@@ -100,7 +100,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 //			dataProvider="getEnvironmentsForOrgsData",
 //			enabled=true)
 //	//@ImplementsNitrateTest(caseId=)
-//	public void EnvironmnetsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
+//	public void EnvironmentsWithCredentials_Test(String username, String password, String org, List<Environment> expectedEnvironments) {
 //		log.info("Testing subscription-manager environments module using username="+username+" password="+password+" org="+org+" and expecting environmnets="+expectedEnvironments+" ...");
 //		
 //		// use subscription-manager to get the organizations for which the user has access

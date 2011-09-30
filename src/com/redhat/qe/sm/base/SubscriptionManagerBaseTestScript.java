@@ -21,9 +21,10 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static SSHCommandRunner client1	= null;	// client1
 	public static SSHCommandRunner client2	= null;	// client2
 	
-	// /etc/rhsm/rhsm.conf parameters..................
 	
-	// rhsm.conf [server] configurations
+	public static String sm_serverUrl				= null;
+	
+	// /etc/rhsm/rhsm.conf [server] configurations
 	public static String sm_serverHostname			= null;
 	public static String sm_serverPrefix 			= null;
 	public static String sm_serverPort 				= null;
@@ -31,17 +32,18 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static String sm_serverSslVerifyDepth	= null;
 	public static String sm_serverCaCertDir			= null;
 	
-	// rhsm.conf [rhsm] configurations
+	// /etc/rhsm/rhsm.conf [rhsm] configurations
 	public static String sm_rhsmBaseUrl				= null;
 	public static String sm_rhsmRepoCaCert			= null;
 	public static String sm_rhsmProductCertDir		= null;
 	public static String sm_rhsmEntitlementCertDir	= null;
 	public static String sm_rhsmConsumerCertDir		= null;
 	
-	// rhsm.conf [rhsmcertd] configurations
+	// /etc/rhsm/rhsm.conf [rhsmcertd] configurations
 	public static String sm_rhsmcertdCertFrequency	= null;
 	public static String sm_rhsmcertdHealFrequency	= null;
 	
+
 	public String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
 	public String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
 	
@@ -129,8 +131,9 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (getProperty("sm.rpm.urls", "").equals("")) 				sm_rpmUrls			= new ArrayList<String>();	else sm_rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
 		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
-		 
-		 
+		
+		sm_serverUrl					= getProperty("sm.server.url","");
+		
 		// rhsm.conf [server] configurations
 		sm_serverHostname				= getProperty("sm.server.hostname","");
 		sm_serverPrefix 				= getProperty("sm.server.prefix","");
@@ -150,6 +153,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		sm_rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
 		sm_rhsmcertdHealFrequency		= getProperty("sm.rhsmcertd.healFrequency","");
 	
+		
 		try {
 //			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 //			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []

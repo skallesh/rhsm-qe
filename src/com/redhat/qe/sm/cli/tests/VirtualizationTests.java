@@ -224,14 +224,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 		// assert that there are two (one for the host and one for the guest)
 		log.info("Using the RESTful Candlepin API, let's find all the pools generated from subscription id: "+subscriptionId);
-		List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, ownerKey, subscriptionId);
+		List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
 		Assert.assertEquals(poolIds.size(), 2, "Exactly two pools should be derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
 
 		// assert that one pool is for the host and the other is for the guest
 		guestPoolId = null;
 		hostPoolId = null;
 		for (String poolId : poolIds) {
-			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
+			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,poolId,sm_serverUrl)) {
 				guestPoolId = poolId;
 			} else {
 				hostPoolId = poolId;
@@ -259,7 +259,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(hostPool,"A host pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+hostPool);
 
 		// assert hostPoolId quantity
-		JSONObject jsonHostPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+hostPool.poolId));	
+		JSONObject jsonHostPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+hostPool.poolId));	
 		int hostPoolQuantityConsumed = jsonHostPool.getInt("consumed");
 		Assert.assertEquals(Integer.valueOf(hostPool.quantity), Integer.valueOf(quantity-hostPoolQuantityConsumed), "Assuming '"+hostPoolQuantityConsumed+"' entitlements are currently being consumed from this host pool '"+hostPool.poolId+"', the quantity of available entitlements should be '"+quantity+"' minus '"+hostPoolQuantityConsumed+"'.");
 		
@@ -268,7 +268,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(guestPool,"A guest pool derived from the virtualization-aware subscription id '"+subscriptionId+"' is listed in all available subscriptions: "+guestPool);
 
 		// assert guestPoolId quantity
-		JSONObject jsonGuestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+guestPool.poolId));	
+		JSONObject jsonGuestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+guestPool.poolId));	
 		int guestPoolQuantityConsumed = jsonGuestPool.getInt("consumed");
 		if (virtLimit.equals("unlimited")) {
 			Assert.assertEquals(guestPool.quantity, virtLimit, "When the subscription product has a virt_limit of 'unlimited', then the guest pool's quantity should be 'unlimited'.");
@@ -305,7 +305,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		String guestPoolQuantityBefore = guestPool.quantity;
 
 		log.info("Now let's modify the start date of the virtualization-aware subscription id '"+subscriptionId+"'...");
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		JSONObject jsonSubscription = null;
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
@@ -316,8 +316,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		updateSubscriptionDatesOnDatabase(subscriptionId,newStartDate,null);
 
 		log.info("Now let's refresh the subscription pools...");
-		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, ownerKey);
-		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword, jobDetail, "FINISHED", 10*1000, 3);
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 
 		// retrieve the host pool again and assert the quantity has not changed
@@ -399,7 +399,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		boolean poolFound = false;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, pool.poolId)) {
+			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,pool.poolId,sm_serverUrl)) {
 				Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
 				poolFound = true;
 			} else {
@@ -420,7 +420,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		boolean poolFound = false;
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, pool.poolId)) {
+			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,pool.poolId,sm_serverUrl)) {
 				//Assert.assertEquals(pool.machineType, "virtual", "MachineType:virtual should be displayed in the available Subscription Pool listing when the pool has a virt_only=true attribute.  Pool: "+pool);
 			} else {
 				Assert.assertEquals(pool.machineType, "physical", "MachineType:physical should be displayed in the available Subscription Pool listing when the pool has a virt_only=false attribute (or absense of a virt_only attribute).  Pool: "+pool);
@@ -471,7 +471,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null));
-		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	
 	@BeforeMethod(groups="setup")
@@ -545,7 +545,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String subscriptionId = jsonSubscription.getString("id");
@@ -568,13 +568,13 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 					if (startDate.before(now) && endDate.after(now)) {
 
 						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
-						List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, ownerKey, subscriptionId);
+						List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
 
 						// determine which pool is for the guest, the other must be for the host
 						String guestPoolId = null;
 						String hostPoolId = null;
 						for (String poolId : poolIds) {
-							if (CandlepinTasks.isPoolVirtOnly (sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword, poolId)) {
+							if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,poolId,sm_serverUrl)) {
 								guestPoolId = poolId;
 							} else {
 								hostPoolId = poolId;

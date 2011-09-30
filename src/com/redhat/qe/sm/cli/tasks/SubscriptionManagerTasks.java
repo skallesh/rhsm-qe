@@ -90,7 +90,7 @@ public class SubscriptionManagerTasks {
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
-		setSSHCommandRunner(runner);
+		sshCommandRunner = runner;
 		hostname		= sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		ipaddr			= sshCommandRunner.runCommandAndWait("ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | sed s/'  Bcast'//g").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
@@ -104,9 +104,7 @@ public class SubscriptionManagerTasks {
 		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
-	public void setSSHCommandRunner(SSHCommandRunner runner) {
-		sshCommandRunner = runner;
-	}
+
 	
 	/**
 	 * Must be called after installSubscriptionManagerRPMs(...)
@@ -556,11 +554,11 @@ public class SubscriptionManagerTasks {
 	public String getCurrentlyRegisteredOwnerKey() throws JSONException, Exception {
 		if (this.currentlyRegisteredOrg!=null) return this.currentlyRegisteredOrg;
 		
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+//		String port = getConfFileParameter(rhsmConfFile, "port");
+//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
-		return (CandlepinTasks.getOwnerKeyOfConsumerId(hostname, port, prefix, this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, getCurrentConsumerId()));
+		return (CandlepinTasks.getOwnerKeyOfConsumerId(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, SubscriptionManagerCLITestScript.sm_serverUrl, getCurrentConsumerId()));
 	}
 	
 	/**
@@ -679,13 +677,13 @@ public class SubscriptionManagerTasks {
 	public Map<BigInteger, SubscriptionPool> getCurrentSerialMapToSubscriptionPools(String username, String password) throws Exception  {
 		
 		Map<BigInteger, SubscriptionPool> serialMapToSubscriptionPools = new HashMap<BigInteger, SubscriptionPool>();
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+//		String port = getConfFileParameter(rhsmConfFile, "port");
+//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,username,password,entitlementCert.id);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(username,password,SubscriptionManagerCLITestScript.sm_serverUrl,entitlementCert.id);
 			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,username,password,poolHref));
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,SubscriptionManagerCLITestScript.sm_serverUrl,poolHref));
 			String subscriptionName = jsonPool.getString("productName");
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
@@ -1084,15 +1082,15 @@ public class SubscriptionManagerTasks {
 	
 	
 	public EntitlementCert getEntitlementCertCorrespondingToSubscribedPool(SubscriptionPool subscribedPool) {
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+//		String port = getConfFileParameter(rhsmConfFile, "port");
+//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
 		for (File entitlementCertFile : getCurrentEntitlementCertFiles("-t")) {
 			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			try {
-				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,entitlementCert.id);
-				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
+				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,entitlementCert.id);
+				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
 				if (jsonPool.getString("id").equals(subscribedPool.poolId)) {
 					return entitlementCert;
 				}
@@ -1106,12 +1104,12 @@ public class SubscriptionManagerTasks {
 	
 	public List<ProductCert> getCurrentProductCertsCorrespondingToSubscriptionPool(SubscriptionPool pool) throws JSONException, Exception {
 		List<ProductCert> currentProductCertsCorrespondingToSubscriptionPool = new ArrayList<ProductCert>();
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+//		String port = getConfFileParameter(rhsmConfFile, "port");
+//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		List<ProductCert> currentProductCerts = getCurrentProductCerts();
 
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,"/pools/"+pool.poolId));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,"/pools/"+pool.poolId));
 		JSONArray jsonProvidedProducts = (JSONArray) jsonPool.getJSONArray("providedProducts");
 		for (int k = 0; k < jsonProvidedProducts.length(); k++) {
 			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
@@ -2270,9 +2268,9 @@ public class SubscriptionManagerTasks {
 	 */
 	public File subscribeToSubscriptionPool(SubscriptionPool pool)  {
 		
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+//		String port = getConfFileParameter(rhsmConfFile, "port");
+//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -2282,7 +2280,7 @@ public class SubscriptionManagerTasks {
 		// is this pool multi-entitleable?
 		boolean isPoolMultiEntitlement = false;
 		try {
-			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId);
+			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,pool.poolId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
@@ -2364,8 +2362,8 @@ public class SubscriptionManagerTasks {
 			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 				try {
-					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,entitlementCert.id);
-					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,jsonEntitlement.getJSONObject("pool").getString("href")));
+					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,entitlementCert.id);
+					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
 					if (jsonPool.getString("id").equals(pool.poolId)) {
 						newCertFile = entitlementCertFile; break;
 					}
@@ -2424,7 +2422,7 @@ public class SubscriptionManagerTasks {
 			int consumed = 0;
 			int quantity = Integer.valueOf(pool.quantity);
 			try {
-				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,"/pools/"+pool.poolId));
+				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,"/pools/"+pool.poolId));
 				consumed = jsonPool.getInt("consumed");
 				quantity = jsonPool.getInt("quantity");
 			} catch (Exception e) {
@@ -2495,16 +2493,16 @@ public class SubscriptionManagerTasks {
 	 */
 	public File subscribeToSubscriptionPool_(SubscriptionPool pool) throws JSONException, Exception  {
 		
-		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
-		String port = getConfFileParameter(rhsmConfFile, "port");
-		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
+//		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
+//		String port = getConfFileParameter(rhsmConfFile, "port");
+//		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		String ownerKey = getCurrentlyRegisteredOwnerKey();
 		
 		log.info("Subscribing to subscription pool: "+pool);
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
-		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(hostname,port,prefix,this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,ownerKey,pool.poolId);
+		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,ownerKey,pool.poolId);
 		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
 		if (serialNumber==null) return null;
 		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
@@ -2669,7 +2667,8 @@ public class SubscriptionManagerTasks {
 		List<SubscriptionPool> poolsAvailable = getCurrentlyAvailableSubscriptionPools();
 		for (SubscriptionPool pool : poolsAvailable) {
 			try {
-				if (!CandlepinTasks.isPoolProductMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
+//				if (!CandlepinTasks.isPoolProductMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
+				if (!CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,pool.poolId)) {
 					poolsAvailableExcludingMuliEntitlement.add(pool);
 				}
 			} catch (Exception e) {

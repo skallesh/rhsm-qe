@@ -104,7 +104,7 @@ public class ManagementAddOnTests extends SubscriptionManagerCLITestScript {
 		
 		// iterate through all available pools looking for those that contain no provided products (A Management AddOn Subscription contains no products)
 		for (SubscriptionPool pool : allAvailablePools) {
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/pools/"+pool.poolId));	
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
 			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
 			if (jsonProvidedProducts.length()==0) {
 				

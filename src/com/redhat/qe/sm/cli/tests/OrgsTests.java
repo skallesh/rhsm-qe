@@ -111,7 +111,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptToGetABogusOwnerViaCandlepinApi_Test() throws Exception {
 		String bogusOwner = "bogusOwner";
-		JSONObject jsonResponse = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername, sm_serverAdminPassword, "/owners/"+bogusOwner));
+		JSONObject jsonResponse = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+bogusOwner));
 		
 		Assert.assertEquals(jsonResponse.getString("displayMessage"), "Owner with id "+bogusOwner+" could not be found", "The JSON returned from the candlepin API call should contain a displayMessage stating that the owner could not be found.");
 		
@@ -157,7 +157,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 
 		// get all of the candlepin users
 		// curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users | python -mjson.tool
-		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/users"));	
+		JSONArray jsonUsers = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/users"));	
 		for (int i = 0; i < jsonUsers.length(); i++) {
 			JSONObject jsonUser = (JSONObject) jsonUsers.get(i);
 			// {
@@ -175,7 +175,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			
 			// get the user's owners
 			// curl -k -u testuser1:password https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/users/testuser1/owners | python -mjson.tool
-			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/users/"+username+"/owners"));	
+			JSONArray jsonUserOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/users/"+username+"/owners"));	
 			List<Org> orgs = new ArrayList<Org>();
 			for (int j = 0; j < jsonUserOwners.length(); j++) {
 				JSONObject jsonOwner = (JSONObject) jsonUserOwners.get(j);

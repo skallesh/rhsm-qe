@@ -52,7 +52,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 
 		// call the candlepin api to create an activation key
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, username, password, "/owners/" + org + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/owners/" + org + "/activation_keys", jsonActivationKeyRequest.toString()));
 
 		// assert that the creation was successful (does not contain a displayMessage)
 		try {
@@ -63,7 +63,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		// assert that the created key is listed
 		// process all of the subscriptions belonging to ownerKey
-		JSONArray jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,username,password,"/owners/"+org+"/activation_keys"));	
+		JSONArray jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/owners/"+org+"/activation_keys"));	
 		JSONObject jsonActivationKeyI = null;
 		for (int i = 0; i < jsonActivationKeys.length(); i++) {
 			jsonActivationKeyI = (JSONObject) jsonActivationKeys.get(i);
@@ -88,13 +88,13 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyI.toString(), "Successfully found newly created activation key with credentials '"+username+"'/'"+password+"' under /owners/"+org+"/activation_keys .");
 		
 		// now assert that the activation key is found under /candlepin/activation_keys/<id>
-		JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys/"+jsonActivationKey.getString("id")));
+		JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 		Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
 
 		// now attempt to delete the key
-		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, username, password, "/activation_keys/"+jsonActivationKey.getString("id"));
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/activation_keys/"+jsonActivationKey.getString("id"));
 		// assert that it is no longer found under /activation_keys
-		jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys"));
+		jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys"));
 		jsonActivationKeyI = null;
 		for (int i = 0; i < jsonActivationKeys.length(); i++) {
 			jsonActivationKeyI = (JSONObject) jsonActivationKeys.get(i);
@@ -119,7 +119,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		
 		// call the candlepin api to create an activation key
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 
 		// assert that the creation was NOT successful (contains a displayMessage)
 		try {
@@ -147,11 +147,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		
 		// call the candlepin api to create an activation key
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		Assert.assertEquals(jsonActivationKey.getString("name"), name, "First activation key creation attempt appears successful.  Activation key: "+jsonActivationKey);
 
 		// attempt to create another key by the same name
-		jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		
 		// assert that the creation was NOT successful (contains a displayMessage)
 		try {
@@ -174,7 +174,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		String poolId = jsonPool.getString("id");
 				
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=728721 - jsefler 8/6/2011
-		if (CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, ConsumerType.person)) {
+		if (CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.person)) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="728721"; 
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -193,17 +193,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		
 		// call the candlepin api to create an activation key
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		Assert.assertEquals(jsonActivationKey.getString("name"), name, "Activation key creation attempt appears successful.  Activation key: "+jsonActivationKey);
 
 		// add the pool with a random available quantity (?quantity=#) to the activation key
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
 //		int addQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a addQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
-		JSONObject jsonAddedPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId +(addQuantity==null?"":"?quantity="+addQuantity), null));
+		JSONObject jsonAddedPool = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + poolId +(addQuantity==null?"":"?quantity="+addQuantity), null));
 		if (addQuantity==null) addQuantity=1;
 
 		// handle the case when the pool productAttributes contain name:"requires_consumer_type" value:"person"
-		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, "requires_consumer_type"))) {
+		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"))) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			try {
@@ -217,7 +217,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// handle the case when the pool is NOT multi_entitlement and we tried to add the pool to the key with a quantity > 1
-		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId) && addQuantity>1) {
+		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId) && addQuantity>1) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			try {
@@ -259,7 +259,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// assert the pool is added
-		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys/"+jsonActivationKey.getString("id")));
+		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 		//# curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c63196bb2001319f66afa83cb4 | python -mjson.tool
 		//{
 		//    "created": "2011-08-06T14:02:12.264+0000", 
@@ -295,11 +295,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// handle the case when "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'."
 		ConsumerType type = null;
-		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, ConsumerType.system)) {
+		if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, ConsumerType.system)) {
 			Assert.assertEquals(registerResult.getStderr().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'.", "Registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			// now register with the same activation key using the needed ConsumerType
-			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, poolId, "requires_consumer_type"));
+			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
 			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, jsonActivationKey.getString("name"), false /*was already unregistered by force above*/, null, null, null);
 		}
 		
@@ -358,7 +358,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithActivationKeyUsingWrongOrg_Test() throws JSONException, Exception {
 		
 		// loop through existing owners and remember the orgs
-		JSONArray jsonOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/owners"));
+		JSONArray jsonOwners = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/owners"));
 		if (jsonOwners.length()<2) throw new SkipException("This test requires at least two orgs on your candlepin server.");
 		List<String> orgs = new ArrayList<String>();
 		for (int j = 0; j < jsonOwners.length(); j++) {
@@ -389,7 +389,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 
 			// call the candlepin api to create an activation key
-			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername,sm_serverAdminPassword, "/owners/" + org + "/activation_keys",  jsonActivationKeyRequest.toString()));
+			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + org + "/activation_keys",jsonActivationKeyRequest.toString()));
 
 			// assert that the creation was successful (does not contain a displayMessage)
 			try {
@@ -399,7 +399,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
 			}
 			// now assert that the new activation key is found under /candlepin/activation_keys/<id>
-			JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys/"+jsonActivationKey.getString("id")));
+			JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 			Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
 
 			// now let's attempt to register with the activation key using a different org
@@ -430,7 +430,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (quantityAvail<1) throw new SkipException("Cannot do this test until there is an available entitlement for pool '"+jsonPool.getString("id")+"'.");
 		
 		// now consume an entitlement from the pool
-		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id"), "requires_consumer_type");
+		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
 		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, (String)null, true, null, null, null));
 		clienttasks.subscribe(null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
@@ -443,7 +443,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean(null, null, null);
 		
 		// assert that the current pool recognizes an increment in consumption
-		JSONObject jsonCurrentPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/pools/"+jsonPool.getString("id")));
+		JSONObject jsonCurrentPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+jsonPool.getString("id")));
 		Assert.assertEquals(jsonCurrentPool.getInt("consumed"),jsonPool.getInt("consumed")+1,"The consumed entitlement from Pool '"+jsonPool.getString("id")+"' has incremented by one.");
 		
 		// finally do the test...
@@ -463,7 +463,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithActivationKeyContainingMultiplePools_Test() throws JSONException, Exception {
 		
 		// get all of the pools belonging to ownerKey
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
 		
 		// create an activation key
@@ -471,7 +471,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
 		mapActivationKeyRequest.put("name", activationKeyName);
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
-		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername,sm_serverAdminPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys",jsonActivationKeyRequest.toString()));
 
 		// process each of the pools adding them to the activation key
 //		List<String> addedPoolIds = new ArrayList<String>();
@@ -481,18 +481,18 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
-			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername, sm_clientPassword,jsonPool.getString("id"),ConsumerType.system)) continue;
+			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 			
 			// add the pool to the activation key
 //			int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
 //			int bindQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a bindQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
 
 //			addedPoolIds.add(poolId);
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 		}
 		if (addQuantity==null) addQuantity=1;
-		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/activation_keys/"+jsonActivationKey.getString("id")));
+		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 		Assert.assertTrue(jsonActivationKey.getJSONArray("pools").length()>0,"MultiplePools have been added to the activation key: "+jsonActivationKey);
 		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"MultiplePools have been added to the activation key: "+jsonActivationKey);
 		
@@ -519,7 +519,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
 		
 		// get all of the pools belonging to ownerKey
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
 		
 		// process each of the pools adding them to an individual activation key
@@ -530,17 +530,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
-			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername, sm_clientPassword,jsonPool.getString("id"),ConsumerType.system)) continue;
+			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 
 			// create an activation key
 			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
 			Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
 			mapActivationKeyRequest.put("name", activationKeyName);
 			JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
-			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername,sm_serverAdminPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys",jsonActivationKeyRequest.toString()));
 			
 			// add the pool to the activation key
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
 
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 			activationKeyNames.add(activationKeyName);
@@ -574,7 +574,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
 		
 		// get all of the pools belonging to ownerKey
-		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
 		
 		// process each of the pools adding them to an individual activation key
@@ -585,17 +585,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
 
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
-			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername, sm_clientPassword,jsonPool.getString("id"),ConsumerType.system)) continue;
+			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 
 			// create an activation key
 			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
 			Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
 			mapActivationKeyRequest.put("name", activationKeyName);
 			JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
-			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_serverAdminUsername,sm_serverAdminPassword, "/owners/" + sm_clientOrg + "/activation_keys",  jsonActivationKeyRequest.toString()));
+			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys",jsonActivationKeyRequest.toString()));
 			
 			// add the pool to the activation key
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
+			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
 
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 			activationKeyNames.add(activationKeyName);
@@ -657,7 +657,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// pluck out the providedProducts that have an attribute type=MKT products
 		for (int j = 0; j < jsonProvidedProducts.length(); j++) {
 			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(j);
-			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_serverAdminUsername,sm_serverAdminPassword,"/products/"+jsonProvidedProduct.getString("productId")));
+			JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/products/"+jsonProvidedProduct.getString("productId")));
 			JSONArray jsonAttributes = jsonProduct.getJSONArray("attributes");
 			for (int k = 0; k < jsonAttributes.length(); k++) {
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(k);
@@ -735,7 +735,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
 			
-			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id"))) {
+			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) {
 
 				// Object blockedByBug, JSONObject jsonPool)
 				ll.add(Arrays.asList(new Object[] {null,	jsonPool}));
@@ -782,9 +782,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// is this pool known to be blocked by any actication key bugs?
 			BlockedByBzBug blockedByBugs = null;
 			List<String> bugids = new ArrayList<String>();
-			if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id"), "requires_consumer_type")))
+			if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type")))
 				bugids.add("732538");
-			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, jsonPool.getString("id")) && addQuantity>1)
+			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id")) && addQuantity>1)
 				bugids.add("729070");			
 			if (!bugids.isEmpty()) blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
 				

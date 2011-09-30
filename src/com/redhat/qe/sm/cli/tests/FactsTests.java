@@ -158,7 +158,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void AssertPoolsWithSocketsGreaterThanSystemsCpuSocketAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null);
 		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 		
 		boolean foundPoolWithSocketAttributes = false;
 		boolean conclusiveTest = false;
@@ -173,7 +173,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the owner's subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");
@@ -222,7 +222,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	public void AssertPoolsWithAnArchDifferentThanSystemsArchitectureAreNotAvailable_Test(SubscriptionManagerTasks smt) throws Exception {
 		smt.unregister(null, null, null);
 		String consumerId = smt.getCurrentConsumerId(smt.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, null, null, null));
-		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		boolean foundPoolWithArchAttributes = false;
 		boolean conclusiveTest = false;
@@ -236,7 +236,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info(factName+" for this system consumer: "+systemValue);
 		
 		// loop through the owner's subscriptions
-		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverHostname,sm_serverPort,sm_serverPrefix,sm_clientUsername,sm_clientPassword,"/owners/"+ownerKey+"/subscriptions"));	
+		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String poolId = jsonSubscription.getString("id");

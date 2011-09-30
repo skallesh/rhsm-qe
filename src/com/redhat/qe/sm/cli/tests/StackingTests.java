@@ -49,7 +49,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		// loop through the pools to determine the minimum socket count for which one of each stackable pool is needed to achieve compliance
 		int minimumSockets=0;
 		for (SubscriptionPool pool : stackableSubscriptionPools) {
-			String sockets = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "sockets");
+			String sockets = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
 			minimumSockets+=Integer.valueOf(sockets);
 		}
 		
@@ -204,7 +204,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		// find all the SubscriptionPools with the same stacking_id
 		for (List<Object> l : getAvailableSubscriptionPoolsDataAsListOfLists()) {
 			SubscriptionPool pool = (SubscriptionPool)l.get(0);
-			String stacking_id = CandlepinTasks.getPoolProductAttributeValue(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, pool.poolId, "stacking_id");
+			String stacking_id = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "stacking_id");
 			
 			if (stacking_id==null) continue; // this pool is not stackable
 			
