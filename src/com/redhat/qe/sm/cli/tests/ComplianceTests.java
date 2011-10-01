@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
@@ -36,7 +37,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable() {
+	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installdProducts.isEmpty(),
@@ -51,10 +52,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports an incompliant status when some installed products are subscribable",
 			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable() {
+	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, LogMessageUtil.action());
 
@@ -71,7 +72,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable() {
+	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installedProducts.isEmpty(),
@@ -86,10 +87,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable",
 			groups={"blockedbyBug-723336","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable() {
+	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 
 		// verify the stdout message
@@ -102,7 +103,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests", "blockedByBug-737762"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable() {
+	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertFalse(installedProducts.isEmpty(),
@@ -117,10 +118,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports an incompliant status when no installed products are subscribable",
 			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable() {
+	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, LogMessageUtil.action());
 
@@ -137,7 +138,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForNoProductsInstalled","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenNoProductsAreInstalled() {
+	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
 		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		Assert.assertTrue(installedProducts.isEmpty(),
@@ -152,15 +153,60 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed",
 			groups={"blockedbyBug-723336","cli.tests"},
-			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled() {
+	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 
 		// verify the stdout message
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
 	}
+	
+	
+	
+	
+	
+	
+	@Test(	description="subscription-manager: verify the system.compliant fact when system is already registered to RHN Classic",
+			groups={"blockedByBug-742027","RHNClassicTests","cli.tests"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test() {
+		
+		// pre-test check for installed products
+		clienttasks.unregister(null,null,null);
+		configureProductCertDirAfterClass();
+		if (clienttasks.getCurrentlyInstalledProducts().isEmpty()) throw new SkipException("This test requires that at least one product cert is installed.");
+
+
+		// first assert that we are not compliant since we have not yet registered to RHN Classic
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
+				"While at least one product cert is installed and we are NOT registered to RHN Classic, the system should NOT be compliant (see value for fact '"+factNameForSystemCompliance+"').");
+
+		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+
+		// now assert compliance
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
+				"By definition, being registered to RHN Classic implies the system IS compliant no matter what products are installed (see value for fact '"+factNameForSystemCompliance+"').");
+	}
+	
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when registered to RHN Classic",
+			groups={"RHNClassicTests","cli.tests"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenRegisteredToRHNClassic_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenRegisteredToRHNClassic_Test() {
+		String command = clienttasks.rhsmComplianceD+" -s -d";
+
+		// verify the stdout message
+		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), "System is already registered to another entitlement system", null);
+	}
+	
+	
 	
 	
 	
@@ -191,6 +237,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 
+	@AfterGroups(groups={"setup"},value="RHNClassicTests")
+	public void removeRHNSystemIdFile() {
+		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);;
+	}
+	
 	@BeforeClass(groups={"setup"})
 	public void setupProductCertDirsBeforeClass() {
 		
