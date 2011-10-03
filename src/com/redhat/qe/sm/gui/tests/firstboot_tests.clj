@@ -133,6 +133,8 @@
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot" "blockedByBug-703491"]}}
   [["badusername" "badpassword" :invalid-credentials]])
 
+
+;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=742416
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=705170
 
