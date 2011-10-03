@@ -545,7 +545,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: autosubscribe consumer more than once and verify we are not duplicately subscribed",
-			groups={"blockedByBug-723044"},
+			groups={"blockedByBug-723044","blockedByBug-743082"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
