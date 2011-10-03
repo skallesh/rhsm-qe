@@ -1,6 +1,7 @@
 (ns com.redhat.qe.sm.gui.tests.subscribe-tests
   (:use [test-clj.testng :only (gen-class-testng data-driven)]
-        [com.redhat.qe.sm.gui.tasks.test-config :only (config)]
+        [com.redhat.qe.sm.gui.tasks.test-config :only (config
+                                                       clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.string :only (split)]
@@ -155,6 +156,24 @@
         (verify (= count available))))
     (tasks/unsubscribe subscription)))
 
+(defn ^{Test {:groups ["subscribe" "blockedByBug-688454"]}}
+  check_blank_date [_]
+  (tasks/ui selecttab :all-available-subscriptions)
+  (tasks/ui settextvalue :date-entry "")
+  (let [error (with-handlers [(handle :date-error [e]
+                                      (:type e))]
+                (do (tasks/ui click :search)
+                    (tasks/checkforerror)))]
+    (verify (= :date-error error)))
+  (let [date (tasks/ui gettextvalue :date-entry)
+        systemtime (.trim (.getStdout (.runCommandAndWait @clientcmd "date +%m/%d/%Y")))]
+    (verify (not (nil? (re-matches #"\d{2}/\d{2}/\d{4}" date))))
+    (verify (= date systemtime))))
+
+(comment
+(defn ^{Test {:groups ["subscribe" "blockedByBug-740831"]}}
+  check_subscribe_greyout [_]
+  ))
 
 ;; you can test data providers in a REPL the following way:
 ;; (doseq [s (stest/get_subscriptions nil :debug true)]

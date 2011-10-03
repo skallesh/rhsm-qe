@@ -34,11 +34,17 @@
       (require :reload-all '[com.redhat.qe.sm.gui.tests.facts-tests :as ftest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.acceptance-tests :as actest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.import-tests :as itest])
+
+      (import '[com.redhat.qe.sm.base SubscriptionManagerCLITestScript])
       )
 
+    (let [cliscript (SubscriptionManagerCLITestScript.)]
+      (.setupBeforeSuite cliscript))
+    
     (do
       (config/init)
       (tasks/connect)
-      (use 'gnome.ldtp))   )
+      (use 'gnome.ldtp))
+    )
 
 )

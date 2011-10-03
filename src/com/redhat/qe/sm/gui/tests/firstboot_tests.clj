@@ -98,7 +98,31 @@
      (verify (= thrown-error expected-error)) 
      ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
      (verify  (or (tasks/fbshowing? :firstboot-user)
-              (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
+                  (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
+
+(defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
+  firstboot_check_back_button [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (reset_firstboot)
+  (tasks/ui click :register-rhn)
+  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :firstboot-forward)
+  (tasks/firstboot-register (@config :username) (@config :password))
+  (verify (= 0 (tasks/ui hasstate :firstboot-back "Sensitive"))))
+
+(defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
+  firstboot_skip_register [_]
+  (kill_firstboot nil)
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (.runCommandAndWait @clientcmd (str "subscription-manager register"
+                                      " --username " (@config :username)
+                                      " --password " (@config :password)
+                                      " --org " (@config :owner-key)))
+  (start_firstboot nil)
+  (tasks/ui click :register-rhn)
+  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/ui showing? :firstboot-window "My Installed Software")))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [["sdf" "sdf" :invalid-credentials]

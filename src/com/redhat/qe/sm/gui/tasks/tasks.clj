@@ -11,7 +11,8 @@
   (:require [clojure.contrib.logging :as log]
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
-           [com.redhat.qe.sm.cli.tasks CandlepinTasks]))
+           [com.redhat.qe.sm.cli.tasks CandlepinTasks]
+           [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]))
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
@@ -41,6 +42,7 @@
                    :wrong-consumer-type #"Consumers of this type are not allowed"
                    :network-error #"Network error, unable to connect to server.*"
                    :error-updating #"Error updating system data*"
+                   :date-error #"Invalid date format. Please re-enter a valid date*"
                    })
 
 (defn matching-error
@@ -192,19 +194,24 @@
 
 (defn firstboot-register
   "Subscribes subscription-manager from within firstboot."
-  [username password & {:keys [system-name-input, autosubscribe]
-                          :or {system-name-input nil, autosubscribe false}}]
+  [username password & {:keys [system-name-input, autosubscribe?, org]
+                          :or {system-name-input nil, autosubscribe? false, org nil}}]
   (assert  (or (fbshowing? :firstboot-user)
                (= 1 (ui guiexist :firstboot-window "Entitlement Platform Registration"))))
   (ui settextvalue :firstboot-user username)
   (ui settextvalue :firstboot-pass password)
   (when system-name-input
     (ui settextvalue :firstboot-system-name system-name-input))
-  (if autosubscribe
+  (if autosubscribe?
     (ui check :firstboot-autosubscribe)
     (ui uncheck :firstboot-autosubscribe))
-    (ui click :firstboot-forward)
-    (checkforerror))
+  (ui click :firstboot-forward)
+  (checkforerror)
+  (if (ui showing? :firstboot-window "Organization Selection")
+    (do 
+      (if org (ui selectrow :firstboot-owner-table org))
+      (ui click :firstboot-forward)))
+  (checkforerror))
   
 
 (defn wait-for-progress-bar
@@ -454,54 +461,38 @@
   "Given a username and password, this function returns a list
   of owners associated with that user"
   [username password]
-  (let [server (conf-file-value "hostname")
-        port (conf-file-value "port")
-        prefix (conf-file-value "prefix")]
-    (seq (CandlepinTasks/getOrgsKeyValueForUser server
-                                                port
-                                                prefix
-                                                username
+  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
+    (seq (CandlepinTasks/getOrgsKeyValueForUser username
                                                 password
+                                                url
                                                 "displayName"))))
 
 (defn get-owner-display-name
   "Given a owner key (org key) this returns the owner's display name"
   [username password orgkey]
-  (let [server (conf-file-value "hostname")
-        port (conf-file-value "port")
-        prefix (conf-file-value "prefix")]
-    (CandlepinTasks/getOrgDisplayNameForOrgKey server
-                                               port
-                                               prefix
-                                               username
-                                               password
-                                               orgkey)))
+  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
+    (CandlepinTasks/getOrgDisplayNameForOrgKey  username
+                                                password
+                                                url
+                                                orgkey)))
 
 (defn get-pool-id
   "Get the pool ID for a given subscription/contract pair."
   [username password orgkey subscription contract]
-  (let [server (conf-file-value "hostname")
-        port (conf-file-value "port")
-        prefix (conf-file-value "prefix")]
-    (CandlepinTasks/getPoolIdFromProductNameAndContractNumber server
-                                                              port
-                                                              prefix
-                                                              username
+  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
+    (CandlepinTasks/getPoolIdFromProductNameAndContractNumber username
                                                               password
+                                                              url
                                                               orgkey
                                                               subscription
                                                               contract)))
 (defn multi-entitlement?
   "Returns true if the subscription can be entitled to multiple times."
   [username password pool]
-  (let [server (conf-file-value "hostname")
-        port (conf-file-value "port")
-        prefix (conf-file-value "prefix")]
-    (CandlepinTasks/isPoolProductMultiEntitlement server
-                                                  port
-                                                  prefix
-                                                  username
+  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
+    (CandlepinTasks/isPoolProductMultiEntitlement username
                                                   password
+                                                  url
                                                   pool)))
 
 (defn get-all-facts []
