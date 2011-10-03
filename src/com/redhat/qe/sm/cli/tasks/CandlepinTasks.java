@@ -294,6 +294,7 @@ schema generation failed
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
 	static public String postResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String requestBody) throws Exception {
+		// EXAMPLE: curl -k --user admin:admin --request POST --data '{"name":"admin_donaldduck-ActivationKey1317353200874"}' --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/donaldduck/activation_keys
 		PostMethod post = new PostMethod(url+path);
 		if (requestBody != null) {
 			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));

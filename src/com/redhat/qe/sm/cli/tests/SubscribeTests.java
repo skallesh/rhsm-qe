@@ -756,6 +756,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
 	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
 	
+	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)
+	
 	
 	
 	

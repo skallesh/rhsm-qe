@@ -45,8 +45,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
-		List<InstalledProduct> installdProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installdProducts.isEmpty(),
+		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
@@ -80,13 +79,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
-		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installedProducts.isEmpty(),
+		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
-		clienttasks.listInstalledProducts();
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			Assert.assertEquals(installedProduct.status, "Subscribed","When config rhsm.productcertdir is populated with product certs for which ALL are covered by the currently available subscriptions, then each installed product status should be Subscribed.");
+		}
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 	}
@@ -106,18 +106,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when no installed products are subscribable",
-			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests", "blockedByBug-737762"},
+			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
-		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertFalse(installedProducts.isEmpty(),
+		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"Before attempting to subscribe and become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
 		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
-		clienttasks.listInstalledProducts();
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			Assert.assertEquals(installedProduct.status, "Not Subscribed","When config rhsm.productcertdir is populated with product certs for which NONE are covered by the currently available subscriptions, then each installed product status should be Not Subscribed.");
+		}
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
 				"When a system has products installed for which NONE are covered by available subscription pools, the system should NOT become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 	}
@@ -146,8 +147,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,null, null, null);
-		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		Assert.assertTrue(installedProducts.isEmpty(),
+		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
 				"Because no products are currently installed, the system should inherently be compliant (see value for fact '"+factNameForSystemCompliance+"') even without subscribing to any subscription pools.");
@@ -181,7 +181,6 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null,null,null);
 		configureProductCertDirAfterClass();
 		if (clienttasks.getCurrentlyInstalledProducts().isEmpty()) throw new SkipException("This test requires that at least one product cert is installed.");
-
 
 		// first assert that we are not compliant since we have not yet registered to RHN Classic
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
@@ -229,10 +228,11 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			
 			// subscribe without asserting results (not necessary)
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(futureSystemSubscriptionPool);
+			List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 			
 			// assert that the Status of the installed product is "Future Subscription"
 			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
-				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert);
+				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
 				Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of the installed product '"+productCert.productName+"' after subscribing to future subscription pool: "+futureSystemSubscriptionPool);
 				// TODO assert the installedProduct start/end dates
 			}
@@ -303,31 +303,74 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+productCertDir, 0);
 			RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDir, 0);
 		}
+
+// THIS FORMER IMPLEMENTATION DEPENDS ON AUTOSUBSCRIBE WORKING
+//		// autosubscribe
+////	clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
+//	clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, (String)null, true, null, null, null);
+//	
+//	// distribute a copy of the product certs amongst the productCertDirs
+//	List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+//	for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
+//		ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
+//		
+//		// WORKAROUND NEEDED FOR Bug 733805 - the name in the subscription-manager installed product listing is changing after a valid subscribe is performed (https://bugzilla.redhat.com/show_bug.cgi?id=733805)
+//		List<EntitlementCert> correspondingEntitlementCerts = clienttasks.getEntitlementCertsCorrespondingToProductCert(productCert);
+//		
+//		if (correspondingEntitlementCerts.isEmpty()) {
+//			// "Not Subscribed" case...
+//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForNoProductsSubscribable, 0);
+//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
+//		} else {
+//			// "Subscribed" case...
+//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForAllProductsSubscribable, 0);
+//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
+//		}
+//		// TODO "Partially Subscribed" case
+//		//InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToEntitlementCert(correspondingEntitlementCert);
+//	}
 		
-		// autosubscribe
-//		clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, (String)null, true, null, null, null);
+		// register and subscribe to all available subscriptions
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null);
+		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 		
-		// distribute a copy of the product certs amongst the productCertDirs
-		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
-			ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
+		// distribute a copy of the product certs amongst the productCertDirs based on their status
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
 			
-			// WORKAROUND NEEDED FOR Bug 733805 - the name in the subscription-manager installed product listing is changing after a valid subscribe is performed (https://bugzilla.redhat.com/show_bug.cgi?id=733805)
-			List<EntitlementCert> correspondingEntitlementCerts = clienttasks.getEntitlementCertsCorrespondingToProductCert(productCert);
-			
-			if (correspondingEntitlementCerts.isEmpty()) {
+			if (installedProduct.status.equals("Not Subscribed")) {
 				// "Not Subscribed" case...
-				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForNoProductsSubscribable, 0);
-				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
-			} else {
+				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForNoProductsSubscribable, 0);
+				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForSomeProductsSubscribable, 0);
+			} else if (installedProduct.status.equals("Subscribed")) {
 				// "Subscribed" case...
-				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForAllProductsSubscribable, 0);
-				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
+				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribable, 0);
+				RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForSomeProductsSubscribable, 0);
+			} else {
+				// TODO "Partially Subscribed" case
+				//InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToEntitlementCert(correspondingEntitlementCert);
 			}
-			// TODO "Partially Subscribed" case
-			//InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToEntitlementCert(correspondingEntitlementCert);
 		}
+		
+		
+		// setup for productCertDirForAllProductsSubscribableInTheFuture
+		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		List<File> productCertFilesCopied = new ArrayList<File>();
+		futureSystemSubscriptionPools = new ArrayList<SubscriptionPool>();
+		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
+			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
+				if (!productCertFilesCopied.contains(productCert.file)) {
+					RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
+					productCertFilesCopied.add(productCert.file);
+					if (!futureSystemSubscriptionPools.contains(futureSystemSubscriptionPool)) {
+						futureSystemSubscriptionPools.add(futureSystemSubscriptionPool);
+					}
+				}
+			}
+		}
+		
 		
 		this.productCertDir = clienttasks.productCertDir;
 	}
@@ -381,32 +424,29 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableInTheFuture")
 	protected void configureProductCertDirForAllProductsSubscribableInTheFuture() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
-		configureProductCertDirAfterClass();
-//		for (List<Object> futureJSONPoolsDataRow : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
-//			JSONObject futureJSONPool = (JSONObject)futureJSONPoolsDataRow.get(0);
-//			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(new SubscriptionPool(futureJSONPool.getString("productId"), futureJSONPool.getString("id")))) {
-//				RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
+//		configureProductCertDirAfterClass();
+////		for (List<Object> futureJSONPoolsDataRow : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
+////			JSONObject futureJSONPool = (JSONObject)futureJSONPoolsDataRow.get(0);
+////			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(new SubscriptionPool(futureJSONPool.getString("productId"), futureJSONPool.getString("id")))) {
+////				RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
+////			}
+////		}
+//		List<File> productCertFilesCopied = new ArrayList<File>();
+//		futureSystemSubscriptionPools = new ArrayList<SubscriptionPool>();
+//		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
+//			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
+//			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
+//				if (!productCertFilesCopied.contains(productCert.file)) {
+//					RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
+//					productCertFilesCopied.add(productCert.file);
+//					if (!futureSystemSubscriptionPools.contains(futureSystemSubscriptionPool)) {
+//						futureSystemSubscriptionPools.add(futureSystemSubscriptionPool);
+//					}
+//				}
 //			}
 //		}
-		List<File> productCertFilesCopied = new ArrayList<File>();
-		futureSystemSubscriptionPools = new ArrayList<SubscriptionPool>();
-		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
-			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
-			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
-				if (!productCertFilesCopied.contains(productCert.file)) {
-					RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
-					productCertFilesCopied.add(productCert.file);
-					if (!futureSystemSubscriptionPools.contains(futureSystemSubscriptionPool)) {
-						futureSystemSubscriptionPools.add(futureSystemSubscriptionPool);
-					}
-				}
-			}
-		}
 		
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableInTheFuture);	
-		
-		
-		
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableInTheFuture+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are subscribable to future available subscriptions.");
 		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
