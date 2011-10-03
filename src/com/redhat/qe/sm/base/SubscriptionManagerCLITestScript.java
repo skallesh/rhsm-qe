@@ -1989,6 +1989,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	@DataProvider(name="getAllFutureSystemSubscriptionPoolsData")
 	public Object[][] getAllFutureSystemSubscriptionPoolsDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllFutureSystemSubscriptionPoolsDataAsListOfLists());
+	}
+	
+	protected List<List<Object>>getAllFutureSystemSubscriptionPoolsDataAsListOfLists() throws ParseException, JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
 			JSONObject jsonPool = (JSONObject) l.get(0);
@@ -2000,8 +2004,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), jsonPool.getString("quantity"), SubscriptionPool.formatDateString(endDate))}));
 		}
-		return TestNGUtils.convertListOfListsTo2dArray(ll);
+		return ll;
 	}
+	
 	protected List<List<Object>> getAllFutureJSONPoolsDataAsListOfLists(ConsumerType consumerType) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
@@ -2030,9 +2035,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 				}
 			}
-
 		}
-		
 		return ll;
 	}
 	
@@ -2076,7 +2079,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				ll.add(Arrays.asList(new Object[]{jsonSubscription}));
 			}
 		}
-		
 		return ll;
 	}
 
@@ -2157,8 +2159,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					}
 				}
 			}
-		}
-				
+		}	
 		return ll;
 	}
 }

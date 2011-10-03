@@ -647,7 +647,7 @@ Expected Results:
 		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
 		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The interoperability message starts with \"WARNING\".");
 		
-		log.info("Simulating registration by RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
