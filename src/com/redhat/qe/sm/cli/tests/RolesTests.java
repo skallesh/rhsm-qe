@@ -79,6 +79,9 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	// Candidates for an automated Test:
+	// TODO Bug 720487 - Refresh Pools w/ Auto-Create Owner Fails
+	//      # curl -k -u admin:admin --request PUT https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/NEWOWNER/subscriptions?auto_create_owner=true	| python -mjson.tool
 		
 		
 	// Configuration methods ***********************************************************************
