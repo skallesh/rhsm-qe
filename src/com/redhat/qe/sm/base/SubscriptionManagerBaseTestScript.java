@@ -132,26 +132,40 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
 		
-		sm_serverUrl					= getProperty("sm.server.url","");
+		if (sm_serverUrl==null)
+			sm_serverUrl					= getProperty("sm.server.url","");
 		
 		// rhsm.conf [server] configurations
-		sm_serverHostname				= getProperty("sm.server.hostname","");
-		sm_serverPrefix 				= getProperty("sm.server.prefix","");
-		sm_serverPort 					= getProperty("sm.server.port","");
-		sm_serverInsecure				= getProperty("sm.server.insecure","");
-		sm_serverSslVerifyDepth			= getProperty("sm.server.sslVerifyDepth","");
-		sm_serverCaCertDir				= getProperty("sm.server.caCertDir","");
+		if (sm_serverHostname==null)
+			sm_serverHostname				= getProperty("sm.server.hostname","");
+		if (sm_serverPrefix==null)
+			sm_serverPrefix 				= getProperty("sm.server.prefix","");
+		if (sm_serverPort==null)
+			sm_serverPort 					= getProperty("sm.server.port","");
+		if (sm_serverInsecure==null)
+			sm_serverInsecure				= getProperty("sm.server.insecure","");
+		if (sm_serverSslVerifyDepth==null)
+			sm_serverSslVerifyDepth			= getProperty("sm.server.sslVerifyDepth","");
+		if (sm_serverCaCertDir==null)
+			sm_serverCaCertDir				= getProperty("sm.server.caCertDir","");
 		
 		// rhsm.conf [rhsm] configurations
-		sm_rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
-		sm_rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
-		sm_rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
-		sm_rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
-		sm_rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");
+		if (sm_rhsmBaseUrl==null)
+			sm_rhsmBaseUrl					= getProperty("sm.rhsm.baseUrl","");
+		if (sm_rhsmRepoCaCert==null)
+			sm_rhsmRepoCaCert				= getProperty("sm.rhsm.repoCaCert","");
+		if (sm_rhsmProductCertDir==null)
+			sm_rhsmProductCertDir			= getProperty("sm.rhsm.productCertDir","");
+		if (sm_rhsmEntitlementCertDir==null)
+			sm_rhsmEntitlementCertDir		= getProperty("sm.rhsm.entitlementCertDir","");
+		if (sm_rhsmConsumerCertDir==null)
+			sm_rhsmConsumerCertDir			= getProperty("sm.rhsm.consumerCertDir","");
 		
 		// rhsm.conf [rhsmcertd] configurations
-		sm_rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
-		sm_rhsmcertdHealFrequency		= getProperty("sm.rhsmcertd.healFrequency","");
+		if (sm_rhsmcertdCertFrequency==null)
+			sm_rhsmcertdCertFrequency		= getProperty("sm.rhsmcertd.certFrequency","");
+		if (sm_rhsmcertdHealFrequency==null)
+			sm_rhsmcertdHealFrequency		= getProperty("sm.rhsmcertd.healFrequency","");
 	
 		
 		try {
