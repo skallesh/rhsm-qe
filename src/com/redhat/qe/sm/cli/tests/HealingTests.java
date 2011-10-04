@@ -20,21 +20,16 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// There is an autoheal attribute on the consumer
-// toggle the autoheal attribute.  Something is wrong in this call - not sure what
-//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request POST --data '{"autoheal":"false"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/2799c6a6-ad05-487c-98fc-6009f89579f5 | python -mjson.tool | grep heal
-//			  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//			                                 Dload  Upload   Total   Spent    Left  Speed
-//			100 14047    0 14047    0    20  36722     52 --:--:-- --:--:-- --:--:-- 43027
-//			    "autoheal": true, 
-//			[root@jsefler-onprem-62server tmp]# 
-		
-// get the consumer attribue value...
-//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/2799c6a6-ad05-487c-98fc-6009f89579f5 | python -mjson.tool | grep heal
-//			  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//			                                 Dload  Upload   Total   Spent    Left  Speed
-//			100 14047    0 14047    0     0  54591      0 --:--:-- --:--:-- --:--:-- 98922
-//			    "autoheal": true, 
-//			[root@jsefler-onprem-62server tmp]# 
+	
+//	[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
+//		[root@jsefler-onprem-62server tmp]# 
+//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET  --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -mjson.tool |  grep heal
+//		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+//		                                 Dload  Upload   Total   Spent    Left  Speed
+//		100 13921    0 13921    0     0  64077      0 --:--:-- --:--:-- --:--:-- 99435
+//		    "autoheal": false, 
+//		[root@jsefler-onprem-62server tmp]# 
+
 
 
 	// Test methods ***********************************************************************

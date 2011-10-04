@@ -1,5 +1,5 @@
 diff --git a/proxy/src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java b/proxy/src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
-index ca0b6f8..331eedb 100644
+index 4ee7b5c..562a48d 100644
 --- a/proxy/src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 +++ b/proxy/src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 @@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -10,13 +10,16 @@ index ca0b6f8..331eedb 100644
  import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
  import org.fedoraproject.candlepin.model.Consumer;
  import org.xnap.commons.i18n.I18n;
-@@ -137,8 +138,38 @@ public class DefaultSubscriptionServiceAdapter implements
-     public void activateSubscription(Consumer consumer, String email, 
+@@ -136,9 +137,40 @@ public class DefaultSubscriptionServiceAdapter implements
+     @Override
+     public void activateSubscription(Consumer consumer, String email,
          String emailLocale) {
-         
 -        throw new ServiceUnavailableException(
+-            i18n.tr("Standalone candlepin does not support redeeming a subscription."));
+-    }
++
 +        String dellAssetTag = consumer.getFact("dmi.system.serial_number");
-+        
++
 +        if (dellAssetTag.startsWith("1")) {
 +            throw new AcceptedRequestException(
 +                i18n.tr("The Dell service tag: {0}, has already been used to activate a subscription",
@@ -36,18 +39,18 @@ index ca0b6f8..331eedb 100644
 +        } else if (dellAssetTag.startsWith("5")) {
 +            throw new AcceptedRequestException(
 +                i18n.tr("Your subscription activation is being processed and should be available soon. " +
-+                		"You will be notified via email once it is available. If you have any questions," +
-+                		" additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.",
++                    "You will be notified via email once it is available. If you have any questions," +
++                    " additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.",
 +                    dellAssetTag));
 +        } else if (dellAssetTag.startsWith("6")) {
 +            throw new AcceptedRequestException(
 +                i18n.tr("The system is unable to process the requested subscription activation {0}",
-+                    dellAssetTag));            
++                    dellAssetTag));
 +        } else {
 +            throw new ServiceUnavailableException(
-                 i18n.tr("Standalone candlepin does not support redeeming a subscription."));
++                 i18n.tr("Standalone candlepin does not support redeeming a subscription."));
 +        }
-     }
-     
++     }
+ 
      @Override
-
+     public Subscription createSubscription(Subscription subscription) {
