@@ -179,7 +179,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// determine the server URL that will be used for candlepin API calls
-		if (sm_serverUrl==null) sm_serverUrl = getProperty("sm.server.url","");
 		if (sm_serverUrl.equals("")) {
 			sm_serverUrl = getServerUrl(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"hostname"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"port"), clienttasks.getConfFileParameter(clienttasks.rhsmConfFile,"prefix"));
 		}
