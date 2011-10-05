@@ -112,7 +112,8 @@
           (verify (tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForNoProductsSubscribable"]
+                       "configureProductCertDirForNoProductsSubscribable"
+                       "blockedByBug-743704"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
   (tasks/restart-app)
@@ -149,3 +150,6 @@
 
 (gen-class-testng)
 
+
+;; TODO write a separte test for https://bugzilla.redhat.com/show_bug.cgi?id=743704
+;;   and restore the override.facts 

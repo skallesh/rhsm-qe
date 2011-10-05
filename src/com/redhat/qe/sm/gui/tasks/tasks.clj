@@ -388,7 +388,8 @@
 (defn compliance?
   "Returns true if the GUI reports that all products have a valid subscription."
   []
-  (= 1 (ui guiexist :main-window "Product entitlement certificates valid*")))  
+  (or (= 1 (ui guiexist :main-window "Product entitlement certificates valid*"))
+      (= 1 (ui guiexist :main-window "No product certificates installed*"))))  
 
 (defn first-date-of-noncomply
   "Pulls the first date of noncompliance from the subscription assistant dialog."

@@ -131,14 +131,16 @@
 
 
 (defn ^{Test {:groups ["subscription-assistant"
-                       "configureProductCertDirForAllProductsSubscribable"]
+                       "configureProductCertDirForAllProductsSubscribable"
+                       "blockedByBug-710149"]
               :dependsOnMethods ["launch_assistant"]}}
   all_products_subscribable [_]
   (tasks/restart-app)
   (let [beforedate (tasks/first-date-of-noncomply)]
     (subscribe_all_products nil)
     (verify tasks/compliance?)
-    (verify (not (= (tasks/first-date-of-noncomply) beforedate)))))
+    (verify (not (= (tasks/first-date-of-noncomply) beforedate)))
+    (verify (tasks/ui showing? :update-certificates))))
 
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=676371
 (defn ^{Test {:groups ["subscription-assistant"
@@ -152,7 +154,8 @@
 
 
 (defn ^{Test {:groups ["subscription-assistant"
-                       "configureProductCertDirForNoProductsSubscribable"]
+                       "configureProductCertDirForNoProductsSubscribable"
+                       "blockedByBug-743704"] ;; remove this block after test is written for it
               :dependsOnMethods ["launch_assistant"]}}
   no_products_subscribable [_]
   (tasks/restart-app)
@@ -163,14 +166,12 @@
 
 
 (defn ^{Test {:groups ["subscription-assistant" 
-                       "configureProductCertDirForNoProductsInstalled"
-                       "blockedByBug-710149"]}}
+                       "configureProductCertDirForNoProductsInstalled"]}}
   no_products_installed [_]
   (tasks/restart-app)
   (verify (= 1 (tasks/ui guiexist
                          :main-window
-                         "No product certificates installed*")))
-  (verify (tasks/ui showing? :update-certificates)))
+                         "No product certificates installed*"))))
 
 
 (gen-class-testng)
