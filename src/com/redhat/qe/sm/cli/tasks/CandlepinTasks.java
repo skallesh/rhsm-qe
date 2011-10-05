@@ -75,6 +75,7 @@ public class CandlepinTasks {
 	protected /*NOT static*/ String serverInstallDir = null;
 	protected /*NOT static*/ String serverImportDir = null;
 	public static String candlepinCRLFile	= "/var/lib/candlepin/candlepin-crl.crl";
+	public static String tomcat6LogFile	= "/var/log/tomcat6/catalina.out";
 	public static String defaultConfigFile	= "/etc/candlepin/candlepin.conf";
 	public static String rubyClientDir	= "/client/ruby";
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
@@ -142,6 +143,11 @@ public class CandlepinTasks {
 		}
 		if (!serverImportDir.equals("")) {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
+		}
+		
+		// clear out the tomcat6 clog file (catalina.out)
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, tomcat6LogFile)==1) {
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, LogMessageUtil.action());	
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
