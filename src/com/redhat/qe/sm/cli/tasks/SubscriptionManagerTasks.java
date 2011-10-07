@@ -558,7 +558,7 @@ public class SubscriptionManagerTasks {
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
-		return (CandlepinTasks.getOwnerKeyOfConsumerId(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, SubscriptionManagerCLITestScript.sm_serverUrl, getCurrentConsumerId()));
+		return (CandlepinTasks.getOwnerKeyOfConsumerId(this.currentlyRegisteredUsername, this.currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId()));
 	}
 	
 	/**
@@ -681,9 +681,9 @@ public class SubscriptionManagerTasks {
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
-			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(username,password,SubscriptionManagerCLITestScript.sm_serverUrl,entitlementCert.id);
+			JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(username,password,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
 			String poolHref = jsonEntitlement.getJSONObject("pool").getString("href");
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,SubscriptionManagerCLITestScript.sm_serverUrl,poolHref));
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,SubscriptionManagerBaseTestScript.sm_serverUrl,poolHref));
 			String subscriptionName = jsonPool.getString("productName");
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
@@ -1095,8 +1095,8 @@ public class SubscriptionManagerTasks {
 		for (File entitlementCertFile : getCurrentEntitlementCertFiles("-t")) {
 			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			try {
-				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,entitlementCert.id);
-				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
+				JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
 				if (jsonPool.getString("id").equals(subscribedPool.poolId)) {
 					return entitlementCert;
 				}
@@ -1115,7 +1115,7 @@ public class SubscriptionManagerTasks {
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		List<ProductCert> currentProductCerts = getCurrentProductCerts();
 
-		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,"/pools/"+pool.poolId));
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,"/pools/"+pool.poolId));
 		JSONArray jsonProvidedProducts = (JSONArray) jsonPool.getJSONArray("providedProducts");
 		for (int k = 0; k < jsonProvidedProducts.length(); k++) {
 			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
@@ -1194,8 +1194,10 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
+	 * @param autoheal TODO
+	 * @throws Exception 
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, List<String> activationKeys, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
@@ -1217,17 +1219,49 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		
 		// reset this.currentlyRegistered values
-		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {			// success
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {		// The system has been registered with id: 660faf39-a8f2-4311-acf2-5c1bb3c141ef
 			this.currentlyRegisteredUsername = username;
 			this.currentlyRegisteredPassword = password;
 			this.currentlyRegisteredOrg = org;
 			this.currentlyRegisteredType = type;
-		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already registered	
-		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {	// failure
+		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// This system is already registered. Use --force to override
+		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {		// Error
 			this.currentlyRegisteredUsername = null;
 			this.currentlyRegisteredPassword = null;
 			this.currentlyRegisteredOrg = null;
 			this.currentlyRegisteredType = null;	
+		}
+		
+		// set autoheal for the consumer
+//		if (autoheal!=null && !sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
+//			// first get the consumerId
+//			if (consumerId==null) {
+//				if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {	// The system has been registered with id: 660faf39-a8f2-4311-acf2-5c1bb3c141ef
+//					consumerId = getCurrentConsumerId(sshCommandResult);
+//				} else
+//				if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {	// This system is already registered. Use --force to override
+//					consumerId = getCurrentConsumerId();
+//				}
+//			}
+//			// now set the autoheal attribute of the consumer
+//			try {
+//				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, autoheal);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				Assert.fail(e.getMessage());
+//			} 
+//		}
+
+		// set autoheal for newly registered consumer only
+		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
+			try {
+				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
+			} catch (Exception e) {
+				e.printStackTrace();
+				Assert.fail(e.getMessage());
+			} 
 		}
 		
 		return sshCommandResult;
@@ -1235,20 +1269,21 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
+	 * @param autoheal TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationKeys = activationKey==null?null:Arrays.asList(new String[]{activationKey});
 
-		return register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, proxy, proxyuser, proxypassword);
+		return register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
 
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, List<String> activationKeys, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
 	
 		// when already registered, just return without any assertions
 		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1284,11 +1319,11 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationKeys = activationKey==null?null:Arrays.asList(new String[]{activationKey});
 
-		return register(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, proxy, proxyuser, proxypassword);
+		return register(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -1362,7 +1397,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,null,null,consumerId, null, new ArrayList<String>(), null, null, null, null);
+		return register(username,password,null,null,null,null,consumerId, null, new ArrayList<String>(), null, null, null, null, null);
 	}
 	
 	
@@ -2286,7 +2321,7 @@ public class SubscriptionManagerTasks {
 		// is this pool multi-entitleable?
 		boolean isPoolMultiEntitlement = false;
 		try {
-			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,pool.poolId);
+			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId);
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
@@ -2368,8 +2403,8 @@ public class SubscriptionManagerTasks {
 			if (!beforeEntitlementCertFiles.contains(entitlementCertFile)) {
 				EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 				try {
-					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,entitlementCert.id);
-					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
+					JSONObject jsonEntitlement = CandlepinTasks.getEntitlementUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,entitlementCert.id);
+					JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,jsonEntitlement.getJSONObject("pool").getString("href")));
 					if (jsonPool.getString("id").equals(pool.poolId)) {
 						newCertFile = entitlementCertFile; break;
 					}
@@ -2428,7 +2463,7 @@ public class SubscriptionManagerTasks {
 			int consumed = 0;
 			int quantity = Integer.valueOf(pool.quantity);
 			try {
-				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,"/pools/"+pool.poolId));
+				jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,"/pools/"+pool.poolId));
 				consumed = jsonPool.getInt("consumed");
 				quantity = jsonPool.getInt("quantity");
 			} catch (Exception e) {
@@ -2508,7 +2543,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
-		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,ownerKey,pool.poolId);
+		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,ownerKey,pool.poolId);
 		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
 		if (serialNumber==null) return null;
 		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
@@ -2674,7 +2709,7 @@ public class SubscriptionManagerTasks {
 		for (SubscriptionPool pool : poolsAvailable) {
 			try {
 //				if (!CandlepinTasks.isPoolProductMultiEntitlement(getConfFileParameter(rhsmConfFile, "hostname"),getConfFileParameter(rhsmConfFile, "port"),getConfFileParameter(rhsmConfFile, "prefix"),this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,pool.poolId)) {
-				if (!CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerCLITestScript.sm_serverUrl,pool.poolId)) {
+				if (!CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId)) {
 					poolsAvailableExcludingMuliEntitlement.add(pool);
 				}
 			} catch (Exception e) {
