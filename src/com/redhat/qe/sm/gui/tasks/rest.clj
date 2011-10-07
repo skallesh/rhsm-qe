@@ -1,5 +1,5 @@
-(ns com.redhat.qe.sm.gui.rest
-  (:require [katello.httpclient :as httpclient]
+(ns com.redhat.qe.sm.gui.tasks.rest
+  (:require [com.redhat.qe.sm.gui.tasks.httpclient :as httpclient]
             [clojure.contrib.json :as json]
             [clojure.contrib.pprint :as pprint]
             [clojure.contrib.logging :as log])
@@ -15,8 +15,9 @@
 (defn get
   "Gets the url, and decodes JSON in the response body, returning a
   clojure datastructure."
-  [url & [req]]
-  (-> (httpclient/get url (merge req {:accept :json})) :body json/read-json))
+  [url user pw & [req]]
+  (-> (httpclient/get url (merge req {:basic-auth [user pw]
+                                      :accept :json})) :body json/read-json))
 
 (defn post
   "Encodes datastructure in body to JSON, posts to url, using user and pw. "
