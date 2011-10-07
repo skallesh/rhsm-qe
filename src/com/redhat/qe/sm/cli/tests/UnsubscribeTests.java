@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -61,12 +62,18 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"AcceptanceTests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
+			groups={"debugTest","AcceptanceTests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=41903)
 	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
-		
+String consumerId = clienttasks.getCurrentConsumerId();
+try {
+	CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, false);
+} catch (Exception e) {
+	// TODO Auto-generated catch block
+	e.printStackTrace();
+}		
 		// subscribe to a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);

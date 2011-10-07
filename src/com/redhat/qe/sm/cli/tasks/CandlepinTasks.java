@@ -293,6 +293,25 @@ schema generation failed
 		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT "+put.getURI());
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
+	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String jsonData) throws Exception {
+		PutMethod put = new PutMethod(url+path);
+		String data = "";
+		String headers = "";
+		if (jsonData != null) {
+			put.setRequestEntity(new StringRequestEntity(jsonData, "application/json", null));
+			put.addRequestHeader("accept", "application/json");
+			put.addRequestHeader("content-type", "application/json");
+			
+			data = "--data '"+jsonData+"' ";
+			for (org.apache.commons.httpclient.Header header : put.getRequestHeaders())
+				headers+= "--header '"+header.toString().trim()+"' ";
+		}
+		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password+" ";
+
+		log.info("SSH alternative to HTTP request: curl -k --request PUT "+credentials+data+headers+put.getURI());
+		return getHTTPResponseAsString(client, put, authenticator, password);
+
+	}
 	static public String deleteResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
 		DeleteMethod delete = new DeleteMethod(url+path);
 		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
@@ -402,6 +421,23 @@ schema generation failed
 //				
 //		return new JSONObject(response);
 		return new JSONObject(putResourceUsingRESTfulAPI(user, password, url, "/owners/"+owner+"/subscriptions"));
+	}
+	
+	static public JSONObject setAutohealForConsumer(String authenticator, String password, String url, String consumerid, Boolean autoheal) throws Exception {
+
+//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
+//		[root@jsefler-onprem-62server tmp]# 
+//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET  --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -mjson.tool |  grep heal
+//		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+//		                                 Dload  Upload   Total   Spent    Left  Speed
+//		100 13921    0 13921    0     0  64077      0 --:--:-- --:--:-- --:--:-- 99435
+//		    "autoheal": false, 
+//		[root@jsefler-onprem-62server tmp]# 
+		
+		JSONObject jsonData = new JSONObject();
+		jsonData.put("autoheal", autoheal.toString());
+		putResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid, jsonData.toString());
+		return new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid));
 	}
 	
 	static public void exportConsumerUsingRESTfulAPI(String owner, String password, String url, String consumerKey, String intoExportZipFile) throws Exception {
@@ -2346,6 +2382,8 @@ schema generation failed
 		return jsonPool; // return json pool to the newly available SubscriptionPool
 		
 	}
+	
+	
 	
 	
 	
