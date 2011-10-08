@@ -442,6 +442,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Healing Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.HealingTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Config Tests">
 		<classes>
 			<class name="com.redhat.qe.sm.cli.tests.ConfigTests" />
