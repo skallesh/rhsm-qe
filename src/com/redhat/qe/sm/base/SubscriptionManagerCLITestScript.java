@@ -684,12 +684,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-	
+	@DataProvider(name="getAllAvailableSubscriptionPoolsData")
+	public Object[][] getAllAvailableSubscriptionPoolsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableSubscriptionPoolsDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllAvailableSubscriptionPoolsDataAsListOfLists() {
+		return getAvailableSubscriptionPoolsDataAsListOfLists(true);
+	}
 	@DataProvider(name="getAvailableSubscriptionPoolsData")
 	public Object[][] getAvailableSubscriptionPoolsDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getAvailableSubscriptionPoolsDataAsListOfLists());
 	}
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
+		return getAvailableSubscriptionPoolsDataAsListOfLists(false);
+	}
+	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists(boolean all) {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
@@ -709,7 +718,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 
 		// populate a list of all available SubscriptionPools
-		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+		List<SubscriptionPool> pools = all? clienttasks.getCurrentlyAllAvailableSubscriptionPools():clienttasks.getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : pools) {
 			ll.add(Arrays.asList(new Object[]{pool}));
 			
 			// minimize the number of dataProvided rows (useful during automated testcase development)

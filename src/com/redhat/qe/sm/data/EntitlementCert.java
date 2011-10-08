@@ -33,7 +33,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public OrderNamespace orderNamespace;
 	public List<ProductNamespace> productNamespaces;
 	public List<ContentNamespace> contentNamespaces;
-	protected String rawCertificate;
+	public String rawCertificate;
 
 
 	public EntitlementCert(String rawCertificate, Map<String, String> certData){
@@ -406,8 +406,10 @@ public class EntitlementCert extends AbstractCommandLineData {
 		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
 		
 		// begin by splitting the rawCertificates and processing each certificate individually
-		for (String rawCertificate : rawCertificates.split("Certificate:")) {
+		String certificateDelimiter = "Certificate:";
+		for (String rawCertificate : rawCertificates.split(certificateDelimiter)) {
 			if (rawCertificate.trim().length()==0) continue;
+			rawCertificate = certificateDelimiter+rawCertificate;
 	
 			Map<String,String> regexes = new HashMap<String,String>();
 

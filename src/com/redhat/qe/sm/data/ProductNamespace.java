@@ -202,10 +202,10 @@ public class ProductNamespace extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("version",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("arch",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("providedTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.1:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("version",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.2:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("arch",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("providedTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.1\\.(\\d+)\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
 		
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){

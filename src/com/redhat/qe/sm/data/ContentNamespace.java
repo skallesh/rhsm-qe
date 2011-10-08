@@ -274,16 +274,16 @@ public class ContentNamespace extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("label",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("physicalEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("flexGuestEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("vendorId",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("downloadUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("gpgKeyUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("metadataExpire",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("requiredTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
+		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.1:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("label",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("physicalEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("flexGuestEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("vendorId",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.5:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("downloadUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("gpgKeyUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.7:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("metadataExpire",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.9:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("requiredTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.10:[\\s\\cM]*\\.(?:.|\\s)(.*)");
 		
 		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
 		for(String field : regexes.keySet()){
