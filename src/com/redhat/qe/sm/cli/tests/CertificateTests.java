@@ -49,10 +49,16 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
 			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"
 			productCertName = productCertName.replaceAll("\\d", "").replaceAll(" {2,}", " ");
+
 			// adjust the product cert name "for Scientific Computing" => "ComputeNode"
 			productCertName = productCertName.replaceFirst("for Scientific Computing","ComputeNode");
+
 			// adjust the product cert name "for IBM POWER" => "Server"
 			productCertName = productCertName.replaceFirst("for IBM POWER","Server");
+
+			// adjust the product cert name "for IBM System z" => "Server"
+			productCertName = productCertName.replaceFirst("for IBM System z","Server");
+
 			// adjust the product cert name "Desktop" => "Client"
 			productCertName = productCertName.replaceFirst("Desktop","Client");
 
@@ -60,6 +66,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
 				return;
 			}
+			
+			//TODO We should also verify the arch  e.g. uname.machine: s390x when on IBM System z
 		}
 		Assert.fail("Could NOT find an installed installed product cert that matches /etc/redhat-release ("+clienttasks.redhatRelease+").");
 	}
