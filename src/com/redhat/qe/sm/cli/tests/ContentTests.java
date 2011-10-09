@@ -123,7 +123,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now we will restart the rhsmcertd and expect the repo list to be updated");
 		int minutes = 2;
-		clienttasks.rhsmcertdServiceRestart(minutes, null, false);
+		clienttasks.restart_rhsmcertd(minutes, null, false);
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
@@ -158,7 +158,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(value="EnableDisableYumRepoAndVerifyContentAvailable_Test", alwaysRun=true)
 	protected void teardownAfterEnableDisableYumRepoAndVerifyContentAvailable_Test() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		clienttasks.rhsmcertdServiceRestart(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), null, false);
+		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), null, false);
 	}
 	
 

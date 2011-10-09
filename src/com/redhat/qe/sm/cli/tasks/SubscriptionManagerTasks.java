@@ -381,13 +381,12 @@ public class SubscriptionManagerTasks {
 	
 
 	/**
-	 * Update the minutes value for the certFrequency setting in the
-	 * default /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
+	 * Update the rhsmcertd frequency configurations in /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
 	 * @param certFrequency - Frequency of certificate refresh (in minutes) (passing null will not change the current value)
 	 * @param healFrequency - Frequency of subscription auto healing (in minutes) (passing null will not change the current value)
 	 * @param waitForMinutes - after restarting, should we wait for the next certFrequency refresh?
 	 */
-	public void rhsmcertdServiceRestart (Integer certFrequency, Integer healFrequency, boolean waitForMinutes){
+	public void restart_rhsmcertd (Integer certFrequency, Integer healFrequency, boolean waitForMinutes){
 //		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
 //		updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
 		
@@ -1257,6 +1256,7 @@ public class SubscriptionManagerTasks {
 		// set autoheal for newly registered consumer only
 		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
 			try {
+				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
 				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -1311,7 +1311,7 @@ public class SubscriptionManagerTasks {
 		String bugId="639417"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			rhsmcertdServiceRestart(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), null, false);
+			restart_rhsmcertd(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), null, false);
 		}
 		// END OF WORKAROUND
 		
