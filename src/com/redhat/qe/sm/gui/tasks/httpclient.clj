@@ -1,4 +1,4 @@
-(ns com.redhat.qe.sm.gui.httpclient
+(ns com.redhat.qe.sm.gui.tasks.httpclient
   (:refer-clojure :exclude (get))
   (:require [clj-http.client :as baseclient]
             [clj-http.core :as core]
