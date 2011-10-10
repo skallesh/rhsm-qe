@@ -62,18 +62,12 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"debugTest","AcceptanceTests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
+			groups={"AcceptanceTests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=41903)
 	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){
 		client.runCommandAndWait("killall -9 yum");
-String consumerId = clienttasks.getCurrentConsumerId();
-try {
-	CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, false);
-} catch (Exception e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-}		
+		
 		// subscribe to a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(subscriptionPool);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
@@ -86,9 +80,8 @@ try {
 		// copy entitlement certificate from location /etc/pki/entitlement/product/ to /tmp
 		log.info("Now let's copy the valid entitlement cert to the side so we can maliciously try to reuse it after its serial has been unsubscribed.");
 		String randDir = "/tmp/sm-certForSubscriptionPool-"+subscriptionPool.poolId;
-		client.runCommandAndWait("rm -rf "+randDir);
-		client.runCommandAndWait("mkdir -p "+randDir);
-		client.runCommandAndWait("cp "+entitlementCertFile.getPath()+" "+randDir);
+		client.runCommandAndWait("rm -rf "+randDir+"; mkdir -p "+randDir);
+		client.runCommandAndWait("cp "+entitlementCertFile+" "+randDir+"; cp "+clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile)+" "+randDir);
 		
 		// unsubscribe from the pool (Note: should be the only one subscribed too
 		clienttasks.unsubscribeFromSerialNumber(clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCertFile));
@@ -98,10 +91,10 @@ try {
 
 		// restart the rhsm cert deamon
 		int certFrequency = 1;
-		clienttasks.rhsmcertdServiceRestart(certFrequency, null, false);
+		clienttasks.restart_rhsmcertd(certFrequency, null, false);
 		
 		// move the copied entitlement certificate from /tmp to location /etc/pki/entitlement/product
-		// Note: this is malicious activity
+		// Note: this is malicious activity (user is trying to continue using entitlement certs that have been unsubscribed)
 		client.runCommandAndWait("cp -f "+randDir+"/* "+clienttasks.entitlementCertDir);
 		
 		// assert all of the entitlement certs are reported in the "yum repolist all" again
@@ -162,7 +155,7 @@ try {
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(List)null,true,null,null,null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(List)null,true,false,null,null,null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(0);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));

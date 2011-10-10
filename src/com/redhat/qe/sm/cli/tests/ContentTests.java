@@ -123,7 +123,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Now we will restart the rhsmcertd and expect the repo list to be updated");
 		int minutes = 2;
-		clienttasks.rhsmcertdServiceRestart(minutes, null, false);
+		clienttasks.restart_rhsmcertd(minutes, null, false);
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
@@ -158,7 +158,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@AfterGroups(value="EnableDisableYumRepoAndVerifyContentAvailable_Test", alwaysRun=true)
 	protected void teardownAfterEnableDisableYumRepoAndVerifyContentAvailable_Test() {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmPluginConfFile, "enabled", "1");
-		clienttasks.rhsmcertdServiceRestart(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), null, false);
+		clienttasks.restart_rhsmcertd(Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "certFrequency")), null, false);
 	}
 	
 
@@ -183,7 +183,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		clienttasks.unregister(null, null, null);
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
 	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
@@ -295,6 +295,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// how to get content    (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/content/fooid
 	// how to associate content with product   (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request POST https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/product/productid/content/fooid&enabled=false
 	// TODO Bug 705068 - product-id plugin displays "duration"
+	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
 	
 	// Configuration Methods ***********************************************************************
 	
@@ -315,7 +316,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		client1tasks.unregister_(null,null,null);
 		// second, unregister client2 since it is a personal consumer
 		if (client2tasks!=null) {
-			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, (String)null, Boolean.TRUE, null, null, null);
+			client2tasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, personalConsumerId, null, (String)null, Boolean.TRUE, null, null, null, null);
 			client2tasks.unsubscribe_(Boolean.TRUE,null, null, null, null);
 			client2tasks.unregister_(null,null,null);
 		}
@@ -342,7 +343,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
@@ -386,7 +387,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
 		
 		// assure we are freshly registered and process all available subscription pools
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool_(pool);
@@ -427,10 +428,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// assure we are registered (as a person on client2 and a system on client1)
 		
 		// register client1 as a system under rhpersonalUsername
-		client1tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, null, null, null);
+		client1tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 		
 		// register client2 as a person under rhpersonalUsername
-		client2tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.person, null, null, null, (String)null, Boolean.TRUE, null, null, null);
+		client2tasks.register(sm_rhpersonalUsername, sm_rhpersonalPassword, sm_rhpersonalOrg, null, ConsumerType.person, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 		
 		// subscribe to the personal subscription pool to unlock the subpool
 		personalConsumerId = client2tasks.getCurrentConsumerId();

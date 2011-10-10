@@ -35,11 +35,11 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
 		clienttasks.unregister(null, null, null);
-		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, null, null, null));
+		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, false, null, null, null));
 		
 		// make sure the certFrequency will not affect the results of this test
 		log.info("Change the certFrequency to a large value to assure the rhsmcertd does not interfere with this test.");
-		clienttasks.rhsmcertdServiceRestart(60, null, false);
+		clienttasks.restart_rhsmcertd(60, null, false);
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
@@ -75,7 +75,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	public void VerificationFixForBug725535_Test() {
 		
 		// assert that rhsmcertd restart successfully before actually running this test
-		clienttasks.rhsmcertdServiceRestart(null,null,false);
+		clienttasks.restart_rhsmcertd(null,null,false);
 		
 		// block the ability of subscription-manager to write to /var/run/rhsm/update by creating a directory in its place
 		removeRhsmUpdateFileAfterGroups();
@@ -136,7 +136,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 	@AfterClass(groups={"setup"})
 	public void rhsmcertdServiceRestartAfterClass () {
 		if (clienttasks==null) return;
-		clienttasks.rhsmcertdServiceRestart(null,null,false);
+		clienttasks.restart_rhsmcertd(null,null,false);
 	}
 	
 	// Protected methods ***********************************************************************

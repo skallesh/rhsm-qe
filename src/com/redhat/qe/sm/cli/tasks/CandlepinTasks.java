@@ -283,55 +283,65 @@ schema generation failed
 //		}
 //		// END OF WORKAROUND
 		
-		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request GET "+get.getURI());
+		// log the curl alternative to HTTP request
+		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
+		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
+		String request	= "--request "+get.getName()+" ";
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+get.getURI()+" | python -mjson.tool");
+
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
+	
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
-		PutMethod put = new PutMethod(url+path);
-		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request PUT "+put.getURI());
-		return getHTTPResponseAsString(client, put, authenticator, password);
+		return putResourceUsingRESTfulAPI(authenticator,password,url,path,null);
 	}
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String jsonData) throws Exception {
 		PutMethod put = new PutMethod(url+path);
-		String data = "";
-		String headers = "";
 		if (jsonData != null) {
 			put.setRequestEntity(new StringRequestEntity(jsonData, "application/json", null));
 			put.addRequestHeader("accept", "application/json");
 			put.addRequestHeader("content-type", "application/json");
-			
-			data = "--data '"+jsonData+"' ";
-			for (org.apache.commons.httpclient.Header header : put.getRequestHeaders())
-				headers+= "--header '"+header.toString().trim()+"' ";
 		}
-		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password+" ";
+		
+		// log the curl alternative to HTTP request
+		// Example: curl --insecure --user testuser1:password --request PUT --data '{"autoheal":"false"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19
+		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
+		String request	= "--request "+put.getName()+" ";
+		String data		= (jsonData==null)? "":"--data '"+jsonData+"' ";
+		String headers	= ""; if (jsonData != null) for (org.apache.commons.httpclient.Header header : put.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+data+headers+put.getURI());
 
-		log.info("SSH alternative to HTTP request: curl -k --request PUT "+credentials+data+headers+put.getURI());
 		return getHTTPResponseAsString(client, put, authenticator, password);
-
 	}
+	
 	static public String deleteResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
 		DeleteMethod delete = new DeleteMethod(url+path);
-		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request DELETE "+delete.getURI());
+		
+		// log the curl alternative to HTTP request
+		// Example: curl --insecure --user testuser1:password --request DELETE https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c632d5f0ee0132d603256c0f6d
+		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
+		String request	= "--request "+delete.getName()+" ";
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+delete.getURI()/*+" | python -mjson.tool"*/);
+
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
+	
 	static public String postResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String requestBody) throws Exception {
-		// EXAMPLE: curl -k --user admin:admin --request POST --data '{"name":"admin_donaldduck-ActivationKey1317353200874"}' --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/owners/donaldduck/activation_keys
 		PostMethod post = new PostMethod(url+path);
 		if (requestBody != null) {
 			post.setRequestEntity(new StringRequestEntity(requestBody, "application/json", null));
 			post.addRequestHeader("accept", "application/json");
 			post.addRequestHeader("content-type", "application/json");
 		}
-		String credentials = authenticator.equals("")? "":"--user "+authenticator+":"+password;
-		String data = requestBody==null? "":"--data '"+requestBody+"'";
-		String headers = "";
-		for ( org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
 
-		log.info("SSH alternative to HTTP request: curl -k "+credentials+" --request POST "+data+" "+headers+" "+post.getURI());
+		// log the curl alternative to HTTP request
+		// Example: curl --insecure --user testuser1:password --request PUT --data '{"autoheal":"false"}' --header 'accept: application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19
+		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
+		String request	= "--request "+post.getName()+" ";
+		String data		= (requestBody==null)? "":"--data '"+requestBody+"' ";
+		String headers	= ""; if (requestBody != null) for (org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+data+headers+post.getURI());
+
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
 	
@@ -350,8 +360,7 @@ schema generation failed
 //		return new JSONObject(sshCommandResult.getStdout());
 //	}
 	
-	protected static String getHTTPResponseAsString(HttpClient client, HttpMethod method, String username, String password) 
-	throws Exception {
+	protected static String getHTTPResponseAsString(HttpClient client, HttpMethod method, String username, String password) throws Exception {
 		HttpMethod m = doHTTPRequest(client, method, username, password);
 		String response = m.getResponseBodyAsString();
 		log.finer("HTTP server returned content: " + response);
@@ -398,9 +407,11 @@ schema generation failed
 	            new UsernamePasswordCredentials(username, password)
 	        );
 	}
+
 	/**
+	 * @param user
 	 * @param password
-	 * @param url TODO
+	 * @param url
 	 * @param owner
 	 * @return a JSONObject representing the jobDetail.  Example:<br>
 	 * 	{

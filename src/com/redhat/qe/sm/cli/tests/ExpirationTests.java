@@ -162,7 +162,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	
@@ -179,7 +179,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	public void checkTimeBeforeClass() throws Exception{
 		checkTime("candlepin server", server);
 		checkTime("client", client);
-		clienttasks.rhsmcertdServiceRestart(1, null, false);
+		clienttasks.restart_rhsmcertd(1, null, false);
 	}
 	
 //	@BeforeMethod

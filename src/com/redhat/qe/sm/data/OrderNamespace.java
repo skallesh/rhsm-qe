@@ -40,7 +40,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 	public Boolean providesManagement;
 	public String supportLevel;
 	public String supportType;
-
+	public String stackingId;
+	public Boolean virtOnly;
 
 
 	public OrderNamespace(Map<String, String> certData) {
@@ -67,6 +68,11 @@ public class OrderNamespace extends AbstractCommandLineData {
 		if (quantityUsed != null)			string += String.format(" %s='%s'", "quantityUsed",quantityUsed);
 		if (warningPeriod != null)			string += String.format(" %s='%s'", "warningPeriod",warningPeriod);
 		if (accountNumber != null)			string += String.format(" %s='%s'", "accountNumber",accountNumber);
+		if (providesManagement != null)		string += String.format(" %s='%s'", "providesManagement",providesManagement);
+		if (supportLevel != null)			string += String.format(" %s='%s'", "supportLevel",supportLevel);
+		if (supportType != null)			string += String.format(" %s='%s'", "supportType",supportType);
+		if (stackingId != null)				string += String.format(" %s='%s'", "stackingId",stackingId);
+		if (virtOnly != null)				string += String.format(" %s='%s'", "virtOnly",virtOnly);
 				
 		return string.trim();
 	}
@@ -242,41 +248,45 @@ public class OrderNamespace extends AbstractCommandLineData {
 		//		  1.3.6.1.4.1.2312.9.4.1 (Name): Red Hat Enterprise Linux Server
 		//		  1.3.6.1.4.1.2312.9.4.2 (Order Number) : ff8080812c3a2ba8012c3a2cbe63005b  
 		//		  1.3.6.1.4.1.2312.9.4.3 (SKU) : MCT0982
-		//		  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678   <- SHOULD ONLY EXIST IF ORIGINATED FROM A REGTOKEN
+		//		  1.3.6.1.4.1.2312.9.4.4 (Subscription Number) : abcd-ef12-1234-5678	<- SHOULD ONLY EXIST IF ORIGINATED FROM A REGTOKEN
 		//		  1.3.6.1.4.1.2312.9.4.5 (Quantity) : 100
 		//		  1.3.6.1.4.1.2312.9.4.6 (Entitlement Start Date) : 2010-10-25T04:00:00Z
 		//		  1.3.6.1.4.1.2312.9.4.7 (Entitlement End Date) : 2011-11-05T00:00:00Z
-		//		  1.3.6.1.4.1.2312.9.4.8 (Virtualization Limit) : 4
-		//		  1.3.6.1.4.1.2312.9.4.9 (Socket Limit) : None
+		//		  1.3.6.1.4.1.2312.9.4.8 (Virtualization Limit) : 4						<- ONLY EXISTS WHEN VIRT POOLS ARE TO BE GENERATED
+		//		  1.3.6.1.4.1.2312.9.4.9 (Socket Limit) : None							<- ONLY EXISTS WHEN THE SUBSCRIPTION IS USED TO SATISFY HARDWARE
 		//		  1.3.6.1.4.1.2312.9.4.10 (Contract Number): 152341643
 		//		  1.3.6.1.4.1.2312.9.4.11 (Quantity Used): 4
 		//		  1.3.6.1.4.1.2312.9.4.12 (Warning Period): 30
 		//		  1.3.6.1.4.1.2312.9.4.13 (Account Number): 9876543210
-		//		  1.3.6.1.4.1.2312.9.4.14 (Provides Management): 0 (boolean, 1 for true)
-		//		  1.3.6.1.4.1.2312.9.4.15 (Support Level): Premium
-		//		  1.3.6.1.4.1.2312.9.4.16 (Support Type): Level 3
+		//		  1.3.6.1.4.1.2312.9.4.14 (Provides Management): 0 (boolean, 1 for true)<- NEEDINFO
+		//		  1.3.6.1.4.1.2312.9.4.15 (Support Level): Premium						<- NEEDINFO
+		//		  1.3.6.1.4.1.2312.9.4.16 (Support Type): Level 3						<- NEEDINFO
+		//		  1.3.6.1.4.1.2312.9.4.17 (Stacking Id): 23456							<- ONLY EXISTS WHEN SUBSCRIPTION IS STACKABLE
+		//		  1.3.6.1.4.1.2312.9.4.18 (Virt Only): 1								<- ONLY EXISTS WHEN POOLS ARE INTENTED FOR VIRT MACHINES ONLY
 		// reference bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=640463
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("productName",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("orderNumber",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("productId",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("subscriptionNumber",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("quantity",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("startDate",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("endDate",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("virtualizationLimit",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("socketLimit",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("contractNumber",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("quantityUsed",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("warningPeriod",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("accountNumber",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.+)");
-		regexes.put("providesManagement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.14:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
-		regexes.put("supportLevel",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.15:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
-		regexes.put("supportType",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.16:[\\s\\cM]*\\.(?:.|\\s)(\\d)");
-		
+		regexes.put("productName",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.1:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("orderNumber",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.2:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("productId",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("subscriptionNumber",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("quantity",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.5:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("startDate",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.6:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("endDate",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.7:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("virtualizationLimit",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.8:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("socketLimit",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.9:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("contractNumber",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.10:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("quantityUsed",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.11:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("warningPeriod",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.12:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("accountNumber",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.13:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("providesManagement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.14:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("supportLevel",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.15:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("supportType",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.16:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("stackingId",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.17:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("virtOnly",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.4\\.18:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+	
 
 		List<Map<String,String>> listMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
