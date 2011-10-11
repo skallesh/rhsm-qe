@@ -23,7 +23,9 @@ import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
@@ -280,6 +282,32 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected File lastSubscribedEntitlementCertFile = null;
 	
 	
+	@Test(	description="verify redhat.repo file does not contain an excessive (more than two) number of successive blank lines",
+			groups={"AcceptanceTests","blockedByBug-737145"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
+		// register and subscribe to populate the redhat.repo file with some yum repos
+		List<YumRepo> yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		if (yumRepos.isEmpty()) {
+		    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null);
+			for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+				clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
+				yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+				if (!yumRepos.isEmpty()) break;
+			}
+		}
+		if (yumRepos.isEmpty()) throw new SkipException("Could not find any subscription that populated the yum repos in "+clienttasks.redhatRepoFile);
+		
+		// contents of redhat.repo file
+		SSHCommandResult result = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile);
+		
+		// successive blank lines in redhat.repo must not exceed n
+		int n=2; String regex = "(\\n\\s*){"+(n+2)+",}"; 	//  (\n\s*){4,}
+		Assert.assertContainsMatch(result.getStdout(),"^# Red Hat Repositories",null,"Comment heading \"Red Hat Repositories\" was found inside "+clienttasks.redhatRepoFile);
+		Assert.assertContainsNoMatch(result.getStdout(),regex,null,"At most, '"+n+"' successive blank lines were found inside "+clienttasks.redhatRepoFile);
+		
+	}
 	
 	
 	
@@ -296,7 +324,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// how to associate content with product   (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request POST https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/product/productid/content/fooid&enabled=false
 	// TODO Bug 705068 - product-id plugin displays "duration"
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
-	// TODO Bug 737145 - redhat.repo contains 50 blank lines at the top 
+
 	
 	
 	// Configuration Methods ***********************************************************************
