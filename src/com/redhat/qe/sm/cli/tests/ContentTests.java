@@ -287,26 +287,28 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
-		// register and subscribe to populate the redhat.repo file with some yum repos
-		List<YumRepo> yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
-		if (yumRepos.isEmpty()) {
-		    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null);
-			for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-				clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
-				yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
-				if (!yumRepos.isEmpty()) break;
-			}
-		}
-		if (yumRepos.isEmpty()) throw new SkipException("Could not find any subscription that populated the yum repos in "+clienttasks.redhatRepoFile);
+		String redhatRepoFileContents = "";
 		
-		// contents of redhat.repo file
-		SSHCommandResult result = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile);
+		// register and repeatedly subscribe to populate the redhat.repo file with yum repos
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null);
+	    for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+			clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
+			// trigger the subscription-manager yum plugin to write to the redhat.repo file
+			// Note: this loop combination is what recreates the duplicate empty lines from being written to redhat.repo
+			client.runCommandAndWait("yum repolist all --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    }
+			
+		// get the yumRepos from the contents of the redhat.repo file
+		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
+		if (YumRepo.parse(redhatRepoFileContents).isEmpty()) throw new SkipException("Could not find any subscription that populated the yum repos in "+clienttasks.redhatRepoFile);
+			
+		// successive blank lines in redhat.repo must not exceed N
+		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
+		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most, '"+N+"' successive blank lines were found inside "+clienttasks.redhatRepoFile);
 		
-		// successive blank lines in redhat.repo must not exceed n
-		int n=2; String regex = "(\\n\\s*){"+(n+2)+",}"; 	//  (\n\s*){4,}
-		Assert.assertContainsMatch(result.getStdout(),"^# Red Hat Repositories",null,"Comment heading \"Red Hat Repositories\" was found inside "+clienttasks.redhatRepoFile);
-		Assert.assertContainsNoMatch(result.getStdout(),regex,null,"At most, '"+n+"' successive blank lines were found inside "+clienttasks.redhatRepoFile);
-		
+		//Assert.assertContainsMatch(redhatRepoFileContents,"^# Red Hat Repositories$",null,"Comment heading \"Red Hat Repositories\" was found inside "+clienttasks.redhatRepoFile);
+		Assert.assertContainsMatch(redhatRepoFileContents,"^# Certificate-Based Repositories$",null,"Comment heading \"Certificate-Based Repositories\" was found inside "+clienttasks.redhatRepoFile);
+		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
 	
 	
