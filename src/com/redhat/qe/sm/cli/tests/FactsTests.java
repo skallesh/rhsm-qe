@@ -318,7 +318,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				"The pools available to a type=candlepin consumer bypass the rules (list --all --available is identical to list --available).");
 	
 		// now assert that all the pools can be subscribed to by the consumer (registered as type candlepin)
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 	}
 	
 	

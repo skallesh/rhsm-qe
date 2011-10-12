@@ -412,9 +412,10 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
 		}
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(started: interval = "+healFrequency+" minutes|started: interval = "+certFrequency+" minutes)",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+) is running...$",null);	// FIXME master/RHEL58 branch
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes",null);
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(started: interval = "+healFrequency+" minutes|started: interval = "+certFrequency+" minutes)",null);
 
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
@@ -2604,23 +2605,28 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * Individually subscribe to each of the currently available subscription pools one at a time 
+	 * @return SubscriptionPools that were available for subscribing 
 	 */
-	public void subscribeToEachOfTheCurrentlyAvailableSubscriptionPools() {
+	public List <SubscriptionPool> subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually() {
 
 		// individually subscribe to each available subscription pool
-		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
+		List <SubscriptionPool> pools = getCurrentlyAvailableSubscriptionPools();
+		for (SubscriptionPool pool : pools) {
 			subscribeToSubscriptionPool(pool);
 		}
 		
 		// assert
 		assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after individually subscribing to them all.");
+		return pools;
 	}
 	
 	
 	/**
-	 * Collectively subscribe to all of the currently available subscription pools in one command call
+	 * Collectively subscribe to the currently available subscription pools in one command call
+	 * 
+	 * @return SubscriptionPools that were available for subscribing 
 	 */
-	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
+	public List<SubscriptionPool> subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively() {
 		
 		// assemble a list of all the available SubscriptionPool ids
 		List <String> poolIds = new ArrayList<String>();
@@ -2632,8 +2638,8 @@ public class SubscriptionManagerTasks {
 		
 		// assert results when assumingRegisterType="system"
 		if (currentlyRegisteredType==null || currentlyRegisteredType.equals(ConsumerType.system)) {
-			assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
-			return;
+			assertNoAvailableSubscriptionPoolsToList(true, "Asserting that no available subscription pools remain after collectively subscribing to them all.");
+			return poolsBeforeSubscribe;
 		}
 		
 		// assert results when assumingRegisterType="candlepin"
@@ -2654,10 +2660,11 @@ public class SubscriptionManagerTasks {
 					Assert.fail("Could not find subscription pool "+beforePool+" listed after subscribing to it as a registered "+currentlyRegisteredType+" consumer.");
 				}
 			}
-			return;
+			return poolsBeforeSubscribe;
 		}
 		
-		Assert.fail("Do not know how to assert subscribeToAllOfTheCurrentlyAvailableSubscriptionPools when registered as type="+currentlyRegisteredType);
+		Assert.fail("Do not know how to assert subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively when registered as type="+currentlyRegisteredType);
+		return poolsBeforeSubscribe;
 	}
 //	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
 //

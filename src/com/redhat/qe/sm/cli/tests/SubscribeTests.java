@@ -204,7 +204,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, (String)null, Boolean.FALSE, false, null, null, null);
-		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 	}
 	
 	
@@ -372,7 +372,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
 	    
 	    // subscribe to all the available pools
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+	    clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 	    
 	    // get all of the current entitlement certs and remember them
 	    List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();

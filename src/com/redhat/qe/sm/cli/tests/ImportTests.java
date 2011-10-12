@@ -579,7 +579,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+importCertificatesDir+"/*",Integer.valueOf(0));
 		
 		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 //		// assemble a list of entitlements that we can use for import
 //		entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();

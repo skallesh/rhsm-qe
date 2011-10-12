@@ -907,7 +907,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, false, null, null, null);
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// then assemble a list of all consumed ProductSubscriptions
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
@@ -932,7 +932,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, (String)null, null, false, null, null, null);
-		clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 
 		
 		// then assemble a list of all consumed ProductSubscriptions
