@@ -120,7 +120,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Stage Only test for redeem with a Dell maufacturer and a bogus serial number.  I expect to get back a stderr with "A subscription was not found for the given Dell service tag: {0}"
+	// TODO Bug 688806 - subscription-manager activate command line fails due to network error - Stage Only test for redeem with a Dell maufacturer and a bogus serial number.  I expect to get back a stderr with "A subscription was not found for the given Dell service tag: {0}"
 	
 	
 	
