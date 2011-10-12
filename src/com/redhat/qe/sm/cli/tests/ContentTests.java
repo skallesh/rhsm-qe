@@ -186,7 +186,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		clienttasks.unregister(null, null, null);
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+	    if (clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively().size()<=0)
+	    	throw new SkipException("No available subscriptions were found.  Therefore we cannot perform this test.");
 	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
 	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
 		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
