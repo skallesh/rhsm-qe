@@ -1,5 +1,5 @@
 (ns com.redhat.qe.sm.gui.tasks.rest
-  (:require [com.redhat.qe.sm.gui.tasks.httpclient :as httpclient]
+  (:require [clj-http.client :as httpclient]
             [clojure.contrib.json :as json]
             [clojure.contrib.pprint :as pprint]
             [clojure.contrib.logging :as log])
@@ -18,6 +18,14 @@
   [url user pw & [req]]
   (-> (httpclient/get url (merge req {:basic-auth [user pw]
                                       :accept :json})) :body json/read-json))
+
+(defn put
+  "Performs a PUT to the url, decodes the JSON in the response body"
+  [url user pw body & [req]]
+  (httpclient/put url (merge req {:body (json/json-str body)
+                                  :basic-auth [user pw]
+                                  :accept :json
+                                  :content-type :json})))
 
 (defn post
   "Encodes datastructure in body to JSON, posts to url, using user and pw. "
