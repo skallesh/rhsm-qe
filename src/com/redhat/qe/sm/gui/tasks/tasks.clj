@@ -9,6 +9,7 @@
         [clojure.contrib.str-utils :only (re-split)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
+            [clojure.contrib.json :as json]
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
@@ -514,6 +515,26 @@
                                rownums))]
     (ui click :close-facts)
     facts))
+
+(defn write-facts
+  "Writes overriding facts file into /etc/rhsm/facts/
+    @facts      : facts to be written. Either a json formatted string or
+                   a clojure datastructure to be converted to a json string
+    @filename   : file name of the facts override file
+    @path       : path of the filename
+    @overwrite? : boolean to overwrite the file
+    @update?    : boolean to update facts with candlepin"  
+  [facts & {:keys [filename path overwrite? update?]
+            :or {filename "override.facts"
+                 path "/etc/rhsm/facts/"
+                 overwrite? true
+                 update? true}}]
+  (let [redirect (if overwrite? ">" ">>")
+        contents (if (string? facts) facts (json/json-str facts))
+        command (str "echo '" contents "' " redirect " " path filename)]
+    (.RunCommandAndWait @clientcmd command)
+    (if update?
+      (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
 
 
 
