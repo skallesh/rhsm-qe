@@ -2,7 +2,8 @@
   (:import [com.redhat.qe.auto.testng TestScript]
 	   [com.redhat.qe.tools SSHCommandRunner]
            [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]
-           [com.redhat.qe.sm.cli.tasks CandlepinTasks]))
+           [com.redhat.qe.sm.cli.tasks CandlepinTasks]
+           [com.redhat.qe.sm.gui.tasks SSLUtilities]))
 
 (defprotocol Defaultable
   (default [this] "returns the default value if the key is not found")
@@ -84,5 +85,8 @@
                                                 (@config :ssh-key-private)
                                                 (@config :ssh-key-passphrase)
                                                 nil))
-  ;; instantiate CandlepinTasks, mostly to turn off CA cert checking in the JVM
-  (reset! candlepin-tasks (CandlepinTasks.)))
+  ;; instantiate CandlepinTasks
+  (reset! candlepin-tasks (CandlepinTasks.))
+  ;; turn off SSL Checking so rest API works
+  (SSLUtilities/trustAllHostnames)
+  (SSLUtilities/trustAllHttpsCertificates))
