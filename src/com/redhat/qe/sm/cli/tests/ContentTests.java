@@ -290,14 +290,18 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
 		String redhatRepoFileContents = "";
 		
-		// register and repeatedly subscribe to populate the redhat.repo file with yum repos
+		// register and repeatedly subscribe/unsubscribe to populate the redhat.repo file with yum repos
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null);
-	    for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
-			clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
-			// trigger the subscription-manager yum plugin to write to the redhat.repo file
-			// Note: this loop combination is what recreates the duplicate empty lines from being written to redhat.repo
-			client.runCommandAndWait("yum repolist all --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    List <SubscriptionPool> pools =  clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+	    for (int i=0;i<2;i++) {
+    		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    	clienttasks.unsubscribe_(true, null, null, null, null);
+	    	for (SubscriptionPool pool : pools) {
+	    		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+	    		clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
+	    	}
 	    }
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 			
 		// get the yumRepos from the contents of the redhat.repo file
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
