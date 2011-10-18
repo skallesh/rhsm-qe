@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -285,37 +286,9 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="verify redhat.repo file does not contain an excessive (more than two) number of successive blank lines",
-			groups={"AcceptanceTests","blockedByBug-737145"},
+			groups={"blockedByBug-737145"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-//	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
-//		String redhatRepoFileContents = "";
-//		
-//		// register and repeatedly subscribe/unsubscribe to populate the redhat.repo file with yum repos
-//	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null);
-//	    List <SubscriptionPool> pools =  clienttasks.getCurrentlyAllAvailableSubscriptionPools();
-//	    for (int i=0;i<2;i++) {
-//    		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-//	    	clienttasks.unsubscribe_(true, null, null, null, null);
-//	    	for (SubscriptionPool pool : pools) {
-//	    		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-//	    		clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
-//	    	}
-//	    }
-//		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-//			
-//		// get the yumRepos from the contents of the redhat.repo file
-//		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
-//		if (YumRepo.parse(redhatRepoFileContents).isEmpty()) throw new SkipException("Could not find any subscription that populated the yum repos in "+clienttasks.redhatRepoFile);
-//			
-//		// successive blank lines in redhat.repo must not exceed N
-//		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
-//		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most, '"+N+"' successive blank lines were found inside "+clienttasks.redhatRepoFile);
-//		
-//		//Assert.assertContainsMatch(redhatRepoFileContents,"^# Red Hat Repositories$",null,"Comment heading \"Red Hat Repositories\" was found inside "+clienttasks.redhatRepoFile);
-//		Assert.assertContainsMatch(redhatRepoFileContents,"^# Certificate-Based Repositories$",null,"Comment heading \"Certificate-Based Repositories\" was found inside "+clienttasks.redhatRepoFile);
-//		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
-//	}
 	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
 		
 		// successive blank lines in redhat.repo must not exceed N
@@ -329,7 +302,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
 
 		// check for excessive blank lines after subscribing to each pool
-	    for (SubscriptionPool pool : clienttasks.getCurrentlyAllAvailableSubscriptionPools()) {
+	    for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
     		clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
@@ -337,8 +310,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
 
 		// check for excessive blank lines after unsubscribing from each serial
+		List<BigInteger> serialNumbers = new ArrayList<BigInteger>();
 	    for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+	    	if (serialNumbers.contains(productSubscription.serialNumber)) continue;	// save some time by avoiding redundant unsubscribes
     		clienttasks.unsubscribe_(null, productSubscription.serialNumber, null, null, null);
+    		serialNumbers.add(productSubscription.serialNumber);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
@@ -350,6 +326,38 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
 	
+	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
+			groups={"AcceptanceTests","blockedByBug-737145"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
+		
+		// successive blank lines in redhat.repo must not exceed N
+		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
+		String redhatRepoFileContents = "";
+	    
+	    // check for excessive blank lines after unregister
+	    clienttasks.unregister(null,null,null);
+	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
+		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
+
+		log.info("Inserting blank lines into the redhat.repo for testing purposes...");
+		client.runCommandAndWait("for i in `seq 1 10`; do echo \"\" >> "+clienttasks.redhatRepoFile+"; done; echo \"# test for bug 737145\" >> "+clienttasks.redhatRepoFile);
+		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
+		Assert.assertContainsMatch(redhatRepoFileContents,regex,null,"File "+clienttasks.redhatRepoFile+" has been infiltrated with excessive blank lines.");
+
+		// trigger the yum plugin for subscription-manager
+		log.info("Triggering the yum plugin for subscription-manager which will purge the blank lines from redhat.repo...");
+	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
+		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside "+clienttasks.redhatRepoFile);
+		
+		// assert the comment heading is present
+		//Assert.assertContainsMatch(redhatRepoFileContents,"^# Red Hat Repositories$",null,"Comment heading \"Red Hat Repositories\" was found inside "+clienttasks.redhatRepoFile);
+		Assert.assertContainsMatch(redhatRepoFileContents,"^# Certificate-Based Repositories$",null,"Comment heading \"Certificate-Based Repositories\" was found inside "+clienttasks.redhatRepoFile);
+		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
+	}
 	
 	
 	// Candidates for an automated Test:
