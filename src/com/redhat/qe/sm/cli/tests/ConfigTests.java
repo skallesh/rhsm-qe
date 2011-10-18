@@ -256,7 +256,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt to use config module to remove a non-existing-section parameter from /etc/rhsm/rhsm.conf (negative test)",
-			groups={"blockedByBug-747024"},
+			groups={"blockedByBug-747024","blockedByBug-746264"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigRemoveNonExistingSectionName_Test() {
