@@ -507,6 +507,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	// FIXME Not sure that this is really a meaningful or necessary test
 	@Test(	description="Verify the Candlepin API denies PUTting of guestIds onto a guest consumer",
 			groups={"blockedByBug-737935"},
 			dependsOnGroups={},
@@ -542,6 +543,93 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// assert expected guestIds are empty (TODO or NULL?)
 		Assert.assertEquals(actualGuestIds, new ArrayList<String>(){},"A guest '"+consumerIdOfGuest+"' consumer should not be allowed to have guestIds PUT on it using the Candlepin API.");
 	}
+	
+	
+	@Test(	description="When Host B PUTs the same guestId as HostA, the guestId should be removed from HostA (simulation of a guest moved from Host A to Host B)",
+			groups={"blockedByBug-737935"},
+			dependsOnGroups={},
+			enabled=true)
+	public void VerifyGuestIdIsRemovedFromHostConsumerAWhenHostConsumerBPutsSameGuestId_Test() throws JSONException, Exception {
+
+		int k=1; JSONObject jsonConsumer; List<String> actualGuestIds = new ArrayList<String>(){};
+		
+		// trick this system into believing it is a host
+		forceVirtWhatToReturnHost();
+		
+		// create host consumer A
+		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+		
+		for (int c=0;c<2;c++) { // run this test twice
+			
+			// call Candlepin API to PUT some guestIds onto the host consumer A
+			JSONObject jsonData = new JSONObject();
+			ArrayList<String> expectedGuestIdsOnHostA = new ArrayList<String>(){};
+			for (String guestId :  Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++})) expectedGuestIdsOnHostA.add(guestId);
+
+			jsonData.put("guestIds", expectedGuestIdsOnHostA);
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData.toString());
+			
+			// get the host consumer and assert that it has all the guestIds just PUT
+			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
+			// actual guestIds
+			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
+			actualGuestIds.clear();
+			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+			}
+			// assert expected guestIds
+			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
+			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on host consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
+
+		
+			
+			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
+			clienttasks.clean(null, null, null);	// this will keep consumer A registered
+			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null, null));
+
+			// call Candlepin API to PUT some guestIds onto the host consumer B
+			// NOTE: decrementing k will effectively move the last guestId from HostA to HostB
+			k--;
+			log.info("Simulating the moving of guestId '"+expectedGuestIdsOnHostA.get(expectedGuestIdsOnHostA.size()-1)+"' from host consumer A to host consumer B by PUTting it on the list of guestIds for host consumer B...");
+			List<String> expectedGuestIdsOnHostB = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++}); 
+			jsonData.put("guestIds", expectedGuestIdsOnHostB);
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData.toString());
+
+			// get the host consumer and assert that it has all the guestIds just PUT
+			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
+			// actual guestIds
+			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
+			actualGuestIds.clear();
+			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+			}
+			// assert expected guestIds
+			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
+			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostB.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostB+"' using the Candlepin API were verified.");
+
+			
+			
+			// Now let's re-verify that the guestIds of host consumer A have not changed
+			// NOTE: The last guestId SHOULD BE REMOVED since it was most recently reported as a guest on HostB
+			log.info("Because guestId '"+expectedGuestIdsOnHostA.get(expectedGuestIdsOnHostA.size()-1)+"' was most recently reported as a guest on host consumer B, it should no longer be on the list of guestIds for host consumer A...");
+			expectedGuestIdsOnHostA.remove(expectedGuestIdsOnHostA.size()-1);
+
+			// get the host consumer and assert that it has all the guestIds just PUT
+			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
+			// actual guestIds
+			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
+			actualGuestIds.clear();
+			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
+				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+			}
+			// assert expected guestIds
+			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
+			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
+
+		}
+	}
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO Bug 683459 - Virt only skus creating two pools

@@ -204,7 +204,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, (String)null, Boolean.FALSE, false, null, null, null);
-		clienttasks.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 	}
 	
 	
@@ -372,7 +372,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
 	    
 	    // subscribe to all the available pools
-	    clienttasks.subscribeToAllOfTheCurrentlyAvailableSubscriptionPools();
+	    clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 	    
 	    // get all of the current entitlement certs and remember them
 	    List<File> entitlementCertFiles = clienttasks.getCurrentEntitlementCertFiles();
@@ -757,7 +757,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
 	
 	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)
-	
+	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
 	
 	
 	

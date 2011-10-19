@@ -706,7 +706,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	//		
+	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.
 	
 	
 	// Configuration methods ***********************************************************************

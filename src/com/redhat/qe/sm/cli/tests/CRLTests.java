@@ -197,6 +197,99 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 
 	
 	
+	// Candidates for an automated Test:
+//	On 10/07/2011 03:34 PM, Michael Stead wrote:
+//		> *Revoking Entitlements When A Guest's Host Changes*
+//		>
+//		> There has been some discussion on when/where the revoke should take
+//		> place, with a concern being the state of the client afterwards, and how
+//		> long the client's and CPs entitlements/certs are out of sync.
+//		>
+//		> As well, do we try and 'replace' the revoked entitlements with one
+//		> provided by the new host (if available) at the same time? Or do we leave
+//		> the client in the current invalid state and wait for healing to kick in
+//		> (if enabled) to fix? or force fixing manually if not?
+//		>
+//		> I'd like to get some feedback on the discussed solutions below so that
+//		> we are all in the loop of how this will be implemented.
+//		>
+//		>
+//		> *1) On certlib check-in *
+//		> Assuming that virt-who has run on two hosts, moving a guest from one to
+//		> the other, the next time a certlib checkin runs on the guest (client):
+//		> - certlib requests the guest's current serials from CP (GET
+//		> consumers/{uuid}/serials).
+//		> - Here we determine if the host has changed, revoke any old host related
+//		> entitlements, and omit the serials from returned serials list.
+//		> - certlib determines from the serials what is missing/rogue and will
+//		> fetch/delete the missing/rogue certificates (as it works now).
+//		>
+//		> Edge Case: What happens if the guest was blatantly destroyed on the host
+//		> without being unregistered? The guest's entitlements would just sit.
+//		> - Could we create a job that cleans this up?
+//		>
+//		> PROS:
+//		> - certs are updated on the client soon after they are revoked.
+//		> - provides an opportunity (outside of healing) to migrate the revoked
+//		> entitlements with similar ones from the new host), if required.
+//		>
+//		> CONS:
+//		> - we are revoking entitlements as part of a GET request. It feels wrong
+//		> and miss-leading in terms of the CP API. But would work.
+//		>
+//		>
+//		> *2) Revoke on hosts updateConsumer triggered by virt-who.*
+//		> Determine what guests were removed from the host, and immediately revoke
+//		> all 'host related' entitlements from EACH removed guest when virt-who
+//		> calls updateConsumer.
+//		>
+//		> PROS:
+//		> - in terms of CP API, this seems like the right place to have this code.
+//		> - entitlements are revoked from each guest as soon as virt-who reports it.
+//		> - Although an error would be shown in subscription manager when an
+//		> unsubscribe was attempted on a revoked cert, all certs would be updated
+//		> once the error dialog was closed (via certlib.update()). Can we live
+//		> with this?
+//		>
+//		> CONS:
+//		> - client certs are now out of sync until next certlib checkin (this
+//		> could be via rhsmd, or a subscribe/unsubscribe, etc.)
+//		> - Length of time it may take until client certs are updated on the client.
+//		> - no opportunity to migrate the entitlements to the new host (without
+//		> healing) as it may not have been reported by virt-who at this point.
+//		>
+//		> *3) Revoke on guest's updateConsumer call.*
+//		> Entitlements get revoked by CP on updateConsumer if the guest's host has
+//		> changed, putting the client in an invalid state until next cert check-in.
+//		>
+//		> PROS:
+//		> - same as #2
+//		>
+//		> CONS:
+//		> - same as #2
+//		> - Longer update time. Need to wait for guest's updateConsumer to be
+//		> called, and then for certlib check-in to update entitlements.
+//		>
+//		>
+//		> I'm sure that I've missed something here, but what do you guys think?
+//		>
+//		> I'm currently working on doing it via option 1, but doing the revoke in
+//		> a GET request feels funny.
+//		>
+//		> Either way, the code that I've been working on to do the revoke can be
+//		> moved around if need be.
+//		>
+//		> Thoughts?
+//		>
+//		> Thanks.
+//		>
+//		> --mstead
+//		>
+//		>
+//		I like (2). The cons are no different than any other
+//		subscriprtion--manager case.
+//
+//		-- bk
 	
 	// Configuration Methods ***********************************************************************
 

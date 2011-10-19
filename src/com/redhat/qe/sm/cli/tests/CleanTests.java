@@ -2,6 +2,7 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
@@ -35,6 +36,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.size()<=0) throw new SkipException("No susbcriptions were available for which an entitlement could be granted and subsequently cleaned by this test.");
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 
