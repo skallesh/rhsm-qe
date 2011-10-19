@@ -287,7 +287,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="verify redhat.repo file does not contain an excessive (more than two) number of successive blank lines",
 			groups={"blockedByBug-737145"},
-			enabled=true)
+			enabled=false) // Disabling... this test takes too long to execute.  VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test effectively provides the same coverage.
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
 		
