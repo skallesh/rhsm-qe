@@ -954,6 +954,14 @@ Expected Results:
 		/usr/share/locale/zh_TW/LC_MESSAGES/rhsm.mo
 		*/
 		
+		// TODO HERE IS A COMMAND FOR GETTING THE EXPECTED TRANSLATION MESSAGE STRINGS
+		/* msgunfmt /usr/share/locale/de/LC_MESSAGES/rhsm.mo
+		msgid "%prog [options]"
+		msgstr "%prog [Optionen]"
+
+		msgid "%s (first date of invalid entitlements)"
+		msgstr "%s (erster Tag mit ungültigen Berechtigungen)"
+		*/
 		return ll;
 	}
 	
