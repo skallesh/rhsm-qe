@@ -1,7 +1,9 @@
 (ns com.redhat.qe.sm.gui.tasks.test-config
   (:import [com.redhat.qe.auto.testng TestScript]
 	   [com.redhat.qe.tools SSHCommandRunner]
-           [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]))
+           [com.redhat.qe.sm.cli.tasks SubscriptionManagerTasks]
+           [com.redhat.qe.sm.cli.tasks CandlepinTasks]
+           [com.redhat.qe.sm.gui.tasks SSLUtilities]))
 
 (defprotocol Defaultable
   (default [this] "returns the default value if the key is not found")
@@ -56,25 +58,35 @@
 (def config (atom {}))
 (def clientcmd (atom nil))
 (def cli-tasks (atom nil))
+(def candlepin-tasks (atom nil))
 (def auth-proxyrunner (atom nil))
 (def noauth-proxyrunner (atom nil))
 
 (defn init []
   (TestScript.) ;;sets up logging, reads properties
   (swap! config merge (get-properties))
+  ;; client command runner to run ssh commands on the rhsm client box
   (reset! clientcmd (SSHCommandRunner. (@config :client-hostname)
 				       (@config :ssh-user)
 				       (@config :ssh-key-private)
 				       (@config :ssh-key-passphrase)
 				       nil))
+  ;; client command runner to run file and other tasks on rhsm client box
   (reset! cli-tasks (SubscriptionManagerTasks. @clientcmd))
+  ;; command runner to run ssh commands on the squid proxy server (with auth)
   (reset! auth-proxyrunner (SSHCommandRunner. (@config :basicauth-proxy-hostname)
                                               (@config :ssh-user)
                                               (@config :ssh-key-private)
                                               (@config :ssh-key-passphrase)
                                               nil))
+  ;; command runner to run ssh commands on the proxy server (no authentication)
   (reset! noauth-proxyrunner (SSHCommandRunner. (@config :noauth-proxy-hostname)
                                                 (@config :ssh-user)
                                                 (@config :ssh-key-private)
                                                 (@config :ssh-key-passphrase)
-                                                nil)))
+                                                nil))
+  ;; instantiate CandlepinTasks
+  (reset! candlepin-tasks (CandlepinTasks.))
+  ;; turn off SSL Checking so rest API works
+  (SSLUtilities/trustAllHostnames)
+  (SSLUtilities/trustAllHttpsCertificates))
