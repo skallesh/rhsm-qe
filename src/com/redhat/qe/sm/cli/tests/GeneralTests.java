@@ -54,7 +54,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 688469 - subscription-manager <module> --help does not work in localized environment.
 	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error
 	// TODO Bug 629708 - import/export validation error wrapped
-	
+	// TODO Bug 744536 - [ALL LANG] [RHSM CLI] unsubscribe module _unexpected 'ascii' code can't decode ...message.
 	
 	
 	// Data Providers ***********************************************************************
