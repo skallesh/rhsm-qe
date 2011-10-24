@@ -1060,6 +1060,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					// Because this subscription is stackable, it better not be filtered out from availability based on the system's sockets.
 					if (productAttributeStackingIdValue==null) {
 					
+						// if the sockets attribute is zero, then this subscription should be available to this client
+						if (Integer.valueOf(attributeValue)==0) {
+							// do not mark productAttributesPassRulesCheck = false;
+						} else
+
 						// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
 						if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
 							if (matchSystem) productAttributesPassRulesCheck = false;
