@@ -4,11 +4,12 @@
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
         gnome.ldtp)
-  (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
+  (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+            [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks])
   (:import [org.testng.annotations Test BeforeClass DataProvider]))
 
 (defn get-userlists [username password]
-  (let [owners (tasks/get-owners username password)]
+  (let [owners (ctasks/get-owners username password)]
     (for [owner owners] (vector username password owner))))
 
 (defn ^{BeforeClass {:groups ["setup"]}}

@@ -6,6 +6,7 @@
         [clojure.contrib.string :only (trim)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+            [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]
            [com.redhat.qe.sm.cli.tests ComplianceTests]
@@ -49,7 +50,7 @@
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
-        ownername (tasks/get-owner-display-name user pass key)]
+        ownername (ctasks/get-owner-display-name user pass key)]
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
@@ -69,7 +70,7 @@
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
-        ownername (tasks/get-owner-display-name user pass key)]
+        ownername (ctasks/get-owner-display-name user pass key)]
     (verify (= (str beforesubs)
                (trim (.getStdout
                       (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
@@ -95,7 +96,7 @@
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
-        ownername (tasks/get-owner-display-name user pass key)]
+        ownername (ctasks/get-owner-display-name user pass key)]
     (verify (= (str beforesubs)
                (trim (.getStdout
                       (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
@@ -122,7 +123,7 @@
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
-        ownername (tasks/get-owner-display-name user pass key)]
+        ownername (ctasks/get-owner-display-name user pass key)]
     (verify (= (str beforesubs)
                (trim (.getStdout
                       (.runCommandAndWait @clientcmd (str "ls " nodir " | wc -l"))))))

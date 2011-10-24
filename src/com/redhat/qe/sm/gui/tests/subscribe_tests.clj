@@ -7,19 +7,13 @@
         [clojure.contrib.string :only (split)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+            [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
-  (let [ownername (tasks/get-owner-display-name (@config :username)
-                                                (@config :password)
-                                                (@config :owner-key))]
-    (with-handlers [(handle :already-registered [e]
-                            (recover e :unregister-first))]
-      (tasks/register (@config :username)
-                      (@config :password)
-                      :owner ownername))))
+  (tasks/register-with-creds))
 
 (defn subscribe_all
   "Subscribes to everything available"
@@ -95,7 +89,7 @@
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
         (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
-              pool (tasks/get-pool-id (@config :username)
+              pool (ctasks/get-pool-id (@config :username)
                                       (@config :password)
                                       (@config :owner-key)
                                       subscription
@@ -107,7 +101,7 @@
               available (str (- (Integer. max) (Integer. used)))
               cmd (fn [num]
                     (str  "<right> <right> <right> <right> <right> <space> " num " <enter>"))]
-          (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
+          (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
             (do
               ;verify that the quantity can be changed
               (tasks/ui selectrowindex :contract-selection-table row)
@@ -198,12 +192,12 @@
         (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
           (if (>= row 0)
             (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
-                  pool (tasks/get-pool-id (@config :username)
+                  pool (ctasks/get-pool-id (@config :username)
                                           (@config :password)
                                           (@config :owner-key)
                                           s
                                           contract)]
-              (if (tasks/multi-entitlement? (@config :username) (@config :password) pool)
+              (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
                 (swap! subs conj [s contract]))
               (recur (dec row)))))
         (tasks/ui click :cancel-contract-selection)))

@@ -4,12 +4,18 @@
                                                        cli-tasks
                                                        auth-proxyrunner
                                                        noauth-proxyrunner)]
-        [error.handler :only (add-recoveries raise)]
+        [error.handler :only (with-handlers
+                              handle
+                              ignore
+                              recover
+                              add-recoveries
+                              raise)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.contrib.str-utils :only (re-split)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             [clojure.contrib.json :as json]
+            [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
@@ -459,45 +465,28 @@
     (f)
     (RemoteFileTasks/getTailFromMarkedFile runner log marker grep)))
 
-(defn get-owners
-  "Given a username and password, this function returns a list
-  of owners associated with that user"
-  [username password]
-  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
-    (seq (CandlepinTasks/getOrgsKeyValueForUser username
-                                                password
-                                                url
-                                                "displayName"))))
+(defn register-with-creds
+  "Registers user with credentials found in automation.properties"
+  [& {:keys [re-register?]
+    :or {re-register? true}}]
+  (let [ownername (ctasks/get-owner-display-name (@config :username)
+                                                 (@config :password)
+                                                 (@config :owner-key))]
+    (if re-register?
+      ;re-register with handlers
+      (with-handlers [(handle :already-registered [e]
+                              (recover e :unregister-first))]
+        (register (@config :username)
+                  (@config :password)
+                  :owner ownername))
+      ;else just attempt a register
+      (register (@config :username)
+                  (@config :password)
+                  :owner ownername))))
 
-(defn get-owner-display-name
-  "Given a owner key (org key) this returns the owner's display name"
-  [username password orgkey]
-  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
-    (CandlepinTasks/getOrgDisplayNameForOrgKey  username
-                                                password
-                                                url
-                                                orgkey)))
-
-(defn get-pool-id
-  "Get the pool ID for a given subscription/contract pair."
-  [username password orgkey subscription contract]
-  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
-    (CandlepinTasks/getPoolIdFromProductNameAndContractNumber username
-                                                              password
-                                                              url
-                                                              orgkey
-                                                              subscription
-                                                              contract)))
-(defn multi-entitlement?
-  "Returns true if the subscription can be entitled to multiple times."
-  [username password pool]
-  (let [url (SubscriptionManagerBaseTestScript/sm_serverUrl)]
-    (CandlepinTasks/isPoolProductMultiEntitlement username
-                                                  password
-                                                  url
-                                                  pool)))
-
-(defn get-all-facts []
+(defn get-all-facts
+  "Creates and returns a map of all system facts as read in via the rhsm-gui"
+  []
   (ui click :view-system-facts)
   (ui waittillguiexist :facts-view)
   (sleep 5000)

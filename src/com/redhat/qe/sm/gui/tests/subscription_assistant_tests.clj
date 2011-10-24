@@ -31,15 +31,16 @@
                                 (fn [product] (check-product product)))
        (check-all-products))))
 
-(defn- register []
-  (with-handlers [(handle :already-registered [e]
-                          (recover e :unregister-first))]
-    (let [user (@config :username)
-          pass (@config :password)
-          owner (tasks/get-owner-display-name user
-                                              pass
-                                              (@config :owner-key))]
-      (tasks/register user pass :owner owner))))
+(comment 
+  (defn- register []
+    (with-handlers [(handle :already-registered [e]
+                            (recover e :unregister-first))]
+      (let [user (@config :username)
+            pass (@config :password)
+            owner (tasks/get-owner-display-name user
+                                                pass
+                                                (@config :owner-key))]
+        (tasks/register user pass :owner owner)))))
 
 
 (defn ^{BeforeClass {:groups ["setup"]}}
@@ -47,9 +48,9 @@
   (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
-  (.runCommandAndWait @clientcmd "subscripton-manager unregister")
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/start-app)
-  (register))
+  (tasks/register-with-creds))
     
 (defn ^{AfterClass {:groups ["setup"]}}
   exit_subscription_assistant [_]
@@ -68,7 +69,7 @@
         
 (defn ^{Test {:groups ["subscription-assistant"]}}
   launch_assistant [_]
-  (register)
+  (tasks/register-with-creds)
   (tasks/ui click :update-certificates)
   (tasks/ui waittillwindowexist :subscription-assistant-dialog 60)
   (tasks/wait-for-progress-bar)

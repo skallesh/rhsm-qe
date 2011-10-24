@@ -24,16 +24,9 @@
 
 (defn ^{BeforeClass {:groups ["facts"]}}
   register [_]
-  (let [ownername (tasks/get-owner-display-name (@config :username)
-                                                (@config :password)
-                                                (@config :owner-key))]
-    (with-handlers [(handle :already-registered [e]
-                            (recover e :unregister-first))]
-      (tasks/register (@config :username)
-                      (@config :password)
-                      :owner ownername)))
+  (tasks/register-with-creds)
   (reset! gui-facts (tasks/get-all-facts))
-  (reset! cli-facts (get-cli-facts))) 
+  (reset! cli-facts (get-cli-facts)))
 
 (defn ^{Test {:groups ["facts"]
               :dataProvider "guifacts"}}
