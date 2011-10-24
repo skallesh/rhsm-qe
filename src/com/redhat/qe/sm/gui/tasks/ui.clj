@@ -136,7 +136,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :firstboot-proxy-pass "proxy password field"
        :firstboot-proxy-close "Close"})
     (define-elements (windows :import-window)
-      {:choose-cert "certificate_chooser_button"
+      {:choose-cert "(None)"
        :import-cert "Import Certificate"
        :import-cancel "import_cancel_button"})
     (define-elements (windows :file-chooser)
