@@ -53,6 +53,8 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with balnk or incorrect text produces traceback.
 	// TODO Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires
 	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring subscriptions
+	// TODO Bug 746218 - auto-heal isn't working for partial subscription
+	
 	
 	// Configuration methods ***********************************************************************
 	
