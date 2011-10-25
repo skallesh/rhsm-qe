@@ -954,6 +954,33 @@ Expected Results:
 		/usr/share/locale/zh_TW/LC_MESSAGES/rhsm.mo
 		*/
 		
+		// TODO HERE IS A COMMAND FOR GETTING THE EXPECTED TRANSLATION MESSAGE STRINGS
+		/* msgunfmt /usr/share/locale/de/LC_MESSAGES/rhsm.mo
+		msgid "%prog [options]"
+		msgstr "%prog [Optionen]"
+
+		msgid "%s (first date of invalid entitlements)"
+		msgstr "%s (erster Tag mit ungültigen Berechtigungen)"
+		*/
+		
+		/* python script that alikins wrote to pad a language strings with _
+	    #!/usr/bin/python
+	     
+	    import polib
+	    import sys
+	     
+	    path = sys.argv[1]
+	    pofile = polib.pofile(path)
+	     
+	    for entry in pofile:
+	    orig = entry.msgstr
+	    new = orig + "_"*40
+	    entry.msgstr = new
+	     
+	    pofile.save(path)
+	    */
+
+		
 		return ll;
 	}
 	
