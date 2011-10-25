@@ -39,10 +39,21 @@
   (.cleanupAfterClass @importtests)
   (tasks/restart-app))
 
+(defn import-cert [certlocation]
+  (tasks/restart-app)
+  (tasks/ui click :import-certificate)
+  (tasks/ui click :choose-cert)
+  (tasks/ui waittillguiexist :file-chooser)
+  (tasks/ui check :text-entry-toggle)
+  (tasks/ui generatekeyevent certlocation)
+  (tasks/ui click :file-open)
+  (tasks/ui click :import-cert)
+  (tasks/checkforerror))
+
 (defn ^{Test {:groups ["import"
                        ;"blockedByBug-737675"
                        "blokecdByBug-712980"]}}
-  import_cert [_]
+  import_valid_cert [_]
   (tasks/restart-app)
   (let [certlocation (str (.getValidImportCertificate @importtests))
         certdir (tasks/conf-file-value "entitlementCertDir")
@@ -54,14 +65,7 @@
         entname (str-drop
                  2 (trim
                     (.getStdout (.runCommandAndWait @clientcmd command))))]
-    (tasks/ui click :import-certificate)
-    (tasks/ui click :choose-cert)
-    (tasks/ui waittillguiexist :file-chooser)
-    (tasks/ui check :text-entry-toggle)
-    (tasks/ui generatekeyevent certlocation)
-    (tasks/ui click :file-open)
-    (tasks/ui click :import-cert)
-    (tasks/checkforerror)
+    (import-cert certlocation)
     (verify (= 1 (tasks/ui guiexist
                            :information-dialog
                            "Certificate import was successful.")))
@@ -109,6 +113,48 @@
     (verify (does-not-exist? (:cert @importedcert)))
     (verify (does-not-exist? (:key @importedcert))))
   (reset! importedcert nil))
+
+
+(defn import-bad-cert [certname expected-error]
+  (let [test-fn (fn []
+                  (with-handlers [(handle expected-error [e]
+                                          (:type e))]
+                    (import-cert certname)))]
+    (let [thrown-error (test-fn)]
+      (verify (= thrown-error expected-error)))))
+
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-702075"]}}
+  import_random [_]
+  (let [certname "/tmp/randomCert.pem"]
+    (.runCommandAndWait @clientcmd (str "rm -rf " certname))
+    (.runCommandAndWait @clientcmd
+                        (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
+    (import-bad-cert certname :invalid-cert)))
+
+(comment 
+  (defn ^{Test {:groups ["import"
+                         "blockedByBug-702075"]}}
+    import_entitlement [_]
+    )
+
+  (defn ^{Test {:groups ["import"
+                         "blockedByBug-702075"]}}
+    import_key [_]
+    )
+
+  (defn ^{Test {:groups ["import"
+                         "blockedByBug-702075"]}}
+    import_product [_]
+    )
+
+  (defn ^{Test {:groups ["import"
+                         "blockedByBug-702075"
+                         "blockedByBug-748912"]}}
+    import_nonexistant [_]
+    (let [certlocation "/tmp/doesNotExist.pem"]
+      (import-cert certlocation)
+      )))
 
 
 (gen-class-testng)
