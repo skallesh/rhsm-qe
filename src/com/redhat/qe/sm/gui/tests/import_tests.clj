@@ -40,7 +40,7 @@
   (tasks/restart-app))
 
 (defn ^{Test {:groups ["import"
-                       "blockedByBug-737675"
+                       ;"blockedByBug-737675"
                        "blokecdByBug-712980"]}}
   import_cert [_]
   (tasks/restart-app)
