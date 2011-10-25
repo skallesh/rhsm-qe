@@ -20,6 +20,7 @@
 
 (def importtests (atom nil))
 (def importedcert (atom nil))
+(def tmpcertpath "/tmp/sm-bogusCerts")
 
 (defn not-nil? [b] (not (nil? b)))
 
@@ -32,7 +33,9 @@
   create_certs [_]
   (reset! importtests (ImportTests.))
   (.setupBeforeClass @importtests)
-  (.runCommandAndWait @clientcmd "subscripton-manager unregister"))
+  (.runCommandAndWait @clientcmd "subscripton-manager unregister")
+  (.runCommandAndWait @clientcmd (str "rm -rf " tmpcertpath))
+  (.runCommandAndWait @clientcmd (str "mkdir " tmpcertpath)))
 
 (defn ^{AfterClass {:groups ["setup"]}}
   cleanup_import [_]
@@ -123,6 +126,20 @@
     (let [thrown-error (test-fn)]
       (verify (= thrown-error expected-error)))))
 
+(defn get-random-file
+  ([path filter]
+     (let [certsindir (split-lines
+                       (.getStdout
+                        (.runCommandAndWait
+                         @clientcmd (str "ls " path filter))))
+           tmpcertname (rand-nth certsindir)
+           certname (str tmpcertpath "a" tmpcertname)]
+       (.runCommandAndWait @clientcmd
+                           (str "/bin/cp -f " path tmpcertname " " certname))
+       certname))
+  ([path]
+     (get-random-file path "")))
+
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"]}}
   import_random [_]
@@ -131,23 +148,27 @@
     (.runCommandAndWait @clientcmd
                         (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
     (import-bad-cert certname :invalid-cert)))
+ 
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-702075"]}}
+  import_entitlement [_]
+  (let [certname (get-random-file "/tmp/sm-importEntitlementsDir/" " | grep -v key")]
+    (import-bad-cert certname :invalid-cert)))
 
-(comment 
-  (defn ^{Test {:groups ["import"
-                         "blockedByBug-702075"]}}
-    import_entitlement [_]
-    )
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-702075"]}}
+  import_key [_]
+  (let [certname (get-random-file "/tmp/sm-importEntitlementsDir/" " | grep key")]
+    (import-bad-cert certname :invalid-cert)))
 
-  (defn ^{Test {:groups ["import"
-                         "blockedByBug-702075"]}}
-    import_key [_]
-    )
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-702075"]}}
+  import_product [_]
+  (let [certname (get-random-file "/etc/pki/product/")]
+    (import-bad-cert certname :invalid-cert)))
 
-  (defn ^{Test {:groups ["import"
-                         "blockedByBug-702075"]}}
-    import_product [_]
-    )
-
+(comment
+  ;TODO depending on bug 748312
   (defn ^{Test {:groups ["import"
                          "blockedByBug-702075"
                          "blockedByBug-748912"]}}
@@ -155,7 +176,6 @@
     (let [certlocation "/tmp/doesNotExist.pem"]
       (import-cert certlocation)
       )))
-
 
 (gen-class-testng)
 

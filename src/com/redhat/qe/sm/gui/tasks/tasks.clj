@@ -50,7 +50,7 @@
                    :network-error #"Network error, unable to connect to server.*"
                    :error-updating #"Error updating system data*"
                    :date-error #"Invalid date format. Please re-enter a valid date*"
-                   :invalid-cert #"*is not a valid certificate file. Please upload a valid certificate*"
+                   :invalid-cert #"is not a valid certificate file. Please upload a valid certificate*"
                    })
 
 (defn matching-error
