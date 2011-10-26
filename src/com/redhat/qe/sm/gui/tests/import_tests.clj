@@ -93,7 +93,7 @@
              :entname entname})))
   
 (defn ^{Test {:groups ["import"]
-              :dependsOnMethods ["import_cert"]}}
+              :dependsOnMethods ["import_valid_cert"]}}
   import_unsubscribe [_]
   (tasks/register-with-creds :re-register? false)
   (tasks/ui selecttab :my-subscriptions)
