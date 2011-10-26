@@ -20,7 +20,7 @@
 
 (def importtests (atom nil))
 (def importedcert (atom nil))
-(def tmpcertpath "/tmp/sm-bogusCerts")
+(def tmpcertpath "/tmp/sm-bogusCerts/")
 
 (defn not-nil? [b] (not (nil? b)))
 
