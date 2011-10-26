@@ -54,7 +54,6 @@
   (tasks/checkforerror))
 
 (defn ^{Test {:groups ["import"
-                       ;"blockedByBug-737675"
                        "blokecdByBug-712980"]}}
   import_valid_cert [_]
   (tasks/restart-app)
