@@ -455,6 +455,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: RHUI Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="RHUITests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Config Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />

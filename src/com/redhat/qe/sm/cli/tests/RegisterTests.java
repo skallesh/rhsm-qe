@@ -986,10 +986,10 @@ Expected Results:
 	
 
 	@DataProvider(name="getRegisterWithNameAndTypeData")
-	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() {
+	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
 	}
-	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() {
+	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		String username=sm_clientUsername;
 		String password=sm_clientPassword;
@@ -1000,11 +1000,24 @@ Expected Results:
 //		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
 //		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
+		// get all of the registerable consumer types
+		/* curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumertypes | python -mjson.tool
+		 * FIXME THIS FAILS AGAINST STAGE ENV; REMOVE THE throws JSONException, Exception AND WRAP IN TRY CATCH; THE CHANGE THE PROPERTIES sm.consumerTypes INPUT TO BE NON_REGISTERABLE CONSUMER TYPES.
+		 * curl --insecure --user CHANGE-ME:CHANGE-ME --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/consumertypes | python -mjson.tool
+		 */
+//		List <String> registerableConsumerTypes = Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
+//		List <String> registerableConsumerTypes = sm_consumerTypes;
+		List <String> registerableConsumerTypes = new ArrayList<String> ();
+		JSONArray jsonConsumerTypes = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/consumertypes"));	
+		for (int i = 0; i < jsonConsumerTypes.length(); i++) {
+			JSONObject jsonConsumerType = (JSONObject) jsonConsumerTypes.get(i);
+			String consumerType = jsonConsumerType.getString("label");
+			registerableConsumerTypes.add(consumerType);
+		}
+		
 		// interate across all ConsumerType values and append rows to the dataProvider
 		for (ConsumerType type : ConsumerType.values()) {
 			String name = type.toString()+"_NAME";
-//			List <String> registerableConsumerTypes = Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
-			List <String> registerableConsumerTypes = sm_consumerTypes;
 			
 			// decide what username and password to test with
 			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {

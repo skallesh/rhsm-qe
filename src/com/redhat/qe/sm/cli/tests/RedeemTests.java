@@ -22,7 +22,7 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- *
+ * Reference: flowchart https://docspace.corp.redhat.com/docs/DOC-65246
  */
 @Test(groups={"RedeemTests"})
 public class RedeemTests extends SubscriptionManagerCLITestScript {

@@ -77,6 +77,13 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhpersonalOrg				= getProperty("sm.rhpersonal.org", null);
 	public String sm_rhpersonalSubproductQuantity =	getProperty("sm.rhpersonal.subproductQuantity", "unlimited");
 	
+	public String sm_rhuiUsername				= getProperty("sm.rhui.username", "");
+	public String sm_rhuiPassword				= getProperty("sm.rhui.password", "");
+	public String sm_rhuiOrg					= getProperty("sm.rhui.org", null);
+	public String sm_rhuiSubscriptionProductId	= getProperty("sm.rhui.subscriptionProductId", "");
+	public String sm_rhuiRepoIdForIsos			= getProperty("sm.rhui.repoIdForIsos", "");
+	public String sm_rhuiDownloadIso			= getProperty("sm.rhui.downloadIso", "");
+
 	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
 	public String sm_passwordWithUnacceptedTC	= getProperty("sm.client.password.unacceptedTC","");
 	
@@ -112,7 +119,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	protected List<String> sm_clientUsernames	= null;
 	protected List<String> sm_rpmUrls			= null;
 	protected List<String> sm_repoCaCertUrls	= null;
-	protected List<String> sm_consumerTypes		= null;
+	protected List<String> sm_consumerTypes		= null;	// TODO, NOT SURE IF THIS IS USED ANYMORE.. SEE RegisterTests.getRegisterWithNameAndTypeDataAsListOfLists
 
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
@@ -131,6 +138,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		if (getProperty("sm.rpm.urls", "").equals("")) 				sm_rpmUrls			= new ArrayList<String>();	else sm_rpmUrls			= Arrays.asList(getProperty("sm.rpm.urls", "").trim().split(" *, *"));
 		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
+		
 		
 		if (sm_serverUrl==null)
 			sm_serverUrl					= getProperty("sm.server.url","");
