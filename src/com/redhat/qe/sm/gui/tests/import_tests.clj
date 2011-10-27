@@ -190,6 +190,3 @@
 
   )
 
-
-; TODO https://bugzilla.redhat.com/show_bug.cgi?id=702075
-; TODO 

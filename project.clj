@@ -47,6 +47,6 @@
       (config/init)
       (tasks/connect)
       (use 'gnome.ldtp))
-    )
+    )     ;<< here for all of it
   
 )

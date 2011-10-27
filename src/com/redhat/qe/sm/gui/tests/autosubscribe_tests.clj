@@ -50,7 +50,9 @@
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
-        ownername (ctasks/get-owner-display-name user pass key)]
+        ownername (if (= "" key)
+                    nil
+                    (ctasks/get-owner-display-name user pass key))]
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
