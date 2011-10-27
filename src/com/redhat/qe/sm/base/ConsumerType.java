@@ -8,7 +8,7 @@ package com.redhat.qe.sm.base;
  * 
  * @author jsefler
  */
-public enum ConsumerType  { system, person, candlepin, domain }
+public enum ConsumerType  { system, person, candlepin, domain, RHUI }
 
 
 //System (a machine)
