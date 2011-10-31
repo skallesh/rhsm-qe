@@ -682,6 +682,21 @@ schema generation failed
 		return poolIds;
 	}
 	
+	public static List<JSONObject> getPoolsForSubscriptionId(String authenticator, String password, String url, String ownerKey, String forSubscriptionId) throws JSONException, Exception{
+		List<JSONObject> pools = new ArrayList<JSONObject>();
+
+		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/pools"));	
+		for (int i = 0; i < jsonPools.length(); i++) {
+			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
+			String poolId = jsonPool.getString("id");
+			String subscriptionId = jsonPool.getString("subscriptionId");
+			if (forSubscriptionId.equals(subscriptionId)) {
+				pools.add(jsonPool);
+			}
+		}
+		return pools;
+	}
+	
 	public static String getSubscriptionIdForPoolId(String authenticator, String password, String url, String forPoolId) throws JSONException, Exception{
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+forPoolId));
 		return jsonPool.getString("subscriptionId");
@@ -1843,11 +1858,31 @@ schema generation failed
 	}
 	
 	public static String getPoolProductAttributeValue (String authenticator, String password, String url, String poolId, String productAttributeName) throws JSONException, Exception {
-		String productAttributeValue = null;	// indicates that the pool's product does NOT have the "productAttributeName" attribute
 
 		// get the pool for the authenticator
 		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
 		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// return the value for the named productAttribute
+		return getPoolProductAttributeValue(jsonPool,productAttributeName);
+	}
+	
+	public static String getPoolAttributeValue (String authenticator, String password, String url, String poolId, String attributeName) throws JSONException, Exception {
+
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// return the value for the named productAttribute
+		return getPoolAttributeValue(jsonPool,attributeName);
+	}
+	
+	public static String getPoolProductAttributeValue (JSONObject jsonPool, String productAttributeName) throws JSONException, Exception {
+		String productAttributeValue = null;	// indicates that the pool's product does NOT have the "productAttributeName" attribute
+
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+//		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
 
 		//{
 		//    "accountNumber": "12331131231", 
@@ -1955,6 +1990,95 @@ schema generation failed
 	}
 	
 	
+	public static String getPoolAttributeValue (JSONObject jsonPool, String attributeName) throws JSONException, Exception {
+		String attributeValue = null;	// indicates that the pool does NOT have the "attributeName" attribute
+
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+//		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+
+		
+//	    {
+//	        "accountNumber": "1508113", 
+//	        "activeSubscription": true, 
+//	        "attributes": [
+//	            {
+//	                "created": "2011-10-30T05:06:50.000+0000", 
+//	                "id": "8a99f9813350d60e0133533919f512f9", 
+//	                "name": "requires_consumer_type", 
+//	                "updated": "2011-10-30T05:06:50.000+0000", 
+//	                "value": "system"
+//	            }, 
+//	            {
+//	                "created": "2011-10-30T05:06:50.000+0000", 
+//	                "id": "8a99f9813350d60e0133533919f512fa", 
+//	                "name": "requires_host", 
+//	                "updated": "2011-10-30T05:06:50.000+0000", 
+//	                "value": "c6ec101c-2c6a-4f5d-9161-ac335d309d0e"
+//	            }, 
+//	            {
+//	                "created": "2011-10-30T05:06:50.000+0000", 
+//	                "id": "8a99f9813350d60e0133533919f512fc", 
+//	                "name": "pool_derived", 
+//	                "updated": "2011-10-30T05:06:50.000+0000", 
+//	                "value": "true"
+//	            }, 
+//	            {
+//	                "created": "2011-10-30T05:06:50.000+0000", 
+//	                "id": "8a99f9813350d60e0133533919f512fb", 
+//	                "name": "virt_only", 
+//	                "updated": "2011-10-30T05:06:50.000+0000", 
+//	                "value": "true"
+//	            }
+//	        ], 
+//	        "consumed": 0, 
+//	        "contractNumber": "2635037", 
+//	        "created": "2011-10-30T05:06:50.000+0000", 
+//	        "endDate": "2012-10-19T03:59:59.000+0000", 
+//	        "href": "/pools/8a99f9813350d60e0133533919f512f8", 
+//	        "id": "8a99f9813350d60e0133533919f512f8", 
+//	        "owner": {
+//	            "displayName": "6445999", 
+//	            "href": "/owners/6445999", 
+//	            "id": "8a85f98432e7376c013302c3a9745c68", 
+//	            "key": "6445999"
+//	        }, 
+//	        "productAttributes": [], 
+//	        "productId": "RH0103708", 
+//	        "productName": "Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)", 
+//	        "providedProducts": [
+//	            {
+//	                "created": "2011-10-30T05:06:50.000+0000", 
+//	                "id": "8a99f9813350d60e0133533919f512fd", 
+//	                "productId": "69", 
+//	                "productName": "Red Hat Enterprise Linux Server", 
+//	                "updated": "2011-10-30T05:06:50.000+0000"
+//	            }
+//	        ], 
+//	        "quantity": 4, 
+//	        "restrictedToUsername": null, 
+//	        "sourceEntitlement": {
+//	            "href": "/entitlements/8a99f9813350d60e0133533919f512fe", 
+//	            "id": "8a99f9813350d60e0133533919f512fe"
+//	        }, 
+//	        "startDate": "2011-10-19T04:00:00.000+0000", 
+//	        "subscriptionId": "2272904", 
+//	        "updated": "2011-10-30T05:06:50.000+0000"
+//	    }, 
+
+		//{
+	
+		JSONArray jsonAttributes = jsonPool.getJSONArray("attributes");
+		// loop through the attributes of this pool looking for the attributeName attribute
+		for (int j = 0; j < jsonAttributes.length(); j++) {
+			JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
+			if (jsonAttribute.getString("name").equals(attributeName)) {
+				attributeValue = jsonAttribute.getString("value");
+				break;
+			}
+		}
+		return attributeValue;
+	}
 	
 	/**
 	 * @param owner
