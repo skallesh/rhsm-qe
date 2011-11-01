@@ -6,12 +6,9 @@
                                                        noauth-proxyrunner)]
         [error.handler :only (add-recoveries raise)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.str-utils :only (re-split)]
+        [clojure.contrib.string :only (trim)]
         gnome.ldtp)
-  (:require [clojure.contrib.logging :as log]
-            [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
-            [com.redhat.qe.sm.gui.tasks.rest :as rest]
-            com.redhat.qe.sm.gui.tasks.ui)
+  (:require [com.redhat.qe.sm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
            [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]))
@@ -21,6 +18,20 @@
   []
   (SubscriptionManagerBaseTestScript/sm_serverUrl))
 
+; Not a candlepin task, but sticking this here.
+(defn get-consumer-id
+  "Returns the consumer id if registered."
+  []
+  (let [identity 
+        (trim
+         (.getStdout
+          (.runCommandAndWait
+           @clientcmd
+           "subscription-manager identity | grep identity | cut -f 2 -d :")))]
+    (if (= identity "")
+      nil
+      identity)))
+
 (defn get-consumer-owner-key
   "Looks up the consumer's owner by consumer-id."
   ([consumerid]
@@ -29,7 +40,7 @@
             (@config :username)
             (@config :password))))
   ([]
-     (get-consumer-owner-key (tasks/get-consumer-id))))
+     (get-consumer-owner-key (get-consumer-id))))
 
 (defn list-available
   "Gets a list of all available pools for a given owner and consumer."
@@ -38,7 +49,7 @@
                (@config :username)
                (@config :password)))
   ([]
-     (list-available (get-consumer-owner-key) (tasks/get-consumer-id))))
+     (list-available (get-consumer-owner-key) (get-consumer-id))))
 
 (defn get-owners
   "Given a username and password, this function returns a list

@@ -531,18 +531,4 @@
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
 
-(defn get-consumer-id
-  "Returns the consumer id if registered."
-  []
-  (let [identity 
-        (trim
-         (.getStdout
-          (.runCommandAndWait
-           @clientcmd
-           "subscription-manager identity | grep identity | cut -f 2 -d :")))]
-    (if (= identity "")
-      nil
-      identity)))
-
-
 
