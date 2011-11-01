@@ -5,11 +5,29 @@
         [error.handler :only (with-handlers handle ignore recover)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+            [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]
            [com.redhat.qe.sm.cli.tests ComplianceTests]))
 
 (def complytests (atom nil))
+(def productlist (atom {}))
+
+(defn build-subscription-map
+  []
+  (let [everything (ctasks/list-available)]
+    (doseq [s everything]
+      (doseq [p (:providedProducts s)]
+        (if (nil? (@productlist (:productName p)))
+          (reset! productlist
+                  (assoc @productlist
+                    (:productName p)
+                    [(:productName s)]))
+          (reset! productlist
+                  (assoc @productlist
+                    (:productName p)
+                    (into (@productlist (:productName p)) [(:productName s)])))))))
+  @productlist)
 
 (defn- check-product 
   ([product]
@@ -50,7 +68,8 @@
   (.setupProductCertDirsBeforeClass @complytests)
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/start-app)
-  (tasks/register-with-creds))
+  (tasks/register-with-creds)
+  (build-subscription-map))
     
 (defn ^{AfterClass {:groups ["setup"]}}
   exit_subscription_assistant [_]

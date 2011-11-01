@@ -12,7 +12,8 @@
                  [webui-framework "1.0.2-SNAPSHOT"]
                  [gnome.ldtp "1.0.0-SNAPSHOT"]
                  [test_clj.testng "1.0.1-SNAPSHOT"]
-                 [clj-http "0.1.3"]]
+                 [clj-http "0.1.3"]
+                 [matchure "0.10.1"]]
   :dev-dependencies [[swank-clojure "1.2.1"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}

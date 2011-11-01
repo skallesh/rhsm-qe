@@ -9,6 +9,8 @@
         [clojure.contrib.str-utils :only (re-split)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
+            [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+            [com.redhat.qe.sm.gui.tasks.rest :as rest]
             com.redhat.qe.sm.gui.tasks.ui)
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
@@ -18,6 +20,25 @@
   "Returns the server url as used by the automation."
   []
   (SubscriptionManagerBaseTestScript/sm_serverUrl))
+
+(defn get-consumer-owner-key
+  "Looks up the consumer's owner by consumer-id."
+  ([consumerid]
+     (:key (rest/get
+            (str (server-url) "/consumers/" consumerid "/owner")
+            (@config :username)
+            (@config :password))))
+  ([]
+     (get-consumer-owner-key (tasks/get-consumer-id))))
+
+(defn list-available
+  "Gets a list of all available pools for a given owner and consumer."
+  ([owner consumerid]
+     (rest/get (str (server-url) "/owners/" owner "/pools?consumer=" consumerid)
+               (@config :username)
+               (@config :password)))
+  ([]
+     (list-available (get-consumer-owner-key) (tasks/get-consumer-id))))
 
 (defn get-owners
   "Given a username and password, this function returns a list

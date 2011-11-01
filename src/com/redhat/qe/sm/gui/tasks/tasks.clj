@@ -11,7 +11,12 @@
                               add-recoveries
                               raise)]
         [com.redhat.qe.verify :only (verify)]
+        [clojure.contrib.string :only (split
+                                       split-lines
+                                       trim
+                                       replace-str)]
         [clojure.contrib.str-utils :only (re-split)]
+        matchure
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             [clojure.contrib.json :as json]
@@ -526,7 +531,18 @@
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
 
-
+(defn get-consumer-id
+  "Returns the consumer id if registered."
+  []
+  (let [identity 
+        (trim
+         (.getStdout
+          (.runCommandAndWait
+           @clientcmd
+           "subscription-manager identity | grep identity | cut -f 2 -d :")))]
+    (if (= identity "")
+      nil
+      identity)))
 
 
 
