@@ -1049,8 +1049,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 683459 - Virt only skus creating two pools
 	// TODO Bug 736436 - virtual subscriptions are not included when the certificates are downloaded 
-	
-	
+	// TODO Bug 750659 - candlepin api /consumers/<consumerid>/guests is returning []
 	
 	
 	// Configuration methods ***********************************************************************
