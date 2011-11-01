@@ -197,10 +197,24 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
 		} finally {
 			if (jsonStatus!=null) {
-				log.info("Candlepin server '"+sm_serverHostname+"' is running release '"+jsonStatus.getString("release")+"' version '"+jsonStatus.get("version")+"'.");
-				Assert.assertEquals(jsonStatus.getBoolean("result"), true,"Candlepin status result");
-				Assert.assertTrue(jsonStatus.getString("release").matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
-				Assert.assertTrue(jsonStatus.getString("version").matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
+				servertasks.statusRelease		= jsonStatus.getString("release");
+				servertasks.statusResult		= jsonStatus.getBoolean("result");
+				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
+				servertasks.statusVersion		= jsonStatus.getString("version");
+				/*
+				# curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
+				{
+				    "release": "1", 
+				    "result": true, 
+				    "standalone": true, 
+				    "version": "0.4.25"
+				}
+				*/
+
+				log.info("Candlepin server '"+sm_serverHostname+"' is running release '"+servertasks.statusRelease+"' version '"+servertasks.statusVersion+"'.");
+				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
+				Assert.assertTrue(servertasks.statusRelease.matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
+				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
 			}
 		}
 

@@ -276,6 +276,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 //		Assert.assertNotNull(hostPoolId, "Found the host pool id ("+hostPoolId+") without an attribute of virt_only=true");	
 		
 // WHEN candlepin.conf candlepin.standalone = true (IF NOT SPECIFIED, DEFAULTS TO true)
+// THE FOLLOWING THREE POOLS SHOULD NEVER OCCUR SINCE ONLY candlepin.standalone SHOULD NOT BE SWITCHED BETWEEN TRUE/FALSE
 //		[root@intel-s3ea2-04 ~]# curl --insecure --user stage_test_12:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/owners/6445999/pools | python -mjson.tool
 //			  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
 //			                                 Dload  Upload   Total   Spent    Left  Speed
@@ -617,10 +618,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		log.info("Using the RESTful Candlepin API, let's find all the pools generated from subscription id: "+subscriptionId);
 		List<JSONObject> jsonPools = CandlepinTasks.getPoolsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
 
-		if (!sm_isServerOnPremises) {
-			Assert.assertEquals(jsonPools.size(), 2, "When the candlepin.standalone is true, exactly two pools should be generated from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").  (one with no attributes, one with virt_only and pool_derived true)");	
+		if (!servertasks.statusStandalone) {
+			Assert.assertEquals(jsonPools.size(), 2, "When the candlepin.standalone is false, exactly two pools should be generated from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").  (one with no attributes, one with virt_only and pool_derived true)");	
 		} else {
-			Assert.assertTrue(jsonPools.size()>=2, "When the candlepin.standalone is false, two or more pools (actual='"+jsonPools.size()+"') should be generated from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").  (one with no attributes, one with virt_only and pool_derived true, the rest with virt_only pool_derived equals true and requires_host)");			
+			// Note: this line of code should not be reached since this test should not be run when servertasks.statusStandalone is true
+			Assert.assertTrue(jsonPools.size()>=1, "When the candlepin.standalone is true, one or more pools (actual='"+jsonPools.size()+"') should be generated from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").  (one with no attributes, the rest with virt_only pool_derived equals true and requires_host)");			
 		}
 
 		// assert that one pool is for the host and the other is for the guest
@@ -1152,6 +1154,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getVirtSubscriptionDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks.statusStandalone) {log.warning("This candlepin server is configured for standalone operation.  The hosted virtualization model tests will not be executed."); return ll;}
 		
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
