@@ -105,7 +105,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			dataProvider="TranslatedCommandLineHelpData")
 	//@ImplementsNitrateTest(caseId=)
 	public void TranslatedCommandLineHelp_Test(Object meta, String lang, String command, List<String> stdoutRegexs) {
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,"LANG="+lang+".UTF8 "+command,0,stdoutRegexs,null);
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,"LANG="+lang+".UTF-8 "+command,0,stdoutRegexs,null);
 	}
 	
 	
