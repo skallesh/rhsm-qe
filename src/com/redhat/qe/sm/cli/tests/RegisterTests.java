@@ -502,13 +502,15 @@ Actions:
 Expected Results:
 
     * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system
+	 * @throws Exception 
+	 * @throws JSONException 
 
 	 */
 	@Test(	description="register with existing consumerid should automatically refresh entitlements",
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=72845)
-	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() {
+	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() throws JSONException, Exception {
 		
 		// register with username and password and remember the consumerid
 		clienttasks.unregister(null, null, null);

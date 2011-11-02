@@ -911,10 +911,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	@DataProvider(name="getAllConsumedProductSubscriptionsData")
-	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() {
+	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
 	}
-	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() {
+	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
@@ -936,10 +936,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	
 	@DataProvider(name="getAllEntitlementCertsData")
-	public Object[][] getAllEntitlementCertsDataAs2dArray() {
+	public Object[][] getAllEntitlementCertsDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllEntitlementCertsDataAsListOfLists());
 	}
-	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() {
+	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		

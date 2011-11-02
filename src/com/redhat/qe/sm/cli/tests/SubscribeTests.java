@@ -363,7 +363,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41694)
-	public void rhsmcertdEnsureCertificatesSynchronize_Test(){
+	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
 		
 		// start with a cleanly unregistered system
 		clienttasks.unregister(null, null, null);

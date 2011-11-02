@@ -43,7 +43,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() {
+	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,false, null, null, null);
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
@@ -77,7 +77,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForAllProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() {
+	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,false, null, null, null);
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
@@ -109,7 +109,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForNoProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() {
+	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,false, null, null, null);
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
@@ -145,7 +145,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			groups={"configureProductCertDirForNoProductsInstalled","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
-	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() {
+	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,(String)null,Boolean.TRUE,false, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"No products are currently installed.");

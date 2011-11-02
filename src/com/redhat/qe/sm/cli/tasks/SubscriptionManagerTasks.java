@@ -2626,8 +2626,10 @@ public class SubscriptionManagerTasks {
 	 * Collectively subscribe to the currently available subscription pools in one command call
 	 * 
 	 * @return SubscriptionPools that were available for subscribing 
+	 * @throws Exception 
+	 * @throws JSONException 
 	 */
-	public List<SubscriptionPool> subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively() {
+	public List<SubscriptionPool> subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively() throws JSONException, Exception {
 		
 		// assemble a list of all the available SubscriptionPool ids
 		List <String> poolIds = new ArrayList<String>();
@@ -2651,9 +2653,16 @@ public class SubscriptionManagerTasks {
 				for (SubscriptionPool afterPool : poolsAfterSubscribe) {
 					if (afterPool.equals(beforePool)) {
 						foundPool = true;
+						
+						// determine how much the quantity should have decremented
+						int expectedDecrement = 1;
+						String virt_only = CandlepinTasks.getPoolAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, afterPool.poolId, "virt_only");
+						String virt_limit = CandlepinTasks.getPoolProductAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, afterPool.poolId, "virt_limit");
+						if (virt_only!=null && Boolean.valueOf(virt_only) && virt_limit!=null) expectedDecrement += Integer.valueOf(virt_limit);	// the quantity consumed on a virt pool should be 1 (from the subscribe on the virtual pool itself) plus virt_limit (from the subscribe by the candlepin consumer on the physical pool)
+
 						// assert the quantity has decremented;
-						Assert.assertEquals(Integer.valueOf(afterPool.quantity).intValue(), Integer.valueOf(beforePool.quantity).intValue()-1,
-								"The quantity of entitlements from subscription pool id '"+afterPool.poolId+"' has decremented by one.");
+						Assert.assertEquals(Integer.valueOf(afterPool.quantity).intValue(), Integer.valueOf(beforePool.quantity).intValue()-expectedDecrement,
+								"The quantity of entitlements from subscription pool id '"+afterPool.poolId+"' has decremented by "+expectedDecrement+".");
 						break;
 					}
 				}

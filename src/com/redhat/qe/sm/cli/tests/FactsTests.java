@@ -281,7 +281,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-641027"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56331)
-	public void BypassRulesDueToType_Test() throws JSONException {
+	public void BypassRulesDueToType_Test() throws Exception {
 		// determine which client is a RHEL Workstation
 		SSHCommandRunner client = null;
 		SubscriptionManagerTasks clienttasks = null;
