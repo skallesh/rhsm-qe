@@ -51,6 +51,25 @@
   ([]
      (list-available (get-consumer-owner-key) (get-consumer-id))))
 
+
+(defn build-product-map
+  []
+  (let [everything (list-available)
+        productlist (atom {})]
+    (doseq [s everything]
+      (doseq [p (:providedProducts s)]
+        (if (nil? (@productlist (:productName p)))
+          (reset! productlist
+                  (assoc @productlist
+                    (:productName p)
+                    [(:productName s)]))
+          (reset! productlist
+                  (assoc @productlist
+                    (:productName p)
+                    (into (@productlist (:productName p)) [(:productName s)]))))))
+    @productlist))
+
+
 (defn get-owners
   "Given a username and password, this function returns a list
   of owners associated with that user"

@@ -21,18 +21,7 @@
 
 (defn build-subscription-map
   []
-  (let [everything (ctasks/list-available)]
-    (doseq [s everything]
-      (doseq [p (:providedProducts s)]
-        (if (nil? (@productlist (:productName p)))
-          (reset! productlist
-                  (assoc @productlist
-                    (:productName p)
-                    [(:productName s)]))
-          (reset! productlist
-                  (assoc @productlist
-                    (:productName p)
-                    (into (@productlist (:productName p)) [(:productName s)])))))))
+  (reset! productlist (ctasks/build-product-map))
   @productlist)
 
 
@@ -143,15 +132,15 @@
         seen (do (tasks/ui check :check-all)
                  (tasks/ui uncheck :check-all)
                  (tasks/sleep 3000)
-               (tasks/ui checkrow
-                         :subscription-product-view
-                         index
-                         0)
-               (tasks/sleep 5000)
-               (into [] (tasks/get-table-elements
-                         :assistant-subscription-view
-                         0
-                         :skip-dropdowns? true)))
+                 (tasks/ui checkrow
+                           :subscription-product-view
+                           index
+                           0)
+                 (tasks/sleep 5000)
+                 (into [] (tasks/get-table-elements
+                           :assistant-subscription-view
+                           0
+                           :skip-dropdowns? true)))
         not-nil? (fn [b] (not (nil? b)))]
     (doseq [s seen]
       (verify (not-nil? (some #{s} expected))))

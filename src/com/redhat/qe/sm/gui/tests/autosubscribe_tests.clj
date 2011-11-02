@@ -3,20 +3,28 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-        [clojure.contrib.string :only (trim)]
+        [clojure.contrib.string :only (trim split)]
         gnome.ldtp)
-  (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+  (:require [clojure.contrib.logging :as log]
+            [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
              com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]
+  (:import [org.testng.annotations
+            BeforeClass
+            AfterClass
+            BeforeGroups
+            Test
+            DataProvider]
            [com.redhat.qe.sm.cli.tests ComplianceTests]
-           [com.redhat.qe.auto.testng BzChecker]))
+           [com.redhat.qe.auto.testng BzChecker]
+           [org.apache.xmlrpc XmlRpcException]))
 
 (def somedir  "/tmp/sm-someProductsSubscribable")
 (def alldir "/tmp/sm-allProductsSubscribable")
 (def nodir "/tmp/sm-noProductsSubscribable")
 (def nonedir  "/tmp/sm-noProductsInstalled")
 (def complytests (atom nil))
+(def productmap (atom {}))
 
 (defn- dirsetup? [dir]
   (and 
@@ -25,6 +33,11 @@
                  (.runCommandAndWait @clientcmd
                                      (str  "test -d " dir " && echo exists")))))
    (= dir (tasks/conf-file-value "productCertDir"))))
+
+(defn setup-product-map
+  []
+  (reset! productmap (ctasks/build-product-map))
+  @productmap)
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
@@ -150,6 +163,70 @@
   (verify (= 0 (tasks/warn-count)))
   (verify (tasks/compliance?)))
 
+
+(defn ^{Test {:groups ["autosubscribe"]
+              :dataProvider "my-installed-software"}}
+  assert_correct_staus [_ product]
+  (let [index (tasks/ui gettablerowindex
+                        :installed-view
+                        product)
+        status (tasks/ui getcellvalue
+                         :installed-view
+                         index 3)
+        not-nil? (fn [b] (not (nil? b)))
+        expected (@productmap product)
+        boxarch (trim (.getStdout
+                       (.runCommandAndWait
+                        @clientcmd
+                        (str 
+                         "subscription-manager facts --list | "
+                         "grep \"lscpu.architecture\" | "
+                         "cut -f 2 -d \":\""))))
+        prodarch (split #"," (try
+                               (tasks/ui getcellvalue
+                                         :installed-view
+                                         index 2)
+                               (catch XmlRpcException e
+                                 "")))]
+    (condp = status
+        "Subscribed" (do (verify (not-nil? expected)))
+        "Not Subscribed" (if (or (not-nil? (some #{boxarch} prodarch))
+                                 (not-nil? (some #{"ALL"} prodarch)))
+                           (verify (nil? expected))
+                           (verify true))
+        "Partially Subscribed" (do (verify (not-nil? expected)))
+        (do
+          (log/error (format "Status \"%s\" unknown!" status))
+          (verify false)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; DATA PROVIDERS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn ^{DataProvider {:name "my-installed-software"}}
+  get_installed_software [_ & {:keys [debug]
+                               :or {debug false}}]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (tasks/restart-app)
+  (tasks/register-with-creds)
+  (let [prods (into [] (map vector (tasks/get-table-elements
+                                    :installed-view
+                                    0)))
+        user (@config :username)
+        pass (@config :password)
+        key  (@config :owner-key)
+        ownername (if (= "" key)
+                    nil
+                    (ctasks/get-owner-display-name user pass key))]
+    (setup-product-map)
+    (tasks/unregister)
+    (tasks/register user
+                    pass
+                    :autosubscribe true
+                    :owner ownername)
+    (if-not debug
+      (to-array-2d prods)
+      prods)))
 
 (gen-class-testng)
 
