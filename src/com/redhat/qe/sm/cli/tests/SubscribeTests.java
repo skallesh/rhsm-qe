@@ -759,7 +759,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
-	
+	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
 	
 	
 	// Configuration Methods ***********************************************************************
