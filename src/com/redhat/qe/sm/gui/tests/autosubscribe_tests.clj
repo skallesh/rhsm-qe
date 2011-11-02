@@ -164,7 +164,8 @@
   (verify (tasks/compliance?)))
 
 
-(defn ^{Test {:groups ["autosubscribe"]
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForSomeProductsSubscribable"]
               :dataProvider "my-installed-software"}}
   assert_correct_staus [_ product]
   (let [index (tasks/ui gettablerowindex
