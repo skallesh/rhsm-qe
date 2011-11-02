@@ -297,7 +297,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unsubscribe while subpools are consumed",
-			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473"},
+			groups={"EnsurePersonCannotUnsubscribeWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658283", "blockedByBug-658683", "blockedByBug-675473", "blockedByBug-738448"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=58898)
@@ -366,7 +366,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: Ensure person consumer cannot unregister while subpools are consumed",
-			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683", "blockedByBug-661130"/*, "blockedByBug-738448"*/},
+			groups={"EnsurePersonCannotUnregisterWhileSubpoolsAreConsumed_Test","RHELPersonal", "blockedByBug-624063", "blockedByBug-639434", "blockedByBug-658683", "blockedByBug-661130", "blockedByBug-738448"},
 			dependsOnGroups={"SubscribeMultipleSystemsToSubPool_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -422,6 +422,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		//		"Attempting to unregister the person consumer is blocked when another system registered with the same username is consuming from a subpool."); // stdout: Cannot unregister consumer 'testuser1' because:
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=738448
 		Boolean invokeWorkaroundWhileBugIsOpen = true;
+		invokeWorkaroundWhileBugIsOpen = false; // setting false due to https://bugzilla.redhat.com/show_bug.cgi?id=738448#c5
 		try {String bugId="738448"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping assertion that message contains \"^Cannot unregister person consumer "+username+" because:\"");
