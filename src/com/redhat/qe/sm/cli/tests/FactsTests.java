@@ -365,7 +365,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//	[root@jsefler-onprem-workstation facts]# 
 
 	// TODO Bug 746241 - UEPConnection.updateConsumer will not allow passing [] for facts, installed_products, or guest_uuids
-
+	// TODO Bug 751205 - cpu_socket(s) facts value on ppc64 occasionally differs from value reported by lscpu
 	
 	
 	
