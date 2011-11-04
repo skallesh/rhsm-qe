@@ -18,6 +18,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -156,7 +157,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup")
 	public void skipIfHosted() {
-		if (!servertasks.isOnPremises) throw new SkipException("These tests are only valid for on-premises candlepin servers.");
+		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException("These tests are only valid for standalone candlepin servers.");
 	}
 	
 	@BeforeClass(groups="setup", dependsOnMethods="skipIfHosted")

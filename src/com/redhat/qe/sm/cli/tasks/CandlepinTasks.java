@@ -49,6 +49,7 @@ import com.redhat.qe.auto.selenium.Base64;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.RevokedCert;
@@ -81,7 +82,7 @@ public class CandlepinTasks {
 	public static File candlepinCACertFile = new File("/etc/candlepin/certs/candlepin-ca.crt");
 	public static String generatedProductsDir	= "/proxy/generated_certs";
 	public static HttpClient client;
-	public boolean isOnPremises = false;
+	CandlepinType serverType = CandlepinType.hosted;
 	public String branch = "";
 	
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
@@ -114,12 +115,12 @@ public class CandlepinTasks {
 	 * @param isOnPremises
 	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
 	 */
-	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, String serverImportDir, boolean isOnPremises, String branch) {
+	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, String serverImportDir, CandlepinType serverType, String branch) {
 		super();
 		this.sshCommandRunner = sshCommandRunner;
 		this.serverInstallDir = serverInstallDir;
 		this.serverImportDir = serverImportDir;
-		this.isOnPremises = isOnPremises;
+		this.serverType = serverType;
 		this.branch = branch;
 	}
 	
@@ -2532,10 +2533,10 @@ schema generation failed
 	
 	
 	public String invalidCredentialsRegexMsg() {
-		return isOnPremises? "^Invalid Credentials$":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
+		return serverType.equals(CandlepinType.standalone)? "^Invalid Credentials$":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
 	}
 	public String invalidCredentialsMsg() {
-		return isOnPremises? "Invalid Credentials":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
+		return serverType.equals(CandlepinType.standalone)? "Invalid Credentials":"Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html";
 	}
 	
 	public static void main (String... args) throws Exception {

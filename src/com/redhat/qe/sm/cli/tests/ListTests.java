@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -466,7 +467,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
 	public void createFutureSubscriptionPoolBeforeClass() throws Exception {
 		// don't bother attempting to create a subscription unless onPremises
-		if (!sm_isServerOnPremises) return;
+		if (!sm_serverType.equals(CandlepinType.standalone)) return;
 
 		// find a randomly available product id
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();

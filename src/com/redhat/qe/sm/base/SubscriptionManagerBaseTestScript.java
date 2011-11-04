@@ -43,14 +43,13 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public static String sm_rhsmcertdCertFrequency	= null;
 	public static String sm_rhsmcertdHealFrequency	= null;
 	
-
 	public String sm_serverAdminUsername		= getProperty("sm.server.admin.username","");
 	public String sm_serverAdminPassword		= getProperty("sm.server.admin.password","");
 	
 	public String sm_serverInstallDir			= getProperty("sm.server.installDir","");
 	public String sm_serverImportDir			= getProperty("sm.server.importDir","");
 	public String sm_serverBranch				= getProperty("sm.server.branch","");
-	public Boolean sm_isServerOnPremises		= Boolean.valueOf(getProperty("sm.server.onPremises","false"));
+	public CandlepinType sm_serverType			= CandlepinType.valueOf(getProperty("sm.server.type","standalone"));
 
 	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
 	public String sm_client1Username			= getProperty("sm.client1.username","");

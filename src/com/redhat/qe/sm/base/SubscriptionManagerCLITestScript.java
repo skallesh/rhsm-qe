@@ -95,16 +95,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<File> generatedProductCertFiles = new ArrayList<File>();
 		
 		// can we create an SSHCommandRunner to connect to the candlepin server ?
-		if (!sm_serverHostname.equals("") && sm_isServerOnPremises) {
+		if (!sm_serverHostname.equals("") && !sm_serverType.equals(CandlepinType.hosted)) {
 			server = new SSHCommandRunner(sm_serverHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_isServerOnPremises,sm_serverBranch);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(server,sm_serverInstallDir,sm_serverImportDir,sm_serverType,sm_serverBranch);
 		} else {
 			log.info("Assuming the server is already setup and running.");
-			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,sm_isServerOnPremises,sm_serverBranch);
+			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,sm_serverType,sm_serverBranch);
 		}
 		
 		// setup the candlepin server
-		if (server!=null && servertasks.isOnPremises) {
+		if (server!=null && sm_serverType.equals(CandlepinType.standalone)) {
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
@@ -199,8 +199,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (jsonStatus!=null) {
 				servertasks.statusRelease		= jsonStatus.getString("release");
 				servertasks.statusResult		= jsonStatus.getBoolean("result");
-				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
 				servertasks.statusVersion		= jsonStatus.getString("version");
+				try {
+				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
+				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
 				/*
 				# curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
 				{
@@ -807,8 +809,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
-		// when the candlepin server is not onPremises, then we usually don't have access to the candlepin api paths to quesry the users, so let's use the input parameters 
-		if (!sm_isServerOnPremises) {
+		// when the candlepin server is not standalone, then we usually don't have access to the candlepin api paths to query the users, so let's use the input parameters 
+		if (!sm_serverType.equals(CandlepinType.standalone)) {
 			for (String username : sm_clientUsernames) {
 				String password = sm_clientPasswordDefault;
 			
