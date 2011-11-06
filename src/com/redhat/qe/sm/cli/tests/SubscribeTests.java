@@ -50,7 +50,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
-//if (!productId.equals("awesomeos-server")) throw new SkipException("debugging");
+//if (!productId.equals("awesomeos-zero-sockets")) throw new SkipException("debugging");
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
@@ -139,9 +139,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					Assert.assertEquals(installedProducts.size(),1, "The status of installed product '"+productCert.productName+"' should only be reported once in the list of installed products.");
 					InstalledProduct installedProduct = installedProducts.get(0);
 					
-					// decide what the status should be...  "Subscribed" or "Partially Subscribed"
+					// decide what the status should be...  "Subscribed" or "Partially Subscribed" (SPECIAL CASE WHEN poolProductSocketsAttribute=0 SHOULD YIELD Subscribed)
 					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets)) {
+					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
