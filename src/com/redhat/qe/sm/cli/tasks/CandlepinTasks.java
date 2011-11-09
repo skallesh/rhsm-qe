@@ -158,9 +158,17 @@ public class CandlepinTasks {
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
-		String patchFileName = "onPremisesRedeemTesting.patch";
-		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), System.getProperty("automation.dir", null)+"/scripts/onPremisesRedeemTesting.patch", serverInstallDir+"/proxy/", "0644");
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+patchFileName, Integer.valueOf(0), "patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java", null);
+		File candlepinRedeemTestsMasterPatchFile = new File(System.getProperty("automation.dir", null)+"/scripts/candlepin-RedeemTests-branch-master.patch");
+		File candlepinRedeemTestsPatchFile = new File(System.getProperty("automation.dir", null)+"/scripts/candlepin-RedeemTests-branch-"+branch+".patch");
+		if (!candlepinRedeemTestsPatchFile.exists()) {
+			log.warning("Failed to find a suitable candlepin patch file for RedeemTests: "+candlepinRedeemTestsPatchFile);
+			log.warning("Attempting to substitute the master candlepin patch file for RedeemTests: "+candlepinRedeemTestsMasterPatchFile);
+			candlepinRedeemTestsPatchFile = candlepinRedeemTestsMasterPatchFile;
+		}
+		RemoteFileTasks.putFile(sshCommandRunner.getConnection(), candlepinRedeemTestsPatchFile.toString(), serverInstallDir+"/proxy/", "0644");
+		// Stdout: patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+		// Stdout: patching file src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
 
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS	

@@ -1,0 +1,57 @@
+diff --git a/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java b/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+index a6acf19..30010a8 100644
+--- a/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
++++ b/proxy/src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
+@@ -23,6 +23,7 @@ import java.util.Set;
+ import org.apache.log4j.Logger;
+ import org.candlepin.config.Config;
+ import org.candlepin.config.ConfigProperties;
++import org.candlepin.exceptions.AcceptedRequestException;
+ import org.candlepin.exceptions.ServiceUnavailableException;
+ import org.candlepin.model.Consumer;
+ import org.candlepin.model.Owner;
+@@ -141,9 +142,41 @@ public class DefaultSubscriptionServiceAdapter implements
+     @Override
+     public void activateSubscription(Consumer consumer, String email,
+         String emailLocale) {
+-        throw new ServiceUnavailableException(
+-            i18n.tr("Standalone candlepin does not support redeeming a subscription."));
+-    }
++
++        String dellAssetTag = consumer.getFact("dmi.system.serial_number");
++
++        if (dellAssetTag.startsWith("1")) {
++            throw new AcceptedRequestException(
++                i18n.tr("The Dell service tag: {0}, has already been used to activate a subscription",
++                    dellAssetTag));
++        } else if (dellAssetTag.startsWith("2")) {
++             throw new AcceptedRequestException(
++                i18n.tr("A subscription was not found for the given Dell service tag: {0}",
++                    dellAssetTag));
++        } else if (dellAssetTag.startsWith("3")) {
++            throw new AcceptedRequestException(
++                i18n.tr("The Dell service tag: {0}, is expired",
++                    dellAssetTag));
++        } else if (dellAssetTag.startsWith("4")) {
++            throw new AcceptedRequestException(
++                i18n.tr("The system is unable to process the requested subscription activation {0}",
++                    dellAssetTag));
++        } else if (dellAssetTag.startsWith("5")) {
++            throw new AcceptedRequestException(
++                i18n.tr("Your subscription activation is being processed and should be available soon. " +
++                    "You will be notified via email once it is available. If you have any questions," +
++                    " additional information can be found here: https://access.redhat.com/kb/docs/DOC-53864.",
++                    dellAssetTag));
++        } else if (dellAssetTag.startsWith("6")) {
++            throw new AcceptedRequestException(
++                i18n.tr("The system is unable to process the requested subscription activation {0}",
++                    dellAssetTag));
++        } else {
++            throw new ServiceUnavailableException(
++                 i18n.tr("Standalone candlepin does not support redeeming a subscription."));
++        }
++     }
++ 
+ 
+     @Override
+     public Subscription createSubscription(Subscription subscription) {
