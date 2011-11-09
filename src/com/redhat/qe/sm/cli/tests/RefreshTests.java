@@ -86,8 +86,8 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, marker);
 		//clienttasks.rhsmcertdServiceRestart(null,null,false);
 		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd \\d+ \\d+\\[  OK  \\]$",null);	
-		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);
-
+		//RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62
+		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// RHEL62 or RHEL58
 		
 		/* # tail /var/log/rhsm/rhsmcertd.log
 		Tue Sep 27 17:36:32 2011: started: interval = 240 minutes
