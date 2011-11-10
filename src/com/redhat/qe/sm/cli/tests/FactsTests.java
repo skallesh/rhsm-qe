@@ -281,7 +281,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-641027"}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56331)
-	public void BypassRulesDueToType_Test() throws JSONException {
+	public void BypassRulesDueToType_Test() throws Exception {
 		// determine which client is a RHEL Workstation
 		SSHCommandRunner client = null;
 		SubscriptionManagerTasks clienttasks = null;
@@ -322,6 +322,22 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager: assert that the cpu_socket(s) fact matches the value from lscpu",
+			groups={"AcceptanceTest"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void MatchingCPUSocketsFact_Test() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+		
+		//TODO This test may need more assertion logic for rhel5.
+		//if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
+		//if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+	
+		String cpu_sockets = clienttasks.getFactValue("cpu_socket(s)");
+		client.runCommandAndWait("lscpu");
+		String lscpu_sockets = client.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+		Assert.assertEquals(cpu_sockets, lscpu_sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+lscpu_sockets+"' reported by lscpu.");
+	}
 
 	
 	
@@ -365,7 +381,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	//	[root@jsefler-onprem-workstation facts]# 
 
 	// TODO Bug 746241 - UEPConnection.updateConsumer will not allow passing [] for facts, installed_products, or guest_uuids
-
 	
 	
 	

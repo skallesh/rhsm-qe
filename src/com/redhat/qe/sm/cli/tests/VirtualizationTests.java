@@ -27,37 +27,72 @@ import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
-/* Notes...
-<jsefler> I'm trying to strategize an automated test for the virt entitlements stuff you demo'ed on Wednesday.  I got a few questions to start with...
-<jharris> sure
- shoot
-<jsefler> using the RESTapi, if I search through all the owners subscriptions and find one with a virt_limit attribute, then that means that two pools should get created corresponding to it.  correct?
- one pool for the host and one pool fir the guests
-<jharris> yes
- specifically the attribute is on either the product or the pool
-<jsefler> what does that mean?
- the virt_limit is an attribute of the product - that I know
- next I need to figure out what the relevant attributes are on the pool
-<jharris> pools have attributes
- products have attributes
- the two pools are created, as you said
- the physical (host) pool will have no additional attributes
- the virt (guest) pool will have an attribute of "virt_only" set to true
- the candlepin logic should only let virtual machines subscribe to that second pool
- this is done by checking the virt.is_guest fact
- that is set in subscription manager
-<jsefler> yup - that sounds good - that's what I need to get started
-<jharris> excellent
- but the virt_only attribute can also just be used on a product, for example
- so that maybe we want to start selling a product that is like RHEL for virtual machines
- IT can just stick that virt_only attribute on the product directly
- and it should do the same filtering
- */
+
 
 /**
  * @author jsefler
  *
  */
+
+// Notes...
+//<jsefler> I'm trying to strategize an automated test for the virt entitlements stuff you demo'ed on Wednesday.  I got a few questions to start with...
+//<jharris> sure
+// shoot
+//<jsefler> using the RESTapi, if I search through all the owners subscriptions and find one with a virt_limit attribute, then that means that two pools should get created corresponding to it.  correct?
+// one pool for the host and one pool fir the guests
+//<jharris> yes
+// specifically the attribute is on either the product or the pool
+//<jsefler> what does that mean?
+// the virt_limit is an attribute of the product - that I know
+// next I need to figure out what the relevant attributes are on the pool
+//<jharris> pools have attributes
+// products have attributes
+// the two pools are created, as you said
+// the physical (host) pool will have no additional attributes
+// the virt (guest) pool will have an attribute of "virt_only" set to true
+// the candlepin logic should only let virtual machines subscribe to that second pool
+// this is done by checking the virt.is_guest fact
+// that is set in subscription manager
+//<jsefler> yup - that sounds good - that's what I need to get started
+//<jharris> excellent
+// but the virt_only attribute can also just be used on a product, for example
+// so that maybe we want to start selling a product that is like RHEL for virtual machines
+// IT can just stick that virt_only attribute on the product directly
+// and it should do the same filtering
+
+
+//10/31/2011 Notes:
+//	<jsefler-lt> wottop: previously a subscription with a virt_limit attribute caused two pools to be generated... one for the host and one for the guest (indicated by virt_only=true attribute).  Now I see a third pool with "requires_host" attribute.
+//	 the third pool seems new and good.
+//	<wottop> hosted or standalone?
+//	--- bleanhar_mtg is now known as bleanhar
+//	<jsefler-lt> hosted
+//	<wottop> there should not be a requires host in hosted
+//	<wottop> also the indication is BOTH virt_only and pool_derived
+//	<jsefler-lt> yes - that is what I see here....  curl --insecure --user stage_test_12:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/owners/6445999/pools | python -mjson.tool
+//	 wottop: so in my standalone on premise I'll get only the two pools (the old way)?
+//	<wottop> no
+//	 hosted: The creation of the bonus pool happens immediately, It is not tied to a specific host consumer. The count is related to the quantity * virt_limit of the physical pool.
+//	 standalone: a bonus pool is created each time the physical pool is used for an entitlement. The quantity is based on the quantity of that one entitlement * virt_limit. It IS tied to the host consumers id, and only guests of that Id can use them.
+//	 in the latter you might have many pools derived from the original physical pool
+//	<jsefler-lt> GOT IT
+//	<wottop> and revoking the host consumer entitlement will cause the bonus pool to go away
+//	<wottop> jsefler-lt: helpful?
+//	<jsefler-lt> wottop: yes
+//	 wottop: revoking the host consumer entitlement will cause the bonus pool to go away AND ANY ENTITLEMENTS THE GUESTS MAY BE CONSUMING-NO QUESTIONS ASKED?
+//	<wottop> The guest entitlements will get revoked. Yes.
+//	<jsefler-lt> wottop: the curl call above is against the hosted STAGE environment and it is seeing the third pool (with "requires_host" attrib).  So is stage considered standalone?   I didn't think so.
+//	<wottop> jsefler-lt: the default is standalone
+//	<jsefler-lt> wottop: I recall you saying something that a candlpin.conf value needs to be set
+//	<wottop> in master. I cannot comment on the state of STAGE
+//	<wottop> jsefler-lt: There is an entry in candlepin.conf: candlepin.standalone = [true] is the default
+//	<jsefler-lt> wottop: so stage just deployed 0.4.25 and I am seeing the third pool, which means that they are tripping the default "standalone" behavior.  Either the default behavior should not be standalone, or jomara needs to know that a new candlepin.conf value needs to be set.
+//	<wottop> jsefler-lt: it is true in the code by default
+//	 jsefler-lt: you want hosted?
+//	<jsefler-lt> wottop: true in the code by default is fine with me, but then I "think" when jomara deploys candlepin in stage/production, then he needs to set the candlepin.standalone = false.    AM I CORRECT?  I'm just trying to get all on the same page.
+//	<wottop> jsefler-lt: if you want hosted yes. Also, I would advise clearing the DB when switching between modes.
+
+
 @Test(groups="VirtualizationTests")
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
@@ -214,31 +249,411 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify host and guest pools are generated from a virtualization-aware subscription.",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests"/*,"blockedByBug-750279"*/},
 			dependsOnGroups={},
 			dataProvider="getVirtSubscriptionData",
 			enabled=true)
 	public void VerifyHostAndGuestPoolsAreGeneratedForVirtualizationAwareSubscription_Test(String subscriptionId, String productName, String productId, int quantity, String virtLimit, String hostPoolId, String guestPoolId) throws JSONException, Exception {
 
-		log.info("When an owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
+//		log.info("When an owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
+//
+//		// assert that there are two (one for the host and one for the guest)
+//		log.info("Using the RESTful Candlepin API, let's find all the pools generated from subscription id: "+subscriptionId);
+//		List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
+//		Assert.assertEquals(poolIds.size(), 2, "Exactly two pools should be derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
+//
+//		// assert that one pool is for the host and the other is for the guest
+//		guestPoolId = null;
+//		hostPoolId = null;
+//		for (String poolId : poolIds) {
+//			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,poolId,sm_serverUrl)) {
+//				guestPoolId = poolId;
+//			} else {
+//				hostPoolId = poolId;
+//			}
+//		}
+//		Assert.assertNotNull(guestPoolId, "Found the guest pool id ("+guestPoolId+") with an attribute of virt_only=true");
+//		Assert.assertNotNull(hostPoolId, "Found the host pool id ("+hostPoolId+") without an attribute of virt_only=true");	
+		
+// WHEN candlepin.conf candlepin.standalone = true (IF NOT SPECIFIED, DEFAULTS TO true)
+// THE FOLLOWING THREE POOLS SHOULD NEVER OCCUR SINCE ONLY candlepin.standalone SHOULD NOT BE SWITCHED BETWEEN TRUE/FALSE
+//		[root@intel-s3ea2-04 ~]# curl --insecure --user stage_test_12:redhat --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/owners/6445999/pools | python -mjson.tool
+//			  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+//			                                 Dload  Upload   Total   Spent    Left  Speed
+//			100  8044    0  8044    0     0   8856      0 --:--:-- --:--:-- --:--:--  9980
+//			[
+//			    {
+//			        "accountNumber": "1508113", 
+//			        "activeSubscription": true, 
+//			        "attributes": [
+//			            {
+//			                "created": "2011-10-30T05:06:50.000+0000", 
+//			                "id": "8a99f9813350d60e0133533919f512f9", 
+//			                "name": "requires_consumer_type", 
+//			                "updated": "2011-10-30T05:06:50.000+0000", 
+//			                "value": "system"
+//			            }, 
+//			            {
+//			                "created": "2011-10-30T05:06:50.000+0000", 
+//			                "id": "8a99f9813350d60e0133533919f512fa", 
+//			                "name": "requires_host", 
+//			                "updated": "2011-10-30T05:06:50.000+0000", 
+//			                "value": "c6ec101c-2c6a-4f5d-9161-ac335d309d0e"
+//			            }, 
+//			            {
+//			                "created": "2011-10-30T05:06:50.000+0000", 
+//			                "id": "8a99f9813350d60e0133533919f512fc", 
+//			                "name": "pool_derived", 
+//			                "updated": "2011-10-30T05:06:50.000+0000", 
+//			                "value": "true"
+//			            }, 
+//			            {
+//			                "created": "2011-10-30T05:06:50.000+0000", 
+//			                "id": "8a99f9813350d60e0133533919f512fb", 
+//			                "name": "virt_only", 
+//			                "updated": "2011-10-30T05:06:50.000+0000", 
+//			                "value": "true"
+//			            }
+//			        ], 
+//			        "consumed": 0, 
+//			        "contractNumber": "2635037", 
+//			        "created": "2011-10-30T05:06:50.000+0000", 
+//			        "endDate": "2012-10-19T03:59:59.000+0000", 
+//			        "href": "/pools/8a99f9813350d60e0133533919f512f8", 
+//			        "id": "8a99f9813350d60e0133533919f512f8", 
+//			        "owner": {
+//			            "displayName": "6445999", 
+//			            "href": "/owners/6445999", 
+//			            "id": "8a85f98432e7376c013302c3a9745c68", 
+//			            "key": "6445999"
+//			        }, 
+//			        "productAttributes": [], 
+//			        "productId": "RH0103708", 
+//			        "productName": "Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)", 
+//			        "providedProducts": [
+//			            {
+//			                "created": "2011-10-30T05:06:50.000+0000", 
+//			                "id": "8a99f9813350d60e0133533919f512fd", 
+//			                "productId": "69", 
+//			                "productName": "Red Hat Enterprise Linux Server", 
+//			                "updated": "2011-10-30T05:06:50.000+0000"
+//			            }
+//			        ], 
+//			        "quantity": 4, 
+//			        "restrictedToUsername": null, 
+//			        "sourceEntitlement": {
+//			            "href": "/entitlements/8a99f9813350d60e0133533919f512fe", 
+//			            "id": "8a99f9813350d60e0133533919f512fe"
+//			        }, 
+//			        "startDate": "2011-10-19T04:00:00.000+0000", 
+//			        "subscriptionId": "2272904", 
+//			        "updated": "2011-10-30T05:06:50.000+0000"
+//			    }, 
+//			    {
+//			        "accountNumber": "1508113", 
+//			        "activeSubscription": true, 
+//			        "attributes": [], 
+//			        "consumed": 3, 
+//			        "contractNumber": "2635037", 
+//			        "created": "2011-10-19T19:05:09.000+0000", 
+//			        "endDate": "2012-10-19T03:59:59.000+0000", 
+//			        "href": "/pools/8a99f98233137a9701331d92a4301203", 
+//			        "id": "8a99f98233137a9701331d92a4301203", 
+//			        "owner": {
+//			            "displayName": "6445999", 
+//			            "href": "/owners/6445999", 
+//			            "id": "8a85f98432e7376c013302c3a9745c68", 
+//			            "key": "6445999"
+//			        }, 
+//			        "productAttributes": [
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4301204", 
+//			                "name": "support_type", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "L1-L3"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4301205", 
+//			                "name": "sockets", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "8"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4301206", 
+//			                "name": "virt_limit", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "4"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4301207", 
+//			                "name": "name", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4301208", 
+//			                "name": "type", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "MKT"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4301209", 
+//			                "name": "description", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Red Hat Enterprise Linux"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a430120b", 
+//			                "name": "product_family", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Red Hat Enterprise Linux"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a430120a", 
+//			                "name": "option_code", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "1"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a430120c", 
+//			                "name": "variant", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Physical Servers"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a430120d", 
+//			                "name": "support_level", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "PREMIUM"
+//			            }
+//			        ], 
+//			        "productId": "RH0103708", 
+//			        "productName": "Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)", 
+//			        "providedProducts": [
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a430120e", 
+//			                "productId": "69", 
+//			                "productName": "Red Hat Enterprise Linux Server", 
+//			                "updated": "2011-10-19T19:05:09.000+0000"
+//			            }
+//			        ], 
+//			        "quantity": 100, 
+//			        "restrictedToUsername": null, 
+//			        "sourceEntitlement": null, 
+//			        "startDate": "2011-10-19T04:00:00.000+0000", 
+//			        "subscriptionId": "2272904", 
+//			        "updated": "2011-10-19T19:05:09.000+0000"
+//			    }, 
+//			    {
+//			        "accountNumber": "1508113", 
+//			        "activeSubscription": true, 
+//			        "attributes": [
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4461210", 
+//			                "name": "requires_consumer_type", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "system"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4461211", 
+//			                "name": "virt_limit", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "0"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471213", 
+//			                "name": "pool_derived", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "true"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471212", 
+//			                "name": "virt_only", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "true"
+//			            }
+//			        ], 
+//			        "consumed": 3, 
+//			        "contractNumber": "2635037", 
+//			        "created": "2011-10-19T19:05:09.000+0000", 
+//			        "endDate": "2012-10-19T03:59:59.000+0000", 
+//			        "href": "/pools/8a99f98233137a9701331d92a446120f", 
+//			        "id": "8a99f98233137a9701331d92a446120f", 
+//			        "owner": {
+//			            "displayName": "6445999", 
+//			            "href": "/owners/6445999", 
+//			            "id": "8a85f98432e7376c013302c3a9745c68", 
+//			            "key": "6445999"
+//			        }, 
+//			        "productAttributes": [
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471214", 
+//			                "name": "support_type", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "L1-L3"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471215", 
+//			                "name": "sockets", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "8"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471216", 
+//			                "name": "virt_limit", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "4"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471217", 
+//			                "name": "name", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471218", 
+//			                "name": "type", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "MKT"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a4471219", 
+//			                "name": "description", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Red Hat Enterprise Linux"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a447121b", 
+//			                "name": "product_family", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Red Hat Enterprise Linux"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a447121a", 
+//			                "name": "option_code", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "1"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a447121c", 
+//			                "name": "variant", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "Physical Servers"
+//			            }, 
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a447121d", 
+//			                "name": "support_level", 
+//			                "productId": "RH0103708", 
+//			                "updated": "2011-10-19T19:05:09.000+0000", 
+//			                "value": "PREMIUM"
+//			            }
+//			        ], 
+//			        "productId": "RH0103708", 
+//			        "productName": "Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)", 
+//			        "providedProducts": [
+//			            {
+//			                "created": "2011-10-19T19:05:09.000+0000", 
+//			                "id": "8a99f98233137a9701331d92a447121e", 
+//			                "productId": "69", 
+//			                "productName": "Red Hat Enterprise Linux Server", 
+//			                "updated": "2011-10-19T19:05:09.000+0000"
+//			            }
+//			        ], 
+//			        "quantity": 400, 
+//			        "restrictedToUsername": null, 
+//			        "sourceEntitlement": null, 
+//			        "startDate": "2011-10-19T04:00:00.000+0000", 
+//			        "subscriptionId": "2272904", 
+//			        "updated": "2011-10-19T19:05:09.000+0000"
+//			    }
+//			]
+
+		log.info("When a hosted owner has purchased a virtualization-aware subscription ("+productName+"; subscriptionId="+subscriptionId+"), he should have subscription access to two pools: one for the host and one for the guest.");
 
 		// assert that there are two (one for the host and one for the guest)
 		log.info("Using the RESTful Candlepin API, let's find all the pools generated from subscription id: "+subscriptionId);
-		List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
-		Assert.assertEquals(poolIds.size(), 2, "Exactly two pools should be derived from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").");
+		List<JSONObject> jsonPools = CandlepinTasks.getPoolsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
+
+		if (!servertasks.statusStandalone) {
+			Assert.assertEquals(jsonPools.size(), 2, "When the candlepin.standalone is false, exactly two pools should be generated from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").  (one with no attributes, one with virt_only and pool_derived true)");	
+		} else {
+			// Note: this line of code should not be reached since this test should not be run when servertasks.statusStandalone is true
+			Assert.assertTrue(jsonPools.size()>=1, "When the candlepin.standalone is true, one or more pools (actual='"+jsonPools.size()+"') should be generated from virtualization-aware subscription id '"+subscriptionId+"' ("+productName+").  (one with no attributes, the rest with virt_only pool_derived equals true and requires_host)");			
+		}
 
 		// assert that one pool is for the host and the other is for the guest
 		guestPoolId = null;
 		hostPoolId = null;
-		for (String poolId : poolIds) {
-			if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,poolId,sm_serverUrl)) {
+		for (JSONObject jsonPool : jsonPools) {
+			String poolId = jsonPool.getString("id");
+//			JSONArray attributes = jsonPool.getJSONArray("attributes");
+//			if (attributes.length()==0) {
+//				hostPoolId = poolId;
+//				continue;
+//			}
+			
+			if (Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only")) &&
+				Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived")) &&
+				CandlepinTasks.getPoolAttributeValue(jsonPool, "requires_host")==null) {
 				guestPoolId = poolId;
-			} else {
+			} else if (
+				Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only")) &&
+				Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived")) &&
+				CandlepinTasks.getPoolAttributeValue(jsonPool, "requires_host")!=null) {
+				//newGuestPoolId = poolId;  // TODO THIS IS THE NEW VIRT-AWARE MODEL FOR WHICH NEW TESTS SHOULD BE AUTOMATED
+			} else if (
+				CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only")==null &&	// TODO or false?
+				CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived")==null &&	// TODO or false?
+				CandlepinTasks.getPoolAttributeValue(jsonPool, "requires_host")==null) {
 				hostPoolId = poolId;
 			}
 		}
-		Assert.assertNotNull(guestPoolId, "Found the guest pool id ("+guestPoolId+") with an attribute of virt_only=true");
-		Assert.assertNotNull(hostPoolId, "Found the host pool id ("+hostPoolId+") without an attribute of virt_only=true");	
+		Assert.assertNotNull(guestPoolId, "Found the virt_only/pool_derived guest pool id ("+guestPoolId+") without an attribute of requires_host");
+		Assert.assertNotNull(hostPoolId, "Found the host pool id ("+hostPoolId+")");	
 	}
 	
 	
@@ -634,8 +1049,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 683459 - Virt only skus creating two pools
 	// TODO Bug 736436 - virtual subscriptions are not included when the certificates are downloaded 
-	
-	
+	// TODO Bug 750659 - candlepin api /consumers/<consumerid>/guests is returning []
 	
 	
 	// Configuration methods ***********************************************************************
@@ -739,6 +1153,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getVirtSubscriptionDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks.statusStandalone) {log.warning("This candlepin server is configured for standalone operation.  The hosted virtualization model tests will not be executed."); return ll;}
 		
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
@@ -765,21 +1180,48 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 					// only retrieve data that is valid today (at this time)
 					if (startDate.before(now) && endDate.after(now)) {
 
-						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
-						List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
+//						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
+//						List<String> poolIds = CandlepinTasks.getPoolIdsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
+//
+//						// determine which pool is for the guest, the other must be for the host
+//						String guestPoolId = null;
+//						String hostPoolId = null;
+//						for (String poolId : poolIds) {
+//							if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,poolId,sm_serverUrl)) {
+//								guestPoolId = poolId;
+//							} else {
+//								hostPoolId = poolId;
+//							}
+//						}
+//						if (poolIds.size() != 2) {hostPoolId=null; guestPoolId=null;}	// set pools to null if there was a problem
+//						ll.add(Arrays.asList(new Object[]{subscriptionId, productName, productId, quantity, virt_limit, hostPoolId, guestPoolId}));
 
-						// determine which pool is for the guest, the other must be for the host
+						
+						// save some computation cycles in the testcases and get the hostPoolId and guestPoolId
+						List<JSONObject> jsonPools = CandlepinTasks.getPoolsForSubscriptionId(sm_clientUsername,sm_clientPassword,sm_serverUrl,ownerKey,subscriptionId);
+
+						// determine which pool is for the guest, and which is for the host
 						String guestPoolId = null;
 						String hostPoolId = null;
-						for (String poolId : poolIds) {
-							if (CandlepinTasks.isPoolVirtOnly (sm_clientUsername,sm_clientPassword,poolId,sm_serverUrl)) {
+						for (JSONObject jsonPool : jsonPools) {
+							String poolId = jsonPool.getString("id");
+							
+							if (Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only")) &&
+								Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived")) &&
+								CandlepinTasks.getPoolAttributeValue(jsonPool, "requires_host")==null) {
 								guestPoolId = poolId;
-							} else {
+							} else if (
+								Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only")) &&
+								Boolean.TRUE.toString().equalsIgnoreCase(CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived")) &&
+								CandlepinTasks.getPoolAttributeValue(jsonPool, "requires_host")!=null) {
+								//newGuestPoolId = poolId;  // TODO THIS IS THE NEW VIRT-AWARE MODEL FOR WHICH NEW TESTS SHOULD BE AUTOMATED
+							} else if (
+								CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only")==null &&	// TODO or false?
+								CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived")==null &&	// TODO or false?
+								CandlepinTasks.getPoolAttributeValue(jsonPool, "requires_host")==null) {
 								hostPoolId = poolId;
 							}
 						}
-						if (poolIds.size() != 2) {hostPoolId=null; guestPoolId=null;}	// set pools to null if there was a problem
-						
 						ll.add(Arrays.asList(new Object[]{subscriptionId, productName, productId, quantity, virt_limit, hostPoolId, guestPoolId}));
 					}
 				}

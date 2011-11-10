@@ -16,6 +16,7 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -59,17 +60,15 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 
 	}
 	
-	@Test(	description="subscription-manager: attempt redeem with --email option (against an onpremises candlepin server)",
+	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
 			groups={"blockedByBug-726791"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RedeemWithEmail_Test() {
-		String warning = "This test was authored for execution against an on-premises candlepin server.";
-		if (sm_isServerOnPremises) {
-			log.warning(warning);
-		} else {
-			throw new SkipException(warning);
-		}
+		String warning = "This test was authored for execution against a standalone candlepin server.";
+		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
+		log.warning(warning);
+
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
@@ -88,11 +87,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void onPremisesMockAttemptToRedeem_Test(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		String warning = "This mock test was authored for execution against an on-premises candlepin server.";
-		if (sm_isServerOnPremises) {
-			log.warning(warning);
-		} else {
-			throw new SkipException(warning);
-		}
+		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
+		log.warning(warning);
 		log.info(testDescription);
 
 		// create a facts file with a serialNumber that will clobber the true system facts

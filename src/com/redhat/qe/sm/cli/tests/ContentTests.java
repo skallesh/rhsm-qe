@@ -171,7 +171,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			groups={"AcceptanceTests"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
-	public void VerifyYumRepoListsEnabledContent(){
+	public void VerifyYumRepoListsEnabledContent() throws JSONException, Exception{
 // Original code from ssalevan
 //	    ArrayList<String> repos = this.getYumRepolist();
 //	    

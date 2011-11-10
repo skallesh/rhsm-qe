@@ -50,7 +50,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
-//if (!productId.equals("awesomeos-server")) throw new SkipException("debugging");
+//if (!productId.equals("awesomeos-zero-sockets")) throw new SkipException("debugging");
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
@@ -139,9 +139,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					Assert.assertEquals(installedProducts.size(),1, "The status of installed product '"+productCert.productName+"' should only be reported once in the list of installed products.");
 					InstalledProduct installedProduct = installedProducts.get(0);
 					
-					// decide what the status should be...  "Subscribed" or "Partially Subscribed"
+					// decide what the status should be...  "Subscribed" or "Partially Subscribed" (SPECIAL CASE WHEN poolProductSocketsAttribute=0 SHOULD YIELD Subscribed)
 					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets)) {
+					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
@@ -363,7 +363,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-617703"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41694)
-	public void rhsmcertdEnsureCertificatesSynchronize_Test(){
+	public void rhsmcertdEnsureCertificatesSynchronize_Test() throws JSONException, Exception{
 		
 		// start with a cleanly unregistered system
 		clienttasks.unregister(null, null, null);
@@ -759,7 +759,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
-	
+	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
 	
 	
 	// Configuration Methods ***********************************************************************

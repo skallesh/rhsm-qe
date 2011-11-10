@@ -400,6 +400,10 @@ public class SubscriptionManagerTasks {
 		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "healFrequency"));
 		if (listOfSectionNameValues.size()>0) config(null,null,true,listOfSectionNameValues);
 		
+		// mark the rhsmcertd log file before restarting the deamon
+		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing service rhsmcertd restart...";
+		RemoteFileTasks.markFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker);
+		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=691137 - jsefler 03/26/2011
 		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -414,10 +418,34 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
 		}
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+) is running...$",null);	// FIXME master/RHEL58 branch
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
+		// # service rhsmcertd restart
+		// rhsmcertd (pid 10172 10173) is running...
+		
+		// # tail -f /var/log/rhsm/rhsmcertd.log
+		// Wed Nov  9 15:21:54 2011: started: interval = 1440 minutes
+		// Wed Nov  9 15:21:54 2011: started: interval = 240 minutes
+		// Wed Nov  9 15:21:55 2011: certificates updated
+		// Wed Nov  9 15:21:55 2011: certificates updated
 
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+) is running...$",null);		// master/RHEL58 branch
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
+
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="752572"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId+" is open.");
+		} else {
+		// END OF WORKAROUND
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
+		}
+		
+		// assert the rhsmcertd log file reflected newly updated certificates...
+		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "certificates updated");
+		Assert.assertContainsMatch(rhsmcertdLogResult, ".*certificates updated\\n.*certificates updated", "The rhsmcertd is logging its restart.");
+		
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		}
@@ -2505,7 +2533,7 @@ public class SubscriptionManagerTasks {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("skipping assert that the productId from the pool matches the entitlement productId");
+				log.warning("Skipping assert that the productId from the pool matches the entitlement productId");
 			} else {
 			// END OF WORKAROUND
 			EntitlementCert entitlementCert = getEntitlementCertFromEntitlementCertFile(newCertFile);
@@ -2626,8 +2654,10 @@ public class SubscriptionManagerTasks {
 	 * Collectively subscribe to the currently available subscription pools in one command call
 	 * 
 	 * @return SubscriptionPools that were available for subscribing 
+	 * @throws Exception 
+	 * @throws JSONException 
 	 */
-	public List<SubscriptionPool> subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively() {
+	public List<SubscriptionPool> subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively() throws JSONException, Exception {
 		
 		// assemble a list of all the available SubscriptionPool ids
 		List <String> poolIds = new ArrayList<String>();
@@ -2651,9 +2681,16 @@ public class SubscriptionManagerTasks {
 				for (SubscriptionPool afterPool : poolsAfterSubscribe) {
 					if (afterPool.equals(beforePool)) {
 						foundPool = true;
+						
+						// determine how much the quantity should have decremented
+						int expectedDecrement = 1;
+						String virt_only = CandlepinTasks.getPoolAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, afterPool.poolId, "virt_only");
+						String virt_limit = CandlepinTasks.getPoolProductAttributeValue(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, afterPool.poolId, "virt_limit");
+						if (virt_only!=null && Boolean.valueOf(virt_only) && virt_limit!=null) expectedDecrement += Integer.valueOf(virt_limit);	// the quantity consumed on a virt pool should be 1 (from the subscribe on the virtual pool itself) plus virt_limit (from the subscribe by the candlepin consumer on the physical pool)
+
 						// assert the quantity has decremented;
-						Assert.assertEquals(Integer.valueOf(afterPool.quantity).intValue(), Integer.valueOf(beforePool.quantity).intValue()-1,
-								"The quantity of entitlements from subscription pool id '"+afterPool.poolId+"' has decremented by one.");
+						Assert.assertEquals(Integer.valueOf(afterPool.quantity).intValue(), Integer.valueOf(beforePool.quantity).intValue()-expectedDecrement,
+								"The quantity of entitlements from subscription pool id '"+afterPool.poolId+"' has decremented by "+expectedDecrement+".");
 						break;
 					}
 				}
