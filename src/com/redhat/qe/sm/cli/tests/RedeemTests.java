@@ -68,7 +68,6 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		String warning = "This test was authored for execution against a standalone candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
 		log.warning(warning);
-
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
@@ -85,7 +84,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getOnPremisesMockAttemptToRedeemData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void onPremisesMockAttemptToRedeem_Test(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+	public void OnPremisesMockAttemptToRedeem_Test(Object blockedByBug, String testDescription, String serialNumber, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		String warning = "This mock test was authored for execution against an on-premises candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.standalone)) throw new SkipException(warning);
 		log.warning(warning);
@@ -111,12 +110,35 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
+	// This test is the hosted equivalent for CASE 2 from getOnPremisesMockAttemptToRedeemData
+	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server using a non-found service tag",
+			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void hostedMockAttemptToRedeemUsingNonFoundServiceTag_Test() {
+		String warning = "This mock test was authored for execution against a hosted candlepin server.";
+		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException(warning);
+		//log.warning(warning);
+
+		// create a facts file with a serialNumber that will clobber the true system facts
+		Map<String,String> facts = new HashMap<String,String>();
+		facts.put("dmi.system.manufacturer", "Dell Inc.");
+		facts.put("dmi.system.serial_number", "0000000");
+		clienttasks.createFactsFileWithOverridingValues(facts);
+		
+		// register and attempt redeem
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
+		
+		// assert the redeemResult here
+		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
+		Assert.assertEquals(redeemResult.getStdout().trim(), "");
+		Assert.assertEquals(redeemResult.getStderr().trim(), "A subscription was not found for the given Dell service tag: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
+	}
 	
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 688806 - subscription-manager activate command line fails due to network error - Stage Only test for redeem with a Dell maufacturer and a bogus serial number.  I expect to get back a stderr with "A subscription was not found for the given Dell service tag: {0}"
 	
 	
 	
