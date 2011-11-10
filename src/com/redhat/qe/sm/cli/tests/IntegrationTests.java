@@ -275,6 +275,37 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>> getSubscribeDataAsListOfLists() throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
+/*		
+sm.integrationTestData:[
+	{
+		username:'stage_test_5',
+		password:'redhat',
+		variant:'Server',		** OPTIONAL **
+		arch:'x86_64',			** OPTIONAL **
+		productIdsData:[
+			{
+		 		productId:'RH0179918',
+		 		reposData:[			** NOT YET IMPLEMENTED **
+		 			{
+		 				repo:'label',
+		 				packages:'pkg1,pkg2'
+		 			}
+		 		]
+		 	},
+		 	{
+		 		productId:'RH1232091'
+		 	},
+		 	{
+		 		productId:'RH1151626'
+		 	},
+		 	{
+		 		productId:'RH1469292'
+		 	}
+		 ]
+	}
+]
+*/
+
 		JSONArray jsonIntegrationTestData = sm_integrationTestData;
 		for (int i = 0; i < jsonIntegrationTestData.length(); i++) {
 			JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
@@ -286,7 +317,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			if (jsonIntegrationTestDatum.has("variant")) variant = jsonIntegrationTestDatum.getString("variant");
 	
 			// skip this jsonIntegrationTestDatum when it does not match the client arch
-			if (!arch.equals("ALL") && !arch.equals(clienttasks.arch)) continue;
+			if (!arch.equals("ALL") && !arch.equals(clienttasks.arch)) continue;	// FIXME fails when arch = x86,ia64 (comma separated)
 			
 			// skip this jsonIntegrationTestDatum when it does not match the client variant
 			if (!variant.equals("ALL") && !variant.equals(clienttasks.variant)) continue;
