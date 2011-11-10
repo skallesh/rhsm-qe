@@ -442,14 +442,15 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
 		}
 		
+		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
+
 		// assert the rhsmcertd log file reflected newly updated certificates...
 		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "certificates updated");
 		Assert.assertContainsMatch(rhsmcertdLogResult, ".*certificates updated\\n.*certificates updated", "The rhsmcertd is logging its restart.");
-		
+
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		}
-		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
 	}
 	public void stop_rhsmcertd (){
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
