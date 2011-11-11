@@ -43,10 +43,6 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
   (merge
     (define-elements (windows :main-window)
       (merge (same-name capitalize [:registration-settings
-                                    :register-system
-                                    :unregister-system
-                                    :import-certificate
-                                    :view-system-facts
                                     :glossary
                                     :update-certificates
                                     :all-available-subscriptions
@@ -62,11 +58,17 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :do-not-overlap
                                     :contain-text
                                     :text-in-subscription
-                                    :unsubscribe
-                                    :proxy-configuration ])
+                                    :unsubscribe])
 		    {:more-search-options "More search options"
                      :contains-the-text "Text in Subscription"
-                     :date-entry "date-entry"}))
+                     :date-entry "date-entry"
+                     :register-system "Register"
+                     :unregister-system "Unregister"
+                     :view-system-facts "gtk-info"
+                     :import-certificate "add"
+                     :proxy-configuration "gtk-network"
+                     :help "help"
+                     :update-certificates "Update"}))
 		    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
