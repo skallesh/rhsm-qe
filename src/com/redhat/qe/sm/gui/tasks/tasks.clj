@@ -500,14 +500,22 @@
   (ui waittillguiexist :facts-view)
   (sleep 5000)
   (let [groups (get-table-elements :facts-view 0)
-        is-data? (fn [rownum]
-                   (try (ui getcellvalue :facts-view rownum 1) true
-                        (catch Exception e false)))
-        _ (doseq [item groups] (do (ui doubleclickrow :facts-view item)
-                                   (sleep 500)))
-        rownums (filter is-data? (range (ui getrowcount :facts-view)))
         getcell (fn [row col] 
                    (ui getcellvalue :facts-view row col))
+        is-data? (fn [rownum]
+                   (try (let [value (getcell rownum 1)
+                              field (getcell rownum 0)]
+                          (if-not (= value 0)
+                            true
+                            (if-not (= nil (some #{\.} (seq field)))
+                              true
+                              false)))
+                        (catch Exception e false)))
+        _ (doseq [item groups] (do (ui selectrow :facts-view item)
+                                   (sleep 500)
+                                   (ui doubleclickrow :facts-view item)
+                                   (sleep 500)))
+        rownums (filter is-data? (range (ui getrowcount :facts-view)))
         facts (into {} (map (fn [rowid] 
                               [(getcell rowid 0) (getcell rowid 1)])
                                rownums))]
