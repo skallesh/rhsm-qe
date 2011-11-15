@@ -11,7 +11,12 @@
                               add-recoveries
                               raise)]
         [com.redhat.qe.verify :only (verify)]
+        [clojure.contrib.string :only (split
+                                       split-lines
+                                       trim
+                                       replace-str)]
         [clojure.contrib.str-utils :only (re-split)]
+        matchure
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             [clojure.contrib.json :as json]
@@ -174,18 +179,21 @@
   (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
    (ui click :register)
    (checkforerror 10)
-   (if (= 1 (ui guiexist :register-dialog)) 
-     (if (= 1 (ui waittillshowing :owners 30))
-       (do
-         (when owner (do 
-                       (if-not (ui rowexist? :owners owner)
-                         (raise {:type :owner-not-available
-                                 :name owner
-                                 :msg (str "Not found in 'Owner Selection':" owner)}))
-                       (ui selectrow :owners owner)))
-         (ui click :register)
-         (sleep 5))))              
-    (checkforerror)))
+   (if (= 1 (ui guiexist :register-dialog))
+     (do
+       (if (= 1 (ui waittillshowing :owners 30))
+         (do
+           (when owner (do 
+                         (if-not (ui rowexist? :owner-view owner)
+                           (raise {:type :owner-not-available
+                                   :name owner
+                                   :msg (str "Not found in 'Owner Selection':" owner)}))
+                         (ui selectrow :owner-view owner)))    
+           (ui click :register)
+           (checkforerror 10)))
+       (ui waittillnotshowing :registering 60000))) 
+   (checkforerror))
+  (sleep 10000))
 
 (defn fbshowing?
   "Utility to see if a GUI object in firstboot on a RHEL5 system is showing."
@@ -525,8 +533,5 @@
     (.RunCommandAndWait @clientcmd command)
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
-
-
-
 
 

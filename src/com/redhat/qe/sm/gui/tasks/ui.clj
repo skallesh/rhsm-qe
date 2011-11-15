@@ -56,6 +56,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :subscribe
                                     :all-subscriptions-view
                                     :my-subscriptions-view
+                                    :installed-view
                                     :match-system
                                     :match-installed
                                     :do-not-overlap
@@ -74,7 +75,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :automatically-subscribe "auto_bind"
          :register "register_button"
          :register-cancel "cancel_button"
-         :owners "tbl0"})
+         :owners "ownerSelectVbox"
+         :owner-view "tbl0"
+         :registering "Registering"})
     (define-elements (windows :question-dialog)
       (same-name capitalize [:yes
                              :no ]))
