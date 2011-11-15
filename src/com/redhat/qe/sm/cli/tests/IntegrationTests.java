@@ -3,23 +3,29 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
+import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.SubscriptionPool;
 
 /**
  * @author jsefler
@@ -55,33 +61,92 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscribeData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void Subscribe_Test(String username, String password, String productId) {
-		clienttasks.register(username, password, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-		File entitlementCertFile = clienttasks.subscribeToProductId(productId);
+	public void RegisterAndSubscribe_Test(String username, String password, ConsumerType type, String productId, String variant, String arch, Integer sockets, String engProductId) {
 
+		// register a new consumer
+		registerConsumerWhenNotAlreadyRegistered(username, password, type, sockets);	
+//		clienttasks.register(username, password, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+
+		// assert non-availability based on sockets
+//		clienttasks.deleteFactsFileWithOverridingValues();
+		if (sockets!=null) {
+			// set client's sockets value one higher than subscription supports
+			Map<String,String> factsMap = new HashMap<String,String>();
+			Integer moreSockets = sockets+1;
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+			//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(moreSockets));
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
+			clienttasks.facts(null,true,null,null,null);
+			SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+			Assert.assertNull(pool, "Subscription pool for product '"+productId+"' is NOT available when the client's sockets (simulated cpu.cpu_socket(s)='"+moreSockets+"') exceed '"+sockets+"'.");
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+			//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
+			clienttasks.facts(null,true,null,null,null);
+		}
+
+		// get the pools available to this registered consumer
+		List<SubscriptionPool> availablePools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+
+		// assert non-availability based on variant
+		/* THIS IS NOT A FILTER
+		if (variant!=null) { 
+			List<String> variants = new ArrayList<String>(Arrays.asList(variant.trim().toUpperCase().split(" *, *")));	// Note: the variant attribute can be a comma separated list of values
+			if (!variants.contains(clienttasks.variant.toUpperCase())) {
+				SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availablePools);
+				Assert.assertNull(pool, "Subscription pool for product '"+productId+"' is NOT available when the client arch (actual='"+clienttasks.variant+"') is not contained in '"+variants+"'.");				
+			}
+		}
+		*/
+		
+		// assert non-availability based on arch
+		if (arch!=null) { 
+			List<String> arches = new ArrayList<String>(Arrays.asList(arch.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+			if (arches.contains("X86")) {arches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+			if (!arches.contains(clienttasks.arch.toUpperCase())) {
+				SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availablePools);
+				Assert.assertNull(pool, "Subscription pool for product '"+productId+"' is NOT available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
+
+				pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
+				Assert.assertNotNull(pool, "Subscription pool for product '"+productId+"' is only listed in ALL available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
+				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+				EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+				assertEngProductsAreProvidedInEntitlementCert(engProductId, entitlementCert);
+				log.warning("No need for further testing of subscription productId '"+productId+"' on this hardware since the providing pool is not normally available.");
+				return;
+			}
+		}
+		
+		// subscribe to the first available pool providing the productId
+		//File entitlementCertFile = clienttasks.subscribeToProductId(productId);
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availablePools);
+		Assert.assertNotNull(pool,"Found first available pool to subscribe to productId '"+productId+"'.");
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		
+		// setup data for subsequent tests
+		// TODO MAYBE WE SHOULD ONLY DO THIS WHEN variants.contains(clienttasks.variant)) OR WHEN SUBSCRIPTION IS AVAILABLE?
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
-		entitlementCertData.add(Arrays.asList(new Object[]{username, password, productId, entitlementCert}));
+		entitlementCertData.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, entitlementCert}));
+		
+		// assert that the entitlementCert contains productNamespaces for the engProductId(s)
+		if (engProductId!=null) {
+			assertEngProductsAreProvidedInEntitlementCert(engProductId, entitlementCert);
+		}
 	}
 	
 	@Test(	description="verify the CDN provides packages for the default enabled content set after subscribing to a product subscription",
 			groups={"VerifyPackagesAreAvailable"},
-			dependsOnMethods={"Subscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultEnabledContentNamespaceData",
-			enabled=true)
+			enabled=false)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
+	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
 		Integer packageCount=null;
 
 //if(true) throw new SkipException("debugging");
-		// register
-		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
-			clienttasks.register(username, password, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-			currentRegisteredUsername = username;
-			currentlySubscribedProductIds.clear();
-		} else {
-			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
-		}
+		// register a new consumer
+		registerConsumerWhenNotAlreadyRegistered(username, password, type, sockets);
 		
 		// assert that there are not yet any available packages from the default enabled/disabled repo
 		// NOT REALLY A VALID ASSERTION WHEN WE COULD ALREADY BE SUBSCRIBED (FOR EFFICIENCY SAKE).  MOREOVER, THE MORE APPROPRIATE ASSERTION COMES AFTER THE SUBSCRIBE)   
@@ -117,34 +182,28 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="verify the CDN provides packages for the non-default enabled content set after subscribing to a product subscription",
 			groups={"VerifyPackagesAreAvailable"},
-			dependsOnMethods={"Subscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultDisabledContentNamespaceData",
-			enabled=true)
+			enabled=false)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace) {
+	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		Assert.assertEquals(contentNamespace.enabled,"0","Reconfirming that we are are about to test a default disabled contentNamespace.");
-		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, productId, contentNamespace);
+		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace);
 	}
 	
 	
 	@Test(	description="ensure an available package can be downloaded/installed/removed from the enabled repo ",
 			groups={},
-			dependsOnMethods={"Subscribe_Test"}, alwaysRun=true,
+			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceWithProductNamespacesData",
-			enabled=true)
+			enabled=false)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, String productId, ContentNamespace contentNamespace, List<ProductNamespace> productNamespaces) {
+	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, List<ProductNamespace> productNamespaces) {
 
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
-		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
-			clienttasks.register(username, password, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-			currentRegisteredUsername = username;
-			currentlySubscribedProductIds.clear();
-		} else {
-			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
-		}
+		registerConsumerWhenNotAlreadyRegistered(username, password, type, sockets);
 		
 		// subscribe
 		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
@@ -210,7 +269,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		clienttasks.yumRemovePackage(pkg);
 		
 		// assert that a productid.pem is/was installed that covers the product from which this package was installed
-		// Note: I am making this assertion after the yumRemovePackage call to avoid leaving packages installed
+		// Note: I am making this assertion after the yumRemovePackage call to avoid leaving packages installed in case this assert fails.
 		if (numberOfProductNamespacesInstalled>1) {
 			log.info("Found product certs installed that match the ProductNamespaces from the entitlement cert that provided the right to install package '"+pkg+"' from repo '"+contentNamespace.label+"'.");
 		} else if (numberOfProductNamespacesInstalled==1){
@@ -254,6 +313,11 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		currentProductCerts = clienttasks.getCurrentProductCerts();
 	}
 	
+	@AfterClass(groups={"setup"})
+	public void cleanupAfterClass() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+	}
+	
 //	@BeforeClass(groups={"setup"})
 //	public void yumCleanAllBeforeClass() {
 //		clienttasks.yumClean("all");
@@ -265,6 +329,49 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	List<ProductCert> currentProductCerts = new ArrayList<ProductCert>();
 	protected String currentRegisteredUsername = null;
 	protected List<String> currentlySubscribedProductIds = new ArrayList<String>();;
+	
+	
+	protected void registerConsumerWhenNotAlreadyRegistered(String username, String password, ConsumerType type, Integer sockets) {
+		// register a new consumer
+		if (!username.equals(currentRegisteredUsername)) { // try to save some time by not re-registering
+		
+			// set the consumer's sockets
+			clienttasks.deleteFactsFileWithOverridingValues();
+			if (sockets!=null) {
+				Map<String,String> factsMap = new HashMap<String,String>();
+				factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+				//factsMap.put("lscpu.cpu_socket(s)", String.valueOf(sockets));
+				clienttasks.createFactsFileWithOverridingValues(factsMap);
+			}
+			
+			// register
+			clienttasks.register(username, password, null, null, type, null, null, null, (String)null, true, false, null, null, null);
+			currentRegisteredUsername = username;
+			currentlySubscribedProductIds.clear();
+		} else {
+			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
+		}
+	}
+	
+	protected void assertEngProductsAreProvidedInEntitlementCert(String engProductId, EntitlementCert entitlementCert) {
+		// assert that the entitlementCert contains productNamespaces for the engProductId(s)
+		if (engProductId!=null) { 
+			List<String> engProductIds = new ArrayList<String>(Arrays.asList(engProductId.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+			for (String id : engProductIds) {
+				boolean foundId = false;
+				for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
+					if (productNamespace.id.equals(id)) {
+						foundId = true; break;
+					}
+				}
+				//Assert.assertTrue(foundId, "After subscribing to product '"+productId+"', found the expected engineering product id '"+id+"' amongst the granted entitlement cert productNamespaces: "+entitlementCert.productNamespaces);
+				Assert.assertTrue(foundId, "Found the expected engineering product id '"+id+"' amongst the granted entitlement cert productNamespaces: "+entitlementCert.productNamespaces);
+			}
+			//Assert.assertEquals(entitlementCert.productNamespaces.size(), engProductIds.size(), "After subscribing to product '"+productId+"', the number of possible provided engineering product ids from the granted entitlement cert matches the expected list: "+engProductIds);			
+			Assert.assertEquals(entitlementCert.productNamespaces.size(), engProductIds.size(), "The number of possible provided engineering product ids from the granted entitlement cert matches the expected list: "+engProductIds);			
+		}
+	}
+	
 	
 	// Data Providers ***********************************************************************
 	
@@ -280,12 +387,16 @@ sm.integrationTestData:[
 	{
 		username:'stage_test_5',
 		password:'redhat',
-		variant:'Server',		** OPTIONAL **
-		arch:'x86_64',			** OPTIONAL **
+		type:'RHUI',						//** OPTIONAL **
+		variant:'Server,ComputeNode',		//** OPTIONAL **	** COMMA SEPARATED **
+		arch:'x86,x86_64',					//** OPTIONAL **	** COMMA SEPARATED **
+		sockets:'8',						//** OPTIONAL **
 		productIdsData:[
 			{
 		 		productId:'RH0179918',
-		 		reposData:[			** NOT YET IMPLEMENTED **
+		 		sockets:'8',				//** OPTIONAL **
+		 		engProductId:'8',			//** OPTIONAL **	** COMMA SEPARATED **
+		 		reposData:[					//** NOT YET IMPLEMENTED **
 		 			{
 		 				repo:'label',
 		 				packages:'pkg1,pkg2'
@@ -311,24 +422,26 @@ sm.integrationTestData:[
 			JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
 			String username = jsonIntegrationTestDatum.getString("username");
 			String password = jsonIntegrationTestDatum.getString("password");
-			String arch = "ALL";
-			if (jsonIntegrationTestDatum.has("arch")) arch = jsonIntegrationTestDatum.getString("arch");
-			String variant = "ALL";
+			ConsumerType type = null;
+			if (jsonIntegrationTestDatum.has("type")) type = ConsumerType.valueOf(jsonIntegrationTestDatum.getString("type"));
+			String variant = null;	// can be comma separated
 			if (jsonIntegrationTestDatum.has("variant")) variant = jsonIntegrationTestDatum.getString("variant");
-	
-			// skip this jsonIntegrationTestDatum when it does not match the client arch
-			if (!arch.equals("ALL") && !arch.equals(clienttasks.arch)) continue;	// FIXME fails when arch = x86,ia64 (comma separated)
+			String arch = null;	// can be comma separated
+			if (jsonIntegrationTestDatum.has("arch")) arch = jsonIntegrationTestDatum.getString("arch");
 			
-			// skip this jsonIntegrationTestDatum when it does not match the client variant
-			if (!variant.equals("ALL") && !variant.equals(clienttasks.variant)) continue;
+
 		
 			JSONArray jsonProductIdsData = (JSONArray) jsonIntegrationTestDatum.getJSONArray("productIdsData");
 			for (int j = 0; j < jsonProductIdsData.length(); j++) {
 				JSONObject jsonProductIdsDatum = (JSONObject) jsonProductIdsData.get(j);
 				String productId = jsonProductIdsDatum.getString("productId");
+				Integer sockets = null;
+				if (jsonProductIdsDatum.has("sockets")) sockets = jsonProductIdsDatum.getInt("sockets");
+				String engProductId = null;	// can be comma separated
+				if (jsonProductIdsDatum.has("engProductId")) engProductId = jsonProductIdsDatum.getString("engProductId");
 				
-				// String username, String password, String productId
-				ll.add(Arrays.asList(new Object[]{username, password, productId}));
+				// String username, String password, String productId, Integer sockets
+				ll.add(Arrays.asList(new Object[]{username, password, type, productId, variant, arch, sockets, engProductId}));
 			}
 		}
 		
@@ -357,15 +470,17 @@ sm.integrationTestData:[
 		for (List<Object> row : entitlementCertData) {
 			String username = (String) row.get(0);
 			String password = (String) row.get(1);
-			String productId = (String) row.get(2);
-			EntitlementCert entitlementCert = (EntitlementCert) row.get(3);
+			String type = (String) row.get(2);
+			String productId = (String) row.get(3);
+			Integer sockets = (Integer) row.get(4);
+			EntitlementCert entitlementCert = (EntitlementCert) row.get(5);
 			
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.enabled.equals(enabledValue) || enabledValue==null) {	// enabled="1", not enabled="0", either=null
 					
 					// String username, String password, String productId, ContentNamespace contentNamespace, List<ProductNamespaces> productNamespaces
-					if (withProductNamespaces)	ll.add(Arrays.asList(new Object[]{username, password, productId, contentNamespace, entitlementCert.productNamespaces}));
-					else 						ll.add(Arrays.asList(new Object[]{username, password, productId, contentNamespace}));
+					if (withProductNamespaces)	ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert.productNamespaces}));
+					else 						ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace}));
 				}
 			}
 		}
