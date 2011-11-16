@@ -50,8 +50,8 @@ import com.redhat.qe.sm.data.SubscriptionPool;
  * if no productid is there, then contact rhel-eng/jgreguske/dgregor
  */
 
-@Test(groups={"IntegrationTests"})
-public class IntegrationTests extends SubscriptionManagerCLITestScript{
+@Test(groups={"ContentIntegrationTests"})
+public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Test Methods ***********************************************************************
@@ -107,7 +107,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 
 				pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 				Assert.assertNotNull(pool, "Subscription pool for product '"+productId+"' is only listed in --all --available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
-				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool); currentlySubscribedProductIds.add(productId);
 				EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 				assertEngProductsAreProvidedInEntitlementCert(engProductId, entitlementCert);
 				log.warning("No need for further testing of subscription productId '"+productId+"' on this hardware since the providing pool is not normally available.");
@@ -116,10 +116,9 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// subscribe to the first available pool providing the productId
-		//File entitlementCertFile = clienttasks.subscribeToProductId(productId);
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availablePools);
 		Assert.assertNotNull(pool,"Found first available pool to subscribe to productId '"+productId+"'.");
-		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool); currentlySubscribedProductIds.add(productId);
 		
 		// setup data for subsequent tests
 		// TODO MAYBE WE SHOULD ONLY DO THIS WHEN variants.contains(clienttasks.variant)) OR WHEN SUBSCRIPTION IS AVAILABLE?
@@ -136,7 +135,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			groups={"VerifyPackagesAreAvailable"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultEnabledContentNamespaceData",
-			enabled=false)
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
@@ -153,10 +152,10 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 
 		// subscribe
 		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
-			clienttasks.subscribeToProductId(productId);
-			currentlySubscribedProductIds.add(productId);
+			clienttasks.subscribeToProductId(productId); currentlySubscribedProductIds.add(productId);
 		} else {
 			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
+			clienttasks.list_(null,null,null, Boolean.TRUE, null, null, null, null);
 		}
 
 		// Assert that after subscribing, the default enabled/disabled repo is now included in yum repolist
@@ -167,7 +166,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		} else {
 			log.warning("Did not find all the requiredTags '"+contentNamespace.requiredTags+"' for this content namespace amongst the currently installed products.");
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
-				"Yum repolist "+abled+" excludes "+abled+" repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+productId+"' because not all requiredTags ("+contentNamespace.requiredTags+") in the contentNamespace are provided by the currently installed productCerts.");
+				"Yum repolist "+abled+" excludes "+abled+" repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+productId+"' because not all requiredTags '"+contentNamespace.requiredTags+"' in the contentNamespace are provided by the currently installed productCerts.");
 			throw new SkipException("This contentNamespace has requiredTags '"+contentNamespace.requiredTags+"' that were not found amongst all of the currently installed products.  Therefore we cannot verify that the CDN is providing packages for repo '"+contentNamespace.label+"'.");
 		}
 
@@ -175,6 +174,9 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		String options = contentNamespace.enabled.equals("1")? contentNamespace.label:contentNamespace.label+" --enablerepo="+contentNamespace.label;
 		packageCount = clienttasks.getYumRepolistPackageCount(options);
 		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero (actual packageCount is '"+packageCount+"').");
+		
+		// TODO populate data for InstallAndRemoveAnyPackageFromContentNamespace_Test 
+		//entitlementCertData.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert.productNamespaces}));
 	}
 	
 	
@@ -182,7 +184,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			groups={"VerifyPackagesAreAvailable"},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dataProvider="getDefaultDisabledContentNamespaceData",
-			enabled=false)
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		Assert.assertEquals(contentNamespace.enabled,"0","Reconfirming that we are are about to test a default disabled contentNamespace.");
@@ -195,7 +197,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceWithProductNamespacesData",
-			enabled=false)
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, List<ProductNamespace> productNamespaces) {
 
@@ -205,8 +207,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe
 		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
-			clienttasks.subscribeToProductId(productId);
-			currentlySubscribedProductIds.add(productId);
+			clienttasks.subscribeToProductId(productId); currentlySubscribedProductIds.add(productId);
 		} else {
 			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
 		}
@@ -381,7 +382,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 /*		
-sm.integrationTestData:[
+sm.content.integrationTestData:[
 	{
 		username:'stage_test_5',
 		password:'redhat',
@@ -415,7 +416,7 @@ sm.integrationTestData:[
 ]
 */
 
-		JSONArray jsonIntegrationTestData = sm_integrationTestData;
+		JSONArray jsonIntegrationTestData = sm_contentIntegrationTestData;
 		for (int i = 0; i < jsonIntegrationTestData.length(); i++) {
 			JSONObject jsonIntegrationTestDatum = (JSONObject) jsonIntegrationTestData.get(i);
 			String username = jsonIntegrationTestDatum.getString("username");
@@ -468,7 +469,7 @@ sm.integrationTestData:[
 		for (List<Object> row : entitlementCertData) {
 			String username = (String) row.get(0);
 			String password = (String) row.get(1);
-			String type = (String) row.get(2);
+			ConsumerType type = (ConsumerType) row.get(2);
 			String productId = (String) row.get(3);
 			Integer sockets = (Integer) row.get(4);
 			EntitlementCert entitlementCert = (EntitlementCert) row.get(5);

@@ -429,14 +429,14 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: Integration Tests">
+	<test name="CLI: Content Integration Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="IntegrationTests" />
+				<include name="ContentIntegrationTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>

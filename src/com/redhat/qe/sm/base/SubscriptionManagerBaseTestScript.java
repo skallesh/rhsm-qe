@@ -122,7 +122,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
-	protected JSONArray sm_integrationTestData = null;
+	protected JSONArray sm_contentIntegrationTestData = null;
 
 	
 	public SubscriptionManagerBaseTestScript() {
@@ -179,7 +179,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 //			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 //			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 			sm_personSubscriptionPoolProductData	= new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
-			sm_integrationTestData					= new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+			sm_contentIntegrationTestData			= new JSONArray(getProperty("sm.content.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
 
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
