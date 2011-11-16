@@ -57,7 +57,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 
 	@Test(	description="register and subscribe to expected product subscription",
-			groups={},
+			groups={"AcceptanceTests"},
 			dataProvider="getSubscribeData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
@@ -65,10 +65,8 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 
 		// register a new consumer
 		registerConsumerWhenNotAlreadyRegistered(username, password, type, sockets);	
-//		clienttasks.register(username, password, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 
 		// assert non-availability based on sockets
-//		clienttasks.deleteFactsFileWithOverridingValues();
 		if (sockets!=null) {
 			// set client's sockets value one higher than subscription supports
 			Map<String,String> factsMap = new HashMap<String,String>();
@@ -108,7 +106,7 @@ public class IntegrationTests extends SubscriptionManagerCLITestScript{
 				Assert.assertNull(pool, "Subscription pool for product '"+productId+"' is NOT available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
 
 				pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-				Assert.assertNotNull(pool, "Subscription pool for product '"+productId+"' is only listed in ALL available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
+				Assert.assertNotNull(pool, "Subscription pool for product '"+productId+"' is only listed in --all --available when the client arch (actual='"+clienttasks.arch+"') is not contained in '"+arches+"'.");
 				File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 				EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 				assertEngProductsAreProvidedInEntitlementCert(engProductId, entitlementCert);
