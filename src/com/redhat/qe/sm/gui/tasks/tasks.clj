@@ -261,6 +261,19 @@
      (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
   ([] (search {})))
 
+(defn is-item?
+  "Determines if an item in a table is a dropdown or an item."
+  [table rownum]
+  (try (let [value (ui getcellvalue table rownum 2)]
+         (if (= 0 value)
+           (try (let [value (ui getcellvalue table rownum 3)]
+                  (if (= 0 value)
+                    false
+                    true))
+                (catch Exception e true))
+           true))
+       (catch Exception e false)))
+
 (defn skip-dropdown
   "Skips dropdown items in a table."
   [table item]
@@ -268,14 +281,11 @@
     (raise {:type :item-not-available
             :name item
             :msg (str "Not found in " table ": " item)}))
-  (let [row (ui gettablerowindex table item)
-        is-item? (fn [rownum]
-                  (try (ui getcellvalue table rownum 2) true
-                       (catch Exception e false)))]
-    (if (is-item? row)
+  (let [row (ui gettablerowindex table item)]
+    (if (is-item? table row)
       (ui selectrow table item)
       (do
-        (if (and (is-item? (+ 1 row))
+        (if (and (is-item? table (+ 1 row))
                  (= item (ui getcellvalue table (+ 1 row) 0)))
           (ui selectrowindex table (+ 1 row))
           (raise {:type :invalid-item
@@ -333,7 +343,7 @@
            (ui waittillwindowexist :firstboot-proxy-dialog 60)
            (ui check :firstboot-proxy-checkbox)
            (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-           (ui check :firstboot-auth-checkbox)
+           ui check :firstboot-auth-checkbox
            (ui settextvalue :firstboot-proxy-user user)
            (ui settextvalue :firstboot-proxy-pass pass)
            (ui click :firstboot-proxy-close)
@@ -432,14 +442,12 @@
         (ui getcellvalue view row col)))
     (do
       (let [allitems (get-table-elements view 0)
-            is-item? (fn [rownum]
-                      (try (ui getcellvalue view rownum 2) true
-                           (catch Exception e false)))
-            rownums (filter is-item? (range (ui getrowcount view)))
+            item-filter (fn [item] (is-item? view item))
+            rownums (filter item-filter (range (ui getrowcount view)))
             items (map (fn [rowid]
                          (ui getcellvalue view rowid 0))
                        rownums)]
-        items)))) 
+        items))))
   
 (defn do-to-all-rows-in
   "Perferms a given function on all elements in a given table and column."
