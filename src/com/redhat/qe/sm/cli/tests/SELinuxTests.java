@@ -9,7 +9,12 @@ import com.redhat.qe.tools.RemoteFileTasks;
 /**
  * @author jsefler
  *
- *
+ * Notes: To investigate a denial in the /var/log/audit/audit.log...
+ * http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Security-Enhanced_Linux/sect-Security-Enhanced_Linux-Fixing_Problems-Searching_For_and_Viewing_Denials.html
+ * 1. yum install setroubleshoot-server
+ * 2. /sbin/aureport -a
+ * 3. /sbin/ausearch -m avc
+ * 
  */
 @Test(groups={"SELinuxTests"})
 public class SELinuxTests extends SubscriptionManagerCLITestScript {

@@ -57,7 +57,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected static SubscriptionManagerTasks client1tasks	= null;	// client1 subscription manager tasks
 	protected static SubscriptionManagerTasks client2tasks	= null;	// client2 subscription manager tasks
 	
-	protected Random randomGenerator = new Random(System.currentTimeMillis());
+	public static Random randomGenerator = new Random(System.currentTimeMillis());
 	
 	public SubscriptionManagerCLITestScript() {
 		super();
@@ -273,8 +273,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	@AfterClass(groups={"setup"}, description="Search the SELinux audit log for denials after running the current class of tests")
 	public void verifyNoSELinuxDenialsWereLoggedAfterClass() {
-		if (client1!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log on client "+client1.getConnection().getHostname()+" while executing this test class.");
-		if (client2!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log on client "+client2.getConnection().getHostname()+" while executing this test class.");
+		if (client1!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client1, client1tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+client1tasks.varLogAuditFile+"' on client "+client1.getConnection().getHostname()+" while executing this test class.");
+		if (client2!=null) Assert.assertTrue(RemoteFileTasks.getTailFromMarkedFile(client2, client2tasks.varLogAuditFile, selinuxClassMarker, "denied").trim().equals(""), "No SELinux denials found in the audit log '"+client2tasks.varLogAuditFile+"' on client "+client2.getConnection().getHostname()+" while executing this test class.");
 	}
 	
 	@AfterSuite(groups={"cleanup"},description="subscription manager tear down")

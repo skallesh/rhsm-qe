@@ -137,8 +137,9 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getDefaultEnabledContentNamespaceData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, EntitlementCert entitlementCert) {
+	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
+		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
 		Integer packageCount=null;
 
 //if(true) throw new SkipException("debugging");
@@ -186,20 +187,74 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getDefaultDisabledContentNamespaceData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, EntitlementCert entitlementCert) {
+	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
 		Assert.assertEquals(contentNamespace.enabled,"0","Reconfirming that we are are about to test a default disabled contentNamespace.");
-		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace, entitlementCert);
+		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace);
 	}
 	
 	
-	@Test(	description="ensure an available package can be downloaded/installed/removed from the enabled repo ",
+	@Test(	description="ensure a random available package can be downloaded from the enabled repo ",
 			groups={},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
 			dataProvider="getContentNamespaceData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, EntitlementCert entitlementCert) {
+	public void DownloadRandomPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
+
+		// register
+		registerConsumerWhenNotAlreadyRegistered(username, password, type, sockets);
+		
+		// subscribe
+		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
+			clienttasks.subscribeToProductId(productId); currentlySubscribedProductIds.add(productId);
+		} else {
+			log.info("Saving time by assuming that we are already subscribed to productId='"+productId+"'");
+			//clienttasks.list_(null,null,null, Boolean.TRUE, null, null, null, null);
+		}
+		
+		
+		// make sure that the products required for this repo are installed
+		/* not needed anymore since this case is already filtered out by the dataProvider
+		if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
+			throw new SkipException("This contentNamespace has requiredTags '"+contentNamespace.requiredTags+"' that were not found amongst all of the currently installed products.  Therefore we cannot install and remove any package from repo '"+contentNamespace.label+"'.");
+		}
+		*/
+		
+		
+		// make sure there is a positive package count provided by this repo
+		/* not needed anymore since this case is already filtered out by the dataProvider
+		Integer packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label+" --enablerepo="+contentNamespace.label);
+		if (packageCount==0) {
+			throw new SkipException("Cannot install a package from this repo '"+contentNamespace.label+"' since it is not providing any packages.");
+		}
+		*/
+		
+		// find a random available package provided by this repo
+		String pkg = clienttasks.findRandomAvailablePackageFromRepo(contentNamespace.label);
+		if (pkg==null) {
+			throw new SkipException("Could NOT find a random available package from this repo '"+contentNamespace.label+"' to attempt an install/remove test.");
+		}
+		
+		// download the package and assert that it is successfully downloaded
+		File pkgFile = clienttasks.yumDownloadPackageFromRepo(pkg, contentNamespace.label, "/tmp", null);
+		Assert.assertNotNull(pkgFile, "The actual downloaded package file is: "+pkgFile);
+		
+		// remove the file since it is not needed anymore
+		client.runCommandAndWait("rm -f "+pkgFile);
+
+	}
+	
+	@Test(	description="ensure a unique available package can be installed/removed from the enabled repo ",
+			groups={},
+			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
+			dependsOnGroups={"VerifyPackagesAreAvailable"},
+			dataProvider="getContentNamespaceData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
+	public void InstallAndRemoveUniquePackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
 
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
@@ -215,16 +270,20 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// make sure that the products required for this repo are installed
+		/* not needed anymore since this case is already filtered out by the dataProvider
 		if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 			throw new SkipException("This contentNamespace has requiredTags '"+contentNamespace.requiredTags+"' that were not found amongst all of the currently installed products.  Therefore we cannot install and remove any package from repo '"+contentNamespace.label+"'.");
 		}
+		*/
 		
 		
 		// make sure there is a positive package count provided by this repo
+		/* not needed anymore since this case is already filtered out by the dataProvider
 		Integer packageCount = clienttasks.getYumRepolistPackageCount(contentNamespace.label+" --enablerepo="+contentNamespace.label);
 		if (packageCount==0) {
 			throw new SkipException("Cannot install a package from this repo '"+contentNamespace.label+"' since it is not providing any packages.");
 		}
+		*/
 		
 		// find an available package that is uniquely provided by this repo
 		String pkg = clienttasks.findUniqueAvailablePackageFromRepo(contentNamespace.label);
@@ -308,6 +367,14 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 	
+	
+	@BeforeClass(groups={"setup"})
+	public void disableAllRepos() {
+		// this is needed to disable all of the beaker-* repos that are enabled by default on Beaker provisioned hardware otherwise VERY long loops occur in clienttasks.findUniqueAvailablePackageFromRepo
+		clienttasks.yumDisableAllRepos();
+	}
+	
+	
 	@BeforeClass(groups={"setup"})
 	public void getCurrentProductCertsBeforeClass() {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -371,6 +438,19 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			//Assert.assertEquals(entitlementCert.productNamespaces.size(), engProductIds.size(), "After subscribing to product '"+productId+"', the number of possible provided engineering product ids from the granted entitlement cert matches the expected list: "+engProductIds);			
 			Assert.assertEquals(entitlementCert.productNamespaces.size(), engProductIds.size(), "The number of possible provided engineering product ids from the granted entitlement cert matches the expected list: "+engProductIds);			
 		}
+	}
+	
+	protected EntitlementCert recallTheEntitlementCertGrantedAfterSubscribing(String username, String password, ConsumerType type, String productId, Integer sockets)  {
+		for (List<Object> row : entitlementCertData) {
+			if ((String)row.get(0) != username) continue;
+			if ((String)row.get(1) != password) continue;
+			if ((ConsumerType)row.get(2) != type) continue;
+			if ((String)row.get(3) != productId) continue;
+			if ((Integer)row.get(4) != sockets) continue;
+			return (EntitlementCert)row.get(5);
+		}
+		Assert.fail("Failed to recall the entitlement cert granted to: username='"+username+"' password='"+password+"' type='"+type+"' productId='"+productId+"' sockets='"+sockets+"'.");
+		return null;
 	}
 	
 	
@@ -472,7 +552,7 @@ sm.content.integrationTestData:[
 				if (contentNamespace.enabled.equals(enabledValue)) {	// enabled="1", not enabled="0"
 					
 					//
-					ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert}));
+					ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace}));
 				}
 			}
 		}
@@ -496,7 +576,7 @@ sm.content.integrationTestData:[
 			EntitlementCert entitlementCert = (EntitlementCert) row.get(6);
 			
 			//
-			ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert}));
+			ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace}));
 
 		}
 		return ll;
