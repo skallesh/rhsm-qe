@@ -137,7 +137,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getDefaultEnabledContentNamespaceData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, EntitlementCert entitlementCert) {
 		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
 		Integer packageCount=null;
 
@@ -154,8 +154,8 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
 			clienttasks.subscribeToProductId(productId); currentlySubscribedProductIds.add(productId);
 		} else {
-			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
-			clienttasks.list_(null,null,null, Boolean.TRUE, null, null, null, null);
+			log.info("Saving time by assuming that we are already subscribed to productId='"+productId+"'");
+			//clienttasks.list_(null,null,null, Boolean.TRUE, null, null, null, null);
 		}
 
 		// Assert that after subscribing, the default enabled/disabled repo is now included in yum repolist
@@ -175,8 +175,8 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		packageCount = clienttasks.getYumRepolistPackageCount(options);
 		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero (actual packageCount is '"+packageCount+"').");
 		
-		// TODO populate data for InstallAndRemoveAnyPackageFromContentNamespace_Test 
-		//entitlementCertData.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert.productNamespaces}));
+		// TODO populate data for subsequent calls to InstallAndRemoveAnyPackageFromContentNamespace_Test 
+		contentNamespaceData.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert}));
 	}
 	
 	
@@ -186,9 +186,9 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getDefaultDisabledContentNamespaceData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
+	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, EntitlementCert entitlementCert) {
 		Assert.assertEquals(contentNamespace.enabled,"0","Reconfirming that we are are about to test a default disabled contentNamespace.");
-		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace);
+		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace, entitlementCert);
 	}
 	
 	
@@ -196,10 +196,10 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			groups={},
 			dependsOnMethods={"RegisterAndSubscribe_Test"}, alwaysRun=true,
 			dependsOnGroups={"VerifyPackagesAreAvailable"},
-			dataProvider="getContentNamespaceWithProductNamespacesData",
+			dataProvider="getContentNamespaceData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
-	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, List<ProductNamespace> productNamespaces) {
+	public void InstallAndRemoveAnyPackageFromContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace, EntitlementCert entitlementCert) {
 
 //if (!contentNamespace.label.equals("rhel-6-server-beta-debug-rpms")) throw new SkipException("debugging");
 		// register
@@ -209,7 +209,8 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		if (!currentlySubscribedProductIds.contains(productId)) { // try to save some time by not re-subscribing
 			clienttasks.subscribeToProductId(productId); currentlySubscribedProductIds.add(productId);
 		} else {
-			log.info("Trying to save time by assuming that we are already subscribed to productId='"+productId+"'");
+			log.info("Saving time by assuming that we are already subscribed to productId='"+productId+"'");
+			//clienttasks.list_(null,null,null, Boolean.TRUE, null, null, null, null);
 		}
 		
 		
@@ -253,7 +254,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		int numberOfProductNamespacesInstalled = 0;
 		ProductCert productCertInstalled=null;
 		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-			for (ProductNamespace productNamespace : productNamespaces) {
+			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
 				if (productNamespace.id.equals(productCert.productId)) {
 					numberOfProductNamespacesInstalled++;
 					productCertInstalled=productCert;
@@ -270,11 +271,11 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		// assert that a productid.pem is/was installed that covers the product from which this package was installed
 		// Note: I am making this assertion after the yumRemovePackage call to avoid leaving packages installed in case this assert fails.
 		if (numberOfProductNamespacesInstalled>1) {
-			log.info("Found product certs installed that match the ProductNamespaces from the entitlement cert that provided the right to install package '"+pkg+"' from repo '"+contentNamespace.label+"'.");
+			log.info("Found product certs installed that match the ProductNamespaces from the entitlement cert that granted the right to install package '"+pkg+"' from repo '"+contentNamespace.label+"'.");
 		} else if (numberOfProductNamespacesInstalled==1){
-			Assert.assertTrue(true,"An installed product cert (productName='"+productCertInstalled.productName+"' productId='"+productCertInstalled.productId+"') corresponding to installed package '"+pkg+"' from repo '"+contentNamespace.label+"' was found after its install.");
+			Assert.assertTrue(true,"An installed product cert (productName='"+productCertInstalled.productName+"' productId='"+productCertInstalled.productId+"') corresponding to installed package '"+pkg+"' from repo '"+contentNamespace.label+"' was found after it was installed.");
 		} else {
-			Assert.fail("After installing package '"+pkg+"' from repo '"+contentNamespace.label+"', there was no productid cert installed.  Expected one of the following productid certs to get installed via the yum product-id plugin: "+productNamespaces);		
+			Assert.fail("After installing package '"+pkg+"' from repo '"+contentNamespace.label+"', there was no product cert installed.  Expected one of the following product certs to get installed via the yum product-id plugin: "+entitlementCert.productNamespaces);		
 		}
 	}
 	
@@ -325,6 +326,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	// Protected Methods ***********************************************************************
 	
 	List<List<Object>> entitlementCertData = new ArrayList<List<Object>>();
+	List<List<Object>> contentNamespaceData = new ArrayList<List<Object>>();
 	List<ProductCert> currentProductCerts = new ArrayList<ProductCert>();
 	protected String currentRegisteredUsername = null;
 	protected List<String> currentlySubscribedProductIds = new ArrayList<String>();;
@@ -348,7 +350,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {
-			log.info("Trying to save time by assuming that we are already registered as username='"+username+"'");
+			log.info("Saving time by assuming that we are already registered as username='"+username+"'");
 		}
 	}
 	
@@ -449,21 +451,13 @@ sm.content.integrationTestData:[
 	
 	@DataProvider(name="getDefaultEnabledContentNamespaceData")
 	public Object[][] getDefaultEnabledContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("1", false));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("1"));
 	}
 	@DataProvider(name="getDefaultDisabledContentNamespaceData")
 	public Object[][] getDefaultDisabledContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("0", false));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("0"));
 	}
-	@DataProvider(name="getContentNamespaceData")
-	public Object[][] getContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(null, false));
-	}
-	@DataProvider(name="getContentNamespaceWithProductNamespacesData")
-	public Object[][] getContentNamespaceWithProductNamespacesDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(null, true));
-	}
-	protected List<List<Object>> getContentNamespaceDataAsListOfLists(String enabledValue, boolean withProductNamespaces) throws JSONException {
+	protected List<List<Object>> getContentNamespaceDataAsListOfLists(String enabledValue) throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		for (List<Object> row : entitlementCertData) {
@@ -475,19 +469,38 @@ sm.content.integrationTestData:[
 			EntitlementCert entitlementCert = (EntitlementCert) row.get(5);
 			
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-				if (contentNamespace.enabled.equals(enabledValue) || enabledValue==null) {	// enabled="1", not enabled="0", either=null
+				if (contentNamespace.enabled.equals(enabledValue)) {	// enabled="1", not enabled="0"
 					
-					// String username, String password, String productId, ContentNamespace contentNamespace, List<ProductNamespaces> productNamespaces
-					if (withProductNamespaces)	ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert.productNamespaces}));
-					else 						ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace}));
+					//
+					ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert}));
 				}
 			}
 		}
 		return ll;
 	}
 
+	@DataProvider(name="getContentNamespaceData")
+	public Object[][] getContentNamespaceDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists());
+	}
+	protected List<List<Object>> getContentNamespaceDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		for (List<Object> row : contentNamespaceData) {
+			String username = (String) row.get(0);
+			String password = (String) row.get(1);
+			ConsumerType type = (ConsumerType) row.get(2);
+			String productId = (String) row.get(3);
+			Integer sockets = (Integer) row.get(4);
+			ContentNamespace contentNamespace = (ContentNamespace) row.get(5);
+			EntitlementCert entitlementCert = (EntitlementCert) row.get(6);
+			
+			//
+			ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace, entitlementCert}));
 
-
+		}
+		return ll;
+	}
 }
 
 

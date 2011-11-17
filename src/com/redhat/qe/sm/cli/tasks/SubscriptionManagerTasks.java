@@ -10,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -3505,7 +3506,10 @@ repolist: 3,394
 		// install the package with repoLabel enabled
 		if (installOptions==null) installOptions=""; installOptions += " -y";
 		String command = "yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"': ");
+		Assert.assertContainsMatch(result.getStdout(), "^Complete!$", "Stdout from command '"+command+"': ");
 		
 		//	201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	201104051837:18.156 - FINE: Stdout: 
