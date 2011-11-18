@@ -3553,8 +3553,8 @@ repolist: 3,394
 		//[root@jsefler-stage-6server ~]# 
 		
 		// extract the name of the downloaded pkg
-		// [/\w\.-]*\.rpm
-		String regex = "([/\\w\\.-]*\\.rpm)";	
+		// ([/\w\.\-+]*\.rpm)
+		String regex = "([/\\w\\.\\-+]*\\.rpm)";	
 		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(result.getStdout());
 		if (!matcher.find()) {
