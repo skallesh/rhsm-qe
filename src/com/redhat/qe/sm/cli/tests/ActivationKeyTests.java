@@ -55,12 +55,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(username, password, sm_serverUrl, "/owners/" + org + "/activation_keys", jsonActivationKeyRequest.toString()));
 
 		// assert that the creation was successful (does not contain a displayMessage)
-		try {
-			String displayMessage = jsonActivationKey.getString("displayMessage");
-			Assert.fail("The creation of an activation key appears to have failed: "+displayMessage);
-		} catch (JSONException e) {
-			Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
+		if (jsonActivationKey.has("displayMessage")) {
+			Assert.fail("The creation of an activation key appears to have failed: "+jsonActivationKey.getString("displayMessage"));
 		}
+		Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
+
 		// assert that the created key is listed
 		// process all of the subscriptions belonging to ownerKey
 		JSONArray jsonActivationKeys = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/owners/"+org+"/activation_keys"));	
@@ -122,10 +121,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 
 		// assert that the creation was NOT successful (contains a displayMessage)
-		try {
+		if (jsonActivationKey.has("displayMessage")) {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
 			Assert.assertEquals(displayMessage, "Activation key names must be alphanumeric or the characters '-' or '_'. ["+badName+"]","Expected the creation of this activation key named '"+badName+"' to fail.");
-		} catch (JSONException e) {
+		} else {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an invalid name '"+badName+"'.");
 			Assert.assertFalse (badName.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with badName '"+badName+"': "+jsonActivationKey);
 		}
@@ -154,11 +153,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
 		
 		// assert that the creation was NOT successful (contains a displayMessage)
-		try {
+		if (jsonActivationKey.has("displayMessage")) {
 			String displayMessage = jsonActivationKey.getString("displayMessage");
 			// Activation key name [dupkey] is already in use for owner [admin]
 			Assert.assertEquals(displayMessage,"Activation key name ["+name+"] is already in use for owner ["+sm_clientOrg+"]","Expected the attempted creation of a duplicate activation key named '"+name+"' for owner '"+sm_clientOrg+"' to fail.");
-		} catch (JSONException e) {
+		} else {
 			log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to a duplicate name '"+name+"'.");
 			Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"The following activation key should not have been created with a duplicate name '"+name+"': "+jsonActivationKey);
 		}
@@ -206,10 +205,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"))) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
-			try {
+			if (jsonActivationKey.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
-			} catch (JSONException e) {
+			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail since we should be blocked from adding pools that require consumer type person to an activation key.");
 				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' which requires a consumer type 'person' should NOT have been added to the following activation key with any quantity: "+jsonActivationKey);
 			}
@@ -220,10 +219,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId) && addQuantity>1) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
-			try {
+			if (jsonActivationKey.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
-			} catch (JSONException e) {
+			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to greater than one quantity '"+addQuantity+"'.");
 				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Non multi-entitlement pool '"+poolId+"' should NOT have been added to the following activation key with a quantity '"+addQuantity+"' greater than one: "+jsonActivationKey);
 			}
@@ -234,10 +233,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity > jsonPool.getInt("quantity")) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			try {
+			if (jsonActivationKey.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
-			} catch (JSONException e) {
+			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
 				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
@@ -248,10 +247,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity < 1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			try {
+			if (jsonActivationKey.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"The quantity must be greater than 0", "Expected the addition of pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' less than one be blocked.");
-			} catch (JSONException e) {
+			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to insufficient quantity '"+addQuantity+"'.");
 				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with insufficient quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
@@ -392,12 +391,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + org + "/activation_keys",jsonActivationKeyRequest.toString()));
 
 			// assert that the creation was successful (does not contain a displayMessage)
-			try {
+			if (jsonActivationKey.has("displayMessage")) {
 				String displayMessage = jsonActivationKey.getString("displayMessage");
 				Assert.fail("The creation of an activation key appears to have failed: "+displayMessage);
-			} catch (JSONException e) {
-				Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
 			}
+			Assert.assertTrue(true,"The absense of a displayMessage indicates the activation key creation was probably successful.");
+			
 			// now assert that the new activation key is found under /candlepin/activation_keys/<id>
 			JSONObject jsonActivationKeyJ = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 			Assert.assertEquals(jsonActivationKey.toString(), jsonActivationKeyJ.toString(), "Successfully found newly created activation key among all activation keys under /activation_keys.");
@@ -487,14 +486,16 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 //			int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
 //			int bindQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a bindQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
 			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
-
+			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
+			}
 //			addedPoolIds.add(poolId);
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 		}
 		if (addQuantity==null) addQuantity=1;
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 		Assert.assertTrue(jsonActivationKey.getJSONArray("pools").length()>0,"MultiplePools have been added to the activation key: "+jsonActivationKey);
-		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"MultiplePools have been added to the activation key: "+jsonActivationKey);
+		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"The number of attempted pools added equals the number of pools retrieved from the activation key: "+jsonActivationKey);
 		
 		
 		// register with the activation key
@@ -541,7 +542,9 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			
 			// add the pool to the activation key
 			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
-
+			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
+			}
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 			activationKeyNames.add(activationKeyName);
 		}
@@ -595,8 +598,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys",jsonActivationKeyRequest.toString()));
 			
 			// add the pool to the activation key
-			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity), null));
-
+			String path = "/activation_keys/" + jsonActivationKey.getString("id") + "/pools/" + jsonPool.getString("id") + (addQuantity==null?"":"?quantity="+addQuantity);
+			JSONObject jsonPoolAddedToActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, path, null));
+			if (jsonPoolAddedToActivationKey.has("displayMessage")) {
+				Assert.fail("Failed to add pool '"+jsonPool.getString("productId")+"' '"+jsonPool.getString("id")+"' to activation key '"+jsonActivationKey.getString("id")+"'.  DisplayMessage: "+jsonPoolAddedToActivationKey.getString("displayMessage"));
+			}
 			jsonPoolsAddedToActivationKey.put(jsonPoolAddedToActivationKey);
 			activationKeyNames.add(activationKeyName);
 		}
