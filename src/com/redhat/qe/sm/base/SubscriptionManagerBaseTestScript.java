@@ -52,13 +52,13 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public CandlepinType sm_serverType			= CandlepinType.valueOf(getProperty("sm.server.type","standalone"));
 
 	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
-	public String sm_client1Username			= getProperty("sm.client1.username","");
-	public String sm_client1Password			= getProperty("sm.client1.password","");
+	public String sm_client1Username			= getProperty("sm.client1.username",null);
+	public String sm_client1Password			= getProperty("sm.client1.password",null);
 	public String sm_client1Org					= getProperty("sm.client1.org",null);
 
 	public String sm_client2Hostname			= getProperty("sm.client2.hostname","");
-	public String sm_client2Username			= getProperty("sm.client2.username","");
-	public String sm_client2Password			= getProperty("sm.client2.password","");
+	public String sm_client2Username			= getProperty("sm.client2.username",null);
+	public String sm_client2Password			= getProperty("sm.client2.password",null);
 	public String sm_client2Org					= getProperty("sm.client2.org",null);
 
 	public String sm_clientHostname				= sm_client1Hostname;

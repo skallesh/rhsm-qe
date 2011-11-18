@@ -717,9 +717,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists(boolean all) {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
 		
 		// assure we are registered
 		clienttasks.unregister(null, null, null);
+
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);
@@ -919,6 +922,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
@@ -944,6 +949,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
@@ -1075,15 +1082,26 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					// then there is no need to check the system's sockets to see if this subscription should be available 
 					// Because this subscription is stackable, it better not be filtered out from availability based on the system's sockets.
 					if (productAttributeStackingIdValue==null) {
-					
-						// if the sockets attribute is zero, then this subscription should be available to this client
-						if (Integer.valueOf(attributeValue)==0) {
-							// do not mark productAttributesPassRulesCheck = false;
-						} else
-
-						// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
-						if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-							if (matchSystem) productAttributesPassRulesCheck = false;
+						
+						SOCKETS:
+						{
+							// if the sockets attribute is not numeric (e.g. "null"),  then this subscription should be available to this client
+							try {Integer.valueOf(attributeValue);}
+							catch (NumberFormatException e) {
+								// do not mark productAttributesPassRulesCheck = false;
+								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' IS QUESTIONABLE.  ITS HAS A '"+attributeName+"' PRODUCT ATTRIBUTE OF '"+attributeValue+"' WHICH IS NOT NUMERIC.  SIMPLY IGNORING THIS ATTRIBUTE.");
+								break SOCKETS;
+							}
+							
+							// if the sockets attribute is zero, then this subscription should be available to this client
+							if (Integer.valueOf(attributeValue)==0) {
+								// do not mark productAttributesPassRulesCheck = false;
+							} else
+	
+							// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
+							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
+								if (matchSystem) productAttributesPassRulesCheck = false;
+							}
 						}
 					}
 				}
@@ -1144,9 +1162,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 							if (!attributeValue.equals(productAttributeSocketsValue)) {
 								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' SOCKETS ATTRIBUTE '"+attributeValue+"' DOES NOT MATCH THE BASE SUBSCRIPTION PRODUCT '"+productId+"' SOCKETS ATTRIBUTE '"+productAttributeSocketsValue+"'.");
 							}
-							if (!productAttributeSocketsValue.equals("") && Integer.valueOf(attributeValue) > Integer.valueOf(productAttributeSocketsValue)) {
-								//providedProductAttributesPassRulesCheck = false;
-							}
+//							if (!productAttributeSocketsValue.equals("") && Integer.valueOf(attributeValue) > Integer.valueOf(productAttributeSocketsValue)) {
+//								//providedProductAttributesPassRulesCheck = false;
+//							}
 						}
 					}
 					if (providedProductAttributesPassRulesCheck) {

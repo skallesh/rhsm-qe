@@ -416,6 +416,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>> getPackageFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
 		
 		// get the currently installed product certs to be used when checking for conditional content tagging
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
@@ -460,6 +462,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>> getYumGroupFromEnabledRepoAndSubscriptionPoolDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
+		if (sm_clientUsername==null) return ll;
+		if (sm_clientPassword==null) return ll;
 		
 		// get the currently installed product certs to be used when checking for conditional content tagging
 		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
