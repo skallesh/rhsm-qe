@@ -624,7 +624,7 @@ Expected Results:
 	
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130"},
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
@@ -641,12 +641,6 @@ Expected Results:
 			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
 			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
 			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-// TODO UNCOMMENT IF bug 755130 IS DENIED
-//		interoperabilityWarningMessage = 
-//			"WARNING" +"\n"+
-//			"This system has already been registered with RHN using RHN Classic technology." +"\n"+
-//			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once." +"\n"+
-//			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
 
 		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
 		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011
