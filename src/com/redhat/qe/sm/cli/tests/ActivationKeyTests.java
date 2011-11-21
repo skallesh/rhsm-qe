@@ -205,7 +205,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"))) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
-			if (jsonActivationKey.has("displayMessage")) {
+			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
 			} else {
@@ -219,7 +219,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId) && addQuantity>1) {
 
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
-			if (jsonActivationKey.has("displayMessage")) {
+			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
 			} else {
@@ -233,7 +233,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity > jsonPool.getInt("quantity")) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			if (jsonActivationKey.has("displayMessage")) {
+			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
 			} else {
@@ -247,7 +247,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity < 1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
-			if (jsonActivationKey.has("displayMessage")) {
+			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
 				Assert.assertEquals(displayMessage,"The quantity must be greater than 0", "Expected the addition of pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' less than one be blocked.");
 			} else {
