@@ -451,6 +451,11 @@ schema generation failed
 	
 	static public JSONObject setAutohealForConsumer(String authenticator, String password, String url, String consumerid, Boolean autoheal) throws Exception {
 
+		return setAttributeForConsumer(authenticator, password, url, consumerid, "autoheal", autoheal);
+	}
+	
+	static public JSONObject setAttributeForConsumer(String authenticator, String password, String url, String consumerid, String attributeName, Boolean attributeValue) throws Exception {
+
 //		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
 //		[root@jsefler-onprem-62server tmp]# 
 //		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET  --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -mjson.tool |  grep heal
@@ -461,7 +466,7 @@ schema generation failed
 //		[root@jsefler-onprem-62server tmp]# 
 		
 		JSONObject jsonData = new JSONObject();
-		jsonData.put("autoheal", autoheal.toString());
+		jsonData.put(attributeName, attributeValue.toString());
 		putResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid, jsonData.toString());
 		return new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid));
 	}
