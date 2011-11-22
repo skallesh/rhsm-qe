@@ -2852,16 +2852,17 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
 				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
 
-		// assert the entitlement certKeyFilePath is removed
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=708362 - jsefler 08/25/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="708362"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		boolean assertCertKeyFilePathIsRemoved = true;
-		if (invokeWorkaroundWhileBugIsOpen) log.warning("Skipping the assertion that the Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed while bug is open."); else
-		// END OF WORKAROUND
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
-				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
+//THIS BUG WAS FIXED AFTER RHEL61, RHEL57, RHEL62, DO NOT TEST IN THE Entitlement-RHEL6.2 BRANCH
+//		// assert the entitlement certKeyFilePath is removed
+//		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=708362 - jsefler 08/25/2011
+//		boolean invokeWorkaroundWhileBugIsOpen = true;
+//		String bugId="708362"; 
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		boolean assertCertKeyFilePathIsRemoved = true;
+//		if (invokeWorkaroundWhileBugIsOpen) log.warning("Skipping the assertion that the Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed while bug is open."); else
+//		// END OF WORKAROUND
+//		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
+//				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
 
 		// assert that only ONE entitlement cert file was removed
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
