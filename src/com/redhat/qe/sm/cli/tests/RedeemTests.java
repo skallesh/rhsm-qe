@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
@@ -17,7 +19,9 @@ import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
+import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -110,12 +114,26 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// This test is the hosted equivalent for CASE 2 from getOnPremisesMockAttemptToRedeemData
-	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server using a non-found service tag",
-			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
+	@Test(	description="subscription-manager: attempt change a consumers canActivate attribute",
+			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void hostedMockAttemptToRedeemUsingNonFoundServiceTag_Test() {
+	public void AttemptToChangeConsumersCanActivateAttribute_Test() throws Exception {
+
+		// register and attempt to update the consumer by forcing its canActivate attribute to true
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, "canActivate", true);
+		log.warning("Beacuse the consumer's canActivate attribute is black-listed from changes, that^ attempt to change it to true should have been ignored.  Let's verify...");
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertFalse(jsonConsumer.getBoolean("canActivate"), "The attempt to change the consumer's canActivate attribute to true should have been ignored leaving the consumer with a value of false.");
+	}
+	
+	// This test is the hosted equivalent for CASE 2 from getOnPremisesMockAttemptToRedeemData
+	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server using a non-found Dell service tag",
+			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
+			enabled=false)	// THIS TEST IS BLOCKED SINCE WE CANNOT CHANGE THE "canActivate" ATTRIBUTE
+	//@ImplementsNitrateTest(caseId=)
+	public void HostedMockAttemptToRedeemUsingNonFoundDellServiceTag_Test() throws Exception {
 		String warning = "This mock test was authored for execution against a hosted candlepin server.";
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException(warning);
 		//log.warning(warning);
@@ -126,8 +144,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		facts.put("dmi.system.serial_number", "0000000");
 		clienttasks.createFactsFileWithOverridingValues(facts);
 		
-		// register and attempt redeem
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		// register and attempt to update the consumer by forcing its canActivate attribute to true
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, "canActivate", true);
+
+		// attempt to redeem
 		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
 		
 		// assert the redeemResult here
@@ -137,6 +158,36 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	// This test is the hosted equivalent for CASE 4 from getOnPremisesMockAttemptToRedeemData
+	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server when consumer's canActivate attribute is false",
+			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void HostedMockAttemptToRedeemWhenCanActivateIsFalse_Test() throws JSONException, Exception {
+		String warning = "This mock test was authored for execution against a hosted candlepin server.";
+		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException(warning);
+		//log.warning(warning);
+
+		// create a facts file with a serialNumber that could not possible match a hocked regtoken on hosted
+		Map<String,String> facts = new HashMap<String,String>();
+		facts.put("dmi.system.serial_number", "0000000");
+		clienttasks.createFactsFileWithOverridingValues(facts);
+		
+		// register and attempt redeem
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+
+		// assert that the consumer's can_activate attribute is false
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertFalse(jsonConsumer.getBoolean("canActivate"), "Upon registering a system with a dmi.system.serial_number of '"+facts.get("dmi.system.serial_number")+"', the consumer's canActivate attribute should be false.");
+		
+		// attempt to redeem
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
+		
+		// assert the redeemResult here
+		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
+		Assert.assertEquals(redeemResult.getStdout().trim(), "");
+		Assert.assertEquals(redeemResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
+	}
 	
 	// Candidates for an automated Test:
 	
