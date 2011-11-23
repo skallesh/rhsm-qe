@@ -874,7 +874,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -896,8 +896,32 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// actual guestIds
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
 			actualGuestIds.clear();
+			//[root@jsefler-stage-6server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/8b7fe5e5-7178-4bad-b686-2ff8c6c19112 | python -msimplejson/tool
+			//  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+			//                                 Dload  Upload   Total   Spent    Left  Speed
+			//100 14242    0 14242    0     0  76993      0 --:--:-- --:--:-- --:--:--  135k
+			//{
+			//<cut>
+			//    "guestIds": [
+			//        {
+			//            "created": "2011-11-23T18:01:15.325+0000", 
+			//            "guestId": "test-guestId2", 
+			//            "id": "8a90f85733cefc4c0133d196b73d6d26", 
+			//            "updated": "2011-11-23T18:01:15.325+0000"
+			//        }, 
+			//        {
+			//            "created": "2011-11-23T18:01:15.293+0000", 
+			//            "guestId": "test-guestId1", 
+			//            "id": "8a90f85733cefc4c0133d196b71d6d23", 
+			//            "updated": "2011-11-23T18:01:15.293+0000"
+			//        }
+			//    ], 
+			//<cut>
+			//    "username": "testuser1", 
+			//    "uuid": "8b7fe5e5-7178-4bad-b686-2ff8c6c19112"
+			//}
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
@@ -912,7 +936,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -952,7 +976,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIds));
 		actualGuestIds.clear();
 		for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-			actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+			actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 		}
 		log.info("Consumer '"+consumerIdOfGuest+"' guestIds: "+actualGuestIds);
 		// assert expected guestIds are empty (TODO or NULL?)
@@ -990,7 +1014,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -1016,7 +1040,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
@@ -1035,7 +1059,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
