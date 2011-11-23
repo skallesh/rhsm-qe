@@ -332,20 +332,28 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu_socket(s) fact matches the value from lscpu",
-			groups={"AcceptanceTest"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			groups={"AcceptanceTest","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MatchingCPUSocketsFact_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
-		//TODO This test may need more assertion logic for rhel5.
-		//if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
-		//if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
-	
+		// get the value of cpu_sockets as determined by subscription-manager facts
 		String cpu_sockets = clienttasks.getFactValue("cpu_socket(s)");
-		client.runCommandAndWait("lscpu");
-		String lscpu_sockets = client.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
-		Assert.assertEquals(cpu_sockets, lscpu_sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+lscpu_sockets+"' reported by lscpu.");
+		
+		if (clienttasks.redhatRelease.contains("release 5")) {
+			//String sockets = clienttasks.sockets;
+			String sockets = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+			Assert.assertEquals(cpu_sockets, sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+sockets+"' as calculated above.");
+			return;
+		}
+		else /*if (clienttasks.redhatRelease.contains("release 6"))*/ {
+			client.runCommandAndWait("lscpu");
+			//String sockets = clienttasks.sockets;
+			String sockets = client.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+			Assert.assertEquals(cpu_sockets, sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+sockets+"' reported by lscpu.");
+			return;
+		}
 	}
 
 	
