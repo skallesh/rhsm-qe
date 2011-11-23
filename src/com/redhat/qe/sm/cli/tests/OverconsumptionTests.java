@@ -42,6 +42,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, registereeName, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 		int quantity = 1000000;
 		for (SubscriptionPool pool: client1tasks.getCurrentlyAvailableSubscriptionPools()) {
+//debugging if (pool.productId.equals("awesomeos-virt-4") && pool.quantity.equals("5")) {testPool=pool;break;}
 			if (pool.quantity.equalsIgnoreCase("unlimited")) continue;
 			int pool_quantity = Integer.valueOf(pool.quantity);
 			if (pool_quantity < quantity && pool_quantity >= 2) {
@@ -62,6 +63,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 
 			// subscribe to the pool
 			client1tasks.subscribeToSubscriptionPool(testPool);
+			testPool.quantity = String.valueOf(Integer.valueOf(testPool.quantity)-1);	// decrement this pool's quantity since we just consumed one
 		}
 		
 		log.info("Now we will register and subscribe the final subscriber as an attempt to oversubscribe to original pool: "+testPool);
