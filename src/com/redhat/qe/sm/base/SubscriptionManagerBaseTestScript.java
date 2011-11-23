@@ -52,13 +52,13 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public CandlepinType sm_serverType			= CandlepinType.valueOf(getProperty("sm.server.type","standalone"));
 
 	public String sm_client1Hostname			= getProperty("sm.client1.hostname","");
-	public String sm_client1Username			= getProperty("sm.client1.username","");
-	public String sm_client1Password			= getProperty("sm.client1.password","");
+	public String sm_client1Username			= getProperty("sm.client1.username",null);
+	public String sm_client1Password			= getProperty("sm.client1.password",null);
 	public String sm_client1Org					= getProperty("sm.client1.org",null);
 
 	public String sm_client2Hostname			= getProperty("sm.client2.hostname","");
-	public String sm_client2Username			= getProperty("sm.client2.username","");
-	public String sm_client2Password			= getProperty("sm.client2.password","");
+	public String sm_client2Username			= getProperty("sm.client2.username",null);
+	public String sm_client2Password			= getProperty("sm.client2.password",null);
 	public String sm_client2Org					= getProperty("sm.client2.org",null);
 
 	public String sm_clientHostname				= sm_client1Hostname;
@@ -122,7 +122,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
-	protected JSONArray sm_integrationTestData = null;
+	protected JSONArray sm_contentIntegrationTestData = null;
 
 	
 	public SubscriptionManagerBaseTestScript() {
@@ -179,7 +179,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 //			systemSubscriptionPoolProductData = new JSONArray(getProperty("sm.system.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 //			personSubscriptionPoolProductData = new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "<>").replaceAll("<", "[").replaceAll(">", "]")); // hudson parameters use <> instead of []
 			sm_personSubscriptionPoolProductData	= new JSONArray(getProperty("sm.person.subscriptionPoolProductData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
-			sm_integrationTestData					= new JSONArray(getProperty("sm.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
+			sm_contentIntegrationTestData			= new JSONArray(getProperty("sm.content.integrationTestData", "[]").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("<", "[").replaceAll(">", "]")); // hudson JSONArray parameters get surrounded with double quotes that need to be stripped
 
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block

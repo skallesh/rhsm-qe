@@ -429,9 +429,9 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: Integration Tests">
+	<test name="CLI: Content Integration Tests">
 		<classes>
-			<class name="com.redhat.qe.sm.cli.tests.IntegrationTests" />
+			<class name="com.redhat.qe.sm.cli.tests.ContentIntegrationTests" />
 		</classes>
 		<groups>
 			<run>

@@ -10,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -98,10 +99,12 @@ public class SubscriptionManagerTasks {
 		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides system-release").getStdout().trim();  // cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release
 		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
-		if (redhatRelease.contains("Server")) variant = "Server";
-		if (redhatRelease.contains("Client")) variant = "Client";
-		if (redhatRelease.contains("Workstation")) variant = "Workstation";
-		if (redhatRelease.contains("ComputeNode")) variant = "ComputeNode";
+		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem
+		if (redhatRelease.contains("Client")) variant = "Client";	//68.pem   (aka Desktop)
+		if (redhatRelease.contains("Workstation")) variant = "Workstation";	//71.pem
+		if (redhatRelease.contains("ComputeNode")) variant = "ComputeNode";	//76.pem
+		//if (redhatRelease.contains("IBM POWER")) variant = "IBM Power";	//74.pem	Red Hat Enterprise Linux for IBM POWER	// TODO  Not sure if these are correct or if they are just Server on a different arch
+		//if (redhatRelease.contains("IBM System z")) variant = "System Z";	//72.pem	Red Hat Enterprise Linux for IBM System z	// TODO
 		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
 		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
@@ -2350,6 +2353,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
+		/* This information is now in the SubscriptionPool itself
 		boolean isPoolMultiEntitlement = false;
 		try {
 			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId);
@@ -2357,19 +2361,23 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
+		*/
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		if (!isPoolMultiEntitlement || Integer.valueOf(pool.quantity)<=1) {
+		if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<=1) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
-					"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+					"When the final quantity from the pool was consumed, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
+		} else if (!pool.multiEntitlement) {
+			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
-					"When the pool is multi-entitleable, the available subscription pools still contains the just subscribed to pool: "+pool);
+					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool);
 		}
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
-		log.warning("Due to subscription-manager design change, we will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
+		//log.warning("We will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
 		/*
 		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
 			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
@@ -3230,6 +3238,7 @@ repolist: 3,394
 		return repos;
 	}
 	
+
 	/**
 	 * @param options [all|enabled|disabled] [--option=...]
 	 * @return the value reported at the bottom of a call to yum repolist [options] (repolist: value)
@@ -3277,7 +3286,7 @@ repolist: 3,394
 	}
 	
 	
-	@Deprecated
+	@Deprecated	// replaced by public ArrayList<String> getYumListAvailable (String options)
 	public ArrayList<String> getYumListOfAvailablePackagesFromRepo (String repoLabel) {
 		ArrayList<String> packages = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
@@ -3371,6 +3380,18 @@ repolist: 3,394
 		return packages;
 	}
 	
+	/**
+	 * Disable all of the repos in /etc/yum.repos.d
+	 * NOTE: On RHEL5, yum-utils must be installed first.
+	 */
+	public void yumDisableAllRepos() {
+		for (String repo : getYumRepolist("enabled")) {
+			String command = "yum-config-manager --disable "+repo;
+			SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");
+		}
+	}
+	
 	public ArrayList<String> yumGroupList (String Installed_or_Available, String options) {
 		ArrayList<String> groups = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
@@ -3417,8 +3438,13 @@ repolist: 3,394
 	}
 	
 	
+	/**
+	 * Find an available package for install that is unique to the specified repo label.
+	 * @param repo
+	 * @return
+	 * Note: You should consider calling yumDisableAllRepos() before using this method especially when this client was provisioned by Beaker.
+	 */
 	public String findUniqueAvailablePackageFromRepo (String repo) {
-		
 		for (String pkg : getYumListAvailable("--disablerepo=* --enablerepo="+repo)) {
 			if (!getYumListAvailable("--disablerepo="+repo+" "+pkg).contains(pkg)) {
 				if (yumCanInstallPackageFromRepo(pkg,repo,null)) {
@@ -3427,6 +3453,12 @@ repolist: 3,394
 			}
 		}
 		return null;
+	}
+	
+	public String findRandomAvailablePackageFromRepo (String repo) {
+		ArrayList<String> pkgs = getYumListAvailable("--disablerepo=* --enablerepo="+repo);
+		if (pkgs.isEmpty()) return null;
+		return pkgs.get(SubscriptionManagerCLITestScript.randomGenerator.nextInt(pkgs.size()));
 	}
 	
 	public String findAnAvailableGroupFromRepo(String repo) {
@@ -3498,12 +3530,63 @@ repolist: 3,394
 		return result.getStdout().contains("Is this ok [y/N]:");
 	}
 	
+	// 
+	/**
+	 * @param pkg
+	 * @param repoLabel
+	 * @param destdir
+	 * @param downloadOptions
+	 * @return the actual downloaded package File (null if there was an error)
+	 * TODO: on RHEL5, the yum-utils package must be installed first to get yumdownloader
+	 */
+	public File yumDownloadPackageFromRepo (String pkg, String repoLabel, String destdir, String downloadOptions) {
+		
+		// use yumdownloader the package with repoLabel enabled
+		if (downloadOptions==null) downloadOptions=""; //downloadOptions += " -y";
+		String command = "yumdownloader "+pkg+" --destdir="+destdir+" --disablerepo=* --enablerepo="+repoLabel+" --noplugins "+downloadOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command+"; "+command); // the second command is needed to populate stdout
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains("error"), "Stderr from command '"+command+"' did not report an error.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");
+
+		//[root@jsefler-stage-6server ~]# yumdownloader --disablerepo=* ricci.x86_64 --enablerepo=rhel-ha-for-rhel-6-server-rpms --destdir /tmp
+		//Loaded plugins: product-id, refresh-packagekit
+		//ricci-0.16.2-35.el6_1.1.x86_64.rpm                                                                                                                                     | 614 kB     00:00     
+		//[root@jsefler-stage-6server ~]# yumdownloader --disablerepo=* ricci.x86_64 --enablerepo=rhel-ha-for-rhel-6-server-rpms --destdir /tmp
+		//Loaded plugins: product-id, refresh-packagekit
+		///tmp/ricci-0.16.2-35.el6_1.1.x86_64.rpm already exists and appears to be complete
+		//[root@jsefler-stage-6server ~]# 
+		
+		// extract the name of the downloaded pkg
+		// ([/\w\.\-+]*\.rpm)
+		String regex = "([/\\w\\.\\-+]*\\.rpm)";	
+		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(result.getStdout());
+		if (!matcher.find()) {
+			log.warning("Did not find the name of the downloaded pkg using regex '"+regex+"'.");
+			return null;
+		}
+		String rpm = matcher.group(1).trim();	// return the contents of the first capturing group
+		
+		//File pkgFile = new File(destdir+File.separatorChar+rpm);
+		File pkgFile = new File(rpm);
+		
+		// assert the downloaded file exists
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,pkgFile.getPath()),1,"Package '"+pkg+"' exists in destdir '"+destdir+"' after yumdownloading.");
+		
+		return pkgFile;
+	}
+	
 	public SSHCommandResult yumInstallPackageFromRepo (String pkg, String repoLabel, String installOptions) {
 		
 		// install the package with repoLabel enabled
 		if (installOptions==null) installOptions=""; installOptions += " -y";
 		String command = "yum install "+pkg+" --enablerepo="+repoLabel+" --disableplugin=rhnplugin "+installOptions; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner,command, 0, "^Complete!$",null);
+		SSHCommandResult result = sshCommandRunner.runCommandAndWait(command);
+		Assert.assertTrue(!result.getStderr().toLowerCase().contains("error"), "Stderr from command '"+command+"' did not report an error.");
+		Assert.assertTrue(result.getStdout().contains("\nComplete!"), "Stdout from command '"+command+"' reported a successful \"Complete!\".");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(0), "ExitCode from command '"+command+"'.");
 		
 		//	201104051837:12.757 - FINE: ssh root@jsefler-betastage-server.usersys.redhat.com yum -y install cairo-spice-debuginfo.x86_64 --enablerepo=rhel-6-server-beta-debug-rpms --disableplugin=rhnplugin (com.redhat.qe.tools.SSHCommandRunner.run)
 		//	201104051837:18.156 - FINE: Stdout: 
@@ -3739,6 +3822,76 @@ repolist: 3,394
 		//	Stderr: Installed products updated.
 		//	ExitCode: 0
 
+		//	201111171056:22.839 - FINE: ssh root@jsefler-stage-6server.usersys.redhat.com echo N | yum install ricci-debuginfo.x86_64 --enablerepo=rhel-ha-for-rhel-6-server-htb-debug-rpms --disableplugin=rhnplugin  (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201111171056:24.774 - FINE: Stdout: 
+		//	Loaded plugins: product-id, refresh-packagekit, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating certificate-based repositories.
+		//	Setting up Install Process
+		//	Resolving Dependencies
+		//	--> Running transaction check
+		//	---> Package ricci-debuginfo.x86_64 0:0.16.2-35.el6 will be installed
+		//	--> Finished Dependency Resolution
+		//	
+		//	Dependencies Resolved
+		//	
+		//	================================================================================
+		//	 Package    Arch   Version       Repository                                Size
+		//	================================================================================
+		//	Installing:
+		//	 ricci-debuginfo
+		//	            x86_64 0.16.2-35.el6 rhel-ha-for-rhel-6-server-htb-debug-rpms 4.4 M
+		//	
+		//	Transaction Summary
+		//	================================================================================
+		//	Install       1 Package(s)
+		//	
+		//	Total download size: 4.4 M
+		//	Installed size: 27 M
+		//	Is this ok [y/N]: Exiting on user Command
+		//	Complete!
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201111171056:24.775 - FINE: Stderr:  (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201111171056:24.775 - FINE: ExitCode: 1 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201111171056:24.775 - INFO: Asserted: 1 is present in the list [1] (com.redhat.qe.auto.testng.Assert.pass)
+		//	201111171056:28.183 - FINE: ssh root@jsefler-stage-6server.usersys.redhat.com yum install ricci-debuginfo.x86_64 --enablerepo=rhel-ha-for-rhel-6-server-htb-debug-rpms --disableplugin=rhnplugin  -y (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201111171056:30.752 - FINE: Stdout: 
+		//	Loaded plugins: product-id, refresh-packagekit, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating certificate-based repositories.
+		//	Setting up Install Process
+		//	Resolving Dependencies
+		//	--> Running transaction check
+		//	---> Package ricci-debuginfo.x86_64 0:0.16.2-35.el6 will be installed
+		//	--> Finished Dependency Resolution
+		//	
+		//	Dependencies Resolved
+		//	
+		//	================================================================================
+		//	 Package    Arch   Version       Repository                                Size
+		//	================================================================================
+		//	Installing:
+		//	 ricci-debuginfo
+		//	            x86_64 0.16.2-35.el6 rhel-ha-for-rhel-6-server-htb-debug-rpms 4.4 M
+		//	
+		//	Transaction Summary
+		//	================================================================================
+		//	Install       1 Package(s)
+		//	
+		//	Total download size: 4.4 M
+		//	Installed size: 27 M
+		//	Downloading Packages:
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201111171056:30.767 - FINE: Stderr: 
+		//	https://cdn.redhat.com/content/htb/rhel/server/6/6Server/x86_64/highavailability/debug/Packages/ricci-debuginfo-0.16.2-35.el6.x86_64.rpm: [Errno 14] PYCURL ERROR 22 - "The requested URL returned error: 404"
+		//	Trying other mirror.
+		//	
+		//	
+		//	Error Downloading Packages:
+		//	  ricci-debuginfo-0.16.2-35.el6.x86_64: failure: Packages/ricci-debuginfo-0.16.2-35.el6.x86_64.rpm from rhel-ha-for-rhel-6-server-htb-debug-rpms: [Errno 256] No more mirrors to try.
+		//	
+		//	 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
+		//	201111171056:30.775 - FINE: ExitCode: 1 (com.redhat.qe.tools.SSHCommandRunner.runCommandAndWait)
 
 		// check if the package was obsoleted:
 		// Package cairo-spice-debuginfo is obsoleted by spice-server, trying to install spice-server-0.7.3-2.el6.x86_64 instead
@@ -3794,6 +3947,8 @@ repolist: 3,394
 		
 		return result;
 	}
+	
+	
 	
 	public SSHCommandResult yumRemovePackage (String pkg) {
 		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError

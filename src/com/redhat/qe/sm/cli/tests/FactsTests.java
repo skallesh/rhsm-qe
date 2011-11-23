@@ -186,18 +186,27 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				JSONObject jsonAttribute = (JSONObject) jsonAttributes.get(j);
 				String attributeName = jsonAttribute.getString("name");
 				if (attributeName.equals("sockets")) {
-					// found the sockets attribute - get its value
+					// found the sockets attribute
 					foundPoolWithSocketAttributes = true;
+					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
+					
+					// get the value of the sockets attribute
+					// test if the sockets attribute value is not numeric (e.g. "null")
+					try {Integer.valueOf(jsonAttribute.getString("value"));}
+					catch (NumberFormatException e) {
+						// do not mark productAttributesPassRulesCheck = false;
+						log.info("Since this sockets value '"+jsonAttribute.getString("value")+"' is a non-integer, Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+" (e.g. arch).");
+						break;
+					}
 					int poolValue = jsonAttribute.getInt("value");
 					
 					// assert that if the maximum cpu_sockets for this subscription pool is greater than the cpu_sockets facts for this consumer, then this product should NOT be available
 					log.fine("Maximum sockets for this subscriptionPool name="+subscriptionName+": "+poolValue);
-					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
 					if (poolValue < systemValue) {
 						Assert.assertFalse(clientPools.contains(pool), "Subscription Pool "+pool+" IS NOT available since this system's "+factName+" ("+systemValue+") exceeds the maximum ("+poolValue+") for this pool to be a candidate for availability.");
 						conclusiveTest = true;
 					} else {
-						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+".");
+						log.info("Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+" (e.g. arch).");
 					}
 					break;
 				}
