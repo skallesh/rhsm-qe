@@ -40,15 +40,17 @@
 
 
 (defn ^{DataProvider {:name "guifacts"}}
-  get_facts [_]
-  (to-array-2d (vec @gui-facts)))
-
-(comment 
-  (defn printfact []
-    (pprint (sort @gui-facts))
-    (println (str "cli-facts: " (count @cli-facts)))
-    (println (str "gui-facts: " (count @gui-facts)))
-    (println (str "fact: " (@cli-facts "virt.is_guest")))
-    (println (str "fact: " (@gui-facts "virt.is_guest")))))
+  get_facts [_ & {:keys [debug]
+                  :or {debug false}}]
+  (if-not debug
+    (to-array-2d (vec @gui-facts))
+    (vec @gui-facts)))
+ 
+(defn printfact []
+  (pprint (sort @gui-facts))
+  (println (str "cli-facts: " (count @cli-facts)))
+  (println (str "gui-facts: " (count @gui-facts)))
+  (println (str "fact: " (@cli-facts "virt.is_guest")))
+  (println (str "fact: " (@gui-facts "virt.is_guest"))))
 
 (gen-class-testng)

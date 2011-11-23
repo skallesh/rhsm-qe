@@ -11,7 +11,7 @@ import gobject
 import gtk
 import time
 import fnmatch
-
+from fnmatch import translate
 
 logger = logging.getLogger("xmlrpcserver.ldtp")
 logger.setLevel(logging.INFO)
@@ -123,6 +123,45 @@ class AllMethods:
     else:
       return value
 
+  def _getobjectproperty(self, window, object):
+    getobjectlist = getattr(ldtp,"getobjectlist")
+    objects = getobjectlist(window)
+    for item in objects:
+      if re.search(object,str(item)):
+        return str(item)
+    return object
+
+  def _matches(self, pattern, item):
+    return bool(re.match(fnmatch.translate(pattern), item, re.M | re.U | re.L))
+
+  #this replicates the origional algorithm
+  def _gettablerowindex(self, window, table, target):
+    numrows = ldtp.getrowcount(window, table)
+    numcols = len(ldtp.getobjectproperty(window, table, 'children').split())
+    for i in range(0,numrows):
+      for j in range(0,numcols):
+        try:
+          value = ldtp.getcellvalue(window, table, i, j)
+          if self._matches(target,value):
+            ldtp.selectrowindex(window, table, i)
+            return i
+        except:
+          continue
+    raise Exception("Item not found in table!")
+
+  #this only searches the first column and is much quicker.
+  def _quickgettablerowindex(self, window, table, target):
+    numrows = ldtp.getrowcount(window, table)
+    for i in range(0,numrows):
+      try:
+        value = ldtp.getcellvalue(window, table, i, 0)
+        if self._matches(target,value):
+          ldtp.selectrowindex(window, table, i)
+          return i
+      except:
+        continue
+    raise Exception("Item not found in table!")
+
   def _window_search(self,match,term):
     if re.search(fnmatch.translate(term),
                    match,
@@ -151,14 +190,6 @@ class AllMethods:
     gobject.idle_add(gtk.main_quit)
     gtk.main()
     return success
-
-  def _getobjectproperty(self,window,object):
-    getobjectlist = getattr(ldtp,"getobjectlist")
-    objects = getobjectlist(window)
-    for item in objects:
-      if re.search(object,str(item)):
-        return str(item)
-    return object
         
   def _dispatch(self,method,params):
     if method in _supported_methods:
@@ -169,18 +200,23 @@ class AllMethods:
       elif method == "closewindow":
         paramslist = list(params)
         return self._closewindow(paramslist[0])
-      elif method = "getobjectproperty":
+      elif method == "getobjectproperty":
         paramslist = list(params)
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
-        params = tuple(paramslist)        
+        params = tuple(paramslist)
 
       function = getattr(ldtp,method)
       retval = function(*params)
+      
       if retval == None:
-        return 0
-      else:
-        return retval
-    
+        retval = 0
+      elif (retval == -1) and (method == "gettablerowindex"):
+        paramslist = list(params)
+        #use quick method for now
+        retval = self._quickgettablerowindex(paramslist[0],
+                                             paramslist[1],
+                                             paramslist[2])
+      return retval
   pass
 
 for name in _supported_methods:
