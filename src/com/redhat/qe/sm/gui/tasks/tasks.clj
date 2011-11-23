@@ -273,11 +273,14 @@
                   (try (ui getcellvalue table rownum 2) true
                        (catch Exception e false)))]
     (if (is-item? row)
-      (ui selectrow table item)
+      (do
+        (ui selectrow table item)
+        row)
       (do
         (if (and (is-item? (+ 1 row))
                  (= item (ui getcellvalue table (+ 1 row) 0)))
-          (ui selectrowindex table (+ 1 row))
+          (do (ui selectrowindex table (+ 1 row))
+              (+ 1 row))
           (raise {:type :invalid-item
                   :name item
                   :msg (str "Invalid item:" item)}))))))
