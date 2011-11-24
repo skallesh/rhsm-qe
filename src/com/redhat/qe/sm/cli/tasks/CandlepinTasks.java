@@ -2010,6 +2010,13 @@ schema generation failed
 	}
 	
 	
+	/**
+	 * @param jsonPool
+	 * @param attributeName
+	 * @return the String "value" of the pool's attribute with the given "name".  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static String getPoolAttributeValue (JSONObject jsonPool, String attributeName) throws JSONException, Exception {
 		String attributeValue = null;	// indicates that the pool does NOT have the "attributeName" attribute
 
