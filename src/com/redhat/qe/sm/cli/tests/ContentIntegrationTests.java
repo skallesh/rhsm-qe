@@ -359,8 +359,17 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 	// Candidates for an automated Test:
 	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
-
-	
+	/* TODO
+	[Bug 756737] RC4.0 content testing: package conflict and/or content missing on RHEL Server - x86_64
+	[Bug 756752] RC4.0 content testing: package conflict and/or content missing on RHEL Server - i386
+	[Bug 756753] RC4.0 content testing: package conflict and/or content missing on RHEL Client - x86_64
+	[Bug 756744] RC4.0 content testing: package conflict and/or content missing on RHEL 6Client - i386
+	[Bug 756751] RC4.0 content testing: package conflict and/or content missing on RHEL Workstation - x86_64
+	[Bug 756760] RC4.0 content testing: package conflict and/or content missing on RHEL Workstation - i386
+	[Bug 756730] RC4.0 content testing: package conflict and/or content missing on RHEL for IBM Power - ppc64
+	[Bug 756735] RC4.0 content testing: package conflict and/or package version different on RHEL for IBM System z- s390
+	[Bug 756757] RC4.0 content testing: package conflict and/or content missing on RHEL Server for HPC Compute Node - x86_64
+	*/
 	
 	
 	
