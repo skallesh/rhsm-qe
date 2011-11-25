@@ -59,7 +59,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 			for (String password : new String[]{null,sm_clientPassword}) {
 				for (Boolean regenerate : new Boolean[]{null,true,false}) {
 					SSHCommandResult identityResult = clienttasks.identity_(username,password,regenerate, null, null, null, null);
-					Assert.assertEquals(identityResult.getStdout().trim(),"Consumer not registered. Please register using --username and --password",
+					Assert.assertEquals(identityResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,
 						"One must be registered to have an identity.");
 				}
 			}

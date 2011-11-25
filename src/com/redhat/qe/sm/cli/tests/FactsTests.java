@@ -45,7 +45,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info("Assert that one must be registered to update the facts...");
 		for (Boolean list : new Boolean[]{true,false}) {			
 			SSHCommandResult result = clienttasks.facts_(list, true, null, null, null);
-			Assert.assertEquals(result.getStdout().trim(),consumerNotRegisteredMsg,
+			Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,
 				"One must be registered to update the facts.");
 		}
 	}
@@ -62,9 +62,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Assert that one need not be registered to list the facts...");		
 		SSHCommandResult result = clienttasks.facts(true, false, null, null, null);
-		Assert.assertContainsNoMatch(result.getStderr(),consumerNotRegisteredMsg,
+		Assert.assertContainsNoMatch(result.getStderr(),clienttasks.msg_ConsumerNotRegistered,
 				"One need not be registered to list the facts.");
-		Assert.assertContainsNoMatch(result.getStdout(),consumerNotRegisteredMsg,
+		Assert.assertContainsNoMatch(result.getStdout(),clienttasks.msg_ConsumerNotRegistered,
 				"One need not be registered to list the facts.");
 	}
 	
@@ -79,7 +79,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),
 				"exitCode from the facts without --list or --update");
-		Assert.assertEquals(result.getStdout().trim(),neededOptionMsg,
+		Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_NeedListOrUpdateOption,
 				"stdout from facts without --list or --update");
 	}
 	
@@ -408,8 +408,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 
-	protected String consumerNotRegisteredMsg = "Consumer not registered. Please register using --username and --password";
-	protected String neededOptionMsg = "Error: Need either --list or --update, Try facts --help";
 	
 
 	

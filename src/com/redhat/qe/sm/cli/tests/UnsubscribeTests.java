@@ -163,7 +163,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now remove the consumer cert to simulate an unregister
 		clienttasks.removeAllCerts(true,false);
-		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),"Consumer not registered. Please register using --username and --password");
+		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered);
 		
 		// now unsubscribe from the serial number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");
