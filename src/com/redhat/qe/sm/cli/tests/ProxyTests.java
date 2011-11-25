@@ -966,7 +966,19 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only include dataProvided rows where org is valid
-			/*FIXME if (l.get(3).equals(sm_clientOrg))*/ ll.add(l);
+			//FIXME? if (l.get(3).equals(sm_clientOrg)) ll.add(l); continue;
+			
+			//	ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg}));
+			if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+				// subscription-manager environments --username=testuser1 --password=password --org=bad-org
+				// Stdout: This system does not support environments.
+				// Stderr:
+				// ExitCode: 0
+				l.set(7, Integer.valueOf(0));	// exitCode
+				l.set(8,"This system does not support environments.");
+				l.set(9,"");
+			}
+			ll.add(l);
 		}
 		return ll;
 	}
@@ -980,7 +992,19 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			// only include dataProvided rows where org is valid
-			/*FIXME if (l.get(3).equals(sm_clientOrg))*/ ll.add(l);
+			//FIXME? if (l.get(3).equals(sm_clientOrg)) ll.add(l); continue;
+			
+			// ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("755258"),	sm_clientUsername,	sm_clientPassword,	"bad-org",		null,				null,						null,						sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg,	basicauthproxy,	sm_basicauthproxyLog,	"TCP_MISS"}));
+			if (!sm_serverType.equals("katello") && !l.get(3).equals(sm_clientOrg)) {
+				// subscription-manager environments --username=testuser1 --password=password --org=bad-org --proxy=auto-services.usersys.redhat.com:3128 --proxyuser=redhat --proxypassword=redhat
+				// Stdout: This system does not support environments.
+				// Stderr:
+				// ExitCode: 0
+				l.set(11, Integer.valueOf(0));	// exitCode
+				l.set(12,"This system does not support environments.");
+				l.set(13,"");
+			}
+			ll.add(l);
 		}
 		return ll;
 	}
