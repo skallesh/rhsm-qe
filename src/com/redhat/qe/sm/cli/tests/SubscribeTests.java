@@ -230,11 +230,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
 			groups={"blockedByBug-584137"},
+//groups={"debugTest"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
-
+//if (!pool.productId.equals("awesomeos-virt-4")) throw new SkipException("debugTesting");
 		//clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
 		Assert.assertNull(CandlepinTasks.getEntitlementSerialForSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, pool.poolId),"Authenticator '"+sm_clientUsername+"' has not been granted any entitlements from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
