@@ -33,7 +33,8 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner, command);
 		//RemoteFileTasks.runCommandAndAssert(client,command,1,"^Error: You need to register this system by running `register` command before using this option.",null);
-		RemoteFileTasks.runCommandAndAssert(client,command,255,"^"+clienttasks.msg_ConsumerNotRegistered,null);	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
+		// results changed after bug fix 749332
+		RemoteFileTasks.runCommandAndAssert(client,command,255,"^"+clienttasks.msg_ConsumerNotRegistered,null);
 
 	}
 	

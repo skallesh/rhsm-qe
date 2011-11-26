@@ -352,12 +352,18 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null,null,null);
 		
 		listResult = clienttasks.list_(null,true,null,null,null,null,null, null);
-		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
-		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
+		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
+		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
+		// results changed after bug fix 749332
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list available command indicates a problem.");
+		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --available subscriptions should require registration.");
 
 		listResult = clienttasks.list_(true,true,null,null,null,null,null, null);
-		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
-		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
+		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
+		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
+		// results changed after bug fix 749332
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list all available command indicates a problem.");
+		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --all --available subscriptions should require registration.");
 
 	}
 	

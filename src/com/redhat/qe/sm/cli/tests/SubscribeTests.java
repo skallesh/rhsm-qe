@@ -139,8 +139,17 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					Assert.assertEquals(installedProducts.size(),1, "The status of installed product '"+productCert.productName+"' should only be reported once in the list of installed products.");
 					InstalledProduct installedProduct = installedProducts.get(0);
 					
-					// decide what the status should be...  "Subscribed" or "Partially Subscribed" (SPECIAL CASE WHEN poolProductSocketsAttribute=0 SHOULD YIELD Subscribed)
+					// decide what the status should be...  "Subscribed" or "Partially Subscribed" (SPECIAL CASE WHEN poolProductSocketsAttribute=0  or "null" SHOULD YIELD Subscribed)
 					String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
+					// treat a non-numeric poolProductSocketsAttribute as if it was null
+					// if the sockets attribute is not numeric (e.g. "null"),  then this subscription should be available to this client
+					try {Integer.valueOf(poolProductSocketsAttribute);}
+					catch (NumberFormatException e) {
+						// do not mark productAttributesPassRulesCheck = false;
+						log.warning("Ecountered a non-numeric value for product sockets attribute sockets on productId='"+productId+"' poolId '"+pool.poolId+"'. SIMPLY IGNORING THIS ATTRIBUTE.");
+						poolProductSocketsAttribute = null;
+					}
+					
 					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
 					} else {

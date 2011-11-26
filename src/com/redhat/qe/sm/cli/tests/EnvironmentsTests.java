@@ -55,6 +55,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	public void EnvironmentsWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		// skip automated interactive password tests on rhel57
 		if (clienttasks.redhatRelease.contains("release 5.7") && promptedPassword!=null) throw new SkipException("Interactive environments with password prompting must be tested manually on RHEL5.7 since python-2.4 is denying password entry from echo piped to stdin.");
+		if (clienttasks.redhatRelease.contains("release 5.8") && promptedPassword!=null) throw new SkipException("Interactive environments with password prompting must be tested manually on RHEL5.8 since python-2.4 is denying password entry from echo piped to stdin.");
 
 		// call environments while providing a valid username at the interactive prompt
 		// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the orgs command

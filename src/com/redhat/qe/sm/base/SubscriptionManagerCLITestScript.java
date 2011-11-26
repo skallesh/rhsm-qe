@@ -2050,8 +2050,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 			Calendar endDate = new GregorianCalendar();
 			endDate.setTimeInMillis(dateFormat.parse(jsonPool.getString("endDate")).getTime());
+			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, jsonPool.getString("id"));
 
-			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), jsonPool.getString("quantity"), SubscriptionPool.formatDateString(endDate))}));
+			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), jsonPool.getString("quantity"), multiEntitlement, SubscriptionPool.formatDateString(endDate))}));
 		}
 		return ll;
 	}

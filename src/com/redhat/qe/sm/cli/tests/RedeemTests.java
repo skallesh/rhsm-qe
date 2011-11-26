@@ -44,8 +44,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null);
 		
 		// assert redemption results
-		Assert.assertEquals(redeemResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Redeem should require that the system be registered.");
-		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(1),"Exit code from redeem when executed against a standalone candlepin server.");
+		//Assert.assertEquals(redeemResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Redeem should require that the system be registered.");
+		//Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(1),"Exit code from redeem when executed against a standalone candlepin server.");
+		// results changed after bug fix 749332
+		Assert.assertEquals(redeemResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Redeem should require that the system be registered.");
+		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against a standalone candlepin server.");
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option",

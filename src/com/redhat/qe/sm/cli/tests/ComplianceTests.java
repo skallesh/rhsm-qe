@@ -269,17 +269,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Protected Class Variables ***********************************************************************
-	
+
+	public static final String factNameForSystemCompliance = "system.entitlements_valid"; // "system.compliant"; // changed with the removal of the word "compliance" 3/30/2011
+	public static final String factValueForSystemCompliance = "valid"; 			// "True"; RHEL62
+	public static final String factValueForSystemNonCompliance = "invalid"; 	// "False"; RHEL62
+	public static final String factValueForSystemPartialCompliance = "partial";	// "False"; RHEL62
+
 	protected final String productCertDirForSomeProductsSubscribable = "/tmp/sm-someProductsSubscribable";
 	protected final String productCertDirForAllProductsSubscribable = "/tmp/sm-allProductsSubscribable";
 	protected final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
 	protected final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
 	protected final String productCertDirForAllProductsSubscribableInTheFuture = "/tmp/sm-allProductsSubscribableInTheFuture";
 	protected String productCertDir = null;
-	protected final String factNameForSystemCompliance = "system.entitlements_valid"; // "system.compliant"; // changed with the removal of the word "compliance" 3/30/2011
-	protected final String factValueForSystemCompliance = "valid"; 	// "True"; RHEL62
-	protected final String factValueForSystemNonCompliance = "invalid"; 	// "False"; RHEL62
-	protected final String factValueForSystemMixedCompliance = "?";
 	protected final String rhsmComplianceDStdoutMessageWhenNonCompliant = "System has one or more certificates that are not valid";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic = "System is already registered to another entitlement system";

@@ -80,42 +80,45 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null,null,true,new String[]{"rhsm","productCertDir".toLowerCase(),productCertDirForStacking});
 		
 		// subscribe to each pool and assert "Partially Subscribe" status and overall incompliance until the final pool is subscribed
-		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
+		Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemNonCompliance,
 			"Prior to subscribing to any of the stackable subscription pools, the overall system entitlement status should NOT be valid/compliant.");
-		int i=0;
+		int s=0;
 		for (SubscriptionPool pool : stackableSubscriptionPools) {
 			File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
-			if (i++<stackableSubscriptionPools.size()) {
+			if (++s < stackableSubscriptionPools.size()) {
+				
+				// assert installed products are Partially Subscribed
+				for (ProductCert installedProductCert : installedProductCerts) {
+					InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
+					Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to stackable subscription pool for ProductId '"+pool.productId+"', the status of Installed Product '"+installedProduct.productName+"' should be Partially Subscribed.");
+				}
 				
 				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=739671
 				boolean invokeWorkaroundWhileBugIsOpen = true;
 				String bugId="739671"; 
 				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 				if (invokeWorkaroundWhileBugIsOpen) {
-					log.info("Skipping the value assertion for fact '"+factNameForSystemCompliance+"' while bug '"+bugId+"' is open.");
+					log.info("Skipping the value assertion for fact '"+ComplianceTests.factNameForSystemCompliance+"' while bug '"+bugId+"' is open.");
 				} else {
 				// END OF WORKAROUND
 				
-				Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.FALSE.toString(),
+				// assert overall system compliance is not yet valid
+				Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemPartialCompliance,
 					"The overall system entitlement status should NOT be valid/compliant until we have subscribed to enough stackable subscription pools to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"'.");		
 				}
 			}
-			
-			// assert installed products are Partially Subscribed
-			for (ProductCert installedProductCert : installedProductCerts) {
-				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
-				Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to stackable subscription pool for ProductId '"+pool.productId+"', the status of Installed Product '"+installedProduct.productName+"' should be Partially Subscribed.");
-			}
-			
 		}
-		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance).toLowerCase(), Boolean.TRUE.toString(),
-			"After having subscribed to all the stackable subscription pools needed to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"', the overall system entitlement status should be valid/compliant.");
-
+		
 		// assert installed products are fully Subscribed
 		for (ProductCert installedProductCert : installedProductCerts) {
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(installedProductCert);
 			Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to enough stackable subscription pools to cover the systems sockets count ("+minimumSockets+"), the status of Installed Product '"+installedProduct.productName+"' should be fully Subscribed.");
 		}
+		// assert overall system compliance is now valid
+		Assert.assertEquals(clienttasks.getFactValue(ComplianceTests.factNameForSystemCompliance), ComplianceTests.factValueForSystemCompliance,
+			"After having subscribed to all the stackable subscription pools needed to meet coverage for the system's cpu.socket(s) '"+minimumSockets+"', the overall system entitlement status should be valid/compliant.");
+
+
 		
 	}
 	
@@ -149,7 +152,6 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 
 	protected final String productCertDirForStacking = "/tmp/sm-stackingProductDir";
 	protected String productCertDir = null;
-	protected final String factNameForSystemCompliance = "system.entitlements_valid"; // "system.compliant"; // changed with the removal of the word "compliance" 3/30/2011
 
 	
 	// Data Providers ***********************************************************************
