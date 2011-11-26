@@ -622,21 +622,19 @@ public class SubscriptionManagerTasks {
 		// The system with UUID 4e3675b1-450a-4066-92da-392c204ca5c7 has been unregistered
 		// ca3f9b32-61e7-44c0-94c1-ce328f7a15b0 testuser1
 		
-		/*
 		Pattern pattern = Pattern.compile("^[a-f,0-9,\\-]{36} [^ ]*$", Pattern.MULTILINE);
 		Matcher matcher = pattern.matcher(registerResult.getStdout());
 		Assert.assertTrue(matcher.find(),"Found the registered UUID in the register result."); 
 		return matcher.group().split(" ")[0];
-		*/
 		
 		// The example output and code above is from RHEL61 and RHEL57, it has changed in RHEL62 to:
 		// The system with UUID 080ee4f9-736e-4195-88e1-8aff83250e7d has been unregistered
 		// The system has been registered with id: 3bc07645-781f-48ef-b3d4-8821dae438f8 
 
-		Pattern pattern = Pattern.compile("^The system has been registered with id: [a-f,0-9,\\-]{36} *$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
-		Matcher matcher = pattern.matcher(registerResult.getStdout());
-		Assert.assertTrue(matcher.find(),"Found the registered UUID in the register result."); 
-		return matcher.group().split(":")[1].trim();
+		//Pattern pattern = Pattern.compile("^The system has been registered with id: [a-f,0-9,\\-]{36} *$", Pattern.MULTILINE/* | Pattern.DOTALL*/);
+		//Matcher matcher = pattern.matcher(registerResult.getStdout());
+		//Assert.assertTrue(matcher.find(),"Found the registered UUID in the register result."); 
+		//return matcher.group().split(":")[1].trim();
 	}
 	
 	/**
@@ -1326,14 +1324,14 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
-		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);	// applicable to RHEL61 and RHEL57. changed in RHEL62 due to feedback from mmccune https://engineering.redhat.com/trac/kalpana/wiki/SubscriptionManagerReview - jsefler 6/28/2011
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);	// applicable to RHEL61 and RHEL57. changed in RHEL62 due to feedback from mmccune https://engineering.redhat.com/trac/kalpana/wiki/SubscriptionManagerReview - jsefler 6/28/2011
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 		
 		// assert that register with consumerId returns the expected uuid
 		if (consumerId!=null) {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
-			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395	// applicable to RHEL61 and RHEL57.
-			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: "+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395	// applicable to RHEL61 and RHEL57.
+			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: "+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		}
 		
 		// assert certificate files are installed into /etc/pki/consumer
@@ -2285,8 +2283,6 @@ public class SubscriptionManagerTasks {
 		// assert that the entitlement pool was found for subscribing
 		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(),"No such entitlement pool:", "The subscription pool was found.");
 		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "Subscription pool .* does not exist.","The subscription pool was found.");
-		//stdoutMessage = "Subscription pool "+(poolId==null?"null":poolId)+" does not exist.";	// Subscription pool {0} does not exist.
-		//Assert.assertFalse(sshCommandResult.getStdout().contains(stdoutMessage), "The subscribe stdout should NOT report: "+stdoutMessage);
 		if (poolIds!=null) {
 			for (String poolId : poolIds) {
 				stdoutMessage = "Subscription pool "+poolId+" does not exist.";	// Subscription pool {0} does not exist.
@@ -2296,7 +2292,9 @@ public class SubscriptionManagerTasks {
 		
 		// assert the stdout msg was a success
 		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
-		else		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
+		else		{
+			//RHEL62 Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
+		}
 
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
@@ -2368,14 +2366,16 @@ public class SubscriptionManagerTasks {
 		if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<=1) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
 					"When the final quantity from the pool was consumed, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
-		} else if (!pool.multiEntitlement) {
-			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
-					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
-		} else {
-			Assert.assertTrue(afterSubscriptionPools.contains(pool),
-					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool);
-		}
-		
+//		} else if (!pool.multiEntitlement) {
+//			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+//					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
+//		} else {
+//			Assert.assertTrue(afterSubscriptionPools.contains(pool),
+//					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool);
+//		}
+		} else Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+				"The remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
+	
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
 		//log.warning("We will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
 		/*
