@@ -160,7 +160,7 @@ public class ActivateTests extends SubscriptionManagerCLITestScript {
 	
 	// This test is the hosted equivalent for CASE 4 from getOnPremisesMockAttemptToActivateData
 	@Test(	description="subscription-manager: attempt activate against a hosted candlepin server when consumer's canActivate attribute is false",
-			groups={"debugTest","AcceptanceTests","MockActivateTests", "blockedByBug-688806"},
+			groups={"AcceptanceTests","MockActivateTests", "blockedByBug-688806"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void HostedMockAttemptToActivateWhenCanActivateIsFalse_Test() throws JSONException, Exception {
@@ -184,10 +184,19 @@ public class ActivateTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult activateResult = clienttasks.activate("tester@redhat.com",null,null,null,null);
 		
 		// assert the activateResult here
-		Assert.assertEquals(activateResult.getExitCode(), new Integer(0));
-		Assert.assertEquals(activateResult.getStdout().trim(), "");
-		Assert.assertEquals(activateResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
+		Assert.assertEquals(activateResult.getExitCode(), new Integer(255));
+		Assert.assertEquals(activateResult.getStdout().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
+		Assert.assertEquals(activateResult.getStderr().trim(), "");
+//RHEL62
+//		Assert.assertEquals(activateResult.getExitCode(), new Integer(0));
+//		Assert.assertEquals(activateResult.getStdout().trim(), "");
+//		Assert.assertEquals(activateResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
 	}
+	
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	
