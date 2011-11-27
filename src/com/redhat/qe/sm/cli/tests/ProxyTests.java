@@ -406,7 +406,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
 		
-		SSHCommandResult attemptResult = clienttasks.redeem_("proxytester@redhat.com","en-us",proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.activate_("proxytester@redhat.com","en-us",proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -434,7 +434,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
 
 		// attempt the moduleTask with the proxy options
-		SSHCommandResult attemptResult = clienttasks.redeem_("proxytester@redhat.com","en-us",proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.activate_("proxytester@redhat.com","en-us",proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -721,7 +721,9 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	public void setupBeforeClass() throws IOException {
 		basicauthproxy = new SSHCommandRunner(sm_basicauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
 		noauthproxy = new SSHCommandRunner(sm_noauthproxyHostname, sm_sshUser, sm_sshKeyPrivate, sm_sshkeyPassphrase, null);
-		nErrMsg = "Network error, unable to connect to server.\n Please see "+clienttasks.rhsmLogFile+" for more information.";
+		nErrMsg = "Network error, unable to connect to server. Please see "+clienttasks.rhsmLogFile+" for more information.";
+//RHEL62
+//		nErrMsg = "Network error, unable to connect to server.\n Please see "+clienttasks.rhsmLogFile+" for more information.";
 	}
 	
 	@BeforeMethod(groups={"setup"})
@@ -820,7 +822,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		null,							null,						Integer.valueOf(255),	nErrMsg,	null}));
 		ll.add(Arrays.asList(new Object[]{	null,	"bad-username",		sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	"bad-password",		sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg}));
+//RHEL62
+//		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	"bad-org",		basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(255),	null,		oErrMsg}));
 
 		// no auth proxy test data...
 		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(0),		null,		null}));
@@ -828,7 +831,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	noauthproxyUrl+"0",		null,						null,					Integer.valueOf(255),	nErrMsg,	null}));
 		ll.add(Arrays.asList(new Object[]{	null,	"bad-username",		sm_clientPassword,	sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
 		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	"bad-password",		sm_clientOrg,	noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	"bad-org",		noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		oErrMsg}));
+//RHEL62
+//		ll.add(Arrays.asList(new Object[]{	null,	sm_clientUsername,	sm_clientPassword,	"bad-org",		noauthproxyUrl,			null,						null,					Integer.valueOf(255),	null,		oErrMsg}));
 
 		return ll;
 	}

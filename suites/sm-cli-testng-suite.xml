@@ -52,19 +52,6 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: ActivationKey Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="ActivationKeyTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
 	<test name="CLI: Proxy Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -116,32 +103,6 @@
 			</run>
 		</groups>
 	</test>
-	
-	<test name="CLI: Repos Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="ReposTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="CLI: Orgs Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="OrgsTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
 
 	<test name="CLI: Subscribe Tests">
 		<packages>
@@ -151,19 +112,6 @@
 			<run>
 				<include name="setup" />
 				<include name="SubscribeTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="CLI: Stacking Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="StackingTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -273,27 +221,14 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: Redeem Tests">
+	<test name="CLI: Activate Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
 		</packages>
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="RedeemTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="CLI: Environments Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="EnvironmentsTests" />
+				<include name="ActivateTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
@@ -416,19 +351,6 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: Roles Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="RolesTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
 	<test name="CLI: Content Integration Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -442,19 +364,6 @@
 		</groups>
 	</test>
 	
-	<test name="CLI: Healing Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="HealingTests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
 	<test name="CLI: RHUI Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
@@ -463,19 +372,6 @@
 			<run>
 				<include name="setup" />
 				<include name="RHUITests" />
-				<include name="cleanup" />
-			</run>
-		</groups>
-	</test>
-	
-	<test name="CLI: Config Tests">
-		<packages>
-			<package name="com.redhat.qe.sm.cli.tests" />
-		</packages>
-		<groups>
-			<run>
-				<include name="setup" />
-				<include name="ConfigTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>

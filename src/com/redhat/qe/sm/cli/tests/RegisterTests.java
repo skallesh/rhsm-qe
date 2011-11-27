@@ -60,7 +60,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterCredentialsData")
 	@ImplementsNitrateTest(caseId=41677)
 	public void RegisterWithCredentials_Test(String username, String password, String org) {
-		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
+//RHEL62
+//		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" org="+org+" ...");
+		log.info("Testing registration to a Candlepin using username="+username+" password="+password+" ...");
 		
 		// cleanup from last test when needed
 		clienttasks.unregister_(null, null, null);
@@ -92,33 +94,35 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		RegistrationData userData = new RegistrationData(username,password,ownerKey,registerResult,allAvailableSubscriptionPools);
 		registrationDataList.add(userData);
 		clienttasks.unregister_(null, null, null);
-		
-		// when no org was given by the dataprovider, then this user must have READ_ONLY access to any one or more orgs
-		if (org==null) {
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=718205 - jsefler 07/01/2011
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="718205"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				// When org==null, then this user has no access to any org/owner
-				// 1. the user has only READ_ONLY access to one org:
-				//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
-				// 2. the user has only READ_ONLY access to more than one org:
-				//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
-				// Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
-				Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
-				Assert.assertFalse(registerResult.getExitCode()==0, "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
-				return;
-			}
-			// END OF WORKAROUND
-			
-			Assert.assertEquals(registerResult.getStderr().trim(), username+" cannot register to any organizations.", "Error message when READ_ONLY user attempts to register.");
-			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
-			return;
-		}
+
+//RHEL62
+//		// when no org was given by the dataprovider, then this user must have READ_ONLY access to any one or more orgs
+//		if (org==null) {
+//			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=718205 - jsefler 07/01/2011
+//			boolean invokeWorkaroundWhileBugIsOpen = true;
+//			String bugId="718205"; 
+//			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//			if (invokeWorkaroundWhileBugIsOpen) {
+//				// When org==null, then this user has no access to any org/owner
+//				// 1. the user has only READ_ONLY access to one org:
+//				//		exitCode=1 stdout= User dopey cannot access organization/owner snowwhite
+//				// 2. the user has only READ_ONLY access to more than one org:
+//				//		exitCode=1 stdout= You must specify an organization/owner for new consumers.
+//				// Once a Candlepin API is in place to figure this out, fix the OR in the Assert.assertContainsMatch(...)
+//				Assert.assertContainsMatch(registerResult.getStderr().trim(), "User "+username+" cannot access organization/owner \\w+|You must specify an organization/owner for new consumers.");	// User testuser3 cannot access organization/owner admin	// You must specify an organization/owner for new consumers.
+//				Assert.assertFalse(registerResult.getExitCode()==0, "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+//				return;
+//			}
+//			// END OF WORKAROUND
+//			
+//			Assert.assertEquals(registerResult.getStderr().trim(), username+" cannot register to any organizations.", "Error message when READ_ONLY user attempts to register.");
+//			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that the register attempt was NOT a success for a READ_ONLY user.");
+//			return;
+//		}
 		Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that the register attempt was a success.");
-		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
-		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
+		Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
+//RHEL62
+//		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 	}
 	
 	
@@ -187,7 +191,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "AcceptanceTests"},
 			enabled=true)
 	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
 
@@ -210,7 +214,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, null, false, null, null, null);
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autosubscribe should NOT list the status of installed products when there are no installed products.");
+//		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autosubscribe should NOT list the status of installed products when there are no installed products.");
 		Assert.assertEquals(clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed Products to list",
 				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
 		//List <InstalledProduct> currentlyInstalledProducts = InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout());
@@ -274,15 +278,16 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
 		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
-		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
-		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product was autosubscribed."); 
-		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(fakeProductCert.productName,null,null,"Subscribed",null,null),
-				"As expected, ProductName '"+fakeProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
+//RHEL62
+//		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
+//		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product was autosubscribed."); 
+//		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(fakeProductCert.productName,"Subscribed",null,null,null,null),
+//				"As expected, ProductName '"+fakeProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
 
 		// WARNING The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.  This is why we search for an available pool that provides one product early in this test.
-		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
-		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
 
 	
@@ -624,7 +629,7 @@ Expected Results:
 	
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018"},
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
@@ -635,12 +640,12 @@ Expected Results:
 			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
 			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
 			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after message change from bug 730018...
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+//		// after message change from bug 730018...
+//		interoperabilityWarningMessage = 
+//			"WARNING" +"\n\n"+
+//			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
+//			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
+//			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
 
 		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
 		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011

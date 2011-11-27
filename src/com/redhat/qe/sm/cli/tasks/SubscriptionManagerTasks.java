@@ -392,16 +392,17 @@ public class SubscriptionManagerTasks {
 	 * @param waitForMinutes - after restarting, should we wait for the next certFrequency refresh?
 	 */
 	public void restart_rhsmcertd (Integer certFrequency, Integer healFrequency, boolean waitForMinutes){
-//		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
-//		updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
-		
-		// use config to set the certFrequency and healFrequency in one call
-		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		if (certFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "certFrequency".toLowerCase(), String.valueOf(certFrequency)});
-		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "certFrequency"));
-		if (healFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "healFrequency".toLowerCase(), String.valueOf(healFrequency)});
-		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "healFrequency"));
-		if (listOfSectionNameValues.size()>0) config(null,null,true,listOfSectionNameValues);
+		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
+
+//RHEL62
+//		// use config to set the certFrequency and healFrequency in one call
+//		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+//		if (certFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "certFrequency".toLowerCase(), String.valueOf(certFrequency)});
+//		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "certFrequency"));
+//
+//		if (healFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "healFrequency".toLowerCase(), String.valueOf(healFrequency)});
+//		else healFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "healFrequency"));
+//		if (listOfSectionNameValues.size()>0) config(null,null,true,listOfSectionNameValues);
 		
 		// mark the rhsmcertd log file before restarting the deamon
 		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing service rhsmcertd restart...";
@@ -419,7 +420,9 @@ public class SubscriptionManagerTasks {
 			}
 		} else {
 		// END OF WORKAROUND
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+"\\[  OK  \\]$",null);	
+//RHEL62
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
 		}
 		// # service rhsmcertd restart
 		// rhsmcertd (pid 10172 10173) is running...
@@ -430,26 +433,30 @@ public class SubscriptionManagerTasks {
 		// Wed Nov  9 15:21:55 2011: certificates updated
 		// Wed Nov  9 15:21:55 2011: certificates updated
 
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+) is running...$",null);		// master/RHEL58 branch
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);
+// RHEL62
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="752572"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId+" is open.");
-		} else {
-		// END OF WORKAROUND
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
-		}
+// RHEL62
+//		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
+//		boolean invokeWorkaroundWhileBugIsOpen = true;
+//		String bugId="752572"; 
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		if (invokeWorkaroundWhileBugIsOpen) {
+//			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId+" is open.");
+//		} else {
+//		// END OF WORKAROUND
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
+//		}
 		
 		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
 
 		// assert the rhsmcertd log file reflected newly updated certificates...
 		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "certificates updated");
-		Assert.assertContainsMatch(rhsmcertdLogResult, ".*certificates updated\\n.*certificates updated", "The rhsmcertd is logging its restart.");
+		Assert.assertContainsMatch(rhsmcertdLogResult, ".*certificates updated", "The rhsmcertd is logging its restart.");
+//RHEL62
+//		Assert.assertContainsMatch(rhsmcertdLogResult, ".*certificates updated\\n.*certificates updated", "The rhsmcertd is logging its restart.");
 
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
@@ -1108,9 +1115,10 @@ public class SubscriptionManagerTasks {
 			String version = productCert.productNamespace.version==null?"None":productCert.productNamespace.version;
 			String arch = productCert.productNamespace.arch==null?"None":productCert.productNamespace.arch;
 			
-			if (installedProduct.productName.equals(name) &&
-				installedProduct.version.equals(version) &&
-				installedProduct.arch.equals(arch)) {
+			if (installedProduct.productName.equals(name)
+//RHEL62				&& installedProduct.version.equals(version) 
+//RHEL62				&& installedProduct.arch.equals(arch)
+				) {
 				return installedProduct;
 			}
 		}
@@ -1284,17 +1292,18 @@ public class SubscriptionManagerTasks {
 //				Assert.fail(e.getMessage());
 //			} 
 //		}
-
-		// set autoheal for newly registered consumer only
-		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
-			try {
-				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
-				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
-			} catch (Exception e) {
-				e.printStackTrace();
-				Assert.fail(e.getMessage());
-			} 
-		}
+		
+//RHEL62
+//		// set autoheal for newly registered consumer only
+//		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
+//			try {
+//				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
+//				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				Assert.fail(e.getMessage());
+//			} 
+//		}
 		
 		return sshCommandResult;
 	}
@@ -1663,7 +1672,11 @@ public class SubscriptionManagerTasks {
 		
 		
 		if (regenerate) {
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Identity certificate has been regenerated.");
+			// [root@rhsm-compat-rhel57 ~]# subscription-manager identity --regenerate
+			// 6d27f0b7-8659-4495-aa3e-174341f61868 rhsm-compat-rhel57
+			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} .+");
+// RHEL62
+//			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Identity certificate has been regenerated.");
 		} else {
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Current identity is: [a-f,0-9,\\-]{36}");
 		}
@@ -2109,17 +2122,17 @@ public class SubscriptionManagerTasks {
 	// redeem module tasks ************************************************************
 
 	/**
-	 * redeem without asserting results
+	 * activate without asserting results
 	 * @param email TODO
 	 * @param locale TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult redeem_(String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult activate_(String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
-		String command = this.command;	command += " redeem";
+		String command = this.command;	command += " activate";
 		if (email!=null)				command += " --email="+email;
 		if (locale!=null)				command += " --locale="+locale;
 		if (proxy!=null)				command += " --proxy="+proxy;
@@ -2130,9 +2143,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 
-	public SSHCommandResult redeem(String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult activate(String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = redeem_(email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = activate_(email, locale, proxy, proxyuser, proxypassword);
 		
 		// TODO assert results...
 		
@@ -2291,10 +2304,12 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert the stdout msg was a success
-		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
-		else		{
-			//RHEL62 Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
-		}
+		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Products:"), "The autosubscribe stdout reports: Installed Product Current Status");
+//RHEL62
+//		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
+//		else		{
+//			Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
+//		}
 
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");

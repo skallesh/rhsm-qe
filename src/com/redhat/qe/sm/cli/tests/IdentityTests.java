@@ -129,8 +129,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// regenerate the identity... and assert
 		log.info("Regenerating identity using the current cert for authentication...");
 		SSHCommandResult identityResult = clienttasks.identity(null,null,Boolean.TRUE, null, null, null, null);
-		// RHEL57 RHEL61 Assert.assertEquals(identityResult.getStdout().trim(), registerResult.getStdout().trim(),
-		//		"The original registered result is returned from identity regenerate with original authenticator.");
+		Assert.assertEquals(identityResult.getStdout().trim(), registerResult.getStdout().trim(),
+				"The original registered result is returned from identity regenerate with original authenticator.");
 		
 		// also assert that the newly regenerated cert matches but is newer than the original cert
 		log.info("also asserting that the newly regenerated cert matches but is newer than original cert...");

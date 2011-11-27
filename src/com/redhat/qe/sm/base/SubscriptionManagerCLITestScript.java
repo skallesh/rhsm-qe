@@ -816,17 +816,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (!sm_serverType.equals(CandlepinType.standalone)) {
 			for (String username : sm_clientUsernames) {
 				String password = sm_clientPasswordDefault;
-			
-				// get the orgs for this username/password
-				//List<Org> orgs = clienttasks.getOrgs(username,password);	// fails when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
-				List<Org> orgs = Org.parse(clienttasks.orgs_(username, password, null, null, null).getStdout());
-				//if (orgs.size()==1) {orgs.clear(); orgs.add(new Org(null,null));}	// when a user belongs to only one org, then we don't really need to know the orgKey for registration
-				if (orgs.isEmpty()) orgs.add(new Org("null","Null"));	// reveals when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
-			
-				// append a username and password for each org the user belongs to
-				for (Org org : orgs) {
-					ll.add(Arrays.asList(new Object[]{username,password,org.orgKey}));
-				}
+				ll.add(Arrays.asList(new Object[]{username,password,null}));
+// Orgs did not exist in RHEL57			
+//				// get the orgs for this username/password
+//				//List<Org> orgs = clienttasks.getOrgs(username,password);	// fails when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
+//				List<Org> orgs = Org.parse(clienttasks.orgs_(username, password, null, null, null).getStdout());
+//				//if (orgs.size()==1) {orgs.clear(); orgs.add(new Org(null,null));}	// when a user belongs to only one org, then we don't really need to know the orgKey for registration
+//				if (orgs.isEmpty()) orgs.add(new Org("null","Null"));	// reveals when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
+//			
+//				// append a username and password for each org the user belongs to
+//				for (Org org : orgs) {
+//					ll.add(Arrays.asList(new Object[]{username,password,org.orgKey}));
+//				}
 			}
 			return ll;
 		}
