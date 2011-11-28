@@ -575,7 +575,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe using various good and bad values for the --quantity option",
-			groups={"AcceptanceTests"},
+//RHEL62
+//			groups={"AcceptanceTests"},
 			dataProvider="getSubscribeWithQuantityData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
