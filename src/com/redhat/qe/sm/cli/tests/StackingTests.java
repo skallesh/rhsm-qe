@@ -122,7 +122,8 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
-	
+	// Candidates for an automated Test:
+	// TODO Bug 733327 - stacking entitlements reports as distinct entries in cli list --installed 
 
 		
 		
