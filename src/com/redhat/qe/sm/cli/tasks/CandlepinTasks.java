@@ -1540,7 +1540,20 @@ schema generation failed
 	}
 	
 	
-	public static BigInteger getEntitlementSerialForSubscribedPoolId(String authenticator, String password, String url, String ownerKey, String poolId) throws JSONException, Exception{
+	/**
+	 * Search through all of the entitlements granted to any consumer created with credentials authenticator:password 
+	 * under the specified ownerKey and return the newest entitlement's serial.
+	 * If no entitlement is found, null is returned.
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param poolId
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static BigInteger getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(String authenticator, String password, String url, String ownerKey, String poolId) throws JSONException, Exception{
 
 		JSONObject jsonSerialCandidate = null;	// the newest serial object corresponding to the subscribed pool id (in case the user subscribed to a multi-entitlement pool we probably want the newest serial)
 
@@ -1608,13 +1621,101 @@ schema generation failed
 		}
 		
 		if (jsonSerialCandidate==null) {
-			log.warning("CandlepinTasks could not getEntitlementSerialForSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
+			log.warning("CandlepinTasks could not getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
 			return null;
 		}
 		
 		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
 	}
 	
+	
+	/**
+	 * Search through all of the entitlements granted to the specified consumer created with credentials authenticator:password 
+	 * and return the newest entitlement's serial.
+	 * If no entitlement is found, null is returned.
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param consumerId
+	 * @param poolId
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static BigInteger getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(String authenticator, String password, String url, String consumerId, String poolId) throws JSONException, Exception{
+
+		JSONObject jsonSerialCandidate = null;	// the newest serial object corresponding to the subscribed pool id (in case the user subscribed to a multi-entitlement pool we probably want the newest serial)
+
+		// get the consumerId's entitlements using authenticator credentials
+		// curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/1809416d-b0ee-4b00-ae8a-7a747728e9bc/entitlements | python -m simplejson/tool
+		JSONArray jsonEntitlements = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/consumers/"+consumerId+"/entitlements"));	
+		for (int i = 0; i < jsonEntitlements.length(); i++) {
+			JSONObject jsonEntitlement = (JSONObject) jsonEntitlements.get(i);
+			/*  
+		    {
+		        "accountNumber": "12331131231", 
+		        "certificates": [
+		            {
+		                "cert": "-----BEGIN CERTIFICATE-----\nMIIKCzCCCELKgW/7sB5p/QnMGtc7H3JA==\n-----END CERTIFICATE-----\n", 
+		                "created": "2011-07-23T00:19:17.657+0000", 
+		                "id": "8a90f8c631544ebf0131545c421a08f4", 
+		                "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAghrtrapSj7ouE4CS++9pLx\n-----END RSA PRIVATE KEY-----\n", 
+		                "serial": {
+		                    "collected": false, 
+		                    "created": "2011-07-23T00:19:17.640+0000", 
+		                    "expiration": "2012-07-21T00:00:00.000+0000", 
+		                    "id": 9013269172175430736, 
+		                    "revoked": false, 
+		                    "serial": 9013269172175430736, 
+		                    "updated": "2011-07-23T00:19:17.640+0000"
+		                }, 
+		                "updated": "2011-07-23T00:19:17.657+0000"
+		            }
+		        ], 
+		        "contractNumber": "21", 
+		        "created": "2011-07-23T00:19:17.631+0000", 
+		        "endDate": "2012-07-21T00:00:00.000+0000", 
+		        "flexExpiryDays": 0, 
+		        "href": "/entitlements/8a90f8c631544ebf0131545c420008f3", 
+		        "id": "8a90f8c631544ebf0131545c420008f3", 
+		        "pool": {
+		            "href": "/pools/8a90f8c631544ebf0131545024da040f", 
+		            "id": "8a90f8c631544ebf0131545024da040f"
+		        }, 
+		        "quantity": 1, 
+		        "startDate": "2011-07-23T00:19:17.631+0000", 
+		        "updated": "2011-07-23T00:19:17.631+0000"
+		    }
+		    */
+			JSONObject jsonPool = jsonEntitlement.getJSONObject("pool");
+			if (poolId.equals(jsonPool.getString("id"))) {
+				JSONArray jsonCertificates = jsonEntitlement.getJSONArray("certificates");
+				for (int j = 0; j < jsonCertificates.length(); j++) {
+					JSONObject jsonCertificate = (JSONObject) jsonCertificates.get(j);
+					JSONObject jsonSerial = jsonCertificate.getJSONObject("serial");
+					if (!jsonSerial.getBoolean("revoked")) {
+						
+						if (jsonSerialCandidate==null) jsonSerialCandidate=jsonSerial;	// set the first found serial as the candidate
+						
+						// determine if this is the newest serial object that has been created
+						DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
+						java.util.Date dateSerialCandidateCreated = iso8601DateFormat.parse(jsonSerialCandidate.getString("created"));
+						java.util.Date dateSerialCreated = iso8601DateFormat.parse(jsonSerial.getString("created"));
+						if (dateSerialCreated.after(dateSerialCandidateCreated)) {
+							jsonSerialCandidate = jsonSerial;
+						}
+					}
+				}
+			}
+		}
+		
+		if (jsonSerialCandidate==null) {
+			log.warning("CandlepinTasks could not getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
+			return null;
+		}
+		
+		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
+	}
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 	

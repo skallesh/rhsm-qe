@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -230,23 +231,31 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="Subscribed for Already subscribed Entitlement.",
 			groups={"blockedByBug-584137"},
-//groups={"debugTest"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41897)
 	public void AttemptToSubscribeToAnAlreadySubscribedPool_Test(SubscriptionPool pool) throws JSONException, Exception{
-//if (!pool.productId.equals("awesomeos-virt-4")) throw new SkipException("debugTesting");
-		//clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
-		Assert.assertNull(CandlepinTasks.getEntitlementSerialForSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, pool.poolId),"Authenticator '"+sm_clientUsername+"' has not been granted any entitlements from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
+		String consumerId = clienttasks.getCurrentConsumerId();
+		Assert.assertNull(CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId),"The current consumer has not been granted any entitlements from pool '"+pool.poolId+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
+		BigInteger serial1 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
 		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
 
-		if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
+		if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
+			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_SuccessfulSubscribe+pool.poolId+"",
+				"subscribe command allows multi-entitlement pools to be subscribed to by the same consumer more than once.");
+			BigInteger serial2 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
+			Assert.assertNotSame(serial1,serial2,
+				"Upon subscribing to a multi-entitlement pool '"+pool.poolId+"' for the second time, the newly granted entilement's serial '"+serial2+"' number differs from the first '"+serial1+"'.");
+			Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem")==1,
+				"After subscribing to multi-entitlement pool '"+pool.poolId+"' for the second time, the first granted entilement cert file still exists.");
+			Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.entitlementCertDir+File.separator+serial2+".pem")==1,
+				"After subscribing to multi-entitlement pool '"+pool.poolId+"' for the second time, the second granted entilement cert file exists.");
+		} else {
 			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.",
 				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
-		} else {
-			Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_SuccessfulSubscribe+pool.poolId+"",
-				"subscribe command allows multi-entitlement pools to be subscribed to by the same consumer more than once.");		
+			Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem")==1,
+				"After attempting to subscribe to pool '"+pool.poolId+"' for the second time, the first granted entilement cert file still exists.");
 		}
 	}
 	
