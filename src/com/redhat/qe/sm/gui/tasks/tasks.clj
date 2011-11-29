@@ -14,7 +14,8 @@
         [clojure.contrib.string :only (split
                                        split-lines
                                        trim
-                                       replace-str)]
+                                       replace-str
+                                       substring?)]
         [clojure.contrib.str-utils :only (re-split)]
         matchure
         gnome.ldtp)
@@ -24,7 +25,8 @@
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
-           [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]))
+           [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]
+           [org.apache.xmlrpc XmlRpcException]))
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
@@ -355,7 +357,12 @@
            (ui click :proxy-configuration)
            (ui waittillwindowexist :proxy-config-dialog 60)
            (ui check :proxy-checkbox)
-           (ui settextvalue :proxy-location (str proxy ":" port))
+           (try
+             (ui settextvalue :proxy-location (str proxy ":" port))
+             (catch XmlRpcException e
+               (if (substring? "not implemented" (.getMessage e))
+                 (do (ui generatekeyevent (str proxy ":" port)))
+                 (throw e))))
            (ui check :authentication-checkbox)
            (ui settextvalue :username-text user)
            (ui settextvalue :password-text pass)
@@ -379,7 +386,13 @@
            (ui click :proxy-configuration)
            (ui waittillwindowexist :proxy-config-dialog 60)
            (ui check :proxy-checkbox)
-           (ui settextvalue :proxy-location (str proxy ":" port))
+           (try
+             (ui settextvalue :proxy-location (str proxy ":" port))
+             (catch XmlRpcException e
+               ;; yay rhel5
+               (if (substring? "not implemented" (.getMessage e))
+                 (do (ui generatekeyevent (str proxy ":" port)))
+                 (throw e))))
            (ui uncheck :authentication-checkbox)
            (ui click :close-proxy)
            (checkforerror))))
