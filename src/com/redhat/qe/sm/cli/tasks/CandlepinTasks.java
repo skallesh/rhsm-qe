@@ -248,7 +248,7 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -mjson.tool | grep url",LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -m simplejson/tool | grep url",LogMessageUtil.action());
 	}
 	
 	public void cleanOutCRL() {
@@ -302,7 +302,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
 		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+get.getURI()+" | python -mjson.tool");
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
@@ -336,7 +336,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request DELETE https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c632d5f0ee0132d603256c0f6d
 		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+delete.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+delete.getURI()/*+" | python -mjson.tool"*/);
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+delete.getURI()/*+" | python -m simplejson/tool"*/);
 
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
