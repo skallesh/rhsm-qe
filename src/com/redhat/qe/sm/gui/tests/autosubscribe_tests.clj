@@ -3,7 +3,7 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [error.handler :only (with-handlers handle ignore recover)]
-        [clojure.contrib.string :only (trim split)]
+        [clojure.contrib.string :only (trim split substring?)]
         gnome.ldtp)
   (:require [clojure.contrib.logging :as log]
             [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
@@ -167,7 +167,7 @@
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForSomeProductsSubscribable"]
               :dataProvider "my-installed-software"}}
-  assert_correct_staus [_ product]
+  assert_correct_status [_ product]
   (let [index (tasks/ui gettablerowindex
                         :installed-view
                         product)
@@ -176,19 +176,34 @@
                          index 3)
         not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
+        rhel5?   (substring? "release 5"
+                             (.getStdout
+                              (.runCommandAndWait
+                               @clientcmd
+                               "cat /etc/redhat-release")))
         boxarch (trim (.getStdout
                        (.runCommandAndWait
                         @clientcmd
-                        (str 
+                        (str
                          "subscription-manager facts --list | "
-                         "grep \"lscpu.architecture\" | "
+                         (if rhel5?
+                           "grep \"uname.machine\" | "
+                           "grep \"lscpu.architecture\" | ")
                          "cut -f 2 -d \":\""))))
         prodarch (split #"," (try
-                               (tasks/ui getcellvalue
-                                         :installed-view
-                                         index 2)
+                               (let [arch (tasks/ui getcellvalue
+                                                    :installed-view
+                                                    index 2)]
+                                 (if (string? arch)
+                                   arch
+                                   ""))
                                (catch XmlRpcException e
                                  "")))]
+    ;;(println (str "index: " index))
+    ;;(println (str "status: "  status))
+    ;;(println (str "expected: " expected))
+    ;;(println (str "boxarch: "  boxarch))
+    ;;(println (str "prodarch: " prodarch))
     (condp = status
         "Subscribed" (do (verify (not-nil? expected)))
         "Not Subscribed" (if (or (not-nil? (some #{boxarch} prodarch))
@@ -234,3 +249,15 @@
 
 ;; TODO write a separte test for https://bugzilla.redhat.com/show_bug.cgi?id=743704
 ;;   and restore the override.facts 
+
+
+;; cruft I want to keep:
+
+(comment
+  boxarch (trim (.getStdout
+                 (.runCommandAndWait
+                  @clientcmd
+                  (str 
+                   "subscription-manager facts --list | "
+                   "grep \"lscpu.architecture\" | "
+                   "cut -f 2 -d \":\"")))))
