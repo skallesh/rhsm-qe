@@ -284,7 +284,7 @@
             :name item
             :msg (str "Not found in " table ": " item)}))
   (let [row (ui gettablerowindex table item)]
-    (if (is-item? row)
+    (if (is-item? table row)
       (do
         (ui selectrow table item)
         row)
