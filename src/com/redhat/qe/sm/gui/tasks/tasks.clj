@@ -361,7 +361,8 @@
              (ui settextvalue :proxy-location (str proxy ":" port))
              (catch XmlRpcException e
                (if (substring? "not implemented" (.getMessage e))
-                 (do (ui generatekeyevent (str proxy ":" port)))
+                 (do (sleep 2000)
+                     (ui generatekeyevent (str proxy ":" port)))
                  (throw e))))
            (ui check :authentication-checkbox)
            (ui settextvalue :username-text user)
@@ -391,7 +392,8 @@
              (catch XmlRpcException e
                ;; yay rhel5
                (if (substring? "not implemented" (.getMessage e))
-                 (do (ui generatekeyevent (str proxy ":" port)))
+                 (do (sleep 2000)
+                     (ui generatekeyevent (str proxy ":" port)))
                  (throw e))))
            (ui uncheck :authentication-checkbox)
            (ui click :close-proxy)
