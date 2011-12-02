@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -248,7 +249,7 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -m simplejson/tool | grep url",LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -m simplejson/tool | egrep \"POST|PUT|GET|DELETE|url\"",LogMessageUtil.action());
 	}
 	
 	public void cleanOutCRL() {
@@ -2530,7 +2531,7 @@ schema generation failed
         return feed;
 	}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, String... providedProducts) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, List<String> providedProducts) throws JSONException{
 		
 		/*
 		[root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST
@@ -2552,7 +2553,7 @@ schema generation failed
 		sub.put("quantity", quantity);
 
 		List<JSONObject> pprods = new ArrayList<JSONObject>();
-		for (String id: providedProducts) {
+		if (providedProducts!=null) for (String id: providedProducts) {
 			JSONObject jo = new JSONObject();
 			jo.put("id", id);
 			pprods.add(jo);
@@ -2567,7 +2568,25 @@ schema generation failed
 		return sub;
 	}
 	
+	public static JSONObject createProductRequestBody(String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException{
+		
 	
+		JSONObject jsonProductData = new JSONObject();
+		if (name!=null)					jsonProductData.put("name", name);
+		if (productId!=null)			jsonProductData.put("id", productId);
+		if (multiplier!=null)			jsonProductData.put("multiplier", multiplier);
+		if (dependentProductIds!=null)	jsonProductData.put("dependentProductIds", dependentProductIds);
+		List<JSONObject> jsonAttributes = new ArrayList<JSONObject>();
+		for (String attributeName : attributes.keySet()) {
+			JSONObject jsonAttribute = new JSONObject();
+			jsonAttribute.put("name", attributeName);
+			jsonAttribute.put("value", attributes.get(attributeName));
+			jsonAttributes.add(jsonAttribute);
+		}
+		jsonProductData.put("attributes", jsonAttributes);
+		
+		return jsonProductData;
+	}
 	
 	
 	
@@ -2579,7 +2598,7 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject createSubscriptionAndRefreshPools(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProductIds) throws JSONException, Exception  {
+	public static JSONObject createSubscriptionAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds) throws JSONException, Exception  {
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -2588,35 +2607,15 @@ schema generation failed
 		Calendar startCalendar = new GregorianCalendar();
 		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
 		Date startDate = startCalendar.getTime();
-
-		
-		// randomly choose a contract number
-		//Integer contractNumber = Integer.valueOf(getRandInt());
-		
-		// randomly choose an account number
-		//Integer accountNumber = Integer.valueOf(getRandInt());
-		
-		// choose a product id for the subscription
-		//String productId =  "MKT-rhel-server";  // too hard coded
-		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
-		//String productId = null;
-		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
-		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		//} while (getPersonProductIds().contains(productId));
-		//String productId = randomAvailableProductId;
-
-		// choose providedProducts for the subscription
-		//String[] providedProducts = {"37068", "37069", "37060"};
-		//String[] providedProducts = {
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
-		//};
-		//String[] providedProducts = {};
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
+		
+		if (jsonSubscription.has("displayMessage")) {
+			//log.warning("Subscription creation appears to have failed: "+jsonSubscription("displayMessage"));
+			Assert.fail("Subscription creation appears to have failed: "+jsonSubscription.getString("displayMessage"));
+		}
 		
 		// refresh the pools
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
@@ -2643,14 +2642,51 @@ schema generation failed
 		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
 		log.info("The newly created subscription pool with id '"+poolId+"' will start in '"+startingMinutesFromNow+"' minutes from now.");
 		log.info("The newly created subscription pool with id '"+poolId+"' will expire in '"+endingMinutesFromNow+"' minutes from now.");
-		return jsonPool; // return json pool to the newly available SubscriptionPool
+		return jsonPool; // return first jsonPool found generated for the newly created subscription
+		
+	}
+	
+	public static JSONObject createProductUsingRESTfulAPI(String authenticator, String password, String url, String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException, Exception  {
+
+		// create the product
+		String requestBody = CandlepinTasks.createProductRequestBody(name, productId, multiplier, attributes, dependentProductIds).toString();
+		JSONObject jsonProduct = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/products",requestBody));
+		
+		if (jsonProduct.has("displayMessage")) {
+			//log.warning("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
+			Assert.fail("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
+		}
+		return jsonProduct; // return jsonProduct representing the newly created product
 		
 	}
 	
 	
-	
-	
-	
+	public static void deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
+
+		// delete all the subscriptions whose product/id matches productId
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonSubscriptions = new JSONArray(getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			String subscriptionId = jsonSubscription.getString("id");
+			
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String productName = jsonProduct.getString("name");
+			if (productId.equals(jsonProduct.getString("id"))) {
+				// delete the subscription
+				deleteResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId);
+				
+				// assert the deleted subscription cannot be GET
+				jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId));
+				Assert.assertTrue(jsonSubscription.has("displayMessage"),"Attempts to GET a deleted subscription fails with a displayMessage.");
+				Assert.assertEquals(jsonSubscription.getString("displayMessage"),"Subscription with id "+subscriptionId+" could not be found");
+			}
+		}
+		
+		// refresh the pools
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
+	}
 	
 	
 	
