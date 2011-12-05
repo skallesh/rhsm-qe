@@ -142,40 +142,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// setup the client(s)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
-			if (smt==null) continue;
-			
-			smt.installSubscriptionManagerRPMs(sm_rpmUrls,sm_yumInstallOptions);
-			
-			// rhsm.conf [server] configurations
-			if (!sm_serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", sm_serverHostname);							else sm_serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
-			if (!sm_serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", sm_serverPrefix);								else sm_serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
-			if (!sm_serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", sm_serverPort);									else sm_serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
-			if (!sm_serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", sm_serverInsecure);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
-			if (!sm_serverSslVerifyDepth.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "ssl_verify_depth", sm_serverSslVerifyDepth);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
-			if (!sm_serverCaCertDir.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", sm_serverCaCertDir);						else sm_serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
-
-			// rhsm.conf [rhsm] configurations
-			if (!sm_rhsmBaseUrl.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", sm_rhsmBaseUrl);								else sm_rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
-			if (!sm_rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", sm_rhsmRepoCaCert);						else sm_rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
-			//if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
-			if (!sm_rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", sm_rhsmProductCertDir);				else sm_rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
-			if (!sm_rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", sm_rhsmEntitlementCertDir);		else sm_rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
-			if (!sm_rhsmConsumerCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", sm_rhsmConsumerCertDir);				else sm_rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
-
-			// rhsm.conf [rhsmcertd] configurations
-			if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
-		
-			smt.initializeFieldsFromConfigFile();
-			smt.removeAllCerts(true,true);
-			smt.installRepoCaCerts(sm_repoCaCertUrls);
-			
-			// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
-			log.info("Copying Candlepin cert onto client to enable certificate validation...");
-			smt.installRepoCaCert(serverCaCertFile, sm_serverHostname.split("\\.")[0]+".pem");
-			
-			// transfer copies of all the generated product certs from the candlepin server to the clients
-			log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
-			smt.installProductCerts(generatedProductCertFiles);
+			if (smt != null)
+				setupClient(smt, serverCaCertFile, generatedProductCertFiles);
 		}
 		
 		// determine the server URL that will be used for candlepin API calls
@@ -239,6 +207,42 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		isSetupBeforeSuiteComplete = true;
 	}
+	
+	public void setupClient(SubscriptionManagerTasks smt, File serverCaCertFile, List<File> generatedProductCertFiles) throws IOException, JSONException{		
+		smt.installSubscriptionManagerRPMs(sm_rpmUrls,sm_yumInstallOptions);
+		
+		// rhsm.conf [server] configurations
+		if (!sm_serverHostname.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "hostname", sm_serverHostname);							else sm_serverHostname = smt.getConfFileParameter(smt.rhsmConfFile, "hostname");
+		if (!sm_serverPrefix.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "prefix", sm_serverPrefix);								else sm_serverPrefix = smt.getConfFileParameter(smt.rhsmConfFile, "prefix");
+		if (!sm_serverPort.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "port", sm_serverPort);									else sm_serverPort = smt.getConfFileParameter(smt.rhsmConfFile, "port");
+		if (!sm_serverInsecure.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "insecure", sm_serverInsecure);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+		if (!sm_serverSslVerifyDepth.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "ssl_verify_depth", sm_serverSslVerifyDepth);							else sm_serverInsecure = smt.getConfFileParameter(smt.rhsmConfFile, "insecure");
+		if (!sm_serverCaCertDir.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "ca_cert_dir", sm_serverCaCertDir);						else sm_serverCaCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "ca_cert_dir");
+	
+		// rhsm.conf [rhsm] configurations
+		if (!sm_rhsmBaseUrl.equals(""))					smt.updateConfFileParameter(smt.rhsmConfFile, "baseurl", sm_rhsmBaseUrl);								else sm_rhsmBaseUrl = smt.getConfFileParameter(smt.rhsmConfFile, "baseurl");
+		if (!sm_rhsmRepoCaCert.equals(""))				smt.updateConfFileParameter(smt.rhsmConfFile, "repo_ca_cert", sm_rhsmRepoCaCert);						else sm_rhsmRepoCaCert = smt.getConfFileParameter(smt.rhsmConfFile, "repo_ca_cert");
+		//if (!rhsmShowIncompatiblePools.equals(""))	smt.updateConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools", rhsmShowIncompatiblePools);	else rhsmShowIncompatiblePools = smt.getConfFileParameter(smt.rhsmConfFile, "showIncompatiblePools");
+		if (!sm_rhsmProductCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "productCertDir", sm_rhsmProductCertDir);				else sm_rhsmProductCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "productCertDir");
+		if (!sm_rhsmEntitlementCertDir.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "entitlementCertDir", sm_rhsmEntitlementCertDir);		else sm_rhsmEntitlementCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "entitlementCertDir");
+		if (!sm_rhsmConsumerCertDir.equals(""))			smt.updateConfFileParameter(smt.rhsmConfFile, "consumerCertDir", sm_rhsmConsumerCertDir);				else sm_rhsmConsumerCertDir = smt.getConfFileParameter(smt.rhsmConfFile, "consumerCertDir");
+	
+		// rhsm.conf [rhsmcertd] configurations
+		if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
+	
+		smt.initializeFieldsFromConfigFile();
+		smt.removeAllCerts(true,true);
+		smt.installRepoCaCerts(sm_repoCaCertUrls);
+		
+		// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
+		log.info("Copying Candlepin cert onto client to enable certificate validation...");
+		smt.installRepoCaCert(serverCaCertFile, sm_serverHostname.split("\\.")[0]+".pem");
+		
+		// transfer copies of all the generated product certs from the candlepin server to the clients
+		log.info("Copying Candlepin generated product certs onto client to simulate installed products...");
+		smt.installProductCerts(generatedProductCertFiles);
+	}
+	
 	protected static boolean isSetupBeforeSuiteComplete = false;
 	
 //	@BeforeSuite(groups={"gui-setup"},dependsOnMethods={"setupBeforeSuite"}, description="subscription manager gui set up")
