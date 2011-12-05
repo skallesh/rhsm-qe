@@ -2241,12 +2241,31 @@ schema generation failed
 			
 			// get the updated job detail
 			jobDetail = new JSONObject(getResourceUsingRESTfulAPI(owner,password,url,statusPath));
-		} while (!jobDetail.getString("state").equalsIgnoreCase(state) || (t*retryMilliseconds >= timeoutMinutes*60*1000));
+		} while (!jobDetail.getString("state").equalsIgnoreCase(state) && (t*retryMilliseconds < timeoutMinutes*60*1000));
 		
 		// assert that the state was achieved within the timeout
-		Assert.assertFalse((t*retryMilliseconds >= timeoutMinutes*60*1000), "JobDetail '"+jobDetail.getString("id")+"' changed state to '"+state+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
-
+		if (t*retryMilliseconds >= timeoutMinutes*60*1000) log.warning("JobDetail: "+jobDetail );
+		Assert.assertEquals(jobDetail.getString("state"),state, "JobDetail '"+jobDetail.getString("id")+"' changed to expected state '"+state+"' within the acceptable timeout of "+timeoutMinutes+" minutes.  (Actual time was '"+t*retryMilliseconds+"' milliseconds.)");
+		
+		//Example of a failed case.
+		//{
+		//    "created": "2011-12-04T08:41:24.185+0000",
+		//    "finishTime": null,
+		//    "group": "async group",
+		//    "id": "refresh_pools_31c39a01-a3f9-4d9f-adaf-9471532a7230",
+		//    "principalName": "admin",
+		//    "result": "org.quartz.SchedulerException: Job threw an unhandled exception. [See nested exception: java.lang.IllegalArgumentException: attempt to create delete event with null entity]",
+		//    "startTime": "2011-12-04T08:41:24.188+0000",
+		//    "state": "FAILED",
+		//    "statusPath": "/jobs/refresh_pools_31c39a01-a3f9-4d9f-adaf-9471532a7230",
+		//    "targetId": "admin",
+		//    "targetType": "owner",
+		//    "updated": "2011-12-04T08:41:24.899+0000"
+		//}
+		
 		return jobDetail;
+	}
+	
 // TODO
 //		public void getJobDetail(String id) {
 //			// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request GET https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d
@@ -2260,10 +2279,9 @@ schema generation failed
 //				  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
 //				  "updated" : "2010-08-30T20:01:11.932+0000",
 //				  "created" : "2010-08-30T20:01:11.721+0000"
-//				}
+//			}
 //		}
 
-	}
 	
 	public void restartTomcat() {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
