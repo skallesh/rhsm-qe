@@ -161,9 +161,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			//201108251644:10.049 - WARNING: Required credentials not available for BASIC <any realm>@rubyvip.web.stage.ext.phx2.redhat.com:80 (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			//201108251644:10.052 - WARNING: Preemptive authentication requested but no default credentials available (org.apache.commons.httpclient.HttpMethodDirector.authenticateHost)
 			jsonStatus = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/status"));
-		} catch (Exception e) {
-			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
-		} finally {
 			if (jsonStatus!=null) {
 				servertasks.statusRelease		= jsonStatus.getString("release");
 				servertasks.statusResult		= jsonStatus.getBoolean("result");
@@ -186,7 +183,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				Assert.assertTrue(servertasks.statusRelease.matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
 				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
 			}
-		}
+		} catch (Exception e) {
+			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
+		} 
 
 		
 		log.info("Installed version of subscription-manager...");
