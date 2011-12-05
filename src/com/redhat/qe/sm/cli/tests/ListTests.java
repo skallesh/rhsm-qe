@@ -5,7 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -73,7 +75,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is listed as available for subscribing: "+pool);
+		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is listed as available for subscribing.");
 	}
 	
 	
@@ -352,12 +354,18 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null,null,null);
 		
 		listResult = clienttasks.list_(null,true,null,null,null,null,null, null);
-		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
-		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
+		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list available command indicates a problem.");
+		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list available subscriptions should require registration.");
+		// results changed after bug fix 749332
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list available command indicates a problem.");
+		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --available subscriptions should require registration.");
 
 		listResult = clienttasks.list_(true,true,null,null,null,null,null, null);
-		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
-		Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
+		//Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(1), "The exit code from the list all available command indicates a problem.");
+		//Assert.assertEquals(listResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Attempting to list all available subscriptions should require registration.");
+		// results changed after bug fix 749332
+		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(255), "The exit code from the list all available command indicates a problem.");
+		Assert.assertEquals(listResult.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered,"Attempting to list --all --available subscriptions should require registration.");
 
 	}
 	
@@ -475,10 +483,92 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String randomAvailableProductId = pool.productId;
 		
 		// create a future subscription and refresh pools for it
-		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId /*, providedProductIds none */);
+		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId, null);
 	}
 	
 	
+	@BeforeClass(groups="setup")
+	public void createSubscriptionsWithVariationsOnProductAttributeSockets() throws JSONException, Exception {
+		String name,productId;
+		List<String> providedProductIds = new ArrayList<String>();
+		Map<String,String> attributes = new HashMap<String,String>();
+		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
+		
+		// Awesome OS for 0 sockets
+		name = "Awesome OS for 0 sockets";
+		productId = "0-sockets";
+		providedProductIds.clear();
+		providedProductIds.add("90001");
+		attributes.clear();
+		attributes.put("sockets", "0");
+		attributes.put("version", "1.0");
+		attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+
+		// re-create an engineering product
+		attributes.put("type", "SVC");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		// re-create a marketing product that provides the engineering product
+		attributes.put("type", "MKT");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		// create a subscription for the marketing product
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -60, 24*60, getRandInt(), getRandInt(), productId, providedProductIds);
+
+	
+		// Awesome OS for no sockets
+		name = "Awesome OS for no sockets";
+		productId = "no-sockets";
+		providedProductIds.clear();
+		providedProductIds.add("90002");
+		attributes.clear();
+		attributes.remove("sockets");
+		attributes.put("version", "0.0");
+		attributes.put("variant", "workstation");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+
+		// re-create an engineering product
+		attributes.put("type", "SVC");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		// re-create a marketing product that provides the engineering product
+		attributes.put("type", "MKT");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		// create a subscription for the marketing product
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -60, 24*60, getRandInt(), getRandInt(), productId, providedProductIds);
+
+		// Awesome OS for null sockets
+		name = "Awesome OS for \"null\" sockets";
+		productId = "null-sockets";
+		providedProductIds.clear();
+		providedProductIds.add("90003");
+		attributes.clear();
+		attributes.put("sockets", "null");
+		attributes.put("version", "0.0");
+		attributes.put("variant", "workstation");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "30");
+
+		// re-create an engineering product
+		attributes.put("type", "SVC");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		// re-create a marketing product that provides the engineering product
+		attributes.put("type", "MKT");
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, productId);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		// create a subscription for the marketing product
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -60, 24*60, getRandInt(), getRandInt(), productId, providedProductIds);
+
+	}	
+
 	
 	
 	// Data Providers ***********************************************************************

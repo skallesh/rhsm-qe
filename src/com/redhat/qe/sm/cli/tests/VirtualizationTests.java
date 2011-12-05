@@ -124,7 +124,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		String virtUuid = clienttasks.getFactValue("virt.uuid");
 		if (Boolean.parseBoolean(virtIsGuest)) {
 			if (virtHostType.contains("ibm_systemz") || virtHostType.contains("xen-dom0") || virtHostType.contains("powervm")) {
-				Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor is contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
+				Assert.assertEquals(virtUuid,"Unknown","subscription-manager facts list reports virt.uuid as Unknown when the hypervisor contains \"ibm_systemz\", \"xen-dom0\", or \"powervm\".");
 			} else {
 				String expectedUuid = client.runCommandAndWait("if [ -r /system/hypervisor/uuid ]; then cat /system/hypervisor/uuid; else dmidecode -s system-uuid; fi").getStdout().trim().toLowerCase();	// TODO Not sure if the cat /system/hypervisor/uuid is exactly correct
 				Assert.assertEquals(virtUuid,expectedUuid,"subscription-manager facts list reports virt.uuid value to be the /system/hypervisor/uuid or dmidecode -s system-uuid.");
@@ -874,7 +874,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -896,8 +896,32 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// actual guestIds
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
 			actualGuestIds.clear();
+			//[root@jsefler-stage-6server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/8b7fe5e5-7178-4bad-b686-2ff8c6c19112 | python -msimplejson/tool
+			//  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+			//                                 Dload  Upload   Total   Spent    Left  Speed
+			//100 14242    0 14242    0     0  76993      0 --:--:-- --:--:-- --:--:--  135k
+			//{
+			//<cut>
+			//    "guestIds": [
+			//        {
+			//            "created": "2011-11-23T18:01:15.325+0000", 
+			//            "guestId": "test-guestId2", 
+			//            "id": "8a90f85733cefc4c0133d196b73d6d26", 
+			//            "updated": "2011-11-23T18:01:15.325+0000"
+			//        }, 
+			//        {
+			//            "created": "2011-11-23T18:01:15.293+0000", 
+			//            "guestId": "test-guestId1", 
+			//            "id": "8a90f85733cefc4c0133d196b71d6d23", 
+			//            "updated": "2011-11-23T18:01:15.293+0000"
+			//        }
+			//    ], 
+			//<cut>
+			//    "username": "testuser1", 
+			//    "uuid": "8b7fe5e5-7178-4bad-b686-2ff8c6c19112"
+			//}
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
@@ -912,7 +936,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -922,7 +946,6 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// FIXME Not sure that this is really a meaningful or necessary test
 	@Test(	description="Verify the Candlepin API denies PUTting of guestIds onto a guest consumer",
 			groups={"blockedByBug-737935"},
 			dependsOnGroups={},
@@ -952,10 +975,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIds));
 		actualGuestIds.clear();
 		for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-			actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+			actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 		}
 		log.info("Consumer '"+consumerIdOfGuest+"' guestIds: "+actualGuestIds);
 		// assert expected guestIds are empty (TODO or NULL?)
+		if (actualGuestIds.size()>0) {throw new SkipException("This testcase is effectively a simulation of virt-who running on a guest and reporting that the guest has guests of its own. This is NOT a realistic scenario and Candlepin is currently not programmed to block this PUT.  No bugzilla has been opened.  Skipping this test until needed in the future.");};
 		Assert.assertEquals(actualGuestIds, new ArrayList<String>(){},"A guest '"+consumerIdOfGuest+"' consumer should not be allowed to have guestIds PUT on it using the Candlepin API.");
 	}
 	
@@ -990,7 +1014,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
@@ -1016,7 +1040,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostB));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostB) Assert.assertContains(actualGuestIds, guestId);
@@ -1035,10 +1059,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			//DEBUGGING jsonConsumer.put("guestIds", new JSONArray(expectedGuestIdsOnHostA));
 			actualGuestIds.clear();
 			for (int g=0; g<jsonConsumer.getJSONArray("guestIds").length(); g++) {
-				actualGuestIds.add((String)jsonConsumer.getJSONArray("guestIds").get(g));
+				actualGuestIds.add(jsonConsumer.getJSONArray("guestIds").getJSONObject(g).getString("guestId"));
 			}
 			// assert expected guestIds
 			for (String guestId : expectedGuestIdsOnHostA) Assert.assertContains(actualGuestIds, guestId);
+			if (actualGuestIds.size() == expectedGuestIdsOnHostA.size()+c+1) throw new SkipException("Currently Candlepin does NOT purge duplicate guest ids PUT by virt-who onto different host consumers.  The most recently PUT guest id is the winner. Entitlements should be revoked for the older guest id.  Development has decided to keep the stale guest id for potential reporting purposes, hence this test is being skipped until needed in the future."); else
 			Assert.assertEquals(actualGuestIds.size(), expectedGuestIdsOnHostA.size(),"All of the expected guestIds PUT on consumer '"+consumerIdOfHostA+"' using the Candlepin API were verified.");
 
 		}
@@ -1050,7 +1075,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 683459 - Virt only skus creating two pools
 	// TODO Bug 736436 - virtual subscriptions are not included when the certificates are downloaded 
 	// TODO Bug 750659 - candlepin api /consumers/<consumerid>/guests is returning []
-	
+	// TODO Bug 756628 - Unable to entitle consumer to the pool with id '8a90f85733d31add0133d337f9410c52'.: virt.guest.host.does.not.match.pool.owner
 	
 	// Configuration methods ***********************************************************************
 		

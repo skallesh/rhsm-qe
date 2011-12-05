@@ -232,7 +232,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	 */
 	protected String createTestPool(int startingMinutesFromNow, int endingMinutesFromNow) throws JSONException, Exception  {
 		
-		if (true) return CandlepinTasks.createSubscriptionAndRefreshPools(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId).getString("id");
+		if (true) return CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, ownerKey, 3, startingMinutesFromNow, endingMinutesFromNow, getRandInt(), getRandInt(), randomAvailableProductId, null).getString("id");
 // TODO DELETE THE REST OF THIS METHOD'S CODE WHEN WE KNOW THE ABOVE CANDLEPIN TASK IS WORKING 8/12/2011
 		
 		// set the start and end dates
@@ -266,7 +266,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
 		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
 		//};
-		String[] providedProducts = {};
+		List<String> providedProducts = null;
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(3, startDate, endDate, productId, contractNumber, accountNumber, providedProducts).toString();

@@ -56,8 +56,10 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now loop through each consumed product subscription and unsubscribe/re-subscribe
 		SubscriptionPool pool = clienttasks.getSubscriptionPoolFromProductSubscription(productSubscription,sm_clientUsername,sm_clientPassword);
-		if (clienttasks.unsubscribeFromProductSubscription(productSubscription))
+		if (clienttasks.unsubscribeFromProductSubscription(productSubscription)) {
+			Assert.assertNotNull(pool, "Successfully determined what SubscriptionPool ProductSubscription '"+productSubscription+"' was consumed from.");
 			clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);	// only re-subscribe when unsubscribe was a success
+		}
 	}
 	
 	
@@ -163,7 +165,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// now remove the consumer cert to simulate an unregister
 		clienttasks.removeAllCerts(true,false);
-		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),"Consumer not registered. Please register using --username and --password");
+		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered);
 		
 		// now unsubscribe from the serial number (while not registered)
 		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "We should be consuming an entitlement (even while not registered)");

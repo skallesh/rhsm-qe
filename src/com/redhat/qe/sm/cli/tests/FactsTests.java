@@ -45,7 +45,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		log.info("Assert that one must be registered to update the facts...");
 		for (Boolean list : new Boolean[]{true,false}) {			
 			SSHCommandResult result = clienttasks.facts_(list, true, null, null, null);
-			Assert.assertEquals(result.getStdout().trim(),consumerNotRegisteredMsg,
+			Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,
 				"One must be registered to update the facts.");
 		}
 	}
@@ -62,9 +62,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		
 		log.info("Assert that one need not be registered to list the facts...");		
 		SSHCommandResult result = clienttasks.facts(true, false, null, null, null);
-		Assert.assertContainsNoMatch(result.getStderr(),consumerNotRegisteredMsg,
+		Assert.assertContainsNoMatch(result.getStderr(),clienttasks.msg_ConsumerNotRegistered,
 				"One need not be registered to list the facts.");
-		Assert.assertContainsNoMatch(result.getStdout(),consumerNotRegisteredMsg,
+		Assert.assertContainsNoMatch(result.getStdout(),clienttasks.msg_ConsumerNotRegistered,
 				"One need not be registered to list the facts.");
 	}
 	
@@ -79,7 +79,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),
 				"exitCode from the facts without --list or --update");
-		Assert.assertEquals(result.getStdout().trim(),neededOptionMsg,
+		Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_NeedListOrUpdateOption,
 				"stdout from facts without --list or --update");
 	}
 	
@@ -332,20 +332,28 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: assert that the cpu_socket(s) fact matches the value from lscpu",
-			groups={"AcceptanceTest"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
+			groups={"AcceptanceTest","blockedByBug-707292"/*,"blockedByBug-751205"*/}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void MatchingCPUSocketsFact_Test() {
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
-		//TODO This test may need more assertion logic for rhel5.
-		//if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
-		//if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
-	
+		// get the value of cpu_sockets as determined by subscription-manager facts
 		String cpu_sockets = clienttasks.getFactValue("cpu_socket(s)");
-		client.runCommandAndWait("lscpu");
-		String lscpu_sockets = client.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
-		Assert.assertEquals(cpu_sockets, lscpu_sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+lscpu_sockets+"' reported by lscpu.");
+		
+		if (clienttasks.redhatRelease.contains("release 5")) {
+			//String sockets = clienttasks.sockets;
+			String sockets = client.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();
+			Assert.assertEquals(cpu_sockets, sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+sockets+"' as calculated above.");
+			return;
+		}
+		else /*if (clienttasks.redhatRelease.contains("release 6"))*/ {
+			client.runCommandAndWait("lscpu");
+			//String sockets = clienttasks.sockets;
+			String sockets = client.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+			Assert.assertEquals(cpu_sockets, sockets, "The fact 'cpu_socket(s)' value='"+cpu_sockets+"' should match the 'CPU socket(s)' value='"+sockets+"' reported by lscpu.");
+			return;
+		}
 	}
 
 	
@@ -400,8 +408,6 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 
-	protected String consumerNotRegisteredMsg = "Consumer not registered. Please register using --username and --password";
-	protected String neededOptionMsg = "Error: Need either --list or --update, Try facts --help";
 	
 
 	

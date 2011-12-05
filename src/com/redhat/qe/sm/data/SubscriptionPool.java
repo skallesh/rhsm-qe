@@ -107,6 +107,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 			String productId,
 			String poolId,
 			String quantity,
+			Boolean multiEntitlement,
 			String endDate) {
 		super(null);
 		
@@ -114,6 +115,7 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		this.productId = productId;
 		this.poolId = poolId;
 		this.quantity = quantity;
+		this.multiEntitlement = multiEntitlement;
 		this.endDate = parseDateString(endDate);
 		associatedProductIDs = new ArrayList<ProductSubscription>();
 	}

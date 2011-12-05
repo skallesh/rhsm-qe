@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -248,7 +249,7 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -mjson.tool | grep url",LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -m simplejson/tool | egrep \"POST|PUT|GET|DELETE|url\"",LogMessageUtil.action());
 	}
 	
 	public void cleanOutCRL() {
@@ -302,7 +303,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
 		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+get.getURI()+" | python -mjson.tool");
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
@@ -336,7 +337,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request DELETE https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c632d5f0ee0132d603256c0f6d
 		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+delete.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+delete.getURI()/*+" | python -mjson.tool"*/);
+		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+delete.getURI()/*+" | python -m simplejson/tool"*/);
 
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
@@ -1540,7 +1541,20 @@ schema generation failed
 	}
 	
 	
-	public static BigInteger getEntitlementSerialForSubscribedPoolId(String authenticator, String password, String url, String ownerKey, String poolId) throws JSONException, Exception{
+	/**
+	 * Search through all of the entitlements granted to any consumer created with credentials authenticator:password 
+	 * under the specified ownerKey and return the newest entitlement's serial.
+	 * If no entitlement is found, null is returned.
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param ownerKey
+	 * @param poolId
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static BigInteger getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(String authenticator, String password, String url, String ownerKey, String poolId) throws JSONException, Exception{
 
 		JSONObject jsonSerialCandidate = null;	// the newest serial object corresponding to the subscribed pool id (in case the user subscribed to a multi-entitlement pool we probably want the newest serial)
 
@@ -1608,13 +1622,101 @@ schema generation failed
 		}
 		
 		if (jsonSerialCandidate==null) {
-			log.warning("CandlepinTasks could not getEntitlementSerialForSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
+			log.warning("CandlepinTasks could not getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
 			return null;
 		}
 		
 		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
 	}
 	
+	
+	/**
+	 * Search through all of the entitlements granted to the specified consumer created with credentials authenticator:password 
+	 * and return the newest entitlement's serial.
+	 * If no entitlement is found, null is returned.
+	 * @param authenticator
+	 * @param password
+	 * @param url
+	 * @param consumerId
+	 * @param poolId
+	 * @return
+	 * @throws JSONException
+	 * @throws Exception
+	 */
+	public static BigInteger getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(String authenticator, String password, String url, String consumerId, String poolId) throws JSONException, Exception{
+
+		JSONObject jsonSerialCandidate = null;	// the newest serial object corresponding to the subscribed pool id (in case the user subscribed to a multi-entitlement pool we probably want the newest serial)
+
+		// get the consumerId's entitlements using authenticator credentials
+		// curl --insecure --user testuser1:password --request GET https://jsefler-f14-5candlepin.usersys.redhat.com:8443/candlepin/consumers/1809416d-b0ee-4b00-ae8a-7a747728e9bc/entitlements | python -m simplejson/tool
+		JSONArray jsonEntitlements = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/consumers/"+consumerId+"/entitlements"));	
+		for (int i = 0; i < jsonEntitlements.length(); i++) {
+			JSONObject jsonEntitlement = (JSONObject) jsonEntitlements.get(i);
+			/*  
+		    {
+		        "accountNumber": "12331131231", 
+		        "certificates": [
+		            {
+		                "cert": "-----BEGIN CERTIFICATE-----\nMIIKCzCCCELKgW/7sB5p/QnMGtc7H3JA==\n-----END CERTIFICATE-----\n", 
+		                "created": "2011-07-23T00:19:17.657+0000", 
+		                "id": "8a90f8c631544ebf0131545c421a08f4", 
+		                "key": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAghrtrapSj7ouE4CS++9pLx\n-----END RSA PRIVATE KEY-----\n", 
+		                "serial": {
+		                    "collected": false, 
+		                    "created": "2011-07-23T00:19:17.640+0000", 
+		                    "expiration": "2012-07-21T00:00:00.000+0000", 
+		                    "id": 9013269172175430736, 
+		                    "revoked": false, 
+		                    "serial": 9013269172175430736, 
+		                    "updated": "2011-07-23T00:19:17.640+0000"
+		                }, 
+		                "updated": "2011-07-23T00:19:17.657+0000"
+		            }
+		        ], 
+		        "contractNumber": "21", 
+		        "created": "2011-07-23T00:19:17.631+0000", 
+		        "endDate": "2012-07-21T00:00:00.000+0000", 
+		        "flexExpiryDays": 0, 
+		        "href": "/entitlements/8a90f8c631544ebf0131545c420008f3", 
+		        "id": "8a90f8c631544ebf0131545c420008f3", 
+		        "pool": {
+		            "href": "/pools/8a90f8c631544ebf0131545024da040f", 
+		            "id": "8a90f8c631544ebf0131545024da040f"
+		        }, 
+		        "quantity": 1, 
+		        "startDate": "2011-07-23T00:19:17.631+0000", 
+		        "updated": "2011-07-23T00:19:17.631+0000"
+		    }
+		    */
+			JSONObject jsonPool = jsonEntitlement.getJSONObject("pool");
+			if (poolId.equals(jsonPool.getString("id"))) {
+				JSONArray jsonCertificates = jsonEntitlement.getJSONArray("certificates");
+				for (int j = 0; j < jsonCertificates.length(); j++) {
+					JSONObject jsonCertificate = (JSONObject) jsonCertificates.get(j);
+					JSONObject jsonSerial = jsonCertificate.getJSONObject("serial");
+					if (!jsonSerial.getBoolean("revoked")) {
+						
+						if (jsonSerialCandidate==null) jsonSerialCandidate=jsonSerial;	// set the first found serial as the candidate
+						
+						// determine if this is the newest serial object that has been created
+						DateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");				// "2012-02-08T00:00:00.000+0000"
+						java.util.Date dateSerialCandidateCreated = iso8601DateFormat.parse(jsonSerialCandidate.getString("created"));
+						java.util.Date dateSerialCreated = iso8601DateFormat.parse(jsonSerial.getString("created"));
+						if (dateSerialCreated.after(dateSerialCandidateCreated)) {
+							jsonSerialCandidate = jsonSerial;
+						}
+					}
+				}
+			}
+		}
+		
+		if (jsonSerialCandidate==null) {
+			log.warning("CandlepinTasks could not getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId '"+poolId+"'. This pool has probably not been subscribed to by authenticator '"+authenticator+"'.");
+			return null;
+		}
+		
+		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
+	}
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 	
@@ -2010,6 +2112,13 @@ schema generation failed
 	}
 	
 	
+	/**
+	 * @param jsonPool
+	 * @param attributeName
+	 * @return the String "value" of the pool's attribute with the given "name".  If not found, then null is returned.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static String getPoolAttributeValue (JSONObject jsonPool, String attributeName) throws JSONException, Exception {
 		String attributeValue = null;	// indicates that the pool does NOT have the "attributeName" attribute
 
@@ -2132,12 +2241,31 @@ schema generation failed
 			
 			// get the updated job detail
 			jobDetail = new JSONObject(getResourceUsingRESTfulAPI(owner,password,url,statusPath));
-		} while (!jobDetail.getString("state").equalsIgnoreCase(state) || (t*retryMilliseconds >= timeoutMinutes*60*1000));
+		} while (!jobDetail.getString("state").equalsIgnoreCase(state) && (t*retryMilliseconds < timeoutMinutes*60*1000));
 		
 		// assert that the state was achieved within the timeout
-		Assert.assertFalse((t*retryMilliseconds >= timeoutMinutes*60*1000), "JobDetail '"+jobDetail.getString("id")+"' changed state to '"+state+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
-
+		if (t*retryMilliseconds >= timeoutMinutes*60*1000) log.warning("JobDetail: "+jobDetail );
+		Assert.assertEquals(jobDetail.getString("state"),state, "JobDetail '"+jobDetail.getString("id")+"' changed to expected state '"+state+"' within the acceptable timeout of "+timeoutMinutes+" minutes.  (Actual time was '"+t*retryMilliseconds+"' milliseconds.)");
+		
+		//Example of a failed case.
+		//{
+		//    "created": "2011-12-04T08:41:24.185+0000",
+		//    "finishTime": null,
+		//    "group": "async group",
+		//    "id": "refresh_pools_31c39a01-a3f9-4d9f-adaf-9471532a7230",
+		//    "principalName": "admin",
+		//    "result": "org.quartz.SchedulerException: Job threw an unhandled exception. [See nested exception: java.lang.IllegalArgumentException: attempt to create delete event with null entity]",
+		//    "startTime": "2011-12-04T08:41:24.188+0000",
+		//    "state": "FAILED",
+		//    "statusPath": "/jobs/refresh_pools_31c39a01-a3f9-4d9f-adaf-9471532a7230",
+		//    "targetId": "admin",
+		//    "targetType": "owner",
+		//    "updated": "2011-12-04T08:41:24.899+0000"
+		//}
+		
 		return jobDetail;
+	}
+	
 // TODO
 //		public void getJobDetail(String id) {
 //			// /usr/bin/curl -u admin:admin -k --header 'Content-type: application/json' --header 'Accept: application/json' --request GET https://jsefler-f12-candlepin.usersys.redhat.com:8443/candlepin/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d
@@ -2151,18 +2279,18 @@ schema generation failed
 //				  "statusPath" : "/jobs/refresh_pools_2adc6dee-790f-438f-95b5-567f14dcd67d",
 //				  "updated" : "2010-08-30T20:01:11.932+0000",
 //				  "created" : "2010-08-30T20:01:11.721+0000"
-//				}
+//			}
 //		}
 
-	}
 	
 	public void restartTomcat() {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service tomcat6 restart",Integer.valueOf(0),"^Starting tomcat6: +\\[  OK  \\]$",null);
 	}
 	
 	public List<RevokedCert> getCurrentlyRevokedCerts() {
-		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl crl -noout -text -in "+candlepinCRLFile);
-		String crls = sshCommandRunner.getStdout();
+		SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging("openssl crl -noout -text -in "+candlepinCRLFile);
+		if (result.getExitCode()!=0) log.warning(result.getStderr());
+		String crls = result.getStdout();
 		return RevokedCert.parse(crls);
 	}
 
@@ -2421,7 +2549,7 @@ schema generation failed
         return feed;
 	}
 		
-	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, String... providedProducts) throws JSONException{
+	public static JSONObject createSubscriptionRequestBody(Integer quantity, Date startDate, Date endDate, String product, Integer contractNumber, Integer accountNumber, List<String> providedProducts) throws JSONException{
 		
 		/*
 		[root@jsefler-onprem-62server ~]# curl -k --user admin:admin --request POST
@@ -2443,7 +2571,7 @@ schema generation failed
 		sub.put("quantity", quantity);
 
 		List<JSONObject> pprods = new ArrayList<JSONObject>();
-		for (String id: providedProducts) {
+		if (providedProducts!=null) for (String id: providedProducts) {
 			JSONObject jo = new JSONObject();
 			jo.put("id", id);
 			pprods.add(jo);
@@ -2458,7 +2586,25 @@ schema generation failed
 		return sub;
 	}
 	
+	public static JSONObject createProductRequestBody(String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException{
+		
 	
+		JSONObject jsonProductData = new JSONObject();
+		if (name!=null)					jsonProductData.put("name", name);
+		if (productId!=null)			jsonProductData.put("id", productId);
+		if (multiplier!=null)			jsonProductData.put("multiplier", multiplier);
+		if (dependentProductIds!=null)	jsonProductData.put("dependentProductIds", dependentProductIds);
+		List<JSONObject> jsonAttributes = new ArrayList<JSONObject>();
+		for (String attributeName : attributes.keySet()) {
+			JSONObject jsonAttribute = new JSONObject();
+			jsonAttribute.put("name", attributeName);
+			jsonAttribute.put("value", attributes.get(attributeName));
+			jsonAttributes.add(jsonAttribute);
+		}
+		jsonProductData.put("attributes", jsonAttributes);
+		
+		return jsonProductData;
+	}
 	
 	
 	
@@ -2470,7 +2616,7 @@ schema generation failed
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	public static JSONObject createSubscriptionAndRefreshPools(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, String... providedProductIds) throws JSONException, Exception  {
+	public static JSONObject createSubscriptionAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, Integer quantity, int startingMinutesFromNow, int endingMinutesFromNow, Integer contractNumber, Integer accountNumber, String productId, List<String> providedProductIds) throws JSONException, Exception  {
 		
 		// set the start and end dates
 		Calendar endCalendar = new GregorianCalendar();
@@ -2479,35 +2625,15 @@ schema generation failed
 		Calendar startCalendar = new GregorianCalendar();
 		startCalendar.add(Calendar.MINUTE, startingMinutesFromNow);
 		Date startDate = startCalendar.getTime();
-
-		
-		// randomly choose a contract number
-		//Integer contractNumber = Integer.valueOf(getRandInt());
-		
-		// randomly choose an account number
-		//Integer accountNumber = Integer.valueOf(getRandInt());
-		
-		// choose a product id for the subscription
-		//String productId =  "MKT-rhel-server";  // too hard coded
-		//JSONArray jsonProducts = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,serverAdminUsername,serverAdminPassword,"/products"));	
-		//String productId = null;
-		//do {	// pick a random productId (excluding a personal productId) // too random; could pick a product that is not available to this system
-		//	productId =  ((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id");
-		//} while (getPersonProductIds().contains(productId));
-		//String productId = randomAvailableProductId;
-
-		// choose providedProducts for the subscription
-		//String[] providedProducts = {"37068", "37069", "37060"};
-		//String[] providedProducts = {
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id"),
-		//	((JSONObject) jsonProducts.get(randomGenerator.nextInt(jsonProducts.length()))).getString("id")
-		//};
-		//String[] providedProducts = {};
 		
 		// create the subscription
 		String requestBody = CandlepinTasks.createSubscriptionRequestBody(quantity, startDate, endDate, productId, contractNumber, accountNumber, providedProductIds).toString();
 		JSONObject jsonSubscription = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/owners/" + ownerKey + "/subscriptions",requestBody));
+		
+		if (jsonSubscription.has("displayMessage")) {
+			//log.warning("Subscription creation appears to have failed: "+jsonSubscription("displayMessage"));
+			Assert.fail("Subscription creation appears to have failed: "+jsonSubscription.getString("displayMessage"));
+		}
 		
 		// refresh the pools
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
@@ -2534,14 +2660,51 @@ schema generation failed
 		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
 		log.info("The newly created subscription pool with id '"+poolId+"' will start in '"+startingMinutesFromNow+"' minutes from now.");
 		log.info("The newly created subscription pool with id '"+poolId+"' will expire in '"+endingMinutesFromNow+"' minutes from now.");
-		return jsonPool; // return json pool to the newly available SubscriptionPool
+		return jsonPool; // return first jsonPool found generated for the newly created subscription
+		
+	}
+	
+	public static JSONObject createProductUsingRESTfulAPI(String authenticator, String password, String url, String name, String productId, Integer multiplier, Map<String,String> attributes, List<String> dependentProductIds) throws JSONException, Exception  {
+
+		// create the product
+		String requestBody = CandlepinTasks.createProductRequestBody(name, productId, multiplier, attributes, dependentProductIds).toString();
+		JSONObject jsonProduct = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/products",requestBody));
+		
+		if (jsonProduct.has("displayMessage")) {
+			//log.warning("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
+			Assert.fail("Product creation appears to have failed: "+jsonProduct.getString("displayMessage"));
+		}
+		return jsonProduct; // return jsonProduct representing the newly created product
 		
 	}
 	
 	
-	
-	
-	
+	public static void deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
+
+		// delete all the subscriptions whose product/id matches productId
+		// process all of the subscriptions belonging to ownerKey
+		JSONArray jsonSubscriptions = new JSONArray(getResourceUsingRESTfulAPI(authenticator,password,url,"/owners/"+ownerKey+"/subscriptions"));	
+		for (int i = 0; i < jsonSubscriptions.length(); i++) {
+			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
+			String subscriptionId = jsonSubscription.getString("id");
+			
+			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
+			String productName = jsonProduct.getString("name");
+			if (productId.equals(jsonProduct.getString("id"))) {
+				// delete the subscription
+				deleteResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId);
+				
+				// assert the deleted subscription cannot be GET
+				jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId));
+				Assert.assertTrue(jsonSubscription.has("displayMessage"),"Attempts to GET a deleted subscription fails with a displayMessage.");
+				Assert.assertEquals(jsonSubscription.getString("displayMessage"),"Subscription with id "+subscriptionId+" could not be found");
+			}
+		}
+		
+		// refresh the pools
+		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(authenticator,password,url,ownerKey);
+		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(authenticator,password,url,jobDetail,"FINISHED", 5*1000, 1);		
+	}
 	
 	
 	

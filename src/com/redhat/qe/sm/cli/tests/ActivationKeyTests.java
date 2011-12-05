@@ -170,6 +170,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
+//if (!jsonPool.getString("productId").equals("awesomeos-virt-4")) throw new SkipException("debugTesting...");
 		String poolId = jsonPool.getString("id");
 				
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=728721 - jsefler 8/6/2011
@@ -318,6 +319,42 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
+		// handle the case when our candlepin is standalone and we have attempted a subscribe to a pool_derived virt_only pool (for which we have not registered our host system)
+		if (servertasks.statusStandalone) {
+			String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+			String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+			if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
+
+				// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=756628
+				boolean invokeWorkaroundWhileBugIsOpen = true;
+				String bugId="756628"; 
+				try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+				if (invokeWorkaroundWhileBugIsOpen) {
+					// 201111232226:08.420 - FINE: ssh root@jsefler-onprem-5server.usersys.redhat.com subscription-manager register --org=admin --activationkey=ActivationKey1322105167469_ForPool8a90f85733d31add0133d337f9410c52 --force
+					// 201111232226:10.299 - FINE: Stdout: The system with UUID bd0271b6-2a0c-41b5-bbb8-df0ad4c7a088 has been unregistered
+					// 201111232226:10.299 - FINE: Stderr: Unable to entitle consumer to the pool with id '8a90f85733d31add0133d337f9410c52'.: virt.guest.host.does.not.match.pool.owner
+					// 201111232226:10.300 - FINE: ExitCode: 255
+					Assert.assertTrue(registerResult.getStderr().trim().startsWith("Unable to entitle consumer to the pool with id '"+poolId+"'."), "Expected stderr to start with: \"Unable to entitle consumer to the pool with id '"+poolId+"'.\" because the host has not registered.");
+					Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
+					return;
+				}
+				// END OF WORKAROUND
+				
+				//201112021710:28.900 - FINE: ssh root@jsefler-onprem-5server.usersys.redhat.com subscription-manager register --org=admin --activationkey=ActivationKey1322863828312_ForPool8a90f85733fc4df80133fc6f6bf50e29 --force
+				//201112021710:31.298 - FINE: Stdout: The system with UUID fc463d3d-dacb-4581-a2c6-2f4d69c7c457 has been unregistered
+				//201112021710:31.299 - FINE: Stderr: Guest's host does not match owner of pool: '8a90f85733fc4df80133fc6f6bf50e29'.
+				//201112021710:31.299 - FINE: ExitCode: 255
+				Assert.assertEquals(registerResult.getStderr().trim(),"Guest's host does not match owner of pool: '"+poolId+"'.");
+				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a virt_only derived_pool on a standalone candlepin server for which our system's host is not registered.");
+
+				return;
+			}
+		}
+		
+		// assert success
+		Assert.assertEquals(registerResult.getStderr().trim(), "");
+		Assert.assertNotSame(registerResult.getExitCode(), Integer.valueOf(255), "The exit code from the register command does not indicate a failure.");
+		
 		// assert that only the pool's providedProducts (excluding type=MKT products) are consumed (unless it is a ManagementAddOn product - indicated by no providedProducts)
 		assertProvidedProductsFromPoolAreWithinConsumedProductSubscriptionsUsingQuantity(jsonPool, clienttasks.getCurrentlyConsumedProductSubscriptions(), addQuantity, true);
 	}
@@ -427,6 +464,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// first, figure out how many entitlements remain
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
 		if (quantityAvail<1) throw new SkipException("Cannot do this test until there is an available entitlement for pool '"+jsonPool.getString("id")+"'.");
+
+		// skip this pool when our candlepin is standalone and this is a pool_derived virt_only pool (for which we have not registered our host system)
+		if (servertasks.statusStandalone) {
+			String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+			String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+			if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
+				throw new SkipException("Skipping this virt_only derived_pool '"+jsonPool.getString("id")+"' on a standalone candlepin server since our system's host is not registered.");
+			}
+		}
 		
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
@@ -482,6 +528,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 			
+			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
+			if (servertasks.statusStandalone) {
+				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
+					continue;
+				}
+			}
+			
 			// add the pool to the activation key
 //			int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
 //			int bindQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a bindQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
@@ -496,7 +551,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		jsonActivationKey = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/activation_keys/"+jsonActivationKey.getString("id")));
 		Assert.assertTrue(jsonActivationKey.getJSONArray("pools").length()>0,"MultiplePools have been added to the activation key: "+jsonActivationKey);
 		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"The number of attempted pools added equals the number of pools retrieved from the activation key: "+jsonActivationKey);
-		
 		
 		// register with the activation key
 		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null, null);
@@ -533,6 +587,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 
+			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
+			if (servertasks.statusStandalone) {
+				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
+					continue;
+				}
+			}
+			
 			// create an activation key
 			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
 			Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
@@ -590,6 +653,15 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// for the purpose of this test, skip non-system pools otherwise the register will fail with "Consumers of this type are not allowed to subscribe to the pool with id '8a90f8c631ab7ccc0131ab7e46ca0619'."
 			if (!CandlepinTasks.isPoolProductConsumableByConsumerType(sm_clientUsername,sm_clientPassword,sm_serverUrl,jsonPool.getString("id"), ConsumerType.system)) continue;
 
+			// for the purpose of this test, skip virt_only derived_pool when server is standalone otherwise the register will fail with "Unable to entitle consumer to the pool with id '8a90f85733d86b130133d88c09410e5e'.: virt.guest.host.does.not.match.pool.owner"
+			if (servertasks.statusStandalone) {
+				String pool_derived = CandlepinTasks.getPoolAttributeValue(jsonPool, "pool_derived");
+				String virt_only = CandlepinTasks.getPoolAttributeValue(jsonPool, "virt_only");
+				if (pool_derived!=null && virt_only!=null && Boolean.valueOf(pool_derived) && Boolean.valueOf(virt_only)) {
+					continue;
+				}
+			}
+			
 			// create an activation key
 			String activationKeyName = String.format("ActivationKey%sWithPool%sForOrg_%s", System.currentTimeMillis(),jsonPool.getString("id"),sm_clientOrg);
 			Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();

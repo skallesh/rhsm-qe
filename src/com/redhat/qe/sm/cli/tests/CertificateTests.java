@@ -39,6 +39,9 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertIsInstalled_Test() {
 		
+		// list the currently installed products
+		clienttasks.listInstalledProducts();
+		
 		// check each of the installed product certs in search of one that matches the /etc/redhat-release
 		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
 		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {

@@ -65,6 +65,9 @@ public class SubscriptionManagerTasks {
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
 
+	public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
+	public final String msg_NeedListOrUpdateOption		= "Error: Need either --list or --update, Try facts --help";
+	public final String msg_SuccessfulSubscribe			= "Successfully consumed a subscription from the pool with id ";	// "Successfully subscribed the system to Pool "; changed 11/24/2011
 	
 	// will be initialized by initializeFieldsFromConfigFile()
 	public String productCertDir				= null; // "/etc/pki/product";
@@ -431,18 +434,20 @@ public class SubscriptionManagerTasks {
 		// Wed Nov  9 15:21:55 2011: certificates updated
 
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+) is running...$",null);		// master/RHEL58 branch
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="752572"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		String bugId1="752572"; 
+		String bugId2="759199"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId+" is open.");
+			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId1+" or "+bugId2+" is open.");
 		} else {
 		// END OF WORKAROUND
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+"\n.* cert check started: interval = "+certFrequency,null);
 		}
 		
 		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
@@ -722,7 +727,8 @@ public class SubscriptionManagerTasks {
 			String poolId = jsonPool.getString("id");
 			String quantity = jsonPool.getString("quantity");
 			String endDate = jsonPool.getString("endDate");
-			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,endDate);
+			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(username,password, SubscriptionManagerBaseTestScript.sm_serverUrl, poolId);
+			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,multiEntitlement,endDate);
 			serialMapToSubscriptionPools.put(entitlementCert.serialNumber, fromPool);
 		}
 		return serialMapToSubscriptionPools;
@@ -2576,13 +2582,13 @@ public class SubscriptionManagerTasks {
 //		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
-		String ownerKey = getCurrentlyRegisteredOwnerKey();
 		
 		log.info("Subscribing to subscription pool: "+pool);
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
-		BigInteger serialNumber = CandlepinTasks.getEntitlementSerialForSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,ownerKey,pool.poolId);
+		//BigInteger serialNumber = CandlepinTasks.getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentlyRegisteredOwnerKey(),pool.poolId);
+		BigInteger serialNumber = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentConsumerId(),pool.poolId);
 		//Assert.assertNotNull(serialNumber, "Found the serial number of the entitlement that was granted after subscribing to pool id '"+pool.poolId+"'.");
 		if (serialNumber==null) return null;
 		File serialPemFile = new File(entitlementCertDir+File.separator+serialNumber+".pem");
