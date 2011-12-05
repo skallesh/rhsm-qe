@@ -1085,6 +1085,33 @@ public class SubscriptionManagerTasks {
 //	}
 
 	
+	/**
+	 * @return a list of the currently granted EntitlementCerts that are within the warningPeriod (days) of its endDate
+	 */
+	public List<EntitlementCert> getCurrentEntitlementCertsWithinWarningPeriod() {
+		List<EntitlementCert> entitlementCertsWithinWarningPeriod = new ArrayList<EntitlementCert>();
+		Calendar now = new GregorianCalendar();	now.setTimeInMillis(System.currentTimeMillis());
+		
+		// assemble all of the current entitlementCerts that are within the warning period
+		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
+			
+			// find the warning period
+			int warningPeriod = 0;	// assume zero
+			try {warningPeriod = Integer.valueOf(entitlementCert.orderNamespace.warningPeriod);}
+			catch (NumberFormatException e) {
+				log.warning("The OrderNamespace's warningPeriod is non-numeric or non-existing in EntitlementCert: "+entitlementCert);
+			}
+			
+			// subtract the warningPeriod number of days from the endDate
+			entitlementCert.orderNamespace.endDate.add(Calendar.DATE, -1*warningPeriod);
+			
+			// check if we are now inside the warningPeriod
+			if (entitlementCert.orderNamespace.endDate.before(now)) {
+				entitlementCertsWithinWarningPeriod.add(entitlementCert);
+			}
+		}
+		return entitlementCertsWithinWarningPeriod;
+	}
 	
 	/**
 	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert

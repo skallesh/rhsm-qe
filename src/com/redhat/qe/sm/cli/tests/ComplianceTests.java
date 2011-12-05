@@ -3,8 +3,11 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -18,6 +21,7 @@ import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -91,7 +95,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"When a system has products installed for which ALL are covered by available subscription pools, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"') after having subscribed to every available subscription pool.");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable",
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable (or an appropriate warning period status if an entitlement is within its warning period status)",
 			groups={"blockedbyBug-723336","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test"},
 			enabled=true)
@@ -99,8 +103,13 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 
-		// verify the stdout message
-		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		if (clienttasks.getCurrentEntitlementCertsWithinWarningPeriod().isEmpty()) {
+			// otherwise verify the rhsmcomplianced status when we should be fully compliant
+			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		} else {
+			// verify the rhsmcomplianced status when there are entitlement certs within their warning period
+			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+		}
 	}
 	
 	
@@ -157,7 +166,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"Even after subscribing to all the available subscription pools, a system with no products installed should remain compliant (see value for fact '"+factNameForSystemCompliance+"').");
 	}
 	
-	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed",
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when no products are installed (and a warning period status when at least one entitlement cert is within its warning period)",
 			groups={"blockedbyBug-723336","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreInstalled_Test"},
 			enabled=true)
@@ -165,8 +174,31 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void VerifyRhsmCompliancedWhenNoProductsAreInstalled_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
 
+		// verify the rhsmcomplianced status when there are entitlement certs within their warning period
+		List<EntitlementCert> entitlementCertsWithinWarningPeriod = clienttasks.getCurrentEntitlementCertsWithinWarningPeriod();
+		while (!entitlementCertsWithinWarningPeriod.isEmpty()) {
+			// assert the rhsmcomplianced status
+			//ssh root@jsefler-onprem-5server.usersys.redhat.com /usr/libexec/rhsmd -s -d
+			//Stdout: System has one or more entitlements in their warning period
+			//Stderr:
+			//ExitCode: 0
+			log.info("Asserting RhsmComplianced while at least one of the current entitlement certs is within its warning period...");
+			RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenInsideWarningPeriod, null);
+			
+			// unsubscribe from the serial
+			EntitlementCert entitlementCert = entitlementCertsWithinWarningPeriod.remove(0);
+			clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+		}
+		
 		// verify the stdout message
+		log.info("Asserting RhsmComplianced status before unsubscribing from all currently consumed subscriptions...");
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		
+		// also assert RhsmComplianced when not consuming any subscriptions
+		log.info("Also asserting RhsmComplianced status after unsubscribing from all currently consumed subscriptions...");
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenCompliant, null);
+		
 	}
 	
 	
@@ -283,6 +315,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected String productCertDir = null;
 	protected final String rhsmComplianceDStdoutMessageWhenNonCompliant = "System has one or more certificates that are not valid";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
+	protected final String rhsmComplianceDStdoutMessageWhenInsideWarningPeriod = "System has one or more entitlements in their warning period";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic = "System is already registered to another entitlement system";
 	protected final String rhsmComplianceDSyslogMessageWhenNonCompliant = "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
 	protected List<SubscriptionPool> futureSystemSubscriptionPools = null;
