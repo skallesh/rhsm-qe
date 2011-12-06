@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
@@ -66,7 +67,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that satisfy the hardware are listed as available",
-			groups={"AcceptanceTests", "blockedByBugzilla-712502"},
+			groups={"AcceptanceTests", "blockedByBugzilla-712502","unsubscribeBeforeGroup"},
 			dataProvider="getSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
@@ -80,7 +81,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that do NOT satisfy the hardware are NOT listed as available",
-			groups={"AcceptanceTests", "blockedByBugzilla-712502"},
+			groups={"AcceptanceTests", "blockedByBugzilla-712502","unsubscribeBeforeGroup"},
 			dataProvider="getNonAvailableSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
@@ -486,6 +487,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		JSONObject futureJSONPool = CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 15, 5/*years*/*365*24*60, 6/*years*/*365*24*60, getRandInt(), getRandInt(), randomAvailableProductId, null);
 	}
 	
+
+	@BeforeGroups(groups="setup",value="unsubscribeBeforeGroup")
+	public void unsubscribeBeforeGroup() {
+		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.unsubscribe_(true, null, null, null, null);
+	}
 	
 	@BeforeClass(groups="setup")
 	public void createSubscriptionsWithVariationsOnProductAttributeSockets() throws JSONException, Exception {
