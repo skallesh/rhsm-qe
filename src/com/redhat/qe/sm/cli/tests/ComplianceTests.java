@@ -145,6 +145,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 		
 		// also verify the /var/syslog/messages
+		sleep(100);
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 	}
 	
