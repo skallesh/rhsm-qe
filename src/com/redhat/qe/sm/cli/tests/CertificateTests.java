@@ -184,6 +184,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
+
 			// asserting all expected OIDS in the ContentNamespace	
 			//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.1 (Name) : Red Hat Enterprise Linux (Supplementary)
 			//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.2 (Label) : rhel-server-6-supplementary
