@@ -149,10 +149,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
-			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
+			groups={"EntitlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50403)
-	public void EnititlementCreated_Test() throws Exception {
+	public void EntitlementCreated_Test() throws Exception {
 		
 		// test prerequisites
 
@@ -200,7 +200,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
