@@ -103,7 +103,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks = new com.redhat.qe.sm.cli.tasks.CandlepinTasks(null,null,null,sm_serverType,sm_serverBranch);
 		}
 		
-		// setup the candlepin server
+		// setup the candlepin server (only when the candlepin server is standalone)
 		if (server!=null && sm_serverType.equals(CandlepinType.standalone)) {
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
@@ -115,11 +115,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// also connect to the candlepin server database
 			dbConnection = connectToDatabase();  // do this after the call to deploy since deploy will restart postgresql
-			
-			// fetch the candlepin CA Cert
-			log.info("Fetching Candlepin CA cert...");
-			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
-			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
 			
 			// fetch the generated Product Certs
 			if (Boolean.valueOf(getProperty("sm.debug.fetchProductCerts","true"))) {
@@ -140,10 +135,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 		
-		// setup the client(s)
+		// fetch the candlepin CA Cert (only when the candlepin server is not hosted)
+		if (server!=null && !sm_serverType.equals(CandlepinType.hosted)) {
+			log.info("Fetching Candlepin CA cert...");
+			serverCaCertFile = new File((getProperty("automation.dir", "/tmp")+"/tmp/"+servertasks.candlepinCACertFile.getName()).replace("tmp/tmp", "tmp"));
+			RemoteFileTasks.getFile(server.getConnection(), serverCaCertFile.getParent(), servertasks.candlepinCACertFile.getPath());
+		}
+		
+		// setup the client(s) (with the fetched candlepin CA Cert and the generated product certs)
 		for (SubscriptionManagerTasks smt : new SubscriptionManagerTasks[]{client2tasks, client1tasks}) {
-			if (smt != null)
-				setupClient(smt, serverCaCertFile, generatedProductCertFiles);
+			if (smt != null) setupClient(smt, serverCaCertFile, generatedProductCertFiles);
 		}
 		
 		// determine the server URL that will be used for candlepin API calls
