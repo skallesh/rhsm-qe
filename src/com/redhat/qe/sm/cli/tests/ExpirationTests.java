@@ -173,6 +173,10 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		// find a randomly available product id
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		
+		// debugging bugzilla 760162
+		//pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
+		
 		randomAvailableProductId = pool.productId;
 	}
 	

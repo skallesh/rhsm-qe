@@ -72,6 +72,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 		
 		// also verify the /var/syslog/messages
+		sleep(100);	// give the message thread time to be logged
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 	}
 	
@@ -145,7 +146,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
 		
 		// also verify the /var/syslog/messages
-		sleep(100);
+		sleep(100);	// give the message thread time to be logged
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.varLogMessagesFile, null, rhsmComplianceDSyslogMessageWhenNonCompliant, null);
 	}
 	

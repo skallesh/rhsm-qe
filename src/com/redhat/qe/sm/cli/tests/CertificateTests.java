@@ -115,6 +115,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) {
+//if (!pool.productId.equals("awesomeos-virt-4")) throw new SkipException("debugTestinging...");
 
 //		// toggle this block of code with the dataProvider to process all pools or just one random pool
 //		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (List)null, true, false, null, null, null);
@@ -124,8 +125,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the pool and get the EntitlementCert
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		//^ replaced with the following to save logging/assertion time
 		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		Assert.assertNotNull(entitlementCert,"Successfully retrieved the entitlement cert granted after subscribing to pool: "+pool);
 		
 		// Commented out the following log of rawCertificate to conserve logFile size
 		//log.info("Raw entitlement certificate: \n"+entitlementCert.rawCertificate);
