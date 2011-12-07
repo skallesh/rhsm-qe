@@ -779,7 +779,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
 	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
-	
+	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
+	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	
 	// Configuration Methods ***********************************************************************
 	
