@@ -62,6 +62,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 
 			// subscribe to the pool
 			client1tasks.subscribeToSubscriptionPool(testPool);
+			testPool.quantity = String.valueOf(Integer.valueOf(testPool.quantity)-1);	// decrement this pool's quantity since we just consumed one
 		}
 		
 		log.info("Now we will register and subscribe the final subscriber as an attempt to oversubscribe to original pool: "+testPool);

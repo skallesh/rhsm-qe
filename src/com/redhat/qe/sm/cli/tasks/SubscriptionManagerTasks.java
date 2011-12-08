@@ -2354,6 +2354,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
+		/* This information is now in the SubscriptionPool itself
 		boolean isPoolMultiEntitlement = false;
 		try {
 			isPoolMultiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,pool.poolId);
@@ -2361,19 +2362,23 @@ public class SubscriptionManagerTasks {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
+		*/
 
 		// assert that the remaining SubscriptionPools does NOT contain the pool just subscribed too (unless it is multi-entitleable)
 		List<SubscriptionPool> afterSubscriptionPools = getCurrentlyAvailableSubscriptionPools();
-		if (!isPoolMultiEntitlement || Integer.valueOf(pool.quantity)<=1) {
+		if (!pool.quantity.equalsIgnoreCase("unlimited") && Integer.valueOf(pool.quantity)<=1) {
 			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
-					"The available subscription pools no longer contains the just subscribed to pool: "+pool);
+					"When the final quantity from the pool was consumed, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
+		} else if (!pool.multiEntitlement) {
+			Assert.assertTrue(!afterSubscriptionPools.contains(pool),
+					"When the pool is not multi-entitleable, the remaining available subscription pools no longer contains the just subscribed to pool: "+pool);
 		} else {
 			Assert.assertTrue(afterSubscriptionPools.contains(pool),
-					"When the pool is multi-entitleable, the available subscription pools still contains the just subscribed to pool: "+pool);
+					"When the pool is multi-entitleable, the remaining available subscription pools still contains the just subscribed to pool: "+pool);
 		}
 		
 		// assert that the remaining SubscriptionPools do NOT contain the same productId just subscribed to
-		log.warning("Due to subscription-manager design change, we will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
+		//log.warning("We will no longer assert that the remaining available pools do not contain the same productId ("+pool.productId+") as the pool that was just subscribed.  Reference: https://bugzilla.redhat.com/show_bug.cgi?id=663455");
 		/*
 		for (SubscriptionPool afterSubscriptionPool : afterSubscriptionPools) {
 			Assert.assertTrue(!afterSubscriptionPool.productId.equals(pool.productId),
@@ -2853,16 +2858,17 @@ public class SubscriptionManagerTasks {
 		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
 				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
 
-		// assert the entitlement certKeyFilePath is removed
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=708362 - jsefler 08/25/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="708362"; 
-		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-		boolean assertCertKeyFilePathIsRemoved = true;
-		if (invokeWorkaroundWhileBugIsOpen) log.warning("Skipping the assertion that the Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed while bug is open."); else
-		// END OF WORKAROUND
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
-				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
+//THIS BUG WAS FIXED AFTER RHEL61, RHEL57, RHEL62, DO NOT TEST IN THE Entitlement-RHEL6.2 BRANCH
+//		// assert the entitlement certKeyFilePath is removed
+//		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=708362 - jsefler 08/25/2011
+//		boolean invokeWorkaroundWhileBugIsOpen = true;
+//		String bugId="708362"; 
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		boolean assertCertKeyFilePathIsRemoved = true;
+//		if (invokeWorkaroundWhileBugIsOpen) log.warning("Skipping the assertion that the Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed while bug is open."); else
+//		// END OF WORKAROUND
+//		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
+//				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
 
 		// assert that only ONE entitlement cert file was removed
 		List<File> afterEntitlementCertFiles = getCurrentEntitlementCertFiles();
