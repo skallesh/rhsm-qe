@@ -69,6 +69,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 					// simply add the contentNamespaces (if not already there) from the modifier to the entitlement cert's contentNamespaces so they will be accounted for in the repos list test below
 					for (ContentNamespace contentNamespace : modifierEntitlementCert.contentNamespaces) {
+						if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 						if (!entitlementCert.contentNamespaces.contains(contentNamespace)) {
 							log.warning("Due to a previously subscribed modifier subscription pool ("+modifierPool.subscriptionName+"), the new repos listed should also include ContentNamespace: "+contentNamespace);
 							entitlementCert.contentNamespaces.add(contentNamespace);
@@ -85,6 +86,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// assert that the new contentNamespaces from the entitlementCert are listed in repos
 		int numNewRepos=0;
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			
 			// instantiate the expected Repo that represents this contentNamespace
 			String expectedRepoUrl;	// the expected RepoUrl is set by joining the rhsm.conf baseurl with the downloadUrl in the contentNamespace which is usually a relative path.  When it is already a full path, leave it!

@@ -27,10 +27,12 @@ public class ContentNamespace extends AbstractCommandLineData {
 	public String requiredTags;	// comma separated list of tags: TAG1,TAG2,TAG3
 
 	public String hash;
+	public String type;
 	
-	public ContentNamespace(String hash, Map<String, String> certData){
+	public ContentNamespace(String type, String hash, Map<String, String> certData){
 		super(certData);
 		this.hash = hash;
+		this.type = type;
 	}
 	
 	
@@ -39,6 +41,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		
 		
 		String string = "";
+		if (type != null)					string += String.format(" %s='%s'", "type",type);
 		if (hash != null)					string += String.format(" %s='%s'", "hash",hash);
 		if (label != null)					string += String.format(" %s='%s'", "label",label);
 		if (name != null)					string += String.format(" %s='%s'", "name",name);
@@ -57,6 +60,9 @@ public class ContentNamespace extends AbstractCommandLineData {
 	@Override
 	public boolean equals(Object obj){
 		ContentNamespace that = (ContentNamespace)obj;
+		
+		if (that.type!=null && !that.type.equals(this.type)) return false;
+		if (this.type!=null && !this.type.equals(that.type)) return false;
 		
 		if (that.hash!=null && !that.hash.equals(this.hash)) return false;
 		if (this.hash!=null && !this.hash.equals(that.hash)) return false;
@@ -271,29 +277,45 @@ public class ContentNamespace extends AbstractCommandLineData {
 		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.8 (Enabled): 1
 		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.9 (Metadata Expire Seconds): 604800
 		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.10 (Required Tags): TAG1,TAG2,TAG3
-		Map<String,String> regexes = new HashMap<String,String>();
 		
-		// abstraction field				regex pattern (with a capturing group)
-		regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.1:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("label",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.2:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("physicalEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("flexGuestEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("vendorId",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.5:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("downloadUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.6:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("gpgKeyUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.7:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.8:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("metadataExpire",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.9:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		regexes.put("requiredTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\.1\\.10:[\\s\\cM]*\\.(?:.|\\s)(.*)");
-		
-		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToMap(pat, rawCertificate, productMap, field);
-		}
-		
+		//  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (core server) - ISOs)
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2 (File repo type))
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.1 (Name) : Red Hat Enterprise Linux (core server)
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.2 (Label) : rhel-server
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.6 (Download URL): content/rhel-server-isos/$releasever/$basearch
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.7 (GPG Key URL): gpg/rhel-server-isos/$releasever/$basearch
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.8 (Enabled):  0
 		List<ContentNamespace> contentNamespaces = new ArrayList<ContentNamespace>();
-		for(String key : productMap.keySet())
-			contentNamespaces.add(new ContentNamespace(key, productMap.get(key)));
+		
+		for (int type : new int[]{1,2}) {	// type=1 is yum	// type=2 is file
+
+			Map<String,String> regexes = new HashMap<String,String>();
+		
+			// abstraction field				regex pattern (with a capturing group)
+			regexes.put("name",					"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.1:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("label",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.2:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("physicalEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("flexGuestEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("vendorId",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.5:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("downloadUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.6:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("gpgKeyUrl",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.7:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("enabled",				"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.8:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("metadataExpire",		"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.9:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			regexes.put("requiredTags",			"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.10:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+			
+			Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToMap(pat, rawCertificate, productMap, field);
+			}
+			
+			String sType = "unknown";
+			if (type==1) sType = "yum";
+			if (type==2) sType = "file";		
+			for(String key : productMap.keySet())
+				contentNamespaces.add(new ContentNamespace(sType, key, productMap.get(key)));
+		}
 		return contentNamespaces;
 	}
 }

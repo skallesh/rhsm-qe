@@ -549,6 +549,7 @@ sm.content.integrationTestData:[
 			EntitlementCert entitlementCert = (EntitlementCert) row.get(5);
 			
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 				if (contentNamespace.enabled.equals(enabledValue)) {	// enabled="1", not enabled="0"
 					
 					//

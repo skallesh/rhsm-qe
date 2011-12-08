@@ -96,7 +96,7 @@ public class SubscriptionManagerTasks {
 		hostname		= sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		ipaddr			= sshCommandRunner.runCommandAndWait("ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | sed s/'  Bcast'//g").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
-		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides system-release").getStdout().trim();  // cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release
+		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
 		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem
@@ -2196,6 +2196,7 @@ public class SubscriptionManagerTasks {
 			if (entitlementCert.validityNotBefore.after(now) || entitlementCert.validityNotAfter.before(now)) continue;
 
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 				numContentNamespaces++;
 			}
 		}
@@ -3121,6 +3122,7 @@ repolist: 3,394
 				
 		 		for (EntitlementCert entitlementCert : entitlementCerts) {
 		 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+		 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 		 				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts)) {
 							if (contentNamespace.enabled.equals("1")) {
 								Assert.assertTrue(yumRepoListEnabled.contains(contentNamespace.label),
@@ -3150,6 +3152,7 @@ repolist: 3,394
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+ 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
 				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all

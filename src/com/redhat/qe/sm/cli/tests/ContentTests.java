@@ -65,6 +65,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// 1. Repolist contains repositories corresponding to your entitled products
 		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (contentNamespace.enabled.equals("1")) {
 				if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 					Assert.assertTrue(repolist.contains(contentNamespace.label),
@@ -80,6 +81,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		repolist = clienttasks.getYumRepolist("disabled");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (contentNamespace.enabled.equals("1")) {
 				Assert.assertFalse(repolist.contains(contentNamespace.label),
 					"Yum repolist disabled excludes enabled repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
@@ -90,6 +92,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		}
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
 					"Yum repolist all includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
@@ -104,6 +107,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
 				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' enabled.");
 		}
@@ -121,6 +125,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		// 2. Repolist does not contain repositories corresponding to your entitled products
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
 				"Yum repolist all excludes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
 		}
@@ -130,6 +135,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.restart_rhsmcertd(minutes, null, false);
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
 					"Yum repolist all now includes repo id/label '"+contentNamespace.label+"' after having subscribed to Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled and run an update with rhsmcertd.");
@@ -143,6 +149,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 				Assert.assertTrue(repolist.contains(contentNamespace.label),
 					"Yum repolist all still includes repo id/label '"+contentNamespace.label+"' despite having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled.");
@@ -155,6 +162,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		sleep(minutes*60*1000);
 		repolist = clienttasks.getYumRepolist("all");
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 			Assert.assertFalse(repolist.contains(contentNamespace.label),
 				"Yum repolist all finally excludes repo id/label '"+contentNamespace.label+"' after having unsubscribed from Subscription ProductId '"+entitlementCert.orderNamespace.productId+"' with the rhsmPluginConfFile '"+clienttasks.rhsmPluginConfFile+"' disabled AND waiting for the next refresh by rhsmcertd.");
 		}
@@ -195,6 +203,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
 		for (EntitlementCert entitlementCert : entitlementCerts) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 				if (contentNamespace.enabled.equals("1")) {
 					if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 						Assert.assertTrue(repolist.contains(contentNamespace.label),
@@ -430,7 +439,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 				if (contentNamespace.enabled.equals("1") && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 					String repoLabel = contentNamespace.label;
 					
@@ -476,6 +485,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to pool: "+pool);
 			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 				if (contentNamespace.enabled.equals("1") && clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) {
 					String repoLabel = contentNamespace.label;
 
@@ -538,6 +548,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(entitlementCertFile, "Found the entitlement cert file that was granted after subscribing to system pool: "+systemPool);
 			EntitlementCert entitlementCert = client1tasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 				if (contentNamespace.enabled.equals("1")) {
 					String repoLabel = contentNamespace.label;
 					
