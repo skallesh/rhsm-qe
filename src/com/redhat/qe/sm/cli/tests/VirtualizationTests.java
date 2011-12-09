@@ -799,7 +799,10 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		// attempt to subscribe to the guestPoolId (should be blocked)
 		SSHCommandResult result = clienttasks.subscribe(null,guestPoolId,null,null,null,null,null,null, null, null);
 		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
-		Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"'.:");
+		//Assert.assertContainsMatch(result.getStdout(), "^Unable to entitle consumer to the pool with id '"+guestPoolId+"'.:");
+		// RHEL58: Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+		Assert.assertEquals(result.getStdout().trim(), "Pool is restricted to virtual guests: '"+guestPoolId+"'.");
+
 	}
 	
 	

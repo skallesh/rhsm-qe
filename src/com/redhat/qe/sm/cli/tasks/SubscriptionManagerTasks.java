@@ -2293,18 +2293,15 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		String stdoutMessage;
 		
-		// if already subscribed, just return the result
-		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
-		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
-
-		// if no free entitlements, just return the result
-		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'.
-		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
-		
-		// if rule failed, just return the result
-		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
-		// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
-		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
+		// just return the result for the following cases:
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
+			sshCommandResult.getStdout().startsWith("No free entitlements are available") ||	// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'.
+			sshCommandResult.getStdout().startsWith("Pool is restricted") ||					// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {			// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
+																								// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
+			log.warning(sshCommandResult.getStdout().trim());
+			return sshCommandResult;	
+		}
 		
 		// assert the subscribe does NOT report "The system is unable to complete the requested transaction"
 		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction.");
