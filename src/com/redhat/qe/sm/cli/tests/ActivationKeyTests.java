@@ -699,7 +699,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false)
-	
+	// TODO Bug 749636 - subscription-manager register fails with consumerid and activationkey specified 
 	
 	// Protected Class Variables ***********************************************************************
 	
