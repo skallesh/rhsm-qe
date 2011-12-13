@@ -124,8 +124,9 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO Bug 733327 - stacking entitlements reports as distinct entries in cli list --installed 
-
-		
+	// TODO Bug 740377 - Stacking Partially Compliant / Yellow State is Broken
+	// TODO Bug 743710 - Subscription manager displays incorrect status for partially subscribed subscription
+	//      MAYBE THIS ONE BELONGS IN COMPLIANCE TESTS?
 		
 	// Configuration methods ***********************************************************************
 
