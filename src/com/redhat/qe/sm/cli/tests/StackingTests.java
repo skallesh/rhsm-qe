@@ -127,6 +127,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 740377 - Stacking Partially Compliant / Yellow State is Broken
 	// TODO Bug 743710 - Subscription manager displays incorrect status for partially subscribed subscription
 	//      MAYBE THIS ONE BELONGS IN COMPLIANCE TESTS?
+	// TODO Bug 726409 - [RFE] Support for certificate stacking 
 		
 	// Configuration methods ***********************************************************************
 
