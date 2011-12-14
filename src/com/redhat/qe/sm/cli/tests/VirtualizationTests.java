@@ -1079,6 +1079,8 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 736436 - virtual subscriptions are not included when the certificates are downloaded 
 	// TODO Bug 750659 - candlepin api /consumers/<consumerid>/guests is returning []
 	// TODO Bug 756628 - Unable to entitle consumer to the pool with id '8a90f85733d31add0133d337f9410c52'.: virt.guest.host.does.not.match.pool.owner
+	// TODO Bug 722977 - virt_only pools are not removed from an owner if the physical pool no longer has a valid virt_limit
+	
 	
 	// Configuration methods ***********************************************************************
 		
