@@ -92,6 +92,9 @@ import com.redhat.qe.tools.SSHCommandResult;
 //	<jsefler-lt> wottop: true in the code by default is fine with me, but then I "think" when jomara deploys candlepin in stage/production, then he needs to set the candlepin.standalone = false.    AM I CORRECT?  I'm just trying to get all on the same page.
 //	<wottop> jsefler-lt: if you want hosted yes. Also, I would advise clearing the DB when switching between modes.
 
+// INSTRUCTIONS FOR BUILDING A XEN KERNEL ON A BEAKER PROVISIONED BOX...
+// https://docspace.corp.redhat.com/people/ndevos/blog/2011/05/26/how-to-quickly-install-a-rhel-5-system-running-xen-and-install-a-guest
+
 
 @Test(groups="VirtualizationTests")
 public class VirtualizationTests extends SubscriptionManagerCLITestScript {
@@ -1080,7 +1083,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 750659 - candlepin api /consumers/<consumerid>/guests is returning []
 	// TODO Bug 756628 - Unable to entitle consumer to the pool with id '8a90f85733d31add0133d337f9410c52'.: virt.guest.host.does.not.match.pool.owner
 	// TODO Bug 722977 - virt_only pools are not removed from an owner if the physical pool no longer has a valid virt_limit
-	
+	// TODO Bug 757697 - subscription-manager virtualization design on Xen
 	
 	// Configuration methods ***********************************************************************
 		
