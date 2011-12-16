@@ -370,7 +370,103 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 	[Bug 756735] RC4.0 content testing: package conflict and/or package version different on RHEL for IBM System z- s390
 	[Bug 756757] RC4.0 content testing: package conflict and/or content missing on RHEL Server for HPC Compute Node - x86_64
 	*/
-	
+
+	/* TODO Bug 768012 - manifest import fails - 404 Resource Not Found 
+	 * On Fri, 2011-12-16 at 11:05 -0500, Keqin Hong wrote:
+> Hi Bryan and Dennis,
+> No problem we will add this check to our content testing.
+> But I have a question. pls see my comments inline.
+>
+> ----- Original Message -----
+> > From: "Dennis Gregorovic" <dgregor@redhat.com>
+> > To: "Bryan Kearney" <bkearney@redhat.com>
+> > Cc: "entitlement-team-list" <entitlement-team-list@redhat.com>, rhel5-leads-list@redhat.com
+> > Sent: Friday, December 16, 2011 12:22:47 AM
+> > Subject: Re: Request for additions to the content testing
+> >
+> > On Thu, 2011-12-15 at 09:58 -0500, Bryan Kearney wrote:
+> > > Keqin / Lawrence:
+> > >
+> > > I have a request to add to your CDN content testing suite. Today,
+> > > Katello testing (which is using the CDN) opened bug
+> > > https://bugzilla.redhat.com/show_bug.cgi?id=768012. The root cause
+> > > is
+> > > that a listing file was not pushed to the CDN. The actual file was
+> > > content/beta/rhel/server/5/5Server/listing
+> > >
+> > > The listing file tells downstream tools what versions and / or
+> > > architectures to look for. You tend to see them in the directory
+> > > which
+> > > as the versions (content/beta/rhel/server/5) and in the directories
+> > > that
+> > > have may arches (content/beta/rhel/server/5/5Server).
+> > >
+> > > Going forward, can you please add this to the items which you test
+> > > for?
+> > > Dgregor or others in RCM can give you the complete set of where
+> > > these
+> > > files should live.
+> > >
+> > > Thanks!
+> > >
+> > > -- bk
+> >
+> > They should live anywhere that there is a variable in the download
+> > URL.
+> > So, if the download URL is
+> >
+> > /content/dist/rhel/server/5/$releasever/$basearch/os
+> >
+> > then you would have the following listing files:
+> >
+> > /content/dist/rhel/server/5/5.6/listing
+> > /content/dist/rhel/server/5/5.7/listing
+> > /content/dist/rhel/server/5/5Server/listing
+> > /content/dist/rhel/server/5/listing
+>
+> 1. Does it exist on qa cdn? Currently there's no listing file under https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/5/ .
+Fixed.  Thanks for catching that.
+
+>
+> It does exist on prod cdn, though.
+> # curl --cert 9175120542568818876.pem --key 9175120542568818876-key.pem -k https://cdn.redhat.com/content/beta/rhel/server/5/listing
+> 5.7
+> 5.8
+> 5Server
+>
+> Regards,
+> Keqin
+> >
+> > The contents of each listing file is the set of subdirectories at
+> > that
+> > level.  For $basearch listing files, the ordering doesn't matter.
+> >  For
+> > $releasever, the releases should be in ascending order with the
+> > default
+> > as the last.
+> >
+> > $ cat /content/dist/rhel/server/5/listing
+> > 5.6
+> > 5.7
+> > 5Server
+> >
+> > The exception to the above is RHUI.  For RHUI, the $releasever
+> > listing
+> > file only lists the default directory.
+> >
+> > $ cat /content/dist/rhel/rhui/server/5/listing
+> > 5Server
+> >
+> > Let me know if there is any other info I can provide.
+> >
+> > Cheers
+> > -- Dennis
+> >
+> >
+
+
+
+	 */
 	
 	
 	
