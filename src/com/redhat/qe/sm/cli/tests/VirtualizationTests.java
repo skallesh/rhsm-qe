@@ -19,6 +19,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -143,11 +144,20 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			groups={}, dependsOnGroups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=70202)
-	public void VirtFactsWhenClientIsAGuest_Test(String host_type) {
+	public void VirtFactsWhenClientIsAGuest_Test(Object bugzilla, String host_type) {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on a '"+host_type+"' hypervisor by clobbering virt-what with a fake bash script...");
 		forceVirtWhatToReturnGuest(host_type);
-
+		
+		// assert virt facts
+		if (host_type.contains("xen-dom0")) {
+			log.warning("A xen-dom0 guest is actually a special case and should be treated by subscription-manager as a host.");
+			assertsForVirtFactsWhenClientIsAHost();
+		} else {
+			assertsForVirtFactsWhenClientIsAGuest(host_type);			
+		}
+	}
+	protected void assertsForVirtFactsWhenClientIsAGuest(String host_type) {
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		// virt.is_guest
@@ -177,7 +187,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		log.info("We will fake out the ability of subscription-manager to read virt-what output on bare metal by clobbering virt-what with a fake bash script...");
 		forceVirtWhatToReturnHost();
-
+		
+		// assert virt facts
+		assertsForVirtFactsWhenClientIsAHost();
+	}
+	protected void assertsForVirtFactsWhenClientIsAHost() {
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		// virt.is_guest
@@ -185,9 +199,14 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(Boolean.valueOf(virtIsGuest),Boolean.FALSE,"subscription-manager facts list reports virt.is_guest as false when the client is running on bare metal.");
 
 		// virt.host_type
-		String virtHostType = clienttasks.getFactValue("virt.host_type");	
-		//Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal ");	// valid assertion prior to bug 726440/722248
-		Assert.assertEquals(virtHostType,"Not Applicable","subscription-manager facts list reports 'Not Applicable' for virt.host_type when run on bare metal ");
+		String virtWhatStdout = client.runCommandAndWait("virt-what").getStdout().trim();
+		String virtHostType = clienttasks.getFactValue("virt.host_type");
+		if (virtWhatStdout.equals("xen\nxen-dom0")) {
+			Assert.assertEquals(virtHostType,virtWhatStdout,"When virt-what reports xen-dom0, subscription-manager should treat virt.host_type as if it were really bare metal.");			
+		} else {
+			//Assert.assertEquals(virtHostType,"","subscription-manager facts list reports no value for virt.host_type when run on bare metal.");	// valid assertion prior to bug 726440/722248
+			Assert.assertEquals(virtHostType,"Not Applicable","subscription-manager facts list reports 'Not Applicable' for virt.host_type when run on bare metal.");
+		}
 		
 		// virt.uuid
 		String virtUuid = clienttasks.getFactValue("virt.uuid");
@@ -196,7 +215,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: facts list should not crash on virt facts when virt-what fails",
-			groups={"blockedByBug-668936"}, dependsOnGroups={},
+			groups={"blockedByBug-668936","blockedByBug-768397"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsWhenVirtWhatFails_Test() {
@@ -221,7 +240,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: facts list should report is_guest and uuid as Unknown when virt-what is not installed",
-			groups={}, dependsOnGroups={},
+			groups={"blockedByBug-768397"}, dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VirtFactsWhenVirtWhatIsNotInstalled_Test() {
@@ -1083,7 +1102,11 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 750659 - candlepin api /consumers/<consumerid>/guests is returning []
 	// TODO Bug 756628 - Unable to entitle consumer to the pool with id '8a90f85733d31add0133d337f9410c52'.: virt.guest.host.does.not.match.pool.owner
 	// TODO Bug 722977 - virt_only pools are not removed from an owner if the physical pool no longer has a valid virt_limit
-	// TODO Bug 757697 - subscription-manager virtualization design on Xen
+	
+	
+	
+	
+	
 	
 	// Configuration methods ***********************************************************************
 		
@@ -1158,22 +1181,23 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 
 		// man virt-what (virt-what-1.3-4.4.el6.x86_64) shows support for the following hypervisors
 
-		ll.add(Arrays.asList(new Object[]{"hyperv"}));
-		ll.add(Arrays.asList(new Object[]{"ibm_systemz\nibm_systemz-direct"}));
-		ll.add(Arrays.asList(new Object[]{"ibm_systemz\nibm_systemz-lpar"}));
-		ll.add(Arrays.asList(new Object[]{"ibm_systemz\nibm_systemz-zvm"}));
-		ll.add(Arrays.asList(new Object[]{"kvm"}));
-		ll.add(Arrays.asList(new Object[]{"openvz"}));
-		ll.add(Arrays.asList(new Object[]{"powervm_lx86"}));
-		ll.add(Arrays.asList(new Object[]{"qemu"}));
-		ll.add(Arrays.asList(new Object[]{"uml"}));
-		ll.add(Arrays.asList(new Object[]{"virtualage"}));
-		ll.add(Arrays.asList(new Object[]{"virtualbox"}));
-		ll.add(Arrays.asList(new Object[]{"virtualpc"}));
-		ll.add(Arrays.asList(new Object[]{"vmware"}));
-		ll.add(Arrays.asList(new Object[]{"xen\nxen-dom0"}));
-		ll.add(Arrays.asList(new Object[]{"xen\nxen-domU"}));
-		ll.add(Arrays.asList(new Object[]{"xen\nxen-hvm"}));
+		//									Object bugzilla, String host_type
+		ll.add(Arrays.asList(new Object[]{null,	"hyperv"}));
+		ll.add(Arrays.asList(new Object[]{null,	"ibm_systemz\nibm_systemz-direct"}));
+		ll.add(Arrays.asList(new Object[]{null,	"ibm_systemz\nibm_systemz-lpar"}));
+		ll.add(Arrays.asList(new Object[]{null,	"ibm_systemz\nibm_systemz-zvm"}));
+		ll.add(Arrays.asList(new Object[]{null,	"kvm"}));
+		ll.add(Arrays.asList(new Object[]{null,	"openvz"}));
+		ll.add(Arrays.asList(new Object[]{null,	"powervm_lx86"}));
+		ll.add(Arrays.asList(new Object[]{null,	"qemu"}));
+		ll.add(Arrays.asList(new Object[]{null,	"uml"}));
+		ll.add(Arrays.asList(new Object[]{null,	"virtualage"}));
+		ll.add(Arrays.asList(new Object[]{null,	"virtualbox"}));
+		ll.add(Arrays.asList(new Object[]{null,	"virtualpc"}));
+		ll.add(Arrays.asList(new Object[]{null,	"vmware"}));
+		ll.add(Arrays.asList(new Object[]{null,	"xen\nxen-domU"}));
+		ll.add(Arrays.asList(new Object[]{null,	"xen\nxen-hvm"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("757697"),	"xen\nxen-dom0"}));
 
 
 		return ll;
