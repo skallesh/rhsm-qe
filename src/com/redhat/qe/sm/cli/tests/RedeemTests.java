@@ -142,10 +142,14 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		//log.warning(warning);
 
 		// create a facts file with a serialNumber that will clobber the true system facts
-		Map<String,String> facts = new HashMap<String,String>();
-		facts.put("dmi.system.manufacturer", "Dell Inc.");
-		facts.put("dmi.system.serial_number", "0000000");
-		clienttasks.createFactsFileWithOverridingValues(facts);
+		//Map<String,String> facts = new HashMap<String,String>();
+		//facts.put("dmi.system.manufacturer", "Dell Inc.");
+		//facts.put("dmi.system.serial_number", "0000000");
+		Map<String,String> facts = new HashMap<String,String>() {{
+			put("dmi.system.manufacturer", "Dell Inc.");
+			put("dmi.system.serial_number", "0000000");
+		}};
+
 		
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
@@ -172,8 +176,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		//log.warning(warning);
 
 		// create a facts file with a serialNumber that could not possible match a hocked regtoken on hosted
-		Map<String,String> facts = new HashMap<String,String>();
-		facts.put("dmi.system.serial_number", "0000000");
+		//Map<String,String> facts = new HashMap<String,String>();
+		//facts.put("dmi.system.serial_number", "0000000");
+		Map<String,String> facts = new HashMap<String,String>() {{
+			put("dmi.system.serial_number", "0000000");
+		}};
 		clienttasks.createFactsFileWithOverridingValues(facts);
 		
 		// register and attempt redeem
