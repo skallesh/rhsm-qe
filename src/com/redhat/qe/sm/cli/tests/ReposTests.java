@@ -119,7 +119,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
-			groups={"unsubscribeAllBeforeThisTest"},
+			groups={"blockedByBug-768983","unsubscribeAllBeforeThisTest"},
 			dataProvider="getAllFutureSystemSubscriptionPoolsData",
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
