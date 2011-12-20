@@ -70,7 +70,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option using LANG",
 			groups={"blockedByBug-766577","AcceptanceTests"},
-			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION
+			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION - NOTE STDOUT DISPLAYS DOUBLE BYTE BUT NOT STDERR
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmailUsingLang_Test() {
 		
@@ -79,6 +79,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		String lang = "de_DE";
 		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));
 		String command = String.format("%s %s redeem", lang==null?"":"LANG="+lang+".UTF-8", clienttasks.command);
+client.runCommandAndWait(command+" --help");
 		SSHCommandResult redeemResult = client.runCommandAndWait(command);
 
 		// bug766577
