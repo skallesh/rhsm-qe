@@ -18,7 +18,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 /**
  * @author jsefler
  * Notes: Top see what products are installed:
- * find /tmp/product/ -name '*.pem' -exec openssl x509 -in '{}' -text  \; | egrep -A1 "1.3.6.1.4.1.2312.9.1.*"
+ * find /etc/pki/product/ -name '*.pem' -exec openssl x509 -in '{}' -text  \; | egrep -A1 "1.3.6.1.4.1.2312.9.1.*"
  */
 public class ProductCert extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
