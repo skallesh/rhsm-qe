@@ -359,6 +359,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 
 	// Candidates for an automated Test:
 	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
+	// TODO Bug 738517 - yum issuing a GET HTTPS request instead of CONNECT HTTPS request when accessing the CDN via HTTP proxy 
 	/* TODO
 	[Bug 756737] RC4.0 content testing: package conflict and/or content missing on RHEL Server - x86_64
 	[Bug 756752] RC4.0 content testing: package conflict and/or content missing on RHEL Server - i386
