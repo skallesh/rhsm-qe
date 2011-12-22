@@ -782,6 +782,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
+	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions
 	
 	// Configuration Methods ***********************************************************************
 	
