@@ -50,7 +50,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	public void ManPageForGUI_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
-
 		// is the guiCommand installed?
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
@@ -60,6 +59,26 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
+	}
+	
+	@Test(	description="rhsm-icon: man page",
+			groups={"blockedByBug-771726"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForRhsmIcon_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String iconCommand = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
+		// is the iconCommand installed?
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+iconCommand,1,null,"^No manual entry for "+iconCommand);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+iconCommand,0,"^"+iconCommand+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(iconCommand+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+iconCommand,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+iconCommand,0,"^"+iconCommand+" ",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
 		}
 	}
@@ -148,14 +167,17 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// String command, String stdoutRegex, List<String> expectedOptions
 		String module;
 		String modulesRegex = "^	\\w+";
-		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*\\, --\\w+(=\\w+)*";
-		/* EXAMPLE FOR optionsRegex
-		  -h, --help            show this help message and exit
-		  --list                list the configuration for this system
-		  --remove=REMOVE       remove configuration entry by section.name
-		  --server.hostname=SERVER.HOSTNAME
-		*/
+		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
 
+		// EXAMPLES FOR optionsRegex
+		//  -h, --help            show this help message and exit
+		//  --list                list the configuration for this system
+		//  --remove=REMOVE       remove configuration entry by section.name
+		//  --server.hostname=SERVER.HOSTNAME
+		//  -?, --help                  Show help options
+		//  --help-all                  Show all help options
+		//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
+		//  -c, --check-period          How often to check for validity (in seconds)
 		
 		// MODULES
 		List <String> modules = new ArrayList<String>();
@@ -503,6 +525,56 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unsubscribeOptions}));
 		}
+		
+		// rhsm-icon:
+		optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w](=\\w+)*, --[\\w\\.-]+(=\\w+)*";
+		//[root@jsefler-onprem-5server ~]# rhsm-icon -?
+		//Usage:
+		//  rhsm-icon [OPTION...] rhsm icon
+		//
+		//Help Options:
+		//  -?, --help                  Show help options
+		//  --help-all                  Show all help options
+		//  --help-gtk                  Show GTK+ Options
+		//
+		//Application Options:
+		//  -c, --check-period          How often to check for validity (in seconds)
+		//  -d, --debug                 Show debug messages
+		//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
+		//  -i, --check-immediately     Run the first status check right away
+		//  --display=DISPLAY           X display to use
+		String rhsmIconCommand = "rhsm-icon"; 
+		List <String> rhsmIconOptions = new ArrayList<String>();
+		rhsmIconOptions.add("-?, --help");
+		rhsmIconOptions.add("--help-all");
+		rhsmIconOptions.add("--help-gtk");
+		rhsmIconOptions.add("-c, --check-period");
+		rhsmIconOptions.add("-d, --debug");
+		rhsmIconOptions.add("-f, --force-icon=TYPE");
+		rhsmIconOptions.add("-i, --check-immediately");
+		rhsmIconOptions.add("--display=DISPLAY");
+		for (String rhsmIconHelpCommand : new String[]{rhsmIconCommand+" -?", rhsmIconCommand+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = rhsmIconCommand+" [OPTIONS]";
+			usage = rhsmIconCommand+" [OPTIONS]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
+			//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, rhsmIconHelpCommand, optionsRegex, rhsmIconOptions}));
+		}
+		List <String> rhsmIconGtkOptions = new ArrayList<String>();
+		rhsmIconGtkOptions.add("--class=CLASS");
+		rhsmIconGtkOptions.add("--name=NAME");
+		rhsmIconGtkOptions.add("--display=DISPLAY");
+		rhsmIconGtkOptions.add("--screen=SCREEN");
+		rhsmIconGtkOptions.add("--sync");
+		rhsmIconGtkOptions.add("--gtk-module=MODULES");
+		rhsmIconGtkOptions.add("--g-fatal-warnings");
+		ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-gtk", optionsRegex, rhsmIconGtkOptions}));
+		List <String> rhsmIconAllOptions = new ArrayList<String>();
+		rhsmIconAllOptions.addAll(rhsmIconOptions);
+		rhsmIconAllOptions.addAll(rhsmIconGtkOptions);
+		ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-all", optionsRegex, rhsmIconAllOptions}));
 		
 		return ll;
 	}
