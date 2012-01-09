@@ -69,19 +69,64 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void ManPageForRhsmIcon_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
-		String iconCommand = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
-		// is the iconCommand installed?
+		String command = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
+		// is the command installed?
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+iconCommand,1,null,"^No manual entry for "+iconCommand);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+iconCommand,0,"^"+iconCommand+": nothing appropriate",null);
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
-			throw new SkipException(iconCommand+" is not installed and therefore its man page is also not installed.");
+			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
-			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+iconCommand,0);
-			RemoteFileTasks.runCommandAndAssert(client,"whatis "+iconCommand,0,"^"+iconCommand+" ",null);
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
 		}
 	}
+	
+	@Test(	description="install-num-migrate-to-rhsm: man page",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForInstallNumMigrateToRhsm_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String command = "install-num-migrate-to-rhsm";
+		// is the command installed?
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
+	}
+	
+	@Test(	description="rhn-migrate-classic-to-rhsm: man page",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForRhnMigrateClassicToRhsm_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String command = "rhn-migrate-classic-to-rhsm";
+		// is the command installed?
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
+	}
+	
+
+	
+	
+	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={},
@@ -168,7 +213,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String module;
 		String modulesRegex = "^	\\w+";
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
-
+		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.-]+(=\\w+)*";
+		
 		// EXAMPLES FOR optionsRegex
 		//  -h, --help            show this help message and exit
 		//  --list                list the configuration for this system
@@ -178,6 +224,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//  --help-all                  Show all help options
 		//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
 		//  -c, --check-period          How often to check for validity (in seconds)
+		//  -i INSTNUMBER, --instnumber=INSTNUMBER
 		
 		// subscription-manager MODULES
 		List <String> modules = new ArrayList<String>();
@@ -528,7 +575,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// rhsm-icon OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {	// test only when the rpm is installed
-			optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w](=\\w+)*, --[\\w\\.-]+(=\\w+)*";
 			//[root@jsefler-onprem-5server ~]# rhsm-icon -?
 			//Usage:
 			//  rhsm-icon [OPTION...] rhsm icon
@@ -576,6 +622,58 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			rhsmIconAllOptions.addAll(rhsmIconOptions);
 			rhsmIconAllOptions.addAll(rhsmIconGtkOptions);
 			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-all", optionsRegex, rhsmIconAllOptions}));
+		}
+		
+		// rhn-migrate-classic-to-rhsm OPTIONS
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+			//[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -h
+			//usage: /usr/sbin/rhn-migrate-classic-to-rhsm [--force|--cli-only|--help|--no-auto]
+			//
+			//options:
+			//  -f, --force     Ignore Channels not available on RHSM
+			//  -c, --cli-only  Don't launch the GUI tool to subscribe the system, just use
+			//                  the CLI tool which will do it automatically
+			//  -n, --no-auto   Don't launch subscription manager at end of process.
+			//  -h, --help      show this help message and exit
+
+			String rhnMigrateClassicToRhsmCommand = "rhn-migrate-classic-to-rhsm"; 
+			List <String> rhsmIconOptions = new ArrayList<String>();
+			rhsmIconOptions.add("-f, --force");
+			rhsmIconOptions.add("-c, --cli-only");
+			rhsmIconOptions.add("-n, --no-auto");
+			rhsmIconOptions.add("-h, --help");
+			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
+				List <String> usages = new ArrayList<String>();
+				String usage = "usage: /usr/sbin/"+rhnMigrateClassicToRhsmCommand+" [--force|--cli-only|--help|--no-auto]";
+				usages.add(usage);
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, rhsmIconOptions}));
+			}
+		}
+		
+		// install-num-migrate-to-rhsm OPTIONS
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+			//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
+			//usage: install-num-migrate-to-rhsm [options]
+			//
+			//options:
+			//  -h, --help            show this help message and exit
+			//  -i INSTNUMBER, --instnumber=INSTNUMBER
+			//                        Install number to run against
+			//  -d, --dryrun          Only print the files which would be copied over
+
+			String rhnMigrateClassicToRhsmCommand = "install-num-migrate-to-rhsm"; 
+			List <String> rhsmIconOptions = new ArrayList<String>();
+			rhsmIconOptions.add("-h, --help");
+			rhsmIconOptions.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
+			rhsmIconOptions.add("-d, --dryrun");
+			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
+				List <String> usages = new ArrayList<String>();
+				String usage = "usage: "+rhnMigrateClassicToRhsmCommand+" [options]";
+				usages.add(usage);
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, rhsmIconOptions}));
+			}
 		}
 		
 		return ll;
