@@ -50,7 +50,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	public void ManPageForGUI_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
-
 		// is the guiCommand installed?
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
@@ -63,6 +62,71 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
 		}
 	}
+	
+	@Test(	description="rhsm-icon: man page",
+			groups={"blockedByBug-771726"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForRhsmIcon_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String command = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
+		// is the command installed?
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
+	}
+	
+	@Test(	description="install-num-migrate-to-rhsm: man page",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForInstallNumMigrateToRhsm_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String command = "install-num-migrate-to-rhsm";
+		// is the command installed?
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
+	}
+	
+	@Test(	description="rhn-migrate-classic-to-rhsm: man page",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ManPageForRhnMigrateClassicToRhsm_Test() {
+		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
+		String command = "rhn-migrate-classic-to-rhsm";
+		// is the command installed?
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
+		} else {
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
+			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+		}
+	}
+	
+
+	
+	
+	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
 			groups={},
@@ -148,16 +212,21 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// String command, String stdoutRegex, List<String> expectedOptions
 		String module;
 		String modulesRegex = "^	\\w+";
-		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*\\, --\\w+(=\\w+)*";
-		/* EXAMPLE FOR optionsRegex
-		  -h, --help            show this help message and exit
-		  --list                list the configuration for this system
-		  --remove=REMOVE       remove configuration entry by section.name
-		  --server.hostname=SERVER.HOSTNAME
-		*/
-
+		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
+		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.-]+(=\\w+)*";
 		
-		// MODULES
+		// EXAMPLES FOR optionsRegex
+		//  -h, --help            show this help message and exit
+		//  --list                list the configuration for this system
+		//  --remove=REMOVE       remove configuration entry by section.name
+		//  --server.hostname=SERVER.HOSTNAME
+		//  -?, --help                  Show help options
+		//  --help-all                  Show all help options
+		//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
+		//  -c, --check-period          How often to check for validity (in seconds)
+		//  -i INSTNUMBER, --instnumber=INSTNUMBER
+		
+		// subscription-manager MODULES
 		List <String> modules = new ArrayList<String>();
 		modules.add("config");
 		modules.add("import");
@@ -182,7 +251,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
 		}
 		
-		// MODULE: config
+		// subscription-manager config OPTIONS
 		module = "config";
 		List <String> configOptions = new ArrayList<String>();
 		configOptions.add("-h, --help");
@@ -236,7 +305,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, configOptions}));
 		}
 		
-		// MODULE: import
+		// subscription-manager import OPTIONS
 		module = "import";
 		List <String> importOptions = new ArrayList<String>();
 		importOptions.add("-h, --help");
@@ -261,7 +330,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, importOptions}));
 		}
 
-		// MODULE: redeem
+		// subscription-manager redeem OPTIONS
 		module = "redeem";
 		List <String> redeemOptions = new ArrayList<String>();
 		redeemOptions.add("-h, --help");
@@ -279,7 +348,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, redeemOptions}));
 		}
 		
-		// MODULE: orgs
+		// subscription-manager orgs OPTIONS
 		module = "orgs";
 		List <String> orgsOptions = new ArrayList<String>();
 		orgsOptions.add("-h, --help");
@@ -297,7 +366,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, orgsOptions}));
 		}
 		
-		// MODULE: repos
+		// subscription-manager repos OPTIONS
 		module = "repos";
 		List <String> reposOptions = new ArrayList<String>();
 		reposOptions.add("-h, --help");
@@ -311,7 +380,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, reposOptions}));
 		}
 		
-		// MODULE: clean
+		// subscription-manager clean OPTIONS
 		module = "clean";
 		List <String> cleanOptions = new ArrayList<String>();
 		cleanOptions.add("-h, --help");
@@ -328,7 +397,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("664581"), smHelpCommand, optionsRegex, cleanOptions}));
 		}
 		
-		// MODULE: environments
+		// subscription-manager environments OPTIONS
 		module = "environments";
 		List <String> environmentsOptions = new ArrayList<String>();
 		environmentsOptions.add("-h, --help");
@@ -347,7 +416,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, environmentsOptions}));
 		}
 		
-		// MODULE: facts
+		// subscription-manager facts OPTIONS
 		module = "facts";
 		List <String> factsOptions = new ArrayList<String>();
 		factsOptions.add("-h, --help");
@@ -365,7 +434,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, factsOptions}));
 		}
 		
-		// MODULE: identity
+		// subscription-manager identity OPTIONS
 		module = "identity";
 		List <String> identityOptions = new ArrayList<String>();
 		identityOptions.add("-h, --help");
@@ -385,7 +454,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, identityOptions}));
 		}
 		
-		// MODULE: list
+		// subscription-manager list OPTIONS
 		module = "list";
 		List <String> listOptions = new ArrayList<String>();
 		listOptions.add("-h, --help");
@@ -406,7 +475,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, listOptions}));
 		}
 		
-		// MODULE: refresh
+		// subscription-manager refresh OPTIONS
 		module = "refresh";
 		List <String> refreshOptions = new ArrayList<String>();
 		refreshOptions.add("-h, --help");
@@ -422,7 +491,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, refreshOptions}));
 		}
 		
-		// MODULE: register
+		// subscription-manager register OPTIONS
 		module = "register";
 		List <String> registerOptions = new ArrayList<String>();
 		registerOptions.add("-h, --help");
@@ -448,7 +517,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, registerOptions}));
 		}
 		
-		// MODULE: subscribe
+		// subscription-manager subscribe OPTIONS
 		module = "subscribe";
 		List <String> subscribeOptions = new ArrayList<String>();
 		subscribeOptions.add("-h, --help");
@@ -470,7 +539,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, subscribeOptions}));
 		}
 		
-		// MODULE: unregister
+		// subscription-manager unregister OPTIONS
 		module = "unregister";
 		List <String> unregisterOptions = new ArrayList<String>();
 		unregisterOptions.add("-h, --help");
@@ -486,7 +555,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unregisterOptions}));
 		}
 		
-		// MODULE: unsubscribe
+		// subscription-manager unsubscribe OPTIONS
 		module = "unsubscribe";
 		List <String> unsubscribeOptions = new ArrayList<String>();
 		unsubscribeOptions.add("-h, --help");
@@ -502,6 +571,109 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unsubscribeOptions}));
+		}
+		
+		// rhsm-icon OPTIONS
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+			//[root@jsefler-onprem-5server ~]# rhsm-icon -?
+			//Usage:
+			//  rhsm-icon [OPTION...] rhsm icon
+			//
+			//Help Options:
+			//  -?, --help                  Show help options
+			//  --help-all                  Show all help options
+			//  --help-gtk                  Show GTK+ Options
+			//
+			//Application Options:
+			//  -c, --check-period          How often to check for validity (in seconds)
+			//  -d, --debug                 Show debug messages
+			//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
+			//  -i, --check-immediately     Run the first status check right away
+			//  --display=DISPLAY           X display to use
+			String rhsmIconCommand = "rhsm-icon"; 
+			List <String> rhsmIconOptions = new ArrayList<String>();
+			rhsmIconOptions.add("-?, --help");
+			rhsmIconOptions.add("--help-all");
+			rhsmIconOptions.add("--help-gtk");
+			rhsmIconOptions.add("-c, --check-period");
+			rhsmIconOptions.add("-d, --debug");
+			rhsmIconOptions.add("-f, --force-icon=TYPE");
+			rhsmIconOptions.add("-i, --check-immediately");
+			rhsmIconOptions.add("--display=DISPLAY");
+			for (String rhsmIconHelpCommand : new String[]{rhsmIconCommand+" -?", rhsmIconCommand+" --help"}) {
+				List <String> usages = new ArrayList<String>();
+				String usage = rhsmIconCommand+" [OPTIONS]";
+				usage = rhsmIconCommand+" [OPTIONS]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
+				//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+				usages.add(usage);
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhsmIconHelpCommand, optionsRegex, rhsmIconOptions}));
+			}
+			List <String> rhsmIconGtkOptions = new ArrayList<String>();
+			rhsmIconGtkOptions.add("--class=CLASS");
+			rhsmIconGtkOptions.add("--name=NAME");
+			rhsmIconGtkOptions.add("--display=DISPLAY");
+			rhsmIconGtkOptions.add("--screen=SCREEN");
+			rhsmIconGtkOptions.add("--sync");
+			rhsmIconGtkOptions.add("--gtk-module=MODULES");
+			rhsmIconGtkOptions.add("--g-fatal-warnings");
+			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-gtk", optionsRegex, rhsmIconGtkOptions}));
+			List <String> rhsmIconAllOptions = new ArrayList<String>();
+			rhsmIconAllOptions.addAll(rhsmIconOptions);
+			rhsmIconAllOptions.addAll(rhsmIconGtkOptions);
+			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-all", optionsRegex, rhsmIconAllOptions}));
+		}
+		
+		// rhn-migrate-classic-to-rhsm OPTIONS
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+			//[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -h
+			//usage: /usr/sbin/rhn-migrate-classic-to-rhsm [--force|--cli-only|--help|--no-auto]
+			//
+			//options:
+			//  -f, --force     Ignore Channels not available on RHSM
+			//  -c, --cli-only  Don't launch the GUI tool to subscribe the system, just use
+			//                  the CLI tool which will do it automatically
+			//  -n, --no-auto   Don't launch subscription manager at end of process.
+			//  -h, --help      show this help message and exit
+
+			String rhnMigrateClassicToRhsmCommand = "rhn-migrate-classic-to-rhsm"; 
+			List <String> rhsmIconOptions = new ArrayList<String>();
+			rhsmIconOptions.add("-f, --force");
+			rhsmIconOptions.add("-c, --cli-only");
+			rhsmIconOptions.add("-n, --no-auto");
+			rhsmIconOptions.add("-h, --help");
+			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
+				List <String> usages = new ArrayList<String>();
+				String usage = "usage: /usr/sbin/"+rhnMigrateClassicToRhsmCommand+" [--force|--cli-only|--help|--no-auto]";
+				usages.add(usage);
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, rhsmIconOptions}));
+			}
+		}
+		
+		// install-num-migrate-to-rhsm OPTIONS
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+			//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
+			//usage: install-num-migrate-to-rhsm [options]
+			//
+			//options:
+			//  -h, --help            show this help message and exit
+			//  -i INSTNUMBER, --instnumber=INSTNUMBER
+			//                        Install number to run against
+			//  -d, --dryrun          Only print the files which would be copied over
+
+			String rhnMigrateClassicToRhsmCommand = "install-num-migrate-to-rhsm"; 
+			List <String> rhsmIconOptions = new ArrayList<String>();
+			rhsmIconOptions.add("-h, --help");
+			rhsmIconOptions.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
+			rhsmIconOptions.add("-d, --dryrun");
+			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
+				List <String> usages = new ArrayList<String>();
+				String usage = "usage: "+rhnMigrateClassicToRhsmCommand+" [options]";
+				usages.add(usage);
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, rhsmIconOptions}));
+			}
 		}
 		
 		return ll;
