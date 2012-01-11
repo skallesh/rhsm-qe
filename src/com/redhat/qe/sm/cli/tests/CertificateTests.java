@@ -38,44 +38,75 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertIsInstalled_Test() {
-		
+// DELETEME		OLD IMPLEMENTATION		
+//		// list the currently installed products
+//		clienttasks.listInstalledProducts();
+//		
+//		// check each of the installed product certs in search of one that matches the /etc/redhat-release
+//		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
+//		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+//			log.info("Found installed product cert: "+productCert);
+//			String productCertName = productCert.productName;
+//			
+//			// strip out numbers from the product cert name before checking for a match...  e.g name='Red Hat Enterprise Linux 6 Server' => 'Red Hat Enterprise Linux Server'
+//			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
+//			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"  (69.pem)
+//			productCertName = productCertName.replaceAll("\\d", "").replaceAll(" {2,}", " ");
+//
+//			// adjust the product cert name "for Scientific Computing" => "ComputeNode"  (76.pem)
+//			productCertName = productCertName.replaceFirst("for Scientific Computing","ComputeNode");
+//
+//			// adjust the product cert name "for IBM POWER" => "Server"  (74.pem)
+//			productCertName = productCertName.replaceFirst("for IBM POWER","Server");
+//
+//			// adjust the product cert name "for IBM System z" => "Server"  (72.pem)
+//			productCertName = productCertName.replaceFirst("for IBM System z","Server");
+//
+//			// adjust the product cert name "Desktop" => "Client"  (68.pem)
+//			productCertName = productCertName.replaceFirst("Desktop","Client");
+//
+//			// adjust the product cert name "for Workstation" => "Workstation"  (71.pem)
+//			//productCertName = productCertName.replaceFirst("Workstation","Workstation");
+//
+//			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCertName, productCert.productNamespace.version))) {
+//				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
+//				return;
+//			}
+//			
+//			//TODO We should also verify the arch  e.g. uname.machine: s390x when on IBM System z
+//		}
+//		Assert.fail("Could NOT find an installed installed product cert that matches /etc/redhat-release ("+clienttasks.redhatRelease+").");
+
 		// list the currently installed products
 		clienttasks.listInstalledProducts();
 		
-		// check each of the installed product certs in search of one that matches the /etc/redhat-release
-		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
-		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-			log.info("Found installed product cert: "+productCert);
-			String productCertName = productCert.productName;
-			
-			// strip out numbers from the product cert name before checking for a match...  e.g name='Red Hat Enterprise Linux 6 Server' => 'Red Hat Enterprise Linux Server'
-			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
-			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"  (69.pem)
-			productCertName = productCertName.replaceAll("\\d", "").replaceAll(" {2,}", " ");
-
-			// adjust the product cert name "for Scientific Computing" => "ComputeNode"  (76.pem)
-			productCertName = productCertName.replaceFirst("for Scientific Computing","ComputeNode");
-
-			// adjust the product cert name "for IBM POWER" => "Server"  (74.pem)
-			productCertName = productCertName.replaceFirst("for IBM POWER","Server");
-
-			// adjust the product cert name "for IBM System z" => "Server"  (72.pem)
-			productCertName = productCertName.replaceFirst("for IBM System z","Server");
-
-			// adjust the product cert name "Desktop" => "Client"  (68.pem)
-			productCertName = productCertName.replaceFirst("Desktop","Client");
-
-			// adjust the product cert name "for Workstation" => "Workstation"  (71.pem)
-			//productCertName = productCertName.replaceFirst("Workstation","Workstation");
-
-			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCertName, productCert.productNamespace.version))) {
-				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
-				return;
-			}
-			
-			//TODO We should also verify the arch  e.g. uname.machine: s390x when on IBM System z
+		// list the currently installed product certs
+		log.info("Installed product certs: ");
+		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		for (ProductCert productCert : productCerts) {
+			log.info(productCert.toString());
 		}
-		Assert.fail("Could NOT find an installed installed product cert that matches /etc/redhat-release ("+clienttasks.redhatRelease+").");
+		
+		// assert that a product cert is installed that matches our base RHEL release version
+		ProductCert productCert = null;
+		if (clienttasks.releasever.equals("5Server") || clienttasks.releasever.equals("6Server")) {
+			if (clienttasks.arch.startsWith("ppc")) {															// ppc ppc64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "74", productCerts);	// Red Hat Enterprise Linux for IBM POWER
+			} else if (clienttasks.arch.startsWith("s390")) {													// s390 s390x
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "72", productCerts);	// Red Hat Enterprise Linux for IBM System z
+			} else { 																							// i386 i686 ia64 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "69", productCerts);	// Red Hat Enterprise Linux Server
+			}
+		} else if (clienttasks.releasever.equals("5Client") || clienttasks.releasever.equals("6Workstation")) {	// i386 i686 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "71", productCerts);	// Red Hat Enterprise Linux Workstation
+		} else if (clienttasks.releasever.equals("6Client")) {													// i386 i686 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "68", productCerts);	// Red Hat Enterprise Linux Desktop
+		} else if (clienttasks.releasever.equals("6ComputeNode")) {												// i386 i686 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "76", productCerts);	// Red Hat Enterprise Linux for Scientific Computing
+		}
+		
+		Assert.assertNotNull(productCert,"Found an installed product cert that matches our base RHEL product...");
+		log.info(productCert.toString());
 	}
 	
 	
@@ -110,11 +141,12 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Make sure the entitlement cert contains all expected OIDs",
-			groups={"AcceptanceTests","blockedByBug-744259"},
+			groups={"AcceptanceTests","blockedByBug-744259","blockedByBug-754426" },
 			dataProvider="getAllAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) {
+//if (!pool.productId.equals("awesomeos-virt-4")) throw new SkipException("debugTestinging...");
 
 //		// toggle this block of code with the dataProvider to process all pools or just one random pool
 //		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (List)null, true, false, null, null, null);
@@ -124,8 +156,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		// subscribe to the pool and get the EntitlementCert
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		//^ replaced with the following to save logging/assertion time
 		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
+		Assert.assertNotNull(entitlementCert,"Successfully retrieved the entitlement cert granted after subscribing to pool: "+pool);
 		
 		// Commented out the following log of rawCertificate to conserve logFile size
 		//log.info("Raw entitlement certificate: \n"+entitlementCert.rawCertificate);
@@ -184,6 +218,8 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
+
 			// asserting all expected OIDS in the ContentNamespace	
 			//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.1 (Name) : Red Hat Enterprise Linux (Supplementary)
 			//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.2 (Label) : rhel-server-6-supplementary
@@ -197,8 +233,10 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.10 (Required Tags): TAG1,TAG2,TAG3
 			if (contentNamespace.name!=null)					{Assert.assertNotNull(contentNamespace.name,					"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.1 (Name) is present with value '"+ contentNamespace.name+"'");}									else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.1 (Name) is missing"); allMandatoryOIDsFound = false;}
 			if (contentNamespace.label!=null)					{Assert.assertNotNull(contentNamespace.label,					"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.2 (Label) is present with value '"+ contentNamespace.label+"'");}									else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.2 (Label) is missing"); allMandatoryOIDsFound = false;}
-//REMOVED	if (contentNamespace.physicalEntitlement!=null)		{Assert.assertNotNull(contentNamespace.physicalEntitlement,		"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.3 (Physical Entitlements) is present with value '"+ contentNamespace.physicalEntitlement+"'");}	else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.3 (Physical Entitlements) is missing"); allOIDSFound = false;}
-//REMOVED	if (contentNamespace.flexGuestEntitlement!=null)	{Assert.assertNotNull(contentNamespace.flexGuestEntitlement,	"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.4 (Flex Guest Entitlements) is present with value '"+ contentNamespace.flexGuestEntitlement+"'");}	else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.4 (Flex Guest Entitlements) is missing"); allOIDSFound = false;}
+			//REMOVED						//if (contentNamespace.physicalEntitlement!=null)		{Assert.assertNotNull(contentNamespace.physicalEntitlement,		"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.3 (Physical Entitlements) is present with value '"+ contentNamespace.physicalEntitlement+"'");}	else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.3 (Physical Entitlements) is missing"); allOIDSFound = false;}
+			Assert.assertNull(contentNamespace.physicalEntitlement,		"ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.3 (Physical Entitlements) has been removed from the generation of entitlements.  Its current value is '"+ contentNamespace.physicalEntitlement+"'");
+			//REMOVED blockedByBug-754426	//if (contentNamespace.flexGuestEntitlement!=null)	{Assert.assertNotNull(contentNamespace.flexGuestEntitlement,	"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.4 (Flex Guest Entitlements) is present with value '"+ contentNamespace.flexGuestEntitlement+"'");}	else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.4 (Flex Guest Entitlements) is missing"); allOIDSFound = false;}
+			Assert.assertNull(contentNamespace.flexGuestEntitlement,	"ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.4 (Flex Guest Entitlements) has been removed from the generation of entitlements.  Its current value is '"+ contentNamespace.flexGuestEntitlement+"'");
 			if (contentNamespace.vendorId!=null)				{Assert.assertNotNull(contentNamespace.vendorId,				"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.5 (Vendor ID) is present with value '"+ contentNamespace.vendorId+"'");}							else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.5 (Vendor ID) is missing"); allMandatoryOIDsFound = false;}
 			if (contentNamespace.downloadUrl!=null)				{Assert.assertNotNull(contentNamespace.downloadUrl,				"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.6 (Download URL) is present with value '"+ contentNamespace.downloadUrl+"'");}						else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.6 (Download URL) is missing"); allMandatoryOIDsFound = false;}
 			if (contentNamespace.gpgKeyUrl!=null)				{Assert.assertNotNull(contentNamespace.gpgKeyUrl,				"Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.7 (GPG Key URL) is present with value '"+ contentNamespace.gpgKeyUrl+"'");}						else {log.warning("Mandatory ContentNamespace OID 1.3.6.1.4.1.2312.9.2."+contentNamespace.hash+".1.7 (GPG Key URL) is missing"); allMandatoryOIDsFound = false;}

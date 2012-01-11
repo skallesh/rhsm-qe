@@ -99,7 +99,7 @@ public class SubscriptionManagerTasks {
 		hostname		= sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		ipaddr			= sshCommandRunner.runCommandAndWait("ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | sed s/'  Bcast'//g").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
-		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides system-release").getStdout().trim();  // cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release
+		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
 		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem
@@ -108,7 +108,7 @@ public class SubscriptionManagerTasks {
 		if (redhatRelease.contains("ComputeNode")) variant = "ComputeNode";	//76.pem
 		//if (redhatRelease.contains("IBM POWER")) variant = "IBM Power";	//74.pem	Red Hat Enterprise Linux for IBM POWER	// TODO  Not sure if these are correct or if they are just Server on a different arch
 		//if (redhatRelease.contains("IBM System z")) variant = "System Z";	//72.pem	Red Hat Enterprise Linux for IBM System z	// TODO
-		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
+		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
 		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
 	}
 	
@@ -1085,6 +1085,33 @@ public class SubscriptionManagerTasks {
 //	}
 
 	
+	/**
+	 * @return a list of the currently granted EntitlementCerts that are within the warningPeriod (days) of its endDate
+	 */
+	public List<EntitlementCert> getCurrentEntitlementCertsWithinWarningPeriod() {
+		List<EntitlementCert> entitlementCertsWithinWarningPeriod = new ArrayList<EntitlementCert>();
+		Calendar now = new GregorianCalendar();	now.setTimeInMillis(System.currentTimeMillis());
+		
+		// assemble all of the current entitlementCerts that are within the warning period
+		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
+			
+			// find the warning period
+			int warningPeriod = 0;	// assume zero
+			try {warningPeriod = Integer.valueOf(entitlementCert.orderNamespace.warningPeriod);}
+			catch (NumberFormatException e) {
+				log.warning("The OrderNamespace's warningPeriod is non-numeric or non-existing in EntitlementCert: "+entitlementCert);
+			}
+			
+			// subtract the warningPeriod number of days from the endDate
+			entitlementCert.orderNamespace.endDate.add(Calendar.DATE, -1*warningPeriod);
+			
+			// check if we are now inside the warningPeriod
+			if (entitlementCert.orderNamespace.endDate.before(now)) {
+				entitlementCertsWithinWarningPeriod.add(entitlementCert);
+			}
+		}
+		return entitlementCertsWithinWarningPeriod;
+	}
 	
 	/**
 	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
@@ -2266,17 +2293,15 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		String stdoutMessage;
 		
-		// if already subscribed, just return the result
-		// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
-		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed")) return sshCommandResult;	
-
-		// if no free entitlements, just return the result
-		// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'.
-		if (sshCommandResult.getStdout().startsWith("No free entitlements are available")) return sshCommandResult;	
-		
-		// if rule failed, just return the result
-		// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
-		if (sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) return sshCommandResult;	
+		// just return the result for the following cases:
+		if (sshCommandResult.getStdout().startsWith("This consumer is already subscribed") ||	// This consumer is already subscribed to the product matching pool with id 'ff8080812c71f5ce012c71f6996f0132'.
+			sshCommandResult.getStdout().startsWith("No free entitlements are available") ||	// No free entitlements are available for the pool with id 'ff8080812e16e00e012e16e1f6090134'.
+			sshCommandResult.getStdout().startsWith("Pool is restricted") ||					// Pool is restricted to virtual guests: '8a90f85734205a010134205ae8d80403'.
+			sshCommandResult.getStdout().startsWith("Unable to entitle consumer")) {			// Unable to entitle consumer to the pool with id '8a90f8b42e3e7f2e012e3e7fc653013e'.: rulefailed.virt.only
+																								// Unable to entitle consumer to the pool with id '8a90f85734160df3013417ac68bb7108'.: Entitlements for awesomeos-virt-4 expired on: 12/7/11 3:43 AM
+			log.warning(sshCommandResult.getStdout().trim());
+			return sshCommandResult;	
+		}
 		
 		// assert the subscribe does NOT report "The system is unable to complete the requested transaction"
 		//Assert.assertContainsNoMatch(sshCommandResult.getStdout(), "The system is unable to complete the requested transaction","The system should always be able to complete the requested transaction.");
@@ -3132,6 +3157,7 @@ repolist: 3,394
 				
 		 		for (EntitlementCert entitlementCert : entitlementCerts) {
 		 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+		 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 		 				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts)) {
 							if (contentNamespace.enabled.equals("1")) {
 								Assert.assertTrue(yumRepoListEnabled.contains(contentNamespace.label),

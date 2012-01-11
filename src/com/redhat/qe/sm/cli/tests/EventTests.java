@@ -149,10 +149,10 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
-			groups={"EnititlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
+			groups={"EntitlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50403)
-	public void EnititlementCreated_Test() throws Exception {
+	public void EntitlementCreated_Test() throws Exception {
 		
 		// test prerequisites
 
@@ -167,8 +167,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+// debugging randlomly picked standalone non-zero virt_limit pools
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
+//testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
 		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
+
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
 		boolean invokeWorkaroundWhileBugIsOpen = true;
@@ -181,7 +185,12 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
-
+        
+        // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
+		if (servertasks.statusStandalone && !"0".equals(CandlepinTasks.getPoolAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit"))) {
+			newEventTitles = new String[]{"ENTITLEMENT CREATED","POOL CREATED"};
+		}
+		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
   
@@ -191,7 +200,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EnititlementCreated_Test"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
@@ -272,6 +281,11 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// assert the consumer feed...
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
+        // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
+		if (servertasks.statusStandalone && !"0".equals(CandlepinTasks.getPoolAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit"))) {
+			newEventTitles = new String[]{"ENTITLEMENT DELETED","POOL DELETED"};
+		}
+		
 		// assert the owner feed...
 		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
 

@@ -22,6 +22,7 @@ import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -52,7 +53,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem without --email option",
-			groups={"blockedByBug-727600"},
+			groups={"blockedByBug-727600","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmail_Test() {
@@ -62,9 +63,39 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		
 		// assert redemption results
 		//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
+		Assert.assertEquals(redeemResult.getStderr().trim(), "");
 		Assert.assertEquals(redeemResult.getStdout().trim(), "email is required for notification","Redeem should require that the email option be specified.");
-		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed against without an email option.");
+		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
+	}
+	
+	@Test(	description="subscription-manager: attempt redeem without --email option using LANG",
+			groups={"blockedByBug-766577","AcceptanceTests"},
+			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION - NOTE STDOUT DISPLAYS DOUBLE BYTE BUT NOT STDERR
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptRedeemWithoutEmailUsingLang_Test() {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
+		String lang = "de_DE";
+		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));
+		String command = String.format("%s %s redeem", lang==null?"":"LANG="+lang+".UTF-8", clienttasks.command);
+client.runCommandAndWait(command+" --help");
+		SSHCommandResult redeemResult = client.runCommandAndWait(command);
 
+		// bug766577
+		// 201112191709:14.807 - FINE: ssh root@jsefler-onprem-5server.usersys.redhat.com LANG=de_DE subscription-manager redeem
+		// 201112191709:17.276 - FINE: Stdout: 
+		// 201112191709:17.277 - FINE: Stderr: 'ascii' codec can't encode character u'\xf6' in position 20: ordinal not in range(128)
+		// 201112191709:17.277 - FINE: ExitCode: 255
+		
+		// [root@jsefler-onprem-5server ~]# LANG=de_DE.UTF-8 subscription-manager redeem
+		// E-Mail-Adresse ist nötig zur Benachrichtigung
+
+		// assert redemption results
+		//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
+		Assert.assertEquals(redeemResult.getStderr().trim(), "");
+		Assert.assertEquals(redeemResult.getStdout().trim(), "E-Mail-Adresse ist nötig zur Benachrichtigung","Redeem should require that the email option be specified.");
+		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
 	}
 	
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
@@ -142,10 +173,14 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		//log.warning(warning);
 
 		// create a facts file with a serialNumber that will clobber the true system facts
-		Map<String,String> facts = new HashMap<String,String>();
-		facts.put("dmi.system.manufacturer", "Dell Inc.");
-		facts.put("dmi.system.serial_number", "0000000");
-		clienttasks.createFactsFileWithOverridingValues(facts);
+		//Map<String,String> facts = new HashMap<String,String>();
+		//facts.put("dmi.system.manufacturer", "Dell Inc.");
+		//facts.put("dmi.system.serial_number", "0000000");
+		Map<String,String> facts = new HashMap<String,String>() {{
+			put("dmi.system.manufacturer", "Dell Inc.");
+			put("dmi.system.serial_number", "0000000");
+		}};
+
 		
 		// register and attempt to update the consumer by forcing its canActivate attribute to true
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
@@ -172,8 +207,11 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		//log.warning(warning);
 
 		// create a facts file with a serialNumber that could not possible match a hocked regtoken on hosted
-		Map<String,String> facts = new HashMap<String,String>();
-		facts.put("dmi.system.serial_number", "0000000");
+		//Map<String,String> facts = new HashMap<String,String>();
+		//facts.put("dmi.system.serial_number", "0000000");
+		Map<String,String> facts = new HashMap<String,String>() {{
+			put("dmi.system.serial_number", "0000000");
+		}};
 		clienttasks.createFactsFileWithOverridingValues(facts);
 		
 		// register and attempt redeem

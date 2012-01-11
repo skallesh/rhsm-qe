@@ -642,13 +642,9 @@ Expected Results:
 			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
 			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
 			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-// TODO UNCOMMENT IF bug 755130 IS DENIED
-//		interoperabilityWarningMessage = 
-//			"WARNING" +"\n"+
-//			"This system has already been registered with RHN using RHN Classic technology." +"\n"+
-//			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once." +"\n"+
-//			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-
+		// during RHEL58, DEV trimmed whitespace from strings...
+		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
+		
 		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
 		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011
 		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
@@ -993,7 +989,34 @@ Expected Results:
 	    pofile.save(path)
 	    */
 
+		/* TODO Here is a script from alikins that will report untranslated strings
+		#!/usr/bin/python
 		
+		# NEEDS polib from http://pypi.python.org/pypi/polib
+		# or easy_install polib
+		 
+		import glob
+		import polib
+		 
+		#FIXME
+		PO_PATH = "po/"
+		 
+		po_files = glob.glob("%s/*.po" % PO_PATH)
+		 
+		for po_file in po_files:
+		  print
+		  print po_file
+		  p = polib.pofile(po_file)
+		  for entry in p.untranslated_entries():
+		    for line in entry.occurrences:
+		      print "%s:%s" % (line[0], line[1])
+		    print "\t%s" % entry.msgid
+		 
+		  for entry in p.fuzzy_entries():
+		    for line in entry.occurrences:
+		      print "%s:%s" % (line[0], line[1])
+		    print "\t%s" % entry.msgid
+		 */
 		return ll;
 	}
 	

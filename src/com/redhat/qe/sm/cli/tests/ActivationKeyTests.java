@@ -171,6 +171,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-4")) throw new SkipException("debugTesting...");
+//if (jsonPool.getInt("quantity")!=-1) throw new SkipException("debugTesting...");
+//if (!jsonPool.getString("productId").equals("awesomeos-virt-unlimited")) throw new SkipException("debugTesting...");
 		String poolId = jsonPool.getString("id");
 				
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=728721 - jsefler 8/6/2011
@@ -231,7 +233,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// handle the case when the quantity is excessive
-		if (addQuantity > jsonPool.getInt("quantity")) {
+		if (addQuantity > jsonPool.getInt("quantity") && addQuantity>1) {
 
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
 			if (jsonAddedPool.has("displayMessage")) {
@@ -312,8 +314,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
-		// handle the case when our quantity request exceeds the quantityAvail and there are no Entitlement Certs avail
-		if (addQuantity > quantityAvail) {
+		// handle the case when our quantity request exceeds the quantityAvail (when pool quantity is NOT unlimited)
+		if (addQuantity > quantityAvail && (jsonPool.getInt("quantity")!=-1/*exclude unlimited pools*/)) {
 			Assert.assertEquals(registerResult.getStderr().trim(), "No free entitlements are available for the pool with id '"+poolId+"'.", "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			return;
@@ -696,7 +698,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	
+	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false)
+	// TODO Bug 749636 - subscription-manager register fails with consumerid and activationkey specified 
 	
 	// Protected Class Variables ***********************************************************************
 	
@@ -858,8 +861,8 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// choose a random valid pool quantity (1<=quantity<=totalPoolQuantity)
 			int quantityAvail = quantity-jsonPool.getInt("consumed");
 			int addQuantity = Math.max(1,randomGenerator.nextInt(quantityAvail+1));	// avoid a addQuantity < 1 see https://bugzilla.redhat.com/show_bug.cgi?id=729125
-
-			// is this pool known to be blocked by any actication key bugs?
+			
+			// is this pool known to be blocked by any activation key bugs?
 			BlockedByBzBug blockedByBugs = null;
 			List<String> bugids = new ArrayList<String>();
 			if (ConsumerType.person.toString().equals(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type")))

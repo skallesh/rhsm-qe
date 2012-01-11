@@ -44,7 +44,7 @@ public class YumRepo extends AbstractCommandLineData {
 	 * @return
 	 */
 	static public List<YumRepo> parse(String stdoutCatOfRedhatRepoFile) {
-		/* # cat /etc/yum.repos.d/redhat.repo
+		/* [root@jsefler-onprem-5server ~]# cat /etc/yum.repos.d/redhat.repo
 		#
 		# Red Hat Repositories
 		# Managed by (rhsm) subscription-manager
@@ -119,6 +119,24 @@ public class YumRepo extends AbstractCommandLineData {
 		sslcacert = /etc/rhsm/ca/redhat-uep.pem
 		sslclientkey = /etc/pki/entitlement/key.pem
 		sslclientcert = /etc/pki/entitlement/7590966368525320704.pem
+		
+		*/
+		
+		/* [root@jsefler-onprem-5server ~]# grep rhel-5-server-rpms /etc/yum.repos.d/redhat.repo -A14
+		[rhel-5-server-rpms]
+		name = Red Hat Enterprise Linux 5 Server (RPMs)
+		baseurl = https://cdn.redhat.com/content/dist/rhel/server/5/$releasever/$basearch/os
+		enabled = 1
+		gpgcheck = 1
+		gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		sslverify = 1
+		sslcacert = /etc/rhsm/ca/redhat-uep.pem
+		sslclientkey = /etc/pki/entitlement/2882285410158247626-key.pem
+		sslclientcert = /etc/pki/entitlement/2882285410158247626.pem
+		metadata_expire = 86400
+		proxy = https://auto-services.usersys.redhat.com:3128
+		proxy_username = redhat
+		proxy_password = redhat
 		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();

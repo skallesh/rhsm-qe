@@ -698,7 +698,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-722975"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithQuantityToMultiplePools_Test() throws NumberFormatException, JSONException, Exception {
+	public void SubscribeWithQuantityToMultiplePools_Test() throws JSONException, Exception {
 		
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
@@ -711,6 +711,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<Integer> quantities = new ArrayList<Integer>();
 		for (SubscriptionPool pool : pools) {
 			poolIds.add(pool.poolId);
+			try {Integer.valueOf(pool.quantity);} catch (NumberFormatException e) {continue;}	// ignore  "unlimited" pools
 			quantities.add(Integer.valueOf(pool.quantity));
 		}
 		Collections.sort(quantities);
@@ -735,7 +736,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (SubscriptionPool pool : pools) {
 			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				Assert.assertTrue(subscribeResult.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
-			} else if (quantity <= Integer.valueOf(pool.quantity)) {
+			} else if (pool.quantity.equalsIgnoreCase("unlimited") || quantity <= Integer.valueOf(pool.quantity)) {
 				//Assert.assertContainsMatch(result.getStdout(), "^Successfully subscribed the system to Pool "+pool.poolId+"$","Subscribe should be successful when subscribing with --quantity less than or equal to the pool's availability.");
 				Assert.assertTrue(subscribeResult.getStdout().contains(clienttasks.msg_SuccessfulSubscribe+pool.poolId),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
@@ -779,7 +780,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
 	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
-	
+	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
+	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
+	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions
 	
 	// Configuration Methods ***********************************************************************
 	
