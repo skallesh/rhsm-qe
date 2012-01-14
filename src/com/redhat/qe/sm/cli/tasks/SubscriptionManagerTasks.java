@@ -202,7 +202,7 @@ public class SubscriptionManagerTasks {
 		// only uninstall rpms when there are new rpms to install
 		if (rpmUrls.size() > 0) {
 			log.info("Uninstalling existing subscription-manager RPMs...");
-			for (String pkg : new String[]{"subscription-manager-firstboot","subscription-manager-gnome","subscription-manager","python-rhsm"}) {
+			for (String pkg : new String[]{"subscription-manager-migration-data","subscription-manager-migration","subscription-manager-firstboot","subscription-manager-gnome","subscription-manager","python-rhsm"}) {
 				//sshCommandRunner.runCommandAndWait("rpm -e "+pkg);
 				sshCommandRunner.runCommandAndWait("yum remove -y "+pkg);
 				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
@@ -226,6 +226,11 @@ public class SubscriptionManagerTasks {
 
 	}
 	
+	public void removeAllFacts() {
+		log.info("Cleaning out facts from consumerCertDir: "+this.factsDir);
+		if (!this.factsDir.startsWith("/etc/rhsm/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING FACTS FROM: "+this.factsDir);
+		else sshCommandRunner.runCommandAndWait("rm -rf "+this.factsDir+"/*.facts");
+	}
 	
 	public void removeAllCerts(boolean consumers, boolean entitlements/*, boolean products*/) {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
