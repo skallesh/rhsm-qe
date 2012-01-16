@@ -134,6 +134,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 749948 - [Release Notes and Deployment Guide] Migration tooling from RHN Classic to Cert-based RHN for RHEL 5 (edit)
 	// TODO Bug 769856 - confusing output from rhn-migrate-to-rhsm when autosubscribe fails
 	// TODO Bug 771615 - Got Traceback with –force migration
+	// TODO Bug 782208 - product certs in subscription-manager-migration-data are all at version 5.7 (should be 5.8)
 	
 	
 	// Configuration methods ***********************************************************************
