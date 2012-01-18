@@ -468,6 +468,9 @@ Fixed.  Thanks for catching that.
 
 
 	 */
+	// TODO dgregor Notes TO FIX TESTS...
+	//<dgregor> java.lang.AssertionError: After installing package 'omping-debuginfo.x86_64' from repo 'rhel-ha-for-rhel-6-server-htb-debug-rpms', there was no product cert installed.  Expected one of the following product certs to get installed via the yum product-id plugin: [id='83' name='Red Hat Enterprise Linux High Availability (for RHEL Server)' version='' arch='x86,x86_64']
+	//<dgregor> jsefler, I think we should update the tests to not check for product certificate with debuginfo repos
 	
 	
 	
