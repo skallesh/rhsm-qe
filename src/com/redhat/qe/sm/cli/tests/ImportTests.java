@@ -106,7 +106,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
 			
 			// make sure the expected entitlement files do not exist before our test and that no subscriptions are consumed
-			clienttasks.removeAllCerts(false, true);
+			clienttasks.removeAllCerts(false, true, false);
 			Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement cert file does NOT yet exist ("+expectedEntitlementCertFile+").");
 			Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement key file does NOT yet exist ("+expectedEntitlementKeyFile+").");
 			Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "Should not be consuming any subscriptions before the import.");
@@ -572,7 +572,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
 		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", importEntitlementsDir);
-		clienttasks.removeAllCerts(false, true);
+		clienttasks.removeAllCerts(false, true, false);
 		
 		// create a directory where we can create bundled entitlement/key certificates for import
 		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+importCertificatesDir,Integer.valueOf(0));

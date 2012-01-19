@@ -44,8 +44,27 @@ public class ProductNamespace extends AbstractCommandLineData {
 	@Override
 	public boolean equals(Object obj){
 
-		return	((ProductNamespace)obj).id.equals(this.id) &&
-				((ProductNamespace)obj).name.equals(this.name);
+//		return	((ProductNamespace)obj).id.equals(this.id) &&
+//				((ProductNamespace)obj).name.equals(this.name);
+		
+		ProductNamespace that = (ProductNamespace) obj;
+		
+		if (that.id!=null && !that.id.equals(this.id)) return false;
+		if (this.id!=null && !this.id.equals(that.id)) return false;
+		
+		if (that.name!=null && !that.name.equals(this.name)) return false;
+		if (this.name!=null && !this.name.equals(that.name)) return false;
+		
+		if (that.version!=null && !that.version.equals(this.version)) return false;
+		if (this.version!=null && !this.version.equals(that.version)) return false;
+		
+		if (that.arch!=null && !that.arch.equals(this.arch)) return false;
+		if (this.arch!=null && !this.arch.equals(that.arch)) return false;
+		
+		if (that.providedTags!=null && !that.providedTags.equals(this.providedTags)) return false;
+		if (this.providedTags!=null && !this.providedTags.equals(that.providedTags)) return false;
+		
+		return true;
 	}
 	
 	/**
