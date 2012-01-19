@@ -8,20 +8,28 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ProductCert;
@@ -36,8 +44,9 @@ import com.redhat.qe.tools.SSHCommandResult;
  *		http://documentation-stage.bne.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Deployment_Guide/rhn-migration.html
  *		https://engineering.redhat.com/trac/PBUPM/browser/trunk/documents/Releases/RHEL6/Variants/RHEL6-Variants.rst
  *		http://linuxczar.net/articles/rhel-installation-numbers
+ *		https://docspace.corp.redhat.com/docs/DOC-71135 (PRODUCT CERTS)
  */
-@Test(groups={"MigrationTests"})
+@Test(groups={"MigrationTests","AcceptanceTests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -59,10 +68,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		p.load(new ByteArrayInputStream(result.getStdout().getBytes("UTF-8")));
 		for (Object key: p.keySet()){
 			// load the channelsToProductCertFilesMap
-			channelsToProductCertFilesMap.put((String)key, p.getProperty((String)(key)));
+			channelsToProductCertFilenamesMap.put((String)key, p.getProperty((String)(key)));
 			// load the mappedProductCertFiles
-			if (!channelsToProductCertFilesMap.get(key).equalsIgnoreCase("none"))
-				mappedProductCertFiles.add(channelsToProductCertFilesMap.get(key));
+			if (!channelsToProductCertFilenamesMap.get(key).equalsIgnoreCase("none"))
+				mappedProductCertFilenames.add(channelsToProductCertFilenamesMap.get(key));
 		}
 	}
 	
@@ -74,8 +83,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAllMappedProductCertFilesExists_Test() {
 
 		boolean allMappedProductCertFilesExist = true;
-		for (String mappedProductCertFile : mappedProductCertFiles) {
-			mappedProductCertFile = baseProductsDir+"/"+mappedProductCertFile;
+		for (String mappedProductCertFilename : mappedProductCertFilenames) {
+			String mappedProductCertFile = baseProductsDir+"/"+mappedProductCertFilename;
 			if (RemoteFileTasks.testFileExists(client, mappedProductCertFile)==1) {
 				log.info("Mapped productCert file '"+mappedProductCertFile+"' exists.");		
 			} else {
@@ -99,7 +108,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<String> existingProductCertFiles = Arrays.asList(result.getStdout().split("\\n"));
 		boolean allExitingProductCertFilesAreMapped = true;
 		for (String existingProductCertFile : existingProductCertFiles) {
-			if (mappedProductCertFiles.contains(new File(existingProductCertFile).getName())) {
+			if (mappedProductCertFilenames.contains(new File(existingProductCertFile).getName())) {
 				log.info("Existing productCert file '"+existingProductCertFile+"' is mapped in '"+channelCertMappingFile+"'.");
 
 			} else {
@@ -111,30 +120,111 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
-	@Test(	description="execute the install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
-			groups={},
+	@Test(	description="Verify that the migration product certs support this system's rhel release version",
+			groups={"blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
-			dataProvider="InstallNumMigrateToRhsmData")
-	public void InstallNumMigrateToRhsm_Test(Object bugzilla, String instnumber, String[] expectedProductCertPems) {
-		String command;
-		SSHCommandResult result;
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test() {
 		
-		// deleting the currently installed product certs
-		//client.runCommandAndWait("rm -f "+clienttasks.productCertDir+"/*.pem");
-		
-		// test dryrun instnumber
-		command = "install-num-migrate-to-rhsm --dryrun --instnumber="+instnumber;
-		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
+		// process all the migration product cert files into ProductCerts and assert their version
+		boolean verifiedVersionOfAllMigrationProductCertFiles = true;
+		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
+			if (!productCert.productNamespace.providedTags.toLowerCase().contains("rhel")) {
+				log.warning("Migration productCert '"+productCert+"' does not provide rhel tags.  Skipping assertion that its version matches this system's rhel version.");
+				continue;
+			}
+			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseVersion)) {
+				log.info("Migration productCert '"+productCert+"' supports this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
+
+			} else {
+				log.warning("Migration productCert '"+productCert+"' does NOT support this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
+				verifiedVersionOfAllMigrationProductCertFiles = false;
+			}
+		}
+		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
 	}
 	
+	
+	// install-num-migrate-to-rhsm Test methods ***********************************************************************
+	
+	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
+			groups={"InstallNumMigrateToRhsm_Test"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dataProvider="InstallNumMigrateToRhsmData")
+	public void InstallNumMigrateToRhsm_Test(Object bugzilla, String instnumber) throws JSONException {
+		String command;
+		SSHCommandResult result;
+		String migrationFact = "migration.migrated_from";
+		
+		// deleting the currently installed product certs
+		clienttasks.removeAllCerts(false, false, true);
+		clienttasks.removeAllFacts();
+		
+		// get the product cert filenames that we should expect install-num-migrate-to-rhsm to copy
+		List<String> expectedMigrationProductCertFilenames = callInstumToGetExpectedMappedProductCertFilenamesCorrespondingToInstnumber(instnumber);
+
+		// test --dryrun --instnumber ................................................
+		command = "install-num-migrate-to-rhsm --dryrun --instnumber="+instnumber;
+		log.info("Testing "+command+" ...");
+		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
+		//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --dryrun --instnumber 0000000e0017fc01
+		//Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-f812997e0eda-71.pem to /etc/pki/product/71.pem
+		//Copying /usr/share/rhsm/product/RHEL-5/Client-Client-x86_64-6587edcf1c03-68.pem to /etc/pki/product/68.pem
+
+		// assert the dryrun
+		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
+			String pemFilename = getPemFileNameFromProductCertFilename(expectedMigrationProductCertFilename);
+			String expectedStdoutString = "Copying "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;
+			Assert.assertTrue(result.getStdout().contains(expectedStdoutString),"The dryrun output from install-num-migrate-to-rhsm contains the expected message: "+expectedStdoutString);
+		}
+		int numProductCertFilenamesToBeCopied=0;
+		for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
+		Assert.assertEquals(numProductCertFilenamesToBeCopied, expectedMigrationProductCertFilenames.size(),"The number of product certs to be copied.");
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "A dryrun should NOT install any product certs.");
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=783278 - jsefler 1/19/2012
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="783278"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping the assertion of the fact '"+migrationFact+"' fact.");
+		} else
+		// END OF WORKAROUND
+		Assert.assertNull(clienttasks.getFactValue(migrationFact), "The migration fact '"+migrationFact+"' should NOT be set after running command: "+command);
+		
+		
+		// test --instnumber ................................................
+		command = "install-num-migrate-to-rhsm --instnumber="+instnumber;
+		log.info("Testing "+command+" ...");
+		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
+		//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --instnumber 0000000e0017fc01
+		//Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-f812997e0eda-71.pem to /etc/pki/product/71.pem
+		//Copying /usr/share/rhsm/product/RHEL-5/Client-Client-x86_64-6587edcf1c03-68.pem to /etc/pki/product/68.pem
+		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running migration command: "+command);
+		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
+			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
+			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
+		}
+		Assert.assertEquals(clienttasks.getFactValue(migrationFact), "install_number", "The migration fact '"+migrationFact+"' should be set after running command: "+command);
+		
+	}
+	
+	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a non-default rhsm.productcertdir configured",
+			groups={"blockedByBug-773707","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dataProvider="InstallNumMigrateToRhsmData")
+	public void InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String instnumber) throws JSONException {
+		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
+		InstallNumMigrateToRhsm_Test(bugzilla,instnumber);
+	}
+
 	// Candidates for an automated Test:
 	// TODO tool that explains/gives valid inst numbers   http://linuxczar.net/articles/rhel-installation-numbers
 	// TODO Bug 749948 - [Release Notes and Deployment Guide] Migration tooling from RHN Classic to Cert-based RHN for RHEL 5 (edit)
 	// TODO Bug 769856 - confusing output from rhn-migrate-to-rhsm when autosubscribe fails
 	// TODO Bug 771615 - Got Traceback with –force migration
-	// TODO Bug 782208 - product certs in subscription-manager-migration-data are all at version 5.7 (should be 5.8)
 	
 	
 	// Configuration methods ***********************************************************************
@@ -168,11 +258,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// determine the original productCertDir value
 		//productCertDirRestore = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
-		productCertDirOriginal = clienttasks.productCertDir;
+		originalProductCertDir = clienttasks.productCertDir;
 		
 		log.info("Backing up all the currently installed product certs...");
-		client.runCommandAndWait("mkdir -p "+productCertDirBackup+"; rm -f "+productCertDirBackup+"/*.pem");
-		client.runCommandAndWait("cp "+productCertDirOriginal+"/*.pem "+productCertDirBackup);
+		client.runCommandAndWait("mkdir -p "+backupProductCertDir+"; rm -f "+backupProductCertDir+"/*.pem");
+		client.runCommandAndWait("cp "+originalProductCertDir+"/*.pem "+backupProductCertDir);
 	}
 	
 	@AfterClass(groups="setup")
@@ -180,23 +270,84 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		
 		log.info("Restoring the originally installed product certs...");
-		client.runCommandAndWait("rm -f "+productCertDirOriginal+"/*.pem");
-		client.runCommandAndWait("cp "+productCertDirBackup+"/*.pem "+productCertDirOriginal);
-		//clienttasks.config(false, false, true, new String[]{"rhsm","productcertdir",productCertDirOriginal});
-		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", productCertDirOriginal);
+		client.runCommandAndWait("rm -f "+originalProductCertDir+"/*.pem");
+		client.runCommandAndWait("cp "+backupProductCertDir+"/*.pem "+originalProductCertDir);
+		configOriginalRhsmProductCertDir();
 	}
 	
+	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsm_Test"})
+	public void configOriginalRhsmProductCertDir() {
+		if (clienttasks==null) return;
+		
+		//clienttasks.config(false, false, true, new String[]{"rhsm","productcertdir",productCertDirOriginal});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", originalProductCertDir);
+	}
+	
+	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"})
+	public void configNonDefaultRhsmProductCertDir() {
+		if (clienttasks==null) return;
+		
+		//clienttasks.config(false, false, true, new String[]{"rhsm","productcertdir",productCertDirNonDefault});
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", nonDefaultProductCertDir);
+	}
+
 	
 	// Protected methods ***********************************************************************
 	protected String baseProductsDir = "/usr/share/rhsm/product/RHEL";
 	protected String channelCertMappingFile = "channel-cert-mapping.txt";
-	List<String> mappedProductCertFiles = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
-	Map<String,String> channelsToProductCertFilesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
-	protected String productCertDirOriginal = null;
-	protected String productCertDirBackup = "/tmp/productCertDirMigrationTestsBackup";
+	List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
+	Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
+	protected String originalProductCertDir		= null;
+	protected String backupProductCertDir		= "/tmp/backupOfProductCertDir";
+	protected String nonDefaultProductCertDir	= "/tmp/migratedProductCertDir";
 
+	protected List<String> callInstumToGetExpectedMappedProductCertFilenamesCorrespondingToInstnumber(String instnumber) throws JSONException {
+		List<String> mappedProductCertFilenamesCorrespondingToInstnumber = new ArrayList<String>();
+
+		String command = "python /usr/lib/python2.4/site-packages/instnum.py "+instnumber;
+		//SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command,0);
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command+" | egrep \"^{.*}$\"", 0);
+		// [root@jsefler-onprem-5server ~]# python /usr/lib/python2.4/site-packages/instnum.py 0000000e0017fc01 | egrep "^{.*}$"
+		// {'Virt': 'VT', 'Workstation': 'Workstation', 'Base': 'Client'}
+		
+		// process result as a json object
+		JSONObject jsonResult = new JSONObject(result.getStdout());
+		String base = jsonResult.getString("Base");
+		for (String mappedProductCertFilename : mappedProductCertFilenames) {
+			// example mappedProductCertFilenames:
+			// Server-Server-s390x-340665cdadee-72.pem  
+			// Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
+			// base-sub-arch-hash-id.pem
+			Iterator keys = jsonResult.keys();
+			while (keys.hasNext()) {
+				String key = (String)keys.next();
+				String sub = jsonResult.getString(key);
+				
+				if (mappedProductCertFilename.startsWith(base+"-"+sub+"-"+clienttasks.arch+"-")) {
+					if (!mappedProductCertFilenamesCorrespondingToInstnumber.contains(mappedProductCertFilename)) {
+						mappedProductCertFilenamesCorrespondingToInstnumber.add(mappedProductCertFilename);
+					}
+				}
+			}
+		}
+		
+		return mappedProductCertFilenamesCorrespondingToInstnumber;
+	}
 	
+//	protected List<ProductCert> getProductCertFilenamesCorrespondingToInstnumber(String instnumber) throws JSONException {
+//	}
+		
+	
+	/**
+	 * Extract the suffix pem filename from the long mapped filename.
+	 * @param productCertFilename example: Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
+	 * @return example: 90.pem
+	 */
+	protected String getPemFileNameFromProductCertFilename(String productCertFilename) {
+		// Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
+		return productCertFilename.split("-")[productCertFilename.split("-").length-1];
+	}
 	
 	// Data Providers ***********************************************************************
 
@@ -209,14 +360,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		// REFRENCE DATA FROM: http://linuxczar.net/articles/rhel-installation-numbers
-		ll.add(Arrays.asList(new Object[]{null,	"0000000e0017fc01", new String[]{"68.pem","71.pem"}}));	// Client
-		ll.add(Arrays.asList(new Object[]{null,	"000000990007fc02", new String[]{}}));					// Red Hat Global Desktop
-		ll.add(Arrays.asList(new Object[]{null,	"000000e90007fc00", new String[]{"69.pem"}}));			// Server
-		ll.add(Arrays.asList(new Object[]{null,	"00000065000bfc00", new String[]{"69.pem","83.pem"}}));	// Server with Cluster
-		ll.add(Arrays.asList(new Object[]{null,	"000000ab000ffc00", new String[]{"69.pem","90.pem","83.pem"}}));	// Server with ClusterStorage
-		ll.add(Arrays.asList(new Object[]{null,	"000000e30013fc00", new String[]{"69.pem"}}));	// Server with HPC
-		ll.add(Arrays.asList(new Object[]{null,	"000000890017fc00", new String[]{"69.pem"}}));	// Server with Directory
-		ll.add(Arrays.asList(new Object[]{null,	"00000052001bfc00", new String[]{"69.pem"}}));	// Server with SMB
+		ll.add(Arrays.asList(new Object[]{null,	"0000000e0017fc01"}));	// Client
+		ll.add(Arrays.asList(new Object[]{null,	"000000990007fc02"}));	// Red Hat Global Desktop
+		ll.add(Arrays.asList(new Object[]{null,	"000000e90007fc00"}));	// Server
+		ll.add(Arrays.asList(new Object[]{null,	"00000065000bfc00"}));	// Server with Cluster
+		ll.add(Arrays.asList(new Object[]{null,	"000000ab000ffc00"}));	// Server with ClusterStorage
+		ll.add(Arrays.asList(new Object[]{null,	"000000e30013fc00"}));	// Server with HPC
+		ll.add(Arrays.asList(new Object[]{null,	"000000890017fc00"}));	// Server with Directory
+		ll.add(Arrays.asList(new Object[]{null,	"00000052001bfc00"}));	// Server with SMB
 		//new BlockedByBzBug("773707")
 
 		return ll;

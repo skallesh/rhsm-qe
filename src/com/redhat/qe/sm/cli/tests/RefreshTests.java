@@ -53,7 +53,7 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 
 		// remove your entitlements
 		log.info("Removing the entitlement certs...");
-		clienttasks.removeAllCerts(false,true);
+		clienttasks.removeAllCerts(false,true, false);
 		Assert.assertEquals(clienttasks.getCurrentEntitlementCerts().size(),0,"Entitlements have been removed.");
 		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0,"Consumed subscription pools do NOT exist after entitlements have been removed.");
 
