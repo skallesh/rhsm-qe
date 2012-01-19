@@ -110,7 +110,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String existingProductCertFile : existingProductCertFiles) {
 			if (mappedProductCertFilenames.contains(new File(existingProductCertFile).getName())) {
 				log.info("Existing productCert file '"+existingProductCertFile+"' is mapped in '"+channelCertMappingFilename+"'.");
-
 			} else {
 				log.warning("Existing productCert file '"+existingProductCertFile+"' is NOT mapped in '"+channelCertMappingFilename+"'.");
 				allExitingProductCertFilesAreMapped = false;
@@ -246,6 +245,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
+
 	// Candidates for an automated Test:
 	// TODO tool that explains/gives valid inst numbers   http://linuxczar.net/articles/rhel-installation-numbers
 	// TODO Bug 749948 - [Release Notes and Deployment Guide] Migration tooling from RHN Classic to Cert-based RHN for RHEL 5 (edit)
@@ -365,9 +365,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		return mappedProductCertFilenamesCorrespondingToInstnumber;
 	}
 	
-//	protected List<ProductCert> getProductCertFilenamesCorrespondingToInstnumber(String instnumber) throws JSONException {
-//	}
-		
+	
 	
 	/**
 	 * Extract the suffix pem filename from the long mapped filename.
