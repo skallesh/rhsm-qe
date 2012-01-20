@@ -231,7 +231,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		if (!sm_rhsmcertdCertFrequency.equals(""))		smt.updateConfFileParameter(smt.rhsmConfFile, "certFrequency", sm_rhsmcertdCertFrequency);				else sm_rhsmcertdCertFrequency = smt.getConfFileParameter(smt.rhsmConfFile, "certFrequency");
 	
 		smt.initializeFieldsFromConfigFile();
-		smt.removeAllCerts(true,true);
+		smt.removeAllCerts(true,true, false);
 		smt.removeAllFacts();
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
 		

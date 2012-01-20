@@ -170,7 +170,9 @@ public class CandlepinTasks {
 		// Stdout: patching file src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 		// Stdout: patching file src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; patch -p2 < "+candlepinRedeemTestsPatchFile.getName(), Integer.valueOf(0), "patching file .*/DefaultSubscriptionServiceAdapter.java", null);
-
+		
+		// modify the gen-certs file so the candlepin cert is valid for more than one year (make it 10 years)
+		RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 3650 ");
 		
 		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS	
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
@@ -459,7 +461,7 @@ schema generation failed
 
 //		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
 //		[root@jsefler-onprem-62server tmp]# 
-//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET  --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -mjson.tool |  grep heal
+//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET  --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -m simplejson/tool |  grep heal
 //		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
 //		                                 Dload  Upload   Total   Spent    Left  Speed
 //		100 13921    0 13921    0     0  64077      0 --:--:-- --:--:-- --:--:-- 99435

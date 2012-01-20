@@ -91,7 +91,8 @@ public class SubscriptionManagerTasks {
 	protected String currentlyRegisteredOrg			= null;	// most recent owner used during register
 	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
-	public String redhatRelease	= null;
+	public String redhatRelease			= null;	// Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
+	public String redhatReleaseVersion	= null;	// 5.8
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
@@ -99,9 +100,10 @@ public class SubscriptionManagerTasks {
 		hostname		= sshCommandRunner.runCommandAndWait("hostname").getStdout().trim();
 		ipaddr			= sshCommandRunner.runCommandAndWait("ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | sed s/'  Bcast'//g").getStdout().trim();
 		arch			= sshCommandRunner.runCommandAndWait("uname --machine").getStdout().trim();  // uname -i --hardware-platform :print the hardware platform or "unknown"	// uname -m --machine :print the machine hardware name
-		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
+		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
 		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
+		redhatReleaseVersion = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem
 		if (redhatRelease.contains("Client")) variant = "Client";	//68.pem   (aka Desktop)
 		if (redhatRelease.contains("Workstation")) variant = "Workstation";	//71.pem
@@ -110,6 +112,11 @@ public class SubscriptionManagerTasks {
 		//if (redhatRelease.contains("IBM System z")) variant = "System Z";	//72.pem	Red Hat Enterprise Linux for IBM System z	// TODO
 		if (redhatRelease.contains("release 5")) sockets = sshCommandRunner.runCommandAndWait("for cpu in `ls -1 /sys/devices/system/cpu/ | egrep cpu[[:digit:]]`; do echo \"cpu `cat /sys/devices/system/cpu/$cpu/topology/physical_package_id`\"; done | grep cpu | sort | uniq | wc -l").getStdout().trim();  // Reference: Bug 707292 - cpu socket detection fails on some 5.7 i386 boxes
 		if (redhatRelease.contains("release 6")) sockets = sshCommandRunner.runCommandAndWait("lscpu | grep 'CPU socket'").getStdout().split(":")[1].trim();
+
+		Pattern pattern = Pattern.compile("\\d+\\.\\d+");
+		Matcher matcher = pattern.matcher(redhatRelease);
+		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseVersion '"+matcher.group()+"' from '"+redhatRelease+"'");
+		redhatReleaseVersion = matcher.group();
 	}
 	
 
@@ -232,22 +239,27 @@ public class SubscriptionManagerTasks {
 		else sshCommandRunner.runCommandAndWait("rm -rf "+this.factsDir+"/*.facts");
 	}
 	
-	public void removeAllCerts(boolean consumers, boolean entitlements/*, boolean products*/) {
+	public void removeAllCerts(boolean consumers, boolean entitlements, boolean products) {
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		String certDir;
 		
 		if (consumers) {
-			//certDir = getConfigFileParameter("consumerCertDir");
-			certDir = this.consumerCertDir;
+			certDir = this.consumerCertDir;	// getConfigFileParameter("consumerCertDir");
 			log.info("Cleaning out certs from consumerCertDir: "+certDir);
 			if (!certDir.startsWith("/etc/pki/") && !certDir.startsWith("/tmp/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
 			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
 		}
 		
 		if (entitlements) {
-			//certDir = getConfigFileParameter("entitlementCertDir");
-			certDir = this.entitlementCertDir;
+			certDir = this.entitlementCertDir;	// getConfigFileParameter("entitlementCertDir");
 			log.info("Cleaning out certs from entitlementCertDir: "+certDir);
+			if (!certDir.startsWith("/etc/pki/") && !certDir.startsWith("/tmp/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
+			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
+		}
+		
+		if (products) {
+			certDir = this.productCertDir;	// getConfigFileParameter("productCertDir");
+			log.info("Cleaning out certs from productCertDir: "+certDir);
 			if (!certDir.startsWith("/etc/pki/") && !certDir.startsWith("/tmp/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
 			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
 		}
@@ -553,6 +565,9 @@ public class SubscriptionManagerTasks {
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
+		return getProductCerts(productCertDir);
+	}
+	public List<ProductCert> getProductCerts(String fromProductCertDir) {
 		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE FILE IN THE OBJECT
 		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+productCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
@@ -565,7 +580,7 @@ public class SubscriptionManagerTasks {
 		}
 		return productCerts;
 		*/
-		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+productCertDir+" -name '*.pem' -exec openssl x509 -in '{}' -noout -text \\; -exec echo \"    File: {}\" \\;");
+		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+fromProductCertDir+" -name '*.pem' -exec openssl x509 -in '{}' -noout -text \\; -exec echo \"    File: {}\" \\;");
 		String certificates = sshCommandRunner.getStdout();
 		return ProductCert.parse(certificates);
 		

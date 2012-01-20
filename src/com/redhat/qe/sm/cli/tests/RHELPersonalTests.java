@@ -276,7 +276,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			systemConsumerIds = new ArrayList<String>();
 			for (int systemNum = 1; systemNum <=multipleSystems; systemNum++) {
 				// simulate a clean system
-				client2tasks.removeAllCerts(true,true);
+				client2tasks.removeAllCerts(true,true, false);
 				
 				String consumerId = client2tasks.getCurrentConsumerId(client2tasks.register(username, password, owner, null, ConsumerType.system, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 				systemConsumerIds.add(consumerId);

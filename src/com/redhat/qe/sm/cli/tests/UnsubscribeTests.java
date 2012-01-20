@@ -164,7 +164,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
 		
 		// now remove the consumer cert to simulate an unregister
-		clienttasks.removeAllCerts(true,false);
+		clienttasks.removeAllCerts(true,false, false);
 		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered);
 		
 		// now unsubscribe from the serial number (while not registered)
