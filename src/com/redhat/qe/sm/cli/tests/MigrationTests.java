@@ -46,13 +46,13 @@ import com.redhat.qe.tools.SSHCommandResult;
  *		http://linuxczar.net/articles/rhel-installation-numbers
  *		https://docspace.corp.redhat.com/docs/DOC-71135 (PRODUCT CERTS)
  */
-@Test(groups={"MigrationTests","AcceptanceTests"})
+@Test(groups={"MigrationTests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={},
+			groups={"AcceptanceTests","debugTest"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() throws FileNotFoundException, IOException {
@@ -76,7 +76,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
-			groups={},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -97,7 +97,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -120,7 +120,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the migration product certs support this system's rhel release version",
-			groups={"blockedByBug-782208"},
+			groups={"AcceptanceTests","blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -148,14 +148,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
-			groups={"InstallNumMigrateToRhsmWithInstNumber_Test"},
+			groups={"AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
-	public void InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
+	public SSHCommandResult InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
 		String command;
 		SSHCommandResult result;
-		String migrationFact = "migration.migrated_from";
 		
 		// deleting the currently installed product certs
 		clienttasks.removeAllCerts(false, false, true);
@@ -165,8 +164,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<String> expectedMigrationProductCertFilenames = callInstumToGetExpectedMappedProductCertFilenamesCorrespondingToInstnumber(instNumber);
 
 		// test --dryrun --instnumber ................................................
+		log.info("Testing with the dryrun option...");
 		command = "install-num-migrate-to-rhsm --dryrun --instnumber="+instNumber;
-		log.info("Testing "+command+" ...");
 		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
 		//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --dryrun --instnumber 0000000e0017fc01
 		//Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-f812997e0eda-71.pem to /etc/pki/product/71.pem
@@ -194,8 +193,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// test --instnumber ................................................
+		log.info("Testing without the dryrun option...");
 		command = "install-num-migrate-to-rhsm --instnumber="+instNumber;
-		log.info("Testing "+command+" ...");
 		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
 		//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --instnumber 0000000e0017fc01
 		//Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-f812997e0eda-71.pem to /etc/pki/product/71.pem
@@ -208,7 +207,64 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertEquals(clienttasks.getFactValue(migrationFact), "install_number", "The migration fact '"+migrationFact+"' should be set after running command: "+command);
 		
+		return result;
 	}
+	
+	
+	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
+			groups={"AcceptanceTests"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			enabled=true)
+	public void InstallNumMigrateToRhsm_Test() throws JSONException {
+		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==0 &&
+			RemoteFileTasks.testFileExists(client, backupMachineInstNumberFile)==1	) {
+			log.info("Restoring backup of the rhn install-num file...");
+			client.runCommandAndWait("mv -f "+backupMachineInstNumberFile+" "+machineInstNumberFile);
+		}
+		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==0) throw new SkipException("This system was NOT provisioned with an install number.");
+		
+		// get the install number used to provision this machine
+		SSHCommandResult result = client.runCommandAndWait("cat "+machineInstNumberFile);
+		String installNumber = result.getStdout().trim();
+		
+		// test this install number explicitly (specifying --instnumber option)
+		SSHCommandResult explicitResult = InstallNumMigrateToRhsmWithInstNumber_Test(null,installNumber);
+		
+		// now test this install number implicitly (without specifying any options)
+		clienttasks.removeAllCerts(false, false, true);
+		clienttasks.removeAllFacts();
+		String command = "install-num-migrate-to-rhsm";
+		SSHCommandResult implicitResult = client.runCommandAndWait(command);
+		// compare implicit to explicit results for verification
+		Assert.assertEquals(implicitResult.getStdout().trim(), explicitResult.getStdout().trim(), "Stdout from running :"+command);
+		Assert.assertEquals(implicitResult.getStderr().trim(), explicitResult.getStderr().trim(), "Stderr from running :"+command);
+		Assert.assertEquals(implicitResult.getExitCode(), explicitResult.getExitCode(), "ExitCode from running :"+command);
+		Assert.assertEquals(clienttasks.getFactValue(migrationFact), "install_number", "The migration fact '"+migrationFact+"' should be set after running command: "+command);
+		
+		// assert that the migrated product certs provide (at least) the same product tags as originally installed with the install number
+		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
+		log.info("The following productCerts were originally installed on this machine prior to this migration test:");
+		for (ProductCert originalProductCert : originallyInstalledRedHatProductCerts) log.info(originalProductCert.toString());
+		log.info("The following productCerts were migrated to the product install directory after running the migration test:");
+		for (ProductCert migratedProductCert : migratedProductCerts) log.info(migratedProductCert.toString());
+		log.info("Will now verify that all of the productTags from the originally installed productCerts are found among the providedTags of the migrated productCerts...");
+		for (ProductCert originalProductCert : originallyInstalledRedHatProductCerts) {
+			if (originalProductCert.productNamespace.providedTags==null) continue;
+			List<String> originalProvidedTags = Arrays.asList(originalProductCert.productNamespace.providedTags.trim().split(" *, *"));
+			for (ProductCert migratedProductCert : migratedProductCerts) {
+				List<String> migratedProvidedTags = Arrays.asList(migratedProductCert.productNamespace.providedTags.trim().split(" *, *"));
+				if (migratedProvidedTags.containsAll(originalProvidedTags)) {
+					Assert.assertTrue(true,"This migrated productCert provides all the same tags as one of the originally installed product certs.\nMigrated productCert: "+migratedProductCert);
+					originalProvidedTags = new ArrayList<String>();//originalProvidedTags.clear();
+					break;
+				}
+			}
+			if (!originalProvidedTags.isEmpty()) {
+				Assert.fail("Failed to find the providedTags from this originally installed productCert among the migrated productCerts.\nOriginal productCert: "+originalProductCert);
+			}
+		}
+	}
+	
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a non-default rhsm.productcertdir configured",
 			groups={"blockedByBug-773707","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
@@ -221,34 +277,50 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		InstallNumMigrateToRhsmWithInstNumber_Test(bugzilla,instNumber);
 	}
 	
-	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num found on machine",
-			groups={},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
-			enabled=false)
-	public void InstallNumMigrateToRhsm_Test() throws JSONException {
-
-	}
 	
-	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with invalid install-num",
+	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a bad length install-num (expecting 16 chars long)",
 			groups={},
 			dependsOnMethods={},
-			enabled=false)
-	public void InstallNumMigrateToRhsmWithInvalidInstNumber_Test() throws JSONException {
-		
+			dataProvider="InstallNumMigrateToRhsmWithInvalidInstNumberData",
+			enabled=true)
+	public void InstallNumMigrateToRhsmWithInvalidInstNumber_Test(Object bugzilla, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+		SSHCommandResult result = client.runCommandAndWait(command);
+		if (expectedStdout!=null) Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from running :"+command);
+		if (expectedStderr!=null) Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from running :"+command);
+		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=783542 - jsefler 1/20/2012
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="783542"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping the exitCode assertion from running: "+command);
+		} else
+		// END OF WORKAROUND
+		if (expectedExitCode!=null) Assert.assertEquals(result.getExitCode(), expectedExitCode, "ExitCode from running :"+command);
 	}
+
 
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with no install-num found on machine",
 			groups={},
 			dependsOnMethods={},
-			enabled=false)
-	public void InstallNumMigrateToRhsmWithMissingInstNumber_Test() throws JSONException {
-		
+			enabled=true)
+	public void InstallNumMigrateToRhsmWithMissingInstNumber_Test() {
+		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==1) {
+			log.info("Backing up the rhn install-num file...");
+			client.runCommandAndWait("mv -f "+machineInstNumberFile+" "+backupMachineInstNumberFile);
+		}
+		InstallNumMigrateToRhsmWithInvalidInstNumber_Test(null, "install-num-migrate-to-rhsm",1,"Could not read installation number from "+machineInstNumberFile+".  Aborting.","");
 	}
+	
+	
+	
+	
+	
+	
+	
+	
 	
 
 	// Candidates for an automated Test:
-	// TODO tool that explains/gives valid inst numbers   http://linuxczar.net/articles/rhel-installation-numbers
-	// TODO Bug 749948 - [Release Notes and Deployment Guide] Migration tooling from RHN Classic to Cert-based RHN for RHEL 5 (edit)
 	// TODO Bug 769856 - confusing output from rhn-migrate-to-rhsm when autosubscribe fails
 	// TODO Bug 771615 - Got Traceback with –force migration
 	
@@ -326,11 +398,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
-	protected String originalProductCertDir		= null;
-	protected String backupProductCertDir		= "/tmp/backupOfProductCertDir";
-	protected String nonDefaultProductCertDir	= "/tmp/migratedProductCertDir";
-	protected String machineInstNumberFile		= "/etc/sysconfig/rhn/install-num";
-	protected String backupMachineInstNumberFile	= "/tmp/install-num";
+	protected String migrationFact					= "migration.migrated_from";
+	protected String originalProductCertDir			= null;
+	protected String backupProductCertDir			= "/tmp/backupOfProductCertDir";
+	protected String nonDefaultProductCertDir		= "/tmp/migratedProductCertDir";
+	protected String machineInstNumberFile			= "/etc/sysconfig/rhn/install-num";
+	protected String backupMachineInstNumberFile	= machineInstNumberFile+".bak";
 
 	protected List<String> callInstumToGetExpectedMappedProductCertFilenamesCorrespondingToInstnumber(String instnumber) throws JSONException {
 		List<String> mappedProductCertFilenamesCorrespondingToInstnumber = new ArrayList<String>();
@@ -401,7 +474,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
-	
+	@DataProvider(name="InstallNumMigrateToRhsmWithInvalidInstNumberData")
+	public Object[][] getInstallNumMigrateToRhsmWithInvalidInstNumberDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getInstallNumMigrateToRhsmWithInvalidInstNumberDataAsListOfLists());
+	}
+	protected List<List<Object>> getInstallNumMigrateToRhsmWithInvalidInstNumberDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
+		
+		// due to design changes, this is a decent place to dump old commands that have been removed
+		
+		// String command, int expectedExitCode, String expectedStdout, String expectedStderr
+		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm -d -i 123456789012345",			1,	"Could not parse the installation number: Unsupported string length", ""}));
+		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm -d -i=12345678901234567",			1,	"Could not parse the installation number: Unsupported string length", ""}));
+		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm    --instnum 123456789X123456",	1,	"Could not parse the installation number: Not a valid hex string", ""}));
+		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm    --instnum=1234567890123456",	1,	"Could not parse the installation number: Checksum verification failed", ""}));
+		
+		return ll;
+	}
 	
 	/*
 	 * 
