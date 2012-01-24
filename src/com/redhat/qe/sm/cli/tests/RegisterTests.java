@@ -590,30 +590,42 @@ Expected Results:
 	
 	
 	@Test(	description="register with interactive prompting for credentials",
-			groups={"blockedByBug-678151"},
+			groups={"debugTest"/*,"blockedByBug-678151"*/},
 			dataProvider = "getInteractiveRegistrationData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOrg, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
-		// skip automated interactive password tests on rhel57
-		if (clienttasks.redhatRelease.contains("release 5.7") && promptedPassword!=null) throw new SkipException("Interactive registration with password prompting must be tested manually on RHEL5.7 since python-2.4 is denying password entry from echo piped to stdin.");
-		if (clienttasks.redhatRelease.contains("release 5.8") && promptedPassword!=null) throw new SkipException("Interactive registration with password prompting must be tested manually on RHEL5.8 since python-2.4 is denying password entry from echo piped to stdin.");
-
+		
 		// ensure we are unregistered
 		clienttasks.unregister(null,null,null);
 
 		// call register while providing a valid username at the interactive prompt
-		// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the register command
-		String echoUsername= promptedUsername==null?"":promptedUsername;
-		String echoPassword = promptedPassword==null?"":promptedPassword;
-		String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";
-		String command = String.format("echo -e \"%s\" | %s register %s %s %s",
-				echoUsername+n+echoPassword,
-				clienttasks.command,
-				commandLineUsername==null?"":"--username="+commandLineUsername,
-				commandLinePassword==null?"":"--password="+commandLinePassword,
-				commandLineOrg==null?"":"--org="+commandLineOrg);
-		
+		String command;
+		if (clienttasks.redhatRelease.contains("release 5")) {
+			// assemble an ssh command using expect to simulate an interactively supply of credentials to the register command
+			//String expectUsername = promptedUsername==null?"":"expect \"*Username:\"; send "+promptedUsername+"\n;";
+			//String expectPassword = promptedPassword==null?"":"expect \"*Password:\"; send "+promptedPassword+"\n;";
+			// [root@jsefler-onprem-5server ~]# expect -c "spawn subscription-manager register; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
+			command = String.format("expect -c \"spawn %s register %s %s %s; %s %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"",
+					clienttasks.command,
+					commandLineUsername==null?"":"--username="+commandLineUsername,
+					commandLinePassword==null?"":"--password="+commandLinePassword,
+					commandLineOrg==null?"":"--org="+commandLineOrg,
+					promptedUsername==null?"":"expect \\\"*Username:\\\"; send "+promptedUsername+"\\\r;",
+					promptedPassword==null?"":"expect \\\"*Password:\\\"; send "+promptedPassword+"\\\r;");
+			if (expectedStderrRegex!=null) {expectedStdoutRegex = expectedStderrRegex; expectedStderrRegex = null;}
+		} else {
+			// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the register command
+			String echoUsername= promptedUsername==null?"":promptedUsername;
+			String echoPassword = promptedPassword==null?"":promptedPassword;
+			String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";
+			command = String.format("echo -e \"%s\" | %s register %s %s %s",
+					echoUsername+n+echoPassword,
+					clienttasks.command,
+					commandLineUsername==null?"":"--username="+commandLineUsername,
+					commandLinePassword==null?"":"--password="+commandLinePassword,
+					commandLineOrg==null?"":"--org="+commandLineOrg);
+		}
 		// attempt to register with the interactive credentials
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
 		

@@ -52,7 +52,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests","debugTest"},
+			groups={"AcceptanceTests"/*,"debugTest"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() throws FileNotFoundException, IOException {
@@ -186,11 +186,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String bugId="783278"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla bug "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			log.warning("Skipping the assertion of the fact '"+migrationFact+"' fact.");
+			log.warning("Skipping the assertion of the fact '"+migrationFromFact+"' fact.");
 		} else
 		// END OF WORKAROUND
-		Assert.assertNull(clienttasks.getFactValue(migrationFact), "The migration fact '"+migrationFact+"' should NOT be set after running command: "+command);
-		
+		Assert.assertNull(clienttasks.getFactValue(migrationFromFact), "The migration fact '"+migrationFromFact+"' should NOT be set after running command: "+command);
+		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
+
 		
 		// test --instnumber ................................................
 		log.info("Testing without the dryrun option...");
@@ -205,8 +206,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
 			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
 		}
-		Assert.assertEquals(clienttasks.getFactValue(migrationFact), "install_number", "The migration fact '"+migrationFact+"' should be set after running command: "+command);
-		
+		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "install_number", "The migration fact '"+migrationFromFact+"' should be set after running command: "+command);
+		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
+
 		return result;
 	}
 	
@@ -239,7 +241,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(implicitResult.getStdout().trim(), explicitResult.getStdout().trim(), "Stdout from running :"+command);
 		Assert.assertEquals(implicitResult.getStderr().trim(), explicitResult.getStderr().trim(), "Stderr from running :"+command);
 		Assert.assertEquals(implicitResult.getExitCode(), explicitResult.getExitCode(), "ExitCode from running :"+command);
-		Assert.assertEquals(clienttasks.getFactValue(migrationFact), "install_number", "The migration fact '"+migrationFact+"' should be set after running command: "+command);
+		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "install_number", "The migration fact '"+migrationFromFact+"' should be set after running command: "+command);
+		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
 		
 		// assert that the migrated product certs provide (at least) the same product tags as originally installed with the install number
 		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
@@ -314,8 +317,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
-	
+	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
+
+//	[root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm; expect \"*Username:\"; send qa@redhat.com\n; expect \"*Password:\"; send CHANGE-ME\n; interact;"
+
 	
 	
 	
@@ -398,7 +403,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
-	protected String migrationFact					= "migration.migrated_from";
+	protected String migrationFromFact				= "migration.migrated_from";
+	protected String migrationSystemIdFact			= "migration.classic_system_id";
 	protected String originalProductCertDir			= null;
 	protected String backupProductCertDir			= "/tmp/backupOfProductCertDir";
 	protected String nonDefaultProductCertDir		= "/tmp/migratedProductCertDir";
