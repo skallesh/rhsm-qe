@@ -81,21 +81,35 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void OrgsWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
-		// skip automated interactive password tests on rhel57
-		if (clienttasks.redhatRelease.contains("release 5.7") && promptedPassword!=null) throw new SkipException("Interactive orgs with password prompting must be tested manually on RHEL5.7 since python-2.4 is denying password entry from echo piped to stdin.");
-		if (clienttasks.redhatRelease.contains("release 5.8") && promptedPassword!=null) throw new SkipException("Interactive orgs with password prompting must be tested manually on RHEL5.8 since python-2.4 is denying password entry from echo piped to stdin.");
 
 		// call orgs while providing a valid username at the interactive prompt
-		// assemble an ssh command using echo and pipe to simulate an interactively supply of credentials to the orgs command
-		String echoUsername= promptedUsername==null?"":promptedUsername;
-		String echoPassword = promptedPassword==null?"":promptedPassword;
-		String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";
-		String command = String.format("echo -e \"%s\" | %s orgs %s %s",
-				echoUsername+n+echoPassword,
-				clienttasks.command,
-				commandLineUsername==null?"":"--username="+commandLineUsername,
-				commandLinePassword==null?"":"--password="+commandLinePassword);
-		
+		String command;
+		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
+			// assemble an ssh command using expect to simulate an interactive supply of credentials to the orgs command
+			String promptedUsernames=""; if (promptedUsername!=null) for (String username : promptedUsername.split("\\n")) {
+				promptedUsernames += "expect \\\"*Username:\\\"; send "+username+"\\\r;";
+			}
+			String promptedPasswords=""; if (promptedPassword!=null) for (String password : promptedPassword.split("\\n")) {
+				promptedPasswords += "expect \\\"*Password:\\\"; send "+password+"\\\r;";
+			}
+			// [root@jsefler-onprem-5server ~]# expect -c "spawn subscription-manager environments orgs; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
+			command = String.format("expect -c \"spawn %s orgs %s %s; %s %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"",
+					clienttasks.command,
+					commandLineUsername==null?"":"--username="+commandLineUsername,
+					commandLinePassword==null?"":"--password="+commandLinePassword,
+					promptedUsernames,
+					promptedPasswords);
+		} else {
+			// assemble an ssh command using echo and pipe to simulate an interactive supply of credentials to the orgs command
+			String echoUsername= promptedUsername==null?"":promptedUsername;
+			String echoPassword = promptedPassword==null?"":promptedPassword;
+			String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";
+			command = String.format("echo -e \"%s\" | %s orgs %s %s",
+					echoUsername+n+echoPassword,
+					clienttasks.command,
+					commandLineUsername==null?"":"--username="+commandLineUsername,
+					commandLinePassword==null?"":"--password="+commandLinePassword);
+		}
 		// attempt orgs with the interactive credentials
 		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
 		
@@ -232,15 +246,25 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		String x = String.valueOf(getRandInt());
-		// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		sm_clientUsername+" Organizations",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		sm_clientUsername+" Organizations",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		sm_clientUsername+" Organizations",				null}));
-		ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	null,																		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(Username: ){3}.*\\n.*"+sm_clientUsername+" Organizations",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
-
+		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
+			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		sm_clientUsername+" Organizations",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	uErrMsg,										null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		sm_clientUsername+" Organizations",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	uErrMsg,										null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		sm_clientUsername+" Organizations",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	uErrMsg,										null}));
+			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\\n\\+-+\\+\\n"+" *"+sm_clientUsername+" Organizations",	null}));
+		} else {
+			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	new Integer(0),		sm_clientUsername+" Organizations",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	new Integer(255),	null,																		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				new Integer(0),		sm_clientUsername+" Organizations",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				new Integer(255),	null,																		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				new Integer(0),		sm_clientUsername+" Organizations",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				new Integer(255),	null,																		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				new Integer(0),		"(Username: ){3}.*\\n.*"+sm_clientUsername+" Organizations",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));
+		}
 		return ll;
 	}
 
