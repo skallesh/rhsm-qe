@@ -435,7 +435,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
 	}
 	
-	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
 			groups={},
 			dependsOnMethods={},
@@ -450,6 +449,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to locate SystemId file. Is this system registered?", "The expected stdout result from call to rhn-migrate-classic-to-rhsm without having registered to RHN Classic.");
 	}
 	
+	
+
 	
 	
 //	[root@jsefler-onprem-5server ~]# rhnreg_ks -v --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo 
@@ -779,9 +780,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 
 
-	
-	
-	
+
 	// Data Providers ***********************************************************************
 
 	@DataProvider(name="InstallNumMigrateToRhsmData")
