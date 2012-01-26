@@ -31,6 +31,7 @@ import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -52,7 +53,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"/*,"debugTest"*/},
+			groups={"AcceptanceTests","debugTest"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() throws FileNotFoundException, IOException {
@@ -145,6 +146,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
@@ -161,7 +163,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.removeAllFacts();
 		
 		// get the product cert filenames that we should expect install-num-migrate-to-rhsm to copy
-		List<String> expectedMigrationProductCertFilenames = callInstumToGetExpectedMappedProductCertFilenamesCorrespondingToInstnumber(instNumber);
+		List<String> expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToInstnumberUsingInstnumTool(instNumber);
 
 		// test --dryrun --instnumber ................................................
 		log.info("Testing with the dryrun option...");
@@ -316,15 +318,219 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
+	
+	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm --no-auto",
+			groups={"debugTest","AcceptanceTests","RhnMigrateClassicToRhsm_Test"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dataProvider="RhnMigrateClassicToRhsmData",
+			enabled=true)
+	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options) {
+		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
+		if (sm_rhnServer.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+		if (options.contains("-n")) log.info("Executing rhn-migrate-classic-to-rhsm --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
 
-//	[root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm; expect \"*Username:\"; send qa@redhat.com\n; expect \"*Password:\"; send CHANGE-ME\n; interact;"
+		// make sure we are NOT registered to RHSM
+		clienttasks.unregister(null,null,null);
 
+		// deleting the currently installed product certs
+		clienttasks.removeAllCerts(false, false, true);
+		clienttasks.removeAllFacts();
+		
+		// register to RHN Classic
+		String rhnSystemId = registerToRhnClassic(rhnUsername, rhnPassword, rhnServer);
+		
+		// subscribe to more RHN Classic channels
+		if (rhnChannelsToAdd.size()>0) addRhnClassicChannels(rhnUsername, rhnPassword, rhnChannelsToAdd);
+		
+		// get a list of the consumed RHN Classic channels
+		List<String> rhnChannelsConsumed = getCurrentRhnClassicChannels();
+		if (rhnChannelsToAdd.size()>0) Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
+
+		// get the product cert filenames that we should expect rhn-migrate-classic-to-rhsm to copy
+		List<String> expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
+		
+		// execute rhn-migrate-classic-to-rhsm with options
+		String expectedMsg;
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(rhnUsername,rhnPassword,options);
+		
+		// assert the exit code
+		if (rhnChannelsConsumed.size()!=expectedMigrationProductCertFilenames.size() && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
+			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the rhn-migrate-classic-to-rhsm command should have exited with code 1.");
+			expectedMsg = "Use --force to ignore these channels and continue the migration.";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);	
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to rhn-migrate-classic-to-rhsm with "+options+" when any of the channels are not mapped to a productCert.");
+			Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),1,"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			
+			// assert that no product certs have been copied yet
+			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when rhn-migrate-classic-to-rhsm requires --force to continue.");
+
+			// assert that we are not yet registered to RHSM
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when rhn-migrate-classic-to-rhsm requires --force to continue.");
+
+			return;
+		}
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to rhn-migrate-classic-to-rhsm with "+options+" when all of the channels.");
+		
+		// assert we are no longer registered to RHN Classic
+		expectedMsg = "System successfully unregistered from RHN Classic.";
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"The absence of system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is not registered using RHN Classic.");
+
+		// assert products are copied
+		expectedMsg = "Product Certificates copied successfully to "+clienttasks.productCertDir;
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);
+		
+		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
+		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running rhn-migrate-classic-to-rhsm with "+options+".");
+		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
+			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
+			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
+		}
+		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running rhn-migrate-classic-to-rhsm with "+options+".");
+		Assert.assertEquals(clienttasks.getFactValue(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running rhn-migrate-classic-to-rhsm with "+options+".");
+		
+		// assert final RHSM status....
+		
+		if (options.contains("-n")) { // -n, --no-auto   Don't launch subscription manager at end of process.
+			// assert that we are NOT registered using rhsm
+			clienttasks.identity_(null, null, null, null, null, null, null);
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM after a call to rhn-migrate-classic-to-rhsm with "+options+".");
+	
+			// assert that we are NOT consuming any entitlements
+			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to rhn-migrate-classic-to-rhsm with "+options+".");
+		} else {
+			// assert that we are registered using rhsm
+			clienttasks.identity(null, null, null, null, null, null, null);
+			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
+	
+			// assert that we are consuming some entitlements (for at least the base product cert)
+			Assert.assertFalse(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to rhn-migrate-classic-to-rhsm with "+options+".");
+			
+		}
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a non-default rhsm.productcertdir configured",
+			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dataProvider="RhnMigrateClassicToRhsmData",
+			enabled=true)
+	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options) {
+		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
+		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options);
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid credentials",
+			groups={},
+			dependsOnMethods={},
+			enabled=true)
+	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
+		
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions("foo","bar",null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
+			groups={},
+			dependsOnMethods={},
+			enabled=true)
+	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
+		
+		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"This system is not registered using RHN Classic.");
+		
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm without having registered to RHN Classic.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to locate SystemId file. Is this system registered?", "The expected stdout result from call to rhn-migrate-classic-to-rhsm without having registered to RHN Classic.");
+	}
 	
 	
 	
+//	[root@jsefler-onprem-5server ~]# rhnreg_ks -v --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo 
+//		[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -c
+//		RHN Username: qa@redhat.com
+//		Password: 
+//
+//		Retrieving existing RHN classic subscription information ...
+//		+----------------------------------+
+//		System is currently subscribed to:
+//		+----------------------------------+
+//		rhel-x86_64-server-5
+//
+//		List of channels for which certs are being copied
+//		rhel-x86_64-server-5
+//
+//		Product Certificates copied successfully to /etc/pki/product !!
+//
+//		Preparing to unregister system from RHN classic ...
+//		System successfully unregistered from RHN Classic.
+//
+//		Attempting to register system to Certificate-based RHN ...
+//		The system has been registered with id: 78cb5e26-3a5a-459d-848c-d5b3102a864d 
+//		System 'jsefler-onprem-5server.usersys.redhat.com' successfully registered to Certificate-based RHN.
+//
+//		Attempting to auto-subscribe to appropriate subscriptions ...
+//		Installed Product Current Status:         
+//
+//		ProductName:          	Red Hat Enterprise Linux Server
+//		Status:               	Subscribed             
+//
+//
+//		Please visit https://access.redhat.com/management/consumers/78cb5e26-3a5a-459d-848c-d5b3102a864d to view the details, and to make changes if necessary.
+//		[root@jsefler-onprem-5server ~]# subscription-manager unregister
+//		System has been un-registered.
+//		[root@jsefler-onprem-5server ~]# 
 
+//	<cliff-bbs> jsefler, so yeah - register; then rhn_check;  use - rhn-channel -L to list all available channels, and then -c to subscribe to channels and then -l to list all subscribed :)
+	
+	
+//	[root@jsefler-onprem-5server rhn]# rhnreg_ks  --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
+//		ERROR: refreshing remote package list for System Profile
+//		[root@jsefler-onprem-5server rhn]# rhn-channel --list
+//		rhel-x86_64-server-5
+//		[root@jsefler-onprem-5server rhn]# rhn-channel --user=qa@redhat.com --password=CHANGE-ME --add -c  rhel-x86_64-server-5-debuginfo -c rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5
+//		[root@jsefler-onprem-5server rhn]# rhn-channel --list
+//		rhel-x86_64-server-5
+//		rhel-x86_64-server-5-debuginfo
+//		rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5
+//		[root@jsefler-onprem-5server rhn]# rhn-migrate-classic-to-rhsm --no-auto
+//		RHN Username: qa@redhat.com
+//		Password: 
+//
+//		Retrieving existing RHN classic subscription information ...
+//		+----------------------------------+
+//		System is currently subscribed to:
+//		+----------------------------------+
+//		rhel-x86_64-server-5
+//		rhel-x86_64-server-5-debuginfo
+//		rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5
+//
+//		+--------------------------------------------------+
+//		Below mentioned channels are NOT available on RHSM
+//		+--------------------------------------------------+
+//		rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5
+// ^ THESE CHANNELS ARE IN THE MAP FILE MAPPED TO none
+//
+//		+---------------------------------------------------------------------------------------+ 
+//		Unrecognized channels. Channel to Product Certificate mapping missing for these channels.
+//		+---------------------------------------------------------------------------------------+
+//		rhel-x86_64-server-5-debuginfo
+// ^ THESE CHANNELS ARE NOT IN THE MAP FILE AT ALL
+//
+//		Use --force to ignore these channels and continue the migration.
+//
+//		[root@jsefler-onprem-5server rhn]# echo $?
+//		1
+//		[root@jsefler-onprem-5server rhn]# 
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO Bug 769856 - confusing output from rhn-migrate-to-rhsm when autosubscribe fails
 	// TODO Bug 771615 - Got Traceback with –force migration
@@ -380,7 +586,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		configOriginalRhsmProductCertDir();
 	}
 	
-	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithInstNumber_Test"})
+	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithInstNumber_Test","RhnMigrateClassicToRhsm_Test"})
 	public void configOriginalRhsmProductCertDir() {
 		if (clienttasks==null) return;
 		
@@ -388,7 +594,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", originalProductCertDir);
 	}
 	
-	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"})
+	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test","RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"})
 	public void configNonDefaultRhsmProductCertDir() {
 		if (clienttasks==null) return;
 		
@@ -400,9 +606,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	protected String baseProductsDir = "/usr/share/rhsm/product/RHEL";
 	protected String channelCertMappingFilename = "channel-cert-mapping.txt";
-	List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
-	Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
-	List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
+	protected List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
+	protected Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
+	protected List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
 	protected String migrationFromFact				= "migration.migrated_from";
 	protected String migrationSystemIdFact			= "migration.classic_system_id";
 	protected String originalProductCertDir			= null;
@@ -411,7 +617,31 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String machineInstNumberFile			= "/etc/sysconfig/rhn/install-num";
 	protected String backupMachineInstNumberFile	= machineInstNumberFile+".bak";
 
-	protected List<String> callInstumToGetExpectedMappedProductCertFilenamesCorrespondingToInstnumber(String instnumber) throws JSONException {
+	
+	
+	protected List<String> getExpectedMappedProductCertFilenamesCorrespondingToChannels(List<String> channels) {
+		List<String> mappedProductCertFilenamesCorrespondingToChannels = new ArrayList<String>();
+		for (String channel : channels) {
+			if (channelsToProductCertFilenamesMap.get(channel)==null) {
+				log.warning("RHN Classic channel '"+channel+"' is NOT mapped in the file '"+channelCertMappingFilename+"'.");
+			} else {
+				log.info("The mapped product cert filename for RHN Classic channel '"+channel+"' is: "+channelsToProductCertFilenamesMap.get(channel));
+				if (!channelsToProductCertFilenamesMap.get(channel).equalsIgnoreCase("none")) {
+					mappedProductCertFilenamesCorrespondingToChannels.add(channelsToProductCertFilenamesMap.get(channel));
+				}
+			}
+		}
+		return mappedProductCertFilenamesCorrespondingToChannels;
+	}
+	
+	
+	/**
+	 * Use the python instnum.py program to determine what mapped product cert filenames from the channel-cert-mapping.txt correspond to this instnumber and should therefor be copied.
+	 * @param instnumber
+	 * @return
+	 * @throws JSONException
+	 */
+	protected List<String> getExpectedMappedProductCertFilenamesCorrespondingToInstnumberUsingInstnumTool(String instnumber) throws JSONException {
 		List<String> mappedProductCertFilenamesCorrespondingToInstnumber = new ArrayList<String>();
 
 		String command = "python /usr/lib/python2.4/site-packages/instnum.py "+instnumber;
@@ -455,6 +685,102 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
 		return productCertFilename.split("-")[productCertFilename.split("-").length-1];
 	}
+	
+	/**
+	 * Call rhn-migrate-classic-to-rhsm without asserting results.
+	 * @param username
+	 * @param password
+	 * @param options
+	 * @return
+	 */
+	protected SSHCommandResult executeRhnMigrateClassicToRhsmWithOptions(String username, String password, String options) {
+		// assemble an ssh command using expect to simulate an interactive supply of credentials to the rhn-migrate-classic-to-rhsm command
+		String promptedUsernames=""; if (username!=null) for (String u : username.split("\\n")) {
+			promptedUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";
+		}
+		String promptedPasswords=""; if (password!=null) for (String p : password.split("\\n")) {
+			promptedPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";
+		}
+		if (options==null) options="";
+		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
+		String command = String.format("expect -c \"spawn rhn-migrate-classic-to-rhsm %s; %s %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"", options, promptedUsernames, promptedPasswords);
+		return client.runCommandAndWait(command);
+	}
+	
+	/**
+	 * Call rhnreg_ks and assert the existence of a systemid file afterwards.
+	 * @param username
+	 * @param password
+	 * @param server
+	 * @return the rhn system_id value from the contents of the systemid file
+	 */
+	protected String registerToRhnClassic(String username, String password, String server) {
+		
+		// register to RHN Classic
+		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
+		//	ERROR: refreshing remote package list for System Profile
+		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --force --norhnsd --nohardware --nopackages --novirtinfo", server, username, password);
+		SSHCommandResult result = client.runCommandAndWait(command);
+		
+		// assert result
+		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to register to RHN Classic.");
+		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to register to RHN Classic.");
+		if (!result.getStdout().trim().equals("")) log.warning("Ignoring result: "+result.getStdout().trim()); 		// <- IGNORE ERRORS LIKE THIS: ERROR: refreshing remote package list for System Profile
+		//Assert.assertEquals(result.getStdout(), "","Stdout from attempt to register to RHN Classic.");
+		
+		// assert existance of system id file
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),1,"The existance of system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is registered using RHN Classic.");
+		
+		// get the value of the systemid
+		// [root@jsefler-onprem-5server rhn]# grep ID- /etc/sysconfig/rhn/systemid
+		// <value><string>ID-1021538137</string></value>
+		command = String.format("grep ID- %s", clienttasks.rhnSystemIdFile);
+		return client.runCommandAndWait(command).getStdout().trim().replaceAll("\\<.*?\\>", "").replaceFirst("ID-", "");		// return 1021538137
+	}
+	
+	/**
+	 * Call rhn-channel --list to get the currently consumed RHN channels.
+	 * @return
+	 */
+	protected List<String> getCurrentRhnClassicChannels() {
+		
+		// [root@jsefler-onprem-5server rhn]# rhn-channel --list
+		// rhel-x86_64-server-5
+		// rhel-x86_64-server-supplementary-5
+		// rhel-x86_64-server-supplementary-5-debuginfo
+		String command = String.format("rhn-channel --list");
+		SSHCommandResult result = client.runCommandAndWait(command);
+		
+		// assert result
+		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to list currently consumed RHN Classic channels.");
+		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to list currently consumed RHN Classic channels.");
+		
+		List<String> rhnChannels = new ArrayList<String>();
+		if (!result.getStdout().trim().equals("")) {
+			rhnChannels	= Arrays.asList(result.getStdout().trim().split("\\n"));
+		}
+		return rhnChannels;
+	}
+	
+	/**
+	 * Call rhn-channel --list to get the currently consumed RHN channels.
+	 * @return
+	 */
+	protected void addRhnClassicChannels(String rhnUsername, String rhnPassword, List<String> rhnChannels) {
+		
+		// [root@jsefler-onprem-5server rhn]# rhn-channel --add --user=qa@redhat.com --password=CHANGE-ME -c rhel-x86_64-server-sap-5
+		String rhnChannelsAsOptions=""; for (String rhnChannel : rhnChannels) rhnChannelsAsOptions+=String.format("--channel=%s ",rhnChannel);
+		String command = String.format("rhn-channel --user=%s --password=%s --add %s",rhnUsername,rhnPassword,rhnChannelsAsOptions);
+		SSHCommandResult result = client.runCommandAndWait(command);
+		
+		// assert result
+		Assert.assertEquals(result.getExitCode(), new Integer(0),"Exitcode from attempt to add RHN Classic channel.");
+		Assert.assertEquals(result.getStderr(), "","Stderr from attempt to add RHN Classic channel.");
+	}
+
+
+	
+	
 	
 	// Data Providers ***********************************************************************
 
@@ -606,4 +932,20 @@ Copying /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-
 
 	
 */
+	
+	@DataProvider(name="RhnMigrateClassicToRhsmData")
+	public Object[][] getRhnMigrateClassicToRhsmDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRhnMigrateClassicToRhsmDataAsListOfLists());
+	}
+	public List<List<Object>> getRhnMigrateClassicToRhsmDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
+		
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnServer,	new ArrayList<String>(),	"--no-auto"}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnServer,	new ArrayList<String>(Arrays.asList("rhel-x86_64-server-5-debuginfo","rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5")),	"--no-auto"}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnServer,	new ArrayList<String>(Arrays.asList("rhel-x86_64-server-5-debuginfo","rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5")),	"--no-auto --force"}));
+
+
+		return ll;
+	}
 }
