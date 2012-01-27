@@ -796,115 +796,115 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only --force"}));
 		return ll;
 	}
+}
+
+
+
+
+// Notes ***********************************************************************
+
+// EXAMPLE FOR install-num-migrate-to-rhsm TAKEN FROM THE DEPLOYMENT GUIDE http://documentation-stage.bne.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Deployment_Guide/rhn-install-num.html
+//	[root@jsefler-onprem-5server ~]# python /usr/lib/python2.4/site-packages/instnum.py da3122afdb7edd23
+//	Product: RHEL Client
+//	Type: Installer Only
+//	Options: Eval FullProd Workstation
+//	Allowed CPU Sockets: Unlimited
+//	Allowed Virtual Instances: Unlimited
+//	Package Repositories: Client Workstation
+//
+//	key: 14299426 'da3122'
+//	checksum: 175 'af'
+//	options: 4416 'Eval FullProd Workstation'
+//	socklimit: -1 'Unlimited'
+//	virtlimit: -1 'Unlimited'
+//	type: 2 'Installer Only'
+//	product: 1 'client'
+//
+//	{'Workstation': 'Workstation', 'Base': 'Client'}
+//
+//	da31-22af-db7e-dd23
+//	[root@jsefler-onprem-5server ~]# 
+//
+//	[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm -d -i da3122afdb7edd23
+//	Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-efa6382a-44c4-408b-a142-37ad4be54aa6-71.pem to /etc/pki/product/71.pem
+//	Copying /usr/share/rhsm/product/RHEL-5/Client-Client-x86_64-efe91c1c-78d7-4d19-b2fb-3c88cfc2da35-68.pem to /etc/pki/product/68.pem
+//	[root@jsefler-onprem-5server ~]# 
+//	[root@jsefler-onprem-5server ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Client-Client-x86_64-efe91c1c-78d7-4d19-b2fb-3c88cfc2da35-68.pem | grep -A1 1.3.6.1.4.1.2312.9.1
+//	            1.3.6.1.4.1.2312.9.1.68.1: 
+//	                . Red Hat Enterprise Linux Desktop
+//	            1.3.6.1.4.1.2312.9.1.68.2: 
+//	                ..5.7
+//	            1.3.6.1.4.1.2312.9.1.68.3: 
+//	                ..x86_64
+//	            1.3.6.1.4.1.2312.9.1.68.4: 
+//	                ..rhel-5,rhel-5-client
+//	[root@jsefler-onprem-5server ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-efa6382a-44c4-408b-a142-37ad4be54aa6-71.pem | grep -A1 1.3.6.1.4.1.2312.9.1
+//	            1.3.6.1.4.1.2312.9.1.71.1: 
+//	                .$Red Hat Enterprise Linux Workstation
+//	            1.3.6.1.4.1.2312.9.1.71.2: 
+//	                ..5.7
+//	            1.3.6.1.4.1.2312.9.1.71.3: 
+//	                ..x86_64
+//	            1.3.6.1.4.1.2312.9.1.71.4: 
+//	                .,rhel-5-client-workstation,rhel-5-workstation
+//	[root@jsefler-onprem-5server ~]# 
+	
+	
+// EXAMPLE FOR install-num-migrate-to-rhsm
+//	[root@dell-pe1855-01 ~]# ls /etc/pki/product/
+//	69.pem
+//	[root@dell-pe1855-01 ~]# cat /etc/redhat-release 
+//	Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
+//	[root@dell-pe1855-01 ~]# openssl x509 -text -in /etc/pki/product/69.pem | grep -A1 1.3.6.1.4.1.2312.9.1
+//	            1.3.6.1.4.1.2312.9.1.69.1: 
+//	                ..Red Hat Enterprise Linux Server
+//	            1.3.6.1.4.1.2312.9.1.69.2: 
+//	                ..5.8 Beta
+//	            1.3.6.1.4.1.2312.9.1.69.3: 
+//	                ..x86_64
+//	            1.3.6.1.4.1.2312.9.1.69.4: 
+//	                ..rhel-5,rhel-5-server
+//	
+//	[root@dell-pe1855-01 ~]# cat /etc/sysconfig/rhn/install-num 
+//	49af89414d147589
+//	[root@dell-pe1855-01 ~]# install-num-migrate-to-rhsm -d -i 49af89414d147589
+//	Copying /usr/share/rhsm/product/RHEL-5/Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem to /etc/pki/product/69.pem
+//	Copying /usr/share/rhsm/product/RHEL-5/Server-ClusterStorage-x86_64-66e8d727-f5aa-4e37-a04b-787fbbc3430c-90.pem to /etc/pki/product/90.pem
+//	Copying /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-8611-744ea744bdc0-83.pem to /etc/pki/product/83.pem
+//	[root@dell-pe1855-01 ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem | grep -A1 1.3.6.1.4.1.2312.9.1
+//	            1.3.6.1.4.1.2312.9.1.69.1: 
+//	                ..Red Hat Enterprise Linux Server
+//	            1.3.6.1.4.1.2312.9.1.69.2: 
+//	                ..5.7
+//	            1.3.6.1.4.1.2312.9.1.69.3: 
+//	                ..x86_64
+//	            1.3.6.1.4.1.2312.9.1.69.4: 
+//	                ..rhel-5,rhel-5-server
+//	
+//	[root@dell-pe1855-01 ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Server-ClusterStorage-x86_64-66e8d727-f5aa-4e37-a04b-787fbbc3430c-90.pem | grep -A1 1.3.6.1.4.1.2312.9.1
+//	            1.3.6.1.4.1.2312.9.1.90.1: 
+//	                .<Red Hat Enterprise Linux Resilient Storage (for RHEL Server)
+//	            1.3.6.1.4.1.2312.9.1.90.2: 
+//	                ..5.7
+//	            1.3.6.1.4.1.2312.9.1.90.3: 
+//	                ..x86_64
+//	            1.3.6.1.4.1.2312.9.1.90.4: 
+//	                .2rhel-5-server-clusterstorage,rhel-5-clusterstorage
+//	                
+//	[root@dell-pe1855-01 ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-8611-744ea744bdc0-83.pem | grep -A1 1.3.6.1.4.1.2312.9.1
+//	            1.3.6.1.4.1.2312.9.1.83.1: 
+//	                .<Red Hat Enterprise Linux High Availability (for RHEL Server)
+//	            1.3.6.1.4.1.2312.9.1.83.2: 
+//	                ..5.7
+//	            1.3.6.1.4.1.2312.9.1.83.3: 
+//	                ..x86_64
+//	            1.3.6.1.4.1.2312.9.1.83.4: 
+//	                .$rhel-5-server-cluster,rhel-5-cluster
+
 	
 
 	
-	// EXAMPLE TAKEN FROM THE DEPLOYMENT GUIDE http://documentation-stage.bne.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/Deployment_Guide/rhn-install-num.html
-/*
-	[root@jsefler-onprem-5server ~]# python /usr/lib/python2.4/site-packages/instnum.py da3122afdb7edd23
-	Product: RHEL Client
-	Type: Installer Only
-	Options: Eval FullProd Workstation
-	Allowed CPU Sockets: Unlimited
-	Allowed Virtual Instances: Unlimited
-	Package Repositories: Client Workstation
-
-	key: 14299426 'da3122'
-	checksum: 175 'af'
-	options: 4416 'Eval FullProd Workstation'
-	socklimit: -1 'Unlimited'
-	virtlimit: -1 'Unlimited'
-	type: 2 'Installer Only'
-	product: 1 'client'
-
-	{'Workstation': 'Workstation', 'Base': 'Client'}
-
-	da31-22af-db7e-dd23
-	[root@jsefler-onprem-5server ~]# 
-
-	[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm -d -i da3122afdb7edd23
-	Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-efa6382a-44c4-408b-a142-37ad4be54aa6-71.pem to /etc/pki/product/71.pem
-	Copying /usr/share/rhsm/product/RHEL-5/Client-Client-x86_64-efe91c1c-78d7-4d19-b2fb-3c88cfc2da35-68.pem to /etc/pki/product/68.pem
-	[root@jsefler-onprem-5server ~]# 
-	[root@jsefler-onprem-5server ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Client-Client-x86_64-efe91c1c-78d7-4d19-b2fb-3c88cfc2da35-68.pem | grep -A1 1.3.6.1.4.1.2312.9.1
-	            1.3.6.1.4.1.2312.9.1.68.1: 
-	                . Red Hat Enterprise Linux Desktop
-	            1.3.6.1.4.1.2312.9.1.68.2: 
-	                ..5.7
-	            1.3.6.1.4.1.2312.9.1.68.3: 
-	                ..x86_64
-	            1.3.6.1.4.1.2312.9.1.68.4: 
-	                ..rhel-5,rhel-5-client
-	[root@jsefler-onprem-5server ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-efa6382a-44c4-408b-a142-37ad4be54aa6-71.pem | grep -A1 1.3.6.1.4.1.2312.9.1
-	            1.3.6.1.4.1.2312.9.1.71.1: 
-	                .$Red Hat Enterprise Linux Workstation
-	            1.3.6.1.4.1.2312.9.1.71.2: 
-	                ..5.7
-	            1.3.6.1.4.1.2312.9.1.71.3: 
-	                ..x86_64
-	            1.3.6.1.4.1.2312.9.1.71.4: 
-	                .,rhel-5-client-workstation,rhel-5-workstation
-	[root@jsefler-onprem-5server ~]# 
-	
-	
-	ANOTHER EXAMPLE
-	
-	
-[root@dell-pe1855-01 ~]# ls /etc/pki/product/
-69.pem
-[root@dell-pe1855-01 ~]# cat /etc/redhat-release 
-Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
-[root@dell-pe1855-01 ~]# openssl x509 -text -in /etc/pki/product/69.pem | grep -A1 1.3.6.1.4.1.2312.9.1
-            1.3.6.1.4.1.2312.9.1.69.1: 
-                ..Red Hat Enterprise Linux Server
-            1.3.6.1.4.1.2312.9.1.69.2: 
-                ..5.8 Beta
-            1.3.6.1.4.1.2312.9.1.69.3: 
-                ..x86_64
-            1.3.6.1.4.1.2312.9.1.69.4: 
-                ..rhel-5,rhel-5-server
-
-[root@dell-pe1855-01 ~]# cat /etc/sysconfig/rhn/install-num 
-49af89414d147589
-[root@dell-pe1855-01 ~]# install-num-migrate-to-rhsm -d -i 49af89414d147589
-Copying /usr/share/rhsm/product/RHEL-5/Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem to /etc/pki/product/69.pem
-Copying /usr/share/rhsm/product/RHEL-5/Server-ClusterStorage-x86_64-66e8d727-f5aa-4e37-a04b-787fbbc3430c-90.pem to /etc/pki/product/90.pem
-Copying /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-8611-744ea744bdc0-83.pem to /etc/pki/product/83.pem
-[root@dell-pe1855-01 ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem | grep -A1 1.3.6.1.4.1.2312.9.1
-            1.3.6.1.4.1.2312.9.1.69.1: 
-                ..Red Hat Enterprise Linux Server
-            1.3.6.1.4.1.2312.9.1.69.2: 
-                ..5.7
-            1.3.6.1.4.1.2312.9.1.69.3: 
-                ..x86_64
-            1.3.6.1.4.1.2312.9.1.69.4: 
-                ..rhel-5,rhel-5-server
-
-[root@dell-pe1855-01 ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Server-ClusterStorage-x86_64-66e8d727-f5aa-4e37-a04b-787fbbc3430c-90.pem | grep -A1 1.3.6.1.4.1.2312.9.1
-            1.3.6.1.4.1.2312.9.1.90.1: 
-                .<Red Hat Enterprise Linux Resilient Storage (for RHEL Server)
-            1.3.6.1.4.1.2312.9.1.90.2: 
-                ..5.7
-            1.3.6.1.4.1.2312.9.1.90.3: 
-                ..x86_64
-            1.3.6.1.4.1.2312.9.1.90.4: 
-                .2rhel-5-server-clusterstorage,rhel-5-clusterstorage
-                
-[root@dell-pe1855-01 ~]# openssl x509 -text -in /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-8611-744ea744bdc0-83.pem | grep -A1 1.3.6.1.4.1.2312.9.1
-            1.3.6.1.4.1.2312.9.1.83.1: 
-                .<Red Hat Enterprise Linux High Availability (for RHEL Server)
-            1.3.6.1.4.1.2312.9.1.83.2: 
-                ..5.7
-            1.3.6.1.4.1.2312.9.1.83.3: 
-                ..x86_64
-            1.3.6.1.4.1.2312.9.1.83.4: 
-                .$rhel-5-server-cluster,rhel-5-cluster
-
-	
-*/
-	
-	
-	
+// 	EXAMPLE FOR rhn-migrate-classic-to-rhsm
 //	[root@jsefler-onprem-5server ~]# rhnreg_ks -v --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo 
 //		[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -c
 //		RHN Username: qa@redhat.com
@@ -940,9 +940,8 @@ Copying /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-
 //		System has been un-registered.
 //		[root@jsefler-onprem-5server ~]# 
 
-//	<cliff-bbs> jsefler, so yeah - register; then rhn_check;  use - rhn-channel -L to list all available channels, and then -c to subscribe to channels and then -l to list all subscribed :)
 	
-	
+//	EXAMPLE FOR rhn-migrate-classic-to-rhsm
 //	[root@jsefler-onprem-5server rhn]# rhnreg_ks  --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
 //		ERROR: refreshing remote package list for System Profile
 //		[root@jsefler-onprem-5server rhn]# rhn-channel --list
@@ -981,4 +980,4 @@ Copying /usr/share/rhsm/product/RHEL-5/Server-Cluster-x86_64-bebfe30e-22a5-4788-
 //		[root@jsefler-onprem-5server rhn]# echo $?
 //		1
 //		[root@jsefler-onprem-5server rhn]# 
-}
+
