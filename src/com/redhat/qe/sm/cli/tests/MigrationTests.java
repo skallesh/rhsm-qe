@@ -432,6 +432,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
 	}
 	
+	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
 			groups={},
 			dependsOnMethods={},
@@ -466,11 +467,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks.redhatRelease.contains("release 5")) baseProductsDir+="-5";
 		if (clienttasks.redhatRelease.contains("release 6")) baseProductsDir+="-6";
 		channelCertMappingFilename = baseProductsDir+"/"+channelCertMappingFilename;
+		
+		// make sure needed rpms are installed
+		for (String pkg : new String[]{"subscription-manager-migration", "subscription-manager-migration-data", "expect"}) {
+			Assert.assertTrue(clienttasks.isPackageInstalled(pkg),"Required package '"+pkg+"' is installed for MigrationTests.");
+		}
 	}
 	
-	@BeforeClass(groups="setup")
+	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
 	public void rememberOriginallyInstalledRedHatProductCertsBeforeClass() {
-		if (clienttasks==null) return;
 		
 		// review the currently installed product certs and filter out the ones from test automation (indicated by suffix "_.pem")
 		for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
@@ -480,9 +485,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
-	@BeforeClass(groups="setup")
+	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
 	public void backupProductCertsBeforeClass() {
-		if (clienttasks==null) return;
 		
 		// determine the original productCertDir value
 		//productCertDirRestore = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir");
@@ -513,9 +517,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", originalProductCertDir);
 	}
 	
-	@BeforeClass(groups="setup")
+	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
 	public void determineRhnClassicBaseAndAvailableChildChannels() throws IOException {
-		if (clienttasks==null) return;
 		if (sm_rhnUsername.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnPassword.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
