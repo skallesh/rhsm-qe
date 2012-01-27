@@ -453,7 +453,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO Bug 769856 - confusing output from rhn-migrate-to-rhsm when autosubscribe fails
 	
 	
 	// Configuration methods ***********************************************************************
