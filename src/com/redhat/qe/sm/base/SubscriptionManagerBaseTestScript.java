@@ -85,7 +85,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	
 	public String sm_rhnUsername				= getProperty("sm.rhn.username","");
 	public String sm_rhnPassword				= getProperty("sm.rhn.password","");
-	public String sm_rhnServer					= getProperty("sm.rhn.server","");
+	public String sm_rhnHostname				= getProperty("sm.rhn.hostname","");
 	
 	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
 	public String sm_passwordWithUnacceptedTC	= getProperty("sm.client.password.unacceptedTC","");
