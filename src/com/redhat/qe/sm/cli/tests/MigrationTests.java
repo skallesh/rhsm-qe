@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -27,6 +28,7 @@ import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -47,7 +49,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests", "debugTest"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() throws FileNotFoundException, IOException {
@@ -138,6 +140,59 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
 	}
+	
+	
+	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in the channel-cert-mapping.txt",
+			groups={"AcceptanceTests", "debugTest"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyChannelCertMappingBasedOnProductBaselineFile_Test() throws JSONException {
+		
+		String rhnProductBaselineUrl= "http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=blob_plain;f=cdn/product-baseline.json;hb=refs/heads/master";
+		File rhnProductBaselineFile= new File("/tmp/product-baseline.json");
+
+		// THE JSON LOOKS LIKE THIS...
+		//		[
+		//			{
+		//				"Content Sets": [
+		//					{
+		//						"Label": "rhel-hpn-for-rhel-6-server-source-rpms", 
+		//						"Repos": [
+		//							{
+		//								"Relative URL": "/content/dist/rhel/server/6/6.1/i386/hpn/source/SRPMS"
+		//							}, 
+		//							{
+		//								"Relative URL": "/content/dist/rhel/server/6/6.2/x86_64/hpn/source/SRPMS"
+		//							}
+		//						]
+		//					}
+		//				], 
+		//				"Name": "Red Hat Enterprise Linux High Performance Networking (for RHEL Server)", 
+		//	 			"Product ID": "132", 
+		//				"RHN Channels": [
+		//					"rhel-x86_64-server-hpn-6", 
+		//					"rhel-x86_64-server-hpn-6-beta-debuginfo", 
+		//					"rhel-x86_64-server-hpn-6-beta", 
+		//					"rhel-x86_64-server-hpn-6-debuginfo"
+		//				]
+		//			}
+		//		]
+        
+		// get the rhnProductBaselineFile from the release engineering team
+		log.info("Fetching the most current "+rhnProductBaselineFile.getName()+" file.");
+		RemoteFileTasks.runCommandAndAssert(client,"wget -O "+rhnProductBaselineFile+" --no-check-certificate \""+rhnProductBaselineUrl.trim()+"\"",Integer.valueOf(0),null,"."+rhnProductBaselineFile+". saved");
+		client.runCommandAndWaitWithoutLogging("cat "+rhnProductBaselineFile);
+		JSONArray jsonProducts = new JSONArray(client.getStdout());	
+		for (int i = 0; i < jsonProducts.length(); i++) {
+			JSONObject jsonProduct = (JSONObject) jsonProducts.get(i);
+			String productName = jsonProduct.getString("Name");
+			String productId = jsonProduct.getString("Product ID");
+		}
+		
+		// TODO FINISH WRITING THIS TEST
+	}
+	
 	
 	
 	
