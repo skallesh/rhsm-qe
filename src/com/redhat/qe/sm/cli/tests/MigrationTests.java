@@ -146,7 +146,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in the channel-cert-mapping.txt",
 			groups={"AcceptanceTests", "debugTest"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
-			enabled=true)
+			enabled=false)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingBasedOnProductBaselineFile_Test() throws JSONException {
 		
