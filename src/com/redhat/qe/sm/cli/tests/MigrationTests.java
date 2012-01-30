@@ -42,6 +42,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *		https://engineering.redhat.com/trac/PBUPM/browser/trunk/documents/Releases/RHEL6/Variants/RHEL6-Variants.rst
  *		http://linuxczar.net/articles/rhel-installation-numbers
  *		https://docspace.corp.redhat.com/docs/DOC-71135 (PRODUCT CERTS)
+ *		https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
  */
 @Test(groups={"MigrationTests"})
 public class MigrationTests extends SubscriptionManagerCLITestScript {
@@ -145,10 +146,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in the channel-cert-mapping.txt",
 			groups={"AcceptanceTests", "debugTest"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
-			enabled=false)
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingBasedOnProductBaselineFile_Test() throws JSONException {
 		
+		// Reference: https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
 		String rhnProductBaselineUrl= "http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=blob_plain;f=cdn/product-baseline.json;hb=refs/heads/master";
 		File rhnProductBaselineFile= new File("/tmp/product-baseline.json");
 
@@ -481,7 +483,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
-		
+		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions("foo","bar",null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
@@ -493,7 +495,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
-		
+		clienttasks.unregister(null,null,null);
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"This system is not registered using RHN Classic.");
 		
@@ -502,6 +504,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to locate SystemId file. Is this system registered?", "The expected stdout result from call to rhn-migrate-classic-to-rhsm without having registered to RHN Classic.");
 	}
 	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm while already registered to RHSM",
+			groups={},
+			dependsOnMethods={},
+			enabled=true)
+	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
+		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (List)null, true, null, null, null, null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm while already registered to RHSM.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout(), "This machine appears to be already registered to Certificate-based RHN.  Exiting.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm while already registered to RHSM.");
+	}
 	
 
 
