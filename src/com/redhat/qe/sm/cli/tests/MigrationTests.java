@@ -24,6 +24,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
@@ -50,12 +51,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests", "debugTest"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileExists_Test() throws FileNotFoundException, IOException {
+	public void VerifyChannelCertMappingFileExists_Test() {
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, channelCertMappingFilename),1,"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
+	}
+	
+	
+	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
+			groups={"AcceptanceTests"},
+			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyChannelCertMapping_Test() throws FileNotFoundException, IOException {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, channelCertMappingFilename),1,"The expected channel cert mapping file '"+channelCertMappingFilename+"' exists.");
 		
+		// Read the channelCertMappingFilename as if they were properties (Warning! this will mask non-unique mappings)
 		// [root@jsefler-onprem-5client ~]# cat /usr/share/rhsm/product/RHEL-5/channel-cert-mapping.txt
 		// rhn-tools-rhel-x86_64-server-5-beta: none
 		// rhn-tools-rhel-x86_64-server-5: Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem
@@ -71,11 +83,30 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (!channelsToProductCertFilenamesMap.get(key).equalsIgnoreCase("none"))
 				mappedProductCertFilenames.add(channelsToProductCertFilenamesMap.get(key));
 		}
+		
+		// Read the channelCertMappingFilename line by line asserting unique mappings
+		boolean uniqueChannelsToProductCertFilenamesMap = true;
+		for (String line: result.getStdout().trim().split("\\n")){
+			if (line.trim().equals("")) continue; // skip blank lines
+			if (line.trim().startsWith("#")) continue; // skip comments
+			String channel = line.split(":")[0].trim();
+			String productCertFilename = line.split(":")[1].trim();
+			if (channelsToProductCertFilenamesMap.containsKey(channel)) {
+				if (!channelsToProductCertFilenamesMap.get(channel).equals(productCertFilename)) {
+					log.warning("RHN Channel '"+channel+"' is already mapped to productFilename '"+productCertFilename+"' while parsing "+channelCertMappingFilename+" line: "+line);
+					uniqueChannelsToProductCertFilenamesMap = false;
+				}
+			} else {
+				Assert.fail("Having trouble parsing the following channel:product map from "+channelCertMappingFilename+": "+line);
+			}
+		}
+		Assert.assertTrue(uniqueChannelsToProductCertFilenamesMap, "Each channel in "+channelCertMappingFilename+" maps to a unique product cert filename. (See above warnings for offenders.)");
 	}
+	
 	
 	@Test(	description="Verify that all product cert files mapped in channel-cert-mapping.txt exist",
 			groups={"AcceptanceTests","blockedByBug-771615"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAllMappedProductCertFilesExists_Test() {
@@ -96,7 +127,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
 			groups={"AcceptanceTests"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyAllExistingProductCertFilesAreMapped_Test() {
@@ -119,7 +150,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Verify that the migration product certs support this system's rhel release version",
 			groups={"AcceptanceTests","blockedByBug-782208"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test() {
@@ -131,78 +162,57 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				log.warning("Migration productCert '"+productCert+"' does not provide rhel tags.  Skipping assertion that its version matches this system's rhel version.");
 				continue;
 			}
-			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseVersion)) {
-				log.info("Migration productCert '"+productCert+"' supports this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
+			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseXY)) {
+				log.info("Migration productCert '"+productCert+"' supports this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
 
 			} else {
-				log.warning("Migration productCert '"+productCert+"' does NOT support this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
+				log.warning("Migration productCert '"+productCert+"' does NOT support this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
 				verifiedVersionOfAllMigrationProductCertFiles = false;
 			}
 		}
-		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of rhel '"+clienttasks.redhatReleaseVersion+"'.");
+		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	
 	
-	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in the channel-cert-mapping.txt",
-			groups={"AcceptanceTests", "debugTest"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
-			enabled=false)
+	@Test(	description="Verify that all of the required RHN Channels in the ProductBaseline file are accounted for in channel-cert-mapping.txt",
+			groups={},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			dataProvider="RhnChannelFromProductBaselineData",
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingBasedOnProductBaselineFile_Test() throws JSONException {
+	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductBaseline_Test(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName) throws JSONException {
 		
-		// Reference: https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
-		String rhnProductBaselineUrl= "http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=blob_plain;f=cdn/product-baseline.json;hb=refs/heads/master";
-		File rhnProductBaselineFile= new File("/tmp/product-baseline.json");
-
-		// THE JSON LOOKS LIKE THIS...
-		//		[
-		//			{
-		//				"Content Sets": [
-		//					{
-		//						"Label": "rhel-hpn-for-rhel-6-server-source-rpms", 
-		//						"Repos": [
-		//							{
-		//								"Relative URL": "/content/dist/rhel/server/6/6.1/i386/hpn/source/SRPMS"
-		//							}, 
-		//							{
-		//								"Relative URL": "/content/dist/rhel/server/6/6.2/x86_64/hpn/source/SRPMS"
-		//							}
-		//						]
-		//					}
-		//				], 
-		//				"Name": "Red Hat Enterprise Linux High Performance Networking (for RHEL Server)", 
-		//	 			"Product ID": "132", 
-		//				"RHN Channels": [
-		//					"rhel-x86_64-server-hpn-6", 
-		//					"rhel-x86_64-server-hpn-6-beta-debuginfo", 
-		//					"rhel-x86_64-server-hpn-6-beta", 
-		//					"rhel-x86_64-server-hpn-6-debuginfo"
-		//				]
-		//			}
-		//		]
-        
-		// get the rhnProductBaselineFile from the release engineering team
-		log.info("Fetching the most current "+rhnProductBaselineFile.getName()+" file.");
-		RemoteFileTasks.runCommandAndAssert(client,"wget -O "+rhnProductBaselineFile+" --no-check-certificate \""+rhnProductBaselineUrl.trim()+"\"",Integer.valueOf(0),null,"."+rhnProductBaselineFile+". saved");
-		client.runCommandAndWaitWithoutLogging("cat "+rhnProductBaselineFile);
-		JSONArray jsonProducts = new JSONArray(client.getStdout());	
-		for (int i = 0; i < jsonProducts.length(); i++) {
-			JSONObject jsonProduct = (JSONObject) jsonProducts.get(i);
-			String productName = jsonProduct.getString("Name");
-			String productId = jsonProduct.getString("Product ID");
+		// does the cdn indicate that this channel maps to more than one product?
+		if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).size()>1) {
+			log.warning("According to the CDN Product Baseline, RHN Channel '"+productBaselineRhnChannel+"' maps to more than one product id: "+cdnProductBaselineChannelMap.get(productBaselineRhnChannel));
+			// handle special cases to decide what productId should be mapped (see bug https://bugzilla.redhat.com/show_bug.cgi?id=786257)
+			if (Arrays.asList("rhel-x86_64-client-supplementary-5","rhel-x86_64-client-5","rhel-i386-client-supplementary-5","rhel-i386-client-5").contains(productBaselineRhnChannel)) {
+				if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).contains("68") && !productBaselineProductId.equals("68")) {
+					throw new SkipException("According to https://bugzilla.redhat.com/show_bug.cgi?id=786257#c1, channel '"+productBaselineProductId+"' is a special case on RHEL5 and the subscription-manager-migration-data file '"+channelCertMappingFilename+"' should only map to productId 68.");
+				}
+			// placeholder for next special case
+			} else if (false) {
+				
+			} else {
+				Assert.fail("Do not know how to choose which productId is mapped to channel '"+productBaselineRhnChannel+"' in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			}
 		}
 		
-		// TODO FINISH WRITING THIS TEST
+		// assert that the subscription-manager-migration-data file has a mapping for this RHN Channel found in the CDN Product Baseline
+		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
+				"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" productName="+productBaselineProductName+" was found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+
+		// now assert that the subscription-manager-migration-data mapping for the RHN Channel is to the same productId as mapped in the CDN Product Baseline
+		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
+				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
-	
-	
 	
 	
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
 			groups={"AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
 	public SSHCommandResult InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
@@ -268,7 +278,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
 			groups={"AcceptanceTests","InstallNumMigrateToRhsm_Test"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	public void InstallNumMigrateToRhsm_Test() throws JSONException {
 		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==0 &&
@@ -324,7 +334,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a non-default rhsm.productcertdir configured",
 			groups={"blockedByBug-773707","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
 	public void InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String instNumber) throws JSONException {
@@ -373,7 +383,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm --no-auto",
 			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options) {
@@ -457,7 +467,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 	
 			// assert that we are consuming some entitlements (for at least the base product cert)
-			Assert.assertFalse(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to rhn-migrate-classic-to-rhsm with "+options+".");
+			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to rhn-migrate-classic-to-rhsm with "+options+".");
 			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
@@ -468,7 +478,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with a non-default rhsm.productcertdir configured",
 			groups={"RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test"},
-			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options) {
@@ -533,8 +543,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return;
 		
 		// determine the full path to the channelCertMappingFile
-		if (clienttasks.redhatRelease.contains("release 5")) baseProductsDir+="-5";
-		if (clienttasks.redhatRelease.contains("release 6")) baseProductsDir+="-6";
+		baseProductsDir+="-"+clienttasks.redhatReleaseX;
 		channelCertMappingFilename = baseProductsDir+"/"+channelCertMappingFilename;
 		
 		// make sure needed rpms are installed
@@ -588,6 +597,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass"})
 	public void determineRhnClassicBaseAndAvailableChildChannels() throws IOException {
+//debugging if (true) return;
 		if (sm_rhnUsername.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnPassword.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
@@ -631,6 +641,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String channelCertMappingFilename = "channel-cert-mapping.txt";
 	protected List<String> mappedProductCertFilenames = new ArrayList<String>();	// list of all the mapped product cert file names in the mapping file (e.g. Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	protected Map<String,String> channelsToProductCertFilenamesMap = new HashMap<String,String>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
+	protected Map<String,List<String>> cdnProductBaselineChannelMap = new HashMap<String,List<String>>();	// map of all the channels to product cert file names (e.g. key=rhn-tools-rhel-x86_64-server-5 value=Server-Server-x86_64-fbe6b460-a559-4b02-aa3a-3e580ea866b2-69.pem)
 	protected List<ProductCert> originallyInstalledRedHatProductCerts = new ArrayList<ProductCert>();
 	protected String migrationFromFact				= "migration.migrated_from";
 	protected String migrationSystemIdFact			= "migration.classic_system_id";
@@ -711,6 +722,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String getPemFileNameFromProductCertFilename(String productCertFilename) {
 		// Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
 		return productCertFilename.split("-")[productCertFilename.split("-").length-1];
+	}
+	
+	/**
+	 * Extract the productId from the long mapped filename.
+	 * @param productCertFilename example: Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
+	 * @return example: 90
+	 */
+	protected String getProductIdFromProductCertFilename(String productCertFilename) {
+		// Server-ClusterStorage-ppc-a3fea9e1dde3-90.pem
+		String pemFilename = getPemFileNameFromProductCertFilename(productCertFilename);
+		return pemFilename.replace(".pem", "");
 	}
 	
 	/**
@@ -866,6 +888,113 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--cli-only"}));
 		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only"}));
 		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only --force"}));
+		return ll;
+	}
+	
+	
+	
+	@DataProvider(name="RhnChannelFromProductBaselineData")
+	public Object[][] getRhnChannelFromProductBaselineDataAs2dArray() throws JSONException {
+		return TestNGUtils.convertListOfListsTo2dArray(getRhnChannelFromProductBaselineDataAsListOfLists());
+	}
+	public List<List<Object>> getRhnChannelFromProductBaselineDataAsListOfLists() throws JSONException {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
+		
+		// Reference: https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
+
+		// THE JSON LOOKS LIKE THIS...
+		//	[
+		//		{
+		//			"Content Sets": [
+		//				{
+		//					"Label": "rhel-hpn-for-rhel-6-server-source-rpms", 
+		//					"Repos": [
+		//						{
+		//							"Relative URL": "/content/dist/rhel/server/6/6.1/i386/hpn/source/SRPMS"
+		//						}, 
+		//						{
+		//							"Relative URL": "/content/dist/rhel/server/6/6.2/x86_64/hpn/source/SRPMS"
+		//						}
+		//					]
+		//				}
+		//			], 
+		//			"Name": "Red Hat Enterprise Linux High Performance Networking (for RHEL Server)", 
+		//			"Product ID": "132", 
+		//			"RHN Channels": [
+		//				"rhel-x86_64-server-hpn-6", 
+		//				"rhel-x86_64-server-hpn-6-beta-debuginfo", 
+		//				"rhel-x86_64-server-hpn-6-beta", 
+		//				"rhel-x86_64-server-hpn-6-debuginfo"
+		//			]
+		//		}
+		//	]
+        
+		// get the rhnProductBaselineFile from the release engineering team
+		// String sm_cdnProductBaselineUrl = "http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=blob_plain;f=cdn/product-baseline.json;hb=refs/heads/master";
+		File cdnProductBaselineFile= new File("/tmp/product-baseline.json");
+		log.info("Fetching the most current "+cdnProductBaselineFile.getName()+" file.");
+		RemoteFileTasks.runCommandAndAssert(client,"wget -O "+cdnProductBaselineFile+" --no-check-certificate \""+sm_cdnProductBaselineUrl+"\"",Integer.valueOf(0),null,"."+cdnProductBaselineFile+". saved");
+		client.runCommandAndWaitWithoutLogging("cat "+cdnProductBaselineFile);
+		JSONArray jsonProducts = new JSONArray(client.getStdout());	
+		for (int p = 0; p < jsonProducts.length(); p++) {
+			JSONObject jsonProduct = (JSONObject) jsonProducts.get(p);
+			String productName = jsonProduct.getString("Name");
+			String productId = jsonProduct.getString("Product ID");
+			JSONArray jsonRhnChannels = jsonProduct.getJSONArray("RHN Channels");
+			
+			// process each of the RHN Channels
+			for (int r=0; r<jsonRhnChannels.length(); r++) {
+				String rhnChannel = jsonRhnChannels.getString(r);
+				
+				// store the rhnChannel in the cdnProductBaselineChannelMap
+				if (cdnProductBaselineChannelMap.containsKey(rhnChannel)) {
+					if (!cdnProductBaselineChannelMap.get(rhnChannel).contains(productId)) {
+						cdnProductBaselineChannelMap.get(rhnChannel).add(productId);
+					}
+				} else {
+					List<String> productIds = new ArrayList<String>(); productIds.add(productId);
+					cdnProductBaselineChannelMap.put(rhnChannel, productIds);
+				}
+//debugging secialcase if (!Arrays.asList("rhel-x86_64-client-supplementary-5","rhel-x86_64-client-5","rhel-i386-client-supplementary-5","rhel-i386-client-5").contains(rhnChannel)) continue;			
+
+				
+				// filter out all RHN Channels not associated with this release  (e.g., assume that an rhn channel containing "-5-" or ends in "-5" is only applicable to rhel5 
+				if (!(rhnChannel.contains("-"+clienttasks.redhatReleaseX+"-") || rhnChannel.endsWith("-"+clienttasks.redhatReleaseX))) continue;
+				
+				// skip on these RHN Channels that slip through this ^ filter
+				// [root@jsefler-onprem-5server tmp]# grep jboss /tmp/product-baseline.json | grep -v Label
+	            // "rhel-x86_64-server-6-rhevm-3-jboss-5", 
+	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-beta", 
+	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo", 
+	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo"
+				List<String> rhnChannelExceptions = Arrays.asList("rhel-x86_64-server-6-rhevm-3-jboss-5","rhel-x86_64-server-6-rhevm-3-jboss-5-beta","rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo","rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo");
+				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals("6")) continue;
+				
+				// bugzillas
+				Object bugzilla = null;
+				if (rhnChannel.contains("-rhev-agent-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
+					bugzilla = new BlockedByBzBug("786278");
+				}
+				if (rhnChannel.contains("-vt-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
+					bugzilla = new BlockedByBzBug("786278");
+				}
+				if (rhnChannel.endsWith("-beta")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 786203 - all RHN *beta Channels in channel-cert-mapping.txt are mapped to "none" instead of valid productId
+					bugzilla = new BlockedByBzBug("786203");
+				}			
+				if (rhnChannel.endsWith("-debuginfo")) { 
+					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
+					bugzilla = new BlockedByBzBug("786140");
+				}
+				
+				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName
+				ll.add(Arrays.asList(new Object[]{bugzilla,	rhnChannel,	productId,	productName}));
+			}
+		}
+		
 		return ll;
 	}
 }

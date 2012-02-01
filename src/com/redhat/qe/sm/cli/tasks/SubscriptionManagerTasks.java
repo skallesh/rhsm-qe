@@ -92,7 +92,9 @@ public class SubscriptionManagerTasks {
 	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
 	public String redhatRelease			= null;	// Red Hat Enterprise Linux Server release 5.8 Beta (Tikanga)
-	public String redhatReleaseVersion	= null;	// 5.8
+	public String redhatReleaseX		= null;	// 5
+	public String redhatReleaseXY		= null;	// 5.8
+
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
@@ -103,7 +105,7 @@ public class SubscriptionManagerTasks {
 		releasever		= sshCommandRunner.runCommandAndWait("rpm -q --qf \"%{VERSION}\\n\" --whatprovides /etc/redhat-release").getStdout().trim();  // e.g. 5Server		// cut -f 5 -d : /etc/system-release-cpe	// rpm -q --qf "%{VERSION}\n" --whatprovides system-release		// rpm -q --qf "%{VERSION}\n" --whatprovides /etc/redhat-release
 		rhsmComplianceD	= sshCommandRunner.runCommandAndWait("rpm -ql subscription-manager | grep libexec/rhsm").getStdout().trim();
 		redhatRelease	= sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
-		redhatReleaseVersion = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
+		redhatReleaseXY = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
 		if (redhatRelease.contains("Server")) variant = "Server";	//69.pem
 		if (redhatRelease.contains("Client")) variant = "Client";	//68.pem   (aka Desktop)
 		if (redhatRelease.contains("Workstation")) variant = "Workstation";	//71.pem
@@ -115,8 +117,9 @@ public class SubscriptionManagerTasks {
 
 		Pattern pattern = Pattern.compile("\\d+\\.\\d+");
 		Matcher matcher = pattern.matcher(redhatRelease);
-		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseVersion '"+matcher.group()+"' from '"+redhatRelease+"'");
-		redhatReleaseVersion = matcher.group();
+		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseXY '"+matcher.group()+"' from '"+redhatRelease+"'");
+		redhatReleaseXY = matcher.group();
+		redhatReleaseX = redhatReleaseXY.replaceFirst("\\..*", "");
 	}
 	
 
