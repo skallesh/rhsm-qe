@@ -184,7 +184,10 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		Assert.assertEquals( clienttasks.getCurrentlySubscribedRepos().size(),0, "No repos are reported by subscription-manager repos --list when not registered.");
 	}
-		
+	
+	
+	// Candidates for an automated Test:
+	// TODO Bug 767620 - [RFE] subscription-manager should have a option that when set prevents the download / install of "redhat.repo"
 		
 	// Configuration methods ***********************************************************************
 
