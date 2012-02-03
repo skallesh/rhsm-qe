@@ -38,44 +38,75 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertIsInstalled_Test() {
-		
+// DELETEME		OLD IMPLEMENTATION		
+//		// list the currently installed products
+//		clienttasks.listInstalledProducts();
+//		
+//		// check each of the installed product certs in search of one that matches the /etc/redhat-release
+//		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
+//		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+//			log.info("Found installed product cert: "+productCert);
+//			String productCertName = productCert.productName;
+//			
+//			// strip out numbers from the product cert name before checking for a match...  e.g name='Red Hat Enterprise Linux 6 Server' => 'Red Hat Enterprise Linux Server'
+//			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
+//			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"  (69.pem)
+//			productCertName = productCertName.replaceAll("\\d", "").replaceAll(" {2,}", " ");
+//
+//			// adjust the product cert name "for Scientific Computing" => "ComputeNode"  (76.pem)
+//			productCertName = productCertName.replaceFirst("for Scientific Computing","ComputeNode");
+//
+//			// adjust the product cert name "for IBM POWER" => "Server"  (74.pem)
+//			productCertName = productCertName.replaceFirst("for IBM POWER","Server");
+//
+//			// adjust the product cert name "for IBM System z" => "Server"  (72.pem)
+//			productCertName = productCertName.replaceFirst("for IBM System z","Server");
+//
+//			// adjust the product cert name "Desktop" => "Client"  (68.pem)
+//			productCertName = productCertName.replaceFirst("Desktop","Client");
+//
+//			// adjust the product cert name "for Workstation" => "Workstation"  (71.pem)
+//			//productCertName = productCertName.replaceFirst("Workstation","Workstation");
+//
+//			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCertName, productCert.productNamespace.version))) {
+//				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
+//				return;
+//			}
+//			
+//			//TODO We should also verify the arch  e.g. uname.machine: s390x when on IBM System z
+//		}
+//		Assert.fail("Could NOT find an installed installed product cert that matches /etc/redhat-release ("+clienttasks.redhatRelease+").");
+
 		// list the currently installed products
 		clienttasks.listInstalledProducts();
 		
-		// check each of the installed product certs in search of one that matches the /etc/redhat-release
-		log.info("Checking each installed product cert for one that matches /etc/redhat-release: "+clienttasks.redhatRelease);
-		for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-			log.info("Found installed product cert: "+productCert);
-			String productCertName = productCert.productName;
-			
-			// strip out numbers from the product cert name before checking for a match...  e.g name='Red Hat Enterprise Linux 6 Server' => 'Red Hat Enterprise Linux Server'
-			// Example redhatRelease: Red Hat Enterprise Linux Server release 6.2 Beta (Santiago)
-			// Example product cert: name="Red Hat Enterprise Linux 6 Server" version="6.2 Beta"  (69.pem)
-			productCertName = productCertName.replaceAll("\\d", "").replaceAll(" {2,}", " ");
-
-			// adjust the product cert name "for Scientific Computing" => "ComputeNode"  (76.pem)
-			productCertName = productCertName.replaceFirst("for Scientific Computing","ComputeNode");
-
-			// adjust the product cert name "for IBM POWER" => "Server"  (74.pem)
-			productCertName = productCertName.replaceFirst("for IBM POWER","Server");
-
-			// adjust the product cert name "for IBM System z" => "Server"  (72.pem)
-			productCertName = productCertName.replaceFirst("for IBM System z","Server");
-
-			// adjust the product cert name "Desktop" => "Client"  (68.pem)
-			productCertName = productCertName.replaceFirst("Desktop","Client");
-
-			// adjust the product cert name "for Workstation" => "Workstation"  (71.pem)
-			//productCertName = productCertName.replaceFirst("Workstation","Workstation");
-
-			if (clienttasks.redhatRelease.startsWith(String.format("%s release %s", productCertName, productCert.productNamespace.version))) {
-				Assert.assertTrue(true,"Found the following installed product cert that appears to match the /etc/redhat-release ("+clienttasks.redhatRelease+"): "+productCert);
-				return;
-			}
-			
-			//TODO We should also verify the arch  e.g. uname.machine: s390x when on IBM System z
+		// list the currently installed product certs
+		log.info("Installed product certs: ");
+		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		for (ProductCert productCert : productCerts) {
+			log.info(productCert.toString());
 		}
-		Assert.fail("Could NOT find an installed installed product cert that matches /etc/redhat-release ("+clienttasks.redhatRelease+").");
+		
+		// assert that a product cert is installed that matches our base RHEL release version
+		ProductCert productCert = null;
+		if (clienttasks.releasever.equals("5Server") || clienttasks.releasever.equals("6Server")) {
+			if (clienttasks.arch.startsWith("ppc")) {															// ppc ppc64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "74", productCerts);	// Red Hat Enterprise Linux for IBM POWER
+			} else if (clienttasks.arch.startsWith("s390")) {													// s390 s390x
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "72", productCerts);	// Red Hat Enterprise Linux for IBM System z
+			} else { 																							// i386 i686 ia64 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "69", productCerts);	// Red Hat Enterprise Linux Server
+			}
+		} else if (clienttasks.releasever.equals("5Client") || clienttasks.releasever.equals("6Workstation")) {	// i386 i686 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "71", productCerts);	// Red Hat Enterprise Linux Workstation
+		} else if (clienttasks.releasever.equals("6Client")) {													// i386 i686 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "68", productCerts);	// Red Hat Enterprise Linux Desktop
+		} else if (clienttasks.releasever.equals("6ComputeNode")) {												// i386 i686 x86_64
+				productCert = ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", "76", productCerts);	// Red Hat Enterprise Linux for Scientific Computing
+		}
+		
+		Assert.assertNotNull(productCert,"Found an installed product cert that matches our base RHEL product...");
+		log.info(productCert.toString());
 	}
 	
 	
