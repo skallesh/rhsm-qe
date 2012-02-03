@@ -146,7 +146,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyEntitlementCertContainsExpectedOIDs_Test(SubscriptionPool pool) {
-//if (!pool.productId.equals("awesomeos-virt-4")) throw new SkipException("debugTestinging...");
+//if (!pool.productId.equals("awesomeos-virt-4")) throw new SkipException("debugging...");
 
 //		// toggle this block of code with the dataProvider to process all pools or just one random pool
 //		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (List)null, true, false, null, null, null);
