@@ -89,6 +89,8 @@ public class SubscriptionManagerTasks {
 	protected ConsumerType currentlyRegisteredType	= null;	// most recent consumer type used during register
 	
 	public String redhatRelease	= null;
+	public Map<String,String> installedPackageVersion = new HashMap<String,String>();	// contains key=python-rhsm, value=python-rhsm-0.98.9-1.el5
+
 	
 	public SubscriptionManagerTasks(SSHCommandRunner runner) {
 		super();
@@ -179,11 +181,6 @@ public class SubscriptionManagerTasks {
 
 	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String installOptions) {
 
-		// verify the subscription-manager client is a rhel 6 machine
-//		log.info("Verifying prerequisite...  client hostname '"+sshCommandRunner.getConnection().getHostname()+"' is a Red Hat Enterprise Linux .* release 6 machine.");
-//		Assert.assertEquals(sshCommandRunner.runCommandAndWait("cat /etc/redhat-release | grep -E \"^Red Hat Enterprise Linux .* release 6.*\"").getExitCode(),Integer.valueOf(0),
-//				sshCommandRunner.getConnection().getHostname()+" must be RHEL 6.*");
-
 		// make sure the client's time is accurate
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
 
@@ -196,31 +193,51 @@ public class SubscriptionManagerTasks {
 //		Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum clean all").getExitCode(),Integer.valueOf(0),"yum clean all was a success");
 		sshCommandRunner.runCommandAndWait("yum clean all");
 		
-		// only uninstall rpms when there are new rpms to install
-		if (rpmUrls.size() > 0) {
-			log.info("Uninstalling existing subscription-manager RPMs...");
-			for (String pkg : new String[]{"subscription-manager-firstboot","subscription-manager-gnome","subscription-manager","python-rhsm"}) {
-				//sshCommandRunner.runCommandAndWait("rpm -e "+pkg);
-				sshCommandRunner.runCommandAndWait("yum remove -y "+pkg);
-				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
-			}
-		}
-
-		// install new rpms
-		for (String rpmUrl : rpmUrls) {
+		// uninstall current rpms
+		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
+		List<String> rpmUrlsReversed = new ArrayList<String>();
+		for (String rpmUrl : rpmUrls) rpmUrlsReversed.add(0,rpmUrl);
+		for (String rpmUrl : rpmUrlsReversed) {
 			rpmUrl = rpmUrl.trim();
-			log.info("Installing RPM from "+rpmUrl+"...");
-			String sm_rpm = "/tmp/"+Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
-			if (!sm_rpm.endsWith(".rpm")) sm_rpm+=".rpm";
-			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+sm_rpm+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+sm_rpm+". saved");
-			// using yum localinstall should enable testing on RHTS boxes right off the bat.
-			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+sm_rpm+" "+installOptions).getExitCode(),Integer.valueOf(0),
-					"Yum installed local rpm: "+sm_rpm);
+			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
+			String pkg = rpm.replaceFirst("\\.rpm$", "");
+			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
+			
+			// remove the existing package first
+			log.info("Removing existing package "+pkg+"...");
+			sshCommandRunner.runCommandAndWait("yum remove -y "+pkg);
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"rpm -q "+pkg,Integer.valueOf(1),"package "+pkg+" is not installed",null);
 		}
 		
-		Assert.assertEquals(sshCommandRunner.runCommandAndWait("rpm -q subscription-manager").getExitCode(),Integer.valueOf(0),
-				"subscription-manager is installed"); // subscription-manager-0.63-1.el6.i686
-
+		// install new rpms
+		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
+		for (String rpmUrl : rpmUrls) {
+			rpmUrl = rpmUrl.trim();
+			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
+			String pkg = rpm.replaceFirst("\\.rpm$", "");
+			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
+			
+			// install rpmUrl
+			log.info("Installing RPM from "+rpmUrl+"...");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+rpmPath+". saved");
+			Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localinstall "+rpmPath+" "+installOptions).getExitCode(),Integer.valueOf(0),
+					"Yum installed local rpm: "+rpmPath);
+		}
+		
+		// attempt to install all required packages that are not already installed
+		String[] pkgs = new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot"};
+		for (String pkg : pkgs) {
+			if (!isPackageInstalled(pkg)) {
+				Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0),
+						"Yum installed package: "+pkg);
+			}
+		}
+		
+		// remember the versions of the packages installed
+		for (String pkg : pkgs) {
+			String version = sshCommandRunner.runCommandAndWait("rpm -q "+pkg).getStdout().trim();
+			installedPackageVersion.put(pkg,version);
+		}
 	}
 	
 	
@@ -3952,7 +3969,19 @@ repolist: 3,394
 		return result;
 	}
 	
-	
+	public boolean isPackageInstalled(String pkg) {
+		// [root@dell-pe2800-01 ~]# rpm -q subscription-manager-migration-data
+		// package subscription-manager-migration-data is not installed
+		// [root@dell-pe2800-01 ~]# echo $?
+		// 1
+		// [root@dell-pe2800-01 ~]# rpm -q subscription-manager
+		// subscription-manager-0.98.14-1.el5
+		// [root@dell-pe2800-01 ~]# echo $?
+		// 0
+		// [root@dell-pe2800-01 ~]# 
+
+		return sshCommandRunner.runCommandAndWait("rpm -q "+pkg).getExitCode()==0? true:false;
+	}
 	
 	public SSHCommandResult yumRemovePackage (String pkg) {
 		String command = "yum -y remove "+pkg+" --disableplugin=rhnplugin"; // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
