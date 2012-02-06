@@ -289,43 +289,8 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptAnEntitlementImportFromACertOnlyFile_Test() {
-		
-		// choose an entitlement cert file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
-
-		//TODO UNCOMMENT THIS LINE, BLOCK TEST WITH blockedByBug-735226 AND DELETE THE REST OF THIS METHOD AFTER BUG IS RESOLVED
 		attemptAnEntitlementImportFromAnInvalidFile_Test(importEntitlementCertFile);
-		if (true) return;
-		
-		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
-		
-		// once imported, what should the entitlement cert file be?
-		File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importEntitlementCertFile.getName());
-		File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
-		
-		// make sure the expected entitlement files do not exist before our test
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement cert file does NOT yet exist ("+expectedEntitlementCertFile+").");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"Before attempting the import, asserting that expected destination for the entitlement key file does NOT yet exist ("+expectedEntitlementKeyFile+").");
-
-		// show the contents of the file about to be imported
-		log.info("Following is the contents of the certificate file about to be imported...");
-		client.runCommandAndWait("cat "+importEntitlementCertFile);
-		
-		// attempt an entitlement cert import from a file containing the cert only
-		clienttasks.importCertificate(importEntitlementCertFile.getPath());
-		
-		// verify that the expectedEntitlementCertFile now exists
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),1,"After attempting the import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
-
-		// verify that the expectedEntitlementKeyFile does NOT exist
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),0,"After attempting the import, the expected destination for the entitlement key file should NOT exist ("+expectedEntitlementKeyFile+") since there was no key in the import file.");
-		
-		// assert that the contents of the imported files match the originals
-		log.info("Asserting that the imported entitlement cert file contents match the original...");
-		RemoteFileTasks.runCommandAndAssert(client, "diff -w "+expectedEntitlementCertFile+" "+importEntitlementCertFile, 0);
-		
-		// finally verify that we are still NOT consuming subscriptions
-		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(),0, "After importing a certificate that is missing a key, there should be no consuming subscriptions listed.");
 	}
 	
 	
@@ -517,9 +482,13 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult importResult = clienttasks.importCertificate_(invalidCertificate.getPath());
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=734533 - jsefler 08/30/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="734533"; 
+		String bugId="734533"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		String bugPkg = "subscription-manager-migration";
+		String bugVer = "subscription-manager-migration-0.96";	// RHEL62
+		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")"); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		bugVer = "subscription-manager-migration-0.98";	// RHEL58
+		try {if (clienttasks.installedPackageVersion.get(bugPkg).contains(bugVer) && !invokeWorkaroundWhileBugIsOpen) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+" which has NOT been fixed in this installed version of "+bugVer+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")"); invokeWorkaroundWhileBugIsOpen=true;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(0));
 			Assert.assertEquals(importResult.getStdout().trim(), invalidCertificate.getName()+" is not a valid certificate file. Please use a valid certificate.");
@@ -528,7 +497,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// assert the negative results
-		Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(255), "The exit code from the import command indicates a failure.");
+		Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(1), "The exit code from the import command indicates a failure.");
 		
 		// {0} is not a valid certificate file. Please use a valid certificate.
 		Assert.assertEquals(importResult.getStderr().trim(), invalidCertificate.getName()+" is not a valid certificate file. Please use a valid certificate.");
