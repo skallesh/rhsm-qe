@@ -3158,6 +3158,7 @@ repolist: 3,394
 				
 		 		for (EntitlementCert entitlementCert : entitlementCerts) {
 		 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+		 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 		 				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts)) {
 							if (contentNamespace.enabled.equals("1")) {
 								Assert.assertTrue(yumRepoListEnabled.contains(contentNamespace.label),
