@@ -691,7 +691,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	/**
-	 * Use the python instnum.py program to determine what mapped product cert filenames from the channel-cert-mapping.txt correspond to this instnumber and should therefor be copied.
+	 * Use the python instnum.py program to determine what mapped product cert filenames from the channel-cert-mapping.txt correspond to this instnumber and should therefore be copied.
 	 * @param instnumber
 	 * @return
 	 * @throws JSONException
@@ -704,6 +704,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client,command+" | egrep \"^{.*}$\"", 0);
 		// [root@jsefler-onprem-5server ~]# python /usr/lib/python2.4/site-packages/instnum.py 0000000e0017fc01 | egrep "^{.*}$"
 		// {'Virt': 'VT', 'Workstation': 'Workstation', 'Base': 'Client'}
+		
+		// decide what product arch applies to our system
+		String arch = clienttasks.arch;	// default
+		if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
+		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
 		
 		// process result as a json object
 		JSONObject jsonResult = new JSONObject(result.getStdout());
@@ -718,7 +723,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				String key = (String)keys.next();
 				String sub = jsonResult.getString(key);
 				
-				if (mappedProductCertFilename.startsWith(base+"-"+sub+"-"+clienttasks.arch+"-")) {
+				if (mappedProductCertFilename.startsWith(base+"-"+sub+"-"+arch+"-")) {
 					if (!mappedProductCertFilenamesCorrespondingToInstnumber.contains(mappedProductCertFilename)) {	// make sure the list contains unique filenames
 						mappedProductCertFilenamesCorrespondingToInstnumber.add(mappedProductCertFilename);
 					}
