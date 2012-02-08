@@ -84,7 +84,7 @@ public class SubscriptionManagerTasks {
 	public String arch							= null;	// of the client
 	public String sockets						= null;	// of the client
 	public String variant						= null;	// of the client
-	public String releasever					= null;	// of the client
+	public String releasever					= null;	// of the client	 // e.g. 5Server	// e.g. 5Client
 	
 	protected String currentlyRegisteredUsername	= null;	// most recent username used during register
 	protected String currentlyRegisteredPassword	= null;	// most recent password used during register

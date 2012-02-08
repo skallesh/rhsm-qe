@@ -403,7 +403,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
-	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options) {
+	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, List<String> expectedMigrationProductCertFilenames) {
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 		if (options.contains("-n")) log.info("Executing rhn-migrate-classic-to-rhsm --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
@@ -425,15 +425,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<String> rhnChannelsConsumed = getCurrentRhnClassicChannels();
 		if (rhnChannelsToAdd.size()>0) Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
 
-		// get the product cert filenames that we should expect rhn-migrate-classic-to-rhsm to copy
-		List<String> expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
+		// get the product cert filenames that we should expect rhn-migrate-classic-to-rhsm to copy (or use the ones supplied to the @Test)
+		if (expectedMigrationProductCertFilenames==null) expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
 		
 		// execute rhn-migrate-classic-to-rhsm with options
 		String expectedMsg;
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(rhnUsername,rhnPassword,options);
 		
 		// assert the exit code
-		if (rhnChannelsConsumed.size()!=expectedMigrationProductCertFilenames.size() && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
+		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the rhn-migrate-classic-to-rhsm command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);	
@@ -501,7 +501,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options) {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
-		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options);
+		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options,null);
+	}
+	
+	
+	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
+			groups={"blockedByBug-786257","RhnMigrateClassicToRhsm_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			dataProvider="RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationData",
+			enabled=true)
+	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, List<String> expectedMigrationProductCertFilenames) {
+		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+
+		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
+		log.info("Red Hat Enterprise Linux Workstation (productId=71) corresponds to child RHN Channel (rhel-ARCH-client-workstation-5) for a 5Client system where ARCH=i386,x86_64.");	
+		log.info("After migrating from RHN Classic to RHSM, these two product certs should not be installed at the same time.");
+
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAdd, "--no-auto", expectedMigrationProductCertFilenames);		
 	}
 	
 	
@@ -546,8 +563,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 
 
-	
-	
 	
 	// Candidates for an automated Test:
 	
@@ -676,7 +691,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String channel : channels) {
 			String mappedProductCertFilename = channelsToProductCertFilenamesMap.get(channel);
 			if (mappedProductCertFilename==null) {
-				log.warning("RHN Classic channel '"+channel+"' is NOT mapped in the file '"+channelCertMappingFilename+"'.");
+				//log.warning("RHN Classic channel '"+channel+"' is NOT mapped in the file '"+channelCertMappingFilename+"'.");
 			} else {
 				log.info("The mapped product cert filename for RHN Classic channel '"+channel+"' is: "+mappedProductCertFilename);
 				if (!mappedProductCertFilename.equalsIgnoreCase("none")) {
@@ -689,6 +704,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		return mappedProductCertFilenamesCorrespondingToChannels;
 	}
 	
+	protected boolean areAllChannelsMapped(List<String> channels) {
+		boolean allChannelsAreMapped = true;
+		for (String channel : channels) {
+			String mappedProductCertFilename = channelsToProductCertFilenamesMap.get(channel);
+			if (mappedProductCertFilename==null) {
+				allChannelsAreMapped = false;
+				log.warning("RHN Classic channel '"+channel+"' is NOT mapped in the file '"+channelCertMappingFilename+"'.");
+			}
+		}
+		return allChannelsAreMapped;
+	}
 	
 	/**
 	 * Use the python instnum.py program to determine what mapped product cert filenames from the channel-cert-mapping.txt correspond to this instnumber and should therefore be copied.
@@ -895,6 +921,33 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 	
+	@DataProvider(name="RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationData")
+	public Object[][] getRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationDataAsListOfLists());
+	}
+	public List<List<Object>> getRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
+		
+		// this test is only applicable on a RHEL 5Client
+		if (!clienttasks.releasever.equals("5Client")) return ll;
+		
+		// decide what product arch applies to our system
+		String arch = clienttasks.arch;	// default
+		//if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
+		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
+		
+		if (!Arrays.asList("i386","x86_64").contains(arch)) Assert.fail("RHEL 5Client should only be available on i386 and x86_64 arches (not: "+arch+").") ;
+		
+		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, 
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList(/*"rhel-"+arch+"-client-5" base channel*/),									Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-5"))})); // 68.pem
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList("rhel-"+arch+"-client-supplementary-5"),										Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-5"))})); // 68.pem
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList("rhel-"+arch+"-client-workstation-5"),										Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-workstation-5"))})); // 71.pem
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList("rhel-"+arch+"-client-supplementary-5","rhel-"+arch+"-client-workstation-5"),	Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-workstation-5"))})); // 71.pem
+
+		return ll;
+	}
+	
 	@DataProvider(name="RhnMigrateClassicToRhsmData")
 	public Object[][] getRhnMigrateClassicToRhsmDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getRhnMigrateClassicToRhsmDataAsListOfLists());
@@ -903,16 +956,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
-		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--no-auto"}));
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--no-auto"}));
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--no-auto --force"}));
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--cli-only"}));
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only"}));
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only --force"}));
+		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, List<String> expectedProductCertFilenames
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--no-auto",			null}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--no-auto",			null}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--no-auto --force",	null}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--cli-only",			null}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only",			null}));
+		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only --force",	null}));
 		return ll;
 	}
-	
 	
 	
 	@DataProvider(name="RhnChannelFromProductBaselineData")
