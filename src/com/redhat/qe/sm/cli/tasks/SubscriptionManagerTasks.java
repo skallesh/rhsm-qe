@@ -238,7 +238,16 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// attempt to install all required packages that are not already installed
-		String[] pkgs = new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data", "expect"};
+		List<String> pkgs = new ArrayList<String>(Arrays.asList(new String[]{"python-rhsm", "subscription-manager", "subscription-manager-gnome", "subscription-manager-firstboot", "subscription-manager-migration", "subscription-manager-migration-data", "expect"}));
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "790116"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String pkg = "subscription-manager-migration-data";
+			log.warning("Skipping the install of "+pkg+".");
+			pkgs.remove(pkg);
+		}
+		// END OF WORKAROUND
 		for (String pkg : pkgs) {
 			if (!isPackageInstalled(pkg)) {
 				Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0),
