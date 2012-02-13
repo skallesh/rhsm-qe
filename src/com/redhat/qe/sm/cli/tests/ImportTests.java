@@ -390,7 +390,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 
 			if (invalidCertificates.contains(importCertificate)) {
 				String errorMsg = new File(importCertificate).getName()+" is not a valid certificate file. Please use a valid certificate.";
-				Assert.assertTrue(importResult.getStdout()/*TODO CHANGE TO stderr after open bz fix */.contains(errorMsg),"The result from the import command contains expected message: "+errorMsg);		
+				Assert.assertTrue(importResult.getStdout().contains(errorMsg),"The result from the import command contains expected message: "+errorMsg);		
 
 				// verify that the expectedEntitlementCertFile does not exist
 				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementCertFile.getPath()),0,"After attempting multiple certificate import, the expected destination for the invalid entitlement cert file should NOT exist ("+expectedEntitlementCertFile+").");
@@ -409,6 +409,9 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 				Assert.assertEquals(RemoteFileTasks.testFileExists(client, expectedEntitlementKeyFile.getPath()),1,"After attempting multiple certificate import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
 			}
 		}
+		
+		// assert results for a successful import
+		Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(0), "The exit code from the import command indicates a success when there is a mix of good/bad import certs.");
 	}
 	
 	
@@ -500,7 +503,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(importResult.getExitCode(), Integer.valueOf(1), "The exit code from the import command indicates a failure.");
 		
 		// {0} is not a valid certificate file. Please use a valid certificate.
-		Assert.assertEquals(importResult.getStderr().trim(), invalidCertificate.getName()+" is not a valid certificate file. Please use a valid certificate.");
+		Assert.assertEquals(importResult.getStdout().trim(), invalidCertificate.getName()+" is not a valid certificate file. Please use a valid certificate.");
 		}
 		
 		// verify that the expectedEntitlementCertFile does NOT exist
