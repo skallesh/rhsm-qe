@@ -215,7 +215,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
-	public SSHCommandResult InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
+	public void InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
+		InstallNumMigrateToRhsmWithInstNumber(instNumber);
+	}
+	protected SSHCommandResult InstallNumMigrateToRhsmWithInstNumber(String instNumber) throws JSONException {
 		String command;
 		SSHCommandResult result;
 		
@@ -295,7 +298,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String installNumber = result.getStdout().trim();
 		
 		// test this install number explicitly (specifying --instnumber option)
-		SSHCommandResult explicitResult = InstallNumMigrateToRhsmWithInstNumber_Test(null,installNumber);
+		SSHCommandResult explicitResult = InstallNumMigrateToRhsmWithInstNumber(installNumber);
 		
 		// now test this install number implicitly (without specifying any options)
 		clienttasks.removeAllCerts(false, false, true);
@@ -739,6 +742,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// process result as a json object
 		JSONObject jsonResult = new JSONObject(result.getStdout());
 		String base = jsonResult.getString("Base");
+		
+		// Workstation (71.pem) is a special sub of the base Client (68.pem) - see bug 790217
+		// when the Workstation key is present on a base Client install, remove the base key - the effect will be to trump the base product cert with the Workstation product cert
+		if (jsonResult.has("Workstation")/* && base.equalsIgnoreCase("client") I DON'T THINK THIS IS NECESSARY*/) {
+			log.warning("This appears to be a Workstation install ("+instnumber+"). Therefore we will assume that the Workstation product cert trumps the Base.");
+			jsonResult.remove("Base");
+		}
+		
 		for (String mappedProductCertFilename : mappedProductCertFilenames) {
 			// example mappedProductCertFilenames:
 			// Server-Server-s390x-340665cdadee-72.pem  
@@ -748,7 +759,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			while (keys.hasNext()) {
 				String key = (String)keys.next();
 				String sub = jsonResult.getString(key);
-				
 				if (mappedProductCertFilename.startsWith(base+"-"+sub+"-"+arch+"-")) {
 					if (!mappedProductCertFilenamesCorrespondingToInstnumber.contains(mappedProductCertFilename)) {	// make sure the list contains unique filenames
 						mappedProductCertFilenamesCorrespondingToInstnumber.add(mappedProductCertFilename);
@@ -889,16 +899,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		// REFRENCE DATA FROM: http://linuxczar.net/articles/rhel-installation-numbers
-		ll.add(Arrays.asList(new Object[]{null,	"0000000e0017fc01"}));	// Client
-		ll.add(Arrays.asList(new Object[]{null,	"000000990007fc02"}));	// Red Hat Global Desktop
-		ll.add(Arrays.asList(new Object[]{null,	"000000e90007fc00"}));	// Server
-		ll.add(Arrays.asList(new Object[]{null,	"00000065000bfc00"}));	// Server with Cluster
-		ll.add(Arrays.asList(new Object[]{null,	"000000ab000ffc00"}));	// Server with ClusterStorage
-		ll.add(Arrays.asList(new Object[]{null,	"000000e30013fc00"}));	// Server with HPC
-		ll.add(Arrays.asList(new Object[]{null,	"000000890017fc00"}));	// Server with Directory
-		ll.add(Arrays.asList(new Object[]{null,	"00000052001bfc00"}));	// Server with SMB
-		//new BlockedByBzBug("773707")
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("790217"),	"0000000e0017fc01"}));	// Client
+		ll.add(Arrays.asList(new Object[]{null,							"000000990007fc02"}));	// Red Hat Global Desktop
+		ll.add(Arrays.asList(new Object[]{null,							"000000e90007fc00"}));	// Server
+		ll.add(Arrays.asList(new Object[]{null,							"00000065000bfc00"}));	// Server with Cluster
+		ll.add(Arrays.asList(new Object[]{null,							"000000ab000ffc00"}));	// Server with ClusterStorage
+		ll.add(Arrays.asList(new Object[]{null,							"000000e30013fc00"}));	// Server with HPC
+		ll.add(Arrays.asList(new Object[]{null,							"000000890017fc00"}));	// Server with Directory
+		ll.add(Arrays.asList(new Object[]{null,							"00000052001bfc00"}));	// Server with SMB
 
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("790217"),	"000000a4004ffc01"}));	// Product: RHEL Client   Options: Basic FullProd Workstation  {'Workstation': 'Workstation', 'Base': 'Client'}
+		ll.add(Arrays.asList(new Object[]{null,							"000000870003fc01"}));	// Product: RHEL Client   Options: NoSLA FullProd  {'Base': 'Client'}
 		return ll;
 	}
 	
