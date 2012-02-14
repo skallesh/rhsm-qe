@@ -192,7 +192,7 @@ public class SubscriptionManagerTasks {
 		}
 	}
 
-	public void installSubscriptionManagerRPMs(List<String> rpmUrls, String installOptions) {
+	public void installSubscriptionManagerRPMs(List<String> rpmInstallUrls, List<String> rpmUpdateUrls, String installOptions) {
 
 		// make sure the client's time is accurate
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop; ntpdate clock.redhat.com; service ntpd start; chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd:\\s+\\[  OK  \\]", null);
@@ -209,7 +209,7 @@ public class SubscriptionManagerTasks {
 		// uninstall current rpms
 		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
 		List<String> rpmUrlsReversed = new ArrayList<String>();
-		for (String rpmUrl : rpmUrls) rpmUrlsReversed.add(0,rpmUrl);
+		for (String rpmUrl : rpmInstallUrls) rpmUrlsReversed.add(0,rpmUrl);
 		for (String rpmUrl : rpmUrlsReversed) {
 			rpmUrl = rpmUrl.trim();
 			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
@@ -224,7 +224,7 @@ public class SubscriptionManagerTasks {
 		
 		// install new rpms
 		// http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/python-rhsm.noarch.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-gnome.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-firstboot.x86_64.rpm,      http://hudson.rhq.lab.eng.bos.redhat.com:8080/hudson/view/Entitlement/job/subscription-manager_RHEL5.8/lastSuccessfulBuild/artifact/rpms/x86_64/subscription-manager-migration.x86_64.rpm,     http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1&rpmname=subscription-manager-migration-data
-		for (String rpmUrl : rpmUrls) {
+		for (String rpmUrl : rpmInstallUrls) {
 			rpmUrl = rpmUrl.trim();
 			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
 			String pkg = rpm.replaceFirst("\\.rpm$", "");
@@ -250,10 +250,26 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		for (String pkg : pkgs) {
 			if (!isPackageInstalled(pkg)) {
-				Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0),
-						"Yum installed package: "+pkg);
+				Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y install "+pkg+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum installed package: "+pkg);
 			}
 		}
+		
+		// update new rpms
+		// http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-gnome,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-firstboot,     http://gibson.usersys.redhat.com/latestrpm/?arch=x86_64&basegrp=subscription-manager&version=0.98.15&rpmname=subscription-manager-migration,    http://gibson.usersys.redhat.com/latestrpm/?arch=noarch&version=1.11&release=el5&rpmname=subscription-manager-migration-data
+		String rpmPaths = "";
+		for (String rpmUrl : rpmUpdateUrls) {
+			rpmUrl = rpmUrl.trim();
+			String rpm = Arrays.asList(rpmUrl.split("/|=")).get(rpmUrl.split("/|=").length-1);
+			String pkg = rpm.replaceFirst("\\.rpm$", "");
+			String rpmPath = "/tmp/"+rpm; if (!rpmPath.endsWith(".rpm")) rpmPath+=".rpm";
+			
+			// upgrade rpmUrl
+			log.info("Upgrading RPM from "+rpmUrl+"...");
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"wget -O "+rpmPath+" --no-check-certificate \""+rpmUrl.trim()+"\"",Integer.valueOf(0),null,"."+rpmPath+". saved");
+			rpmPaths += rpmPath; rpmPaths += " ";
+		}
+		if (!rpmUpdateUrls.isEmpty()) Assert.assertEquals(sshCommandRunner.runCommandAndWait("yum -y localupdate "+rpmPaths+" "+installOptions).getExitCode(),Integer.valueOf(0), "Yum updated local rpms: "+rpmPaths);
+
 		
 		// remember the versions of the packages installed
 		for (String pkg : pkgs) {
