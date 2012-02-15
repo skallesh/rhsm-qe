@@ -56,7 +56,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions","" +
 				"Available Subscriptions are listed for '"+sm_clientUsername+"' to consume.");
-		Assert.assertContainsNoMatch(availableSubscriptionPools, "No Available subscription pools to list",
+		Assert.assertContainsNoMatch(availableSubscriptionPools, "No available subscription pools to list",
 				"Available Subscriptions are listed for '"+sm_clientUsername+"' to consume.");
 
 		log.warning("These manual TCMS instructions are not really achievable in this automated test...");
@@ -102,8 +102,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
-		Assert.assertContainsMatch(consumedProductSubscription, "No Consumed subscription pools to list",
-				"No Consumed subscription pools listed for '"+sm_clientUsername+"' after registering (without autosubscribe).");
+		Assert.assertContainsMatch(consumedProductSubscription, "No consumed subscription pools to list",
+				"No consumed subscription pools listed for '"+sm_clientUsername+"' after registering (without autosubscribe).");
 	}
 	
 	
@@ -320,7 +320,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult listResult = clienttasks.listConsumedProductSubscriptions();
 		
 		// assert redemption results
-		Assert.assertEquals(listResult.getStdout().trim(), "No Consumed subscription pools to list","List consumed should NOT require that the system be registered.");
+		Assert.assertEquals(listResult.getStdout().trim(), "No consumed subscription pools to list","List consumed should NOT require that the system be registered.");
 		Assert.assertEquals(listResult.getExitCode(), Integer.valueOf(0),"Exit code from list consumed when executed without being registered.");
 	}
 	

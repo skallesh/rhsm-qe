@@ -459,7 +459,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"The absence of system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is not registered using RHN Classic.");
 
 		// assert products are copied
-		expectedMsg = "Product Certificates copied successfully to "+clienttasks.productCertDir;
+		expectedMsg = String.format("Product certificates copied successfully to %s !",clienttasks.productCertDir);
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed

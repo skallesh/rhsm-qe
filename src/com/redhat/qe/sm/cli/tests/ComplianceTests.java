@@ -267,14 +267,14 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// assert that the Status of the installed product is "Future Subscription"
 			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
 				InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
-				Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of the installed product '"+productCert.productName+"' after subscribing to future subscription pool: "+futureSystemSubscriptionPool);
+				Assert.assertEquals(installedProduct.status, "Future Subscribed", "Status of the installed product '"+productCert.productName+"' after subscribing to future subscription pool: "+futureSystemSubscriptionPool);
 				// TODO assert the installedProduct start/end dates
 			}
 		}
 		
 		// simply assert that actually did subscribe every installed product to a future subscription pool
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			Assert.assertEquals(installedProduct.status, "Future Subscription", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
+			Assert.assertEquals(installedProduct.status, "Future Subscribed", "Status of every installed product should be a Future Subscription after subscribing all installed products to a future pool.  This Installed Product: "+installedProduct);
 		}
 		
 		// finally assert that the overall system is non-compliant

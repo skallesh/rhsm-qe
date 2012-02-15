@@ -141,12 +141,12 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// assert the results
 		log.info("SSHCommandResult from '"+client1tasks.hostname+"': "+result1);
 //		Assert.assertEquals(result1.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client1tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
-		Assert.assertEquals(result1.getStdout().trim(), clienttasks.msg_SuccessfulSubscribe+testPool.poolId,"On '"+client1tasks.hostname+"' we successfully subscribed to poolid: "+testPool.poolId);
+		Assert.assertEquals(result1.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",testPool.poolId),"On '"+client1tasks.hostname+"' we successfully subscribed to poolid: "+testPool.poolId);
 		Assert.assertEquals(result1.getStderr().trim(), "","No stderr information is expected on '"+client1tasks.hostname+"'.");
 		Assert.assertEquals(result1.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client1tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		log.info("SSHCommandResult from '"+client2tasks.hostname+"': "+result2);
 //		Assert.assertEquals(result2.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+client2tasks.hostname+"' indicates that it successfully subscribed to poolid: "+testPool.poolId);
-		Assert.assertEquals(result2.getStdout().trim(), clienttasks.msg_SuccessfulSubscribe+testPool.poolId,"On '"+client2tasks.hostname+"' we successfully subscribed to poolid: "+testPool.poolId);
+		Assert.assertEquals(result2.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",testPool.poolId),"On '"+client2tasks.hostname+"' we successfully subscribed to poolid: "+testPool.poolId);
 		Assert.assertEquals(result2.getStderr().trim(), "","No stderr information is expected on '"+client2tasks.hostname+"'.");
 		Assert.assertEquals(result2.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+client2tasks.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		
@@ -246,7 +246,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// assert the Winner and Loser
 		log.info("SSHCommandResult from '"+smtWinner.hostname+"': "+sshWinner);
 //		Assert.assertEquals(sshWinner.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+smtWinner.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
-		Assert.assertEquals(sshWinner.getStdout().trim(), clienttasks.msg_SuccessfulSubscribe+testPool.poolId,"On '"+smtWinner.hostname+"' we successfully subscribed to poolid '"+testPool.poolId+"' indicating that it won the subscribe race to the subscription pool's final entitlement.");
+		Assert.assertEquals(sshWinner.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",testPool.poolId),"On '"+smtWinner.hostname+"' we successfully subscribed to poolid '"+testPool.poolId+"' indicating that it won the subscribe race to the subscription pool's final entitlement.");
 		Assert.assertEquals(sshWinner.getStderr().trim(), "","No stderr information is expected on '"+smtWinner.hostname+"'.");
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
