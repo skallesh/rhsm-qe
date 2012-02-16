@@ -58,16 +58,17 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :do-not-overlap
                                     :contain-text
                                     :text-in-subscription
-                                    :unsubscribe])
+                                    :unsubscribe
+                                    :view-system-facts
+                                    :proxy-configuration
+                                    :import-certificate
+                                    :help])
 		    {:more-search-options "More search options"
                      :contains-the-text "Text in Subscription"
                      :date-entry "date-entry"
                      :register-system "Register"
+                     :redeem "Redeem a Subscription"
                      :unregister-system "Unregister"
-                     :view-system-facts "gtk-info"
-                     :import-certificate "add"
-                     :proxy-configuration "gtk-network"
-                     :help "help"
                      :update-certificates "Update"}))
 		    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
