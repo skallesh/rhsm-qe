@@ -193,7 +193,7 @@
                          (ui selectrow :owner-view owner)))    
            (ui click :register)
            (checkforerror 10)))
-       (ui waittillnotshowing :registering 60000))) 
+       (ui waittillnotshowing :registering 1800))) ;; 30 minutes
    (checkforerror))
   (sleep 10000))
 
