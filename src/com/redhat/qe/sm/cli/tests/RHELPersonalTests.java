@@ -659,8 +659,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Consumers of this type are not allowed to subscribe to the pool with id '"+personalPool.poolId+"'",
 					"Attempting to subscribe a system consumer to a personal pool is blocked.");
-			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),"No Consumed subscription pools to list",
-					"Because the subscribe attempt was blocked, there should still be 'No Consumed subscription pools to list'.");
+			Assert.assertEquals(client1tasks.listConsumedProductSubscriptions().getStdout().trim(),"No consumed subscription pools to list",
+					"Because the subscribe attempt was blocked, there should still be 'No consumed subscription pools to list'.");
 		}
 	}
 	
