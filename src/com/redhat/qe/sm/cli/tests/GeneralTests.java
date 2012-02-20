@@ -107,10 +107,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
 		// String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",		2,		null,	clienttasks.command+": error: no such option: --product"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",	2,		null,	clienttasks.command+": error: no such option: --regtoken"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",		2,		null,	clienttasks.command+": error: no such option: --pool"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",	255,	"Only one of --pool or --auto may be used.",	null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					2,		null,	clienttasks.command+": error: no such option: --product"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				2,		null,	clienttasks.command+": error: no such option: --regtoken"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					2,		null,	clienttasks.command+": error: no such option: --pool"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									255,	"This command requires that you specify a pool with --pool or use --auto.",	null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				255,	"Only one of --pool or --auto may be used.",	null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	255,	"Must use --auto with --servicelevel.",	null}));
 		
 		return ll;
 	}
