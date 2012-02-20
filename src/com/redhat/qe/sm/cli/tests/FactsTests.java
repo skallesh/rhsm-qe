@@ -299,7 +299,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		} else if (client2!=null && client2tasks.getRedhatRelease().startsWith("Red Hat Enterprise Linux Workstation")) {
 			client = client2; clienttasks = client2tasks;
 		} else {
-			throw new SkipException("This test requires a RHEL Workstation client.");
+			throw new SkipException("This test requires a Red Hat Enterprise Linux Workstation.");
 		}
 
 		// on a RHEL workstation register to candlepin (as type system)
