@@ -248,11 +248,13 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 //		Assert.assertEquals(sshWinner.getStdout().trim(), "","The lack of information in stdout from the subscribe command on '"+smtWinner.hostname+"' indicates that it won the subscribe race to the subscription pool's final entitlement.");
 		Assert.assertEquals(sshWinner.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",testPool.poolId),"On '"+smtWinner.hostname+"' we successfully subscribed to poolid '"+testPool.poolId+"' indicating that it won the subscribe race to the subscription pool's final entitlement.");
 		Assert.assertEquals(sshWinner.getStderr().trim(), "","No stderr information is expected on '"+smtWinner.hostname+"'.");
-		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");
+//		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
+		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt successfully granted an entitlement.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
 		Assert.assertEquals(sshLoser.getStdout().trim(), "No free entitlements are available for the pool with id '"+testPool.poolId+"'.", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
-		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");
+//		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
+		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(1),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt did not grant an entitlement.");
 	}
 
 	
