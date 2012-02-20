@@ -206,11 +206,22 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		this.productCertDir = clienttasks.productCertDir;	// store the original productCertDir
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 
-		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary
+		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary directory
 		clienttasks.unregister(null, null, null);
 		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, null, false, null, null, null);
+
+		//[root@jsefler-r63-server ~]# subscription-manager register --username testuser1 --password password --auto --org admin
+		//The system has been registered with id: 243ea73d-01bb-458d-a7a5-2d61fde69494 
+		//Installed Product Current Status:
+		//ProductName:          	Awesome OS for S390 Bits 
+		//Status:               	Not Subscribed           
+		//
+		//ProductName:          	Stackable with Awesome OS for x86_64 Bits
+		//Status:               	Subscribed   
+		
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
-		Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Installed Products:", "register with autosubscribe should NOT list the status of installed products when there are no installed products.");
+		Assert.assertTrue(InstalledProduct.parse(sshCommandResult.getStdout()).isEmpty(),
+				"The Installed Product Current Status should be empty when attempting to register with autosubscribe without any product certs installed.");
 		Assert.assertEquals(clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed products to list",
 				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
 		//List <InstalledProduct> currentlyInstalledProducts = InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null).getStdout());

@@ -1349,19 +1349,31 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
 		
 		// reset this.currentlyRegistered values
-		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {		// The system has been registered with id: 660faf39-a8f2-4311-acf2-5c1bb3c141ef
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
+			// The system has been registered with id: 660faf39-a8f2-4311-acf2-5c1bb3c141ef
 			this.currentlyRegisteredUsername = username;
 			this.currentlyRegisteredPassword = password;
 			this.currentlyRegisteredOrg = org;
 			this.currentlyRegisteredType = type;
 		} else
-		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// This system is already registered. Use --force to override
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && autosubscribe!=null && autosubscribe) {
+			// https://bugzilla.redhat.com/show_bug.cgi?id=689608
+			this.currentlyRegisteredUsername = username;
+			this.currentlyRegisteredPassword = password;
+			this.currentlyRegisteredOrg = org;
+			this.currentlyRegisteredType = type;	
 		} else
-		if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {		// Error
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (force==null || !force)) {
+			// This system is already registered. Use --force to override
+		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
+			// Traceback/Error
 			this.currentlyRegisteredUsername = null;
 			this.currentlyRegisteredPassword = null;
 			this.currentlyRegisteredOrg = null;
 			this.currentlyRegisteredType = null;	
+		} else {
+			Assert.fail("Encountered an unknown exitCode '"+sshCommandResult.getExitCode()+"' during a attempt to register.");
 		}
 		
 		// set autoheal for the consumer
@@ -1384,8 +1396,19 @@ public class SubscriptionManagerTasks {
 //			} 
 //		}
 
-		// set autoheal for newly registered consumer only
-		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
+//		// set autoheal for newly registered consumer only
+//		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
+//			try {
+//				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
+//				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//				Assert.fail(e.getMessage());
+//			} 
+//		}
+		
+		// set autoheal attribute of the consumer
+		if (autoheal!=null && !sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
 			try {
 				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
 				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
@@ -1419,8 +1442,20 @@ public class SubscriptionManagerTasks {
 		// when already registered, just return without any assertions
 		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
 
-		// assert results for a successful registration
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
+		// assert results for a successful registration exit code
+		if (autosubscribe==null || !autosubscribe)	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
+		
+		// assert the heading for the current status of the installed products
+		String msg = "Installed Product Current Status:";
+		if (autosubscribe==null || !autosubscribe)
+			Assert.assertFalse(sshCommandResult.getStdout().contains(msg),
+					"register without autosubscribe should not show a list of the \""+msg+"\".");
+		else
+			Assert.assertTrue(sshCommandResult.getStdout().contains(msg),
+					"register with autosubscribe should show a list of the \""+msg+"\".");	
+		
+		// assert stdout results for a successful registration id
 		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);	// applicable to RHEL61 and RHEL57. changed in RHEL62 due to feedback from mmccune https://engineering.redhat.com/trac/kalpana/wiki/SubscriptionManagerReview - jsefler 6/28/2011
