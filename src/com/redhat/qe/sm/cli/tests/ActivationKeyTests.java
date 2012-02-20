@@ -480,7 +480,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
 		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, (String)null, true, null, null, null, null));
-		clienttasks.subscribe(null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
 		// String consumer1Id = clienttasks.getCurrentConsumerId();

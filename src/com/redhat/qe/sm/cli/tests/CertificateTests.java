@@ -157,7 +157,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		//File entitlementCertFile = clienttasks.subscribeToSubscriptionPool(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
 		//^ replaced with the following to save logging/assertion time
-		clienttasks.subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
+		clienttasks.subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
 		Assert.assertNotNull(entitlementCert,"Successfully retrieved the entitlement cert granted after subscribing to pool: "+pool);
 		

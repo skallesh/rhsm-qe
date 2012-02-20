@@ -128,7 +128,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// subscribe to the future SubscriptionPool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,pool.poolId,null,null,null,null,null,null,null,null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null);
 
 		// assert that the granted EntitlementCert and its corresponding key exist
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);

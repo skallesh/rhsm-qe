@@ -602,7 +602,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			SubscriptionPool personSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",personProductId,client1tasks.getCurrentlyAllAvailableSubscriptionPools());
 			Assert.assertNotNull(personSubscriptionPool,
 					"Personal subscription with ProductId '"+personProductId+"' is available to user '"+username+"' registered as a person.");
-			client1tasks.subscribe(null, personSubscriptionPool.poolId, null, null, null, null, null, null, null, null);
+			client1tasks.subscribe(null, null, personSubscriptionPool.poolId, null, null, null, null, null, null, null, null);
 	
 			log.info("Now register client2 under username '"+username+"' as a system and assert the subpool ProductId '"+systemProductId+"' is available...");
 			client2tasks.unregister(null, null, null);
@@ -653,7 +653,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNull(personSubscriptionPool, "Personal ProductId '"+personProductId+"' is NOT listed in all available subscription pools to user '"+username+"' registered as a system.");
 			
 			// attempt to subscribe system consumer to personal pool
-			SSHCommandResult sshCommandResult = client1tasks.subscribe_(null, personalPool.poolId, null, null, null, null, null, null, null, null);
+			SSHCommandResult sshCommandResult = client1tasks.subscribe_(null, null, personalPool.poolId, null, null, null, null, null, null, null, null);
 			
 			// stdout: Consumers of this type are not allowed to subscribe to the pool with id 'ff8080812c9e72a8012c9e738ce70191'
 			//Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success."); // behavior prior to bug fix https://bugzilla.redhat.com/show_bug.cgi?id=689608

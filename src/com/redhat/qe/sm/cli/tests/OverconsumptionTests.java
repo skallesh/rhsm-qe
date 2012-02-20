@@ -85,7 +85,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		// No free entitlements are available for the pool with id	'8a9b90882df297d5012df31def5e00bb'.
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
-		Assert.assertEquals(client1tasks.subscribe_(null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'.");
+		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'.");
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),

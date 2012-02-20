@@ -312,7 +312,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 		// check for excessive blank lines after subscribing to each pool
 	    for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-    		clienttasks.subscribe_(null,pool.poolId,null,null,null,null,null,null,null,null);
+    		clienttasks.subscribe_(null,null,pool.poolId,null,null,null,null,null,null,null, null);
     		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError		
 		}
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();

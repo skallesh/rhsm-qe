@@ -2347,12 +2347,14 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe WITHOUT asserting results
+	 * @param servicelevel TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;									command += " subscribe";
 		if (auto!=null && auto)											command += " --auto";
+		if (servicelevel!=null)											command += " --servicelevel="+servicelevel;
 		if (poolIds!=null)		for (String poolId : poolIds)			command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)		command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)		command += " --regtoken="+regtoken;
@@ -2369,24 +2371,26 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * subscribe WITHOUT asserting results.
+	 * @param servicelevel TODO
 	 */
-	public SSHCommandResult subscribe_(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe_(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
 		List<String> productIds	= productId==null?null:Arrays.asList(new String[]{productId});
 		List<String> regtokens	= regtoken==null?null:Arrays.asList(new String[]{regtoken});
 
-		return subscribe_(auto, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
+		return subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
 	}
 
 
 	
 	/**
 	 * subscribe and assert all results are successful
+	 * @param servicelevel TODO
 	 */
-	public SSHCommandResult subscribe(Boolean auto, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = subscribe_(auto, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = subscribe_(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
 		auto = auto==null? false:auto;	// the non-null default value for auto is false
 
 		// assert results...
@@ -2436,14 +2440,15 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * subscribe and assert all results are successful
+	 * @param servicelevel TODO
 	 */
-	public SSHCommandResult subscribe(Boolean auto, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult subscribe(Boolean auto, String servicelevel, String poolId, String productId, String regtoken, String quantity, String email, String locale, String proxy, String proxyuser, String proxypassword) {
 
 		List<String> poolIds	= poolId==null?null:Arrays.asList(new String[]{poolId});
 		List<String> productIds	= productId==null?null:Arrays.asList(new String[]{productId});
 		List<String> regtokens	= regtoken==null?null:Arrays.asList(new String[]{regtoken});
 
-		return subscribe(auto, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
+		return subscribe(auto, servicelevel, poolIds, productIds, regtokens, quantity, email, locale, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -2480,7 +2485,7 @@ public class SubscriptionManagerTasks {
 		List<ProductSubscription> beforeProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// is this pool multi-entitleable?
 		/* This information is now in the SubscriptionPool itself
@@ -2708,7 +2713,7 @@ public class SubscriptionManagerTasks {
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");
 		
 		log.info("Subscribing to subscription pool: "+pool);
-		SSHCommandResult sshCommandResult = subscribe(null, pool.poolId, null, null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = subscribe(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 
 		// get the serial of the entitlement that was granted from this pool
 		//BigInteger serialNumber = CandlepinTasks.getOwnersNewestEntitlementSerialCorrespondingToSubscribedPoolId(this.currentlyRegisteredUsername,this.currentlyRegisteredPassword,SubscriptionManagerBaseTestScript.sm_serverUrl,getCurrentlyRegisteredOwnerKey(),pool.poolId);
@@ -2804,7 +2809,7 @@ public class SubscriptionManagerTasks {
 		for (SubscriptionPool pool : poolsBeforeSubscribe) {
 			poolIds.add(pool.poolId);
 		}
-		if (!poolIds.isEmpty()) subscribe(null,poolIds, null, null, null, null, null, null, null, null);
+		if (!poolIds.isEmpty()) subscribe(null,null, poolIds, null, null, null, null, null, null, null, null);
 		
 		// assert results when assumingRegisterType="system"
 		if (currentlyRegisteredType==null || currentlyRegisteredType.equals(ConsumerType.system)) {

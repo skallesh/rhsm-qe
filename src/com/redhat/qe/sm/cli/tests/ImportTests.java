@@ -562,7 +562,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 			SubscriptionPool futurePool = (SubscriptionPool) futureSystemSubscriptionPoolsData[randomGenerator.nextInt(futureSystemSubscriptionPoolsData.length)][0];
 			
 			// subscribe to the future subscription pool
-			SSHCommandResult subscribeResult = clienttasks.subscribe(null,futurePool.poolId,null,null,null,null,null,null,null,null);
+			SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,futurePool.poolId,null,null,null,null,null,null,null, null);
 	
 			// assert that the granted entitlement cert begins in the future
 			Calendar now = new GregorianCalendar();	now.setTimeInMillis(System.currentTimeMillis());

@@ -239,7 +239,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNull(CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId),"The current consumer has not been granted any entitlements from pool '"+pool.poolId+"'.");
 		Assert.assertNotNull(clienttasks.subscribeToSubscriptionPool_(pool),"Authenticator '"+sm_clientUsername+"' has been granted an entitlement from pool '"+pool.poolId+"' under organization '"+sm_clientOrg+"'.");
 		BigInteger serial1 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
-		SSHCommandResult result = clienttasks.subscribe_(null,pool.poolId,null,null,null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null);
 
 		if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
 			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),
@@ -281,7 +281,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe to all pool ids
 		log.info("Attempting to subscribe to multiple pools with duplicate and bad pool ids...");
-		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, poolIds, null, null, null, null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null, null, null, null, null, null, null);
 		
 		/*
 		No such entitlement pool: bad123
@@ -454,7 +454,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
 		
 		// autosubscribe
-		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,(String)null,null,null,null,null,null,null,null, null);
+		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);
 		
 		/* RHEL57 RHEL61 Example Results...
 		# subscription-manager subscribe --auto
@@ -576,12 +576,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
 		
 		// autosubscribe once
-		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,(String)null,null,null,null,null,null,null,null, null);
+		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);
 		List<File> entitlementCertFiles1 = clienttasks.getCurrentEntitlementCertFiles();
 		List<InstalledProduct> autosubscribedProductStatusList1 = InstalledProduct.parse(result1.getStdout());
 		
 		// autosubscribe twice
-		SSHCommandResult result2 = clienttasks.subscribe(Boolean.TRUE,(String)null,null,null,null,null,null,null,null, null);
+		SSHCommandResult result2 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);
 		List<File> entitlementCertFiles2 = clienttasks.getCurrentEntitlementCertFiles();
 		List<InstalledProduct> autosubscribedProductStatusList2 = InstalledProduct.parse(result2.getStdout());
 		
@@ -589,6 +589,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(entitlementCertFiles2.size(), entitlementCertFiles1.size(), "The number of granted entitlement certs is the same after a second autosubscribe.");
 		Assert.assertEquals(autosubscribedProductStatusList2.size(), autosubscribedProductStatusList1.size(), "The stdout from autosubscribe reports the same number of installed product status entries after a second autosubscribe.");
 		Assert.assertTrue(autosubscribedProductStatusList1.containsAll(autosubscribedProductStatusList2), "The list of installed product status entries from a second autosubscribe is the same as the first.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithAutoAndUnavailableServicelevel_Test() throws Exception {
+
+		// before testing, make sure all the expected subscriptionPoolProductId are available
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		
+		// subscribe with auto specifying an unavailable service level
+		SSHCommandResult result = clienttasks.subscribe_(Boolean.TRUE,"FOO",(String)null,null,null,null,null,null,null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to subscribe with auto and an unavailable service level.");
+		Assert.assertEquals(result.getStdout().trim(), "Cannot set a service level for a consumer that is not available to its organization.", "Stdout from an attempt to subscribe with auto and an unavailable service level.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to subscribe with auto and an unavailable service level.");
 	}
 	
 	
@@ -605,7 +622,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// subscribe with quantity
-		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,pool.poolId,null,null,quantity,null,null,null,null, null);
+		SSHCommandResult sshCommandResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,quantity,null,null,null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after subscribe with quantity=\""+quantity+"\" option:");
@@ -667,10 +684,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(consumer2Pool.quantity, String.valueOf(consumer2Quantity),"The pool quantity available to consumer2 has been decremented by the quantity consumer1 consumed.");
 		
 		// assert that consumer2 can NOT oversubscribe
-		Assert.assertTrue(!clienttasks.subscribe(null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity+1),null,null,null,null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to oversubscribe using the remaining pool quantity+1 should NOT succeed.");
+		Assert.assertTrue(!clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity+1),null,null,null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to oversubscribe using the remaining pool quantity+1 should NOT succeed.");
 
 		// assert that consumer2 can successfully consume all the remaining pool quantity
-		Assert.assertTrue(clienttasks.subscribe(null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null,null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
+		Assert.assertTrue(clienttasks.subscribe(null,null,consumer2Pool.poolId,null,null,String.valueOf(consumer2Quantity),null,null,null, null, null).getStdout().startsWith("Success"),"An attempt by consumer2 to exactly consume the remaining pool quantity should succeed.");
 		
 		// start rolling back the subscribes
 		
@@ -718,7 +735,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int quantity = quantities.get(quantities.size()/2);	// choose the median as the quantity to subscribe with
 		
 		// collectively subscribe to all pools with --quantity
-		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, poolIds, null, null, String.valueOf(quantity), null, null, null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null, String.valueOf(quantity), null, null, null, null, null);
 		
 		/*
 		Multi-entitlement not supported for pool with id '8a90f8c6320e9a4401320e9be0e20480'.
@@ -758,7 +775,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		now.setTimeInMillis(System.currentTimeMillis());
 		
 		// subscribe to the future subscription pool
-		SSHCommandResult subscribeResult = clienttasks.subscribe(null,pool.poolId,null,null,null,null,null,null,null,null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(null,null,pool.poolId,null,null,null,null,null,null,null, null);
 
 		// assert that the granted entitlement cert begins in the future
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(pool);
