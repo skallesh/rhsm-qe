@@ -505,6 +505,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		registerOptions.add("--autosubscribe");
 		registerOptions.add("--force");
 		registerOptions.add("--activationkey=ACTIVATION_KEYS");
+		registerOptions.add("--servicelevel=SERVICE_LEVEL");
 		registerOptions.add("--proxy=PROXY_URL");
 		registerOptions.add("--proxyuser=PROXY_USER");
 		registerOptions.add("--proxypassword=PROXY_PASSWORD");
@@ -524,6 +525,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		subscribeOptions.add("--pool=POOL");
 		subscribeOptions.add("--quantity=QUANTITY");
 		subscribeOptions.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
+		subscribeOptions.add("--servicelevel=SERVICE_LEVEL");
 		//subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 		//subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
 		//subscribeOptions.add("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
