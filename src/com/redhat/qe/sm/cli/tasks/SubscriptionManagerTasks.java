@@ -1324,10 +1324,11 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
+	 * @param servicelevel TODO
 	 * @param autoheal TODO
 	 * @throws Exception 
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
@@ -1339,6 +1340,7 @@ public class SubscriptionManagerTasks {
 		if (name!=null)															command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerId!=null)													command += " --consumerid="+consumerId;
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
+		if (servicelevel!=null)													command += " --servicelevel="+servicelevel;
 		if (activationKeys!=null)	for (String activationKey : activationKeys)	command += " --activationkey="+activationKey;
 		if (force!=null && force)												command += " --force";
 		if (proxy!=null)														command += " --proxy="+proxy;
@@ -1423,21 +1425,22 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
+	 * @param servicelevel TODO
 	 * @param autoheal TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationKeys = activationKey==null?null:Arrays.asList(new String[]{activationKey});
 
-		return register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register_(username, password, org, environment, type, name, consumerId, autosubscribe, servicelevel, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
 
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerId, autosubscribe, servicelevel, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
 	
 		// when already registered, just return without any assertions
 		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1485,11 +1488,11 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationKeys = activationKey==null?null:Arrays.asList(new String[]{activationKey});
 
-		return register(username, password, org, environment, type, name, consumerId, autosubscribe, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register(username, password, org, environment, type, name, consumerId, autosubscribe, servicelevel, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -1563,7 +1566,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,null,null,consumerId, null, new ArrayList<String>(), null, null, null, null, null);
+		return register(username,password,null,null,null,null,consumerId, null, null, new ArrayList<String>(), null, null, null, null, null);
 	}
 	
 	

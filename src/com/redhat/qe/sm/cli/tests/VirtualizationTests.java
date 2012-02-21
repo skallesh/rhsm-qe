@@ -883,7 +883,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// create host consumer A
-		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, null, null, null, null));
 		
 		for (int c=0;c<2;c++) { // run this test twice
 			
@@ -909,7 +909,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			
 			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
 			clienttasks.clean(null, null, null);	// this will keep consumer A registered
-			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null, null));
+			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, null, null, null, null));
 
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			List<String> expectedGuestIdsOnHostB = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++}); 
@@ -983,7 +983,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnGuest("kvm");
 		
 		// create a guest consumer
-		String consumerIdOfGuest = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+		String consumerIdOfGuest = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, null, null, null, null));
 			
 		// call Candlepin API to PUT some guestIds onto the guest consumer
 		JSONObject jsonData = new JSONObject();
@@ -1021,7 +1021,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		forceVirtWhatToReturnHost();
 		
 		// create host consumer A
-		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, null, null, null, null));
+		String consumerIdOfHostA = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, null, null, null, null));
 		
 		for (int c=0;c<2;c++) { // run this test twice
 			
@@ -1049,7 +1049,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			
 			// Now let's create a second host consumer B and add its own guestIds to it and assert the same test
 			clienttasks.clean(null, null, null);	// this will keep consumer A registered
-			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, null, null, null, null));
+			String consumerIdOfHostB = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, null, null, null, null));
 
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			// NOTE: decrementing k will effectively move the last guestId from HostA to HostB
@@ -1138,7 +1138,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	

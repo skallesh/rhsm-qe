@@ -558,7 +558,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (List)null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (List)null, true, null, null, null, null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm while already registered to RHSM.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "This machine appears to be already registered to Certificate-based RHN.  Exiting.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm while already registered to RHSM.");

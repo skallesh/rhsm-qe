@@ -55,12 +55,12 @@ public class RolesTests extends SubscriptionManagerCLITestScript {
 		switch(AccessType.valueOf(access)) {
 			case ALL:
 				// when a user has ALL access to orgKey, then the user should be able to successfully register to that org.
-				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, (String)null, true, null, null, null, null);
+				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, (String)null, true, null, null, null, null);
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can successfully register with access '"+access+"'.");
 				Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 				break;
 			case READ_ONLY:
-				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, (String)null, true, null, null, null, null);
+				sshCommandResult = clienttasks.register_(username, password, orgKey, null, null, null, null, null, null, (String)null, true, null, null, null, null);
 				Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code indicates that user '"+username+"' with role '"+roleName+"' to org '"+orgKey+"' can NOT register with access '"+access+"'.");
 				//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization/owner "+orgKey);	// before string translation files were committed
 				Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), "User "+username+" cannot access organization "+orgKey);

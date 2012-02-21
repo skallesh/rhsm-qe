@@ -293,7 +293,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(addedQuantity, addQuantity, "Pool id '"+poolId+"' appears to be successfully added with quantity '"+addQuantity+"' to activation key: "+jsonActivationKey);
 
 		// register with the activation key
-		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register_(null, null, sm_clientOrg, null, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null, null);
 		
 		// handle the case when "Consumers of this type are not allowed to subscribe to the pool with id '"+poolId+"'."
 		ConsumerType type = null;
@@ -302,7 +302,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering a system consumer using an activationKey containing a pool that requires a non-system consumer type should fail.");
 			// now register with the same activation key using the needed ConsumerType
 			type = ConsumerType.valueOf(CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, poolId, "requires_consumer_type"));
-			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, jsonActivationKey.getString("name"), false /*was already unregistered by force above*/, null, null, null, null);
+			registerResult = clienttasks.register_(null, null, sm_clientOrg, null, type, null, null, null, null, jsonActivationKey.getString("name"), false /*was already unregistered by force above*/, null, null, null, null);
 		}
 		
 		// handle the case when "A consumer type of 'person' cannot be used with activation keys"
@@ -444,7 +444,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			for (String differentOrg : orgs) {
 				if (differentOrg.equals(org)) continue;
 				
-				SSHCommandResult registerResult = clienttasks.register_(null,null,differentOrg,null,null,null,null,null,activationKeyName,true,null,null,null, null);
+				SSHCommandResult registerResult = clienttasks.register_(null,null,differentOrg,null,null,null,null,null,null,activationKeyName,true,null,null, null, null);
 
 				// assert the sshCommandResult here
 				Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The expected exit code from the register attempt with activationKey using the wrong org.");
@@ -479,7 +479,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// now consume an entitlement from the pool
 		String requires_consumer_type = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"), "requires_consumer_type");
 		ConsumerType consumerType = requires_consumer_type==null?null:ConsumerType.valueOf(requires_consumer_type);
-		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, (String)null, true, null, null, null, null));
+		String consumer1Id = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, consumerType, null, null, null, null, (String)null, true, null, null, null, null));
 		clienttasks.subscribe(null, null, jsonPool.getString("id"), null, null, null, null, null, null, null, null);
 
 		// remember the consuming consumerId
@@ -555,7 +555,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonActivationKey.getJSONArray("pools").length(), jsonPoolsAddedToActivationKey.length(),"The number of attempted pools added equals the number of pools retrieved from the activation key: "+jsonActivationKey);
 		
 		// register with the activation key
-		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, jsonActivationKey.getString("name"), true, null, null, null, null);
 		
 		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -621,7 +621,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		commaSeparatedActivationKeyNames = commaSeparatedActivationKeyNames.replaceFirst(",$", ""); // strip off trailing comma
 		
 		// register with the activation key specified as a single string
-		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, commaSeparatedActivationKeyNames, true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, commaSeparatedActivationKeyNames, true, null, null, null, null);
 		
 		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -683,7 +683,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		if (addQuantity==null) addQuantity=1;
 		
 		// register with the activation key specified as a single string
-		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, activationKeyNames, true, null, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(null, null, sm_clientOrg, null, null, null, null, null, null, activationKeyNames, true, null, null, null, null);
 		
 		// assert that all the pools were consumed
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -710,7 +710,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void unregisterAllSystemConsumerIds() {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
-				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, (String)null, Boolean.TRUE, null, null, null, null);
+				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, (String)null, Boolean.TRUE, null, null, null, null);
 				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
 				clienttasks.unregister_(null, null, null);
 			}

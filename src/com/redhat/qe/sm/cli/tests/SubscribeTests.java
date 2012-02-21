@@ -55,7 +55,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
 //		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
@@ -213,7 +213,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41686)
 	public void SubscribeConsumerToEachAvailableSubscriptionPoolUsingPoolId_Test(String username, String password, String owner){
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, (String)null, Boolean.FALSE, false, null, null, null);
+		clienttasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.FALSE, null, (String)null, Boolean.FALSE, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 	}
 	
@@ -267,7 +267,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// begin the test with a cleanly registered system
 		clienttasks.unregister(null, null, null);
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 	    
 		// assemble a list of all the available SubscriptionPool ids with duplicates and bad ids
 		List <String> poolIds = new ArrayList<String>();
@@ -338,7 +338,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
-		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null));
+		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
 		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
 		clienttasks.restart_rhsmcertd(minutes, null, false); sleep(10000); // allow 10sec for the initial update
@@ -352,7 +352,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		
 		log.info("Finally test with a registered user and verify that the rhsmcertd succeeds because he can identify himself to the candlepin server.");
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, (String)null, Boolean.TRUE, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerid, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 		clienttasks.restart_rhsmcertd(minutes, null, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when registered..."; // https://tcms.engineering.redhat.com/case/41692/
@@ -388,7 +388,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		
 		// register a clean user
-	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 	    
 	    // subscribe to all the available pools
 	    clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -417,7 +417,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
 	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 
 		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -448,7 +448,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		
 		// get the expected subscriptionPoolProductIdData
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
@@ -570,7 +570,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeWithAutoMoreThanOnce_Test() throws Exception {
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// get the expected subscriptionPoolProductIdData
 		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
@@ -593,13 +593,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
-			groups={},
+			groups={/*blockedByBug-795798*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithAutoAndUnavailableServicelevel_Test() throws Exception {
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// subscribe with auto specifying an unavailable service level
 		SSHCommandResult result = clienttasks.subscribe_(Boolean.TRUE,"FOO",(String)null,null,null,null,null,null,null, null, null);
@@ -670,7 +670,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// clean the client and register a second consumer
 		clienttasks.clean(null,null,null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer2", null, null, (String)null, false, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer2", null, null, null, (String)null, false, false, null, null, null);
 		
 		// remember the second consumerId
 		String consumer2Id = clienttasks.getCurrentConsumerId(); systemConsumerIds.add(consumer2Id);
@@ -693,14 +693,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// restore consumer1, unsubscribe, and assert remaining quantities
 		clienttasks.clean(null,null,null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, (String)null, false, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer1Id, null, null, (String)null, false, false, null, null, null);
 		Assert.assertNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()),"SubscriptionPool '"+consumer1Pool.poolId+"' should NOT be available (because consumer1 is already subscribed to it).");
 		clienttasks.unsubscribe(null,clienttasks.getCurrentlyConsumedProductSubscriptions().get(0).serialNumber,null,null,null);
 		consumer1Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer1Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools()); 
 		Assert.assertEquals(consumer1Pool.quantity, String.valueOf(totalPoolQuantity-consumer2Quantity),"The pool quantity available to consumer1 has incremented by the quantity consumer1 consumed.");
 		
 		// restore consumer2, unsubscribe, and assert remaining quantities
-		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumer2Id, null, null, (String)null, true, false, null, null, null);
 		consumer2Pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", consumer2Pool.poolId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		//Assert.assertNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should NOT be available (because consumer2 is already subscribed to it).");
 		Assert.assertNotNull(consumer2Pool,"SubscriptionPool '"+consumer2Pool.poolId+"' should be available even though consumer2 is already subscribed to it because it is multi-entitleable.");
@@ -718,7 +718,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeWithQuantityToMultiplePools_Test() throws JSONException, Exception {
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// get all the available pools
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -807,7 +807,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void unregisterAllSystemConsumerIds() {
 		if (clienttasks!=null) {
 			for (String systemConsumerId : systemConsumerIds) {
-				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, (String)null, Boolean.TRUE, null, null, null, null);
+				clienttasks.register_(sm_clientUsername,sm_clientPassword,null,null,null,null,systemConsumerId, null, null, (String)null, Boolean.TRUE, null, null, null, null);
 				clienttasks.unsubscribe_(Boolean.TRUE, null, null, null, null);
 				clienttasks.unregister_(null, null, null);
 			}
@@ -866,7 +866,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer", null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionQuantityConsumer", null, null, null, (String)null, true, false, null, null, null);
 		
 //		// find a random testpool with a positive quantity
 //		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
