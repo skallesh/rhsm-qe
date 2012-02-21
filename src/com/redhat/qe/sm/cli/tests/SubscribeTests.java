@@ -596,16 +596,37 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			groups={/*blockedByBug-795798*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithAutoAndUnavailableServicelevel_Test() throws Exception {
-
-		// before testing, make sure all the expected subscriptionPoolProductId are available
+	public void SubscribeWithAutoAndUnavailableServiceLevel_Test() {
+		
+		// register with force
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// subscribe with auto specifying an unavailable service level
-		SSHCommandResult result = clienttasks.subscribe_(Boolean.TRUE,"FOO",(String)null,null,null,null,null,null,null, null, null);
+		SSHCommandResult result = clienttasks.subscribe_(true,"FOO",(String)null,null,null,null,null,null,null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStdout().trim(), "Cannot set a service level for a consumer that is not available to its organization.", "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to subscribe with auto and an unavailable service level.");
+	}
+	
+	
+	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
+			groups={"AcceptanceTests"},
+			dataProvider="getSubscribeWithAutoAndServicelevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) {
+		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
+		
+		// start fresh by returning all entitlements
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+		// subscribe with auto specifying a valid service level
+		clienttasks.subscribe(true,serviceLevel,(String)null,null,null,null,null,null,null, null, null);
+
+		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+		}
 	}
 	
 	
@@ -618,7 +639,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		log.info("Testing subscription-manager subscribe using various good and bad values for the --quantity option.");
 		if(pool==null) throw new SkipException(expectedStderrRegex);	// special case in the dataProvider to identify when a test pool was not available; expectedStderrRegex contains a message for what kind of test pool was being searched for.
 	
-		// start fresh by returning all subscriptions
+		// start fresh by returning all entitlements
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// subscribe with quantity
@@ -940,6 +961,28 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));
+		}
+		
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getSubscribeWithAutoAndServicelevelData")
+	public Object[][] getSubscribeWithAutoAndServicelevelDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscribeWithAutoAndServicelevelDataAsListOfLists());
+	}
+	protected List<List<Object>>getSubscribeWithAutoAndServicelevelDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register with force
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, (String)null, true, false, null, null, null));
+		
+		// what is the consumer's org?
+		String org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
+
+		// get all the valid service levels available to this org	
+		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
+			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
 		}
 		
 		return ll;

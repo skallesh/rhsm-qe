@@ -611,6 +611,15 @@ schema generation failed
 		return jsonOrg.getString("id");
 	}
 	
+	public static List<String> getServiceLevelsForOrgKey(String authenticator, String password, String url, String orgKey) throws JSONException, Exception {
+		JSONArray jsonLevels = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+orgKey+"/servicelevels"));	
+		List<String> serviceLevels = new ArrayList<String>();
+		for (int i=0; i<jsonLevels.length(); i++) {
+			serviceLevels.add(jsonLevels.getString(i));
+		}
+		return serviceLevels;
+	}
+	
 	public static void dropAllConsumers(final String owner, final String password, final String url) throws Exception{
 		JSONArray consumers = new JSONArray(getResourceUsingRESTfulAPI(owner, password, url, "consumers"));
 		List<String> consumerRefs = new ArrayList<String>();

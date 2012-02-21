@@ -1328,7 +1328,7 @@ public class SubscriptionManagerTasks {
 	 * @param autoheal TODO
 	 * @throws Exception 
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
@@ -1338,10 +1338,10 @@ public class SubscriptionManagerTasks {
 		if (environment!=null)													command += " --environment="+environment;
 		if (type!=null)															command += " --type="+type;
 		if (name!=null)															command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
-		if (consumerId!=null)													command += " --consumerid="+consumerId;
+		if (consumerid!=null)													command += " --consumerid="+consumerid;
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
 		if (servicelevel!=null)													command += " --servicelevel="+servicelevel;
-		if (activationKeys!=null)	for (String activationKey : activationKeys)	command += " --activationkey="+activationKey;
+		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+activationkey;
 		if (force!=null && force)												command += " --force";
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;
@@ -1378,37 +1378,6 @@ public class SubscriptionManagerTasks {
 			Assert.fail("Encountered an unknown exitCode '"+sshCommandResult.getExitCode()+"' during a attempt to register.");
 		}
 		
-		// set autoheal for the consumer
-//		if (autoheal!=null && !sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
-//			// first get the consumerId
-//			if (consumerId==null) {
-//				if (sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {	// The system has been registered with id: 660faf39-a8f2-4311-acf2-5c1bb3c141ef
-//					consumerId = getCurrentConsumerId(sshCommandResult);
-//				} else
-//				if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {	// This system is already registered. Use --force to override
-//					consumerId = getCurrentConsumerId();
-//				}
-//			}
-//			// now set the autoheal attribute of the consumer
-//			try {
-//				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, autoheal);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				Assert.fail(e.getMessage());
-//			} 
-//		}
-
-//		// set autoheal for newly registered consumer only
-//		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
-//			try {
-//				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
-//				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//				Assert.fail(e.getMessage());
-//			} 
-//		}
-		
 		// set autoheal attribute of the consumer
 		if (autoheal!=null && !sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
 			try {
@@ -1428,19 +1397,20 @@ public class SubscriptionManagerTasks {
 	 * @param servicelevel TODO
 	 * @param autoheal TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
-		List<String> activationKeys = activationKey==null?null:Arrays.asList(new String[]{activationKey});
+		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register_(username, password, org, environment, type, name, consumerId, autosubscribe, servicelevel, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
 
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, List<String> activationKeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
-		
-		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerId, autosubscribe, servicelevel, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+
+		String msg;
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	
 		// when already registered, just return without any assertions
 		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1450,7 +1420,7 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the register command indicates a success.");
 		
 		// assert the heading for the current status of the installed products
-		String msg = "Installed Product Current Status:";
+		msg = "Installed Product Current Status:";
 		if (autosubscribe==null || !autosubscribe)
 			Assert.assertFalse(sshCommandResult.getStdout().contains(msg),
 					"register without autosubscribe should not show a list of the \""+msg+"\".");
@@ -1462,13 +1432,17 @@ public class SubscriptionManagerTasks {
 		if (type==ConsumerType.person) name = username;		// https://bugzilla.redhat.com/show_bug.cgi?id=661130
 		if (name==null) name = this.hostname;				// https://bugzilla.redhat.com/show_bug.cgi?id=669395
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+name);	// applicable to RHEL61 and RHEL57. changed in RHEL62 due to feedback from mmccune https://engineering.redhat.com/trac/kalpana/wiki/SubscriptionManagerReview - jsefler 6/28/2011
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
+		msg = "The system has been registered with id: [a-f,0-9,\\-]{36}";
+		Assert.assertTrue(Pattern.compile(".*"+msg+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from register contains a match to expected msg: "+msg);
 		
 		// assert that register with consumerId returns the expected uuid
-		if (consumerId!=null) {
+		if (consumerid!=null) {
 			//Assert.assertEquals(sshCommandResult.getStdout().trim(), consumerId+" "+username, "register to an exiting consumer was a success");
 			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^"+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395	// applicable to RHEL61 and RHEL57.
-			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: "+consumerId, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
+			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "The system has been registered with id: "+consumerid, "register to an exiting consumer was a success");	// removed name from assert to account for https://bugzilla.redhat.com/show_bug.cgi?id=669395
+			msg = "The system has been registered with id: "+consumerid;
+			Assert.assertTrue(sshCommandResult.getStdout().contains(msg), "Stdout from register contains a match to expected msg: "+msg);
 		}
 		
 		// assert certificate files are installed into /etc/pki/consumer
@@ -1476,7 +1450,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
-		boolean invokeWorkaroundWhileBugIsOpen = true;
+		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
 		String bugId="639417"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
@@ -1488,11 +1462,11 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerId, Boolean autosubscribe, String servicelevel, String activationKey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
-		List<String> activationKeys = activationKey==null?null:Arrays.asList(new String[]{activationKey});
+		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register(username, password, org, environment, type, name, consumerId, autosubscribe, servicelevel, activationKeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -2432,8 +2406,12 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert the stdout msg was a success
-		if (auto)	Assert.assertTrue(sshCommandResult.getStdout().startsWith("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
-		else		Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
+		if (servicelevel!=null)
+			Assert.assertTrue(sshCommandResult.getStdout().contains("Service level set to: "+servicelevel), "The autosubscribe stdout reports: Service level set to: "+servicelevel);
+		if (auto)
+			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");
+		else
+			Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
 
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");

@@ -206,6 +206,24 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
+			groups={"AcceptanceTests"},
+			dataProvider="getRegisterWithAutosubscribeAndServicelevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithAutosubscribeAndServicelevel_Test(Object bugzulla, String serviceLevel) {
+		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
+
+		// register with autosubscribe specifying a valid service level
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, (String)null, true, null, null, null, null);
+
+		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
 			enabled=true)
@@ -1221,4 +1239,25 @@ Expected Results:
 		return ll;
 	}
 	
+	
+	@DataProvider(name="getRegisterWithAutosubscribeAndServicelevelData")
+	public Object[][] getRegisterWithAutosubscribeAndServicelevelDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithAutosubscribeAndServicelevelDataAsListOfLists());
+	}
+	protected List<List<Object>>getRegisterWithAutosubscribeAndServicelevelDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
+		String org = sm_clientOrg;
+		if (org==null) {
+			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, (String)null, true, false, null, null, null));
+			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
+		}
+		// get all the valid service levels available to this org	
+		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
+			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+		}
+		
+		return ll;
+	}
 }
