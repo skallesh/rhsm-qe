@@ -114,7 +114,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				255,	"Only one of --pool or --auto may be used.",	null}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	255,	"Must use --auto with --servicelevel.",	null}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				255,	"Must use --autosubscribe with --servicelevel.",	null}));
-		
+
 		return ll;
 	}
 }
