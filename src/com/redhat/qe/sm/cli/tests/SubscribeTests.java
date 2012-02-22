@@ -614,7 +614,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscribeWithAutoAndServicelevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) {
+	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
 		// start fresh by returning all entitlements
@@ -622,6 +622,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// subscribe with auto specifying a valid service level
 		clienttasks.subscribe(true,serviceLevel,(String)null,null,null,null,null,null,null, null, null);
+		
+		// get the current consumer object and assert that the serviceLevel persisted
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
+		Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");
 
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {

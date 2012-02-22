@@ -1833,6 +1833,44 @@ public class SubscriptionManagerTasks {
 	}
 	
 	
+	// service-level module tasks ************************************************************
+
+	/**
+	 * service_level without asserting results
+	 */
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " service-levels";
+		if (show!=null && show)			command += " --show";
+		if (list!=null && list)			command += " --list";
+		if (username!=null)				command += " --username="+username;
+		if (password!=null)				command += " --password="+password;
+		if (org!=null)					command += " --org="+org;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager service-level"
+	 */
+	public SSHCommandResult service_level(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = service_level_(show, list, username, password, org, proxy, proxyuser, proxypassword);
+		
+		// TODO assert results...
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the service-level command indicates a success.");
+		
+		return sshCommandResult; // from the service-level command
+	}
+	
+	
 	// config module tasks ************************************************************
 
 	/**
