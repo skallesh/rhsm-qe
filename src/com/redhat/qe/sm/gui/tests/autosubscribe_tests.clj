@@ -79,6 +79,7 @@
                        "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? somedir))
   (let [beforesubs (tasks/warn-count)
@@ -105,6 +106,7 @@
                        "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? alldir))
   (let [beforesubs (tasks/warn-count)
@@ -132,6 +134,7 @@
                        "blockedByBug-743704"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nodir))
   (let [beforesubs (tasks/warn-count)
@@ -158,6 +161,7 @@
                        "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nonedir))
   (verify (= 0 (tasks/warn-count)))
