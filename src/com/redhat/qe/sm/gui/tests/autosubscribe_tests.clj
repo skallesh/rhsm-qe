@@ -83,13 +83,16 @@
   (tasks/restart-app)
   (verify (dirsetup? somedir))
   (let [beforesubs (tasks/warn-count)
+        dircount (trim (.getStdout
+                        (.runCommandAndWait
+                         @clientcmd
+                         (str "ls " somedir " | wc -l"))))
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
         ownername (ctasks/get-owner-display-name user pass key)]
     (verify (= (str beforesubs)
-               (trim (.getStdout
-                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+               dircount))
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
