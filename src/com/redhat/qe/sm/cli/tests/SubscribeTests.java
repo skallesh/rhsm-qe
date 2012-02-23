@@ -621,7 +621,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// subscribe with auto specifying a valid service level
-		clienttasks.subscribe(true,serviceLevel,(String)null,null,null,null,null,null,null, null, null);
+		clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null);
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
@@ -630,6 +630,34 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: after subscribing with auto and a service level, assert that another subscribe with auto still uses the persisted service level",
+			groups={},
+			dependsOnMethods={"SubscribeWithAutoAndServicelevel_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithAutoAgainAfterSubscribeWithAutoAndServicelevel_Test() throws JSONException, Exception {
+		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
+		
+		// get the current service level
+		String serviceLevel = clienttasks.getCurrentServiceLevel();
+		Assert.assertNotNull(serviceLevel, "The current service level should not be null after subscribing with auto and servicelevel during the prior test.");
+		
+		// return all entitlements
+		clienttasks.unsubscribe(true, null, null, null, null);
+		
+		// subscribe with auto specifying without specifying a service level
+		clienttasks.subscribe(true,null,(String)null,(String)null,(String)null,null,null,null,null, null, null);
+		
+		// get the current consumer object and assert that the serviceLevel persisted even though the subscribe did NOT specify a service level
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The call to subscribe with auto (without specifying a servicelevel) did not alter current servicelevel.");
+
+		// assert that each of the autosubscribed entitlements come from a pool that supports the original service level
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 		}
 	}
 	

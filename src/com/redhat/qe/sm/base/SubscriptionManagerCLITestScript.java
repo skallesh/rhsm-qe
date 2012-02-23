@@ -810,7 +810,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		for (List<Object> l : getRegisterCredentialsDataAsListOfLists()) {
 			// l contains: String username, String password, String owner
-			if (l.get(2) !=null) ll.add(l);
+			if (l.get(2) != null) ll.add(l);
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
@@ -915,6 +915,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (jsonUserOwners.length()==0) {
 				ll.add(Arrays.asList(new Object[]{username,password,null}));			
 			}
+			
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
 		}
 		
 		return ll;

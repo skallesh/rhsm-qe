@@ -542,6 +542,43 @@ public class SubscriptionManagerTasks {
 	}
 
 	/**
+	 * @return the current service level returned by subscription-manager service-level --show (must already be registered)
+	 */
+	public String getCurrentServiceLevel() {
+		
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
+		
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager service-levels --show
+		Current service level: Standard
+		*/
+		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
+		
+		return serviceLevel.isEmpty()?null:serviceLevel;
+	}
+	
+	/**
+	 * @return list of the service labels returned by subscription-manager service-level --list (must already be registered)
+	 */
+	public List<String> getCurrentlyAvailableServiceLevels() {
+		
+		SSHCommandResult result = service_level(false, true, null, null, null, null, null, null);
+		
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager service-levels --list
+		+-------------------------------------------+
+		               Service Levels
+		+-------------------------------------------+
+		Standard
+		None
+		Premium
+		*/
+		List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
+		
+		return serviceLevels;
+	}
+	
+	/**
 	 * @return list of objects representing the subscription-manager list --available
 	 */
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools() {
@@ -1816,19 +1853,26 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = orgs_(username, password, proxy, proxyuser, proxypassword);
 		
 		// assert results...
-		
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager orgs --username testuser1 --password password
+		+-------------------------------------------+
+		          testuser1 Organizations
+		+-------------------------------------------+
+
+		OrgName: 	Admin Owner              
+		OrgKey: 	admin                    
+
+		OrgName: 	Snow White               
+		OrgKey: 	snowwhite                
+		*/
+
+		// assert the banner
+		String bannerRegex = "\\+-+\\+\\n\\s*"+username+" Organizations\\s*\\n\\+-+\\+";
+		Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from orgs contains the expected banner regex: "+bannerRegex);
+
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
 
-		// assert the expected banner
-		/*
-		+-------------------------------------------+
-			        testuser1 Organizations
-		+-------------------------------------------+
-		*/
-		String regex = username+" Organizations";
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
-		
 		return sshCommandResult; // from the orgs command
 	}
 	
@@ -1862,7 +1906,33 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult sshCommandResult = service_level_(show, list, username, password, org, proxy, proxyuser, proxypassword);
 		
-		// TODO assert results...
+		// assert results...
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager service-levels --show --list
+		Current service level: 
+		+-------------------------------------------+
+		               Service Levels
+		+-------------------------------------------+
+		Standard
+		None
+		Premium
+		*/
+		
+		// assert the banner
+		String bannerRegex = "\\+-+\\+\\n\\s*Service Levels\\s*\\n\\+-+\\+";
+		if (list!=null && list) {
+			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
+		} else {
+			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
+		}
+		
+		// assert the "Current service level: "
+		String regex = "Current service level: ";
+		if (show!=null && show) {
+			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
+		} else {
+			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --show) should not contains the regex: "+regex);	
+		}
 		
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the service-level command indicates a success.");
