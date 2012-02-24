@@ -129,7 +129,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
-			groups={},
+			groups={"debugTest"},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
@@ -211,7 +211,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// String command, String stdoutRegex, List<String> expectedOptions
 		String module;
-		String modulesRegex = "^	\\w+";
+		String modulesRegex = "^	[\\w-]+";
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
 		       optionsRegex = "^  --[\\w\\.-]+(=[\\w\\.-]+)*|^  -[\\?\\w]( \\w+)*, --[\\w\\.-]+(=\\w+)*";
 		
@@ -243,6 +243,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("subscribe");
 		modules.add("unregister");
 		modules.add("unsubscribe");
+		modules.add("service-level");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" [options] MODULENAME --help";
@@ -250,6 +251,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
 		}
+		
 		
 		// subscription-manager config OPTIONS
 		module = "config";
@@ -573,6 +575,27 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unsubscribeOptions}));
+		}
+		
+		// subscription-manager service-level OPTIONS
+		module = "service-level";
+		List <String> serviceLevelOptions = new ArrayList<String>();
+		serviceLevelOptions.add("-h, --help");
+		serviceLevelOptions.add("--proxy=PROXY_URL");
+		serviceLevelOptions.add("--proxyuser=PROXY_USER");
+		serviceLevelOptions.add("--proxypassword=PROXY_PASSWORD");
+		serviceLevelOptions.add("--username=USERNAME");
+		serviceLevelOptions.add("--password=PASSWORD");
+		serviceLevelOptions.add("--org=ORG");
+		serviceLevelOptions.add("--show");
+		serviceLevelOptions.add("--list");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, serviceLevelOptions}));
 		}
 		
 		// rhsm-icon OPTIONS

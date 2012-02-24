@@ -549,7 +549,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
 		
 		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-levels --show
+		[root@jsefler-r63-server ~]# subscription-manager service-level --show
 		Current service level: Standard
 		*/
 		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
@@ -565,9 +565,9 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult result = service_level(false, true, null, null, null, null, null, null);
 		
 		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-levels --list
+		[root@jsefler-r63-server ~]# subscription-manager service-level --list
 		+-------------------------------------------+
-		               Service Levels
+		          Available Service Levels
 		+-------------------------------------------+
 		Standard
 		None
@@ -1894,7 +1894,7 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult service_level_(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
-		String command = this.command;	command += " service-levels";
+		String command = this.command;	command += " service-level";
 		if (show!=null && show)			command += " --show";
 		if (list!=null && list)			command += " --list";
 		if (username!=null)				command += " --username="+username;
@@ -1917,10 +1917,10 @@ public class SubscriptionManagerTasks {
 		
 		// assert results...
 		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-levels --show --list
+		[root@jsefler-r63-server ~]# subscription-manager service-level --show --list
 		Current service level: 
 		+-------------------------------------------+
-		               Service Levels
+          			Available Service Levels
 		+-------------------------------------------+
 		Standard
 		None
@@ -1928,7 +1928,7 @@ public class SubscriptionManagerTasks {
 		*/
 		
 		// assert the banner
-		String bannerRegex = "\\+-+\\+\\n\\s*Service Levels\\s*\\n\\+-+\\+";
+		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
 		if (list!=null && list) {
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
 		} else {
