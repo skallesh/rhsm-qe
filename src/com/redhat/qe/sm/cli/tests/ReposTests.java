@@ -188,6 +188,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO Bug 767620 - [RFE] subscription-manager should have a option that when set prevents the download / install of "redhat.repo"
+	// TODO Bug 797243 - manual changes to redhat.repo are too sticky
 		
 	// Configuration methods ***********************************************************************
 

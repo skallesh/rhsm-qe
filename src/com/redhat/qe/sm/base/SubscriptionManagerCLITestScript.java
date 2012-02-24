@@ -727,7 +727,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// assure we are registered
 		clienttasks.unregister(null, null, null);
-
+		
+		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);

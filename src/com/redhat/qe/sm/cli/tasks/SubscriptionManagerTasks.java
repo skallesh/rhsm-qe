@@ -1495,7 +1495,16 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-
+		// TEMPORARY WORKAROUND FOR Bug 797243 - manual changes to redhat.repo are too sticky
+		invokeWorkaroundWhileBugIsOpen = true;
+		bugId="797243"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Triggering a yum transaction to insure the redhat.repo file is wiped clean");
+			sshCommandRunner.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		}
+		// END OF WORKAROUND
+		
 		return sshCommandResult; // from the register command
 	}
 	
