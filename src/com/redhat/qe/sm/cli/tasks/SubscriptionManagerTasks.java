@@ -1405,6 +1405,9 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (force==null || !force)) {
 			// This system is already registered. Use --force to override
 		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (environment!=null)) {
+			// Server does not support environments.
+		} else
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
 			// Traceback/Error
 			this.currentlyRegisteredUsername = null;
@@ -1416,7 +1419,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// set autoheal attribute of the consumer
-		if (autoheal!=null && !sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
+		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
 			try {
 				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
 				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
