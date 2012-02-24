@@ -89,13 +89,18 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void ManPageForInstallNumMigrateToRhsm_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
-		String command = "install-num-migrate-to-rhsm";
+		String command = MigrationTests.installNumTool;
 		// is the command installed?
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
-			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
+			throw new SkipException(command+" is not installed and therefore its man page cannot be installed.");
+		} else if (!clienttasks.redhatReleaseX.equals("5")) {
+			log.info("The man page for '"+command+"' should only be installed on RHEL5.");
+			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
+			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
+			throw new SkipException("The migration tool '"+command+"' and its man page is only applicable on RHEL5.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
@@ -109,7 +114,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void ManPageForRhnMigrateClassicToRhsm_Test() {
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
-		String command = "rhn-migrate-classic-to-rhsm";
+		String command = MigrationTests.rhnMigrateTool;
 		// is the command installed?
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
@@ -129,7 +134,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: assert only expected command line options are available",
-			groups={"debugTest"},
+			groups={},
 			dataProvider="ExpectedCommandLineOptionsData")
 	@ImplementsNitrateTest(caseId=46713)
 	//@ImplementsNitrateTest(caseId=46707)
@@ -210,6 +215,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return ll;
 		
 		// String command, String stdoutRegex, List<String> expectedOptions
+		List<String> options = new ArrayList<String>();
 		String module;
 		String modulesRegex = "^	[\\w-]+";
 		String optionsRegex = "^  --[\\w\\.]+(=[\\w\\.]+)*|^  -\\w(=\\w+)*, --\\w+(=\\w+)*";
@@ -255,72 +261,72 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// subscription-manager config OPTIONS
 		module = "config";
-		List <String> configOptions = new ArrayList<String>();
-		configOptions.add("-h, --help");
-		configOptions.add("--list");
-		configOptions.add("--remove=REMOVE");
-		configOptions.add("--server.ca_cert_dir=SERVER.CA_CERT_DIR");
-		configOptions.add("--server.hostname=SERVER.HOSTNAME");
-		configOptions.add("--server.insecure=SERVER.INSECURE");
-		configOptions.add("--server.port=SERVER.PORT");
-		configOptions.add("--server.prefix=SERVER.PREFIX");
-		configOptions.add("--server.proxy_hostname=SERVER.PROXY_HOSTNAME");
-		configOptions.add("--server.proxy_password=SERVER.PROXY_PASSWORD");
-		configOptions.add("--server.proxy_port=SERVER.PROXY_PORT");
-		configOptions.add("--server.proxy_user=SERVER.PROXY_USER");
-		configOptions.add("--server.repo_ca_cert=SERVER.REPO_CA_CERT");
-		configOptions.add("--server.ssl_verify_depth=SERVER.SSL_VERIFY_DEPTH");
-		configOptions.add("--rhsm.baseurl=RHSM.BASEURL");
-		configOptions.add("--rhsm.ca_cert_dir=RHSM.CA_CERT_DIR");
-		configOptions.add("--rhsm.consumercertdir=RHSM.CONSUMERCERTDIR");
-		configOptions.add("--rhsm.entitlementcertdir=RHSM.ENTITLEMENTCERTDIR");
-		configOptions.add("--rhsm.hostname=RHSM.HOSTNAME");
-		configOptions.add("--rhsm.insecure=RHSM.INSECURE");
-		configOptions.add("--rhsm.port=RHSM.PORT");
-		configOptions.add("--rhsm.prefix=RHSM.PREFIX");
-		configOptions.add("--rhsm.productcertdir=RHSM.PRODUCTCERTDIR");
-		configOptions.add("--rhsm.proxy_hostname=RHSM.PROXY_HOSTNAME");
-		configOptions.add("--rhsm.proxy_password=RHSM.PROXY_PASSWORD");
-		configOptions.add("--rhsm.proxy_port=RHSM.PROXY_PORT");
-		configOptions.add("--rhsm.proxy_user=RHSM.PROXY_USER");
-		configOptions.add("--rhsm.repo_ca_cert=RHSM.REPO_CA_CERT");
-		configOptions.add("--rhsm.ssl_verify_depth=RHSM.SSL_VERIFY_DEPTH");
-		configOptions.add("--rhsmcertd.ca_cert_dir=RHSMCERTD.CA_CERT_DIR");
-		configOptions.add("--rhsmcertd.certfrequency=RHSMCERTD.CERTFREQUENCY");
-		configOptions.add("--rhsmcertd.healfrequency=RHSMCERTD.HEALFREQUENCY");
-		configOptions.add("--rhsmcertd.hostname=RHSMCERTD.HOSTNAME");
-		configOptions.add("--rhsmcertd.insecure=RHSMCERTD.INSECURE");
-		configOptions.add("--rhsmcertd.port=RHSMCERTD.PORT");
-		configOptions.add("--rhsmcertd.prefix=RHSMCERTD.PREFIX");
-		configOptions.add("--rhsmcertd.proxy_hostname=RHSMCERTD.PROXY_HOSTNAME");
-		configOptions.add("--rhsmcertd.proxy_password=RHSMCERTD.PROXY_PASSWORD");
-		configOptions.add("--rhsmcertd.proxy_port=RHSMCERTD.PROXY_PORT");
-		configOptions.add("--rhsmcertd.proxy_user=RHSMCERTD.PROXY_USER");
-		configOptions.add("--rhsmcertd.repo_ca_cert=RHSMCERTD.REPO_CA_CERT");
-		configOptions.add("--rhsmcertd.ssl_verify_depth=RHSMCERTD.SSL_VERIFY_DEPTH");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--list");
+		options.add("--remove=REMOVE");
+		options.add("--server.ca_cert_dir=SERVER.CA_CERT_DIR");
+		options.add("--server.hostname=SERVER.HOSTNAME");
+		options.add("--server.insecure=SERVER.INSECURE");
+		options.add("--server.port=SERVER.PORT");
+		options.add("--server.prefix=SERVER.PREFIX");
+		options.add("--server.proxy_hostname=SERVER.PROXY_HOSTNAME");
+		options.add("--server.proxy_password=SERVER.PROXY_PASSWORD");
+		options.add("--server.proxy_port=SERVER.PROXY_PORT");
+		options.add("--server.proxy_user=SERVER.PROXY_USER");
+		options.add("--server.repo_ca_cert=SERVER.REPO_CA_CERT");
+		options.add("--server.ssl_verify_depth=SERVER.SSL_VERIFY_DEPTH");
+		options.add("--rhsm.baseurl=RHSM.BASEURL");
+		options.add("--rhsm.ca_cert_dir=RHSM.CA_CERT_DIR");
+		options.add("--rhsm.consumercertdir=RHSM.CONSUMERCERTDIR");
+		options.add("--rhsm.entitlementcertdir=RHSM.ENTITLEMENTCERTDIR");
+		options.add("--rhsm.hostname=RHSM.HOSTNAME");
+		options.add("--rhsm.insecure=RHSM.INSECURE");
+		options.add("--rhsm.port=RHSM.PORT");
+		options.add("--rhsm.prefix=RHSM.PREFIX");
+		options.add("--rhsm.productcertdir=RHSM.PRODUCTCERTDIR");
+		options.add("--rhsm.proxy_hostname=RHSM.PROXY_HOSTNAME");
+		options.add("--rhsm.proxy_password=RHSM.PROXY_PASSWORD");
+		options.add("--rhsm.proxy_port=RHSM.PROXY_PORT");
+		options.add("--rhsm.proxy_user=RHSM.PROXY_USER");
+		options.add("--rhsm.repo_ca_cert=RHSM.REPO_CA_CERT");
+		options.add("--rhsm.ssl_verify_depth=RHSM.SSL_VERIFY_DEPTH");
+		options.add("--rhsmcertd.ca_cert_dir=RHSMCERTD.CA_CERT_DIR");
+		options.add("--rhsmcertd.certfrequency=RHSMCERTD.CERTFREQUENCY");
+		options.add("--rhsmcertd.healfrequency=RHSMCERTD.HEALFREQUENCY");
+		options.add("--rhsmcertd.hostname=RHSMCERTD.HOSTNAME");
+		options.add("--rhsmcertd.insecure=RHSMCERTD.INSECURE");
+		options.add("--rhsmcertd.port=RHSMCERTD.PORT");
+		options.add("--rhsmcertd.prefix=RHSMCERTD.PREFIX");
+		options.add("--rhsmcertd.proxy_hostname=RHSMCERTD.PROXY_HOSTNAME");
+		options.add("--rhsmcertd.proxy_password=RHSMCERTD.PROXY_PASSWORD");
+		options.add("--rhsmcertd.proxy_port=RHSMCERTD.PROXY_PORT");
+		options.add("--rhsmcertd.proxy_user=RHSMCERTD.PROXY_USER");
+		options.add("--rhsmcertd.repo_ca_cert=RHSMCERTD.REPO_CA_CERT");
+		options.add("--rhsmcertd.ssl_verify_depth=RHSMCERTD.SSL_VERIFY_DEPTH");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, configOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager import OPTIONS
 		module = "import";
-		List <String> importOptions = new ArrayList<String>();
-		importOptions.add("-h, --help");
-		//importOptions.add("--certificate=CERTIFICATE_FILES");	// prior to fix for Bug 735212
-		importOptions.add("--certificate=CERTIFICATE_FILE");
+		options.clear();
+		options.add("-h, --help");
+		//options("--certificate=CERTIFICATE_FILES");	// prior to fix for Bug 735212
+		options.add("--certificate=CERTIFICATE_FILE");
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=733873
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		String bugId="733873"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			importOptions.add("--proxy=PROXY_URL");
-			importOptions.add("--proxyuser=PROXY_USER");
-			importOptions.add("--proxypassword=PROXY_PASSWORD");
+			options.add("--proxy=PROXY_URL");
+			options.add("--proxyuser=PROXY_USER");
+			options.add("--proxypassword=PROXY_PASSWORD");
 		}
 		// END OF WORKAROUND
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
@@ -329,273 +335,273 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, importOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 
 		// subscription-manager redeem OPTIONS
 		module = "redeem";
-		List <String> redeemOptions = new ArrayList<String>();
-		redeemOptions.add("-h, --help");
-		redeemOptions.add("--email=EMAIL");
-		redeemOptions.add("--locale=LOCALE");
-		redeemOptions.add("--proxy=PROXY_URL");
-		redeemOptions.add("--proxyuser=PROXY_USER");
-		redeemOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--email=EMAIL");
+		options.add("--locale=LOCALE");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, redeemOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager orgs OPTIONS
 		module = "orgs";
-		List <String> orgsOptions = new ArrayList<String>();
-		orgsOptions.add("-h, --help");
-		orgsOptions.add("--username=USERNAME");
-		orgsOptions.add("--password=PASSWORD");
-		orgsOptions.add("--proxy=PROXY_URL");
-		orgsOptions.add("--proxyuser=PROXY_USER");
-		orgsOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--username=USERNAME");
+		options.add("--password=PASSWORD");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, orgsOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager repos OPTIONS
 		module = "repos";
-		List <String> reposOptions = new ArrayList<String>();
-		reposOptions.add("-h, --help");
-		reposOptions.add("--list");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--list");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, reposOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager clean OPTIONS
 		module = "clean";
-		List <String> cleanOptions = new ArrayList<String>();
-		cleanOptions.add("-h, --help");
+		options.clear();
+		options.add("-h, --help");
 		// removed in https://bugzilla.redhat.com/show_bug.cgi?id=664581
-		//cleanOptions.add("--proxy=PROXY_URL");
-		//cleanOptions.add("--proxyuser=PROXY_USER");
-		//cleanOptions.add("--proxypassword=PROXY_PASSWORD");
+		//options("--proxy=PROXY_URL");
+		//options("--proxyuser=PROXY_USER");
+		//options("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("664581"), smHelpCommand, optionsRegex, cleanOptions}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("664581"), smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager environments OPTIONS
 		module = "environments";
-		List <String> environmentsOptions = new ArrayList<String>();
-		environmentsOptions.add("-h, --help");
-		environmentsOptions.add("--username=USERNAME");
-		environmentsOptions.add("--password=PASSWORD");
-		environmentsOptions.add("--org=ORG");
-		environmentsOptions.add("--proxy=PROXY_URL");
-		environmentsOptions.add("--proxyuser=PROXY_USER");
-		environmentsOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--username=USERNAME");
+		options.add("--password=PASSWORD");
+		options.add("--org=ORG");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, environmentsOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager facts OPTIONS
 		module = "facts";
-		List <String> factsOptions = new ArrayList<String>();
-		factsOptions.add("-h, --help");
-		factsOptions.add("--list");
-		factsOptions.add("--update");
-		factsOptions.add("--proxy=PROXY_URL");
-		factsOptions.add("--proxyuser=PROXY_USER");
-		factsOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--list");
+		options.add("--update");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, factsOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager identity OPTIONS
 		module = "identity";
-		List <String> identityOptions = new ArrayList<String>();
-		identityOptions.add("-h, --help");
-		identityOptions.add("--username=USERNAME");
-		identityOptions.add("--password=PASSWORD");
-		identityOptions.add("--regenerate");
-		identityOptions.add("--force");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=678151
-		identityOptions.add("--proxy=PROXY_URL");
-		identityOptions.add("--proxyuser=PROXY_USER");
-		identityOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--username=USERNAME");
+		options.add("--password=PASSWORD");
+		options.add("--regenerate");
+		options.add("--force");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=678151
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, identityOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager list OPTIONS
 		module = "list";
-		List <String> listOptions = new ArrayList<String>();
-		listOptions.add("-h, --help");
-		listOptions.add("--installed");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=634254
-		listOptions.add("--consumed");
-		listOptions.add("--available");
-		listOptions.add("--all");
-		listOptions.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
-		listOptions.add("--proxy=PROXY_URL");
-		listOptions.add("--proxyuser=PROXY_USER");
-		listOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--installed");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=634254
+		options.add("--consumed");
+		options.add("--available");
+		options.add("--all");
+		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, listOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager refresh OPTIONS
 		module = "refresh";
-		List <String> refreshOptions = new ArrayList<String>();
-		refreshOptions.add("-h, --help");
-		refreshOptions.add("--proxy=PROXY_URL");
-		refreshOptions.add("--proxyuser=PROXY_USER");
-		refreshOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, refreshOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager register OPTIONS
 		module = "register";
-		List <String> registerOptions = new ArrayList<String>();
-		registerOptions.add("-h, --help");
-		registerOptions.add("--username=USERNAME");
-		registerOptions.add("--type=CONSUMERTYPE");
-		registerOptions.add("--name=CONSUMERNAME");
-		registerOptions.add("--password=PASSWORD");
-		registerOptions.add("--consumerid=CONSUMERID");
-		registerOptions.add("--org=ORG");
-		registerOptions.add("--environment=ENVIRONMENT");
-		registerOptions.add("--autosubscribe");
-		registerOptions.add("--force");
-		registerOptions.add("--activationkey=ACTIVATION_KEYS");
-		registerOptions.add("--servicelevel=SERVICE_LEVEL");
-		registerOptions.add("--proxy=PROXY_URL");
-		registerOptions.add("--proxyuser=PROXY_USER");
-		registerOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--username=USERNAME");
+		options.add("--type=CONSUMERTYPE");
+		options.add("--name=CONSUMERNAME");
+		options.add("--password=PASSWORD");
+		options.add("--consumerid=CONSUMERID");
+		options.add("--org=ORG");
+		options.add("--environment=ENVIRONMENT");
+		options.add("--autosubscribe");
+		options.add("--force");
+		options.add("--activationkey=ACTIVATION_KEYS");
+		options.add("--servicelevel=SERVICE_LEVEL");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[]{null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, registerOptions}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager subscribe OPTIONS
 		module = "subscribe";
-		List <String> subscribeOptions = new ArrayList<String>();
-		subscribeOptions.add("-h, --help");
-		subscribeOptions.add("--pool=POOL");
-		subscribeOptions.add("--quantity=QUANTITY");
-		subscribeOptions.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
-		subscribeOptions.add("--servicelevel=SERVICE_LEVEL");
-		//subscribeOptions.add("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
-		//subscribeOptions.add("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
-		//subscribeOptions.add("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
-		subscribeOptions.add("--proxy=PROXY_URL");
-		subscribeOptions.add("--proxyuser=PROXY_USER");
-		subscribeOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--pool=POOL");
+		options.add("--quantity=QUANTITY");
+		options.add("--auto");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=680399
+		options.add("--servicelevel=SERVICE_LEVEL");
+		//options("--regtoken=REGTOKEN");	// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+		//options("--email=EMAIL");			// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+		//options("--locale=LOCALE");		// https://bugzilla.redhat.com/show_bug.cgi?id=670823
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, subscribeOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager unregister OPTIONS
 		module = "unregister";
-		List <String> unregisterOptions = new ArrayList<String>();
-		unregisterOptions.add("-h, --help");
-		unregisterOptions.add("--proxy=PROXY_URL");
-		unregisterOptions.add("--proxyuser=PROXY_USER");
-		unregisterOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unregisterOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager unsubscribe OPTIONS
 		module = "unsubscribe";
-		List <String> unsubscribeOptions = new ArrayList<String>();
-		unsubscribeOptions.add("-h, --help");
-		unsubscribeOptions.add("--serial=SERIAL");
-		unsubscribeOptions.add("--all");
-		unsubscribeOptions.add("--proxy=PROXY_URL");
-		unsubscribeOptions.add("--proxyuser=PROXY_USER");
-		unsubscribeOptions.add("--proxypassword=PROXY_PASSWORD");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--serial=SERIAL");
+		options.add("--all");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, unsubscribeOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// subscription-manager service-level OPTIONS
 		module = "service-level";
-		List <String> serviceLevelOptions = new ArrayList<String>();
-		serviceLevelOptions.add("-h, --help");
-		serviceLevelOptions.add("--proxy=PROXY_URL");
-		serviceLevelOptions.add("--proxyuser=PROXY_USER");
-		serviceLevelOptions.add("--proxypassword=PROXY_PASSWORD");
-		serviceLevelOptions.add("--username=USERNAME");
-		serviceLevelOptions.add("--password=PASSWORD");
-		serviceLevelOptions.add("--org=ORG");
-		serviceLevelOptions.add("--show");
-		serviceLevelOptions.add("--list");
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--username=USERNAME");
+		options.add("--password=PASSWORD");
+		options.add("--org=ORG");
+		options.add("--show");
+		options.add("--list");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = "Usage: "+clienttasks.command+" "+module+" [OPTIONS]";
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, serviceLevelOptions}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
 		// rhsm-icon OPTIONS
@@ -617,7 +623,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//  --display=DISPLAY           X display to use
 			String rhsmIconCommand = "rhsm-icon"; 
 			List <String> rhsmIconOptions = new ArrayList<String>();
-			rhsmIconOptions.add("-?, --help");
+			rhsmIconOptions.add("-h, --help");	//rhsmIconOptions.add("-?, --help");
 			rhsmIconOptions.add("--help-all");
 			rhsmIconOptions.add("--help-gtk");
 			rhsmIconOptions.add("-c, --check-period");
@@ -661,23 +667,24 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//  -n, --no-auto   Don't launch subscription manager at end of process.
 			//  -h, --help      show this help message and exit
 
-			String rhnMigrateClassicToRhsmCommand = "rhn-migrate-classic-to-rhsm"; 
-			List <String> rhsmIconOptions = new ArrayList<String>();
-			rhsmIconOptions.add("-f, --force");
-			rhsmIconOptions.add("-c, --cli-only");
-			rhsmIconOptions.add("-n, --no-auto");
-			rhsmIconOptions.add("-h, --help");
+			String rhnMigrateClassicToRhsmCommand = MigrationTests.rhnMigrateTool; 
+			options.clear();
+			options.add("-f, --force");
+			options.add("-c, --cli-only");
+			options.add("-n, --no-auto");
+			options.add("-h, --help");
 			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
 				List <String> usages = new ArrayList<String>();
-				String usage = "usage: /usr/sbin/"+rhnMigrateClassicToRhsmCommand+" [--force|--cli-only|--help|--no-auto]";
+				String usage = "usage: "+rhnMigrateClassicToRhsmCommand+" [OPTIONS]";
 				usages.add(usage);
 				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, rhsmIconOptions}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		
 		// install-num-migrate-to-rhsm OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+		if (clienttasks.redhatReleaseX.equals("5")) {	// test only on RHEL5
 			//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --help
 			//usage: install-num-migrate-to-rhsm [options]
 			//
@@ -687,18 +694,19 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//                        Install number to run against
 			//  -d, --dryrun          Only print the files which would be copied over
 
-			String rhnMigrateClassicToRhsmCommand = "install-num-migrate-to-rhsm"; 
-			List <String> rhsmIconOptions = new ArrayList<String>();
-			rhsmIconOptions.add("-h, --help");
-			rhsmIconOptions.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
-			rhsmIconOptions.add("-d, --dryrun");
+			String rhnMigrateClassicToRhsmCommand = MigrationTests.installNumTool; 
+			options.clear();
+			options.add("-h, --help");
+			options.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
+			options.add("-d, --dryrun");
 			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
 				List <String> usages = new ArrayList<String>();
 				String usage = "usage: "+rhnMigrateClassicToRhsmCommand+" [options]";
 				usages.add(usage);
 				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, rhsmIconOptions}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 			}
+		}
 		}
 		
 		return ll;

@@ -219,6 +219,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		InstallNumMigrateToRhsmWithInstNumber(instNumber);
 	}
 	protected SSHCommandResult InstallNumMigrateToRhsmWithInstNumber(String instNumber) throws JSONException {
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		String command;
 		SSHCommandResult result;
 		
@@ -231,7 +232,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// test --dryrun --instnumber ................................................
 		log.info("Testing with the dryrun option...");
-		command = "install-num-migrate-to-rhsm --dryrun --instnumber="+instNumber;
+		command = installNumTool+" --dryrun --instnumber="+instNumber;
 		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
 		//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --dryrun --instnumber 0000000e0017fc01
 		//Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-f812997e0eda-71.pem to /etc/pki/product/71.pem
@@ -241,7 +242,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
 			String pemFilename = getPemFileNameFromProductCertFilename(expectedMigrationProductCertFilename);
 			String expectedStdoutString = "Copying "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;
-			Assert.assertTrue(result.getStdout().contains(expectedStdoutString),"The dryrun output from install-num-migrate-to-rhsm contains the expected message: "+expectedStdoutString);
+			Assert.assertTrue(result.getStdout().contains(expectedStdoutString),"The dryrun output from "+installNumTool+" contains the expected message: "+expectedStdoutString);
 		}
 		int numProductCertFilenamesToBeCopied=0;
 		for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
@@ -263,7 +264,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// test --instnumber ................................................
 		log.info("Testing without the dryrun option...");
-		command = "install-num-migrate-to-rhsm --instnumber="+instNumber;
+		command = installNumTool+" --instnumber="+instNumber;
 		result = RemoteFileTasks.runCommandAndAssert(client,command,0);
 		//[root@jsefler-onprem-5server ~]# install-num-migrate-to-rhsm --instnumber 0000000e0017fc01
 		//Copying /usr/share/rhsm/product/RHEL-5/Client-Workstation-x86_64-f812997e0eda-71.pem to /etc/pki/product/71.pem
@@ -286,6 +287,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	public void InstallNumMigrateToRhsm_Test() throws JSONException {
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==0 &&
 			RemoteFileTasks.testFileExists(client, backupMachineInstNumberFile)==1	) {
 			log.info("Restoring backup of the rhn install-num file...");
@@ -303,14 +305,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// now test this install number implicitly (without specifying any options)
 		clienttasks.removeAllCerts(false, false, true);
 		clienttasks.removeAllFacts();
-		String command = "install-num-migrate-to-rhsm";
-		SSHCommandResult implicitResult = client.runCommandAndWait(command);
+		SSHCommandResult implicitResult = client.runCommandAndWait(installNumTool);
 		// compare implicit to explicit results for verification
-		Assert.assertEquals(implicitResult.getStdout().trim(), explicitResult.getStdout().trim(), "Stdout from running :"+command);
-		Assert.assertEquals(implicitResult.getStderr().trim(), explicitResult.getStderr().trim(), "Stderr from running :"+command);
-		Assert.assertEquals(implicitResult.getExitCode(), explicitResult.getExitCode(), "ExitCode from running :"+command);
-		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "install_number", "The migration fact '"+migrationFromFact+"' should be set after running command: "+command);
-		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
+		Assert.assertEquals(implicitResult.getStdout().trim(), explicitResult.getStdout().trim(), "Stdout from running :"+installNumTool);
+		Assert.assertEquals(implicitResult.getStderr().trim(), explicitResult.getStderr().trim(), "Stderr from running :"+installNumTool);
+		Assert.assertEquals(implicitResult.getExitCode(), explicitResult.getExitCode(), "ExitCode from running :"+installNumTool);
+		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "install_number", "The migration fact '"+migrationFromFact+"' should be set after running command: "+installNumTool);
+		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+installNumTool);
 		
 		// assert that the migrated product certs provide (at least) the same product tags as originally installed with the install number
 		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
@@ -343,7 +344,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
 	public void InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String instNumber) throws JSONException {
-
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "773707"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -368,6 +370,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="InstallNumMigrateToRhsmWithInvalidInstNumberData",
 			enabled=true)
 	public void InstallNumMigrateToRhsmWithInvalidInstNumber_Test(Object bugzilla, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		SSHCommandResult result = client.runCommandAndWait(command);
 		if (expectedStdout!=null) Assert.assertEquals(result.getStdout().trim(), expectedStdout, "Stdout from running :"+command);
 		if (expectedStderr!=null) Assert.assertEquals(result.getStderr().trim(), expectedStderr, "Stderr from running :"+command);
@@ -390,11 +393,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void InstallNumMigrateToRhsmWithMissingInstNumber_Test() {
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==1) {
 			log.info("Backing up the rhn install-num file...");
 			client.runCommandAndWait("mv -f "+machineInstNumberFile+" "+backupMachineInstNumberFile);
 		}
-		InstallNumMigrateToRhsmWithInvalidInstNumber_Test(null, "install-num-migrate-to-rhsm",1,"Could not read installation number from "+machineInstNumberFile+".  Aborting.","");
+		InstallNumMigrateToRhsmWithInvalidInstNumber_Test(null, installNumTool,1,"Could not read installation number from "+machineInstNumberFile+".  Aborting.","");
+	}
+	
+	
+	@Test(	description="Assert that install-num-migrate-to-rhsm is only installed on RHEL5",
+			groups={"blockedByBug-790205"},
+			dependsOnMethods={},
+			enabled=true)
+	public void InstallNumMigrateToRhsmShouldOnlyBeInstalledOnRHEL5_Test() {
+		// make sure subscription-manager-migration is installed on RHEL5
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, "rpm -ql "+clienttasks.command+"-migration", 0);
+		Assert.assertEquals(result.getStdout().contains(installNumTool), clienttasks.redhatReleaseX.equals("5"), "The "+clienttasks.command+"-migration package should only provide '"+installNumTool+"' on RHEL5.");
 	}
 	
 	
@@ -409,7 +424,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, List<String> expectedMigrationProductCertFilenames) {
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
-		if (options.contains("-n")) log.info("Executing rhn-migrate-classic-to-rhsm --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
+		if (options.contains("-n")) log.info("Executing "+rhnMigrateTool+" --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
 
 		// make sure we are NOT registered to RHSM
 		clienttasks.unregister(null,null,null);
@@ -437,57 +452,57 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert the exit code
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
-			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the rhn-migrate-classic-to-rhsm command should have exited with code 1.");
+			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
-			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);	
-			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to rhn-migrate-classic-to-rhsm with "+options+" when any of the channels are not mapped to a productCert.");
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);	
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to "+rhnMigrateTool+" with "+options+" when any of the channels are not mapped to a productCert.");
 			Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),1,"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that no product certs have been copied yet
-			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" requires --force to continue.");
 
 			// assert that we are not yet registered to RHSM
-			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when rhn-migrate-classic-to-rhsm requires --force to continue.");
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
 
 			return;
 		}
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to rhn-migrate-classic-to-rhsm with "+options+" when all of the channels.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to "+rhnMigrateTool+" with "+options+" when all of the channels.");
 		
 		// assert we are no longer registered to RHN Classic
 		expectedMsg = "System successfully unregistered from RHN Classic.";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"The absence of system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is not registered using RHN Classic.");
 
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",clienttasks.productCertDir);
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to rhn-migrate-classic-to-rhsm with "+options+" contains message: "+expectedMsg);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
 		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
-		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running rhn-migrate-classic-to-rhsm with "+options+".");
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".");
 		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
 			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
 			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
 		}
-		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running rhn-migrate-classic-to-rhsm with "+options+".");
-		Assert.assertEquals(clienttasks.getFactValue(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running rhn-migrate-classic-to-rhsm with "+options+".");
+		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
+		Assert.assertEquals(clienttasks.getFactValue(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		
 		// assert final RHSM status....
 		
 		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
 			// assert that we are NOT registered using rhsm
 			clienttasks.identity_(null, null, null, null, null, null, null);
-			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM after a call to rhn-migrate-classic-to-rhsm with "+options+".");
+			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM after a call to "+rhnMigrateTool+" with "+options+".");
 	
 			// assert that we are NOT consuming any entitlements
-			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to rhn-migrate-classic-to-rhsm with "+options+".");
+			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to "+rhnMigrateTool+" with "+options+".");
 		} else {
 			// assert that we are registered using rhsm
 			clienttasks.identity(null, null, null, null, null, null, null);
 			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 	
 			// assert that we are consuming some entitlements (for at least the base product cert)
-			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to rhn-migrate-classic-to-rhsm with "+options+".");
+			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to "+rhnMigrateTool+" with "+options+".");
 			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
@@ -532,8 +547,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions("foo","bar",null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm with invalid credentials.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" with invalid credentials.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to "+rhnMigrateTool+" with invalid credentials.");
 	}
 	
 	
@@ -547,8 +562,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"This system is not registered using RHN Classic.");
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm without having registered to RHN Classic.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to locate SystemId file. Is this system registered?", "The expected stdout result from call to rhn-migrate-classic-to-rhsm without having registered to RHN Classic.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" without having registered to RHN Classic.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to locate SystemId file. Is this system registered?", "The expected stdout result from call to "+rhnMigrateTool+" without having registered to RHN Classic.");
 	}
 	
 	
@@ -560,8 +575,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (List)null, true, null, null, null, null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to rhn-migrate-classic-to-rhsm while already registered to RHSM.");
-		Assert.assertContainsMatch(sshCommandResult.getStdout(), "This machine appears to be already registered to Certificate-based RHN.  Exiting.", "The expected stdout result from call to rhn-migrate-classic-to-rhsm while already registered to RHSM.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" while already registered to RHSM.");
+		Assert.assertContainsMatch(sshCommandResult.getStdout(), "This machine appears to be already registered to Certificate-based RHN.  Exiting.", "The expected stdout result from call to "+rhnMigrateTool+" while already registered to RHSM.");
 	}
 	
 
@@ -687,6 +702,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String backupMachineInstNumberFile	= machineInstNumberFile+".bak";
 	protected String rhnBaseChannel = null;
 	protected List<String> rhnAvailableChildChannels = new ArrayList<String>();
+	static public String installNumTool = "install-num-migrate-to-rhsm";
+	static public String rhnMigrateTool = "rhn-migrate-classic-to-rhsm";
 	
 	
 	protected List<String> getExpectedMappedProductCertFilenamesCorrespondingToChannels(List<String> channels) {
@@ -810,7 +827,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		if (options==null) options="";
 		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; interact; catch wait reason; exit [lindex \$reason 3]"
-		String command = String.format("expect -c \"spawn rhn-migrate-classic-to-rhsm %s; %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", options, promptedUsernames, promptedPasswords);
+		String command = String.format("expect -c \"spawn %s %s; %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedUsernames, promptedPasswords);
 		//                                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
 		return client.runCommandAndWait(command);
 	}
@@ -827,7 +844,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// register to RHN Classic
 		// [root@jsefler-onprem-5server ~]# rhnreg_ks --serverUrl=https://xmlrpc.rhn.code.stage.redhat.com/XMLRPC --username=qa@redhat.com --password=CHANGE-ME --force --norhnsd --nohardware --nopackages --novirtinfo
 		//	ERROR: refreshing remote package list for System Profile
-		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword);
+		String command = String.format("rhnreg_ks --serverUrl=https://xmlrpc.%s/XMLRPC --username=%s --password=%s --profilename=%s --force --norhnsd --nohardware --nopackages --novirtinfo", rhnHostname, rhnUsername, rhnPassword, clienttasks.hostname);
 		SSHCommandResult result = client.runCommandAndWait(command);
 		
 		// assert result
@@ -897,6 +914,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public List<List<Object>> getInstallNumMigrateToRhsmDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
+		// if (!clienttasks.redhatReleaseX.equals("5")) return ll;	// prone to improperly unexecuted tests
+		if (clienttasks.redhatReleaseX.equals("6")) return ll;
+		if (clienttasks.redhatReleaseX.equals("7")) return ll;
 		
 		// REFRENCE DATA FROM: http://linuxczar.net/articles/rhel-installation-numbers
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("790217"),	"0000000e0017fc01"}));	// Client
@@ -920,14 +940,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected List<List<Object>> getInstallNumMigrateToRhsmWithInvalidInstNumberDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
+		// if (!clienttasks.redhatReleaseX.equals("5")) return ll;	// prone to improperly unexecuted tests
+		if (clienttasks.redhatReleaseX.equals("6")) return ll;
+		if (clienttasks.redhatReleaseX.equals("7")) return ll;
 		
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
 		// String command, int expectedExitCode, String expectedStdout, String expectedStderr
-		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm -d -i 123456789012345",			1,	"Could not parse the installation number: Unsupported string length", ""}));
-		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm -d -i=12345678901234567",			1,	"Could not parse the installation number: Unsupported string length", ""}));
-		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm    --instnum 123456789X123456",	1,	"Could not parse the installation number: Not a valid hex string", ""}));
-		ll.add(Arrays.asList(new Object[]{null, "install-num-migrate-to-rhsm    --instnum=1234567890123456",	1,	"Could not parse the installation number: Checksum verification failed", ""}));
+		ll.add(Arrays.asList(new Object[]{null, installNumTool+" -d -i 123456789012345",			1,	"Could not parse the installation number: Unsupported string length", ""}));
+		ll.add(Arrays.asList(new Object[]{null, installNumTool+" -d -i=12345678901234567",			1,	"Could not parse the installation number: Unsupported string length", ""}));
+		ll.add(Arrays.asList(new Object[]{null, installNumTool+"    --instnum 123456789X123456",	1,	"Could not parse the installation number: Not a valid hex string", ""}));
+		ll.add(Arrays.asList(new Object[]{null, installNumTool+"    --instnum=1234567890123456",	1,	"Could not parse the installation number: Checksum verification failed", ""}));
 		
 		return ll;
 	}
