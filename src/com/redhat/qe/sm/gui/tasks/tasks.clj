@@ -87,12 +87,6 @@
   (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
   (ui waittillwindownotexist :main-window 30))
 
-(defn restart-app
-  "Restarts subscription-manager-gui"
-  []
-  (kill-app)
-  (start-app))
-
 (defn start-firstboot
   "Convenience function that calls start-app with the firstboot path."
   []
@@ -519,6 +513,19 @@
                   (@config :password)
                   :owner ownername))))
 
+(defn restart-app
+  "Restarts subscription-manager-gui"
+  [& {:keys [unregister?
+             reregister?]
+      :or {unregister? false
+           reregister? false}}]
+  (kill-app)
+  (if (or unregister? reregister?)
+    (.runCommandAndWait @clientcmd "subscription-manager unregister"))
+  (start-app)
+  (if reregister?
+    (register-with-creds)))
+
 (defn get-all-facts
   "Creates and returns a map of all system facts as read in via the rhsm-gui"
   []
@@ -567,5 +574,14 @@
     (.RunCommandAndWait @clientcmd command)
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
+
+
+(comment
+  (defn build-installed-product-map
+    []
+    (let [pemfiles (split-lines (.getStdout (.runcommandAndWait @clientcmd "ls /etc/pki/product/")))
+          productmap (atom {})
+          dir "/etc/pki/product/"]
+      (doseq [pem pemfile]))))
 
 

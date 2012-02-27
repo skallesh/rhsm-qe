@@ -43,7 +43,7 @@
   (kill-app)
 )
 
-(defn ^{Test {:groups ["interop"]
+(defn ^{Test {:groups ["interop" "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"] }}
   check_warning_ok [_]
   (tasks/start-app)
@@ -54,7 +54,7 @@
   (kill-app)
 )
 
-(defn ^{Test {:groups ["interop"]
+(defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"]}}
   check_warning_cancel [_]
   (tasks/start-app)
@@ -64,7 +64,7 @@
   (kill-app)
 )
 
-(defn ^{Test {:groups ["interop"]
+(defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
   check_no_warning [_]
   (.runCommandAndWait @clientcmd (str "rm -f " systemid))
