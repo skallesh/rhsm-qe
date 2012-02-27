@@ -16,6 +16,7 @@ import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -415,6 +416,7 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"proxy_user",			"rhsm_proxy_user"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"repo_ca_cert",			"/tmp/rhsm/repo_ca_cert.pem"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsm",			"ssl_verify_depth",		"1"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("797996"),	"rhsm",			"manage_repos",			"0"}));
 
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"ca_cert_dir",			"/tmp/rhsmcertd/ca_cert_dir"}));
 		ll.add(Arrays.asList(new Object[]{null,	"rhsmcertd",	"certFrequency",		"300"}));
