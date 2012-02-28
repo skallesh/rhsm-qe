@@ -65,7 +65,9 @@ public class SubscriptionManagerTasks {
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
 
-	public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
+	//public final String msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
+	//public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=767790
+	public final String msg_ConsumerNotRegistered		= "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
 	public final String msg_NeedListOrUpdateOption		= "Error: Need either --list or --update, Try facts --help";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
