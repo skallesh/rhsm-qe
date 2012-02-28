@@ -3406,15 +3406,23 @@ repolist: 3,394
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-
+ 				
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
 				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-//				if (areReported)	// before development of conditional content tagging
-				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts))
-					Assert.assertContainsMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
-				else
-					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all.");
-	 		}
+				boolean isReported = Pattern.compile(regex,Pattern.MULTILINE).matcher(result.getStdout()).find();
+
+				boolean areAllRequiredTagsInstalled = areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts);
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) {
+//					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all since its type '"+contentNamespace.type+"' is non-yum.");
+					Assert.assertTrue(!isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all since its type '"+contentNamespace.type+"' is non-yum.");
+				} else if (areReported && areAllRequiredTagsInstalled) {
+//					Assert.assertContainsMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
+					Assert.assertTrue(isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
+				} else {
+//					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all"+((areReported&&!areAllRequiredTagsInstalled)?" since all its required tags '"+contentNamespace.requiredTags+"' are NOT found among the currently installed product certs.":"."));
+					Assert.assertTrue(!isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all"+((areReported&&!areAllRequiredTagsInstalled)?" since all its required tags '"+contentNamespace.requiredTags+"' are NOT found among the currently installed product certs.":"."));
+				}
+ 			}
  		}
 
 		// assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 
