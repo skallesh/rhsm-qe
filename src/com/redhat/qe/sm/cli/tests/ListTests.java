@@ -549,7 +549,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// create a subscription for the marketing product
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-
+		
+		
 		// Awesome OS for null sockets
 		name = "Awesome OS for \"null\" sockets";
 		productId = "null-sockets";
@@ -562,6 +563,15 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		attributes.put("arch", "ALL");
 		attributes.put("warning_period", "30");
 
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "795552"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping the creation of product: "+name);
+			return;
+		}
+		// END OF WORKAROUND
+			
 		// re-create an engineering product
 		attributes.put("type", "SVC");
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
@@ -573,7 +583,6 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// create a subscription for the marketing product
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-
 	}	
 
 	

@@ -65,7 +65,9 @@ public class SubscriptionManagerTasks {
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
 
-	public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
+	//public final String msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
+	//public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=767790
+	public final String msg_ConsumerNotRegistered		= "This system is not yet registered. Try 'subscription-manager register --help' for more information.";
 	public final String msg_NeedListOrUpdateOption		= "Error: Need either --list or --update, Try facts --help";
 	
 	// will be initialized by initializeFieldsFromConfigFile()
@@ -541,6 +543,43 @@ public class SubscriptionManagerTasks {
 		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
 
+	/**
+	 * @return the current service level returned by subscription-manager service-level --show (must already be registered)
+	 */
+	public String getCurrentServiceLevel() {
+		
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
+		
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager service-level --show
+		Current service level: Standard
+		*/
+		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
+		
+		return serviceLevel.isEmpty()?null:serviceLevel;
+	}
+	
+	/**
+	 * @return list of the service labels returned by subscription-manager service-level --list (must already be registered)
+	 */
+	public List<String> getCurrentlyAvailableServiceLevels() {
+		
+		SSHCommandResult result = service_level(false, true, null, null, null, null, null, null);
+		
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager service-level --list
+		+-------------------------------------------+
+		          Available Service Levels
+		+-------------------------------------------+
+		Standard
+		None
+		Premium
+		*/
+		List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
+		
+		return serviceLevels;
+	}
+	
 	/**
 	 * @return list of objects representing the subscription-manager list --available
 	 */
@@ -1368,6 +1407,9 @@ public class SubscriptionManagerTasks {
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (force==null || !force)) {
 			// This system is already registered. Use --force to override
 		} else
+		if (sshCommandResult.getExitCode().equals(Integer.valueOf(1)) && (environment!=null)) {
+			// Server does not support environments.
+		} else
 		if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
 			// Traceback/Error
 			this.currentlyRegisteredUsername = null;
@@ -1379,7 +1421,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// set autoheal attribute of the consumer
-		if (autoheal!=null && !sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {
+		if (autoheal!=null && sshCommandResult.getExitCode().equals(Integer.valueOf(0))) {
 			try {
 				// Note: NullPointerException will likely occur when activationKeys are used because null will likely be passed for username/password
 				CandlepinTasks.setAutohealForConsumer(currentlyRegisteredUsername, currentlyRegisteredPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, getCurrentConsumerId(sshCommandResult), autoheal);
@@ -1458,7 +1500,16 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-
+		// TEMPORARY WORKAROUND FOR Bug 797243 - manual changes to redhat.repo are too sticky
+		invokeWorkaroundWhileBugIsOpen = true;
+		bugId="797243"; 
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Triggering a yum transaction to insure the redhat.repo file is wiped clean");
+			sshCommandRunner.runCommandAndWait("yum repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
+		}
+		// END OF WORKAROUND
+		
 		return sshCommandResult; // from the register command
 	}
 	
@@ -1816,20 +1867,91 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = orgs_(username, password, proxy, proxyuser, proxypassword);
 		
 		// assert results...
-		
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager orgs --username testuser1 --password password
+		+-------------------------------------------+
+		          testuser1 Organizations
+		+-------------------------------------------+
+
+		OrgName: 	Admin Owner              
+		OrgKey: 	admin                    
+
+		OrgName: 	Snow White               
+		OrgKey: 	snowwhite                
+		*/
+
+		// assert the banner
+		String bannerRegex = "\\+-+\\+\\n\\s*"+username+" Organizations\\s*\\n\\+-+\\+";
+		Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from orgs contains the expected banner regex: "+bannerRegex);
+
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the orgs command indicates a success.");
 
-		// assert the expected banner
-		/*
-		+-------------------------------------------+
-			        testuser1 Organizations
-		+-------------------------------------------+
-		*/
-		String regex = username+" Organizations";
-		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), regex);
-		
 		return sshCommandResult; // from the orgs command
+	}
+	
+	
+	// service-level module tasks ************************************************************
+
+	/**
+	 * service_level without asserting results
+	 */
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " service-level";
+		if (show!=null && show)			command += " --show";
+		if (list!=null && list)			command += " --list";
+		if (username!=null)				command += " --username="+username;
+		if (password!=null)				command += " --password="+password;
+		if (org!=null)					command += " --org="+org;
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager service-level"
+	 */
+	public SSHCommandResult service_level(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = service_level_(show, list, username, password, org, proxy, proxyuser, proxypassword);
+		
+		// assert results...
+		/*
+		[root@jsefler-r63-server ~]# subscription-manager service-level --show --list
+		Current service level: 
+		+-------------------------------------------+
+          			Available Service Levels
+		+-------------------------------------------+
+		Standard
+		None
+		Premium
+		*/
+		
+		// assert the banner
+		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
+		if (list!=null && list) {
+			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
+		} else {
+			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
+		}
+		
+		// assert the "Current service level: "
+		String regex = "Current service level: ";
+		if (show!=null && show) {
+			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
+		} else {
+			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --show) should not contains the regex: "+regex);	
+		}
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the service-level command indicates a success.");
+		
+		return sshCommandResult; // from the service-level command
 	}
 	
 	
@@ -3286,15 +3408,23 @@ repolist: 3,394
 		SSHCommandResult result = sshCommandRunner.runCommandAndWait("yum repolist all --disableplugin=rhnplugin");	// FIXME, THIS SHOULD MAKE USE OF getYumRepolist
  		for (EntitlementCert entitlementCert : entitlementCerts) {
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
-
+ 				
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
 				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
-//				if (areReported)	// before development of conditional content tagging
-				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts))
-					Assert.assertContainsMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
-				else
-					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all.");
-	 		}
+				boolean isReported = Pattern.compile(regex,Pattern.MULTILINE).matcher(result.getStdout()).find();
+
+				boolean areAllRequiredTagsInstalled = areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts);
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) {
+//					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all since its type '"+contentNamespace.type+"' is non-yum.");
+					Assert.assertTrue(!isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all since its type '"+contentNamespace.type+"' is non-yum.");
+				} else if (areReported && areAllRequiredTagsInstalled) {
+//					Assert.assertContainsMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
+					Assert.assertTrue(isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is reported in yum repolist all.");
+				} else {
+//					Assert.assertContainsNoMatch(result.getStdout(), regex, null, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all"+((areReported&&!areAllRequiredTagsInstalled)?" since all its required tags '"+contentNamespace.requiredTags+"' are NOT found among the currently installed product certs.":"."));
+					Assert.assertTrue(!isReported, "ContentNamespace label '"+contentNamespace.label.trim()+"' from EntitlementCert '"+entitlementCert.serialNumber+"' is NOT reported in yum repolist all"+((areReported&&!areAllRequiredTagsInstalled)?" since all its required tags '"+contentNamespace.requiredTags+"' are NOT found among the currently installed product certs.":"."));
+				}
+ 			}
  		}
 
 		// assert that the sshCommandRunner.getStderr() does not contains an error on the entitlementCert.download_url e.g.: http://redhat.com/foo/path/never/repodata/repomd.xml: [Errno 14] HTTP Error 404 : http://www.redhat.com/foo/path/never/repodata/repomd.xml 

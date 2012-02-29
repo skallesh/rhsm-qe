@@ -151,12 +151,24 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 						poolProductSocketsAttribute = null;
 					}
 					
+					// consider the socket coverage and assert the installed product's status 
 					if (poolProductSocketsAttribute!=null && Integer.valueOf(poolProductSocketsAttribute)<Integer.valueOf(clienttasks.sockets) && Integer.valueOf(poolProductSocketsAttribute)>0) {
 						Assert.assertEquals(installedProduct.status, "Partially Subscribed", "After subscribing to a pool for ProductId '"+productId+"' (covers '"+poolProductSocketsAttribute+"' sockets), the status of Installed Product '"+bundledProductName+"' should be Partially Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir+" and the machine's sockets value ("+clienttasks.sockets+") is greater than what a single subscription covers.");
 					} else {
 						Assert.assertEquals(installedProduct.status, "Subscribed", "After subscribing to a pool for ProductId '"+productId+"', the status of Installed Product '"+bundledProductName+"' is Subscribed since a corresponding product cert was found in "+clienttasks.productCertDir);
 					}
-					Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+bundledProductName+"' expires on the same DAY as the consumed ProductSubscription: "+productSubscription);
+					
+					// behavior update after fix from Bug 767619 - Date range for installed products needs to be smarter.
+					//Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(productSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+productSubscription);					
+					if (installedProduct.status.equals("Subscribed")) {
+						// assert the valid date range on the installed product match the validity period of the product subscription
+						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+bundledProductName+"' expires on the same DAY as the consumed ProductSubscription: "+productSubscription);
+						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(productSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+productSubscription);
+					} else {
+						// assert the date range on the installed product is None
+						Assert.assertNull(installedProduct.startDate, "Installed Product '"+bundledProductName+"' start date range should be None/null when today's status is NOT fully Subscribed.");
+						Assert.assertNull(installedProduct.endDate, "Installed Product '"+bundledProductName+"' end date range should be None/null when today's status is NOT fully Subscribed.");
+					}
 				}
 				if (productCerts.isEmpty()) {
 					Assert.assertNull(InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, currentlyInstalledProducts),"There should NOT be an installed status report for '"+bundledProductName+"' since a corresponding product cert was not found in "+clienttasks.productCertDir);
@@ -614,18 +626,50 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscribeWithAutoAndServicelevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) {
+	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
 		// start fresh by returning all entitlements
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// subscribe with auto specifying a valid service level
-		clienttasks.subscribe(true,serviceLevel,(String)null,null,null,null,null,null,null, null, null);
+		clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null);
+		
+		// get the current consumer object and assert that the serviceLevel persisted
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
+		Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");
 
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: after subscribing with auto and a service level, assert that another subscribe with auto still uses the persisted service level",
+			groups={},
+			dependsOnMethods={"SubscribeWithAutoAndServicelevel_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SubscribeWithAutoAgainAfterSubscribeWithAutoAndServicelevel_Test() throws JSONException, Exception {
+		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
+		
+		// get the current service level
+		String serviceLevel = clienttasks.getCurrentServiceLevel();
+		Assert.assertNotNull(serviceLevel, "The current service level should not be null after subscribing with auto and servicelevel during the prior test.");
+		
+		// return all entitlements
+		clienttasks.unsubscribe(true, null, null, null, null);
+		
+		// subscribe with auto specifying without specifying a service level
+		clienttasks.subscribe(true,null,(String)null,(String)null,(String)null,null,null,null,null, null, null);
+		
+		// get the current consumer object and assert that the serviceLevel persisted even though the subscribe did NOT specify a service level
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The call to subscribe with auto (without specifying a servicelevel) did not alter current servicelevel.");
+
+		// assert that each of the autosubscribed entitlements come from a pool that supports the original service level
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 		}
 	}
 	
@@ -941,8 +985,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(0),		"^"+String.format("No free entitlements are available for the pool with id '%s'.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(0),		"^"+String.format("No free entitlements are available for the pool with id '%s'.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+String.format("No free entitlements are available for the pool with id '%s'.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+String.format("No free entitlements are available for the pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to yes."}));
 		}
@@ -950,7 +994,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		pool= poolWithMultiEntitlementNo;
 		if (pool!=null) {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
 		}
@@ -958,7 +1002,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		pool= poolWithMultiEntitlementNull;
 		if (pool!=null) {
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(0),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));
 		}

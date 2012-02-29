@@ -8,6 +8,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.json.JSONException;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
@@ -186,9 +187,91 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// Candidates for an automated Test:
-	// TODO Bug 767620 - [RFE] subscription-manager should have a option that when set prevents the download / install of "redhat.repo"
+	@Test(	description="subscription-manager: set manage_repos to 0 and assert redhat.repo is removed.",
+			enabled=true,
+			groups={"blockedByBug-767620","blockedByBug-797996","ManageReposTests","AcceptanceTests"})
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff_Test() throws JSONException, Exception{
 		
+		// manually set the manage_repos to 1
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
+//		clienttasks.restart_rhsmcertd(null, null, false);
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		
+		// assert that the redhat.repo exists before and after a yum transaction
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),1,"When rhsm.manage_repos is configured on, the redhat.repo should exist after registration.");
+		clienttasks.getYumRepolist(null);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),1,"When rhsm.manage_repos is configured on, the redhat.repo should exist after yum transaction.");
+
+		// assert that the repos list is not entitled to use any repositories, but is enabled by configuration!
+		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
+
+		// NOW DISABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","0"});
+		
+		// assert that the repos list is disabled by configuration!
+		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration.");
+
+		// trigger a yum transaction and assert that the redhat.repo no longer exists
+		clienttasks.getYumRepolist(null);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"When rhsm.manage_repos is configured off, the redhat.repo file should not exist anymore.");
+		
+		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"Even after subscribing to all subscription pools while rhsm.manage_repos is off, the redhat.repo is not generated.");
+	}
+	
+	
+	@Test(	description="subscription-manager: set manage_repos to 1 and assert redhat.repo is restored.",
+			enabled=true,
+			groups={"blockedByBug-767620","blockedByBug-797996","ManageReposTests"})
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListIsEnabledByConfigurationAfterRhsmManageReposIsConfiguredOn_Test() throws JSONException, Exception{
+		
+		// manually set the manage_repos to 0
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "0");
+//		clienttasks.restart_rhsmcertd(null, null, false);
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		
+		// assert that the redhat.repo does NOT exist before and after a yum transaction
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"When rhsm.manage_repos is configured off, the redhat.repo should NOT exist after registration.");
+		clienttasks.getYumRepolist(null);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"When rhsm.manage_repos is configured off, the redhat.repo should NOT exist after yum transaction.");
+
+		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"Even after subscribing to all subscription pools while rhsm.manage_repos is off, the redhat.repo is not generated.");
+
+		// NOW ENABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
+			
+		// assert that the repos list is not entitled to use any repositories, but is enabled by configuration!
+		Assert.assertTrue(!clienttasks.getCurrentlySubscribedRepos().isEmpty(), "Now that the system's rhsm.manage_repos is enabled, the entitled content (assuming>0) is displayed in the repos --list.");
+
+		// trigger a yum transaction and assert that the redhat.repo now exists
+		clienttasks.getYumRepolist(null);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),1,"When rhsm.manage_repos is configured on, the redhat.repo file should now exist.");
+	}
+	
+	
+	// Candidates for an automated Test:
+	// TODO Bug 797243 - manual changes to redhat.repo are too sticky
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	// Configuration methods ***********************************************************************
 
 	@BeforeClass(groups={"setup"})
@@ -200,6 +283,11 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
 	public void unsubscribeAllBeforeGroups() {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+	}
+	
+	@AfterGroups(groups={"setup"}, value={"ManageReposTests"})
+	public void setManageReposConfiguration() {
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
 	}
 	
 	
