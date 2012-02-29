@@ -1,18 +1,31 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
+import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -236,6 +249,102 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
+	
+	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
+			groups={"AcceptanceTests","ConsumerDeletedServerSideTests"},
+			dataProvider="getConsumerCertDirData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test(Object bugzilla, String consumerCertDir) throws Exception {
+		
+		// set the rhsm.consumerCertDir (DO NOT USE SubscriptionTasks.config(...))
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",consumerCertDir);
+		
+		// make sure that rhsmcertd will not interfere
+		//clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"certfrequency","240");
+		clienttasks.config(null, null, true, new String[]{"rhsmcertd","certfrequency","240"});
+		clienttasks.restart_rhsmcertd(null, null, false);
+		
+		// register and remember the original consumer identity
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, (String)null, true, null, null, null, null);
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		String consumerCert_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerCertFile()).getStdout().trim();
+		String consumerKey_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerKeyFile()).getStdout().trim();
+		
+		// Subscribe to a randomly available pool...
+		log.info("Subscribe to a randomly available pool...");
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.size()<=0) throw new SkipException("No susbcriptions are available for which an entitlement could be granted.");
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
+		
+		// do a server-side consumer deletion 
+		// # curl -k -u testuser1:password --request DELETE https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/8511a2a6-c2ec-4612-8186-af932a3b97cf
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerCert.consumerid);
+		
+		// assert that all subscription-manager calls are blocked by a message stating that the consumer has been deleted
+		// Original Stderr: Consumer with id b0f1ed9f-3dfa-4eea-8e04-72ab8075d533 could not be found
+		String expectedMsg = String.format("Consumer %s has been deleted",consumerCert.consumerid); SSHCommandResult result;
+		result = clienttasks.identity_(null,null,null,null,null,null,null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		result = clienttasks.list_(null, true, null, null, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+		result = clienttasks.refresh_(null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		result = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list_(null, null, null, true, null, null, null, null).getStdout());
+		result = clienttasks.unsubscribe_(null, consumedProductSubscriptions.get(0).serialNumber, null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		result = clienttasks.service_level_(null,null,null,null,null,null,null,null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		result = clienttasks.facts_(null, true, null, null, null);	// Bug 798788:  Error updating system data, see /var/log/rhsm/rhsm.log for more details.
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "798788"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping stderr assertion from subscription-manager facts --update.");
+		} else {
+		// END OF WORKAROUND
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
+		}
+		
+		// restart rhsmcertd
+		clienttasks.restart_rhsmcertd(null, null, false);
+		
+		// assert that the consumer has been backed up and assert the md5sum matches
+		String consumerCertFileOld = clienttasks.consumerCertDir+".old/cert.pem";
+		String consumerCertKeyOld = clienttasks.consumerCertDir+".old/key.pem";
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, consumerCertFileOld), 1, "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer cert should be copied to: "+consumerCertFileOld);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, consumerCertKeyOld), 1, "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer key should be copied to: "+consumerCertKeyOld);
+		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertFileOld).getStdout().replaceAll(consumerCertFileOld, "").trim(), consumerCert_md5sum.replaceAll(clienttasks.consumerCertFile(), "").trim(), "After the deleted consumer cert is backed up, its md5sum matches that from the original consumer cert.");
+		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertKeyOld).getStdout().replaceAll(consumerCertKeyOld, "").trim(), consumerKey_md5sum.replaceAll(clienttasks.consumerKeyFile(), "").trim(), "After the deleted consumer key is backed up, its md5sum matches that from the original consumer key.");
+		
+		// assert that the system is no longer registered and no entitlements remain
+		Assert.assertEquals(clienttasks.identity_(null,null,null,null,null,null,null).getStdout().trim(),clienttasks.msg_ConsumerNotRegistered,"The system should no longer be registered after rhsmcertd triggers following a server-side consumer deletion.");
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCertFiles().isEmpty(),"The system should no longer have any entitlements after rhsmcertd triggers following a server-side consumer deletion.");
+	}
+	
+	
+	
+	
+	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=678151
 	
@@ -251,6 +360,21 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 	}
 	
+	@BeforeGroups(groups={"setup"}, value={"ConsumerDeletedServerSideTests"})
+	public void setConsumerCertDirBeforeGroups() {
+		if (clienttasks!=null) {
+			origConsumerCertDir = clienttasks.consumerCertDir;
+		}
+	}
+	@AfterGroups(groups={"setup"}, value={"ConsumerDeletedServerSideTests"})
+	public void setConsumerCertDirAfterGroups() {
+		if (clienttasks!=null) {
+			clienttasks.unregister_(null,null,null);
+			clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",origConsumerCertDir);
+			//clienttasks.consumerCertDir = origConsumerCertDir;
+		}
+	}
+	protected String origConsumerCertDir = null;
 	
 	
 	// Protected Methods ***********************************************************************
@@ -259,5 +383,19 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	// Data Providers ***********************************************************************
 
+	
+	@DataProvider(name="getConsumerCertDirData")
+	public Object[][] getConsumerCertDirDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getConsumerCertDirDataAsListOfLists());
+	}
+	protected List<List<Object>> getConsumerCertDirDataAsListOfLists(){
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+
+		// String consumerCertDir
+		ll.add(Arrays.asList(new Object[]{null,	clienttasks.consumerCertDir}));
+		ll.add(Arrays.asList(new Object[]{null,	"/tmp/consumer"}));
+
+		return ll;
+	}
 
 }

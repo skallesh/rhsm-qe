@@ -76,8 +76,8 @@ public class SubscriptionManagerTasks {
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String caCertDir						= null; // "/etc/rhsm/ca";
 	public String baseurl						= null;
-	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
-	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
+	public String consumerKeyFile()	{			return this.consumerCertDir+"/key.pem";}
+	public String consumerCertFile() {			return this.consumerCertDir+"/cert.pem";}
 
 	
 	public String hostname						= null;	// of the client
@@ -137,8 +137,6 @@ public class SubscriptionManagerTasks {
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
 			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
 			this.baseurl			= getConfFileParameter(rhsmConfFile, "baseurl").replaceFirst("/$", "");
-			this.consumerCertFile	= consumerCertDir+"/cert.pem";
-			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
 		} else {
 			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+rhsmConfFile);
@@ -673,11 +671,11 @@ public class SubscriptionManagerTasks {
 	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
-		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile)!=1) {
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile())!=1) {
 			log.info("Currently, there is no consumer registered.");
 			return null;
 		}
-		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+this.consumerCertFile);
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+this.consumerCertFile());
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
 	}
@@ -1488,8 +1486,8 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert certificate files are installed into /etc/pki/consumer
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile()),1, "Consumer key file '"+this.consumerKeyFile()+"' must exist after register.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile()),1, "Consumer cert file '"+this.consumerCertFile()+"' must exist after register.");
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
@@ -2214,8 +2212,8 @@ public class SubscriptionManagerTasks {
 		} 
 		
 		// assert that the consumer cert and key have been removed
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),0, "Consumer key file '"+this.consumerKeyFile+"' does NOT exist after unregister.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile()),0, "Consumer key file '"+this.consumerKeyFile()+"' does NOT exist after unregister.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile()),0, "Consumer cert file '"+this.consumerCertFile()+" does NOT exist after unregister.");
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
