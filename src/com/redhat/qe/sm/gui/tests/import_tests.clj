@@ -54,7 +54,8 @@
   (tasks/checkforerror))
 
 (defn ^{Test {:groups ["import"
-                       "blokecdByBug-712980"]}}
+                       "blokecdByBug-712980"
+                       "blockedByBug-712978"]}}
   import_valid_cert [_]
   (tasks/restart-app)
   (let [certlocation (str (.getValidImportCertificate @importtests))
@@ -94,7 +95,7 @@
   
 (defn ^{Test {:groups ["import"]
               :dependsOnMethods ["import_valid_cert"]}}
-  import_unsubscribe [_]
+  import_unregister [_]
   (tasks/register-with-creds :re-register? false)
   (tasks/ui selecttab :my-subscriptions)
   (let [assert-in-table? (fn [pred]
@@ -103,9 +104,9 @@
                                   (tasks/get-table-elements :my-subscriptions-view
                                                             0
                                                             :skip-dropdowns? true))))]
-    (assert-in-table? not-nil?)
+    (verify (assert-in-table? not-nil?))
     (tasks/unregister)
-    (assert-in-table? nil?))
+    (verify (assert-in-table? nil?)))
   (let [certdirfiles (split-lines
                       (.getStdout (.runCommandAndWait
                                    @clientcmd
@@ -116,14 +117,43 @@
     (verify (does-not-exist? (:key @importedcert))))
   (reset! importedcert nil))
 
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-691784"
+                       "blockedByBug-723363"]}}
+  import_unsubscribe [_]
+  (tasks/restart-app :unregister? true)
+  (import_valid_cert nil)
+  (let [assert-in-table? (fn [pred]
+                           (pred
+                            (some #{(:entname @importedcert)}
+                                  (tasks/get-table-elements :my-subscriptions-view
+                                                            0
+                                                            :skip-dropdowns? true))))]
+    (verify (assert-in-table? not-nil?))
+    (tasks/unsubscribe (:entname @importedcert))
+    (verify (assert-in-table? nil?)))
+  (let [certdirfiles (split-lines
+                      (.getStdout (.runCommandAndWait
+                                   @clientcmd
+                                   (str "ls " (:certdir @importedcert)))))
+        does-not-exist? (fn [file]
+                          (nil? (some #{file} certdirfiles)))]
+    (verify (does-not-exist? (:cert @importedcert)))
+    (verify (does-not-exist? (:key @importedcert))))
+  (reset! importedcert nil))
 
-(defn import-bad-cert [certname expected-error]
+(defn import-bad-cert [certname
+                       expected-error
+                       & {:keys [cancel?]
+                          :or {cancel? true}}]
   (let [test-fn (fn []
                   (with-handlers [(handle expected-error [e]
                                           (:type e))]
                     (import-cert certname)))]
     (let [thrown-error (test-fn)]
-      (verify (= thrown-error expected-error)))))
+      (verify (= thrown-error expected-error))))
+  (if cancel?
+    (tasks/ui click :import-cancel)))
 
 (defn get-random-file
   ([path filter]
@@ -165,6 +195,14 @@
   import_product [_]
   (let [certname (get-random-file "/etc/pki/product/")]
     (import-bad-cert certname :invalid-cert)))
+
+(defn ^{Test {:groups ["import"
+                       "blockedByBug-691788"]
+              :dependsOnMethods ["import_random"]}}
+  import_and_reopen [_]
+  (import_random nil)
+  (tasks/restart-app)
+  (verify (= 1 (tasks/ui guiexist :main-window))))
 
 (comment
   ;TODO depending on bug 748312
