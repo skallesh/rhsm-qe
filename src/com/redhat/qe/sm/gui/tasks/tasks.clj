@@ -482,17 +482,26 @@
     (verify (= config-file-user user))
     (verify (= config-file-password password))))
 
-(defn get-logging
-  "Runs a given function f and returns changes to a log file.
+(comment
+  ;old and busted
+  (defn get-logging
+    
+    [runner logfile name grep f]
+    (let [marker (str (System/currentTimeMillis) " " name)]
+      (RemoteFileTasks/markFile runner logfile marker)
+      (f)
+      (RemoteFileTasks/getTailFromMarkedFile runner logfile marker grep))))
+
+(defmacro get-logging [runner logfile name grep & forms]
+  "Runs given forms and returns changes to a log file.
   runner: an instance of a SSHCommandRunner
   log: string containing which log file to look at
   name: string used to mark the log file
   grep: what to grep the results for"
-  [runner log name grep f]
-  (let [marker (str (System/currentTimeMillis) " " name)]
-    (RemoteFileTasks/markFile runner log marker)
-    (f)
-    (RemoteFileTasks/getTailFromMarkedFile runner log marker grep)))
+  `(let [marker# (str (System/currentTimeMillis) " " ~name)]
+     (RemoteFileTasks/markFile ~runner ~logfile marker#)
+     (do ~@forms)
+     (RemoteFileTasks/getTailFromMarkedFile ~runner ~logfile marker# ~grep)))
 
 (defn register-with-creds
   "Registers user with credentials found in automation.properties"

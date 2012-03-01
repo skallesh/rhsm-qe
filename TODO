@@ -10,7 +10,11 @@ GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=702075
   https://bugzilla.redhat.com/show_bug.cgi?id=723363
   https://bugzilla.redhat.com/show_bug.cgi?id=712980
-
+  https://bugzilla.redhat.com/show_bug.cgi?id=656896
+  https://bugzilla.redhat.com/show_bug.cgi?id=706384
+    
+  https://tcms.engineering.redhat.com/case/70205/?from_plan=2110
+  
 GUI LIMBO:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=676377 < rhsm icon
@@ -27,7 +31,6 @@ GUI LIMBO:
 GUI TODO:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=703920
-  https://bugzilla.redhat.com/show_bug.cgi?id=706384 < look for tracebacks running 2nd rhsm
 
   https://bugzilla.redhat.com/show_bug.cgi?id=740788
   https://bugzilla.redhat.com/show_bug.cgi?id=740377
@@ -38,7 +41,6 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=727973
   https://bugzilla.redhat.com/show_bug.cgi?id=745995
 
-  https://bugzilla.redhat.com/show_bug.cgi?id=656896 < look for libglade-WARNING on launch
   https://bugzilla.redhat.com/show_bug.cgi?id=766778
   https://bugzilla.redhat.com/show_bug.cgi?id=704408
   
@@ -58,7 +60,7 @@ GUI TODO:
   https://tcms.engineering.redhat.com/case/70305/?from_plan=2110
   https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
   https://tcms.engineering.redhat.com/case/73580/?from_plan=2110
-  https://tcms.engineering.redhat.com/case/70205/?from_plan=2110 (verify that facts match cli facts only)
+
   https://tcms.engineering.redhat.com/case/73339/?from_plan=2110
   https://tcms.engineering.redhat.com/case/69815/?from_plan=2110 (fake by removing and adding product cert)
   https://tcms.engineering.redhat.com/case/69814/?from_plan=2110

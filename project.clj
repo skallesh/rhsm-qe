@@ -37,6 +37,7 @@
       (require :reload-all '[com.redhat.qe.sm.gui.tests.facts-tests :as ftest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.acceptance-tests :as actest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.import-tests :as itest])
+      (require :reload-all '[com.redhat.qe.sm.gui.tests.system-tests :as systest])
 
       (import '[com.redhat.qe.sm.base SubscriptionManagerCLITestScript])
       )

@@ -54,7 +54,7 @@
                                      auth-log
                                      "proxy-auth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
     
 (defn ^{Test {:groups ["proxy"]
@@ -65,7 +65,7 @@
                                      noauth-log
                                      "proxy-noauth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
@@ -76,13 +76,13 @@
                                      auth-log
                                      "disabled-auth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (clojure.string/blank? logoutput)))
   (let [logoutput (tasks/get-logging @noauth-proxyrunner 
                                      noauth-log
                                      "disabled-auth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (clojure.string/blank? logoutput))))
 
 (defn ^{Test {:groups ["proxy"]}}
