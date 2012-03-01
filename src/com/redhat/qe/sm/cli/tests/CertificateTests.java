@@ -271,10 +271,22 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		if (clienttasks!=null) {
+			
+			// get all of the installed product certs
 			List<File> productCertFiles = clienttasks.getCurrentProductCertFiles();
-			if (productCertFiles.size()==0) log.info("No Product Cert files were found.");
+			if (productCertFiles.size()==0) log.warning("No Product Cert files were found.");
 			for (File productCertFile : productCertFiles) {
+				if (productCertFile.getName().endsWith("_.pem")) {
+					log.info("Skipping the generated product cert '"+productCertFile+"' from those provided by @DataProvider name=getProductCertFilesData.");
+					continue;
+				}
 				ll.add(Arrays.asList(new Object[]{productCertFile}));
+			}
+			
+			// get all of the product certs from the subscription-manager-migration-data
+			SSHCommandResult result = client.runCommandAndWait("rpm -ql subscription-manager-migration-data | grep .pem");
+			for (String productCertFilePath : result.getStdout().split("\n")) {
+				ll.add(Arrays.asList(new Object[]{new File(productCertFilePath)}));
 			}
 		}
 		
