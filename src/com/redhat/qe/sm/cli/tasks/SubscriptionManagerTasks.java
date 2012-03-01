@@ -548,13 +548,15 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
 		
-		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-level --show
-		Current service level: Standard
-		*/
+		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
+		// Current service level: Standard
+		//
+		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
+		// Current service level: 
 		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
 		
-		return serviceLevel.isEmpty()?null:serviceLevel;
+		//return serviceLevel.isEmpty()?null:serviceLevel;
+		return serviceLevel;
 	}
 	
 	/**
@@ -1932,7 +1934,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert the banner
 		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
-		if (list!=null && list) {
+		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
 		} else {
 			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
@@ -1940,10 +1942,12 @@ public class SubscriptionManagerTasks {
 		
 		// assert the "Current service level: "
 		String regex = "Current service level: ";
-		if (show!=null && show) {
+		if (show!=null && show) {	// when explicitly asked to show
 			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
-		} else {
-			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --show) should not contains the regex: "+regex);	
+		} else if (list!=null && list) {	// when explicitly asked to list but not show
+			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
+		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
+			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
 		}
 		
 		// assert the exit code was a success
