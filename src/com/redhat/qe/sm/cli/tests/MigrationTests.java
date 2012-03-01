@@ -126,7 +126,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-799103"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1077,7 +1077,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo", 
 	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo"
 				List<String> rhnChannelExceptions = Arrays.asList("rhel-x86_64-server-6-rhevm-3-jboss-5","rhel-x86_64-server-6-rhevm-3-jboss-5-beta","rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo","rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo");
-				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals("6")) continue;
+				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals(/*"5"*/"6")) continue;
 				
 				// bugzillas
 				Object bugzilla = null;
@@ -1096,6 +1096,36 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannel.endsWith("-debuginfo")) { 
 					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
 					bugzilla = new BlockedByBzBug("786140");
+				}
+				if (rhnChannel.equals("rhel-x86_64-server-optional-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-sfs-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-ha-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-rs-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-6-rhevh") ||
+					rhnChannel.equals("rhel-x86_64-server-6-rhevm-3") ||
+					rhnChannel.equals("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
+					rhnChannel.equals("rhel-x86_64-server-sjis-6") ||
+					rhnChannel.equals("rhel-x86_64-server-sap-6") ||
+					rhnChannel.equals("rhel-x86_64-server-lb-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-workstation-sfs-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-workstation-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-workstation-optional-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-6") ||
+					rhnChannel.equals("rhel-i386-server-6-cf-tools-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-tools-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-ae-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-ce-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-se-1") ||
+					rhnChannel.equals("sam-rhel-x86_64-server-6-htb")) { 
+					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
+					bugzilla = new BlockedByBzBug("799152");
+				}
+				if (rhnChannel.equals("rhel-s390x-server-6") ||
+					rhnChannel.equals("rhel-s390x-server-optional-6") ||
+					rhnChannel.equals("rhel-s390x-server-supplementary-6")) { 
+					// Bug 799103 - no mapping for s390x product cert included in the subscription-manager-migration-data
+					bugzilla = new BlockedByBzBug("799103");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName
