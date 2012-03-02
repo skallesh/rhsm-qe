@@ -148,7 +148,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="Verify that the migration product certs support this system's rhel release version",
+	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
 			groups={"AcceptanceTests","blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
@@ -159,18 +159,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean verifiedVersionOfAllMigrationProductCertFiles = true;
 		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
 			if (!productCert.productNamespace.providedTags.toLowerCase().contains("rhel")) {
-				log.warning("Migration productCert '"+productCert+"' does not provide rhel tags.  Skipping assertion that its version matches this system's rhel version.");
+				log.warning("Migration productCert '"+productCert+"' does not provide RHEL tags.  Skipping assertion that its version matches this system's RHEL version.");
 				continue;
 			}
 			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseXY)) {
-				log.info("Migration productCert '"+productCert+"' supports this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
+				log.info("Migration productCert '"+productCert+"' supports this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 
 			} else {
-				log.warning("Migration productCert '"+productCert+"' does NOT support this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
+				log.warning("Migration productCert '"+productCert+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 				verifiedVersionOfAllMigrationProductCertFiles = false;
 			}
 		}
-		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
+		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	
 	
@@ -502,7 +502,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 	
 			// assert that we are consuming some entitlements (for at least the base product cert)
-			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to "+rhnMigrateTool+" with "+options+".");
+			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
 			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
