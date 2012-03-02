@@ -8,9 +8,11 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.tools.RemoteFileTasks;
+import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author ssalevan
@@ -42,10 +44,12 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: attempt to access functionality that does not exist",
 			groups={},
 			dataProvider="NegativeFunctionalityData")
-	public void AttemptingCommandsThatAreInvalid_Test(String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void AttemptingCommandsThatAreInvalid_Test(String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		log.info("Testing subscription-manager-cli command that is invalid, expecting it to fail: "+ command);
-		RemoteFileTasks.runCommandAndAssert(client,command,expectedExitCode,expectedStdoutRegex,expectedStderrRegex);
-
+		SSHCommandResult result = client.runCommandAndWait(command);
+		if (expectedExitCode!=null)	Assert.assertEquals(result.getExitCode(), expectedExitCode, "The expected exit code.");
+		if (expectedStdout!=null)	Assert.assertEquals(result.getStdout().trim(), expectedStdout, "The expected stdout message.");
+		if (expectedStderr!=null)	Assert.assertEquals(result.getStderr().trim(), expectedStderr, "The expected stderr message.");
 	}
 	
 	
@@ -107,13 +111,13 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
 		// String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					2,		null,	clienttasks.command+": error: no such option: --product"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				2,		null,	clienttasks.command+": error: no such option: --regtoken"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					2,		null,	clienttasks.command+": error: no such option: --pool"}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									255,	"This command requires that you specify a pool with --pool or use --auto.",	null}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				255,	"Only one of --pool or --auto may be used.",	null}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	255,	"Must use --auto with --servicelevel.",	null}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				255,	"Must use --autosubscribe with --servicelevel.",	null}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									new Integer(255),	"Error: This command requires that you specify a pool with --pool or use --auto.",	""}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 
 		return ll;
 	}
