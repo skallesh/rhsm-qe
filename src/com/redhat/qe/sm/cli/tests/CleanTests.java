@@ -1,8 +1,12 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.Test;
 
@@ -10,6 +14,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -23,7 +28,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager-cli: clean and verify the identity is removed",
-			groups={"AcceptanceTests","Clean_Test","blockedByBug-654429"},
+			groups={"AcceptanceTests","blockedByBug-654429"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=64178)	// http://gibson.usersys.redhat.com/agilo/ticket/4020
 	public void Clean_Test() {
@@ -54,21 +59,42 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	// Configuration methods ***********************************************************************
-	
-	String consumerId = null;
-	@AfterGroups(value="Clean_Test", alwaysRun=true)
-	public void teardownAfterClass() {
-		if (consumerId!=null) {
+	@Test(	description="subscription-manager: set manage_repos to 0 and assert clean still works.",
+			enabled=true,
+			groups={"AcceptanceTests", "blockedByBug-799394", "CleanAfterRhsmManageReposIsConfigured_Test"})
+	//@ImplementsNitrateTest(caseId=)
+	public void CleanAfterRhsmManageReposIsConfigured_Test() throws JSONException, Exception{
+		List<String[]> rhsmManageRepo = new ArrayList<String[]>();
+		for (String value : new String[]{"1","0"}) {
+			rhsmManageRepo.clear();
+			rhsmManageRepo.add(new String[]{"rhsm", "manage_repos", value});
+			clienttasks.config(null, null, true, rhsmManageRepo);
+			consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, null, null, null, null));
 			clienttasks.clean(null, null, null);
-			clienttasks.register(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, (String)null, Boolean.TRUE, false, null, null, null);
-			clienttasks.unregister(null, null, null);
 		}
 		
 	}
 	
 	
+	// Configuration methods ***********************************************************************
+	
+	String consumerId = null;
+	@AfterClass(groups={"setup"})
+	public void teardownAfterClass() {
+		if (clienttasks!=null) {
+			clienttasks.unregister_(null, null, null);
+			clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, (String)null, Boolean.TRUE, false, null, null, null);
+			clienttasks.unregister_(null, null, null);
+			consumerId = null;
+		}
+		
+	}
+	
+	@AfterGroups(groups={"setup"}, value={"CleanAfterRhsmManageReposIsConfigured_Test"})
+	public void setManageReposConfiguration() {
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "manage_repos", "1");
+		//clienttasks.config(null, null, true, Arrays.asList(new String[]{"",""}));
+	}
 	
 	// Protected methods ***********************************************************************
 
