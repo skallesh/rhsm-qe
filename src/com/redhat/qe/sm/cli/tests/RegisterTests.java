@@ -192,8 +192,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithAutosubscribeAndUnavailableServicelevel_Test() throws JSONException, Exception {
 
 		// attempt the registration
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, "FOO", (String)null, true, null, null, null, null);
-		String msg = "Cannot set a service level for a consumer that is not available to its organization.";
+		String unavailableServiceLevel = "FOO";
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, unavailableServiceLevel, (String)null, true, null, null, null, null);
+		String msg = "Cannot set a service level for a consumer that is not available to its organization."; // before Bug 795798 - Cannot set a service level for a consumer that is not available to its organization.
+		msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
