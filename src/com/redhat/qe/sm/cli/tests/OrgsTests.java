@@ -121,14 +121,15 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt to get a bogus owner via the candlepin api",
-			groups={"blockedByBug-729780"},
+			groups={"blockedByBug-729780","blockedByBug-796468"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptToGetABogusOwnerViaCandlepinApi_Test() throws Exception {
 		String bogusOwner = "bogusOwner";
 		JSONObject jsonResponse = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/owners/"+bogusOwner));
 		
-		Assert.assertEquals(jsonResponse.getString("displayMessage"), "Owner with id "+bogusOwner+" could not be found", "The JSON returned from the candlepin API call should contain a displayMessage stating that the owner could not be found.");
+		//Assert.assertEquals(jsonResponse.getString("displayMessage"), "Owner with id "+bogusOwner+" could not be found", "The JSON returned from the candlepin API call should contain a displayMessage stating that the owner/org could not be found.");	// valid prior to Bug 796468 - Owner with id FOO could not be found
+		Assert.assertEquals(jsonResponse.getString("displayMessage"), "Organization with id "+bogusOwner+" could not be found", "The JSON returned from the candlepin API call should contain a displayMessage stating that the owner/org could not be found.");
 		
 		// TODO could also use the RemoteFileTasks to mark the catalina.out file and assert that it contains a 404 response instead of the 403 response as reported in:
 		// https://bugzilla.redhat.com/show_bug.cgi?id=729780
