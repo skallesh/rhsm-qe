@@ -108,7 +108,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-			groups={/*"blockedByBug-796468"*/},
+			groups={"blockedByBug-796468"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListWithInvalidOrg_Test() {
@@ -119,14 +119,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Owner with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null);
 		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Owner with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 	}
 	
