@@ -2208,6 +2208,14 @@ public class SubscriptionManagerTasks {
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
+			// TEMPORARY WORKAROUND FOR BUG
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="800121"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("If 'NoneType' object message was thrown to stdout during unregister, we will ignore it while this bug is open.");
+				Assert.assertTrue(sshCommandResult.getStdout().trim().contains("System has been un-registered."), "The unregister command was a success.");
+			} else
+			// END OF WORKAROUND
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unregister command indicates a success.");
 		} else {
