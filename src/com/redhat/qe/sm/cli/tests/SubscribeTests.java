@@ -352,7 +352,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		log.info("Now test with a registered user whose identity is corrupt and verify that the rhsmcertd actually fails since it cannot self-identify itself to the candlepin server.");
 		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null));
 		log.info("Corrupting the identity cert by borking its content...");
-		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
+		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile()+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile(), 0);
 		clienttasks.restart_rhsmcertd(minutes, null, false); sleep(10000); // allow 10sec for the initial update
 		log.info("Appending a marker in the '"+clienttasks.rhsmcertdLogFile+"' so we can assert that the certificates are being updated every '"+minutes+"' minutes");
 		marker = "Testing rhsm.conf certFrequency="+minutes+" when identity is corrupted...";
@@ -616,7 +616,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// subscribe with auto specifying an unavailable service level
 		SSHCommandResult result = clienttasks.subscribe_(true,"FOO",(String)null,null,null,null,null,null,null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from an attempt to subscribe with auto and an unavailable service level.");
-		Assert.assertEquals(result.getStdout().trim(), "Cannot set a service level for a consumer that is not available to its organization.", "Stdout from an attempt to subscribe with auto and an unavailable service level.");
+		//Assert.assertEquals(result.getStdout().trim(), "Cannot set a service level for a consumer that is not available to its organization.", "Stdout from an attempt to subscribe with auto and an unavailable service level.");
+		Assert.assertEquals(result.getStdout().trim(), String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg), "Stdout from an attempt to subscribe with auto and an unavailable service level.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to subscribe with auto and an unavailable service level.");
 	}
 	

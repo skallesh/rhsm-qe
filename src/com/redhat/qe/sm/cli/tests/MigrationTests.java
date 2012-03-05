@@ -126,7 +126,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-799103"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -148,7 +148,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="Verify that the migration product certs support this system's rhel release version",
+	@Test(	description="Verify that the migration product certs support this system's RHEL release version",
 			groups={"AcceptanceTests","blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
@@ -159,18 +159,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		boolean verifiedVersionOfAllMigrationProductCertFiles = true;
 		for (ProductCert productCert : clienttasks.getProductCerts(baseProductsDir)) {
 			if (!productCert.productNamespace.providedTags.toLowerCase().contains("rhel")) {
-				log.warning("Migration productCert '"+productCert+"' does not provide rhel tags.  Skipping assertion that its version matches this system's rhel version.");
+				log.warning("Migration productCert '"+productCert+"' does not provide RHEL tags.  Skipping assertion that its version matches this system's RHEL version.");
 				continue;
 			}
 			if (productCert.productNamespace.version.equals(clienttasks.redhatReleaseXY)) {
-				log.info("Migration productCert '"+productCert+"' supports this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
+				log.info("Migration productCert '"+productCert+"' supports this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 
 			} else {
-				log.warning("Migration productCert '"+productCert+"' does NOT support this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
+				log.warning("Migration productCert '"+productCert+"' does NOT support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 				verifiedVersionOfAllMigrationProductCertFiles = false;
 			}
 		}
-		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of rhel '"+clienttasks.redhatReleaseXY+"'.");
+		Assert.assertTrue(verifiedVersionOfAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' support this version of RHEL '"+clienttasks.redhatReleaseXY+"'.");
 	}
 	
 	
@@ -502,7 +502,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 	
 			// assert that we are consuming some entitlements (for at least the base product cert)
-			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base rhel product) after call to "+rhnMigrateTool+" with "+options+".");
+			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
 			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
@@ -1077,7 +1077,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo", 
 	            // "rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo"
 				List<String> rhnChannelExceptions = Arrays.asList("rhel-x86_64-server-6-rhevm-3-jboss-5","rhel-x86_64-server-6-rhevm-3-jboss-5-beta","rhel-x86_64-server-6-rhevm-3-jboss-5-debuginfo","rhel-x86_64-server-6-rhevm-3-jboss-5-beta-debuginfo");
-				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals("6")) continue;
+				if (rhnChannelExceptions.contains(rhnChannel) && !clienttasks.redhatReleaseX.equals(/*"5"*/"6")) continue;
 				
 				// bugzillas
 				Object bugzilla = null;
@@ -1096,6 +1096,36 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannel.endsWith("-debuginfo")) { 
 					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
 					bugzilla = new BlockedByBzBug("786140");
+				}
+				if (rhnChannel.equals("rhel-x86_64-server-optional-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-sfs-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-ha-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-rs-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-server-6-rhevh") ||
+					rhnChannel.equals("rhel-x86_64-server-6-rhevm-3") ||
+					rhnChannel.equals("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
+					rhnChannel.equals("rhel-x86_64-server-sjis-6") ||
+					rhnChannel.equals("rhel-x86_64-server-sap-6") ||
+					rhnChannel.equals("rhel-x86_64-server-lb-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-workstation-sfs-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-workstation-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-workstation-optional-6-htb") ||
+					rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-6") ||
+					rhnChannel.equals("rhel-i386-server-6-cf-tools-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-tools-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-ae-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-ce-1") ||
+					rhnChannel.equals("rhel-x86_64-server-6-cf-se-1") ||
+					rhnChannel.equals("sam-rhel-x86_64-server-6-htb")) { 
+					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
+					bugzilla = new BlockedByBzBug("799152");
+				}
+				if (rhnChannel.equals("rhel-s390x-server-6") ||
+					rhnChannel.equals("rhel-s390x-server-optional-6") ||
+					rhnChannel.equals("rhel-s390x-server-supplementary-6")) { 
+					// Bug 799103 - no mapping for s390x product cert included in the subscription-manager-migration-data
+					bugzilla = new BlockedByBzBug("799103");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName

@@ -584,7 +584,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		if (futureEntitlementCertFile!=null) entitlementCertFiles.remove(entitlementCertFiles.indexOf(futureEntitlementCertFile));
 
 		// create a bundled consumer cert/key file for a negative import test
-		client.runCommandAndWait("cat "+clienttasks.consumerCertFile+" "+clienttasks.consumerKeyFile+" > "+consumerCertFile);
+		client.runCommandAndWait("cat "+clienttasks.consumerCertFile()+" "+clienttasks.consumerKeyFile()+" > "+consumerCertFile);
 
 		// restore the entitlementCertDir
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);

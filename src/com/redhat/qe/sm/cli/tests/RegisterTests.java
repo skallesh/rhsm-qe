@@ -157,8 +157,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, command, exitCode, stdoutRegex, stderrRegex);
 		
 		// assert that the consumer cert and key have NOT been dropped
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerKeyFile),0, "Consumer key file '"+clienttasks.consumerKeyFile+"' does NOT exist after an attempt to register with invalid credentials.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerCertFile),0, "Consumer cert file '"+clienttasks.consumerCertFile+" does NOT exist after an attempt to register with invalid credentials.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerKeyFile()),0, "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerCertFile()),0, "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
 	}
 	
 
@@ -192,8 +192,10 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	public void RegisterWithAutosubscribeAndUnavailableServicelevel_Test() throws JSONException, Exception {
 
 		// attempt the registration
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, "FOO", (String)null, true, null, null, null, null);
-		String msg = "Cannot set a service level for a consumer that is not available to its organization.";
+		String unavailableServiceLevel = "FOO";
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, unavailableServiceLevel, (String)null, true, null, null, null, null);
+		String msg = "Cannot set a service level for a consumer that is not available to its organization."; // before Bug 795798 - Cannot set a service level for a consumer that is not available to its organization.
+		msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
 		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
@@ -519,7 +521,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// Now.. mess up your identity..  by borking its content
 		log.info("Messing up the identity cert by borking its content...");
-		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile, 0);
+		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile()+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile(), 0);
 		
 		// reregister w/ username, password, and consumerid
 		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);

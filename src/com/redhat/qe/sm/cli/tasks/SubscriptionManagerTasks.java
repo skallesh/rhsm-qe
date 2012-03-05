@@ -76,8 +76,8 @@ public class SubscriptionManagerTasks {
 	public String consumerCertDir				= null; // "/etc/pki/consumer";
 	public String caCertDir						= null; // "/etc/rhsm/ca";
 	public String baseurl						= null;
-	public String consumerKeyFile				= null; // consumerCertDir+"/key.pem";
-	public String consumerCertFile				= null; // consumerCertDir+"/cert.pem";
+	public String consumerKeyFile()	{			return this.consumerCertDir+"/key.pem";}
+	public String consumerCertFile() {			return this.consumerCertDir+"/cert.pem";}
 
 	
 	public String hostname						= null;	// of the client
@@ -137,8 +137,6 @@ public class SubscriptionManagerTasks {
 			this.productCertDir		= getConfFileParameter(rhsmConfFile, "productCertDir").replaceFirst("/$", "");
 			this.caCertDir			= getConfFileParameter(rhsmConfFile, "ca_cert_dir").replaceFirst("/$", "");
 			this.baseurl			= getConfFileParameter(rhsmConfFile, "baseurl").replaceFirst("/$", "");
-			this.consumerCertFile	= consumerCertDir+"/cert.pem";
-			this.consumerKeyFile	= consumerCertDir+"/key.pem";
 			log.info(this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() succeeded on '"+sshCommandRunner.getConnection().getHostname()+"'.");
 		} else {
 			log.warning("Cannot "+this.getClass().getSimpleName()+".initializeFieldsFromConfigFile() on '"+sshCommandRunner.getConnection().getHostname()+"' until file exists: "+rhsmConfFile);
@@ -550,13 +548,15 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
 		
-		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-level --show
-		Current service level: Standard
-		*/
+		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
+		// Current service level: Standard
+		//
+		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
+		// Current service level: 
 		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
 		
-		return serviceLevel.isEmpty()?null:serviceLevel;
+		//return serviceLevel.isEmpty()?null:serviceLevel;
+		return serviceLevel;
 	}
 	
 	/**
@@ -673,11 +673,11 @@ public class SubscriptionManagerTasks {
 	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
-		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile)!=1) {
+		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile())!=1) {
 			log.info("Currently, there is no consumer registered.");
 			return null;
 		}
-		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+this.consumerCertFile);
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+this.consumerCertFile());
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
 	}
@@ -1488,8 +1488,8 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert certificate files are installed into /etc/pki/consumer
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),1, "Consumer key file '"+this.consumerKeyFile+"' must exist after register.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),1, "Consumer cert file '"+this.consumerCertFile+"' must exist after register.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile()),1, "Consumer key file '"+this.consumerKeyFile()+"' must exist after register.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile()),1, "Consumer cert file '"+this.consumerCertFile()+"' must exist after register.");
 		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=639417 - jsefler 10/1/2010
 		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
@@ -1934,7 +1934,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert the banner
 		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
-		if (list!=null && list) {
+		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
 		} else {
 			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
@@ -1942,10 +1942,12 @@ public class SubscriptionManagerTasks {
 		
 		// assert the "Current service level: "
 		String regex = "Current service level: ";
-		if (show!=null && show) {
+		if (show!=null && show) {	// when explicitly asked to show
 			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
-		} else {
-			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --show) should not contains the regex: "+regex);	
+		} else if (list!=null && list) {	// when explicitly asked to list but not show
+			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
+		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
+			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
 		}
 		
 		// assert the exit code was a success
@@ -2206,6 +2208,14 @@ public class SubscriptionManagerTasks {
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
+			// TEMPORARY WORKAROUND FOR BUG
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="800121"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("If 'NoneType' object message was thrown to stdout during unregister, we will ignore it while this bug is open.");
+				Assert.assertTrue(sshCommandResult.getStdout().trim().contains("System has been un-registered."), "The unregister command was a success.");
+			} else
+			// END OF WORKAROUND
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unregister command indicates a success.");
 		} else {
@@ -2214,8 +2224,8 @@ public class SubscriptionManagerTasks {
 		} 
 		
 		// assert that the consumer cert and key have been removed
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile),0, "Consumer key file '"+this.consumerKeyFile+"' does NOT exist after unregister.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile),0, "Consumer cert file '"+this.consumerCertFile+" does NOT exist after unregister.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile()),0, "Consumer key file '"+this.consumerKeyFile()+"' does NOT exist after unregister.");
+		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile()),0, "Consumer cert file '"+this.consumerCertFile()+" does NOT exist after unregister.");
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");

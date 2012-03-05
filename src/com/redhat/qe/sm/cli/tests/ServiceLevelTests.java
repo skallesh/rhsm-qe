@@ -108,7 +108,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-			groups={/*"blockedByBug-796468"*/},
+			groups={"blockedByBug-796468"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListWithInvalidOrg_Test() {
@@ -119,14 +119,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Owner with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null);
 		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Owner with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 	}
 	
@@ -162,12 +162,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// register with no service-level
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,(List<String>)null,true,null,null,null,null));
 		
-		// get the current consumer object and assert that the serviceLevel is null
+		// get the current consumer object and assert that the serviceLevel is empty (value is "")
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/consumers/"+consumerId));
-		Assert.assertEquals(jsonConsumer.get("serviceLevel"), JSONObject.NULL, "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value null.");
-		
-		// assert that "Current service level:" is null
-		Assert.assertNull(clienttasks.getCurrentServiceLevel(), "When the system has been registered without a service level, the current service level should be null.");
+		// Assert.assertEquals(jsonConsumer.get("serviceLevel"), JSONObject.NULL, "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value null.");	// original value was null
+		Assert.assertEquals(jsonConsumer.get("serviceLevel"), "", "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value empty.");
+	
+		// assert that "Current service level:" is empty
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "When the system has been registered without a service level, the current service level value should be empty.");
+		Assert.assertEquals(clienttasks.service_level(null,null,null,null,null,null,null,null).getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level value should be empty.");
 
 		// get all the valid service levels available to this org	
 		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*username or*/sm_serverAdminUsername, /*password or*/sm_serverAdminPassword, sm_serverUrl, org);
