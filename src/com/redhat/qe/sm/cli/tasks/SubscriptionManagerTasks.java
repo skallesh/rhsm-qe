@@ -64,6 +64,7 @@ public class SubscriptionManagerTasks {
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
+	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
 
 	//public final String msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
 	//public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=767790
@@ -276,6 +277,16 @@ public class SubscriptionManagerTasks {
 			installedPackageVersion.put(pkg,version);
 		}
 	}
+	
+	public void cloneRhnDefinitions(String gitRepository) {
+		if (gitRepository.equals("")) return;
+		
+		// git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
+		log.info("Cloning Rhn Definitions...");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+rhnDefinitionsDir+"; mkdir "+rhnDefinitionsDir+"; cd "+rhnDefinitionsDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("git clone %s %s",gitRepository,rhnDefinitionsDir), new Integer(0));
+	}
+	
 	
 	public void removeAllFacts() {
 		log.info("Cleaning out facts from consumerCertDir: "+this.factsDir);

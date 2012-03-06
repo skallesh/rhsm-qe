@@ -234,6 +234,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.removeAllCerts(true,true, false);
 		smt.removeAllFacts();
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
+		smt.cloneRhnDefinitions(sm_rhnDefinitionsGitRepository);
 		
 		// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
 		log.info("Copying Candlepin cert onto client to enable certificate validation...");

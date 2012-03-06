@@ -83,12 +83,6 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhuiRepoIdForIsos			= getProperty("sm.rhui.repoIdForIsos", "");
 	public String sm_rhuiDownloadIso			= getProperty("sm.rhui.downloadIso", "");
 	
-	public String sm_rhnUsername				= getProperty("sm.rhn.username","");
-	public String sm_rhnPassword				= getProperty("sm.rhn.password","");
-	public String sm_rhnHostname				= getProperty("sm.rhn.hostname","");
-
-	public String sm_cdnProductBaselineUrl		= getProperty("sm.cdn.productBaselineUrl","");
-
 	public String sm_usernameWithUnacceptedTC	= getProperty("sm.client.username.unacceptedTC","");
 	public String sm_passwordWithUnacceptedTC	= getProperty("sm.client.password.unacceptedTC","");
 	
@@ -120,6 +114,15 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_noauthproxyHostname		= getProperty("sm.noauthproxy.hostname", "");
 	public String sm_noauthproxyPort			= getProperty("sm.noauthproxy.port", "");
 	public String sm_noauthproxyLog				= getProperty("sm.noauthproxy.log", "");
+	
+	public String sm_rhnUsername				= getProperty("sm.rhn.username","");
+	public String sm_rhnPassword				= getProperty("sm.rhn.password","");
+	public String sm_rhnHostname				= getProperty("sm.rhn.hostname","");
+
+	//public String sm_cdnProductBaselineUrl			= getProperty("sm.cdn.productBaselineUrl","");
+	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");
+	public String sm_rhnDefinitionsProductCertsDir		= getProperty("sm.rhn.definitionsProductCertsDir","");
+	public String sm_rhnDefinitionsProductBaselineFile	= getProperty("sm.rhn.definitionsProductBaselineFile","");
 	
 	protected List<String> sm_clientUsernames	= null;
 	protected List<String> sm_rpmInstallUrls	= null;
