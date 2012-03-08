@@ -7,7 +7,7 @@
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [com.redhat.qe.sm.gui.tests.register-tests :as rtest]
             [com.redhat.qe.sm.gui.tests.subscribe-tests :as stest]
-            [com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest]
+            [com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest])
   (:import [org.testng.annotations Test BeforeClass DataProvider]))
 
 
@@ -44,3 +44,4 @@
   (atest/register_autosubscribe nil))
 
 (gen-class-testng)
+
