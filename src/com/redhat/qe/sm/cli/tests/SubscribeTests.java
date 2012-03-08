@@ -677,7 +677,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
-			groups={"AcceptanceTests","CandlepinConsumerEntitlementsDryrunWithServicelevel_Test"},
+			groups={"AcceptanceTests"},
 			dataProvider="getSubscribeWithAutoAndServicelevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -768,6 +768,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		unsubscribeRandomly();
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
+	
 	
 	@Test(	description="subscription-manager: after subscribing with auto and a service level, assert that another subscribe with auto still uses the persisted service level",
 			groups={},
@@ -1011,13 +1012,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	protected List<String> systemConsumerIds = new ArrayList<String>();
 	
 	protected void unsubscribeRandomly() {
-//		log.info("Unsubscribing from a random selection of consumed product subscriptions (for the sake of test variability)...");
-//		for (ProductSubscription productSubscription: clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-//			//SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-//			if (randomGenerator.nextInt(2)==1) {
-//				clienttasks.unsubscribeFromProductSubscription(productSubscription);
-//			}
-//		}
 		log.info("Unsubscribing from a random selection of entitlements (for the sake of test variability)...");
 		for (EntitlementCert entitlementCert: clienttasks.getCurrentEntitlementCerts()) {
 			if (randomGenerator.nextInt(2)==1) {
