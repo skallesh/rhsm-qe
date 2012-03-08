@@ -91,6 +91,7 @@ public class CandlepinTasks {
 	public boolean statusResult = true;
 	public String statusVersion = "";
 	public boolean statusStandalone = false;	// default to false since /status on stage is not readable and is expected to be false
+	public String statusTimeUTC = "";
 
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
@@ -305,7 +306,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/e60d7786-1f61-4dec-ad19-bde068dd3c19 | python -mjson.tool
 		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+get.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+get.getURI()+" | python -m simplejson/tool");
 
 		return getHTTPResponseAsString(client, get, authenticator, password);
 	}
@@ -327,7 +328,7 @@ schema generation failed
 		String request	= "--request "+put.getName()+" ";
 		String data		= (jsonData==null)? "":"--data '"+jsonData+"' ";
 		String headers	= ""; if (jsonData != null) for (org.apache.commons.httpclient.Header header : put.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+data+headers+put.getURI());
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+put.getURI());
 
 		return getHTTPResponseAsString(client, put, authenticator, password);
 	}
@@ -339,7 +340,7 @@ schema generation failed
 		// Example: curl --insecure --user testuser1:password --request DELETE https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/activation_keys/8a90f8c632d5f0ee0132d603256c0f6d
 		String user		= (authenticator.equals(""))? "":"--user "+authenticator+":"+password+" ";
 		String request	= "--request "+delete.getName()+" ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+delete.getURI()/*+" | python -m simplejson/tool"*/);
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+delete.getURI()/*+" | python -m simplejson/tool"*/);
 
 		return getHTTPResponseAsString(client, delete, authenticator, password);
 	}
@@ -358,7 +359,7 @@ schema generation failed
 		String request	= "--request "+post.getName()+" ";
 		String data		= (requestBody==null)? "":"--data '"+requestBody+"' ";
 		String headers	= ""; if (requestBody != null) for (org.apache.commons.httpclient.Header header : post.getRequestHeaders()) headers+= "--header '"+header.toString().trim()+"' ";
-		log.info("SSH alternative to HTTP request: curl --insecure "+user+request+data+headers+post.getURI());
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure "+user+request+data+headers+post.getURI());
 
 		return getHTTPResponseAsString(client, post, authenticator, password);
 	}
@@ -481,7 +482,7 @@ schema generation failed
 	
 		boolean validzip = false;
 		GetMethod get = new GetMethod(url+"/consumers/"+consumerKey+"/export");
-		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" --request GET "+get.getURI()+" > "+intoExportZipFile);
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user "+owner+":"+password+" --request GET "+get.getURI()+" > "+intoExportZipFile);
 		InputStream response = getHTTPResponseAsStream(client, get, owner, password);
 		File zipFile = new File(intoExportZipFile);
 		FileOutputStream fos = new FileOutputStream(zipFile);
@@ -517,7 +518,7 @@ schema generation failed
 
 		//PostMethod post = new PostMethod("https://"+server+":"+port+prefix+"/owners/"+ownerKey+"/import");	// candlepin branch 0.2-
 		PostMethod post = new PostMethod(url+"/owners/"+ownerKey+"/imports");		// candlepin branch 0.3+ (/import changed to /imports)
-		log.info("SSH alternative to HTTP request: curl -k --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" --request POST "+post.getURI());
+		log.info("SSH alternative to HTTP request: curl --stderr /dev/null --insecure --user "+owner+":"+password+" -F export=@"+fromExportZipFile+" --request POST "+post.getURI());
 		File f = new File(fromExportZipFile);
 		Part[] parts = {
 			      new FilePart(f.getName(), f)
