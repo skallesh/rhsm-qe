@@ -27,7 +27,6 @@
       (require :reload-all '[com.redhat.qe.sm.gui.tasks.tasks :as tasks])
       (require :reload-all '[com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks])
       (require :reload-all '[com.redhat.qe.sm.gui.tasks.rest :as rest])
-      (require :reload-all '[com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.subscribe-tests :as stest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.register-tests :as rtest])
       (require :reload-all '[com.redhat.qe.sm.gui.tests.proxy-tests :as ptest])
@@ -51,4 +50,6 @@
       (use 'gnome.ldtp))
     )     ;<< here for all of it
   
+  ;not used
+  (require :reload-all '[com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
 )

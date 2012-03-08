@@ -276,11 +276,11 @@
         allsubs (tasks/get-table-elements :all-subscriptions-view 0 :skip-dropdowns? true)]
     (doseq [s allsubs]
       (try+
-       (tasks/open-contract-selection s)0
+       (tasks/open-contract-selection s)
        (tasks/ui click :cancel-contract-selection)
        (swap! subs conj [s])
        (catch [:type :subscription-not-available] _)
-       (catch [:type :contract-selection-not-available]
+       (catch [:type :contract-selection-not-available] _
            (tasks/unsubscribe s))))
     (if-not debug
       (to-array-2d @subs)

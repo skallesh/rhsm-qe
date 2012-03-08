@@ -1,3 +1,4 @@
+(comment
 (ns com.redhat.qe.sm.gui.tests.subscription-assistant-tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
@@ -250,3 +251,4 @@
 
 
 (gen-class-testng)
+)

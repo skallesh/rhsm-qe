@@ -57,7 +57,8 @@
       </run>
     </groups>
   </test>
-  
+
+<!--  this window got removed  
   <test name="GUI: Subscription Assistant">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
@@ -70,6 +71,7 @@
       </run>
     </groups>
   </test>
+-->
   
   <test name="GUI: Proxy">
     <packages>

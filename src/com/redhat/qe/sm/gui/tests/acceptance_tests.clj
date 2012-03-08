@@ -8,7 +8,6 @@
             [com.redhat.qe.sm.gui.tests.register-tests :as rtest]
             [com.redhat.qe.sm.gui.tests.subscribe-tests :as stest]
             [com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest]
-            [com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
   (:import [org.testng.annotations Test BeforeClass DataProvider]))
 
 

@@ -1,3 +1,4 @@
+(comment
 (ns com.redhat.qe.sm.gui.tests.test-tests
   (:use [test-clj.testng :only (gen-class-testng)]))
 
@@ -5,3 +6,4 @@
   (println "w00t"))
 
 (gen-class-testng)
+)
