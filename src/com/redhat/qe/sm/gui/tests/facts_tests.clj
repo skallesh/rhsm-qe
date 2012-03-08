@@ -4,7 +4,6 @@
                                                        clientcmd
                                                        cli-tasks)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.string :only (split-lines split)]
         clojure.contrib.pprint
         gnome.ldtp)

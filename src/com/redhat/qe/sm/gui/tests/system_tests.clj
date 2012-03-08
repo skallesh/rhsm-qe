@@ -3,7 +3,6 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.string :only (split
                                        split-lines
                                        trim

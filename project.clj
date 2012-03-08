@@ -5,7 +5,7 @@
   :keep-non-project-classes true
   :dependencies [[org.clojure/clojure "1.2.0"]
                  [org.clojure/clojure-contrib "1.2.0"]
-                 [error.handler "1.0.0-SNAPSHOT"]
+                 [slingshot "0.8.0"]
                  [net.java.dev.rome/rome "1.0.0"]
                  [org.jdom/jdom "1.1"]
                  [postgresql/postgresql "8.4-701.jdbc4"]
@@ -14,12 +14,12 @@
                  [test_clj.testng "1.0.1-SNAPSHOT"]
                  [clj-http "0.1.3"]
                  [matchure "0.10.1"]]
-  :dev-dependencies [[swank-clojure "1.2.1"]]
+  :dev-dependencies [[slamhound "1.2.0"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"})
-  
-  
+
+
 (comment
   (do   
     (do 

@@ -4,12 +4,7 @@
                                                        cli-tasks
                                                        auth-proxyrunner
                                                        noauth-proxyrunner)]
-        [error.handler :only (with-handlers
-                              handle
-                              ignore
-                              recover
-                              add-recoveries
-                              raise)]
+        [slingshot.slingshot :only [throw+ try+]]
         [com.redhat.qe.verify :only (verify)]
         [clojure.contrib.string :only (split
                                        split-lines
@@ -111,16 +106,16 @@
   Allows for recovery of the error message.
   @wait: specify the time to wait for the error dialog."
   ([wait]
-      (add-recoveries
-       {:log-warning (fn [e] (log/warn
-                             (format "Got error %s, message was: '%s'"
-                                     (name (:type e)) (:msg e))))}
-       (if (= 1 (ui waittillwindowexist :error-dialog wait)) 
-         (let [message (get-error-msg)
-               type (matching-error message)]
-           (clear-error-dialog)
-           (raise {:type type 
-                   :msg message})))))
+     (if (= 1 (ui waittillwindowexist :error-dialog wait)) 
+       (let [message (get-error-msg)
+             type (matching-error message)]
+         (clear-error-dialog)
+         (throw+ {:type type 
+                  :msg message
+                  :log-warning (fn []
+                                 (log/warn
+                                  (format "Got error '%s', message was: '%s'"
+                                          (name type) message)))}))))
   ([] (checkforerror 3)))
                
 (defn set-conf-file-value
@@ -139,7 +134,7 @@
   "Unregisters subscripton manager by clicking the 'unregister' button."
   []
   (if (ui showing? :register-system)
-    (raise {:type :not-registered
+    (throw+ {:type :not-registered
             :msg "Tried to unregister when already unregistered."}))
   (ui click :unregister-system)
   (ui waittillwindowexist :question-dialog 30)
@@ -151,18 +146,19 @@
   [username password & {:keys [system-name-input, autosubscribe, owner]
                         :or {system-name-input nil, autosubscribe false, owner nil}}]
   (if (ui showing? :unregister-system)
-    (raise {:type :already-registered
-          :username username
-          :password password
-          :name system-name-input
-          :auto autosubscribe
-          :ownername owner
-          :unregister-first (fn [e] (unregister)
-                              (register (:username e)
-                                        (:password e)
-                                        :system-name-input (:name e)
-                                        :autosubscribe (:auto e)
-                                        :owner (:ownername e)))}))
+    (throw+ {:type :already-registered
+             :username username
+             :password password
+             :system-name-input system-name-input
+             :autosubscribe autosubscribe
+             :owner owner
+             :unregister-first (fn []
+                                 (unregister)
+                                 (register username
+                                           password
+                                           :system-name-input system-name-input
+                                           :autosubscribe autosubscribe
+                                           :owner owner))}))
   (ui click :register-system)
   (ui waittillguiexist :redhat-login)
   (ui settextvalue :redhat-login username)
@@ -172,7 +168,7 @@
   (if autosubscribe 
    (ui check :automatically-subscribe)
    (ui uncheck :automatically-subscribe))  
-  (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
+  (try+ 
    (ui click :register)
    (checkforerror 10)
    (if (= 1 (ui guiexist :register-dialog))
@@ -181,14 +177,16 @@
          (do
            (when owner (do 
                          (if-not (ui rowexist? :owner-view owner)
-                           (raise {:type :owner-not-available
-                                   :name owner
-                                   :msg (str "Not found in 'Owner Selection':" owner)}))
+                           (throw+ {:type :owner-not-available
+                                    :name owner
+                                    :msg (str "Not found in 'Owner Selection':" owner)}))
                          (ui selectrow :owner-view owner)))    
            (ui click :register)
            (checkforerror 10)))
        (ui waittillnotshowing :registering 1800))) ;; 30 minutes
-   (checkforerror))
+   (checkforerror)
+   (catch Object e
+     (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))
   (sleep 10000))
 
 (defn fbshowing?
@@ -274,9 +272,9 @@
   "Skips dropdown items in a table."
   [table item]
   (if-not (ui rowexist? table item)
-    (raise {:type :item-not-available
-            :name item
-            :msg (str "Not found in " table ": " item)}))
+    (throw+ {:type :item-not-available
+             :name item
+             :msg (str "Not found in " table ": " item)}))
   (let [row (ui gettablerowindex table item)]
     (if (is-item? table row)
       (do
@@ -287,9 +285,9 @@
                  (= item (ui getcellvalue table (+ 1 row) 0)))
           (do (ui selectrowindex table (+ 1 row))
               (+ 1 row))
-          (raise {:type :invalid-item
-                  :name item
-                  :msg (str "Invalid item:" item)}))))))
+          (throw+ {:type :invalid-item
+                   :name item
+                   :msg (str "Invalid item:" item)}))))))
 
 (defn open-contract-selection
   "Opens the contract selection dialog for a given subscription." 
@@ -299,9 +297,9 @@
   (ui click :subscribe)
   (checkforerror)
   (if-not (= 1 (ui waittillwindowexist :contract-selection-dialog 5))
-    (raise {:type :contract-selection-not-available
-            :name s
-            :msg (str s " Does not have multiple contracts.")})))
+    (throw+ {:type :contract-selection-not-available
+             :name s
+             :msg (str s " does not have multiple contracts.")})))
 
 (defn subscribe
   "Subscribes to a given subscription, s."
@@ -324,14 +322,14 @@
   (ui selecttab :my-subscriptions)
   (sleep 5000)
   (if-not (ui rowexist? :my-subscriptions-view s)
-    (raise {:type :not-subscribed
-            :name s
-            :msg (str "Not found in 'My Subscriptions': " s)}))
+    (throw+ {:type :not-subscribed
+             :name s
+             :msg (str "Not found in 'My Subscriptions': " s)}))
   (ui selectrow :my-subscriptions-view s)
   (ui click :unsubscribe)
   (ui waittillwindowexist :question-dialog 60)
   (ui click :yes)
-  (checkforerror) )
+  (checkforerror))
 
 (defn enableproxy-auth
   "Configures a proxy that uses authentication through subscription-manager-gui."
@@ -342,7 +340,7 @@
            (ui waittillwindowexist :firstboot-proxy-dialog 60)
            (ui check :firstboot-proxy-checkbox)
            (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-           ui check :firstboot-auth-checkbox
+           (ui check :firstboot-auth-checkbox)
            (ui settextvalue :firstboot-proxy-user user)
            (ui settextvalue :firstboot-proxy-pass pass)
            (ui click :firstboot-proxy-close)
@@ -512,15 +510,18 @@
                                                  (@config :owner-key))]
     (if re-register?
       ;re-register with handlers
-      (with-handlers [(handle :already-registered [e]
-                              (recover e :unregister-first))]
-        (register (@config :username)
-                  (@config :password)
-                  :owner ownername))
+      (try+
+       (register (@config :username)
+                 (@config :password)
+                 :owner ownername)
+       (catch
+           [:type :already-registered]
+           {:keys [unregister-first]}
+         (unregister-first)))
       ;else just attempt a register
       (register (@config :username)
-                  (@config :password)
-                  :owner ownername))))
+                (@config :password)
+                :owner ownername))))
 
 (defn restart-app
   "Restarts subscription-manager-gui"

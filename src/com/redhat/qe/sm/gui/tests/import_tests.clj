@@ -2,8 +2,8 @@
   (:use [test-clj.testng :only (gen-class-testng data-driven)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
+        [slingshot.slingshot :only (try+ throw+)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
         [clojure.contrib.string :only (split
                                        split-lines
                                        trim
@@ -147,9 +147,10 @@
                        & {:keys [cancel?]
                           :or {cancel? true}}]
   (let [test-fn (fn []
-                  (with-handlers [(handle expected-error [e]
-                                          (:type e))]
-                    (import-cert certname)))]
+                  (try+
+                   (import-cert certname)
+                   (catch Object e
+                     (:type e))))]
     (let [thrown-error (test-fn)]
       (verify (= thrown-error expected-error))))
   (if cancel?

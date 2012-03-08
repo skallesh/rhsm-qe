@@ -2,8 +2,8 @@
   (:use [test-clj.testng :only (gen-class-testng data-driven)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
-         gnome.ldtp)
+        [slingshot.slingshot :only (try+ throw+)]
+        gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
@@ -90,9 +90,11 @@
   (tasks/ui uncheck :rhn-classic-mode)
   (tasks/ui click :firstboot-forward)
   (let [test-fn (fn [username password expected-error-type]
-                    (with-handlers [(handle expected-error-type [e]
-                                      (:type e))]
-                      (tasks/firstboot-register username password)))]
+                  (try+
+                   (tasks/firstboot-register username password)
+                   (catch [:type expected-error-type]
+                       {:keys [type]}
+                     type)))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
      (verify (= thrown-error expected-error)) 
@@ -137,7 +139,6 @@
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=742416
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
 ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=705170
-
 
 (gen-class-testng)
 
