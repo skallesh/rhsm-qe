@@ -614,7 +614,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	
 	// Candidates for an automated Test:
-	
+	// TODO Bug 798015 - Multiple problems identified when running the rhn-migrate-classic-to-rhsm via a http proxy
 	
 	// Configuration methods ***********************************************************************
 	

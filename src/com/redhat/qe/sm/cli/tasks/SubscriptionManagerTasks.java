@@ -2474,7 +2474,7 @@ public class SubscriptionManagerTasks {
 		// assemble the command
 		String command = this.command;									command += " subscribe";
 		if (auto!=null && auto)											command += " --auto";
-		if (servicelevel!=null)											command += " --servicelevel="+servicelevel;
+		if (servicelevel!=null)											command += " --servicelevel="+(servicelevel.equals("")?"\"\"":servicelevel);	// quote an empty string
 		if (poolIds!=null)		for (String poolId : poolIds)			command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)		command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)		command += " --regtoken="+regtoken;
@@ -2549,7 +2549,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert the stdout msg was a success
-		if (servicelevel!=null)
+		if (servicelevel!=null && !servicelevel.equals(""))
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Service level set to: "+servicelevel), "The autosubscribe stdout reports: Service level set to: "+servicelevel);
 		if (auto)
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");

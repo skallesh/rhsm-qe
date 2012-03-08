@@ -2010,6 +2010,13 @@ schema generation failed
 		return getPoolAttributeValue(jsonPool,attributeName);
 	}
 	
+	/**
+	 * @param jsonPool
+	 * @param productAttributeName
+	 * @return the value of the pool's productAttribute with the name "productAttributeName".  null is returned when the name is not found.
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	public static String getPoolProductAttributeValue (JSONObject jsonPool, String productAttributeName) throws JSONException, Exception {
 		String productAttributeValue = null;	// indicates that the pool's product does NOT have the "productAttributeName" attribute
 
