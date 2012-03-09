@@ -4,8 +4,8 @@
                                                        clientcmd
                                                        cli-tasks)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (split-lines split)]
-        clojure.contrib.pprint
+        [clojure.string :only (split-lines split)]
+        clojure.pprint
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             com.redhat.qe.sm.gui.tasks.ui)
@@ -21,7 +21,7 @@
                   (.runCommandAndWait @clientcmd
                                       "subscription-manager facts --list"))
         allfactpairs (split-lines allfacts)
-        factslist (into {} (map (fn [fact] (vec (split #": " fact)))
+        factslist (into {} (map (fn [fact] (vec (split fact #": ")))
                                 allfactpairs))]
     factslist))
 

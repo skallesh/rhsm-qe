@@ -2,7 +2,7 @@
   (:use [test-clj.testng :only (gen-class-testng)]
 	[com.redhat.qe.sm.gui.tasks.tasks])
   (:require [com.redhat.qe.sm.gui.tasks.test-config :as config]
-            [clojure.contrib.logging :as log])
+            [clojure.tools.logging :as log])
   (:import [org.testng.annotations BeforeSuite AfterSuite]))
   
 (defn- restart-vnc []

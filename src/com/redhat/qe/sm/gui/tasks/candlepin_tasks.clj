@@ -1,7 +1,7 @@
 (ns com.redhat.qe.sm.gui.tasks.candlepin-tasks
   (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
-        [clojure.contrib.string :only (trim)])
+        [clojure.string :only (trim)])
   (:require [com.redhat.qe.sm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]

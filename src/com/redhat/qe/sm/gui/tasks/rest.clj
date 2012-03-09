@@ -1,8 +1,8 @@
 (ns com.redhat.qe.sm.gui.tasks.rest
   (:require [clj-http.client :as httpclient]
-            [clojure.contrib.json :as json]
-            [clojure.contrib.pprint :as pprint]
-            [clojure.contrib.logging :as log])
+            [clojure.data.json :as json]
+            [clojure.pprint :as pprint]
+            [clojure.tools.logging :as log])
   (:refer-clojure :exclude (get)))
 
 (defmacro with-logs [body & forms]

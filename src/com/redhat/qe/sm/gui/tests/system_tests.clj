@@ -3,11 +3,6 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (split
-                                       split-lines
-                                       trim
-                                       replace-str
-                                       substring?)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
@@ -35,7 +30,7 @@
                                   "check_libglade_warnings"
                                   "libglade-WARNING"
                                   (tasks/start-app))]
-    (verify (not (substring? "libglade-WARNING" output))))
+    (verify (not (tasks/substring? "libglade-WARNING" output))))
   (tasks/kill-app))
 
 (defn ^{Test {:groups ["system"
@@ -48,8 +43,8 @@
                             nil
                             (tasks/start-app)
                             (tasks/sleep 10000))]
-    (verify (substring? "subscription-manager-gui is already running" output))
-    (verify (not (substring? "Traceback" output)))))
+    (verify (tasks/substring? "subscription-manager-gui is already running" output))
+    (verify (not (tasks/substring? "Traceback" output)))))
 
 ;; TODO
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=747014 < help button

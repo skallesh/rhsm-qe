@@ -6,16 +6,12 @@
                                                        noauth-proxyrunner)]
         [slingshot.slingshot :only [throw+ try+]]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (split
-                                       split-lines
-                                       trim
-                                       replace-str
-                                       substring?)]
-        [clojure.contrib.str-utils :only (re-split)]
+        [clojure.string :only (split
+                               split-lines)]
         matchure
         gnome.ldtp)
-  (:require [clojure.contrib.logging :as log]
-            [clojure.contrib.json :as json]
+  (:require [clojure.tools.logging :as log]
+            [clojure.data.json :as json]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
@@ -43,6 +39,11 @@
        (if  (> (- (System/currentTimeMillis) starttime#) ~timeout)
 	 (throw (RuntimeException. (str "Hit timeout of " ~timeout "ms.")))
 	 (do ~@forms)))))
+
+(defn #^String substring?
+  "True if s contains the substring."
+  [substring #^String s]
+  (.contains s substring))
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"

@@ -4,7 +4,7 @@
                                                        clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only (try+ throw+)]
-        [clojure.contrib.string :only (split)]
+        [clojure.string :only (split)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
@@ -96,8 +96,8 @@
                                       contract)
               usedmax (tasks/ui getcellvalue :contract-selection-table row 2)
               default (tasks/ui getcellvalue :contract-selection-table row 6)
-              used (first (split #" / " usedmax))
-              max (last (split #" / " usedmax))
+              used (first (split usedmax #" / "))
+              max (last (split usedmax #" / "))
               available (str (- (Integer. max) (Integer. used)))
               repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
               enter-quantity (fn [num]
@@ -155,8 +155,8 @@
     (tasks/ui selectrow :contract-selection-table contract)
     (let [line (tasks/ui gettablerowindex :contract-selection-table contract)
           usedmax (tasks/ui getcellvalue :contract-selection-table line 2)
-          used (first (split #" / " usedmax))
-          max (last (split #" / " usedmax))
+          used (first (split usedmax #" / "))
+          max (last (split usedmax #" / "))
           available (str (- (Integer. max) (Integer. used)))
           repeat-cmd (fn [n cmd] (apply str (repeat n cmd)))
           enter-quantity (fn [num]

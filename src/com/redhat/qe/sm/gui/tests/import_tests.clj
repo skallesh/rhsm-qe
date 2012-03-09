@@ -4,10 +4,9 @@
                                                        clientcmd)]
         [slingshot.slingshot :only (try+ throw+)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (split
-                                       split-lines
-                                       trim
-                                       replace-str)]
+        [clojure.string :only (split
+                               split-lines
+                               trim)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
              com.redhat.qe.sm.gui.tasks.ui)
@@ -60,8 +59,8 @@
   (tasks/restart-app)
   (let [certlocation (str (.getValidImportCertificate @importtests))
         certdir (tasks/conf-file-value "entitlementCertDir")
-        cert (last (split #"/" certlocation))
-        key (replace-str ".pem" "-key.pem" cert)
+        cert (last (split certlocation #"/"))
+        key (clojure.string/replace ".pem" "-key.pem" cert)
         command (str "openssl x509 -text -in "
                      certlocation
                      " | grep 2312.9.4.1: -A 1 | grep -v 2312.9.4.1")

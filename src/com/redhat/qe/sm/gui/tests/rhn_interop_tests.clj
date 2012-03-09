@@ -4,7 +4,6 @@
         [com.redhat.qe.verify :only (verify)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
-            [clojure.contrib.java-utils :as jutils]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]))
 

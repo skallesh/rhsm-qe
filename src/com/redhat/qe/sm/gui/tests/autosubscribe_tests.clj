@@ -2,9 +2,9 @@
   (:use [test-clj.testng :only (gen-class-testng)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (trim split substring?)]
+        [clojure.string :only (trim split)]
         gnome.ldtp)
-  (:require [clojure.contrib.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
              com.redhat.qe.sm.gui.tasks.ui)
@@ -182,7 +182,7 @@
                          index 3)
         not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
-        rhel5?   (substring? "release 5"
+        rhel5?   (tasks/substring? "release 5"
                              (.getStdout
                               (.runCommandAndWait
                                @clientcmd
@@ -196,15 +196,16 @@
                            "grep \"uname.machine\" | "
                            "grep \"lscpu.architecture\" | ")
                          "cut -f 2 -d \":\""))))
-        prodarch (split #"," (try
-                               (let [arch (tasks/ui getcellvalue
-                                                    :installed-view
-                                                    index 2)]
-                                 (if (string? arch)
-                                   arch
-                                   ""))
-                               (catch XmlRpcException e
-                                 "")))]
+        prodarch (split (try
+                          (let [arch (tasks/ui getcellvalue
+                                               :installed-view
+                                               index 2)]
+                            (if (string? arch)
+                              arch
+                              ""))
+                          (catch XmlRpcException e
+                            ""))
+                        #",")]
     ;;(println (str "index: " index))
     ;;(println (str "status: "  status))
     ;;(println (str "expected: " expected))
