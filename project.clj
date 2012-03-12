@@ -24,7 +24,8 @@
 
 
 (comment
-  (do   
+  (do
+    (use '[clojure.repl])
     (do 
       (require :reload-all '[com.redhat.qe.sm.gui.tasks.test-config :as config])
       (require :reload-all '[com.redhat.qe.sm.gui.tasks.tasks :as tasks])
