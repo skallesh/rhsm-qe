@@ -58,6 +58,7 @@ public class SubscriptionManagerTasks {
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
+	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String factsOverrideFile	= factsDir+"/override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
@@ -330,14 +331,16 @@ public class SubscriptionManagerTasks {
 		log.info("Updating config file '"+confFile+"' parameter '"+parameter+"' value to: "+value);
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
-				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value: " + value);
+				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value '"+value+"'.");
 		
 		// also update this "cached" value for these config file parameters
-		if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
-		if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
-		if (parameter.equals("productCertDir"))		this.productCertDir = value;
-		if (parameter.equals("baseurl"))			this.baseurl = value;
-		if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
+		if (confFile.equals(this.rhsmConfFile)) {
+			if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
+			if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
+			if (parameter.equals("productCertDir"))		this.productCertDir = value;
+			if (parameter.equals("baseurl"))			this.baseurl = value;
+			if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
+		}
 	}
 	
 	public void commentConfFileParameter(String confFile, String parameter){
@@ -363,7 +366,8 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getConfFileParameter(String confFile, String parameter){
 		// Note: parameter can be case insensitive
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
+//		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile), 0);	// tolerates = or : assignment character
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
 	}
