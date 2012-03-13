@@ -74,8 +74,8 @@ public class Org extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("orgKey",				"OrgKey:(.*)");
-		regexes.put("orgName",				"OrgName:(.*)");
+		regexes.put("orgKey",				"Key:(.*)");
+		regexes.put("orgName",				"Name:(.*)");
 		
 		List<Map<String,String>> orgsList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

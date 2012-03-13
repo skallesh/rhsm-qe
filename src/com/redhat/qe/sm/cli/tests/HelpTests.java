@@ -253,7 +253,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s [options] MODULENAME --help",clienttasks.command);	// prior to Bug 796730 - subscription-manager usage statement
-			usage = String.format("Usage: %s MODULENAME [MODULE-OPTIONS] [--help]",clienttasks.command);
+			usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",clienttasks.command);
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("796730"), smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
