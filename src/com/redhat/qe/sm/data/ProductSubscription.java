@@ -164,12 +164,12 @@ public class ProductSubscription extends AbstractCommandLineData {
 
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("productName",			"Name:(.*)");
-		regexes.put("contractNumber",		"ContractNumber:(.*)");
-		regexes.put("accountNumber",		"AccountNumber:(.*)");
-		regexes.put("serialNumber",			"SerialNumber:(.*)");
-		regexes.put("quantityUsed",			"QuantityUsed:(.*)");
+		regexes.put("productName",			"Product Name:(.*)");
+		regexes.put("contractNumber",		"Contract Number:(.*)");
+		regexes.put("accountNumber",		"Account Number:(.*)");
+		regexes.put("serialNumber",			"Serial Number:(.*)");
 		regexes.put("isActive",				"Active:(.*)");
+		regexes.put("quantityUsed",			"Quantity Used:(.*)");
 		regexes.put("startDate",			"Begins:(.*)");
 		regexes.put("endDate",				"Expires:(.*)");
 		
