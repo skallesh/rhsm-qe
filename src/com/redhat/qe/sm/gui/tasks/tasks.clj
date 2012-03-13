@@ -232,6 +232,7 @@
   (ui waittillwindownotexist :progress-dialog 30)
   (checkforerror))
 
+;; TODO write this with better airities
 (defn search
   "Performs a subscription search within subscription-manager-gui."
   ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
@@ -241,7 +242,9 @@
     (ui (setchecked match-system?) :match-system)
     (ui (setchecked do-not-overlap?) :do-not-overlap)
     (ui (setchecked match-installed?) :match-installed))
-  (if active-on (comment "Procedure to set date goes here, BZ#675777 "))
+  (ui click :more-search-options)
+  (if active-on ;BZ#675777
+    (ui settextvalue :date-entry active-on))
   (if contain-text
     (ui settextvalue :contains-the-text contain-text)
     (ui settextvalue :contains-the-text ""))

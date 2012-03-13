@@ -11,6 +11,20 @@
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
 
+(def productlist (atom {}))
+
+(defn build-subscription-map
+  []
+  (reset! productlist (ctasks/build-product-map :all? true))
+  @productlist)
+
+(defn allsearch
+  ([filter]
+     (tasks/search {:match-system? false
+                   :do-not-overlap? false
+                   :contain-text filter}))
+  ([] (allsearch nil)))
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   register [_]
   (tasks/register-with-creds))
@@ -177,11 +191,11 @@
     (catch [:type :wrong-consumer-type]
         {:keys [log-warning]} (log-warning))))
 
-(comment ;commenting this out because it breaks everything
-  (defn ^{Test {:groups ["subscribe"
-                         "blockedByBug-688454"
-                         "blockedByBug-704408"]}}
-    check_blank_date [_]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-688454"
+                       "blockedByBug-704408"]}}
+  check_blank_date [_]
+  (try
     (tasks/ui selecttab :all-available-subscriptions)
     (tasks/ui settextvalue :date-entry "")
     (let [error (try+ (tasks/ui click :search)
@@ -189,16 +203,41 @@
                       (catch Object e (:type e)))]
       (verify (= :date-error error)))
     (verify (= "" (tasks/ui gettextvalue :date-entry)))
+    
     (comment ;this is the old test after it autofilled the date
       (let [date (tasks/ui gettextvalue :date-entry)
             systemtime (.trim (.getStdout (.runCommandAndWait @clientcmd "date +%m/%d/%Y")))]
         (verify (not (nil? (re-matches #"\d{2}/\d{2}/\d{4}" date))))
-        (verify (= date systemtime))))))
+        (verify (= date systemtime))))
+    
+    (finally (tasks/restart-app))))
+
+(defn ^{Test {:groups ["subscribe"]
+              :dataProvider "installed-products"}}
+  filter_by_product [_ product]
+  (allsearch product)
+  (let [expected (@productlist product)
+        seen (into [] (tasks/get-table-elements
+                       :all-subscriptions-view
+                       0
+                       :skip-dropdowns? true))
+        hasprod? (fn [s] (tasks/substring? product s))
+        inmap? (fn [e] (some hasprod? (flatten e)))
+        matches (flatten (filter inmap? @productlist))
+        not-nil? (fn [b] (not (nil? b)))]
+    (doseq [s seen]
+      (verify (not-nil? (some #{s} matches))))
+    (doseq [e expected]
+      (verify (not-nil? (some #{e} seen))))))
 
 (comment
 (defn ^{Test {:groups ["subscribe" "blockedByBug-740831"]}}
   check_subscribe_greyout [_]
   ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; DATA PROVIDERS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; you can test data providers in a REPL the following way:
 ;; (doseq [s (stest/get_subscriptions nil :debug true)]
@@ -286,6 +325,21 @@
     (if-not debug
       (to-array-2d @subs)
       @subs)))
+
+(defn ^{DataProvider {:name "installed-products"}}
+  get_installed_products [_ & {:keys [debug]
+                               :or {debug false}}]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (tasks/restart-app)
+  (tasks/register-with-creds)
+  (let [prods (into [] (map vector (tasks/get-table-elements
+                                    :installed-view
+                                    0)))]
+    (build-subscription-map)
+    (tasks/search)
+    (if-not debug
+      (to-array-2d prods)
+      prods)))
 
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
   ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
