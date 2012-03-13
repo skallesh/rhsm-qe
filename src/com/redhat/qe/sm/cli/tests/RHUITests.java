@@ -107,6 +107,38 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndAssert(client, "wget --no-check-certificate --certificate="+entitlementCertFile+" --private-key="+entitlementKeyFile+" --output-document="+downloadedIsoFile+" -- "+repoUrl+"/"+sm_rhuiDownloadIso, 0/*, stdoutRegex, stderrRegex*/);
 		Assert.assertEquals(RemoteFileTasks.testFileExists(client, downloadedIsoFile.getPath()), 1,"Expected RHUI Download ISO was downloaded.");
 	}
+	
+	
+	@Test(	description="mount the downloaded RHUI iso and list the packages in the iso",
+			groups={},
+			dependsOnMethods={"DownloadRHUIISOFromFileRepo_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ListPackagesInMountedRHUIISO_Test() {
+
+		//	[root@jsefler-r63-server tmp]# mkdir -p /tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD
+		//	[root@jsefler-r63-server tmp]# mount -o loop /tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso /tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD
+		//	[root@jsefler-r63-server tmp]# ls /tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD/Packages/
+		//	gofer-0.64-1.el6.noarch.rpm            pulp-0.0.263-18.el6.noarch.rpm                   python-gofer-0.64-1.el6.noarch.rpm
+		//	gofer-package-0.64-1.el6.noarch.rpm    pulp-admin-0.0.263-18.el6.noarch.rpm             python-httplib2-0.6.0-4.el6_0.noarch.rpm
+		//	grinder-0.0.136-1.el6.noarch.rpm       pulp-cds-0.0.263-18.el6.noarch.rpm               python-isodate-0.4.4-4.pulp.el6.noarch.rpm
+		//	js-1.70-12.el6_0.x86_64.rpm            pulp-client-lib-0.0.263-18.el6.noarch.rpm        python-oauth2-1.5.170-2.pulp.el6.noarch.rpm
+		//	libmongodb-1.8.2-2.el6.x86_64.rpm      pulp-common-0.0.263-18.el6.noarch.rpm            python-webpy-0.32-8.el6_0.noarch.rpm
+		//	libyaml-0.1.3-3.el6_1.x86_64.rpm       pulp-consumer-0.0.263-18.el6.noarch.rpm          PyYAML-3.09-14.el6_1.x86_64.rpm
+		//	m2crypto-0.21.1.pulp-7.el6.x86_64.rpm  pulp-selinux-server-0.0.263-18.el6.noarch.rpm    rh-rhua-selinux-policy-0.0.6-1.el6.noarch.rpm
+		//	mod_wsgi-3.3-2.pulp.el6.x86_64.rpm     pymongo-1.9-8.el6_1.x86_64.rpm                   rh-rhui-tools-2.0.60-1.el6.noarch.rpm
+		//	mongodb-1.8.2-2.el6.x86_64.rpm         python-BeautifulSoup-3.0.8.1-3.el6_1.noarch.rpm  ruby-gofer-0.64-1.el6.noarch.rpm
+		//	mongodb-server-1.8.2-2.el6.x86_64.rpm  python-bson-1.9-8.el6_1.x86_64.rpm               TRANS.TBL
+		//	[root@jsefler-r63-server tmp]# umount /tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD
+
+		File downloadedIsoFile = new File("/tmp/"+sm_rhuiDownloadIso);
+		File mountPoint = new File(downloadedIsoFile+".mount");
+		client.runCommandAndWait("mkdir -p "+mountPoint+"; umount "+mountPoint);
+		RemoteFileTasks.runCommandAndAssert(client, "mount -o loop "+downloadedIsoFile+" "+mountPoint, 0/*, stdoutRegex, stderrRegex*/);
+		Assert.assertEquals(RemoteFileTasks.testFileExists(client, mountPoint+"/Packages"), 1, "The expected Packages directory exists after mounting the downloaded iso file.");
+		client.runCommandAndWait("ls -1 "+mountPoint+"/Packages");
+		client.runCommandAndWait("umount "+mountPoint);
+	}
 
 	
 	
