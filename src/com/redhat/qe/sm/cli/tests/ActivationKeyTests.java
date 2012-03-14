@@ -316,7 +316,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// handle the case when our quantity request exceeds the quantityAvail (when pool quantity is NOT unlimited)
 		if (addQuantity > quantityAvail && (jsonPool.getInt("quantity")!=-1/*exclude unlimited pools*/)) {
-			Assert.assertEquals(registerResult.getStderr().trim(), "No free entitlements are available for the pool with id '"+poolId+"'.", "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
+			Assert.assertEquals(registerResult.getStderr().trim(), "No entitlements are available from the pool with id '"+poolId+"'.", "Registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			Assert.assertEquals(registerResult.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which not enough entitlements remain should fail.");
 			return;
 		}
@@ -498,7 +498,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonCurrentPool, quantityAvail);
 		
 		// assume RegisterWithActivationKeyContainingPoolWithQuantity_Test exits with the most recent results on the top of the client stack
-		Assert.assertEquals(client.getStderr().trim(), "No free entitlements are available for the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which non enough entitlements remain should fail.");
+		Assert.assertEquals(client.getStderr().trim(), "No entitlements are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
 		Assert.assertEquals(client.getExitCode(), Integer.valueOf(255), "The exitCode from registering with an activationKey containing a pool for which non enough entitlements remain should fail.");
 	}
 	

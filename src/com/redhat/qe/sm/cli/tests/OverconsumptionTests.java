@@ -82,10 +82,10 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 
 		// now attempt to oversubscribe
 		log.info("Now we will attempt to oversubscribe to original pool: "+testPool);
-		// No free entitlements are available for the pool with id	'8a9b90882df297d5012df31def5e00bb'.
+		// No entitlements are available from the pool with id '8a90f8143611c33f013611c4797b0456'.
 		Assert.assertNull(client1tasks.subscribeToSubscriptionPool(testPool),"No entitlement cert is granted when the pool is already fully subscribed.");
 		// try again
-		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No free entitlements are available for the pool with id '"+testPool.poolId+"'.");
+		Assert.assertEquals(client1tasks.subscribe_(null, null, testPool.poolId, null, null, null, null, null, null, null, null).getStdout().trim(),"No entitlements are available from the pool with id '"+testPool.poolId+"'.");
 		// assert the consumed quantity again
 		jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"),
@@ -226,7 +226,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		JSONObject jsonTestPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+testPool.poolId));
 		Assert.assertEquals(jsonTestPool.getInt("consumed"), jsonTestPool.getInt("quantity"), "Asserting the test pool's consumed attribute matches it's original total quantity after having consumed all of its available entitlements.");
 		
-		// one of these command should have succeeded and one should have failed with "No free entitlements..."
+		// one of these command should have succeeded and one should have failed with "No entitlements are available"...
 		// decide who was the winner and who must have been the loser
 		SSHCommandResult sshWinner, sshLoser;
 		SubscriptionManagerTasks smtWinner, smtLoser;
@@ -251,7 +251,7 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 //		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
 		Assert.assertEquals(sshWinner.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtWinner.hostname+"' indicates the subscribe attempt successfully granted an entitlement.");
 		log.info("SSHCommandResult from '"+smtLoser.hostname+"': "+sshLoser);
-		Assert.assertEquals(sshLoser.getStdout().trim(), "No free entitlements are available for the pool with id '"+testPool.poolId+"'.", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
+		Assert.assertEquals(sshLoser.getStdout().trim(), "No entitlements are available from the pool with id '"+testPool.poolId+"'.", "Stdout must indicate to system '"+smtLoser.hostname+"' that there are no free entitlements left from poolId '"+testPool.poolId+"'.");
 		Assert.assertEquals(sshLoser.getStderr().trim(), "","No stderr information is expected on '"+smtLoser.hostname+"'.");
 //		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(0),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt was handled gracefully.");	// assertion valid prior to RHEL63 fix for bug 689608
 		Assert.assertEquals(sshLoser.getExitCode(), Integer.valueOf(1),"The exit code from the subscribe command on '"+smtLoser.hostname+"' indicates the subscribe attempt did not grant an entitlement.");
