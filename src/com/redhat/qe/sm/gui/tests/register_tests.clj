@@ -2,7 +2,7 @@
   (:use [test-clj.testng :only [gen-class-testng data-driven]]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
+        [slingshot.slingshot :only (try+ throw+)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks])
@@ -14,17 +14,18 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (with-handlers [(ignore :not-registered)]
-    (tasks/unregister)))
+  (try+ (tasks/unregister)
+        (catch [:type :not-registered] _)))
 
 (defn ^{Test {:groups ["registration"]
               :dataProvider "userowners"}}
   simple_register [_ user pass owner]
-  (with-handlers [(handle :already-registered [e]
-                          (recover e :unregister-first))]
-    (if owner 
-      (tasks/register user pass :owner owner)
-      (tasks/register user pass)))
+  (try+
+   (if owner 
+     (tasks/register user pass :owner owner)
+     (tasks/register user pass))
+   (catch [:type :already-registered]
+       {:keys [unregister-first]} (unregister-first)))
   (verify (action exists? :unregister-system))
   (if owner
     (do 
@@ -36,10 +37,11 @@
 
 (defn register_bad_credentials [user pass recovery]
   (let [test-fn (fn [username password expected-error-type]
-                    (with-handlers [(handle expected-error-type [e]
-                                      (recover e :cancel)
-                                      (:type e))]
-                      (tasks/register username password)))]
+                  (try+ (tasks/register username password)
+                        (catch
+                            [:type expected-error-type]
+                            {:keys [type cancel]}
+                          (cancel) type)))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery
           register-button :register-system]
@@ -47,9 +49,10 @@
 
 (defn ^{Test {:groups ["registration"]}}
   unregister [_]
-  (with-handlers [(handle :already-registered [e]
-                          (recover e :unregister-first))]
-    (tasks/register (@config :username) (@config :password)))
+  (try+ (tasks/register (@config :username) (@config :password))
+        (catch
+            [:type :already-registered]
+            {:keys [unregister-first]} (unregister-first)))
   (tasks/unregister)
   (verify (action exists? :register-system)))
 

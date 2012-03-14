@@ -4,23 +4,14 @@
                                                        cli-tasks
                                                        auth-proxyrunner
                                                        noauth-proxyrunner)]
-        [error.handler :only (with-handlers
-                              handle
-                              ignore
-                              recover
-                              add-recoveries
-                              raise)]
+        [slingshot.slingshot :only [throw+ try+]]
         [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (split
-                                       split-lines
-                                       trim
-                                       replace-str
-                                       substring?)]
-        [clojure.contrib.str-utils :only (re-split)]
+        [clojure.string :only (split
+                               split-lines)]
         matchure
         gnome.ldtp)
-  (:require [clojure.contrib.logging :as log]
-            [clojure.contrib.json :as json]
+  (:require [clojure.tools.logging :as log]
+            [clojure.data.json :as json]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
@@ -48,6 +39,11 @@
        (if  (> (- (System/currentTimeMillis) starttime#) ~timeout)
 	 (throw (RuntimeException. (str "Hit timeout of " ~timeout "ms.")))
 	 (do ~@forms)))))
+
+(defn #^String substring?
+  "True if s contains the substring."
+  [substring #^String s]
+  (.contains s substring))
 
 ;; A mapping of RHSM error messages to regexs that will match that error.
 (def known-errors {:invalid-credentials #"Invalid Credentials|Invalid username or password.*"
@@ -87,12 +83,6 @@
   (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
   (ui waittillwindownotexist :main-window 30))
 
-(defn restart-app
-  "Restarts subscription-manager-gui"
-  []
-  (kill-app)
-  (start-app))
-
 (defn start-firstboot
   "Convenience function that calls start-app with the firstboot path."
   []
@@ -117,16 +107,16 @@
   Allows for recovery of the error message.
   @wait: specify the time to wait for the error dialog."
   ([wait]
-      (add-recoveries
-       {:log-warning (fn [e] (log/warn
-                             (format "Got error %s, message was: '%s'"
-                                     (name (:type e)) (:msg e))))}
-       (if (= 1 (ui waittillwindowexist :error-dialog wait)) 
-         (let [message (get-error-msg)
-               type (matching-error message)]
-           (clear-error-dialog)
-           (raise {:type type 
-                   :msg message})))))
+     (if (= 1 (ui waittillwindowexist :error-dialog wait)) 
+       (let [message (get-error-msg)
+             type (matching-error message)]
+         (clear-error-dialog)
+         (throw+ {:type type 
+                  :msg message
+                  :log-warning (fn []
+                                 (log/warn
+                                  (format "Got error '%s', message was: '%s'"
+                                          (name type) message)))}))))
   ([] (checkforerror 3)))
                
 (defn set-conf-file-value
@@ -145,7 +135,7 @@
   "Unregisters subscripton manager by clicking the 'unregister' button."
   []
   (if (ui showing? :register-system)
-    (raise {:type :not-registered
+    (throw+ {:type :not-registered
             :msg "Tried to unregister when already unregistered."}))
   (ui click :unregister-system)
   (ui waittillwindowexist :question-dialog 30)
@@ -157,18 +147,19 @@
   [username password & {:keys [system-name-input, autosubscribe, owner]
                         :or {system-name-input nil, autosubscribe false, owner nil}}]
   (if (ui showing? :unregister-system)
-    (raise {:type :already-registered
-          :username username
-          :password password
-          :name system-name-input
-          :auto autosubscribe
-          :ownername owner
-          :unregister-first (fn [e] (unregister)
-                              (register (:username e)
-                                        (:password e)
-                                        :system-name-input (:name e)
-                                        :autosubscribe (:auto e)
-                                        :owner (:ownername e)))}))
+    (throw+ {:type :already-registered
+             :username username
+             :password password
+             :system-name-input system-name-input
+             :autosubscribe autosubscribe
+             :owner owner
+             :unregister-first (fn []
+                                 (unregister)
+                                 (register username
+                                           password
+                                           :system-name-input system-name-input
+                                           :autosubscribe autosubscribe
+                                           :owner owner))}))
   (ui click :register-system)
   (ui waittillguiexist :redhat-login)
   (ui settextvalue :redhat-login username)
@@ -178,7 +169,7 @@
   (if autosubscribe 
    (ui check :automatically-subscribe)
    (ui uncheck :automatically-subscribe))  
-  (add-recoveries {:cancel (fn [e] (ui click :register-cancel))}
+  (try+ 
    (ui click :register)
    (checkforerror 10)
    (if (= 1 (ui guiexist :register-dialog))
@@ -187,14 +178,16 @@
          (do
            (when owner (do 
                          (if-not (ui rowexist? :owner-view owner)
-                           (raise {:type :owner-not-available
-                                   :name owner
-                                   :msg (str "Not found in 'Owner Selection':" owner)}))
+                           (throw+ {:type :owner-not-available
+                                    :name owner
+                                    :msg (str "Not found in 'Owner Selection':" owner)}))
                          (ui selectrow :owner-view owner)))    
            (ui click :register)
            (checkforerror 10)))
        (ui waittillnotshowing :registering 1800))) ;; 30 minutes
-   (checkforerror))
+   (checkforerror)
+   (catch Object e
+     (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))
   (sleep 10000))
 
 (defn fbshowing?
@@ -239,6 +232,7 @@
   (ui waittillwindownotexist :progress-dialog 30)
   (checkforerror))
 
+;; TODO write this with better airities
 (defn search
   "Performs a subscription search within subscription-manager-gui."
   ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
@@ -248,7 +242,9 @@
     (ui (setchecked match-system?) :match-system)
     (ui (setchecked do-not-overlap?) :do-not-overlap)
     (ui (setchecked match-installed?) :match-installed))
-  (if active-on (comment "Procedure to set date goes here, BZ#675777 "))
+  (ui click :more-search-options)
+  (if active-on ;BZ#675777
+    (ui settextvalue :date-entry active-on))
   (if contain-text
     (ui settextvalue :contains-the-text contain-text)
     (ui settextvalue :contains-the-text ""))
@@ -280,9 +276,9 @@
   "Skips dropdown items in a table."
   [table item]
   (if-not (ui rowexist? table item)
-    (raise {:type :item-not-available
-            :name item
-            :msg (str "Not found in " table ": " item)}))
+    (throw+ {:type :item-not-available
+             :name item
+             :msg (str "Not found in " table ": " item)}))
   (let [row (ui gettablerowindex table item)]
     (if (is-item? table row)
       (do
@@ -293,9 +289,9 @@
                  (= item (ui getcellvalue table (+ 1 row) 0)))
           (do (ui selectrowindex table (+ 1 row))
               (+ 1 row))
-          (raise {:type :invalid-item
-                  :name item
-                  :msg (str "Invalid item:" item)}))))))
+          (throw+ {:type :invalid-item
+                   :name item
+                   :msg (str "Invalid item:" item)}))))))
 
 (defn open-contract-selection
   "Opens the contract selection dialog for a given subscription." 
@@ -305,9 +301,9 @@
   (ui click :subscribe)
   (checkforerror)
   (if-not (= 1 (ui waittillwindowexist :contract-selection-dialog 5))
-    (raise {:type :contract-selection-not-available
-            :name s
-            :msg (str s " Does not have multiple contracts.")})))
+    (throw+ {:type :contract-selection-not-available
+             :name s
+             :msg (str s " does not have multiple contracts.")})))
 
 (defn subscribe
   "Subscribes to a given subscription, s."
@@ -330,14 +326,14 @@
   (ui selecttab :my-subscriptions)
   (sleep 5000)
   (if-not (ui rowexist? :my-subscriptions-view s)
-    (raise {:type :not-subscribed
-            :name s
-            :msg (str "Not found in 'My Subscriptions': " s)}))
+    (throw+ {:type :not-subscribed
+             :name s
+             :msg (str "Not found in 'My Subscriptions': " s)}))
   (ui selectrow :my-subscriptions-view s)
   (ui click :unsubscribe)
   (ui waittillwindowexist :question-dialog 60)
   (ui click :yes)
-  (checkforerror) )
+  (checkforerror))
 
 (defn enableproxy-auth
   "Configures a proxy that uses authentication through subscription-manager-gui."
@@ -348,7 +344,7 @@
            (ui waittillwindowexist :firstboot-proxy-dialog 60)
            (ui check :firstboot-proxy-checkbox)
            (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-           ui check :firstboot-auth-checkbox
+           (ui check :firstboot-auth-checkbox)
            (ui settextvalue :firstboot-proxy-user user)
            (ui settextvalue :firstboot-proxy-pass pass)
            (ui click :firstboot-proxy-close)
@@ -488,17 +484,26 @@
     (verify (= config-file-user user))
     (verify (= config-file-password password))))
 
-(defn get-logging
-  "Runs a given function f and returns changes to a log file.
+(comment
+  ;old and busted
+  (defn get-logging
+    
+    [runner logfile name grep f]
+    (let [marker (str (System/currentTimeMillis) " " name)]
+      (RemoteFileTasks/markFile runner logfile marker)
+      (f)
+      (RemoteFileTasks/getTailFromMarkedFile runner logfile marker grep))))
+
+(defmacro get-logging [runner logfile name grep & forms]
+  "Runs given forms and returns changes to a log file.
   runner: an instance of a SSHCommandRunner
   log: string containing which log file to look at
   name: string used to mark the log file
   grep: what to grep the results for"
-  [runner log name grep f]
-  (let [marker (str (System/currentTimeMillis) " " name)]
-    (RemoteFileTasks/markFile runner log marker)
-    (f)
-    (RemoteFileTasks/getTailFromMarkedFile runner log marker grep)))
+  `(let [marker# (str (System/currentTimeMillis) " " ~name)]
+     (RemoteFileTasks/markFile ~runner ~logfile marker#)
+     (do ~@forms)
+     (RemoteFileTasks/getTailFromMarkedFile ~runner ~logfile marker# ~grep)))
 
 (defn register-with-creds
   "Registers user with credentials found in automation.properties"
@@ -509,15 +514,31 @@
                                                  (@config :owner-key))]
     (if re-register?
       ;re-register with handlers
-      (with-handlers [(handle :already-registered [e]
-                              (recover e :unregister-first))]
-        (register (@config :username)
-                  (@config :password)
-                  :owner ownername))
+      (try+
+       (register (@config :username)
+                 (@config :password)
+                 :owner ownername)
+       (catch
+           [:type :already-registered]
+           {:keys [unregister-first]}
+         (unregister-first)))
       ;else just attempt a register
       (register (@config :username)
-                  (@config :password)
-                  :owner ownername))))
+                (@config :password)
+                :owner ownername))))
+
+(defn restart-app
+  "Restarts subscription-manager-gui"
+  [& {:keys [unregister?
+             reregister?]
+      :or {unregister? false
+           reregister? false}}]
+  (kill-app)
+  (if (or unregister? reregister?)
+    (.runCommandAndWait @clientcmd "subscription-manager unregister"))
+  (start-app)
+  (if reregister?
+    (register-with-creds)))
 
 (defn get-all-facts
   "Creates and returns a map of all system facts as read in via the rhsm-gui"
@@ -567,5 +588,14 @@
     (.RunCommandAndWait @clientcmd command)
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
+
+
+(comment
+  (defn build-installed-product-map
+    []
+    (let [pemfiles (split-lines (.getStdout (.runcommandAndWait @clientcmd "ls /etc/pki/product/")))
+          productmap (atom {})
+          dir "/etc/pki/product/"]
+      (doseq [pem pemfile]))))
 
 

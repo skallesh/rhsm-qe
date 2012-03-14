@@ -57,7 +57,8 @@
       </run>
     </groups>
   </test>
-  
+
+<!--  this window got removed  
   <test name="GUI: Subscription Assistant">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
@@ -70,6 +71,7 @@
       </run>
     </groups>
   </test>
+-->
   
   <test name="GUI: Proxy">
     <packages>
@@ -126,7 +128,7 @@
     </groups>
   </test>
   
-    <test name="GUI: Import">
+  <test name="GUI: Import">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
@@ -139,5 +141,19 @@
       </run>
     </groups>
   </test>
-  
+
+  <test name="GUI: System">
+    <packages>
+      <package name="com.redhat.qe.sm.gui.tests" />
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>
+    <groups>
+      <run>
+        <include name="system"/>
+        <include name="setup" />
+        <include name="cleanup" />
+      </run>
+    </groups>
+  </test>
+
 </suite>

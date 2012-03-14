@@ -1,39 +1,48 @@
-GUI TODO:
+GUI DONE:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=667991
-  https://bugzilla.redhat.com/show_bug.cgi?id=679961   << partial done
-  https://bugzilla.redhat.com/show_bug.cgi?id=676371   
-  https://bugzilla.redhat.com/show_bug.cgi?id=676377
-  https://bugzilla.redhat.com/show_bug.cgi?id=683151
-  https://bugzilla.redhat.com/show_bug.cgi?id=629670#c4
-  https://bugzilla.redhat.com/show_bug.cgi?id=683550
+  https://bugzilla.redhat.com/show_bug.cgi?id=676371  < done but make this data driven
+  https://bugzilla.redhat.com/show_bug.cgi?id=683550 
   https://bugzilla.redhat.com/show_bug.cgi?id=691784
   https://bugzilla.redhat.com/show_bug.cgi?id=691788
-  https://bugzilla.redhat.com/show_bug.cgi?id=700601
-  https://bugzilla.redhat.com/show_bug.cgi?id=703920
-  https://bugzilla.redhat.com/show_bug.cgi?id=705170
-
   https://bugzilla.redhat.com/show_bug.cgi?id=712978
-  https://bugzilla.redhat.com/show_bug.cgi?id=696020
   https://bugzilla.redhat.com/show_bug.cgi?id=705445
-  https://bugzilla.redhat.com/show_bug.cgi?id=707041
   https://bugzilla.redhat.com/show_bug.cgi?id=702075
-  https://bugzilla.redhat.com/show_bug.cgi?id=704069
-  https://bugzilla.redhat.com/show_bug.cgi?id=708095
-  https://bugzilla.redhat.com/show_bug.cgi?id=706384
   https://bugzilla.redhat.com/show_bug.cgi?id=723363
   https://bugzilla.redhat.com/show_bug.cgi?id=712980
+  https://bugzilla.redhat.com/show_bug.cgi?id=656896
+  https://bugzilla.redhat.com/show_bug.cgi?id=706384
+    
+  https://tcms.engineering.redhat.com/case/70205/?from_plan=2110
+  
+GUI LIMBO:
+
+  https://bugzilla.redhat.com/show_bug.cgi?id=676377 < rhsm icon
+  https://bugzilla.redhat.com/show_bug.cgi?id=683151 < rhsm icon
+  https://bugzilla.redhat.com/show_bug.cgi?id=629670#c4 < rhsm icon
+  https://bugzilla.redhat.com/show_bug.cgi?id=700601 < firstboot starting with a bad locale not sure if I should automate
+  https://bugzilla.redhat.com/show_bug.cgi?id=705170 < firstboot, not fixed due to pending redesign
+  https://bugzilla.redhat.com/show_bug.cgi?id=696020 < only repo on i686 box
+  https://bugzilla.redhat.com/show_bug.cgi?id=707041 < date picker throws traceback
+  https://bugzilla.redhat.com/show_bug.cgi?id=704069 < bug in different locale
+  https://bugzilla.redhat.com/show_bug.cgi?id=708095 < bug in different locale
+  https://bugzilla.redhat.com/show_bug.cgi?id=772921 < rhsm icon
+    
+GUI TODO:
+
+  https://bugzilla.redhat.com/show_bug.cgi?id=703920
 
   https://bugzilla.redhat.com/show_bug.cgi?id=740788
   https://bugzilla.redhat.com/show_bug.cgi?id=740377
   https://bugzilla.redhat.com/show_bug.cgi?id=745965
   https://bugzilla.redhat.com/show_bug.cgi?id=755861
   https://bugzilla.redhat.com/show_bug.cgi?id=723248
-  https://bugzilla.redhat.com/show_bug.cgi?id=766778
-  https://bugzilla.redhat.com/show_bug.cgi?id=747014
+  https://bugzilla.redhat.com/show_bug.cgi?id=747014 < help button
   https://bugzilla.redhat.com/show_bug.cgi?id=727973
   https://bugzilla.redhat.com/show_bug.cgi?id=745995
-  https://bugzilla.redhat.com/show_bug.cgi?id=772921
+
+  https://bugzilla.redhat.com/show_bug.cgi?id=766778
+  https://bugzilla.redhat.com/show_bug.cgi?id=704408
   
   https://tcms.engineering.redhat.com/case/44125/?from_plan=2806
   https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
@@ -51,7 +60,7 @@ GUI TODO:
   https://tcms.engineering.redhat.com/case/70305/?from_plan=2110
   https://tcms.engineering.redhat.com/case/77359/?from_plan=2110
   https://tcms.engineering.redhat.com/case/73580/?from_plan=2110
-  https://tcms.engineering.redhat.com/case/70205/?from_plan=2110 (verify that facts match cli facts only)
+
   https://tcms.engineering.redhat.com/case/73339/?from_plan=2110
   https://tcms.engineering.redhat.com/case/69815/?from_plan=2110 (fake by removing and adding product cert)
   https://tcms.engineering.redhat.com/case/69814/?from_plan=2110

@@ -1,5 +1,5 @@
 (ns com.redhat.qe.sm.gui.tasks.ui
-  (:use  [clojure.contrib [string :only [join split capitalize]]])
+  (:use  [clojure.string :only [join split capitalize]])
   (:require [gnome.ldtp :as ldtp])
   (:import java.util.NoSuchElementException
 	   [gnome.ldtp Element Tab Window TabGroup]))
@@ -10,7 +10,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
      (same-name identity coll))
   ([word-fn coll]
      (zipmap coll
-	     (for [keyword coll] (->> keyword name (split #"-") (map word-fn) (join " "))))))
+	     (for [keyword coll] (->> (split (name keyword) #"-") (map word-fn) (join " "))))))
 
 (defn define-elements [window m]
   (zipmap (keys m) (for [v (vals m)] (Element. window v))))

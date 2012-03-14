@@ -2,10 +2,9 @@
   (:use [test-clj.testng :only (gen-class-testng)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
-        [clojure.contrib.string :only (trim split substring?)]
+        [clojure.string :only (trim split)]
         gnome.ldtp)
-  (:require [clojure.contrib.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             [com.redhat.qe.sm.gui.tasks.candlepin-tasks :as ctasks]
              com.redhat.qe.sm.gui.tasks.ui)
@@ -79,16 +78,20 @@
                        "configureProductCertDirForSomeProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   some_products_subscribable [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? somedir))
   (let [beforesubs (tasks/warn-count)
+        dircount (trim (.getStdout
+                        (.runCommandAndWait
+                         @clientcmd
+                         (str "ls " somedir " | wc -l"))))
         user (@config :username)
         pass (@config :password)
         key  (@config :owner-key)
         ownername (ctasks/get-owner-display-name user pass key)]
     (verify (= (str beforesubs)
-               (trim (.getStdout
-                      (.runCommandAndWait @clientcmd (str "ls " somedir " | wc -l"))))))
+               dircount))
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do 
@@ -105,6 +108,7 @@
                        "configureProductCertDirForAllProductsSubscribable"]
               :dependsOnMethods ["register_autosubscribe"]}}
   all_products_subscribable [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? alldir))
   (let [beforesubs (tasks/warn-count)
@@ -132,6 +136,7 @@
                        "blockedByBug-743704"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_subscribable [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nodir))
   (let [beforesubs (tasks/warn-count)
@@ -158,6 +163,7 @@
                        "configureProductCertDirForNoProductsInstalled"]
               :dependsOnMethods ["register_autosubscribe"]}}
   no_products_installed [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nonedir))
   (verify (= 0 (tasks/warn-count)))
@@ -176,7 +182,7 @@
                          index 3)
         not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
-        rhel5?   (substring? "release 5"
+        rhel5?   (tasks/substring? "release 5"
                              (.getStdout
                               (.runCommandAndWait
                                @clientcmd
@@ -190,15 +196,16 @@
                            "grep \"uname.machine\" | "
                            "grep \"lscpu.architecture\" | ")
                          "cut -f 2 -d \":\""))))
-        prodarch (split #"," (try
-                               (let [arch (tasks/ui getcellvalue
-                                                    :installed-view
-                                                    index 2)]
-                                 (if (string? arch)
-                                   arch
-                                   ""))
-                               (catch XmlRpcException e
-                                 "")))]
+        prodarch (split (try
+                          (let [arch (tasks/ui getcellvalue
+                                               :installed-view
+                                               index 2)]
+                            (if (string? arch)
+                              arch
+                              ""))
+                          (catch XmlRpcException e
+                            ""))
+                        #",")]
     ;;(println (str "index: " index))
     ;;(println (str "status: "  status))
     ;;(println (str "expected: " expected))

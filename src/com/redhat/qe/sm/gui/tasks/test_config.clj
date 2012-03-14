@@ -73,6 +73,7 @@
 				       nil))
   ;; client command runner to run file and other tasks on rhsm client box
   (reset! cli-tasks (SubscriptionManagerTasks. @clientcmd))
+  (.initializeFieldsFromConfigFile @cli-tasks)
   ;; command runner to run ssh commands on the squid proxy server (with auth)
   (reset! auth-proxyrunner (SSHCommandRunner. (@config :basicauth-proxy-hostname)
                                               (@config :ssh-user)

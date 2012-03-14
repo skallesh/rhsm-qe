@@ -1,13 +1,7 @@
 (ns com.redhat.qe.sm.gui.tasks.candlepin-tasks
   (:use [com.redhat.qe.sm.gui.tasks.test-config :only (config
-                                                       clientcmd
-                                                       cli-tasks
-                                                       auth-proxyrunner
-                                                       noauth-proxyrunner)]
-        [error.handler :only (add-recoveries raise)]
-        [com.redhat.qe.verify :only (verify)]
-        [clojure.contrib.string :only (trim)]
-        gnome.ldtp)
+                                                       clientcmd)]
+        [clojure.string :only (trim)])
   (:require [com.redhat.qe.sm.gui.tasks.rest :as rest])
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
@@ -44,17 +38,31 @@
 
 (defn list-available
   "Gets a list of all available pools for a given owner and consumer."
-  ([owner consumerid]
-     (rest/get (str (server-url) "/owners/" owner "/pools?consumer=" consumerid)
+  ([owner consumerid & {:keys [all?]
+                        :or {all? false}}]
+     (rest/get (str (server-url)
+                    "/owners/" owner
+                    "/pools?consumer=" consumerid
+                    (if all? "&listall=true"))
                (@config :username)
                (@config :password)))
+  ([all?]
+     (list-available
+      (get-consumer-owner-key)
+      (get-consumer-id)
+      :all? all?))
   ([]
-     (list-available (get-consumer-owner-key) (get-consumer-id))))
+     (list-available
+      (get-consumer-owner-key)
+      (get-consumer-id))))
 
 
 (defn build-product-map
-  []
-  (let [everything (list-available)
+  [& {:keys [all?]
+      :or {all? false}}]
+  (let [everything (if all?
+                     (list-available true)
+                     (list-available))
         productlist (atom {})]
     (doseq [s everything]
       (doseq [p (:providedProducts s)]

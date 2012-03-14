@@ -4,9 +4,9 @@
                                                        clientcmd
                                                        auth-proxyrunner
                                                        noauth-proxyrunner)]
+        [slingshot.slingshot :only (try+ throw+)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
-	       gnome.ldtp)
+        gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass AfterClass]))
 
@@ -15,14 +15,14 @@
 
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
-  (with-handlers [(ignore :not-registered)]
-    (tasks/unregister)))
+  (try+ (tasks/unregister)
+        (catch [:type :not-registered] _)))
 
 (defn register []
-  (with-handlers [(handle :already-registered [e]
-                               (recover e :unregister-first))]
-    (tasks/register (@config :username) (@config :password))
-    (verify (action exists? :unregister-system))))
+  (try+ (tasks/register (@config :username) (@config :password))
+        (verify (action exists? :unregister-system))
+        (catch [:type :already-registered]
+            {:keys [unregister-first]} (unregister-first))))
 
 (defn ^{Test {:groups ["proxy"]}}
   enable_proxy_auth [_]
@@ -54,7 +54,7 @@
                                      auth-log
                                      "proxy-auth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
     
 (defn ^{Test {:groups ["proxy"]
@@ -65,7 +65,7 @@
                                      noauth-log
                                      "proxy-noauth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
 
 (defn ^{Test {:groups ["proxy"]
@@ -76,13 +76,13 @@
                                      auth-log
                                      "disabled-auth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (clojure.string/blank? logoutput)))
   (let [logoutput (tasks/get-logging @noauth-proxyrunner 
                                      noauth-log
                                      "disabled-auth-connect"
                                      nil
-                                     register)]
+                                     (register))]
     (verify (clojure.string/blank? logoutput))))
 
 (defn ^{Test {:groups ["proxy"]}}
@@ -91,9 +91,8 @@
         port      "666"]
     (tasks/enableproxy-noauth hostname port)
     (tasks/verify-conf-proxies hostname port "" ""))
-  (let [thrown-error (with-handlers [(handle :network-error [e]
-                                             (:type e))]
-                       (register))]
+  (let [thrown-error (try+ (register)
+                           (catch Object e (:type e)))]
     (verify (= thrown-error :network-error)))
   (disable_proxy nil))
 
@@ -105,12 +104,12 @@
         port      "666"]
     (tasks/enableproxy-noauth hostname port)
     (tasks/verify-conf-proxies hostname port "" ""))
-  (let [thrown-error (with-handlers [(handle :error-updating [e]
-                                             (:type e))]
-                       (tasks/ui click :view-system-facts)
+  (let [thrown-error (try+ (tasks/ui click :view-system-facts)
                        (tasks/ui waittillguiexist :facts-view)
                        (tasks/ui click :update-facts)
-                       (tasks/checkforerror))]
+                       (tasks/checkforerror)
+                       (catch Object e
+                         (:type e)))]
     (verify (= thrown-error :error-updating)))
   (tasks/ui click :close-facts)
   (disable_proxy nil))

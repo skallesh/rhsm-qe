@@ -1,7 +1,8 @@
 (ns com.redhat.qe.sm.gui.tests.base
   (:use [test-clj.testng :only (gen-class-testng)]
 	[com.redhat.qe.sm.gui.tasks.tasks])
-  (:require [com.redhat.qe.sm.gui.tasks.test-config :as config])
+  (:require [com.redhat.qe.sm.gui.tasks.test-config :as config]
+            [clojure.tools.logging :as log])
   (:import [org.testng.annotations BeforeSuite AfterSuite]))
   
 (defn- restart-vnc []
@@ -17,6 +18,11 @@
 
 (defn ^{AfterSuite {:groups ["setup"]}}
   killGUI [_]
-  (.runCommand @config/clientcmd "killall -9 subscription-manager-gui"))
+  (.runCommand @config/clientcmd "killall -9 subscription-manager-gui")
+  (log/info "Contents of ldtpd.log:")
+  (log/info (.getStdout
+             (.runCommandAndWait
+              @config/clientcmd
+              "cat /var/log/ldtpd/ldtpd.log"))))
 
 (gen-class-testng)

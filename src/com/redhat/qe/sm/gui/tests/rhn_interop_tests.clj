@@ -2,10 +2,8 @@
   (:use [test-clj.testng :only (gen-class-testng)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
-        [error.handler :only (with-handlers handle ignore recover)]
-	       gnome.ldtp)
+        gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
-            [clojure.contrib.java-utils :as jutils]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]))
 
@@ -43,7 +41,7 @@
   (kill-app)
 )
 
-(defn ^{Test {:groups ["interop"]
+(defn ^{Test {:groups ["interop" "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"] }}
   check_warning_ok [_]
   (tasks/start-app)
@@ -54,7 +52,7 @@
   (kill-app)
 )
 
-(defn ^{Test {:groups ["interop"]
+(defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning"]}}
   check_warning_cancel [_]
   (tasks/start-app)
@@ -64,7 +62,7 @@
   (kill-app)
 )
 
-(defn ^{Test {:groups ["interop"]
+(defn ^{Test {:groups ["interop"  "blockedByBug-667991"]
               :dependsOnMethods ["check_warning" "check_warning_ok" "check_warning_cancel"]}}
   check_no_warning [_]
   (.runCommandAndWait @clientcmd (str "rm -f " systemid))

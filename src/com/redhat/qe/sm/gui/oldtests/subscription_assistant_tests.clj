@@ -1,3 +1,4 @@
+(comment
 (ns com.redhat.qe.sm.gui.tests.subscription-assistant-tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
@@ -100,7 +101,9 @@
   (launch_assistant nil))
 
 
-(defn ^{Test {:groups ["subscription-assistant" "blockedByBug-703997"]
+(defn ^{Test {:groups ["subscription-assistant"
+                       "blockedByBug-703997"
+                       "blockedByBug-705445"]
               :dependsOnMethods ["launch_assistant"]}}
   subscribe_all_products [_]
   (reset-assistant)
@@ -248,3 +251,4 @@
 
 
 (gen-class-testng)
+)
