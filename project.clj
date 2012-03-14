@@ -17,7 +17,8 @@
                  [test_clj.testng "1.0.1-SNAPSHOT"]
                  [clj-http "0.1.3"]
                  [matchure "0.10.1"]]
-  :dev-dependencies [[slamhound "1.2.0"]]
+  :dev-dependencies [[slamhound "1.2.0"]
+                     [fn.trace "1.3.2.0-SNAPSHOT"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"})
