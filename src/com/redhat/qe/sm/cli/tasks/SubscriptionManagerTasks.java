@@ -4289,11 +4289,11 @@ repolist: 3,394
 		return true;
 	}
 	
-	protected void runRHSMCallAsLang(String lang,String rhsmCall){
-		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
+	public SSHCommandResult runCommandWithLang(String lang,String rhsmCall){
+		return sshCommandRunner.runCommandAndWait("LANG="+lang+" " + rhsmCall);
 	}
 	
-	protected void setLanguage(String lang){
+	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
 }

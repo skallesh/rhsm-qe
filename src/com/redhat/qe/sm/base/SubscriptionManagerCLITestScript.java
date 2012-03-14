@@ -411,14 +411,6 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	
-//	public void runRHSMCallAsLang(SSHCommandRunner sshCommandRunner, String lang,String rhsmCall){
-//		sshCommandRunner.runCommandAndWait("export LANG="+lang+"; " + rhsmCall);
-//	}
-//	
-//	public void setLanguage(SSHCommandRunner sshCommandRunner, String lang){
-//		sshCommandRunner.runCommandAndWait("export LANG="+lang);
-//	}
-	
 
 	// Protected Inner Data Class ***********************************************************************
 	

@@ -540,6 +540,30 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"The list of consumed products after reregistering is identical.");
 	}
 	
+	@Test(	description="attempt LANG=C subscription-manager register",
+			groups={"blockedByBug-729988"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithFallbackCLocale_Test() {
+
+		//	[root@rhsm-compat-rhel61 ~]# LANG=C subscription-manager register --username stage_test_12 --password redhat 1>/tmp/stdout 2>/tmp/stderr
+		//	[root@rhsm-compat-rhel61 ~]# echo $?
+		//	255
+		//	[root@rhsm-compat-rhel61 ~]# cat /tmp/stdout 
+		//	[root@rhsm-compat-rhel61 ~]# cat /tmp/stderr
+		//	'NoneType' object has no attribute 'lower'
+		//	[root@rhsm-compat-rhel61 ~]# 
+		
+		for(String lang: new String[]{"C","us"}) {
+			clienttasks.unregister(null, null, null);
+			String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
+			if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
+			SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
+			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with LANG="+lang+" fallback locale.");
+			//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with LANG="+lang+" fallback locale.");
+		}
+	}
 	
 	/**
 	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
