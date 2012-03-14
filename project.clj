@@ -6,8 +6,6 @@
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.json "0.1.2"]
-                 ;[org.clojure/clojure "1.2.0"]
-                 ;[org.clojure/clojure-contrib "1.2.0"]
                  [slingshot "0.8.0"]
                  [net.java.dev.rome/rome "1.0.0"]
                  [org.jdom/jdom "1.1"]
