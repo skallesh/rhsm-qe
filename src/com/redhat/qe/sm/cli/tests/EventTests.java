@@ -108,7 +108,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: events: Consumer Created is sent over an RSS atom feed.",
-			groups={"ConsumerCreated_Test"}, dependsOnGroups={},
+			groups={"ConsumerCreated_Test"},
+			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void ConsumerCreated_Test() throws Exception {
@@ -149,7 +150,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Enitlement Created is sent over an RSS atom feed.",
-			groups={"EntitlementCreated_Test"}, dependsOnGroups={"ConsumerCreated_Test"},
+			groups={"EntitlementCreated_Test"},
+			dependsOnGroups={"ConsumerCreated_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=50403)
 	public void EntitlementCreated_Test() throws Exception {
@@ -167,7 +169,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-// debugging randlomly picked standalone non-zero virt_limit pools
+// debugTesting randomly picked standalone non-zero virt_limit pools
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
@@ -187,7 +189,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
         
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
-		if (servertasks.statusStandalone && !"0".equals(CandlepinTasks.getPoolAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit"))) {
+        String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
+		if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
 			newEventTitles = new String[]{"ENTITLEMENT CREATED","POOL CREATED"};
 		}
 		
@@ -200,7 +203,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Pool Modified and Entitlement Modified is sent over an RSS atom feed.",
-			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"}, dependsOnGroups={"EntitlementCreated_Test"},
+			groups={"blockedByBug-721141","PoolModifiedAndEntitlementModified_Test","blockedByBug-645597"},
+			dependsOnGroups={"EntitlementCreated_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void PoolModifiedAndEntitlementModified_Test() throws Exception {
@@ -252,7 +256,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: events: Entitlement Deleted is sent over an RSS atom feed.",
-			groups={"EnititlementDeleted_Test"}, dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
+			groups={"EnititlementDeleted_Test"},
+			dependsOnGroups={"PoolModifiedAndEntitlementModified_Test"},
 			enabled=true, alwaysRun=true)
 	//@ImplementsTCMS(id="")
 	public void EnititlementDeleted_Test() throws Exception {
@@ -282,7 +287,8 @@ public class EventTests extends SubscriptionManagerCLITestScript{
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
-		if (servertasks.statusStandalone && !"0".equals(CandlepinTasks.getPoolAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit"))) {
+        String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
+		if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
 			newEventTitles = new String[]{"ENTITLEMENT DELETED","POOL DELETED"};
 		}
 		
@@ -728,6 +734,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		// alternative to dependsOnGroups={"RegisterWithCredentials_Test"}
 		// This allows us to satisfy a dependency on registrationDataList making TestNG add unwanted Test results.
 		// This also allows us to individually run this Test Class on Hudson.
+// debugTesting if (true) return;
 		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 	}
 	

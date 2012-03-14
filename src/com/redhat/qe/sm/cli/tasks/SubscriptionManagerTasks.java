@@ -58,12 +58,14 @@ public class SubscriptionManagerTasks {
 	public final String rhsmPluginConfFile	= "/etc/yum/pluginconf.d/subscription-manager.conf"; // "/etc/yum/pluginconf.d/rhsmplugin.conf"; renamed by dev on 11/24/2010
 	public final String rhsmFactsJsonFile	= "/var/lib/rhsm/facts/facts.json";
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
+	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String factsDir			= "/etc/rhsm/facts";
 	public final String factsOverrideFile	= factsDir+"/override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
+	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
 
 	//public final String msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
 	//public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=767790
@@ -277,6 +279,16 @@ public class SubscriptionManagerTasks {
 		}
 	}
 	
+	public void cloneRhnDefinitions(String gitRepository) {
+		if (gitRepository.equals("")) return;
+		
+		// git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
+		log.info("Cloning Rhn Definitions...");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+rhnDefinitionsDir+"; mkdir "+rhnDefinitionsDir+"; cd "+rhnDefinitionsDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("git clone %s %s",gitRepository,rhnDefinitionsDir), new Integer(0));
+	}
+	
+	
 	public void removeAllFacts() {
 		log.info("Cleaning out facts from consumerCertDir: "+this.factsDir);
 		if (!this.factsDir.startsWith("/etc/rhsm/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING FACTS FROM: "+this.factsDir);
@@ -319,14 +331,16 @@ public class SubscriptionManagerTasks {
 		log.info("Updating config file '"+confFile+"' parameter '"+parameter+"' value to: "+value);
 		Assert.assertEquals(
 				RemoteFileTasks.searchReplaceFile(sshCommandRunner, confFile, "^"+parameter+"\\s*=.*$", parameter+"="+value.replaceAll("\\/", "\\\\/")),
-				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value: " + value);
+				0,"Updated '"+confFile+"' parameter '"+parameter+"' to value '"+value+"'.");
 		
 		// also update this "cached" value for these config file parameters
-		if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
-		if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
-		if (parameter.equals("productCertDir"))		this.productCertDir = value;
-		if (parameter.equals("baseurl"))			this.baseurl = value;
-		if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
+		if (confFile.equals(this.rhsmConfFile)) {
+			if (parameter.equals("consumerCertDir"))	this.consumerCertDir = value;
+			if (parameter.equals("entitlementCertDir"))	this.entitlementCertDir = value;
+			if (parameter.equals("productCertDir"))		this.productCertDir = value;
+			if (parameter.equals("baseurl"))			this.baseurl = value;
+			if (parameter.equals("ca_cert_dir"))		this.caCertDir = value;
+		}
 	}
 	
 	public void commentConfFileParameter(String confFile, String parameter){
@@ -352,7 +366,8 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getConfFileParameter(String confFile, String parameter){
 		// Note: parameter can be case insensitive
-		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
+//		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "grep -iE ^"+parameter+" "+confFile, 0/*, "^"+parameter, null*/);
+		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(sshCommandRunner, String.format("grep -iE \"^%s *(=|:)\" %s",parameter,confFile), 0);	// tolerates = or : assignment character
 		String value = result.getStdout().split("=|:",2)[1];
 		return value.trim();
 	}
@@ -2463,7 +2478,7 @@ public class SubscriptionManagerTasks {
 		// assemble the command
 		String command = this.command;									command += " subscribe";
 		if (auto!=null && auto)											command += " --auto";
-		if (servicelevel!=null)											command += " --servicelevel="+servicelevel;
+		if (servicelevel!=null)											command += " --servicelevel="+(servicelevel.equals("")?"\"\"":servicelevel);	// quote an empty string
 		if (poolIds!=null)		for (String poolId : poolIds)			command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)		command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)		command += " --regtoken="+regtoken;
@@ -2538,7 +2553,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert the stdout msg was a success
-		if (servicelevel!=null)
+		if (servicelevel!=null && !servicelevel.equals(""))
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Service level set to: "+servicelevel), "The autosubscribe stdout reports: Service level set to: "+servicelevel);
 		if (auto)
 			Assert.assertTrue(sshCommandResult.getStdout().contains("Installed Product Current Status:"), "The autosubscribe stdout reports: Installed Product Current Status");

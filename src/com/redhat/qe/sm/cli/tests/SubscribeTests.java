@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -630,6 +631,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
+		String initialConsumerServiceLevel = clienttasks.getCurrentServiceLevel();
+		
 		// start fresh by returning all entitlements
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
@@ -638,12 +641,132 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
-		Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");
+		if (serviceLevel==null || serviceLevel.equals("")) {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), initialConsumerServiceLevel, "The consumer's serviceLevel preference should remain unchanged when calling subscribe with auto and a servicelevel of null or \"\".");
+		} else {
+			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");			
+		}
 
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			if ((serviceLevel==null || serviceLevel.equals("")) && initialConsumerServiceLevel.equals("")) {
+				log.info("When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer's has no sericelevel preference, then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
+			} else if ((serviceLevel==null || serviceLevel.equals("")) && !initialConsumerServiceLevel.equals("")){
+				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,initialConsumerServiceLevel, "When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer has a sericelevel preference set, then the servicelevel of the granted entitlement certs must match the current consumer's service level preference.");
+			} else {
+				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel, "This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			}
 		}
+	}
+	
+ 
+	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with an unavailable service level",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void CandlepinConsumerEntitlementsDryrunWithUnavailableServicelevel_Test() throws JSONException, Exception {
+		// register with force
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null));
+
+		String serviceLevel = "FOO";
+		JSONObject jsonDryrunResult= new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, String.format("/consumers/%s/entitlements/dry-run%s",consumerId, serviceLevel==null?"":String.format("?service_level=%s",serviceLevel))));
+
+		Assert.assertTrue(jsonDryrunResult.has("displayMessage"),"The dry-run results threw an error with a displayMessage when attempting to run wirh serviceLevel '"+serviceLevel+"' ");
+		Assert.assertEquals(jsonDryrunResult.getString("displayMessage"),String.format("Service level %s is not available to consumers of organization %s.","FOO",sm_clientOrg), "JSON results from a Candlepin Restful API call to dry-run with an unavailable service level.");
+	}
+	
+	
+	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
+			groups={"AcceptanceTests"},
+			dataProvider="getSubscribeWithAutoAndServicelevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void CandlepinConsumerEntitlementsDryrunWithServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
+	    //"GET"
+	    //"url": "/consumers/{consumer_uuid}/entitlements/dry-run?service_level=#{service_level}", 
+
+		// store the initial state of the system
+		String consumerId = clienttasks.getCurrentConsumerId();
+		String initialServiceLevel = clienttasks.getCurrentServiceLevel();
+		List<EntitlementCert> initialEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		List<SubscriptionPool> initialAvailableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+
+		// call the candlepin API
+		// curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/consumers/7033f5c0-c451-4d4c-bf88-c5061dc2c521/entitlements/dry-run?service_level=Premium | python -m simplejson/tool
+		JSONArray jsonDryrunResults= new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, String.format("/consumers/%s/entitlements/dry-run%s",consumerId, serviceLevel==null?"":String.format("?service_level=%s",serviceLevel))));
+
+		// assert that each of the dry run results match the service level and the proposed quantity is available
+		//List<SubscriptionPool> dryrunSubscriptionPools = new ArrayList<SubscriptionPool>();
+		for (int i = 0; i < jsonDryrunResults.length(); i++) {
+			// jsonDryrunResults is an array of two values per entry: "pool" and "quantity"
+			JSONObject jsonPool = ((JSONObject) jsonDryrunResults.get(i)).getJSONObject("pool");
+			Integer quantity = ((JSONObject) jsonDryrunResults.get(i)).getInt("quantity");
+			
+			// assert that all of the pools proposed provide the requested service level
+			String poolId = jsonPool.getString("id");
+			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", poolId, initialAvailableSubscriptionPools);
+			//dryrunSubscriptionPools.add(subscriptionPool);
+			if (serviceLevel==null || serviceLevel.equals("")) {
+				log.info("Pool '"+poolId+"' returned by the dry-run results (without requesting a service-level) has a value of '"+CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level")+"'.");
+			} else {
+				Assert.assertEquals(CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level"), serviceLevel,"Pool '"+poolId+"' returned by the dry-run results provides the requested service-level '"+serviceLevel+"'.");
+			}
+			Assert.assertNotNull(subscriptionPool,"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+"' was found in the list --available.");
+			Assert.assertTrue(quantity<=(subscriptionPool.quantity.equalsIgnoreCase("unlimited")?quantity+1:Integer.valueOf(subscriptionPool.quantity)),"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+", will supply a quantity ("+quantity+") that is within the available quantity ("+subscriptionPool.quantity+").");
+		}
+		// TODO: This assert is not reliable unless there really is a pool that provides a product that is actually installed.
+		//Assert.assertTrue(jsonDryrunResults.length()>0, "Dry-run results for service-level '"+serviceLevel+"' are not empty.");
+		
+		// assert the the dry-run did not change the current service level
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), initialServiceLevel,"The consumer's current service level setting was not affected by the dry-run query with serviceLevel '"+serviceLevel+"'.");
+		clienttasks.identity(null, null, true, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), initialServiceLevel,"The consumer's current service level setting was not affected by the dry-run query with serviceLevel '"+serviceLevel+"' even after an identity regeneration.");
+		
+		// assert that no new entitlements were actually given
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().containsAll(initialEntitlementCerts), "This system's prior entitlements are unchanged after the dry-run.");
+		
+		// actually autosubscribe with this service-level
+		clienttasks.subscribe(true, serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
+		//clienttasks.subscribe(true,"".equals(serviceLevel)?String.format("\"%s\"", serviceLevel):serviceLevel, (List<String>)null, (List<String>)null, (List<String>)null, null, null, null, null, null, null);
+		
+		// determine the newly granted entitlement certs
+		List<EntitlementCert> newlyGrantedEntitlementCerts = new ArrayList<EntitlementCert>();
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			if (!initialEntitlementCerts.contains(entitlementCert)) {
+				newlyGrantedEntitlementCerts.add(entitlementCert);
+				if (serviceLevel==null || serviceLevel.equals("")) {
+					log.info("The service level provided by the entitlement cert granted after autsubscribe (without specifying a service level) is '"+entitlementCert.orderNamespace.supportLevel+"'.");
+				} else {
+					Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel,"The service level provided by the entitlement cert granted after autsubscribe with service level match.");
+				}
+			}
+		}
+		
+		// assert that one entitlement was granted per dry-run pool proposed
+		Assert.assertEquals(newlyGrantedEntitlementCerts.size(), jsonDryrunResults.length(),"The autosubscribe results granted the same number of entitlements as the dry-run pools returned.");
+
+		// assert that the newly granted entitlements were actually granted from the dry-run pools
+		//for (SubscriptionPool dryrunSubscriptionPool : dryrunSubscriptionPools) {
+		for (int i = 0; i < jsonDryrunResults.length(); i++) {
+			// jsonDryrunResults is an array of two values per entry: "pool" and "quantity"
+			JSONObject jsonPool = ((JSONObject) jsonDryrunResults.get(i)).getJSONObject("pool");
+			Integer quantity = ((JSONObject) jsonDryrunResults.get(i)).getInt("quantity");
+			
+			// assert that all of the pools proposed provide the requested service level
+			String poolId = jsonPool.getString("id");
+			SubscriptionPool dryrunSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", poolId, initialAvailableSubscriptionPools);
+
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(dryrunSubscriptionPool);
+			Assert.assertNotNull(entitlementCert, "Found an entitlement cert corresponding to dry-run pool: "+dryrunSubscriptionPool);
+			Assert.assertTrue(newlyGrantedEntitlementCerts.contains(entitlementCert),"This entitlement cert is among the newly granted entitlement from the autosubscribe.");
+			Assert.assertEquals(Integer.valueOf(entitlementCert.orderNamespace.quantityUsed), quantity, "The actual entitlement quantityUsed matches the dry-run quantity results for pool :"+dryrunSubscriptionPool);
+		}
+		
+		
+		// for the sake of variability, let's unsubscribe from a randomly consumed subscription
+		unsubscribeRandomly();
+		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
 	
 	
@@ -888,7 +1011,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 	protected List<String> systemConsumerIds = new ArrayList<String>();
 	
-	
+	protected void unsubscribeRandomly() {
+		log.info("Unsubscribing from a random selection of entitlements (for the sake of test variability)...");
+		for (EntitlementCert entitlementCert: clienttasks.getCurrentEntitlementCerts()) {
+			if (randomGenerator.nextInt(2)==1) {
+				clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+			}
+		}
+	}
 
 	
 	// Data Providers ***********************************************************************
@@ -1027,8 +1157,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// get all the valid service levels available to this org	
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
+			
+			// Object bugzulla, String serviceLevel
 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
 		}
+		// throw in null and "" as a possible service level
+		ll.add(Arrays.asList(new Object[] {null,	null}));
+		ll.add(Arrays.asList(new Object[] {null,	""}));
 		
 		return ll;
 	}

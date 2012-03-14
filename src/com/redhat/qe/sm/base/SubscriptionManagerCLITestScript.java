@@ -166,20 +166,21 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				servertasks.statusRelease		= jsonStatus.getString("release");
 				servertasks.statusResult		= jsonStatus.getBoolean("result");
 				servertasks.statusVersion		= jsonStatus.getString("version");
+				servertasks.statusTimeUTC		= jsonStatus.getString("timeUTC");
 				try {
 				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
 				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
-				/*
-				# curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
-				{
-				    "release": "1", 
-				    "result": true, 
-				    "standalone": true, 
-				    "version": "0.4.25"
-				}
-				*/
 
-				log.info("Candlepin server '"+sm_serverHostname+"' is running release '"+servertasks.statusRelease+"' version '"+servertasks.statusVersion+"'.");
+				//[root@jsefler-r63-server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -mjson.tool
+				//{
+				//    "release": "1", 
+				//    "result": true, 
+				//    "standalone": true, 
+				//    "timeUTC": "2012-03-08T18:58:07.688+0000", 
+				//    "version": "0.5.24"
+				//}
+
+				log.info("Candlepin server '"+sm_serverHostname+"' is running: release="+servertasks.statusRelease+" version="+servertasks.statusVersion+" standalone="+servertasks.statusStandalone+" timeUTC="+servertasks.statusTimeUTC);
 				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
 				Assert.assertTrue(servertasks.statusRelease.matches("\\d+"), "Candlepin release matches d+");	// https://bugzilla.redhat.com/show_bug.cgi?id=703962
 				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
@@ -234,6 +235,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.removeAllCerts(true,true, false);
 		smt.removeAllFacts();
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
+		smt.cloneRhnDefinitions(sm_rhnDefinitionsGitRepository);
 		
 		// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
 		log.info("Copying Candlepin cert onto client to enable certificate validation...");

@@ -225,13 +225,13 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		
 		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		//regexes.put("subscriptionName",			"ProductName:(.*)");	// FIXME: truncates subscriptionName value when it spans multiple lines FIXED below
-		regexes.put("subscriptionName",			"ProductName:(.*(\\n.*?)+)^\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+: represents the start of the next property so as to capture a multi-line value
-		regexes.put("productId",				"ProductId:(.*)");
-		regexes.put("poolId",					"PoolId:(.*)");
+		regexes.put("subscriptionName",			"Product Name:(.*(\\n.*?)+)^\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+: represents the start of the next property so as to capture a multi-line value
+		regexes.put("productId",				"Product Id:(.*)");
+		regexes.put("poolId",					"Pool Id:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
 		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
 		regexes.put("endDate",					"Expires:(.*)");
-		regexes.put("machineType",				"MachineType:(.*)");
+		regexes.put("machineType",				"Machine Type:(.*)");
 	
 		List<Map<String,String>> listOfAvailableSubscriptionMaps = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
