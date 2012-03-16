@@ -138,7 +138,9 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 //	}
 	
 	
-	
+	// Candidates for an automated Test:
+	// TODO Bug 734474 - better error message for missing enviroment on katello
+	// TODO Bug 738322 - Katello returning inaccurate message via subscription-manager when user has incorrect credentials 
 	
 	// Configuration methods ***********************************************************************
 	
