@@ -19,6 +19,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
@@ -486,10 +487,19 @@ public class SubscriptionManagerTasks {
 		String rhsmcertdLogMarker = System.currentTimeMillis()+" Testing service rhsmcertd restart...";
 		RemoteFileTasks.markFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker);
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId="804227";  // may also need to include 804228
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Restart rhsmcertd has no workaround for Bugzilla "+bugId+".");
+		}
+		// END OF WORKAROUND
+		
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=691137 - jsefler 03/26/2011
 		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="691137"; 
+			/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA
+			/*String*/ bugId="691137";
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				RemoteFileTasks.runCommandAndWait(sshCommandRunner,"service rhsmcertd restart", LogMessageUtil.action());
@@ -514,7 +524,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
+		/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA
 		String bugId1="752572"; 
 		String bugId2="759199"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
