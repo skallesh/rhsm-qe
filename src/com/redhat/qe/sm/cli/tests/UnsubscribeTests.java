@@ -64,7 +64,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Malicious Test - Unsubscribe and then attempt to reuse the revoked entitlement cert.",
-			groups={"AcceptanceTests","blockedByBug-584137", "blockedByBug-602852", "blockedByBug-672122"},
+			groups={"AcceptanceTests","blockedByBug-584137","blockedByBug-602852","blockedByBug-672122","blockedByBug-804227"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	@ImplementsNitrateTest(caseId=41903)
 	public void UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test(SubscriptionPool subscriptionPool){

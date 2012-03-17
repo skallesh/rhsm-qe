@@ -40,7 +40,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// Test methods ***********************************************************************
 
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
-			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test"},
+			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227"},
 			dataProvider="getAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41696,fromPlan=2479)
@@ -176,7 +176,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	
 	@Test(	description="subscription-manager content flag : Default content flag should enable",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-804227"},
 	        enabled=true)
 	@ImplementsNitrateTest(caseId=47578,fromPlan=2479)
 	public void VerifyYumRepoListsEnabledContent() throws JSONException, Exception{
