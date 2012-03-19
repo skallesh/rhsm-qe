@@ -1395,35 +1395,35 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
 					bugzilla = new BlockedByBzBug("786278");
 				}
-				if (rhnChannel.endsWith("-beta")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+				if (rhnChannel.endsWith("-beta") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786203 - all RHN *beta Channels in channel-cert-mapping.txt are mapped to "none" instead of valid productId
 					bugzilla = new BlockedByBzBug("786203");
 				}			
-				if (rhnChannel.endsWith("-debuginfo")) { 
+				if (rhnChannel.endsWith("-debuginfo") && clienttasks.redhatReleaseX.equals("5")) { 
 					// Bug 786140 - RHN Channels for "*debuginfo" are missing from the channel-cert-mapping.txt 
 					bugzilla = new BlockedByBzBug("786140");
 				}
-				if (rhnChannel.equals("rhel-x86_64-server-optional-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-server-sfs-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-server-ha-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-server-rs-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-server-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-server-6-rhevh") ||
-					rhnChannel.equals("rhel-x86_64-server-6-rhevm-3") ||
-					rhnChannel.equals("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
-					rhnChannel.equals("rhel-x86_64-server-sjis-6") ||
-					rhnChannel.equals("rhel-x86_64-server-sap-6") ||
-					rhnChannel.equals("rhel-x86_64-server-lb-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-workstation-sfs-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-workstation-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-workstation-optional-6-htb") ||
-					rhnChannel.equals("rhel-x86_64-rhev-mgmt-agent-6") ||
-					rhnChannel.equals("rhel-i386-server-6-cf-tools-1") ||
-					rhnChannel.equals("rhel-x86_64-server-6-cf-tools-1") ||
-					rhnChannel.equals("rhel-x86_64-server-6-cf-ae-1") ||
-					rhnChannel.equals("rhel-x86_64-server-6-cf-ce-1") ||
-					rhnChannel.equals("rhel-x86_64-server-6-cf-se-1") ||
-					rhnChannel.equals("sam-rhel-x86_64-server-6-htb")) { 
+				if (rhnChannel.startsWith("rhel-x86_64-server-optional-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sfs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-ha-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-rs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-rhevh") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-rhevm-3-jboss-5") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sjis-6") ||
+					rhnChannel.startsWith("rhel-x86_64-server-sap-6") ||
+					rhnChannel.startsWith("rhel-x86_64-server-lb-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-workstation-sfs-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-workstation-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-workstation-optional-6-htb") ||
+					rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-6") ||
+					rhnChannel.startsWith("rhel-i386-server-6-cf-tools-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-tools-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ae-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-ce-1") ||
+					rhnChannel.startsWith("rhel-x86_64-server-6-cf-se-1") ||
+					rhnChannel.startsWith("sam-rhel-x86_64-server-6-htb") || rhnChannel.startsWith("sam-rhel-x86_64-server-6-beta")) { 
 					// Bug 799152 - subscription-manager-migration-data is missing some product certs for RHN Channels in product-baseline.json
 					bugzilla = new BlockedByBzBug("799152");
 				}
