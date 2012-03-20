@@ -59,6 +59,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :contain-text
                                     :text-in-subscription
                                     :unsubscribe
+                                    :system-preferences
                                     :view-system-facts
                                     :proxy-configuration
                                     :import-certificate
@@ -75,7 +76,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
         {:redhat-login "account_login"
          :password "account_password"
          :system-name "consumer_name"
-         :automatically-subscribe "auto_bind"
+         :skip-autobind "auto_bind"
          :register "register_button"
          :register-cancel "cancel_button"
          :owners "ownerSelectVbox"
