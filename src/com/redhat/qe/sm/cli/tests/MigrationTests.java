@@ -24,6 +24,7 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BlockedByBzBug;
 import com.redhat.qe.auto.testng.BzChecker;
@@ -158,7 +159,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests","blockedByBug-782208"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=130940)
 	public void VerifyMigrationProductCertsSupportThisSystemsRhelVersion_Test() {
 		
 		// process all the migration product cert files into ProductCerts and assert their version
@@ -246,6 +247,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
+	@ImplementsNitrateTest(caseId=131567)
+	//@ImplementsNitrateTest(caseId=130760)
+	//@ImplementsNitrateTest(caseId=130758)
 	public void InstallNumMigrateToRhsmWithInstNumber_Test(Object bugzilla, String instNumber) throws JSONException {
 		InstallNumMigrateToRhsmWithInstNumber(instNumber);
 	}
@@ -317,6 +321,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests","InstallNumMigrateToRhsm_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
+	@ImplementsNitrateTest(caseId=130760)
 	public void InstallNumMigrateToRhsm_Test() throws JSONException {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		if (RemoteFileTasks.testFileExists(client, machineInstNumberFile)==0 &&
@@ -400,6 +405,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			dataProvider="InstallNumMigrateToRhsmWithInvalidInstNumberData",
 			enabled=true)
+	@ImplementsNitrateTest(caseId=130760)
 	public void InstallNumMigrateToRhsmWithInvalidInstNumber_Test(Object bugzilla, String command, Integer expectedExitCode, String expectedStdout, String expectedStderr) {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is applicable to RHEL5 only.");
 		SSHCommandResult result = client.runCommandAndWait(command);
@@ -452,6 +458,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
+	@ImplementsNitrateTest(caseId=130763)
 	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, List<String> expectedMigrationProductCertFilenames, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
@@ -600,6 +607,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
+	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
 	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, List<String> expectedMigrationProductCertFilenames) {
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
@@ -696,6 +704,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
+	@ImplementsNitrateTest(caseId=130765)
 	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, List<String> expectedProductCertFilenames) {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
@@ -724,6 +733,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-789008"},
 			dependsOnMethods={},
 			enabled=true)
+	@ImplementsNitrateTest(caseId=136404)
 	public void RhnMigrateClassicToRhsmWithInvalidCredentials_Test() {
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions("foo","bar",null);
