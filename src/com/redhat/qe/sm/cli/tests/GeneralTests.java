@@ -118,6 +118,7 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --installed --servicelevel=foo",		new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 
 		return ll;
 	}

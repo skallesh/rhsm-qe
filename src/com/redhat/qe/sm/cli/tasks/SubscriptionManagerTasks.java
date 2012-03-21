@@ -2268,22 +2268,24 @@ public class SubscriptionManagerTasks {
 	 * list without asserting results
 	 * @param all TODO
 	 * @param available TODO
-	 * @param ondate TODO
 	 * @param consumed TODO
 	 * @param installed TODO
+	 * @param servicelevel TODO
+	 * @param ondate TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult list_(Boolean all, Boolean available, String ondate, Boolean consumed, Boolean installed, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult list_(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;		command += " list";	
 		if (all!=null && all)				command += " --all";
 		if (available!=null && available)	command += " --available";
-		if (ondate!=null)					command += " --ondate="+ondate;
 		if (consumed!=null && consumed)		command += " --consumed";
 		if (installed!=null && installed)	command += " --installed";
+		if (ondate!=null)					command += " --ondate="+ondate;
+		if (servicelevel!=null)				command += " --servicelevel="+(servicelevel.equals("")?"\"\"":servicelevel);	// quote an empty string
 		if (proxy!=null)					command += " --proxy="+proxy;
 		if (proxyuser!=null)				command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
@@ -2297,7 +2299,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list_(null,null,null,null, Boolean.TRUE, null, null, null);
+		SSHCommandResult sshCommandResult = list_(null,null,null,Boolean.TRUE, null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
 
@@ -2317,7 +2319,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
@@ -2335,11 +2337,11 @@ public class SubscriptionManagerTasks {
 		String bugId="638266"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null);
+			return list_(Boolean.FALSE,Boolean.TRUE,null, null, null, null, null, null, null);
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null);
 		
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
@@ -2353,7 +2355,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list_(null,null,null, Boolean.TRUE, null, null, null, null);
+		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed command indicates a success.");
@@ -2986,18 +2988,18 @@ public class SubscriptionManagerTasks {
 		Assert.fail("Do not know how to assert subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively when registered as type="+currentlyRegisteredType);
 		return poolsBeforeSubscribe;
 	}
-//	public void subscribeToAllOfTheCurrentlyAvailableSubscriptionPools() {
-//
-//		// assemble a list of all the available SubscriptionPool ids
-//		List <Integer> poolIds = new ArrayList<Integer>();
-//		for (SubscriptionPool pool : getCurrentlyAvailableSubscriptionPools()) {
-//			poolIds.add(pool.poolId);
-//		}
-//		if (!poolIds.isEmpty()) subscribe(poolIds, null, null, null, null);
-//		
-//		// assert
-//		assertNoAvailableSubscriptionPoolsToList("Asserting that no available subscription pools remain after simultaneously subscribing to them all.");
-//	}
+	public void subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively() {
+
+		// assemble a list of all the available SubscriptionPool ids
+		List<String> poolIds = new ArrayList<String>();
+		for (SubscriptionPool pool : getCurrentlyAllAvailableSubscriptionPools()) {
+			poolIds.add(pool.poolId);
+		}
+		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null);
+		
+		// assert
+		assertNoAvailableSubscriptionPoolsToList(true,"Asserting that no available subscription pools remain after simultaneously subscribing to them all available.");
+	}
 	
 	public void assertNoAvailableSubscriptionPoolsToList(boolean ignoreMuliEntitlementSubscriptionPools, String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;

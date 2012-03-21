@@ -30,6 +30,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 	public Boolean isActive;
 	public Calendar startDate;
 	public Calendar endDate;
+	public String serviceLevel;
+	public String serviceType;
 	
 	public SubscriptionPool fromSubscriptionPool;
 	
@@ -84,6 +86,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 		if (isActive != null)		string += String.format(" %s='%s'", "isActive",isActive);
 		if (startDate != null)		string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)		string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
+		if (serviceLevel != null)	string += String.format(" %s='%s'", "serviceLevel",serviceLevel);
+		if (serviceType != null)	string += String.format(" %s='%s'", "serviceType",serviceType);
 		if (fromSubscriptionPool != null)		string += String.format(" %s='%s'", "fromPool",fromSubscriptionPool);
 
 		return string.trim();
@@ -158,6 +162,18 @@ public class ProductSubscription extends AbstractCommandLineData {
 		QuantityUsed:       	1                        
 		Begins:             	04/13/2011               
 		Expires:            	09/12/2012  
+		
+		
+		Product Name:         	Awesome OS Server Bits   
+		Contract Number:      	102                      
+		Account Number:       	12331131231              
+		Serial Number:        	4600280714779411996      
+		Active:               	True                     
+		Quantity Used:        	1                        
+		Service Level:        	                         
+		Service Type :        	                         
+		Begins:               	02/18/2012               
+		Expires:              	04/18/2013  
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -170,6 +186,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 		regexes.put("serialNumber",			"Serial Number:(.*)");
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("quantityUsed",			"Quantity Used:(.*)");
+		regexes.put("serviceLevel",			"Service Level:(.*)");
+		regexes.put("serviceType",			"Service Type:(.*)");
 		regexes.put("startDate",			"Begins:(.*)");
 		regexes.put("endDate",				"Expires:(.*)");
 		

@@ -34,7 +34,8 @@ public class SubscriptionPool extends AbstractCommandLineData {
 	public Boolean multiEntitlement;
 	public Calendar endDate;
 	public String machineType;
-
+	public String serviceLevel;
+	public String serviceType;
 	
 	public Calendar startDate;
 	public Boolean activeSubscription;
@@ -148,7 +149,8 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		if (startDate != null)			string += String.format(" %s='%s'", "startDate",formatDateString(startDate));
 		if (endDate != null)			string += String.format(" %s='%s'", "endDate",formatDateString(endDate));
 		if (machineType != null)		string += String.format(" %s='%s'", "machineType",machineType);
-
+		if (serviceLevel != null)		string += String.format(" %s='%s'", "serviceLevel",serviceLevel);
+		if (serviceType != null)		string += String.format(" %s='%s'", "serviceType",serviceType);
 
 		return string.trim();
 	}
@@ -219,6 +221,28 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		Multi-Entitlement: 	No                       
 		Expires:           	09/18/2012               
 		MachineType:       	physical  
+		
+		
+		Product Name:         	Awesome OS Server Bundled (2 Sockets, Standard Support)
+		Product Id:           	awesomeos-server-2-socket-std
+		Pool Id:              	8a90f814362d6d6d01362d6e90e702fa
+		Quantity:             	5                        
+		Service Level:        	Standard                 
+		Service Type:        	L1-L3                    
+		Multi-Entitlement:    	No                       
+		Expires:              	04/18/2013               
+		Machine Type:         	physical                 
+		
+		Product Name:         	Awesome OS with up to 4 virtual guests
+		Product Id:           	awesomeos-virt-4         
+		Pool Id:              	8a90f814362d6d6d01362d6e9607044d
+		Quantity:             	5                        
+		Service Level:        	                         
+		Service Type:        	                         
+		Multi-Entitlement:    	Yes                      
+		Expires:              	04/18/2013               
+		Machine Type:         	physical  
+		
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -228,8 +252,10 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		regexes.put("subscriptionName",			"Product Name:(.*(\\n.*?)+)^\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+: represents the start of the next property so as to capture a multi-line value
 		regexes.put("productId",				"Product Id:(.*)");
 		regexes.put("poolId",					"Pool Id:(.*)");
-		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
 		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
+		regexes.put("serviceLevel",				"Service Level:(.*)");
+		regexes.put("serviceType",				"Service Type:(.*)");
+		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
 		regexes.put("endDate",					"Expires:(.*)");
 		regexes.put("machineType",				"Machine Type:(.*)");
 	
