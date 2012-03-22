@@ -784,7 +784,7 @@ Expected Results:
 		
 		// assert results
 		Assert.assertEquals(result.getStderr().trim(), "ERROR: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(1),"Exit code from register to environment when the candlepin server does NOT support environments.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
 	}
 	
 	@Test(	description="subscription-manager: attempt register to --environment without --org option should fail",
