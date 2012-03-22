@@ -536,7 +536,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 709412 - subscription manager cli uses product name comparisons in the list command
 	// TODO Bug 710141 - OwnerInfo needs to only show info for pools that are active right now, for all the stats
 	// TODO Bug 734880 - subscription-manager list --installed reports differently between LEGACY vs NEW SKU subscriptions  (Note: Bryan says that this had nothing to do with Legacy vs Non Legacy - it was simply a regression in bundled products when stacking was introduced)
-	
+	// TODO Bug 803386 - display product ID in product details pane on sm-gui and cli
 	
 	
 	
