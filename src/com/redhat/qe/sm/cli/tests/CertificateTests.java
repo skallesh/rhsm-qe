@@ -250,7 +250,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735
-
+	// TODO Bug 805690 - gpgcheck for repo metadata is ignored 
 	
 	
 	
