@@ -12,6 +12,11 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
      (zipmap coll
 	     (for [keyword coll] (->> (split (name keyword) #"-") (map word-fn) (join " "))))))
 
+(defn text-field [coll]
+  (zipmap coll
+          (for [keyword coll]
+            (->> (conj (split (name keyword) #"-") "text") (map capitalize) (join  " ")))))
+
 (defn define-elements [window m]
   (zipmap (keys m) (for [v (vals m)] (Element. window v))))
 
@@ -49,7 +54,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :my-subscriptions
                                     :my-installed-software
                                     :search
-                                    :subscribe
+                                    ;this is commented out until 803374 is decided on:
+                                    ;:subscribe
                                     :all-subscriptions-view
                                     :my-subscriptions-view
                                     :installed-view
@@ -70,7 +76,30 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :register-system "Register"
                      :redeem "Redeem a Subscription"
                      :unregister-system "Unregister"
-                     :update-certificates "Update"}))
+                     :update-certificates "Update"
+                     ;these two are a temporary fix for 803374:
+                     :subscribe "All Available Subscribe"
+                     :autosubscribe "Subscribe"}
+                    ;dynamic text fields for details sections:
+                    (text-field [:certificate-status
+                                 :installed-subscription
+                                 :product
+                                 :support-type
+                                 :support-type
+                                 :support-level
+                                 :provides-management
+                                 :account
+                                 :start-date
+                                 :end-date
+                                 :subscription
+                                 :all-available-support-type
+                                 :all-available-support-level
+                                 :all-available-subscription])
+                    {:product-id "Product ID Text"
+                     :stacking-id "Stacking ID Text"
+                     :contract-number "Contract Number"
+                     :bundled-products "Bundeled Products Table"
+                     :all-available-bundled-products "All Available Bundled Products Table"}))
 		    {:main-tabgroup (TabGroup. (windows :main-window) "ptl0")}
     (define-elements (windows :register-dialog)
         {:redhat-login "account_login"
@@ -109,6 +138,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :warning-dialog)
       {:warn-ok "OK"
        :warn-cancel "Cancel"})
+    ; subscription-assistant dialog no longer exists
     (define-elements (windows :subscription-assistant-dialog)
       {:first-date "*first date of invalid entitlements*"
        :different-date "A different date:"
