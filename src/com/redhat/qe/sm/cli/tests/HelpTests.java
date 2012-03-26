@@ -472,6 +472,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--consumed");
 		options.add("--available");
 		options.add("--all");
+		options.add("--servicelevel=SERVICELEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");

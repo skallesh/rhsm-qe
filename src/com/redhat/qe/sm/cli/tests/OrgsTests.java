@@ -147,7 +147,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 	
 		
 	// Candidates for an automated Test:
-	
+	// TODO Bug 789344 - subscription-manager doesn't support spaces in --org parameter unless --environment parameter is given 
 	
 	// Configuration methods ***********************************************************************
 	

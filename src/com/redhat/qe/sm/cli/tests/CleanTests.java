@@ -75,6 +75,9 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		
 	}
 	
+	// Candidates for an automated Test:
+	// TODO Bug 781510 - 'subscription-manager clean' should delete redhat.repo
+	
 	
 	// Configuration methods ***********************************************************************
 	

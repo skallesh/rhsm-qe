@@ -987,6 +987,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions
+	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.
+	
 	
 	// Configuration Methods ***********************************************************************
 	

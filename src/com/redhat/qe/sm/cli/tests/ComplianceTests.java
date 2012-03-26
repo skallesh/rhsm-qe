@@ -3,9 +3,14 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -314,6 +319,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
 	protected final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
 	protected final String productCertDirForAllProductsSubscribableInTheFuture = "/tmp/sm-allProductsSubscribableInTheFuture";
+	protected final String productCertDirForAllProductsSubscribableByOneCommonServiceLevel = "/tmp/sm-allProductsSubscribableByOneCommonServiceLevel";
+	protected final String productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel = "/tmp/sm-allProductsSubscribableByMoreThanOneCommonServiceLevel";
+	public String allProductsSubscribableByOneCommonServiceLevelValue=null;
+	public List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelValues=null;
 	protected String productCertDir = null;
 	protected final String rhsmComplianceDStdoutMessageWhenNonCompliant = "System has one or more certificates that are not valid";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
@@ -338,37 +347,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public void setupProductCertDirsBeforeClass() throws ParseException, JSONException, Exception {
 		
 		// clean out the productCertDirs
-		for (String productCertDir : new String[]{productCertDirForSomeProductsSubscribable,productCertDirForAllProductsSubscribable,productCertDirForNoProductsSubscribable,productCertDirForNoProductsinstalled,productCertDirForAllProductsSubscribableInTheFuture}) {
+		for (String productCertDir : new String[]{
+				productCertDirForSomeProductsSubscribable,
+				productCertDirForAllProductsSubscribable,
+				productCertDirForNoProductsSubscribable,
+				productCertDirForNoProductsinstalled,
+				productCertDirForAllProductsSubscribableInTheFuture,
+				productCertDirForAllProductsSubscribableByOneCommonServiceLevel,
+				productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel}) {
 			RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+productCertDir, 0);
 			RemoteFileTasks.runCommandAndAssert(client, "mkdir "+productCertDir, 0);
 		}
 
-// THIS FORMER IMPLEMENTATION DEPENDS ON AUTOSUBSCRIBE WORKING
-//		// autosubscribe
-////	clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
-//	clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, (String)null, true, null, null, null);
-//	
-//	// distribute a copy of the product certs amongst the productCertDirs
-//	List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-//	for (File productCertFile : clienttasks.getCurrentProductCertFiles()) {
-//		ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
-//		
-//		// WORKAROUND NEEDED FOR Bug 733805 - the name in the subscription-manager installed product listing is changing after a valid subscribe is performed (https://bugzilla.redhat.com/show_bug.cgi?id=733805)
-//		List<EntitlementCert> correspondingEntitlementCerts = clienttasks.getEntitlementCertsCorrespondingToProductCert(productCert);
-//		
-//		if (correspondingEntitlementCerts.isEmpty()) {
-//			// "Not Subscribed" case...
-//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForNoProductsSubscribable, 0);
-//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
-//		} else {
-//			// "Subscribed" case...
-//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForAllProductsSubscribable, 0);
-//			RemoteFileTasks.runCommandAndAssert(client, "cp "+productCertFile+" "+productCertDirForSomeProductsSubscribable, 0);
-//		}
-//		// TODO "Partially Subscribed" case
-//		//InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToEntitlementCert(correspondingEntitlementCert);
-//	}
-		
 		// register and subscribe to all available subscriptions
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -412,7 +402,137 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		
+		// determine the serviceLevel and all the products that are subscribable by one common service level 
+		Map<String,Set<String>> serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());
+//debugTesting serviceLevelToProductIdsMap.get("Premium").add("17000");
+		Map<String,Set<String>> productIdsToServiceLevelsMap = getInvertedMap(serviceLevelToProductIdsMap);
+		Set<String> allProductsSubscribableByOneCommonServiceLevelCandidates = productIdsToServiceLevelsMap.keySet();
+		boolean allProductsSubscribableByOneCommonServiceLevelDeterminable=true;
+		OUT: do {
+			String serviceLevelCandidate = getKeyToLongestMap(serviceLevelToProductIdsMap);
+			// does this candidate have all candidate products?
+			if (serviceLevelToProductIdsMap.get(serviceLevelCandidate).containsAll(allProductsSubscribableByOneCommonServiceLevelCandidates)) {
+				// is there another serviceLevel that has all candidate products?
+				for (String serviceLevel : serviceLevelToProductIdsMap.keySet()) {
+					if (serviceLevel.equals(serviceLevelCandidate)) continue;
+					if (serviceLevelToProductIdsMap.get(serviceLevel).size()==serviceLevelToProductIdsMap.get(serviceLevelCandidate).size()) {
+						allProductsSubscribableByOneCommonServiceLevelDeterminable = false;
+						break OUT;
+					}
+				}
+				allProductsSubscribableByOneCommonServiceLevelValue = serviceLevelCandidate;
+				
+			} else {
+				// pluck the first candidate product that is not in the serviceLevelCandidate map of products
+				for (String productId : (String[])allProductsSubscribableByOneCommonServiceLevelCandidates.toArray(new String[]{})) {
+					if (!serviceLevelToProductIdsMap.get(serviceLevelCandidate).contains(productId)) {
+						allProductsSubscribableByOneCommonServiceLevelCandidates.remove(productId);
+						for (String serviceLevel : serviceLevelToProductIdsMap.keySet()) {
+							serviceLevelToProductIdsMap.get(serviceLevel).remove(productId);
+						}
+						break;
+					}
+				}
+			}
+		} while (allProductsSubscribableByOneCommonServiceLevelValue==null && allProductsSubscribableByOneCommonServiceLevelDeterminable);
+		// copy the products to productCertDirForAllProductsSubscribableByOneCommonServiceLevel
+		if (allProductsSubscribableByOneCommonServiceLevelDeterminable) {
+			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+				if (allProductsSubscribableByOneCommonServiceLevelCandidates.contains(productCert.id)) {
+					RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribableByOneCommonServiceLevel, 0);
+				}
+			}
+		} else {
+			log.warning("Cannot determine a set of products where allProductsSubscribableByOneCommonServiceLevel.");
+		}
+		
+		
+		// determine the serviceLevels and all the products that are subscribable by more than one common service level
+		serviceLevelToProductIdsMap = getServiceLevelToProductIdsMapFromEntitlementCerts(clienttasks.getCurrentEntitlementCerts());
+
+		productIdsToServiceLevelsMap = getInvertedMap(serviceLevelToProductIdsMap);
+		List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates = new ArrayList<String>();
+		for (String productId : productIdsToServiceLevelsMap.keySet()) {
+			if (productIdsToServiceLevelsMap.get(productId).size() >1) allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.add(productId);
+		}
+		if (!allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.isEmpty()) {
+
+			// randomly choose the service levels from the candidates
+			allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(productIdsToServiceLevelsMap.get(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.get(randomGenerator.nextInt(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.size()))).toArray(new String[]{}));
+//debugTesting allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(new String[]{"None", "Standard", "Premium"});
+			// pluck out the productIds that do not map to all of the values in allProductsSubscribableByMoreThanOneCommonServiceLevelValues
+			for (String  productId : productIdsToServiceLevelsMap.keySet()) {
+				if (!productIdsToServiceLevelsMap.get(productId).containsAll(allProductsSubscribableByMoreThanOneCommonServiceLevelValues)) {
+					allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.remove(productId);
+				}
+			}
+			
+			// copy the products to productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
+			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
+				if (allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.contains(productCert.id)) {
+					RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel, 0);
+				}
+			}
+		} else {
+			log.warning("Cannot determine a set of products where allProductsSubscribableByMoreThanOneCommonServiceLevel.");
+		}
+		
+		
 		this.productCertDir = clienttasks.productCertDir;
+	}
+	protected String getKeyToLongestMap (Map<String,Set<String>> map) {
+		int maxLength=0;
+		String maxKey=null;
+		for (String key : map.keySet()) {
+			if (map.get(key).size()>maxLength) {
+				maxLength = map.get(key).size();
+				maxKey = key;
+			}
+		}
+		return maxKey;
+	}
+	protected Map<String,Set<String>> getInvertedMap(Map<String,Set<String>> serviceLevelToProductIdsMap) {
+		Map<String,Set<String>> productIdsToServiceLevelsMap = new HashMap<String,Set<String>>();
+		for (String serviceLevel : serviceLevelToProductIdsMap.keySet()) {
+			for (String productId : serviceLevelToProductIdsMap.get(serviceLevel)) {
+				if (!productIdsToServiceLevelsMap.containsKey(productId)) productIdsToServiceLevelsMap.put(productId, new HashSet<String>());
+				HashSet<String> serviceLevelSet = (HashSet<String>) productIdsToServiceLevelsMap.get(productId);
+				serviceLevelSet.add(serviceLevel);
+			}
+		}
+		return productIdsToServiceLevelsMap;
+	}
+	protected Map<String,Set<String>> getServiceLevelToProductIdsMapFromEntitlementCerts(List<EntitlementCert> entitlementCerts) {
+	
+		//{Standard=[37065, 27060, 37069, 37068, 37067, 37070,        37060], 
+		// None    =[37060], 
+		// Premium =[37065,        37069, 37068, 37067, 37070,        37060]}
+		//
+		//
+		//{27060=[Standard],
+		// 37065=[Standard, Premium],
+		// 37069=[Standard, Premium],
+		// 37068=[Standard, Premium],
+		// 37067=[Standard, Premium],
+		// 37070=[Standard, Premium],
+		// 37060=[Standard, Premium, None]}
+		
+		// create maps of serviceLevel-to-productIds and productIds-to-serviceLevel
+		Map<String,Set<String>> serviceLevelToProductIdsMap = new HashMap<String,Set<String>>();
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			String serviceLevel = entitlementCert.orderNamespace.supportLevel;
+			
+			// skip all entitlements without a service level
+			if (serviceLevel==null || serviceLevel.equals("")) continue;
+			
+			if (!serviceLevelToProductIdsMap.containsKey(serviceLevel)) serviceLevelToProductIdsMap.put(serviceLevel, new HashSet<String>());
+			HashSet<String> productIdSet = (HashSet<String>) serviceLevelToProductIdsMap.get(serviceLevel);		
+			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
+	//debugTesting if (productNamespace.id.equals("27060")) continue;
+				productIdSet.add(productNamespace.id);
+			}
+		}
+		return serviceLevelToProductIdsMap;
 	}
 	
 	@AfterClass(groups={"setup"},alwaysRun=true)
@@ -464,34 +584,33 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableInTheFuture")
 	protected void configureProductCertDirForAllProductsSubscribableInTheFuture() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
-//		configureProductCertDirAfterClass();
-////		for (List<Object> futureJSONPoolsDataRow : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
-////			JSONObject futureJSONPool = (JSONObject)futureJSONPoolsDataRow.get(0);
-////			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(new SubscriptionPool(futureJSONPool.getString("productId"), futureJSONPool.getString("id")))) {
-////				RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
-////			}
-////		}
-//		List<File> productCertFilesCopied = new ArrayList<File>();
-//		futureSystemSubscriptionPools = new ArrayList<SubscriptionPool>();
-//		for (List<Object> futureSystemSubscriptionPoolsDataRow : getAllFutureSystemSubscriptionPoolsDataAsListOfLists()) {
-//			SubscriptionPool futureSystemSubscriptionPool = (SubscriptionPool)futureSystemSubscriptionPoolsDataRow.get(0);
-//			for (ProductCert productCert : clienttasks.getCurrentProductCertsCorrespondingToSubscriptionPool(futureSystemSubscriptionPool)) {
-//				if (!productCertFilesCopied.contains(productCert.file)) {
-//					RemoteFileTasks.runCommandAndAssert(client, "cp -n "+productCert.file+" "+productCertDirForAllProductsSubscribableInTheFuture, 0);
-//					productCertFilesCopied.add(productCert.file);
-//					if (!futureSystemSubscriptionPools.contains(futureSystemSubscriptionPool)) {
-//						futureSystemSubscriptionPools.add(futureSystemSubscriptionPool);
-//					}
-//				}
-//			}
-//		}
-		
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableInTheFuture);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableInTheFuture+" | wc -l");
 		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are subscribable to future available subscriptions.");
 		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all subscribable products based on future available subscriptions.");
 	}
+	
+	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel")
+	protected void configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel() {
+		clienttasks.unregister(null, null, null);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableByOneCommonServiceLevel);	
+		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableByOneCommonServiceLevel+" | wc -l");
+		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are autosubscribable via one common service level.");
+		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
+				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all autosubscribable products via one common service level.");
+	}
+	
+	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel")
+	protected void configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel() {
+		clienttasks.unregister(null, null, null);
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel);	
+		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel+" | wc -l");
+		if (Integer.valueOf(r.getStdout().trim())==0) throw new SkipException("Could not find any installed product certs that are autosubscribable via more than one common service level.");
+		Assert.assertTrue(Integer.valueOf(r.getStdout().trim())>0,
+				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all autosubscribable products via more than one common service level.");
+	}
+
 	// Data Providers ***********************************************************************
 
 	
