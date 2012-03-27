@@ -730,7 +730,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid credentials",
-			groups={"blockedByBug-789008"},
+			groups={"blockedByBug-789008","blockedByBug-807477"},
 			dependsOnMethods={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=136404)
@@ -744,7 +744,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={},
+			groups={"blockedByBug-807477"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
@@ -759,7 +759,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm while already registered to RHSM",
-			groups={},
+			groups={"blockedByBug-807477"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
