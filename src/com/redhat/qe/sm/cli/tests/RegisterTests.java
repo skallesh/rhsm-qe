@@ -187,7 +187,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
-			groups={/*,"blockedByBug-795798"*/},
+			groups={"blockedByBug-795798"},
 			enabled=true)
 	public void RegisterWithAutosubscribeAndUnavailableServicelevel_Test() throws JSONException, Exception {
 

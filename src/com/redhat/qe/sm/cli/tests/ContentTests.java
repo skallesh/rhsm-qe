@@ -381,7 +381,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// how to associate content with product   (see Bug 687970): [jsefler@jsefler ~]$ curl -u admin:admin -k --request POST https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/product/productid/content/fooid&enabled=false
 	// TODO Bug 705068 - product-id plugin displays "duration"
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
-
+	// TODO Bug 806457 - If yum runs with no enabled or active repo's, we delete the product cert 
 	
 	
 	// Configuration Methods ***********************************************************************

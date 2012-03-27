@@ -606,7 +606,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
-			groups={/*blockedByBug-795798*/},
+			groups={"blockedByBug-795798"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithAutoAndUnavailableServiceLevel_Test() {

@@ -42,7 +42,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
 			enabled=true,
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-807407"},
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
@@ -179,7 +179,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
 			enabled=true,
-			groups={"blockedByBug-724809"})
+			groups={"blockedByBug-724809","blockedByBug-807360"})
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsEmptyWhenNotRegistered_Test(){
 		
