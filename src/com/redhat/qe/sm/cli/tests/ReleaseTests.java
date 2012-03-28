@@ -102,15 +102,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after attempting to unset it.");
 	}
 	
-	@Test(	description="assert that a consumer can register with a release value and that subscription-manager release will return the set value",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void GetTheReleaseAfterRegisteringWithTheRelease_Test() {
-		
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,"Foo",(List<String>)null,true,null,null,null, null);		
-		Assert.assertEquals(clienttasks.getCurrentRelease(), "Foo", "The release value retrieved after registering with the release.");
-	}
+
 	
 	
 //	@Test(	description="subscription-manager: service-level --show (when not registered)",
