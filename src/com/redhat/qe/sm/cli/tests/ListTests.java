@@ -55,7 +55,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=41678)
 	public void EnsureAvailableSubscriptionsListed_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		String availableSubscriptionPools = clienttasks.listAvailableSubscriptionPools().getStdout();
 		Assert.assertContainsMatch(availableSubscriptionPools, "Available Subscriptions","" +
 				"Available Subscriptions are listed for '"+sm_clientUsername+"' to consume.");
@@ -103,7 +103,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		String consumedProductSubscription = clienttasks.listConsumedProductSubscriptions().getStdout();
 		Assert.assertContainsMatch(consumedProductSubscription, "No consumed subscription pools to list",
 				"No consumed subscription pools listed for '"+sm_clientUsername+"' after registering (without autosubscribe).");
@@ -117,7 +117,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@ImplementsNitrateTest(caseId=41679)
 	public void EnsureConsumedEntitlementsListed_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		
 		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
 		Assert.assertNotNull(pool, "SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
@@ -136,7 +136,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureInstalledProductsListed_Test() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		String installedProductsAsString = clienttasks.listInstalledProducts().getStdout();
@@ -166,7 +166,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureListAndListInstalledAreTheSame_Test() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 
 		// assert same results when no subscribed to anything...
 		log.info("assert list [--installed] produce same results when not subscribed to anything...");
@@ -261,7 +261,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// register a person
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(username, password, owner, null, ConsumerType.person, null, null, null, null, null, (String)null, null, false, null, null, null);
 
 		// assert that subscriptions with personal productIds are available to this person consumer
 		List<SubscriptionPool> subscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
@@ -287,7 +287,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void EnsureRHELPersonalIsNotAvailableToRegisteredSystem_Test() throws JSONException {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, ConsumerType.system, null, null, null, null, null, (String)null, null, false, null, null, null);
 		SubscriptionPool rhelPersonalPool = null;
 		
 		for (String personProductId : getPersonProductIds()) {
@@ -546,7 +546,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() {
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 	}
 	
 	// NOTE: This method is not necessary, but adds a little more spice to ListAvailableWithFutureOnDate_Test
@@ -706,7 +706,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
 		String org = sm_clientOrg;
 		if (org==null) {
-			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, (String)null, true, false, null, null, null));
+			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
 			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		}
 		// get all the valid service levels available to this org	
@@ -730,7 +730,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register with force and subscribe to all available subscriptions collectively
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, (String)null, true, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
 		String org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		

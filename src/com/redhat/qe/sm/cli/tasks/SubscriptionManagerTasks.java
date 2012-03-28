@@ -585,24 +585,63 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * @return the current release returned by subscription-manager release (must already be registered)
+	 */
+	public String getCurrentRelease() {
+		
+		SSHCommandResult result = release(null, null, null, null, null);
+		
+		//	[root@jsefler-r63-server ~]# subscription-manager release
+		//	Release: foo
+		//	[root@jsefler-r63-server ~]# subscription-manager release
+		//	Release not set
+
+		String release = result.getStdout().replaceFirst(".*:", "").replaceFirst("Release not set", "").trim();
+		
+		return release;
+	}
+	
+	/**
 	 * @return list of the service labels returned by subscription-manager service-level --list (must already be registered)
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
 		SSHCommandResult result = service_level(false, true, null, null, null, null, null, null);
 		
-		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-level --list
-		+-------------------------------------------+
-		          Available Service Levels
-		+-------------------------------------------+
-		Standard
-		None
-		Premium
-		*/
+		//	[root@jsefler-r63-server ~]# subscription-manager service-level --list
+		//	+-------------------------------------------+
+		//	          Available Service Levels
+		//	+-------------------------------------------+
+		//	Standard
+		//	None
+		//	Premium
+		
 		List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
 		
 		return serviceLevels;
+	}
+	
+	/**
+	 * @return list of the releases returned by subscription-manager release --list (must already be registered)
+	 */
+	public List<String> getCurrentlyAvailableReleases() {
+		
+		SSHCommandResult result = release(true,null,null,null,null);
+		
+		//	[root@jsefler-r63-workstation ~]# subscription-manager release --list
+		//	5.7
+		//	5.8
+		//	5Client
+		//	6.0
+		//	6.1
+		//	6.2
+		//	6Workstation
+		List<String> releases =  new ArrayList<String>();
+		for (String release : result.getStdout().trim().split("\\n")) {
+			if (!release.isEmpty())	releases.add(release);
+		}
+		
+		return releases;
 	}
 	
 	/**
@@ -1388,11 +1427,8 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
-	 * @param servicelevel TODO
-	 * @param autoheal TODO
-	 * @throws Exception 
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
@@ -1405,6 +1441,7 @@ public class SubscriptionManagerTasks {
 		if (consumerid!=null)													command += " --consumerid="+consumerid;
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
 		if (servicelevel!=null)													command += " --servicelevel="+servicelevel;
+		if (release!=null)														command += " --release="+release;
 		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+activationkey;
 		if (force!=null && force)												command += " --force";
 		if (proxy!=null)														command += " --proxy="+proxy;
@@ -1461,23 +1498,22 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
-	 * @param servicelevel TODO
-	 * @param autoheal TODO
+	 * @param release TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
 
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 
 		String msg;
-		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	
 		// when already registered, just return without any assertions
 		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1538,11 +1574,11 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -1616,7 +1652,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,null,null,consumerId, null, null, new ArrayList<String>(), null, null, null, null, null);
+		return register(username,password,null,null,null,null,consumerId, null, null, null, new ArrayList<String>(), null, null, null, null, null);
 	}
 	
 	
@@ -1977,6 +2013,74 @@ public class SubscriptionManagerTasks {
 		
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the service-level command indicates a success.");
+		
+		return sshCommandResult; // from the service-level command
+	}
+	
+	
+	// release module tasks ************************************************************
+
+	/**
+	 * release without asserting results
+	 */
+	public SSHCommandResult release_(Boolean list, String set, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " release";
+		if (list!=null && list)			command += " --list";
+		if (set!=null)					command += " --set="+(set.equals("")?"\"\"":set);	// quote an empty string
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager release"
+	 */
+	public SSHCommandResult release(Boolean list, String set, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = release_(list, set, proxy, proxyuser, proxypassword);
+		
+		// assert results...
+//TODO
+//		/*
+//		[root@jsefler-r63-server ~]# subscription-manager service-level --show --list
+//		Current service level: 
+//		+-------------------------------------------+
+//          			Available Service Levels
+//		+-------------------------------------------+
+//		Standard
+//		None
+//		Premium
+//		*/
+//		
+//		// assert the banner
+//		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
+//		if (list!=null && list) {	// when explicitly asked to list
+//			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
+//		} else {
+//			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
+//		}
+//		
+//		// assert the "Current service level: "
+//		String regex = "Current service level: ";
+//		if (show!=null && show) {	// when explicitly asked to show
+//			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
+//		} else if (list!=null && list) {	// when explicitly asked to list but not show
+//			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
+//		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
+//			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
+//		}
+		
+		if (set!=null) {
+		 Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set),"Stdout from release --set with a value.");
+		}
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the release command indicates a success.");
 		
 		return sshCommandResult; // from the service-level command
 	}

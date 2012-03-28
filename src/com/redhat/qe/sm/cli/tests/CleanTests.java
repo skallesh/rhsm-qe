@@ -36,7 +36,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
 		clienttasks.unregister(null, null, null);
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,null,false,null, null, null));
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,false, null, null, null));
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
@@ -69,7 +69,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 			rhsmManageRepo.clear();
 			rhsmManageRepo.add(new String[]{"rhsm", "manage_repos", value});
 			clienttasks.config(null, null, true, rhsmManageRepo);
-			consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, null, null, null, null));
+			consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, null, null, null, null));
 			clienttasks.clean(null, null, null);
 		}
 		
@@ -86,7 +86,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	public void teardownAfterClass() {
 		if (clienttasks!=null) {
 			clienttasks.unregister_(null, null, null);
-			clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, (String)null, Boolean.TRUE, false, null, null, null);
+			clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 			clienttasks.unregister_(null, null, null);
 			consumerId = null;
 		}

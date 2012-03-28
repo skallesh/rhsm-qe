@@ -200,7 +200,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 //		clienttasks.restart_rhsmcertd(null, null, false);
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// assert that the repos list is enabled.
 		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
@@ -241,7 +241,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 //		clienttasks.restart_rhsmcertd(null, null, false);
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 
 		// assert that the repos list is disabled.
 		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
@@ -317,7 +317,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// subscribe to all available subscription so as to populate the redhat.repo file
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();

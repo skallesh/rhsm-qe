@@ -108,7 +108,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 		
 	@BeforeClass(groups="setup")
 	public void registerBeforeClass() throws Exception {
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 		ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 	}
 	

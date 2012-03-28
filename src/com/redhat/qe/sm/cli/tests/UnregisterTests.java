@@ -26,11 +26,11 @@ public class UnregisterTests extends SubscriptionManagerCLITestScript {
 	@ImplementsNitrateTest(caseId=46714)
 	public void RegisterSubscribeAndUnregisterTest() {
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		List<SubscriptionPool> availPoolsBeforeSubscribingToAllPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsIndividually();
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		for (SubscriptionPool afterPool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			SubscriptionPool originalPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", afterPool.poolId, availPoolsBeforeSubscribingToAllPools);
 			Assert.assertEquals(originalPool.quantity, afterPool.quantity,

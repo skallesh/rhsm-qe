@@ -250,6 +250,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("unregister");
 		modules.add("unsubscribe");
 		modules.add("service-level");
+		modules.add("release");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s [options] MODULENAME --help",clienttasks.command);	// prior to Bug 796730 - subscription-manager usage statement
@@ -517,6 +518,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--force");
 		options.add("--activationkey=ACTIVATION_KEYS");
 		options.add("--servicelevel=SERVICE_LEVEL");
+		options.add("--release=RELEASE");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
@@ -597,6 +599,24 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--password=PASSWORD");
 		options.add("--org=ORG");
 		options.add("--show");
+		options.add("--list");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
+		}
+				
+		// subscription-manager release OPTIONS
+		module = "release";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--set=RELEASE");
 		options.add("--list");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();

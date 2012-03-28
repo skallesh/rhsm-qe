@@ -723,11 +723,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		clienttasks.unregister(null, null, null);
 		
 		// register
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		if (client2tasks!=null)	{
 			client2tasks.unregister(null, null, null);
 			if (!sm_client2Username.equals("") && !sm_client2Password.equals(""))
-				client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+				client2tasks.register(sm_client2Username, sm_client2Password, sm_client2Org, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		}
 		
 		// unsubscribe from all consumed product subscriptions and then assemble a list of all SubscriptionPools
@@ -930,7 +930,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// then assemble a list of all consumed ProductSubscriptions
@@ -957,7 +957,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// first make sure we are subscribed to all pools
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 
 		
@@ -1005,7 +1005,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		Calendar now = new GregorianCalendar();
@@ -1202,7 +1202,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		Calendar now = new GregorianCalendar();
@@ -2065,7 +2065,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		for (List<Object> l : getAllFutureJSONSubscriptionsDataAsListOfLists(consumerType)) {
@@ -2097,7 +2097,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
 		Calendar now = new GregorianCalendar();
@@ -2143,7 +2143,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
-		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
 
 		
