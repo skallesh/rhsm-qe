@@ -2076,7 +2076,7 @@ public class SubscriptionManagerTasks {
 //		}
 		
 		if (set!=null) {
-		 Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set),"Stdout from release --set with a value.");
+		 Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set).trim(),"Stdout from release --set with a value.");
 		}
 		
 		// assert the exit code was a success

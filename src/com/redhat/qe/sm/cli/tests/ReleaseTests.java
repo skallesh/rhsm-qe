@@ -20,7 +20,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
  */
 
-@Test(groups={"ReleaseTests","debugTest","AcceptanceTest"})
+@Test(groups={"ReleaseTests","AcceptanceTest"})
 public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 	
@@ -97,8 +97,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
 
 		clienttasks.release(null, "Foo", null, null, null);
-		SSHCommandResult result = clienttasks.release(null, null, null, null, null);
-		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after attempting to unset it.");
+		SSHCommandResult result = clienttasks.release(null, "", null, null, null);
+		//Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after attempting to unset it.");	// DEV choose to implement this differently https://bugzilla.redhat.com/show_bug.cgi?id=807822#c2
 		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after attempting to unset it.");
 	}
 	
