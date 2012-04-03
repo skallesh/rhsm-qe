@@ -805,7 +805,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		
 		for (List<Object> l : getRegisterCredentialsDataAsListOfLists()) {
 			// l contains: String username, String password, String owner
-			if (l.get(2) != null) ll.add(l);
+			if (l.get(2) != null) {
+				if (!l.get(2).equals("null")) {
+					ll.add(l);
+				}
+			}
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}

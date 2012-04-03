@@ -1155,7 +1155,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// what is the consumer's org?
 		String org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 
-		// get all the valid service levels available to this org	
+		// get all the valid service levels available to this org
+ 		if (sm_serverOld) {
+	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
+	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+	 		}
+ 		} else
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
 			
 			// Object bugzulla, String serviceLevel

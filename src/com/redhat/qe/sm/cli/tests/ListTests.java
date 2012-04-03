@@ -553,8 +553,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	@BeforeClass(groups="setup", dependsOnMethods="registerBeforeClass")
 	public void createFutureSubscriptionPoolBeforeClass() throws Exception {
 		// don't bother attempting to create a subscription unless onPremises
-		if (!sm_serverType.equals(CandlepinType.standalone)) return;
-
+//		if (!sm_serverType.equals(CandlepinType.standalone)) return;
+		if (server==null) {
+			log.warning("Skipping createFutureSubscriptionPoolBeforeClass() when server is null.");
+			return;	
+		}
+		
 		// find a randomly available product id
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
@@ -577,8 +581,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<String> providedProductIds = new ArrayList<String>();
 		Map<String,String> attributes = new HashMap<String,String>();
 		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
+		if (server==null) {
+			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
+			return;	
+		}
 //debugTesting if (true) return;
-		
+	
 		// Awesome OS for 0 sockets
 		name = "Awesome OS for 0 sockets";
 		productId = "0-sockets";

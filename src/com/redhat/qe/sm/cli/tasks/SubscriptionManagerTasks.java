@@ -606,7 +606,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
-		SSHCommandResult result = service_level(false, true, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null);
 		
 		//	[root@jsefler-r63-server ~]# subscription-manager service-level --list
 		//	+-------------------------------------------+
@@ -616,7 +616,13 @@ public class SubscriptionManagerTasks {
 		//	None
 		//	Premium
 		
-		List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
+		List<String> serviceLevels = new ArrayList<String>();
+		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
+		
+		//List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
+		for (String serviceLevel : result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) {
+			serviceLevels.add(serviceLevel);
+		}
 		
 		return serviceLevels;
 	}
@@ -1969,7 +1975,7 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-		
+
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
@@ -1993,6 +1999,12 @@ public class SubscriptionManagerTasks {
 		Premium
 		*/
 		
+				
+		if (Boolean.valueOf(System.getProperty("sm.server.old","false"))) {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "ERROR: The service-level command is not supported by the server.");
+			throw new SkipException(sshCommandResult.getStderr().trim());
+ 		}
+ 		 			
 		// assert the banner
 		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
 		if (list!=null && list) {	// when explicitly asked to list
@@ -2045,6 +2057,13 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = release_(list, set, proxy, proxyuser, proxypassword);
 		
 		// assert results...
+		if (list==null)
+		if (Boolean.valueOf(System.getProperty("sm.server.old","false"))) {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "ERROR: The 'release' command is not supported by the server.");
+			throw new SkipException(sshCommandResult.getStderr().trim());
+ 		}
+		
+		
 //TODO
 //		/*
 //		[root@jsefler-r63-server ~]# subscription-manager service-level --show --list
