@@ -337,7 +337,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","blockedByBug-737145"},
+			groups={"AcceptanceTests","blockedByBug-737145","debugTest"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
@@ -356,7 +356,16 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	    // check for excessive blank lines after unregister
 	    clienttasks.unregister(null,null,null);
 	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-	    Assert.assertEquals(client.getStderr().trim(), "Unable to read consumer identity","Yum repolist should not touch redhat.repo when there is no consumer.");
+		//    ssh root@hp-dl360g4-01.rhts.eng.rdu.redhat.com yum -q repolist --disableplugin=rhnplugin
+		//    Stdout:
+		//    Stderr:
+		//    Unable to read consumer identity
+		//    Repo rhel-6-server-rpms forced skip_if_unavailable=True due to: /etc/pki/entitlement/8228808229145718707.pem
+		//    Repo rhel-6-server-rpms forced skip_if_unavailable=True due to: /etc/pki/entitlement/8228808229145718707-key.pem
+		//    Repo rhel-6-server-cf-tools-1-rpms forced skip_if_unavailable=True due to: /etc/pki/entitlement/8228808229145718707.pem
+		//    Repo rhel-6-server-cf-tools-1-rpms forced skip_if_unavailable=True due to: /etc/pki/entitlement/8228808229145718707-key.pem
+		//    ExitCode: 0
+	    Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");
 	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after unregistering.");
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsNoMatch(redhatRepoFileContents,regex,null,"At most '"+N+"' successive blank are acceptable inside '"+clienttasks.redhatRepoFile+"' after unregistering.");
@@ -366,7 +375,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		redhatRepoFileContents = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsMatch(redhatRepoFileContents,regex,null,"File "+clienttasks.redhatRepoFile+" has been infiltrated with excessive blank lines.");
 	    client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
-	    Assert.assertEquals(client.getStderr().trim(), "Unable to read consumer identity","Yum repolist should not touch redhat.repo when there is no consumer.");
+	    Assert.assertTrue(client.getStderr().contains("Unable to read consumer identity"),"Yum repolist should not touch redhat.repo when there is no consumer and state in stderr 'Unable to read consumer identity'.");
 		String redhatRepoFileContents2 = client.runCommandAndWait("cat "+clienttasks.redhatRepoFile).getStdout();
 		Assert.assertContainsMatch(redhatRepoFileContents2,regex,null,"File "+clienttasks.redhatRepoFile+" is still infiltrated with excessive blank lines.");
 		Assert.assertEquals(redhatRepoFileContents2, redhatRepoFileContents,"File "+clienttasks.redhatRepoFile+" remains unchanged when there is no consumer.");
@@ -384,7 +393,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","blockedByBug-737145"},
+			groups={"AcceptanceTests","blockedByBug-737145","debugTest"},
 			enabled=false)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test_BEFORE_BUG_FIX_781510() {
@@ -439,6 +448,11 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	@BeforeClass(groups={"setup"})
 	public void removeYumBeakerRepos() {
 		client.runCommandAndWait("mkdir -p /tmp/beaker.repos; mv -f /etc/yum.repos.d/beaker*.repo /tmp/beaker.repos");
+	}
+	
+	@BeforeClass(groups={"setup"})
+	public void setManageRepos() {
+		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","1"});
 	}
 	
 	@AfterClass(groups={"setup"})

@@ -103,6 +103,13 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 	
 
+	// TODO
+	// SubscribeToAllAndAndSetAReleaseAndMakeSureTheReposList AND YumReposList Substitues for $releaseVer
+	// SubscribeToAllAndAndUnSetReleaseAndMakeSureTheReposListDoesNOTSubstitutes for $releaseVer bug 807407 	
+	// Test against stage to ensure releaseVer --list returns all the valid values for rhel5 and rhel6
+	// ReleaseListWithInvalidCredentials_Test
+	//	ReleaseListWithInvalidCredentials_Test() {
+	
 	
 	
 //	@Test(	description="subscription-manager: service-level --show (when not registered)",
