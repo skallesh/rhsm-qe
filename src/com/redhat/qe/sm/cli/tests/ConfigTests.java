@@ -149,10 +149,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the parameter was removed from the config file (only for names in defaultConfFileParameterNames) otherwise the value is blanked
 		String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
-		if (clienttasks.defaultConfFileParameterNames().contains(name.toLowerCase())) {
-			Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+		if (clienttasks.defaultConfFileParameterNames(false).contains(name)) {
+			Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
 		} else {
-			Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
+			Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
 		}
 	}
 	
@@ -195,16 +195,16 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 		String regexForName = "("+name+"|"+name.toLowerCase()+")";	// note: python will write and tolerate all lowercase parameter names
 		String regexForValue = null;
 		String assertMsg = "";
-		if (clienttasks.defaultConfFileParameterNames().contains(name)) {	// case 1:
+		if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {	// case 1:
 			// value listed for name after having removed a parameter that has a default defined
 			//   ca_cert_dir = [/etc/rhsm/ca/]
 			regexForValue = "\\[.*\\]";
-			assertMsg = "After executing subscription-manager config to remove '"+section+"."+name+"', calling config --list shows the default value for the parameter surrounded by square brackets[].";
+			assertMsg = "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', calling config --list shows the default value for the parameter surrounded by square brackets[].";
 		} else {	// case 2:
 			// value listed for name after having removed a parameter that does NOT have a default defined
 			//   hostname =
 			regexForValue = "";
-			assertMsg = "After executing subscription-manager config to remove '"+section+"."+name+"', calling config --list shows the default value as an empty string when since this parameter has no default.";
+			assertMsg = "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', calling config --list shows the default value as an empty string since this parameter has no default.";
 		}
 		String regexForSectionNameExpectedValue = "^\\["+section+"\\](\\n.*?)+^   "+regexForName+" = "+regexForValue+"$";
 		log.info("Using regex \""+regexForSectionNameExpectedValue+"\"to assert the default value was listed by config after having removed the parameter name.");	
@@ -247,10 +247,10 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 			String name		= (String) row.get(2);
 			String value	= (String) row.get(3);
 			String newValue = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, section, name);
-			if (clienttasks.defaultConfFileParameterNames().contains(name.toLowerCase())) {
-				Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
+			if (clienttasks.defaultConfFileParameterNames(true).contains(name.toLowerCase())) {
+				Assert.assertNull(newValue, "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter is removed from config file '"+clienttasks.rhsmConfFile+"'.");
 			} else {
-				Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
+				Assert.assertEquals(newValue, "", "After executing subscription-manager config to remove '"+section+"."+name.toLowerCase()+"', the parameter value is blanked from config file '"+clienttasks.rhsmConfFile+"'. (e.g. parameter_name = )");			
 			}
 		}
 	}

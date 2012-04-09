@@ -2216,8 +2216,8 @@ public class SubscriptionManagerTasks {
 				//You have removed the value for section rhsmcertd and name port.
 				//The default value for port will now be used.
 				//Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name+" will now be used."), defaultConfFileParameterNames().contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name.toLowerCase()+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name.toLowerCase()+" will now be used."), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 			}
 		}
 
@@ -2231,13 +2231,15 @@ public class SubscriptionManagerTasks {
 		return config(list, remove, set, listOfSectionNameValues);
 	}
 	
-	public List<String> defaultConfFileParameterNames() {
+	public List<String> defaultConfFileParameterNames(Boolean toLowerCase) {
+		if (toLowerCase==null) toLowerCase=false;	// return the defaultConfFileParameterNames in lowerCase
 		
 		// hard-coded list of parameter called DEFAULTS in /usr/lib/python2.6/site-packages/rhsm/config.py
 		// this list of hard-coded parameter names have a hard-coded value (not listed here) that will be used
 		// after a user calls subscription-manager --remove section.name otherwise the remove will set the value to ""
 		List<String> defaultNames = new ArrayList<String>();
 
+		// BEFORE FIX FOR BUG 807721
 		// initialize defaultNames (will appear in all config sections and have a default value)
 		//	DEFAULTS = {
 		//	        'hostname': 'localhost',
@@ -2252,6 +2254,7 @@ public class SubscriptionManagerTasks {
 		//	        'proxy_password': '',
 		//	        'insecure': '0'
 		//	        }
+		/*
 		defaultNames.add("hostname");
 		defaultNames.add("prefix");
 		defaultNames.add("port");
@@ -2263,6 +2266,53 @@ public class SubscriptionManagerTasks {
 		defaultNames.add("proxy_user");
 		defaultNames.add("proxy_password");
 		defaultNames.add("insecure");
+		*/
+		
+		// AFTER FIX FOR BUG 807721
+		//# Defaults are applied to each section in the config file.
+		//DEFAULTS = {
+		//                'hostname': 'localhost',
+		//                'prefix': '/candlepin',
+		//                'port': '8443',
+		//                'ca_cert_dir': '/etc/rhsm/ca/',
+		//                'repo_ca_cert': '/etc/rhsm/ca/redhat-uep.pem',
+		//                'ssl_verify_depth': '3',
+		//                'proxy_hostname': '',
+		//                'proxy_port': '',
+		//                'proxy_user': '',
+		//                'proxy_password': '',
+		//                'insecure': '0',
+		//                'baseurl': 'https://cdn.redhat.com',
+		//                'manage_repos': '1',
+		//                'productCertDir': '/etc/pki/product',
+		//                'entitlementCertDir': '/etc/pki/entitlement',
+		//                'consumerCertDir': '/etc/pki/consumer',
+		//                'certFrequency': '240',
+		//                'healFrequency': '1440',
+		//            }
+		defaultNames.add("hostname");
+		defaultNames.add("prefix");
+		defaultNames.add("port");
+		defaultNames.add("ca_cert_dir");
+		defaultNames.add("repo_ca_cert");
+		defaultNames.add("ssl_verify_depth");
+		defaultNames.add("proxy_hostname");
+		defaultNames.add("proxy_port");
+		defaultNames.add("proxy_user");
+		defaultNames.add("proxy_password");
+		defaultNames.add("insecure");
+		defaultNames.add("baseurl");
+		defaultNames.add("manage_repos");
+		defaultNames.add("productCertDir");
+		defaultNames.add("entitlementCertDir");
+		defaultNames.add("consumerCertDir");
+		defaultNames.add("certFrequency");
+		defaultNames.add("healFrequency");
+		
+		// lowercase all of the defaultNames when requested
+		if (toLowerCase) for (String defaultName : defaultNames) {
+			defaultNames.set(defaultNames.indexOf(defaultName), defaultName.toLowerCase());
+		}
 		
 		return defaultNames;
 	}

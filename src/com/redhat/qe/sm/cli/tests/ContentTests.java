@@ -337,7 +337,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","blockedByBug-737145","debugTest"},
+			groups={"AcceptanceTests","blockedByBug-737145"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test() {
@@ -393,7 +393,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 		Assert.assertContainsMatch(redhatRepoFileContents,"^# Managed by \\(rhsm\\) subscription-manager$",null,"Comment heading \"Managed by (rhsm) subscription-manager\" was found inside "+clienttasks.redhatRepoFile);		
 	}
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
-			groups={"AcceptanceTests","blockedByBug-737145","debugTest"},
+			groups={"AcceptanceTests","blockedByBug-737145"},
 			enabled=false)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
 	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test_BEFORE_BUG_FIX_781510() {
