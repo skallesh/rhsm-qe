@@ -136,7 +136,7 @@ public class CandlepinTasks {
 		}
 		
 		log.info("Upgrading the server to the latest git tag...");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, serverInstallDir),1,"Found the server install directory "+serverInstallDir);
+		Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, serverInstallDir),"Found the server install directory "+serverInstallDir);
 		
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, "/etc/sudoers", "\\(^Defaults[[:space:]]\\+requiretty\\)", "#\\1");	// Needed to prevent error:  sudo: sorry, you must have a tty to run sudo
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; git reset --hard HEAD; git checkout master; git pull", Integer.valueOf(0), null, "(Already on|Switched to branch) 'master'");
@@ -154,9 +154,16 @@ public class CandlepinTasks {
 			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverImportDir+"; git pull", Integer.valueOf(0));
 		}
 		
-		// clear out the tomcat6 clog file (catalina.out)
-		if (RemoteFileTasks.testFileExists(sshCommandRunner, tomcat6LogFile)==1) {
+		// clear out the tomcat6 log file (catalina.out)
+		if (RemoteFileTasks.testExists(sshCommandRunner, tomcat6LogFile)) {
 			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, LogMessageUtil.action());	
+		}
+		
+		// clear out the candlepin/hornetq to prevent the following:
+		// catalina.out: java.lang.OutOfMemoryError: Java heap space
+		// deploy.sh: /usr/lib64/ruby/gems/1.8/gems/rest-client-1.6.1/lib/restclient/abstract_response.rb:48:in `return!': 404 Resource Not Found (RestClient::ResourceNotFound)
+		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/lib/candlepin/hornetq/")) {
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /var/lib/candlepin/hornetq/", LogMessageUtil.action());	
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
@@ -175,7 +182,7 @@ public class CandlepinTasks {
 		// modify the gen-certs file so the candlepin cert is valid for more than one year (make it 10 years)
 		RemoteFileTasks.searchReplaceFile(sshCommandRunner, serverInstallDir+"/proxy/buildconf/scripts/gen-certs", "\\-days 365 ", "\\-days 3650 ");
 		
-		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS	
+		/* TODO: RE-INSTALL GEMS HELPS WHEN THERE ARE DEPLOY ERRORS
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "for item in $(for gem in $(gem list | grep -v \"\\*\"); do echo $gem; done | grep -v \"(\" | grep -v \")\"); do echo 'Y' | gem uninstall $item -a; done", Integer.valueOf(0), "Successfully uninstalled", null);	// probably only needs to be run once  // for item in $(for gem in $(gem list | grep -v "\*"); do echo $gem; done | grep -v "(" | grep -v ")"); do echo 'Y' | gem uninstall $item -a; done
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install bundler", Integer.valueOf(0), "installed", null);	// probably only needs to be run once
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
@@ -250,11 +257,10 @@ schema generation failed
 		}
 		// run the buildr API script to see a report of the current API
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
-/* FIXME COMMENTED OUT WHILE FAILING;  SENT EMAIL TO ZEUS 3/21/2012 http://pastebin.test.redhat.com/82430
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
 		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy; cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",LogMessageUtil.action());
-*/
+
 	}
 	
 	public void cleanOutCRL() {
