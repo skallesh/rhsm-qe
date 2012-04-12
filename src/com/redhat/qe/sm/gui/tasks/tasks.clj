@@ -17,7 +17,8 @@
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
            [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]
-           [org.apache.xmlrpc XmlRpcException]))
+           ;[org.apache.xmlrpc XmlRpcException]
+           ))
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here
@@ -72,10 +73,14 @@
   "starts the subscription-manager-gui
   @path: lauch the application at [path]"
   ([]
-     (start-app (@config :binary-path)))
+     (start-app (@config :binary-path) :main-window))
   ([path]
+     (ui launchapp path [] 10))
+  ([path window]
      (ui launchapp path [] 10)
-     (ui waittillwindowexist :main-window 30)))
+     (ui waittillwindowexist window 30)
+     (sleep 1000)
+     (ui maximizewindow window)))
 
 (defn kill-app
   "Kills the subscription-manager-gui"
@@ -144,21 +149,21 @@
 
 (defn register
   "Registers subscription manager by clicking the 'Register System' button in the gui."
-  [username password & {:keys [system-name-input, autosubscribe, owner]
-                        :or {system-name-input nil, autosubscribe false, owner nil}}]
+  [username password & {:keys [system-name-input, skip-autosubscribe, owner]
+                        :or {system-name-input nil, skip-autosubscribe true, owner nil}}]
   (if (ui showing? :unregister-system)
     (throw+ {:type :already-registered
              :username username
              :password password
              :system-name-input system-name-input
-             :autosubscribe autosubscribe
+             :skip-autosubscribe skip-autosubscribe
              :owner owner
              :unregister-first (fn []
                                  (unregister)
                                  (register username
                                            password
                                            :system-name-input system-name-input
-                                           :autosubscribe autosubscribe
+                                           :skip-autosubscribe skip-autosubscribe
                                            :owner owner))}))
   (ui click :register-system)
   (ui waittillguiexist :redhat-login)
@@ -166,9 +171,9 @@
   (ui settextvalue :password password)
   (when system-name-input
     (ui settextvalue :system-name system-name-input))
-  (if autosubscribe 
-   (ui check :automatically-subscribe)
-   (ui uncheck :automatically-subscribe))  
+  (if skip-autosubscribe 
+   (ui check :skip-autobind)
+   (ui uncheck :skip-autobind))  
   (try+ 
    (ui click :register)
    (checkforerror 10)
@@ -355,7 +360,7 @@
            (ui check :proxy-checkbox)
            (try
              (ui settextvalue :proxy-location (str proxy ":" port))
-             (catch XmlRpcException e
+             (catch Exception e
                (if (substring? "not implemented" (.getMessage e))
                  (do (sleep 2000)
                      (ui generatekeyevent (str proxy ":" port)))
@@ -385,7 +390,7 @@
            (ui check :proxy-checkbox)
            (try
              (ui settextvalue :proxy-location (str proxy ":" port))
-             (catch XmlRpcException e
+             (catch Exception e
                ;; yay rhel5
                (if (substring? "not implemented" (.getMessage e))
                  (do (sleep 2000)

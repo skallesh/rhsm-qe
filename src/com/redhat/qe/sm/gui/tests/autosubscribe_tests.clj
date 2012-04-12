@@ -70,7 +70,7 @@
         (do 
           (tasks/register user
                           pass
-                          :autosubscribe true
+                          :skip-autosubscribe false
                           :owner ownername)
           (verify (<= (tasks/warn-count) beforesubs))))))
  
@@ -97,7 +97,7 @@
         (do 
           (tasks/register user
                           pass
-                          :autosubscribe true
+                          :skip-autosubscribe false
                           :owner ownername)
           (tasks/ui waittillwindownotexist :register-dialog 600)
           (tasks/sleep 20000)
@@ -124,7 +124,7 @@
         (do 
           (tasks/register user
                           pass
-                          :autosubscribe true
+                          :skip-autosubscribe false
                           :owner ownername)
           (tasks/ui waittillwindownotexist :register-dialog 600)
           (tasks/sleep 20000)
@@ -152,7 +152,7 @@
         (do 
           (tasks/register user
                           pass
-                          :autosubscribe true
+                          :skip-autosubscribe false
                           :owner ownername)
           (tasks/ui waittillwindownotexist :register-dialog 600)
           (tasks/sleep 10000)
@@ -245,7 +245,7 @@
     (tasks/unregister)
     (tasks/register user
                     pass
-                    :autosubscribe true
+                    :skip-autosubscribe false
                     :owner ownername)
     (if-not debug
       (to-array-2d prods)
