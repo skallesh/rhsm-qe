@@ -158,7 +158,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(List)null,true,false,null,null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List)null,true,false,null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(0);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));

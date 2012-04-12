@@ -36,7 +36,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 		// Start fresh by unregistering and registering...
 		log.info("Start fresh by unregistering and registering...");
 		clienttasks.unregister(null, null, null);
-		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,null,false,null, null, null));
+		consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,false, null, null, null));
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
@@ -69,14 +69,30 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 			rhsmManageRepo.clear();
 			rhsmManageRepo.add(new String[]{"rhsm", "manage_repos", value});
 			clienttasks.config(null, null, true, rhsmManageRepo);
-			consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, null, null, null, null));
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 			clienttasks.clean(null, null, null);
 		}
 		
 	}
 	
+	@Test(	description="verify redhat.repo file is deleted of after calling subscription-manager clean",
+			groups={"blockedByBug-781510"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
+	public void VerifyRedHatRepoFileIsDeletedAfterClean_Test() {
+		
+		// Start fresh by registering...
+		log.info("Start fresh by registering...");
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,true,false, null, null, null);
+		client.runCommandAndWait("yum -q repolist --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError			
+	    Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to exist after registering and triggering a yum transacton.");
+		clienttasks.clean(null, null, null);
+	    Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Expecting the redhat repo file '"+clienttasks.redhatRepoFile+"' to NOT exist after running clean.");
+	}
+	
+	
 	// Candidates for an automated Test:
-	// TODO Bug 781510 - 'subscription-manager clean' should delete redhat.repo
+
 	
 	
 	// Configuration methods ***********************************************************************
@@ -86,7 +102,7 @@ public class CleanTests extends SubscriptionManagerCLITestScript {
 	public void teardownAfterClass() {
 		if (clienttasks!=null) {
 			clienttasks.unregister_(null, null, null);
-			clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, (String)null, Boolean.TRUE, false, null, null, null);
+			clienttasks.register_(sm_clientUsername, sm_clientPassword, null, null, null, null, consumerId, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
 			clienttasks.unregister_(null, null, null);
 			consumerId = null;
 		}

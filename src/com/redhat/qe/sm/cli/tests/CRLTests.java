@@ -120,7 +120,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		Calendar originalStartDate = (Calendar) originalProducts.get(0).startDate.clone();
 		Calendar originalEndDate = (Calendar) originalProducts.get(0).endDate.clone();
 		Integer contractNumber = originalProducts.get(0).contractNumber;
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalEntitlementCertFile.getPath()),1,"Original entitlement cert file '"+originalEntitlementCertFile+"' exists.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, originalEntitlementCertFile.getPath()),"Original entitlement cert file '"+originalEntitlementCertFile+"' exists.");
 		
 		log.info("Now we will change the start and end date of the subscription pool adding one month to enddate and subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
@@ -136,7 +136,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		log.info("The updated certs should now be on the client...");
 
 		log.info("First, let's assert that the original entitlement cert file '"+originalEntitlementCertFile+"' is gone...");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, originalEntitlementCertFile.getPath()),0,"Original certificate file '"+originalEntitlementCertFile+"' has been removed from the system.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, originalEntitlementCertFile.getPath()),"Original certificate file '"+originalEntitlementCertFile+"' has been removed from the system.");
 
 		log.info("Second, let's assert that the consumed products have been refreshed...");
 		//List<ProductSubscription> newProducts = ProductSubscription.findAllInstancesWithMatchingFieldFromList("contractNumber",contractNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
@@ -150,7 +150,7 @@ public class CRLTests extends SubscriptionManagerCLITestScript{
 		BigInteger newSerialNumber = newProducts.get(0).serialNumber;
 		File newCertFile = new File(clienttasks.entitlementCertDir+"/"+newSerialNumber+".pem");
 		Assert.assertNotSame(newCertFile, originalEntitlementCertFile,"The newly granted and refresh entitlement cert file should not be the same as the original cert file.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, newCertFile.getPath()),1,"New entitlement certificate file '"+newCertFile+"' exists.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, newCertFile.getPath()),"New entitlement certificate file '"+newCertFile+"' exists.");
 		for (ProductSubscription newProduct : newProducts) {
 			Assert.assertEquals(ProductSubscription.formatDateString(newProduct.startDate), ProductSubscription.formatDateString(newStartDate),
 					"Rhsmcertd has updated the entitled startdate from '"+ProductSubscription.formatDateString(originalStartDate)+"' to '"+ProductSubscription.formatDateString(newStartDate)+"' for consumed product '"+newProduct.productName+"' that originated from poolId '"+pool.poolId+"'.");

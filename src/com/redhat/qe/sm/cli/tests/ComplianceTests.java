@@ -20,10 +20,12 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -31,6 +33,7 @@ import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductNamespace;
+import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -48,12 +51,76 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 	
+	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
+			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests"},
+			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(Object bugzilla, String servicelevel) {
+		
+		// test register with service level
+		clienttasks.unregister_(null,null,null);
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
+				"Before attempting to register with autosubscribe and a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,servicelevel,null,(String)null, Boolean.TRUE, false, null, null, null);
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
+				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			Assert.assertEquals(productSubscription.serviceLevel, servicelevel,
+				"When a system has been registered with autosubscribe specifying a common service level, then all consumed product subscriptions must provide that service level.");
+		}
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), servicelevel,
+			"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
+	
+		// test autosubscribe (without service level) and assert that the consumed subscriptions provide the same service level as persisted during register
+		clienttasks.unsubscribe(true, null, null, null, null);
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
+				"Before attempting to autosubscribe with a common servicelevel to become compliant for all the currently installed products, the system should be non-compliant (see value for fact '"+factNameForSystemCompliance+"').");
+		clienttasks.subscribe(true, null, (List<String>)null, null, null, null, null, null, null, null, null);
+		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
+				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
+		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
+			Assert.assertEquals(productSubscription.serviceLevel, servicelevel,
+				"When a system has been registered with autosubscribe without specifying a common service level, then all consumed product subscriptions must provide the consumer's service level preference.");
+		}
+	}
+	
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by more than one common service level",
+			groups={"cli.tests"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test() {
+		VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test();
+	}
+	
+	
+	
+	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
+			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
+		VerifySystemCompliantFactWhenAllProductsSubscribableByMoreThanOneCommonServiceLevel_Test(null,allProductsSubscribableByOneCommonServiceLevelValue);
+	}
+	
+	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
+			groups={"cli.tests"},
+			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
+			enabled=true)
+	//@ImplementsTCMS(id="")
+	public void VerifyRhsmCompliancedWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
+		VerifyRhsmCompliancedWhenAllProductsAreSubscribable_Test();
+	}
+	
+	
+	
 	@Test(	description="subscription-manager: verify the system.compliant fact is False when some installed products are subscribable",
 			groups={"configureProductCertDirForSomeProductsSubscribable","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, Boolean.TRUE, false, null, null, null);
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of only SOME are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -88,7 +155,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribable_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, Boolean.TRUE, false, null, null, null);
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of ALL are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -125,7 +192,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, Boolean.TRUE, false, null, null, null);
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"Products are currently installed for which the compliance of NONE are covered by currently available subscription pools.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemNonCompliance,
@@ -162,7 +229,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenNoProductsAreInstalled_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, Boolean.TRUE, false, null, null, null);
 		Assert.assertTrue(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
 				"No products are currently installed.");
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
@@ -254,7 +321,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsAreSubscribableInTheFuture_Test() throws JSONException, Exception {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(String)null,Boolean.TRUE, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null, Boolean.TRUE, false, null, null, null);
 
 		// initial assertions
 		Assert.assertFalse(clienttasks.getCurrentlyInstalledProducts().isEmpty(),
@@ -314,15 +381,17 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	public static final String factValueForSystemNonCompliance = "invalid"; 	// "False"; RHEL62
 	public static final String factValueForSystemPartialCompliance = "partial";	// "False"; RHEL62
 
-	protected final String productCertDirForSomeProductsSubscribable = "/tmp/sm-someProductsSubscribable";
-	protected final String productCertDirForAllProductsSubscribable = "/tmp/sm-allProductsSubscribable";
-	protected final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
-	protected final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
-	protected final String productCertDirForAllProductsSubscribableInTheFuture = "/tmp/sm-allProductsSubscribableInTheFuture";
-	protected final String productCertDirForAllProductsSubscribableByOneCommonServiceLevel = "/tmp/sm-allProductsSubscribableByOneCommonServiceLevel";
-	protected final String productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel = "/tmp/sm-allProductsSubscribableByMoreThanOneCommonServiceLevel";
-	public String allProductsSubscribableByOneCommonServiceLevelValue=null;
-	public List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelValues=null;
+	public static final String productCertDirForSomeProductsSubscribable = "/tmp/sm-someProductsSubscribable";
+	public static final String productCertDirForAllProductsSubscribable = "/tmp/sm-allProductsSubscribable";
+	public static final String productCertDirForNoProductsSubscribable = "/tmp/sm-noProductsSubscribable";
+	public static final String productCertDirForNoProductsinstalled = "/tmp/sm-noProductsInstalled";
+	public static final String productCertDirForAllProductsSubscribableInTheFuture = "/tmp/sm-allProductsSubscribableInTheFuture";
+	public static final String productCertDirForAllProductsSubscribableByOneCommonServiceLevel = "/tmp/sm-allProductsSubscribableByOneCommonServiceLevel";
+	public static final String productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel = "/tmp/sm-allProductsSubscribableByMoreThanOneCommonServiceLevel";
+
+	public static String allProductsSubscribableByOneCommonServiceLevelValue=null;	// the value of the service_level to expect from all of the autosubscribed pools after calling configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel
+	public static List<String> allProductsSubscribableByMoreThanOneCommonServiceLevelValues= new ArrayList<String>();	// the service_level values to expect subscription-manager-gui to prompt the user to choose from when autosubscribing after calling configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
+
 	protected String productCertDir = null;
 	protected final String rhsmComplianceDStdoutMessageWhenNonCompliant = "System has one or more certificates that are not valid";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
@@ -331,9 +400,65 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected final String rhsmComplianceDSyslogMessageWhenNonCompliant = "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
 	protected List<SubscriptionPool> futureSystemSubscriptionPools = null;
 	
+	
+	
+	
 	// Protected Methods ***********************************************************************
 	
+	protected String getKeyToLongestMap (Map<String,Set<String>> map) {
+		int maxLength=0;
+		String maxKey=null;
+		for (String key : map.keySet()) {
+			if (map.get(key).size()>maxLength) {
+				maxLength = map.get(key).size();
+				maxKey = key;
+			}
+		}
+		return maxKey;
+	}
+	protected Map<String,Set<String>> getInvertedMap(Map<String,Set<String>> serviceLevelToProductIdsMap) {
+		Map<String,Set<String>> productIdsToServiceLevelsMap = new HashMap<String,Set<String>>();
+		for (String serviceLevel : serviceLevelToProductIdsMap.keySet()) {
+			for (String productId : serviceLevelToProductIdsMap.get(serviceLevel)) {
+				if (!productIdsToServiceLevelsMap.containsKey(productId)) productIdsToServiceLevelsMap.put(productId, new HashSet<String>());
+				HashSet<String> serviceLevelSet = (HashSet<String>) productIdsToServiceLevelsMap.get(productId);
+				serviceLevelSet.add(serviceLevel);
+			}
+		}
+		return productIdsToServiceLevelsMap;
+	}
+	protected Map<String,Set<String>> getServiceLevelToProductIdsMapFromEntitlementCerts(List<EntitlementCert> entitlementCerts) {
 	
+		//{Standard=[37065, 27060, 37069, 37068, 37067, 37070,        37060], 
+		// None    =[37060], 
+		// Premium =[37065,        37069, 37068, 37067, 37070,        37060]}
+		//
+		//
+		//{27060=[Standard],
+		// 37065=[Standard, Premium],
+		// 37069=[Standard, Premium],
+		// 37068=[Standard, Premium],
+		// 37067=[Standard, Premium],
+		// 37070=[Standard, Premium],
+		// 37060=[Standard, Premium, None]}
+		
+		// create maps of serviceLevel-to-productIds and productIds-to-serviceLevel
+		Map<String,Set<String>> serviceLevelToProductIdsMap = new HashMap<String,Set<String>>();
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			String serviceLevel = entitlementCert.orderNamespace.supportLevel;
+			
+			// skip all entitlements without a service level
+			if (serviceLevel==null || serviceLevel.equals("")) continue;
+			
+			if (!serviceLevelToProductIdsMap.containsKey(serviceLevel)) serviceLevelToProductIdsMap.put(serviceLevel, new HashSet<String>());
+			HashSet<String> productIdSet = (HashSet<String>) serviceLevelToProductIdsMap.get(serviceLevel);		
+			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
+//debugTesting if (productNamespace.id.equals("27060")) continue;
+				productIdSet.add(productNamespace.id);
+			}
+		}
+		return serviceLevelToProductIdsMap;
+	}
 	
 	
 	// Configuration Methods ***********************************************************************
@@ -360,7 +485,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// register and subscribe to all available subscriptions
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		
 		// distribute a copy of the product certs amongst the productCertDirs based on their status
@@ -458,7 +583,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		if (!allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.isEmpty()) {
 
 			// randomly choose the service levels from the candidates
-			allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(productIdsToServiceLevelsMap.get(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.get(randomGenerator.nextInt(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.size()))).toArray(new String[]{}));
+//			allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(productIdsToServiceLevelsMap.get(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.get(randomGenerator.nextInt(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.size()))).toArray(new String[]{}));
+			allProductsSubscribableByMoreThanOneCommonServiceLevelValues.addAll(productIdsToServiceLevelsMap.get(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.get(randomGenerator.nextInt(allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.size()))));
 //debugTesting allProductsSubscribableByMoreThanOneCommonServiceLevelValues = Arrays.asList(new String[]{"None", "Standard", "Premium"});
 			// pluck out the productIds that do not map to all of the values in allProductsSubscribableByMoreThanOneCommonServiceLevelValues
 			for (String  productId : productIdsToServiceLevelsMap.keySet()) {
@@ -480,70 +606,18 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		this.productCertDir = clienttasks.productCertDir;
 	}
-	protected String getKeyToLongestMap (Map<String,Set<String>> map) {
-		int maxLength=0;
-		String maxKey=null;
-		for (String key : map.keySet()) {
-			if (map.get(key).size()>maxLength) {
-				maxLength = map.get(key).size();
-				maxKey = key;
-			}
-		}
-		return maxKey;
-	}
-	protected Map<String,Set<String>> getInvertedMap(Map<String,Set<String>> serviceLevelToProductIdsMap) {
-		Map<String,Set<String>> productIdsToServiceLevelsMap = new HashMap<String,Set<String>>();
-		for (String serviceLevel : serviceLevelToProductIdsMap.keySet()) {
-			for (String productId : serviceLevelToProductIdsMap.get(serviceLevel)) {
-				if (!productIdsToServiceLevelsMap.containsKey(productId)) productIdsToServiceLevelsMap.put(productId, new HashSet<String>());
-				HashSet<String> serviceLevelSet = (HashSet<String>) productIdsToServiceLevelsMap.get(productId);
-				serviceLevelSet.add(serviceLevel);
-			}
-		}
-		return productIdsToServiceLevelsMap;
-	}
-	protected Map<String,Set<String>> getServiceLevelToProductIdsMapFromEntitlementCerts(List<EntitlementCert> entitlementCerts) {
-	
-		//{Standard=[37065, 27060, 37069, 37068, 37067, 37070,        37060], 
-		// None    =[37060], 
-		// Premium =[37065,        37069, 37068, 37067, 37070,        37060]}
-		//
-		//
-		//{27060=[Standard],
-		// 37065=[Standard, Premium],
-		// 37069=[Standard, Premium],
-		// 37068=[Standard, Premium],
-		// 37067=[Standard, Premium],
-		// 37070=[Standard, Premium],
-		// 37060=[Standard, Premium, None]}
-		
-		// create maps of serviceLevel-to-productIds and productIds-to-serviceLevel
-		Map<String,Set<String>> serviceLevelToProductIdsMap = new HashMap<String,Set<String>>();
-		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			String serviceLevel = entitlementCert.orderNamespace.supportLevel;
-			
-			// skip all entitlements without a service level
-			if (serviceLevel==null || serviceLevel.equals("")) continue;
-			
-			if (!serviceLevelToProductIdsMap.containsKey(serviceLevel)) serviceLevelToProductIdsMap.put(serviceLevel, new HashSet<String>());
-			HashSet<String> productIdSet = (HashSet<String>) serviceLevelToProductIdsMap.get(serviceLevel);		
-			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
-	//debugTesting if (productNamespace.id.equals("27060")) continue;
-				productIdSet.add(productNamespace.id);
-			}
-		}
-		return serviceLevelToProductIdsMap;
-	}
 	
 	@AfterClass(groups={"setup"},alwaysRun=true)
 	public void configureProductCertDirAfterClass() {
 		if (clienttasks==null) return;
 		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
+		allProductsSubscribableByOneCommonServiceLevelValue = null;
+		allProductsSubscribableByMoreThanOneCommonServiceLevelValues.clear();
 	}
 	
 	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForSomeProductsSubscribable")
-	protected void configureProductCertDirForSomeProductsSubscribable() {
+	public void configureProductCertDirForSomeProductsSubscribable() {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForSomeProductsSubscribable);
 		SSHCommandResult r0 = client.runCommandAndWait("ls -1 "+productCertDirForSomeProductsSubscribable+" | wc -l");
@@ -555,7 +629,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains some subscribable products based on the currently available subscriptions.");
 	}
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribable")
-	protected void configureProductCertDirForAllProductsSubscribable() {
+	public void configureProductCertDirForAllProductsSubscribable() {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribable);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribable+" | wc -l");
@@ -564,7 +638,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all subscribable products based on the currently available subscriptions.");
 	}
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsSubscribable")
-	protected void configureProductCertDirForNoProductsSubscribable() {
+	public void configureProductCertDirForNoProductsSubscribable() {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsSubscribable);
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsSubscribable+" | wc -l");
@@ -573,7 +647,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 				"The "+clienttasks.rhsmConfFile+" file is currently configured with a productCertDir that contains all non-subscribable products based on the currently available subscriptions.");
 	}
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForNoProductsInstalled")
-	protected void configureProductCertDirForNoProductsInstalled() {
+	public void configureProductCertDirForNoProductsInstalled() {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForNoProductsinstalled);
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForNoProductsinstalled+" | wc -l");
@@ -582,7 +656,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableInTheFuture")
-	protected void configureProductCertDirForAllProductsSubscribableInTheFuture() throws JSONException, Exception {
+	public void configureProductCertDirForAllProductsSubscribableInTheFuture() throws JSONException, Exception {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableInTheFuture);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableInTheFuture+" | wc -l");
@@ -592,7 +666,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel")
-	protected void configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel() {
+	public void configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel() {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableByOneCommonServiceLevel);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableByOneCommonServiceLevel+" | wc -l");
@@ -602,7 +676,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@BeforeGroups(groups={"setup"},value="configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel")
-	protected void configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel() {
+	public void configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel() {
 		clienttasks.unregister(null, null, null);
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir",productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel);	
 		SSHCommandResult r = client.runCommandAndWait("ls -1 "+productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel+" | wc -l");
@@ -613,7 +687,19 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 	// Data Providers ***********************************************************************
 
-	
+	@DataProvider(name="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData")
+	public Object[][] getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesDataAsListOfLists());
+	}
+	protected List<List<Object>> getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesDataAsListOfLists(){
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+
+		for (String servicelevel : allProductsSubscribableByMoreThanOneCommonServiceLevelValues) {
+			ll.add(Arrays.asList(new Object[]{null,	servicelevel}));		
+		}
+
+		return ll;
+	}
 
 }
 

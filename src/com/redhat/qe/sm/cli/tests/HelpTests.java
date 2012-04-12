@@ -170,7 +170,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: assert help commands return translated text",
-			groups={"blockedByBug-756156"},
+			groups={/*"blockedByBug-756156"*/},
 			dataProvider="TranslatedCommandLineHelpData")
 	//@ImplementsNitrateTest(caseId=)
 	public void TranslatedCommandLineHelp_Test(Object meta, String lang, String command, List<String> stdoutRegexs) {
@@ -191,6 +191,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	@BeforeClass(groups={"setup"})
 	public void makewhatisBeforeClass() {
 		// running makewhatis to ensure that the whatis database is built on Beaker provisioned systems
+//debugTesting if (true) return;
 		RemoteFileTasks.runCommandAndAssert(client,"makewhatis",0);
 	}
 	
@@ -250,6 +251,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		modules.add("unregister");
 		modules.add("unsubscribe");
 		modules.add("service-level");
+		modules.add("release");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s [options] MODULENAME --help",clienttasks.command);	// prior to Bug 796730 - subscription-manager usage statement
@@ -306,6 +308,21 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--rhsmcertd.proxy_user=RHSMCERTD.PROXY_USER");
 		options.add("--rhsmcertd.repo_ca_cert=RHSMCERTD.REPO_CA_CERT");
 		options.add("--rhsmcertd.ssl_verify_depth=RHSMCERTD.SSL_VERIFY_DEPTH");
+		// after bug 807721, more config options are available
+		options.add("--server.certfrequency=SERVER.CERTFREQUENCY");
+		options.add("--server.manage_repos=SERVER.MANAGE_REPOS");
+		options.add("--server.entitlementcertdir=SERVER.ENTITLEMENTCERTDIR");
+		options.add("--server.baseurl=SERVER.BASEURL");
+		options.add("--server.productcertdir=SERVER.PRODUCTCERTDIR");
+		options.add("--server.consumercertdir=SERVER.CONSUMERCERTDIR");
+		options.add("--server.healfrequency=SERVER.HEALFREQUENCY");
+		options.add("--rhsm.certfrequency=RHSM.CERTFREQUENCY");
+		options.add("--rhsm.healfrequency=RHSM.HEALFREQUENCY");
+		options.add("--rhsmcertd.manage_repos=RHSMCERTD.MANAGE_REPOS");
+		options.add("--rhsmcertd.entitlementcertdir=RHSMCERTD.ENTITLEMENTCERTDIR");
+		options.add("--rhsmcertd.baseurl=RHSMCERTD.BASEURL");
+		options.add("--rhsmcertd.productcertdir=RHSMCERTD.PRODUCTCERTDIR");
+		options.add("--rhsmcertd.consumercertdir=RHSMCERTD.CONSUMERCERTDIR");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -472,7 +489,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--consumed");
 		options.add("--available");
 		options.add("--all");
-		options.add("--servicelevel=SERVICELEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
+		options.add("--servicelevel=SERVICE_LEVEL");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=800999
 		options.add("--ondate=ON_DATE");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=672562
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
@@ -517,6 +534,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--force");
 		options.add("--activationkey=ACTIVATION_KEYS");
 		options.add("--servicelevel=SERVICE_LEVEL");
+		options.add("--release=RELEASE");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");
@@ -597,6 +615,24 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--password=PASSWORD");
 		options.add("--org=ORG");
 		options.add("--show");
+		options.add("--list");
+		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
+			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
+		}
+				
+		// subscription-manager release OPTIONS
+		module = "release";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--set=RELEASE");
 		options.add("--list");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
@@ -735,31 +771,31 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		// MODULES
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h",clienttasks.command+" --help"}) {
 
-			// # for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L subscription-manager --help | grep -- --help"; LANG=$L subscription-manager  --help | grep -- --help; done;
-			
 			// TODO new BlockedByBzBug("707080")
-			lang = "en_US"; usage = "(U|u)sage: subscription-manager [options] MODULENAME --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "de_DE"; usage = "(V|v)erbrauch: subscription-manager [options] MODULENAME --help";		ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "es_ES"; usage = "(U|u)so: subscription-manager [opciones] NOMBREDEMÓDULO --help";		ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "fr_FR"; usage = "(U|u)tilisation: subscription-manager [options] MODULENAME --help";	ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"707080","743734","743732"}), lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "it_IT"; usage = "(U|u)tilizzo: subscription-manager [options] MODULENAME --help";		ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "ja_JP"; usage = "使用法: subscription-manager [オプション] モジュール名 --help";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "ko_KR"; usage = "사용법: subscription-manager [options] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "pt_BR"; usage = "(U|u)so: subscription-manager [options] MODULENAME --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "ru_RU"; usage = "(Ф|ф)ормат: subscription-manager [параметры] МОДУЛЬ --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "zh_CN"; usage = "使用: subscription-manager [options] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"707080","743732"}), lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "zh_TW"; usage = "使用方法：subscription-manager [options] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "as_IN"; usage = "ব্যৱহাৰ: subscription-manager [বিকল্পসমূহ] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"743732","750807"}), lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "bn_IN"; usage = "ব্যবহারপ্রণালী: subscription-manager [options] MODULENAME --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "hi_IN"; usage = "प्रयोग: subscription-manager [options] MODULENAME --help";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "mr_IN"; usage = "(वापर|वपार): subscription-manager [options] MODULENAME --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "gu_IN"; usage = "વપરાશ: subscription-manager [options] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "kn_IN"; usage = "ಬಳಕೆ: subscription-manager [options] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "ml_IN"; usage = "ഉപയോഗിയ്ക്കേണ്ട വിധം: subscription-manager [options] MODULENAME --help";	ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "or_IN"; usage = "ବ୍ଯବହାର ବିଧି: subscription-manager [options] MODULENAME --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "pa_IN"; usage = "ਵਰਤੋਂ: subscription-manager [options] MODULENAME --help";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "ta_IN"; usage = "பயன்பாடு: subscription-manager [விருப்பங்கள்] MODULENAME --help";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "te_IN"; usage = "వాడుక: subscription-manager [options] MODULENAME --help";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			// [root@jsefler-r63-server ~]# for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L.UTF-8 subscription-manager --help | grep -- --help"; LANG=$L.UTF-8 subscription-manager  --help | grep -- --help; done;
+			lang = "en_US"; usage = "(U|u)sage: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "de_DE"; usage = "(V|v)erwendung: subscription-manager MODUL-NAME [MODUL-OPTIONEN] [--help]";		ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "es_ES"; usage = "(U|u)so: subscription-manager MÓDULO-NOMBRE [MÓDULO-OPCIONES] [--help]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+//			lang = "fr_FR"; usage = "(U|u)tilisation\\s?: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";	ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug(new String[]{"707080","743734","743732"})*/, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "fr_FR"; usage = "(U|u)tilisation.*: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";	ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug(new String[]{"707080","743734","743732"})*/, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "it_IT"; usage = "(U|u)tilizzo: subscription-manager NOME-MODULO [OPZIONI-MODULO] [--help]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "ja_JP"; usage = "使い方: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "ko_KR"; usage = "사용법: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "pt_BR"; usage = "(U|u)so: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "ru_RU"; usage = "(Ф|ф)ормат: subscription-manager ДЕЙСТВИЕ [ПАРАМЕТРЫ] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "zh_CN"; usage = "用法: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug(new String[]{"707080","743732"})*/, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "zh_TW"; usage = "使用方法：subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "as_IN"; usage = "ব্যৱহাৰ: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug(new String[]{"743732","750807"})*/, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "bn_IN"; usage = "ব্যবহারপ্রণালী: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "hi_IN"; usage = "प्रयोग: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "mr_IN"; usage = "(वापर|वपार): subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "gu_IN"; usage = "વપરાશ: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "kn_IN"; usage = "ಬಳಕೆ: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("811294"), lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "ml_IN"; usage = "ഉപയോഗിയ്ക്കേണ്ട വിധം: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";		ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "or_IN"; usage = "ବ୍ୟବହାର ବିଧି: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "pa_IN"; usage = "ਵਰਤੋਂ: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "ta_IN"; usage = "பயன்பாடு: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("811301"), lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "te_IN"; usage = "వాడుక: subscription-manager MODULE-NAME [MODULE-OPTIONS] [--help]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			
 			// TODO MODULE: clean
 			// TODO MODULE: activate
@@ -769,11 +805,13 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			// TODO MODULE: refresh
 			
 			// MODULE: register
+			// [root@jsefler-r63-server ~]# for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo "# LANG=$L.UTF-8 subscription-manager register --help | grep -- 'subscription-manager register'"; LANG=$L.UTF-8 subscription-manager register --help | grep -- 'subscription-manager register'; done;
 			module = "register";
 			lang = "en_US"; usage = "(U|u)sage: subscription-manager register [OPTIONS]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "de_DE"; usage = "(V|v)erbrauch: subscription-manager register [OPTIONS]";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("693527"), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "de_DE"; usage = "(V|v)erbrauch: subscription-manager register [OPTIONS]";		ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug("693527")*/, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "es_ES"; usage = "(U|u)so: subscription-manager register [OPTIONS]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "fr_FR"; usage = "(U|u)tilisation : subscription-manager register [OPTIONS]";	ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+//			lang = "fr_FR"; usage = "(U|u)tilisation\\s?: subscription-manager register [OPTIONS]";	ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "fr_FR"; usage = "(U|u)tilisation.*subscription-manager register [OPTIONS]";	ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "it_IT"; usage = "(U|u)tilizzo: subscription-manager register [OPTIONS]";		ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "ja_JP"; usage = "使用法: subscription-manager register [OPTIONS]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "ko_KR"; usage = "사용법: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
@@ -781,12 +819,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			lang = "ru_RU"; usage = "(Ф|ф)ормат: subscription-manager register [OPTIONS]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "zh_CN"; usage = "使用：subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "zh_TW"; usage = "使用方法：subscription-manager register [OPTIONS]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "as_IN"; usage = "ব্যৱহাৰ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug(new String[]{"743732"}), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "as_IN"; usage = "ব্যৱহাৰ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {null/*new BlockedByBzBug(new String[]{"743732"})*/, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "bn_IN"; usage = "ব্যবহারপ্রণালী: subscription-manager register [OPTIONS]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "hi_IN"; usage = "प्रयोग: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "mr_IN"; usage = "(वापर|वपार): subscription-manager register [OPTIONS]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "gu_IN"; usage = "વપરાશ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
-			lang = "kn_IN"; usage = "ಬಳಕೆ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
+			lang = "kn_IN"; usage = "ಬಳಕೆ: subscription-manager register [OPTIONS]";					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("811294"), lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			lang = "ml_IN"; usage = "ഉപയോഗിയ്ക്കേണ്ട വിധം: subscription-manager register [OPTIONS]";	ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));
 			//lang = "or_IN"; usage = "ବ୍ଯବହାର ବିଧି: subscription-manager register [OPTIONS]";			ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));	//rhel57 rhel61
 			lang = "or_IN"; usage = "ଉପଯୋଗ: subscription-manager register [OPTIONS]";				ll.add(Arrays.asList(new Object[] {null, lang, smHelpCommand+" "+module, newList(usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$")}));

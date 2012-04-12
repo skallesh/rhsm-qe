@@ -585,24 +585,69 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * @return the current release returned by subscription-manager release (must already be registered)
+	 */
+	public String getCurrentRelease() {
+		
+		SSHCommandResult result = release(null, null, null, null, null);
+		
+		//	[root@jsefler-r63-server ~]# subscription-manager release
+		//	Release: foo
+		//	[root@jsefler-r63-server ~]# subscription-manager release
+		//	Release not set
+
+		String release = result.getStdout().replaceFirst(".*:", "").replaceFirst("Release not set", "").trim();
+		
+		return release;
+	}
+	
+	/**
 	 * @return list of the service labels returned by subscription-manager service-level --list (must already be registered)
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
-		SSHCommandResult result = service_level(false, true, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null);
 		
-		/*
-		[root@jsefler-r63-server ~]# subscription-manager service-level --list
-		+-------------------------------------------+
-		          Available Service Levels
-		+-------------------------------------------+
-		Standard
-		None
-		Premium
-		*/
-		List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
+		//	[root@jsefler-r63-server ~]# subscription-manager service-level --list
+		//	+-------------------------------------------+
+		//	          Available Service Levels
+		//	+-------------------------------------------+
+		//	Standard
+		//	None
+		//	Premium
+		
+		List<String> serviceLevels = new ArrayList<String>();
+		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
+		
+		//List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
+		for (String serviceLevel : result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) {
+			serviceLevels.add(serviceLevel);
+		}
 		
 		return serviceLevels;
+	}
+	
+	/**
+	 * @return list of the releases returned by subscription-manager release --list (must already be registered)
+	 */
+	public List<String> getCurrentlyAvailableReleases() {
+		
+		SSHCommandResult result = release(true,null,null,null,null);
+		
+		//	[root@jsefler-r63-workstation ~]# subscription-manager release --list
+		//	5.7
+		//	5.8
+		//	5Client
+		//	6.0
+		//	6.1
+		//	6.2
+		//	6Workstation
+		List<String> releases =  new ArrayList<String>();
+		for (String release : result.getStdout().trim().split("\\n")) {
+			if (!release.isEmpty())	releases.add(release);
+		}
+		
+		return releases;
 	}
 	
 	/**
@@ -1388,11 +1433,8 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
-	 * @param servicelevel TODO
-	 * @param autoheal TODO
-	 * @throws Exception 
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
@@ -1405,6 +1447,7 @@ public class SubscriptionManagerTasks {
 		if (consumerid!=null)													command += " --consumerid="+consumerid;
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
 		if (servicelevel!=null)													command += " --servicelevel="+servicelevel;
+		if (release!=null)														command += " --release="+release;
 		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+activationkey;
 		if (force!=null && force)												command += " --force";
 		if (proxy!=null)														command += " --proxy="+proxy;
@@ -1461,23 +1504,22 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
-	 * @param servicelevel TODO
-	 * @param autoheal TODO
+	 * @param release TODO
 	 */
-	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
 
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 
 		String msg;
-		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	
 		// when already registered, just return without any assertions
 		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
@@ -1538,11 +1580,11 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
-		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
+		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -1616,7 +1658,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -f "+consumerCertFile, LogMessageUtil.action());
 		//removeAllCerts(true, true);
 		clean(null, null, null);
-		return register(username,password,null,null,null,null,consumerId, null, null, new ArrayList<String>(), null, null, null, null, null);
+		return register(username,password,null,null,null,null,consumerId, null, null, null, new ArrayList<String>(), null, null, null, null, null);
 	}
 	
 	
@@ -1933,7 +1975,7 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-		
+
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
@@ -1957,6 +1999,12 @@ public class SubscriptionManagerTasks {
 		Premium
 		*/
 		
+				
+		if (Boolean.valueOf(System.getProperty("sm.server.old","false"))) {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "ERROR: The service-level command is not supported by the server.");
+			throw new SkipException(sshCommandResult.getStderr().trim());
+ 		}
+ 		 			
 		// assert the banner
 		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
 		if (list!=null && list) {	// when explicitly asked to list
@@ -1977,6 +2025,81 @@ public class SubscriptionManagerTasks {
 		
 		// assert the exit code was a success
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the service-level command indicates a success.");
+		
+		return sshCommandResult; // from the service-level command
+	}
+	
+	
+	// release module tasks ************************************************************
+
+	/**
+	 * release without asserting results
+	 */
+	public SSHCommandResult release_(Boolean list, String set, String proxy, String proxyuser, String proxypassword) {
+
+		// assemble the command
+		String command = this.command;	command += " release";
+		if (list!=null && list)			command += " --list";
+		if (set!=null)					command += " --set="+(set.equals("")?"\"\"":set);	// quote an empty string
+		if (proxy!=null)				command += " --proxy="+proxy;
+		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * "subscription-manager release"
+	 */
+	public SSHCommandResult release(Boolean list, String set, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = release_(list, set, proxy, proxyuser, proxypassword);
+		
+		// assert results...
+		if (list==null)
+		if (Boolean.valueOf(System.getProperty("sm.server.old","false"))) {
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "ERROR: The 'release' command is not supported by the server.");
+			throw new SkipException(sshCommandResult.getStderr().trim());
+ 		}
+		
+		
+//TODO
+//		/*
+//		[root@jsefler-r63-server ~]# subscription-manager service-level --show --list
+//		Current service level: 
+//		+-------------------------------------------+
+//          			Available Service Levels
+//		+-------------------------------------------+
+//		Standard
+//		None
+//		Premium
+//		*/
+//		
+//		// assert the banner
+//		String bannerRegex = "\\+-+\\+\\n\\s*Available Service Levels\\s*\\n\\+-+\\+";
+//		if (list!=null && list) {	// when explicitly asked to list
+//			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
+//		} else {
+//			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
+//		}
+//		
+//		// assert the "Current service level: "
+//		String regex = "Current service level: ";
+//		if (show!=null && show) {	// when explicitly asked to show
+//			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
+//		} else if (list!=null && list) {	// when explicitly asked to list but not show
+//			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
+//		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
+//			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
+//		}
+		
+		if (set!=null) {
+		 Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set).trim(),"Stdout from release --set with a value.");
+		}
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the release command indicates a success.");
 		
 		return sshCommandResult; // from the service-level command
 	}
@@ -2093,8 +2216,8 @@ public class SubscriptionManagerTasks {
 				//You have removed the value for section rhsmcertd and name port.
 				//The default value for port will now be used.
 				//Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+".\nThe default value for "+name+" will now be used."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
-				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name+" will now be used."), defaultConfFileParameterNames().contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
+				Assert.assertTrue(sshCommandResult.getStdout().contains("You have removed the value for section "+section+" and name "+name.toLowerCase()+"."), "The stdout indicates the removal of config parameter name '"+name+"' from section '"+section+"'.");
+				Assert.assertEquals(sshCommandResult.getStdout().contains("The default value for "+name.toLowerCase()+" will now be used."), defaultConfFileParameterNames(true).contains(name), "The stdout indicates the default value for '"+name+"' will now be used after having removed it from section '"+section+"'.");
 			}
 		}
 
@@ -2108,13 +2231,15 @@ public class SubscriptionManagerTasks {
 		return config(list, remove, set, listOfSectionNameValues);
 	}
 	
-	public List<String> defaultConfFileParameterNames() {
+	public List<String> defaultConfFileParameterNames(Boolean toLowerCase) {
+		if (toLowerCase==null) toLowerCase=false;	// return the defaultConfFileParameterNames in lowerCase
 		
 		// hard-coded list of parameter called DEFAULTS in /usr/lib/python2.6/site-packages/rhsm/config.py
 		// this list of hard-coded parameter names have a hard-coded value (not listed here) that will be used
 		// after a user calls subscription-manager --remove section.name otherwise the remove will set the value to ""
 		List<String> defaultNames = new ArrayList<String>();
 
+		// BEFORE FIX FOR BUG 807721
 		// initialize defaultNames (will appear in all config sections and have a default value)
 		//	DEFAULTS = {
 		//	        'hostname': 'localhost',
@@ -2129,6 +2254,7 @@ public class SubscriptionManagerTasks {
 		//	        'proxy_password': '',
 		//	        'insecure': '0'
 		//	        }
+		/*
 		defaultNames.add("hostname");
 		defaultNames.add("prefix");
 		defaultNames.add("port");
@@ -2140,6 +2266,53 @@ public class SubscriptionManagerTasks {
 		defaultNames.add("proxy_user");
 		defaultNames.add("proxy_password");
 		defaultNames.add("insecure");
+		*/
+		
+		// AFTER FIX FOR BUG 807721
+		//# Defaults are applied to each section in the config file.
+		//DEFAULTS = {
+		//                'hostname': 'localhost',
+		//                'prefix': '/candlepin',
+		//                'port': '8443',
+		//                'ca_cert_dir': '/etc/rhsm/ca/',
+		//                'repo_ca_cert': '/etc/rhsm/ca/redhat-uep.pem',
+		//                'ssl_verify_depth': '3',
+		//                'proxy_hostname': '',
+		//                'proxy_port': '',
+		//                'proxy_user': '',
+		//                'proxy_password': '',
+		//                'insecure': '0',
+		//                'baseurl': 'https://cdn.redhat.com',
+		//                'manage_repos': '1',
+		//                'productCertDir': '/etc/pki/product',
+		//                'entitlementCertDir': '/etc/pki/entitlement',
+		//                'consumerCertDir': '/etc/pki/consumer',
+		//                'certFrequency': '240',
+		//                'healFrequency': '1440',
+		//            }
+		defaultNames.add("hostname");
+		defaultNames.add("prefix");
+		defaultNames.add("port");
+		defaultNames.add("ca_cert_dir");
+		defaultNames.add("repo_ca_cert");
+		defaultNames.add("ssl_verify_depth");
+		defaultNames.add("proxy_hostname");
+		defaultNames.add("proxy_port");
+		defaultNames.add("proxy_user");
+		defaultNames.add("proxy_password");
+		defaultNames.add("insecure");
+		defaultNames.add("baseurl");
+		defaultNames.add("manage_repos");
+		defaultNames.add("productCertDir");
+		defaultNames.add("entitlementCertDir");
+		defaultNames.add("consumerCertDir");
+		defaultNames.add("certFrequency");
+		defaultNames.add("healFrequency");
+		
+		// lowercase all of the defaultNames when requested
+		if (toLowerCase) for (String defaultName : defaultNames) {
+			defaultNames.set(defaultNames.indexOf(defaultName), defaultName.toLowerCase());
+		}
 		
 		return defaultNames;
 	}
