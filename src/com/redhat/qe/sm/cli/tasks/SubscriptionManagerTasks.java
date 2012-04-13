@@ -1448,7 +1448,7 @@ public class SubscriptionManagerTasks {
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
 		if (servicelevel!=null)													command += " --servicelevel="+servicelevel;
 		if (release!=null)														command += " --release="+release;
-		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+activationkey;
+		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+String.format(activationkey.contains(" ")?"\"%s\"":"%s", activationkey);	// quote activationkey containing spaces
 		if (force!=null && force)												command += " --force";
 		if (proxy!=null)														command += " --proxy="+proxy;
 		if (proxyuser!=null)													command += " --proxyuser="+proxyuser;

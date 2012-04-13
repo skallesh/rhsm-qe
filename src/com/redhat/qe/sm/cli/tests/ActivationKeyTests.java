@@ -37,6 +37,17 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 
 	
+	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
+			groups={},
+			dataProvider="getRegisterWithUnknownActivationKeyData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void AttemptRegisterWithUnknownActivationKey_Test(Object blockedByBug, String unknownActivationKeyName, String org) {
+		SSHCommandResult sshCommandResult = clienttasks.register_(null, null, org, null, null, null, null, null, null, null, unknownActivationKeyName, true, null, null, null, null);
+		Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
+	}
+	
 	@Test(	description="use the candlepin api to create valid activation keys",
 			groups={},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
@@ -169,7 +180,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getRegisterWithActivationKeyContainingPoolWithQuantity_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
+	public void RegisterWithActivationKeyContainingPoolWithQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool, Integer addQuantity) throws JSONException, Exception {
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-4")) throw new SkipException("debugging...");
 //if (jsonPool.getInt("quantity")!=-1) throw new SkipException("debugging...");
 //if (!jsonPool.getString("productId").equals("awesomeos-virt-unlimited")) throw new SkipException("debugging...");
@@ -187,16 +198,16 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		
 		// generate a unique activation key name for this test
-		String name = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), poolId);
+		//String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), poolId);
 		
 		// create a JSON object to represent the request body
 		Map<String,String> mapActivationKeyRequest = new HashMap<String,String>();
-		mapActivationKeyRequest.put("name", name);
+		mapActivationKeyRequest.put("name", keyName);
 		JSONObject jsonActivationKeyRequest = new JSONObject(mapActivationKeyRequest);
 		
 		// call the candlepin api to create an activation key
 		JSONObject jsonActivationKey = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/owners/" + sm_clientOrg + "/activation_keys", jsonActivationKeyRequest.toString()));
-		Assert.assertEquals(jsonActivationKey.getString("name"), name, "Activation key creation attempt appears successful.  Activation key: "+jsonActivationKey);
+		Assert.assertEquals(jsonActivationKey.getString("name"), keyName, "Activation key creation attempt appears successful.  Activation key: "+jsonActivationKey);
 
 		// add the pool with a random available quantity (?quantity=#) to the activation key
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
@@ -210,10 +221,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
-				Assert.assertEquals(displayMessage,"Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
+				Assert.assertEquals(displayMessage,"Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys","Expected the addition of a requires consumer type person pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' to be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail since we should be blocked from adding pools that require consumer type person to an activation key.");
-				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' which requires a consumer type 'person' should NOT have been added to the following activation key with any quantity: "+jsonActivationKey);
+				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' which requires a consumer type 'person' should NOT have been added to the following activation key with any quantity: "+jsonActivationKey);
 			}
 			return;
 		}
@@ -224,10 +235,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// assert that the adding of the pool to the key was NOT successful (contains a displayMessage from some thrown exception)
 			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
-				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' to be blocked.");
+				Assert.assertEquals(displayMessage,"Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one.","Expected the addition of a non-multi-entitlement pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' to be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to greater than one quantity '"+addQuantity+"'.");
-				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Non multi-entitlement pool '"+poolId+"' should NOT have been added to the following activation key with a quantity '"+addQuantity+"' greater than one: "+jsonActivationKey);
+				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Non multi-entitlement pool '"+poolId+"' should NOT have been added to the following activation key with a quantity '"+addQuantity+"' greater than one: "+jsonActivationKey);
 			}
 			return;
 		}
@@ -238,10 +249,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
 			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
-				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+name+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
+				Assert.assertEquals(displayMessage,"The quantity must not be greater than the total allowed for the pool", "Expected the addition of multi-entitlement pool '"+poolId+"' to activation key named '"+keyName+"' with an excessive quantity '"+addQuantity+"' to be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to an excessive quantity '"+addQuantity+"'.");
-				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
+				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with an excessive quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
 			return;
 		}
@@ -252,10 +263,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			// assert that adding the pool to the key was NOT successful (contains a displayMessage)
 			if (jsonAddedPool.has("displayMessage")) {
 				String displayMessage = jsonAddedPool.getString("displayMessage");
-				Assert.assertEquals(displayMessage,"The quantity must be greater than 0", "Expected the addition of pool '"+poolId+"' to activation key named '"+name+"' with quantity '"+addQuantity+"' less than one be blocked.");
+				Assert.assertEquals(displayMessage,"The quantity must be greater than 0", "Expected the addition of pool '"+poolId+"' to activation key named '"+keyName+"' with quantity '"+addQuantity+"' less than one be blocked.");
 			} else {
 				log.warning("The absense of a displayMessage indicates the activation key creation was probably successful when we expected it to fail due to insufficient quantity '"+addQuantity+"'.");
-				Assert.assertFalse (name.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with insufficient quantity '"+addQuantity+"': "+jsonActivationKey);
+				Assert.assertFalse (keyName.equals(jsonActivationKey.getString("name")),"Pool '"+poolId+"' should NOT have been added to the following activation key with insufficient quantity '"+addQuantity+"': "+jsonActivationKey);
 			}
 			return;
 		}
@@ -367,27 +378,41 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity_Test(Object blockedByBug, JSONObject jsonPool) throws JSONException, Exception {
+	public void RegisterWithActivationKeyContainingPoolWithQuantityOutsideAvailableQuantity_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
 
 		// choose a random pool quantity > totalPoolQuantity)
 		Integer excessiveQuantity = jsonPool.getInt("quantity") + randomGenerator.nextInt(10) +1;
-	
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonPool, excessiveQuantity);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonPool, 0);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonPool, -1);
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonPool, -1*excessiveQuantity);
+		//String keyName = String.format("ActivationKey%s_ForPool%s_", System.currentTimeMillis(), jsonPool.getString("id"));
+
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity"+excessiveQuantity, jsonPool, excessiveQuantity);
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity0", jsonPool, 0);
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-1", jsonPool, -1);
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName+"_Quantity-"+excessiveQuantity, jsonPool, -1*excessiveQuantity);
 	}
 	
 	
-	@Test(	description="create an activation key, add it to a pool (without specifying a quantity), and then register with the activation key",
+	@Test(	description="create an activation key, add a pool to it (without specifying a quantity), and then register with the activation key",
 			groups={},
 			dataProvider="getRegisterWithActivationKeyContainingPool_TestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPool_Test(Object blockedByBug, JSONObject jsonPool) throws JSONException, Exception {
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonPool, null);
+	public void RegisterWithActivationKeyContainingPool_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonPool, null);
 	}
 	
+	/*
+	 * CANDLEPIN DOES NOT PERMIT CREATION OF AN INTERNATIONAL KEY {"displayMessage":"Activation key names must be alphanumeric or the characters '-' or '_'. [ak_na_testovÃ¡nÃ­]"}
+	 * HOWEVER, SAM/KATELLO DOES PERMIT CREATION OF INTERNATIONAL ACTIVATION KEYS  See https://bugzilla.redhat.com/show_bug.cgi?id=803773#c12
+	 * @Test enabled=false
+	 */
+	@Test(	description="create an activation key named with an international character, add a pool to it (without specifying a quantity), and then register with the activation key",
+			groups={"blockedByBug-803773"},
+			dataProvider="getRegisterWithInternationalActivationKeyContainingPool_TestData",
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithInternationalActivationKeyContainingPool_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonPool, null);
+	}
 	
 	@Test(	description="create an activation key for each org and then attempt to register with the activation key using a different org",
 			groups={},
@@ -461,7 +486,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllMultiEntitlementJSONPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithActivationKeyContainingPoolForWhichNotEnoughQuantityRemains_Test(Object blockedByBug, JSONObject jsonPool) throws JSONException, Exception {
+	public void RegisterWithActivationKeyContainingPoolForWhichNotEnoughQuantityRemains_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
 		
 		// first, figure out how many entitlements remain
 		int quantityAvail = jsonPool.getInt("quantity")-jsonPool.getInt("consumed");
@@ -495,7 +520,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// finally do the test...
 		// create an activation key, add the current pool to the activation key with this valid quantity, and attempt to register with it.
-		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, jsonCurrentPool, quantityAvail);
+		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonCurrentPool, quantityAvail);
 		
 		// assume RegisterWithActivationKeyContainingPoolWithQuantity_Test exits with the most recent results on the top of the client stack
 		Assert.assertEquals(client.getStderr().trim(), "No entitlements are available from the pool with id '"+jsonCurrentPool.getString("id")+"'.", "Registering a with an activationKey containing a pool for which not enough entitlements remain should fail.");
@@ -700,7 +725,6 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 755677 - failing to add a virt unlimited pool to an activation key  (SHOULD CREATE AN UNLIMITED POOL IN A BEFORE CLASS FOR THIS BUG TO AVOID RESTARTING CANDLEPIN IN standalone=false)
 	// TODO Bug 749636 - subscription-manager register fails with consumerid and activationkey specified 
-	// TODO Bug 803773 - Can't register with activation key containing international characters
 	
 	// Protected Class Variables ***********************************************************************
 	
@@ -818,11 +842,12 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
-			
+			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
+		
 			if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id"))) {
 
 				// Object blockedByBug, JSONObject jsonPool)
-				ll.add(Arrays.asList(new Object[] {null,	jsonPool}));
+				ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
 			}
 		}
 		return ll;
@@ -836,10 +861,28 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllJSONPoolsDataAsListOfLists()) {
 			JSONObject jsonPool = (JSONObject)l.get(0);
+			String keyName = String.format("ActivationKey%s_ForPool%s", System.currentTimeMillis(), jsonPool.getString("id"));
 
-			// Object blockedByBug, JSONObject jsonPool)
-			ll.add(Arrays.asList(new Object[] {null,	jsonPool}));
+			// Object blockedByBug, String keyName, JSONObject jsonPool)
+			ll.add(Arrays.asList(new Object[] {null, keyName, jsonPool}));
 		}
+		return ll;
+	}
+	
+	@DataProvider(name="getRegisterWithInternationalActivationKeyContainingPool_TestData")
+	public Object[][] getRegisterWithInternationalActivationKeyContainingPool_TestDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithInternationalActivationKeyContainingPool_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithInternationalActivationKeyContainingPool_TestDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		
+		// randomly choose a pool
+		List<List<Object>> allJSONPoolsDataAsListOfLists = getAllJSONPoolsDataAsListOfLists();
+		JSONObject jsonPool = (JSONObject)allJSONPoolsDataAsListOfLists.get(randomGenerator.nextInt(allJSONPoolsDataAsListOfLists.size())).get(0);  // randomly pick a pool
+		
+		// Object blockedByBug, String keyName, JSONObject jsonPool)
+		ll.add(Arrays.asList(new Object[] {null,	"ak_na_testování", jsonPool}));
+
 		return ll;
 	}
 	
@@ -871,9 +914,11 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			if (!CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, jsonPool.getString("id")) && addQuantity>1)
 				bugids.add("729070");			
 			if (!bugids.isEmpty()) blockedByBugs = new BlockedByBzBug(bugids.toArray(new String[]{}));
-				
-			// Object blockedByBug, JSONObject jsonPool
-			ll.add(Arrays.asList(new Object[] {blockedByBugs,	jsonPool,	addQuantity}));
+			
+			String keyName = String.format("ActivationKey%s_ForPool%s_WithQuantity%s", System.currentTimeMillis(), jsonPool.getString("id"), addQuantity);
+
+			// Object blockedByBug, String keyName, JSONObject jsonPool
+			ll.add(Arrays.asList(new Object[] {blockedByBugs,	keyName, jsonPool,	addQuantity}));
 		}
 		return ll;
 	}
@@ -921,6 +966,22 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		name = "s p a c e s";			ll.add(Arrays.asList(new Object[] {null,	name}));
 
 		name = "#poundSign";			ll.add(Arrays.asList(new Object[] {null,	name}));
+		
+		return ll;
+	}
+	
+	@DataProvider(name="getRegisterWithUnknownActivationKeyData")
+	public Object[][] getRegisterWithUnknownActivationKeyDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithUnknownActivationKeyDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithUnknownActivationKeyDataAsListOfLists() throws Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		String name;
+		
+		name = " ";						ll.add(Arrays.asList(new Object[] {null,	name, sm_clientOrg}));
+		name = "unknown";				ll.add(Arrays.asList(new Object[] {null,	name, sm_clientOrg}));
+		name = "ak_na_testování";		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("803773"),	name, sm_clientOrg}));
+		name = "使 용 Ф ব্ ಬ ഉ ବ୍ டு వా Й Ó";	ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("803773"),	name, sm_clientOrg}));
 		
 		return ll;
 	}
