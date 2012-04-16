@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -19,11 +21,19 @@ public class YumRepo extends AbstractCommandLineData {
 	public String name;
 	public String baseurl;
 	public Boolean enabled;
+	public Boolean gpgcheck;
+	public String gpgkey;
+	
+//	public String rawYumRepo;
 
 	
-	public YumRepo(Map<String, String> repoData) {
-		super(repoData);
+	public YumRepo(Map<String, String> yumRepoData) {
+		super(yumRepoData);
 	}
+//	public YumRepo(String rawYumRepo, Map<String, String> yumRepoData){
+//		super(yumRepoData);
+//		this.rawYumRepo = rawYumRepo;
+//	}
 	
 	
 	@Override
@@ -34,6 +44,8 @@ public class YumRepo extends AbstractCommandLineData {
 		if (name != null)		string += String.format(" %s='%s'", "name",name);
 		if (baseurl != null)	string += String.format(" %s='%s'", "baseurl",baseurl);
 		if (enabled != null)	string += String.format(" %s='%s'", "enabled",enabled);
+		if (gpgcheck != null)	string += String.format(" %s='%s'", "gpgcheck",gpgcheck);
+		if (gpgkey != null)		string += String.format(" %s='%s'", "gpgkey",gpgkey);
 
 		return string.trim();
 	}
@@ -62,64 +74,6 @@ public class YumRepo extends AbstractCommandLineData {
 		sslclientcert = /etc/pki/entitlement/8367634176913608279.pem
 		metadata_expire = 3600
 		
-		[awesomeos-modifier]
-		name = awesomeos-modifier
-		baseurl = http://example.com/awesomeos-modifier
-		enabled = 1
-		gpgcheck = 1
-		gpgkey = http://example.com/awesomeos-modifier/gpg
-		sslverify = 1
-		sslcacert = /etc/rhsm/ca/redhat-uep.pem
-		sslclientkey = /etc/pki/entitlement/key.pem
-		sslclientcert = /etc/pki/entitlement/834137930840854788.pem
-		
-		[awesomeos-server-scalable-fs]
-		name = awesomeos-server-scalable-fs
-		baseurl = https://cdn.redhat.com/path/to/awesomeos-server-scalable-fs
-		enabled = 1
-		gpgcheck = 1
-		gpgkey = https://cdn.redhat.com/path/to/awesomeos/gpg/
-		sslverify = 1
-		sslcacert = /etc/rhsm/ca/redhat-uep.pem
-		sslclientkey = /etc/pki/entitlement/key.pem
-		sslclientcert = /etc/pki/entitlement/8367634176913608279.pem
-		metadata_expire = 3600
-		
-		[always-enabled-content]
-		name = always-enabled-content
-		baseurl = https://cdn.redhat.com/foo/path/always
-		enabled = 1
-		gpgcheck = 1
-		gpgkey = https://cdn.redhat.com/foo/path/always/gpg
-		sslverify = 1
-		sslcacert = /etc/rhsm/ca/redhat-uep.pem
-		sslclientkey = /etc/pki/entitlement/key.pem
-		sslclientcert = /etc/pki/entitlement/7590966368525320704.pem
-		metadata_expire = 200
-		
-		[content-label]
-		name = content
-		baseurl = https://cdn.redhat.com/foo/path
-		enabled = 1
-		gpgcheck = 1
-		gpgkey = https://cdn.redhat.com/foo/path/gpg/
-		sslverify = 1
-		sslcacert = /etc/rhsm/ca/redhat-uep.pem
-		sslclientkey = /etc/pki/entitlement/key.pem
-		sslclientcert = /etc/pki/entitlement/7590966368525320704.pem
-		metadata_expire = 0
-		
-		[never-enabled-content]
-		name = never-enabled-content
-		baseurl = https://cdn.redhat.com/foo/path/never
-		enabled = 0
-		gpgcheck = 1
-		gpgkey = https://cdn.redhat.com/foo/path/never/gpg
-		sslverify = 1
-		sslcacert = /etc/rhsm/ca/redhat-uep.pem
-		sslclientkey = /etc/pki/entitlement/key.pem
-		sslclientcert = /etc/pki/entitlement/7590966368525320704.pem
-		
 		*/
 		
 		/* [root@jsefler-onprem-5server ~]# grep rhel-5-server-rpms /etc/yum.repos.d/redhat.repo -A14
@@ -139,23 +93,77 @@ public class YumRepo extends AbstractCommandLineData {
 		proxy_password = redhat
 		*/
 		
-		Map<String,String> regexes = new HashMap<String,String>();
-		
-		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("id",					"\\[(.*)\\]");
-		regexes.put("name",					"name = (.*)");
-		regexes.put("baseurl",				"baseurl = (.*)");
-		regexes.put("enabled",				"enabled = (.*)");
-		
-		List<Map<String,String>> yumRepoList = new ArrayList<Map<String,String>>();
-		for(String field : regexes.keySet()){
-			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, stdoutCatOfRedhatRepoFile, yumRepoList, field);
-		}
+		// begin by finding all the yumRepoIds
+		List<String> yumRepoIds = new ArrayList<String>();
+		Matcher m = Pattern.compile("^(\\[.*\\])", Pattern.MULTILINE).matcher(stdoutCatOfRedhatRepoFile);
+		while (m.find()) yumRepoIds.add(m.group(1));
 		
 		List<YumRepo> yumRepos = new ArrayList<YumRepo>();
-		for(Map<String,String> yumRepoMap : yumRepoList)
-			yumRepos.add(new YumRepo(yumRepoMap));
+		
+		
+		// begin by splitting the yumRepos and processing each yumRepo individually
+
+		// trim off leading redhat.repo comments from stdoutCatOfRedhatRepoFile
+		stdoutCatOfRedhatRepoFile = Pattern.compile("^.*?(\\[.*?\\])", Pattern.DOTALL).matcher(stdoutCatOfRedhatRepoFile).replaceAll("$1");
+
+		// split the stdoutCatOfRedhatRepoFile by the [id] and processing each yumRepo individually
+		int y=0;
+		for (String rawYumRepo : stdoutCatOfRedhatRepoFile.split("\\[.*\\]")) {
+			if (rawYumRepo.trim().length()==0) continue;	// skip leading split
+			rawYumRepo = yumRepoIds.get(y++)+rawYumRepo;	// tac the yumRepo [id] back on
+	
+			Map<String,String> regexes = new HashMap<String,String>();
+
+			// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+			regexes.put("id",					"\\[(.*)\\]");
+			regexes.put("name",					"name = (.*)");
+			regexes.put("baseurl",				"baseurl = (.*)");
+			regexes.put("enabled",				"enabled = (.*)");
+			regexes.put("gpgcheck",				"gpgcheck = (.*)");
+			regexes.put("gpgkey",				"gpgkey = (.*)");
+
+			List<Map<String,String>> yumRepoDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawYumRepo, yumRepoDataList, field);
+			}
+			
+			// assert that there is only one group of yumRepoData found in the map
+			if (yumRepoDataList.size()!=1) Assert.fail("Error when parsing raw yumRepo.");
+			Map<String,String> yumRepoData = yumRepoDataList.get(0);
+			
+			// create a new YumRepo
+			yumRepos.add(new YumRepo(/*rawYumRepo,*/yumRepoData));
+		}
+		
 		return yumRepos;
+		
+		
+		
+		
+		
+		
+//		// OLD PARSING - fails when there is not a gpgkey on every yumRepo
+//		
+//		Map<String,String> regexes = new HashMap<String,String>();
+//		
+//		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+//		regexes.put("id",					"\\[(.*)\\]");
+//		regexes.put("name",					"name = (.*)");
+//		regexes.put("baseurl",				"baseurl = (.*)");
+//		regexes.put("enabled",				"enabled = (.*)");
+//		regexes.put("gpgcheck",				"gpgcheck = (.*)");
+//		regexes.put("gpgkey",				"gpgkey = (.*)");
+//		
+//		List<Map<String,String>> yumRepoList = new ArrayList<Map<String,String>>();
+//		for(String field : regexes.keySet()){
+//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+//			addRegexMatchesToList(pat, stdoutCatOfRedhatRepoFile, yumRepoList, field);
+//		}
+//		
+//		List<YumRepo> yumRepos = new ArrayList<YumRepo>();
+//		for(Map<String,String> yumRepoMap : yumRepoList)
+//			yumRepos.add(new YumRepo(yumRepoMap));
+//		return yumRepos;
 	}
 }

@@ -588,7 +588,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 //debugTesting if (true) return;
 	
 		// Awesome OS for 0 sockets
-		name = "Awesome OS for 0 sockets";
+		name = "Awesome OS for systems with sockets value=0";
 		productId = "0-sockets";
 		providedProductIds.clear();
 		providedProductIds.add("90001");
@@ -611,7 +611,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 	
 		// Awesome OS for no sockets
-		name = "Awesome OS for no sockets";
+		name = "Awesome OS for systems with no sockets";
 		productId = "no-sockets";
 		providedProductIds.clear();
 		providedProductIds.add("90002");
@@ -634,8 +634,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// Awesome OS for "zero" sockets
-		name = "Awesome OS for \"zero\" sockets";
-		productId = "zero-sockets";
+		name = "Awesome OS for systems with sockets value=\"unknown\"";
+		productId = "unknown-sockets";
 		providedProductIds.clear();
 		providedProductIds.add("90003");
 		attributes.clear();
@@ -666,7 +666,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// Awesome OS for null sockets
-		name = "Awesome OS for null sockets";
+		name = "Awesome OS for systems with sockets value=null";
 		productId = "null-sockets";
 		providedProductIds.clear();
 		providedProductIds.add("90004");

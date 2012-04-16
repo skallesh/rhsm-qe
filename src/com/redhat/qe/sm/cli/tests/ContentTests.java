@@ -221,6 +221,96 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
+	@Test(	description="subscription-manager content flag : gpgcheck value in redhat.repo should be disabled when gpg_url is empty or null",
+			groups={"AcceptanceTests","blockedByBug-741293","blockedByBug-805690"},
+	        enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyGpgCheckValuesInYumRepos() throws JSONException, Exception {
+//		[root@jsefler-r63-server ~]# cat /etc/yum.repos.d/redhat.repo 
+//		#
+//		# Certificate-Based Repositories
+//		# Managed by (rhsm) subscription-manager
+//		#
+//		# If this file is empty and this system is subscribed consider 
+//		# a "yum repolist" to refresh available repos
+//		#
+//
+//		[content-label]
+//		name = content
+//		baseurl = https://cdn.redhat.com/foo/path
+//		enabled = 1
+//		gpgcheck = 1
+//		gpgkey = https://cdn.redhat.com/foo/path/gpg/
+//		sslverify = 1
+//		sslcacert = /etc/rhsm/ca/redhat-uep.pem
+//		sslclientkey = /etc/pki/entitlement/5488047145460852736-key.pem
+//		sslclientcert = /etc/pki/entitlement/5488047145460852736.pem
+//		metadata_expire = 0
+
+//		1.3.6.1.4.1.2312.9.2 (Content Namespace)
+//		1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (core server))
+//		  1.3.6.1.4.1.2312.9.2.<content_hash>.1 (Yum repo type))
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.1 (Name) : Red Hat Enterprise Linux (core server)
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.2 (Label) : rhel-server
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.6 (Download URL): content/rhel-server/$releasever/$basearch
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.7 (GPG Key URL): file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.8 (Enabled): 1
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.9 (Metadata Expire Seconds): 604800
+//		    1.3.6.1.4.1.2312.9.2.<content_hash>.1.10 (Required Tags): TAG1,TAG2,TAG3
+		
+		List<ProductCert> currentProductCerts = clienttasks.getCurrentProductCerts();
+		
+	    clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+	    if (clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively().size()<=0)
+	    	throw new SkipException("No available subscriptions were found.  Therefore we cannot perform this test.");
+	    List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+	    Assert.assertTrue(!entitlementCerts.isEmpty(),"After subscribing to all available subscription pools, there must be some entitlements."); // or maybe we should skip when nothing is consumed 
+
+	    
+	    ArrayList<String> repolist = clienttasks.getYumRepolist("enabled");
+	    List<YumRepo> yumRepos = clienttasks.getCurrentlySubscribedYumRepos();
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
+				if (contentNamespace.enabled.equals("1")) {
+					if (!clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentProductCerts)) continue;
+					YumRepo yumRepo = YumRepo.findFirstInstanceWithMatchingFieldFromList("id"/*label*/, contentNamespace.label, yumRepos);
+					
+					// case 1: contentNamespace.gpgKeyUrl==null
+					if (contentNamespace.gpgKeyUrl==null) {
+						Assert.assertFalse(yumRepo.gpgcheck,
+								"gpgcheck is False for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has a null gpgKeyUrl: contentNamespace: "+contentNamespace);
+						Assert.assertNull(yumRepo.gpgkey,
+								"gpgkey is not set for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has a null gpgKeyUrl: contentNamespace: "+contentNamespace);
+					
+					// case 2: contentNamespace.gpgKeyUrl==""
+					} else if (contentNamespace.gpgKeyUrl.equals("")) {
+						Assert.assertFalse(yumRepo.gpgcheck,
+								"gpgcheck is False for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has an empty gpgKeyUrl: contentNamespace: "+contentNamespace);
+						Assert.assertNull(yumRepo.gpgkey,
+								"gpgkey is not set for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has an empty gpgKeyUrl: contentNamespace: "+contentNamespace);
+
+					// case 3: contentNamespace.gpgKeyUrl.startsWith("http")
+					} else if (contentNamespace.gpgKeyUrl.startsWith("http")) {
+						Assert.assertTrue(yumRepo.gpgcheck,
+								"gpgcheck is True for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has a non-null/empty gpgKeyUrl: contentNamespace: "+contentNamespace);
+						Assert.assertEquals(yumRepo.gpgkey, contentNamespace.gpgKeyUrl,
+								"gpgkey is set for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has a non-null/empty gpgKeyUrl: contentNamespace: "+contentNamespace);
+
+					// case 4: contentNamespace.gpgKeyUrl is a relative path   
+					} else {
+						Assert.assertTrue(yumRepo.gpgcheck,
+								"gpgcheck is True for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has a non-null/empty gpgKeyUrl: contentNamespace: "+contentNamespace);
+						Assert.assertEquals(yumRepo.gpgkey, clienttasks.baseurl+contentNamespace.gpgKeyUrl,
+								"gpgkey is set for Yum repo '"+yumRepo.id+"' when corresponding entitlement contentNamespace has a non-null/empty gpgKeyUrl: contentNamespace: "+contentNamespace);
+					}
+				}
+			}
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager Yum plugin: ensure content can be downloaded/installed/removed",
 			groups={"AcceptanceTests","blockedByBug-701425"},
 			dataProvider="getPackageFromEnabledRepoAndSubscriptionPoolData",
