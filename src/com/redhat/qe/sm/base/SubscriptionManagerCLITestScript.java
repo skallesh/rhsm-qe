@@ -179,6 +179,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				//    "timeUTC": "2012-03-08T18:58:07.688+0000", 
 				//    "version": "0.5.24"
 				//}
+				
+				//TODO git candlepin version on hosted stage:
+				// curl -s	http://git.corp.redhat.com/cgit/puppet-cfg/modules/candlepin/plain/data/rpm-versions.yaml?h=stage | grep candlepin
+				// candlepin-it-jars: 0.5.26-1
+				// candlepin-jboss: 0.5.26-1.el6
 
 				log.info("Candlepin server '"+sm_serverHostname+"' is running: release="+servertasks.statusRelease+" version="+servertasks.statusVersion+" standalone="+servertasks.statusStandalone+" timeUTC="+servertasks.statusTimeUTC);
 				Assert.assertEquals(servertasks.statusResult, true,"Candlepin status result");
