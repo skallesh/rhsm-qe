@@ -347,6 +347,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=678151
+	// TODO Bug 813296 - Consumer could not get correct info after being deleted from server side
 	
 	
 	
