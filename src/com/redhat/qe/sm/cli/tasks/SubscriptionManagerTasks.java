@@ -524,7 +524,7 @@ public class SubscriptionManagerTasks {
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
-		/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA
+		/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA; setting invokeWorkaroundWhileBugIsOpen to false to save execution time
 		String bugId1="752572"; 
 		String bugId2="759199"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -536,7 +536,14 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+"\n.* cert check started: interval = "+certFrequency,null);
 		}
 		
-		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
+		// give the rhsmcertd time to make its initial check-in with the candlepin server and update the certs
+		// I've seen this take 10 to 15 seconds as demonstrated here...
+		//	1334786048260 Testing service rhsmcertd restart...
+		//	Wed Apr 18 17:54:11 2012: healing check started: interval = 1440
+		//	Wed Apr 18 17:54:11 2012: cert check started: interval = 240
+		//	Wed Apr 18 17:54:21 2012: certificates updated
+		//	Wed Apr 18 17:54:26 2012: certificates updated
+		SubscriptionManagerCLITestScript.sleep(20000);	// 20 seconds	
 
 		// assert the rhsmcertd log file reflected newly updated certificates...
 		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "certificates updated");
