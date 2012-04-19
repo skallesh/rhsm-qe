@@ -75,7 +75,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="verify that the consumer's current subscription-manager release value matches the release value just set",
-			groups={},
+			groups={"blockedByBug-814385"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void GetTheReleaseAfterSettingTheRelease_Test() {
@@ -88,7 +88,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 
 	@Test(	description="assert that the subscription-manager release can be unset",
-			groups={"blockedByBug-807822"},
+			groups={"blockedByBug-807822","blockedByBug-814385"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsetTheReleaseAfterSettingTheRelease_Test() {
