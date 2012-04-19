@@ -9,6 +9,7 @@ import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -376,6 +377,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	protected String origConsumerCertDir = null;
+	
+	@AfterClass(groups="setup")
+	public void cleanAfterClass() {
+		// use the following to recover bugs like 814466
+		if (clienttasks!=null) {
+			clienttasks.clean(null,null,null);
+		}
+	}
 	
 	
 	// Protected Methods ***********************************************************************
