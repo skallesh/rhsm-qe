@@ -608,6 +608,16 @@ public class SubscriptionManagerTasks {
 		
 		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null);
 		
+		List<String> serviceLevels = new ArrayList<String>();
+		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
+
+		//	ssh root@margo.idm.lab.bos.redhat.com subscription-manager service-level --list
+		//	Stdout: This org does not have any subscriptions with service levels.
+		//	Stderr:
+		//	ExitCode: 0
+		if (result.getStdout().equals("This org does not have any subscriptions with service levels.")) return serviceLevels;
+
+		
 		//	[root@jsefler-r63-server ~]# subscription-manager service-level --list
 		//	+-------------------------------------------+
 		//	          Available Service Levels
@@ -615,11 +625,6 @@ public class SubscriptionManagerTasks {
 		//	Standard
 		//	None
 		//	Premium
-		
-		List<String> serviceLevels = new ArrayList<String>();
-		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
-		
-		//List<String> serviceLevels = Arrays.asList(result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n"));
 		for (String serviceLevel : result.getStdout().split("\\+-+\\+")[result.getStdout().split("\\+-+\\+").length-1].trim().split("\\n")) {
 			serviceLevels.add(serviceLevel);
 		}
