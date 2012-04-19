@@ -253,7 +253,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466"},
+			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296"},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -380,7 +380,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	@AfterClass(groups="setup")
 	public void cleanAfterClass() {
-		// use the following to recover bugs like 814466
+		// use the following to recover bugs like 814466,813296
 		if (clienttasks!=null) {
 			clienttasks.clean(null,null,null);
 		}
