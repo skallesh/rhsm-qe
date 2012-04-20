@@ -18,12 +18,16 @@
            [com.redhat.qe.auto.testng BzChecker]
            [org.apache.xmlrpc XmlRpcException]))
 
-(def somedir  "/tmp/sm-someProductsSubscribable")
-(def alldir "/tmp/sm-allProductsSubscribable")
-(def nodir "/tmp/sm-noProductsSubscribable")
-(def nonedir  "/tmp/sm-noProductsInstalled")
+(def somedir (ComplianceTests/productCertDirForSomeProductsSubscribable))
+(def alldir (ComplianceTests/productCertDirForAllProductsSubscribable))
+(def nodir (ComplianceTests/productCertDirForNoProductsSubscribable))
+(def nonedir (ComplianceTests/productCertDirForNoProductsinstalled))
+(def one-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByOneCommonServiceLevel))
+(def multi-sla-dir (ComplianceTests/productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel))
 (def complytests (atom nil))
 (def productmap (atom {}))
+(def common-sla (atom nil))
+(def sla-list (atom nil))
 
 (defn- dirsetup? [dir]
   (and 
@@ -47,6 +51,8 @@
   (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
+  (reset! common-sla (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue))
+  (reset! sla-list (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues)))
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/start-app))
 
@@ -55,81 +61,6 @@
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)
   (tasks/restart-app))
-
-(defn ^{Test {:groups ["autosubscribe"]}}
-  register_autosubscribe [_]
-  (let [beforesubs (tasks/warn-count)
-        user (@config :username)
-        pass (@config :password)
-        key  (@config :owner-key)
-        ownername (if (= "" key)
-                    nil
-                    (ctasks/get-owner-display-name user pass key))]
-      (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do 
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
-          (verify (<= (tasks/warn-count) beforesubs))))))
- 
-(defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForSomeProductsSubscribable"]
-              :dependsOnMethods ["register_autosubscribe"]}}
-  some_products_subscribable [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
-  (tasks/restart-app)
-  (verify (dirsetup? somedir))
-  (let [beforesubs (tasks/warn-count)
-        dircount (trim (.getStdout
-                        (.runCommandAndWait
-                         @clientcmd
-                         (str "ls " somedir " | wc -l"))))
-        user (@config :username)
-        pass (@config :password)
-        key  (@config :owner-key)
-        ownername (ctasks/get-owner-display-name user pass key)]
-    (verify (= (str beforesubs)
-               dircount))
-    (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do 
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
-          (tasks/ui waittillwindownotexist :register-dialog 600)
-          (tasks/sleep 20000)
-          (verify (<= (tasks/warn-count) beforesubs))
-          (verify (not (tasks/compliance?)))))))
-
-(defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForAllProductsSubscribable"]
-              :dependsOnMethods ["register_autosubscribe"]}}
-  all_products_subscribable [_]
-  (.runCommandAndWait @clientcmd "subscription-manager unregister")
-  (tasks/restart-app)
-  (verify (dirsetup? alldir))
-  (let [beforesubs (tasks/warn-count)
-        user (@config :username)
-        pass (@config :password)
-        key  (@config :owner-key)
-        ownername (ctasks/get-owner-display-name user pass key)]
-    (verify (= (str beforesubs)
-               (trim (.getStdout
-                      (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
-    (if (= 0 beforesubs)
-        (verify (tasks/compliance?))
-        (do 
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
-          (tasks/ui waittillwindownotexist :register-dialog 600)
-          (tasks/sleep 20000)
-          (verify (= (tasks/warn-count) 0))
-          (verify (tasks/compliance?))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsSubscribable"
@@ -169,6 +100,34 @@
   (verify (= 0 (tasks/warn-count)))
   (verify (tasks/compliance?)))
 
+ (defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]}}
+  simple_autosubscribe [_]
+   (.runCommandAndWait @clientcmd "subscription-manager unregister")
+   (tasks/restart-app)
+  (verify (dirsetup? one-sla-dir))
+   (let [beforesubs (tasks/warn-count)
+        dircount (trim (.getStdout
+                          (.runCommandAndWait
+                           @clientcmd
+                           (str "ls " one-sla-dir " | wc -l"))))
+          user (@config :username)
+          pass (@config :password)
+          key  (@config :owner-key)
+         ownername (ctasks/get-owner-display-name user pass key)]
+     (verify (= (str beforesubs)
+               dircount))
+     (if (= 0 beforesubs)
+      (verify (tasks/compliance?))
+      (do 
+        (tasks/register user
+                        pass
+                        :skip-autosubscribe false
+                        :owner ownername)
+        (tasks/ui waittillwindownotexist :register-dialog 600)
+        (tasks/sleep 20000)
+        (verify (<= (tasks/warn-count) beforesubs))
+        (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForSomeProductsSubscribable"]
@@ -203,7 +162,7 @@
                             (if (string? arch)
                               arch
                               ""))
-                          (catch XmlRpcException e
+                          (catch Exception e
                             ""))
                         #",")]
     ;;(println (str "index: " index))
@@ -242,11 +201,13 @@
                     nil
                     (ctasks/get-owner-display-name user pass key))]
     (setup-product-map)
-    (tasks/unregister)
-    (tasks/register user
-                    pass
-                    :skip-autosubscribe false
-                    :owner ownername)
+    (.runCommandAndWait @clientcmd "subscription-manager subscribe --auto")
+    (comment
+      (tasks/unregister)
+      (tasks/register user
+                      pass
+                      :skip-autosubscribe false
+                      :owner ownername))
     (if-not debug
       (to-array-2d prods)
       prods)))
@@ -268,3 +229,86 @@
                    "subscription-manager facts --list | "
                    "grep \"lscpu.architecture\" | "
                    "cut -f 2 -d \":\"")))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; OLD TESTS NO LONGER IN USE ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(comment
+  ;; tests no longer usable in the GUI
+  (defn ^{Test {:groups ["autosubscribe"]}}
+    register_autosubscribe [_]
+    (let [beforesubs (tasks/warn-count)
+          user (@config :username)
+          pass (@config :password)
+          key  (@config :owner-key)
+          ownername (if (= "" key)
+                      nil
+                      (ctasks/get-owner-display-name user pass key))]
+      (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :skip-autosubscribe false
+                          :owner ownername)
+          (verify (<= (tasks/warn-count) beforesubs))))))
+  
+  (defn ^{Test {:groups ["autosubscribe"
+                         "configureProductCertDirForSomeProductsSubscribable"]
+                :dependsOnMethods ["register_autosubscribe"]}}
+    some_products_subscribable [_]
+    (.runCommandAndWait @clientcmd "subscription-manager unregister")
+    (tasks/restart-app)
+    (verify (dirsetup? somedir))
+    (let [beforesubs (tasks/warn-count)
+          dircount (trim (.getStdout
+                          (.runCommandAndWait
+                           @clientcmd
+                           (str "ls " somedir " | wc -l"))))
+          user (@config :username)
+          pass (@config :password)
+          key  (@config :owner-key)
+          ownername (ctasks/get-owner-display-name user pass key)]
+      (verify (= (str beforesubs)
+                 dircount))
+      (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :skip-autosubscribe false
+                          :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 20000)
+          (verify (<= (tasks/warn-count) beforesubs))
+          (verify (not (tasks/compliance?)))))))
+
+  (defn ^{Test {:groups ["autosubscribe"
+                         "configureProductCertDirForAllProductsSubscribable"]
+                :dependsOnMethods ["register_autosubscribe"]}}
+    all_products_subscribable [_]
+    (.runCommandAndWait @clientcmd "subscription-manager unregister")
+    (tasks/restart-app)
+    (verify (dirsetup? alldir))
+    (let [beforesubs (tasks/warn-count)
+          user (@config :username)
+          pass (@config :password)
+          key  (@config :owner-key)
+          ownername (ctasks/get-owner-display-name user pass key)]
+      (verify (= (str beforesubs)
+                 (trim (.getStdout
+                        (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
+      (if (= 0 beforesubs)
+        (verify (tasks/compliance?))
+        (do 
+          (tasks/register user
+                          pass
+                          :skip-autosubscribe false
+                          :owner ownername)
+          (tasks/ui waittillwindownotexist :register-dialog 600)
+          (tasks/sleep 20000)
+          (verify (= (tasks/warn-count) 0))
+          (verify (tasks/compliance?))))))
+
+)
