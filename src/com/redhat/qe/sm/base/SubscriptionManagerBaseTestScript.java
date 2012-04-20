@@ -122,14 +122,14 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 
 	//public String sm_cdnProductBaselineUrl			= getProperty("sm.cdn.productBaselineUrl","");
 	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");
-	public String sm_rhnDefinitionsProductCertsDir		= getProperty("sm.rhn.definitionsProductCertsDir","");
 	public String sm_rhnDefinitionsProductBaselineFile	= getProperty("sm.rhn.definitionsProductBaselineFile","");
 	
-	protected List<String> sm_clientUsernames	= null;
-	protected List<String> sm_rpmInstallUrls	= null;
-	protected List<String> sm_rpmUpdateUrls		= null;
-	protected List<String> sm_repoCaCertUrls	= null;
-	protected List<String> sm_consumerTypes		= null;	// TODO, NOT SURE IF THIS IS USED ANYMORE.. SEE RegisterTests.getRegisterWithNameAndTypeDataAsListOfLists
+	protected List<String> sm_rhnDefinitionsProductCertsDirs	= null;
+	protected List<String> sm_clientUsernames					= null;
+	protected List<String> sm_rpmInstallUrls					= null;
+	protected List<String> sm_rpmUpdateUrls						= null;
+	protected List<String> sm_repoCaCertUrls					= null;
+	protected List<String> sm_consumerTypes						= null;	// TODO, NOT SURE IF THIS IS USED ANYMORE.. SEE RegisterTests.getRegisterWithNameAndTypeDataAsListOfLists
 
 //	protected JSONArray systemSubscriptionPoolProductData = null;
 	protected JSONArray sm_personSubscriptionPoolProductData = null;
@@ -144,10 +144,11 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
 		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
-		if (getProperty("sm.client.usernames", "").equals("")) 		sm_clientUsernames	= new ArrayList<String>();	else sm_clientUsernames	= Arrays.asList(getProperty("sm.client.usernames", "").trim().split(" *, *"));
-		if (getProperty("sm.rpm.installurls", "").equals("")) 		sm_rpmInstallUrls	= new ArrayList<String>();	else sm_rpmInstallUrls	= Arrays.asList(getProperty("sm.rpm.installurls", "").trim().split(" *, *"));
-		if (getProperty("sm.rpm.updateurls", "").equals("")) 		sm_rpmUpdateUrls	= new ArrayList<String>();	else sm_rpmUpdateUrls	= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
-		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))	sm_repoCaCertUrls	= new ArrayList<String>();	else sm_repoCaCertUrls	= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
+		if (getProperty("sm.rhn.definitionsProductCertsDirs", "").equals("")) 	sm_rhnDefinitionsProductCertsDirs	= new ArrayList<String>();	else sm_rhnDefinitionsProductCertsDirs	= Arrays.asList(getProperty("sm.rhn.definitionsProductCertsDirs", "").trim().split(" *, *"));
+		if (getProperty("sm.client.usernames", "").equals("")) 					sm_clientUsernames					= new ArrayList<String>();	else sm_clientUsernames					= Arrays.asList(getProperty("sm.client.usernames", "").trim().split(" *, *"));
+		if (getProperty("sm.rpm.installurls", "").equals("")) 					sm_rpmInstallUrls					= new ArrayList<String>();	else sm_rpmInstallUrls					= Arrays.asList(getProperty("sm.rpm.installurls", "").trim().split(" *, *"));
+		if (getProperty("sm.rpm.updateurls", "").equals("")) 					sm_rpmUpdateUrls					= new ArrayList<String>();	else sm_rpmUpdateUrls					= Arrays.asList(getProperty("sm.rpm.updateurls", "").trim().split(" *, *"));
+		if (getProperty("sm.rhsm.repoCaCert.urls", "").equals(""))				sm_repoCaCertUrls					= new ArrayList<String>();	else sm_repoCaCertUrls					= Arrays.asList(getProperty("sm.rhsm.repoCaCert.urls", "").trim().split(" *, *"));
 																														 sm_consumerTypes	= Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
 		
 		
