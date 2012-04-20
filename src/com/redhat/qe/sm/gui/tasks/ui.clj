@@ -41,7 +41,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :firstboot-window "frm0"
                 :firstboot-proxy-dialog "Advanced Network Configuration"
                 :import-window "Provide a Subscription Certificate"
-                :file-chooser "Select A File"}))
+                :file-chooser "Select A File"
+                :subscribe-system-dialog "Subscribe System"}))
 
 
 (def elements
@@ -54,8 +55,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :my-subscriptions
                                     :my-installed-software
                                     :search
-                                    ;this is commented out until 803374 is decided on:
-                                    ;:subscribe
+                                    :subscribe
                                     :all-subscriptions-view
                                     :my-subscriptions-view
                                     :installed-view
@@ -77,7 +77,6 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :redeem "Redeem a Subscription"
                      :unregister-system "Unregister"
                      :update-certificates "Update"
-                     :subscribe "Subscribe"
                      :autosubscribe "Auto-subscribe"}
                     ;dynamic text fields for details sections:
                     (text-field [:certificate-status
@@ -110,6 +109,11 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :owners "ownerSelectVbox"
          :owner-view "tbl0"
          :registering "Registering"})
+    (define-elements (windows :subscribe-system-dialog)
+      {:sla-subscribe "Subscribe"
+       :sla-forward "Forward"
+       :sla-cancel "Cancel"
+       :sla-back "Back"})
     (define-elements (windows :question-dialog)
       (same-name capitalize [:yes
                              :no ]))
