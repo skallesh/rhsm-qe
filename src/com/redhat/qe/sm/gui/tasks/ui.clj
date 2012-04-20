@@ -77,9 +77,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :redeem "Redeem a Subscription"
                      :unregister-system "Unregister"
                      :update-certificates "Update"
-                     ;these two are a temporary fix for 803374:
-                     :subscribe "All Available Subscribe"
-                     :autosubscribe "Subscribe"}
+                     :subscribe "Subscribe"
+                     :autosubscribe "Auto-subscribe"}
                     ;dynamic text fields for details sections:
                     (text-field [:certificate-status
                                  :installed-subscription
