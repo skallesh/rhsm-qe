@@ -763,7 +763,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={"blockedByBug-807477","AcceptanceTests","debugTest"},
+			groups={"blockedByBug-807477","AcceptanceTests"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
@@ -1465,6 +1465,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					rhnChannel.equals("rhel-s390x-server-supplementary-6")) { 
 					// Bug 799103 - no mapping for s390x product cert included in the subscription-manager-migration-data
 					bugzilla = new BlockedByBzBug("799103");
+				}
+				if (rhnChannel.equals("sam-rhel-x86_64-server-6") ||
+					rhnChannel.equals("sam-rhel-x86_64-server-6-debuginfo")) { 
+					// Bug 815433 - sam-rhel-x86_64-server-6-beta channel mapping needs replacement in channel-cert-mapping.txt 
+					bugzilla = new BlockedByBzBug("815433");
 				}
 				if (productId.equals("167")) {
 					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
