@@ -212,7 +212,9 @@
              (when sla (ui click :subscribe-system-dialog sla)))))))
    (checkforerror)
    (catch Object e
-     (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))
+     (if (substring? "No service levels" (:msg e))
+       (throw+ (assoc e :type :no-sla-available))
+       (throw+ (into e {:cancel (fn [] (ui click :register-cancel))})))))
   (sleep 10000))
 
 (defn fbshowing?

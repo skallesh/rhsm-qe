@@ -3,6 +3,7 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
         [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (trim split)]
+        [slingshot.slingshot :only [throw+ try+]]
         gnome.ldtp)
   (:require [clojure.tools.logging :as log]
             [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
@@ -80,13 +81,16 @@
                       (.runCommandAndWait @clientcmd (str "ls " nodir " | wc -l"))))))
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
-        (do 
-          (tasks/register user
-                          pass
-                          :skip-autosubscribe false
-                          :owner ownername)
+        (do
+          (let [msg (try+
+                     (tasks/register user
+                                     pass
+                                     :skip-autosubscribe false
+                                     :owner ownername)
+                     (catch [:type :no-sla-available] {:keys [msg]} msg))]
+            (verify (tasks/substring? "No service levels will cover all installed products" msg)))
           (tasks/ui waittillwindownotexist :register-dialog 600)
-          (tasks/sleep 10000)
+          (tasks/sleep 1000)
           (verify (= (tasks/warn-count) beforesubs))
           (verify (not (tasks/compliance?)))))))
 
@@ -127,7 +131,17 @@
         (tasks/ui waittillwindownotexist :register-dialog 600)
         (tasks/sleep 20000)
         (verify (<= (tasks/warn-count) beforesubs))
-        (verify (not (tasks/compliance?)))))))
+        (verify (tasks/compliance?))))))
+
+(defn ^{Test {:groups ["autosubscribe"
+                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]
+              :dependsOnMethods ["simple_autosubscribe"]}}
+  assert_service_level [_]
+  (verify
+   (tasks/substring? @common-sla
+                     (.getStdout (.runCommandAndWait @clientcmd "subscription-manager service-level"))))
+  ;; TODO: some steps to verify gui is in sync after bug 815563
+  )
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForSomeProductsSubscribable"]
@@ -215,7 +229,7 @@
 (gen-class-testng)
 
 
-;; TODO write a separte test for https://bugzilla.redhat.com/show_bug.cgi?id=743704
+;; TODO: write a separte test for https://bugzilla.redhat.com/show_bug.cgi?id=743704
 ;;   and restore the override.facts 
 
 
