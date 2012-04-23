@@ -763,13 +763,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm without having registered to classic (no /etc/sysconfig/rhn/systemid)",
-			groups={"blockedByBug-807477"},
+			groups={"blockedByBug-807477","AcceptanceTests","debugTest"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
+		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server be a hosted system that accepts credentials for '"+sm_clientUsername+"' to RHN Classic.");
 		clienttasks.unregister(null,null,null);
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile),0,"This system is not registered using RHN Classic.");
+		Assert.assertFalse(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" without having registered to RHN Classic.");
@@ -1070,10 +1071,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult executeRhnMigrateClassicToRhsmWithOptions(String username, String password, String options) {
 		// assemble an ssh command using expect to simulate an interactive supply of credentials to the rhn-migrate-classic-to-rhsm command
 		String promptedUsernames=""; if (username!=null) for (String u : username.split("\\n")) {
-			promptedUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";
+			promptedUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
 		}
 		String promptedPasswords=""; if (password!=null) for (String p : password.split("\\n")) {
-			promptedPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";
+			promptedPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
 		}
 		if (options==null) options="";
 		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; interact; catch wait reason; exit [lindex \$reason 3]"
