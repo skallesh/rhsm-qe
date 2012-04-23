@@ -224,8 +224,13 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to register with autosubscribe and a servicelevel persisted the servicelevel setting on the current consumer object.");
 		
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
+		clienttasks.listConsumedProductSubscriptions();
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			if (sm_exemptServiceLevels.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
+				log.warning("After autosubscribed registration with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
+			} else {
+				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
+			}
 		}
 	}
 	

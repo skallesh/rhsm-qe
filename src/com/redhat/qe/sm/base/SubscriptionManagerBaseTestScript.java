@@ -123,7 +123,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	//public String sm_cdnProductBaselineUrl			= getProperty("sm.cdn.productBaselineUrl","");
 	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");
 	public String sm_rhnDefinitionsProductBaselineFile	= getProperty("sm.rhn.definitionsProductBaselineFile","");
-	
+
+	protected List<String> sm_exemptServiceLevels				= null;
 	protected List<String> sm_rhnDefinitionsProductCertsDirs	= null;
 	protected List<String> sm_clientUsernames					= null;
 	protected List<String> sm_rpmInstallUrls					= null;
@@ -144,6 +145,7 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
 		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
 		
+		if (getProperty("sm.exemptServiceLevels", "").equals("")) 				sm_exemptServiceLevels				= new ArrayList<String>();	else sm_exemptServiceLevels				= Arrays.asList(getProperty("sm.exemptServiceLevels", "").toUpperCase().trim().split(" *, *"));	// change to UPPER CASE since these will be case insensitive
 		if (getProperty("sm.rhn.definitionsProductCertsDirs", "").equals("")) 	sm_rhnDefinitionsProductCertsDirs	= new ArrayList<String>();	else sm_rhnDefinitionsProductCertsDirs	= Arrays.asList(getProperty("sm.rhn.definitionsProductCertsDirs", "").trim().split(" *, *"));
 		if (getProperty("sm.client.usernames", "").equals("")) 					sm_clientUsernames					= new ArrayList<String>();	else sm_clientUsernames					= Arrays.asList(getProperty("sm.client.usernames", "").trim().split(" *, *"));
 		if (getProperty("sm.rpm.installurls", "").equals("")) 					sm_rpmInstallUrls					= new ArrayList<String>();	else sm_rpmInstallUrls					= Arrays.asList(getProperty("sm.rpm.installurls", "").trim().split(" *, *"));

@@ -111,7 +111,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-			groups={"blockedByBug-796468"},
+			groups={"blockedByBug-796468","blockedByBug-815479"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListWithInvalidOrg_Test() {
