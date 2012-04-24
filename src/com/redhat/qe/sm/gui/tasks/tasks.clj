@@ -149,8 +149,16 @@
 
 (defn register
   "Registers subscription manager by clicking the 'Register System' button in the gui."
-  [username password & {:keys [system-name-input, skip-autosubscribe, owner]
-                        :or {system-name-input nil, skip-autosubscribe true, owner nil}}]
+  [username password & {:keys [system-name-input
+                               skip-autosubscribe
+                               owner
+                               sla
+                               auto-select-sla]
+                        :or {system-name-input nil
+                             skip-autosubscribe true
+                             owner nil
+                             sla nil
+                             auto-select-sla true}}]
   (if (ui showing? :unregister-system)
     (throw+ {:type :already-registered
              :username username
@@ -179,20 +187,34 @@
    (checkforerror 10)
    (if (= 1 (ui guiexist :register-dialog))
      (do
+       ;; handle owner selection
        (if (= 1 (ui waittillshowing :owners 30))
          (do
            (when owner (do 
                          (if-not (ui rowexist? :owner-view owner)
                            (throw+ {:type :owner-not-available
                                     :name owner
-                                    :msg (str "Not found in 'Owner Selection':" owner)}))
-                         (ui selectrow :owner-view owner)))    
+                                    :msg (str "Not found in 'Owner Selection':" owner)})
+                           (ui selectrow :owner-view owner))))    
            (ui click :register)
            (checkforerror 10)))
-       (ui waittillnotshowing :registering 1800))) ;; 30 minutes
+       (ui waittillnotshowing :registering 1800)  ;; 30 minutes
+       ;; handle sla selection
+       (if (= 1 (ui guiexist :subscribe-system-dialog))
+         (do
+           (if auto-select-sla
+             (do 
+               (if (= 1 (ui guiexist :sla-forward)) ;; sla selection is presented
+                 (do (when sla (ui click :subscribe-system-dialog sla))
+                     (ui click :sla-forward)))
+               (ui click :sla-subscribe))
+             ;; else leave sla dialog open
+             (when sla (ui click :subscribe-system-dialog sla)))))))
    (checkforerror)
    (catch Object e
-     (throw+ (into e {:cancel (fn [] (ui click :register-cancel))}))))
+     (if (substring? "No service levels" (:msg e))
+       (throw+ (assoc e :type :no-sla-available))
+       (throw+ (into e {:cancel (fn [] (ui click :register-cancel))})))))
   (sleep 10000))
 
 (defn fbshowing?

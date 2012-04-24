@@ -38,10 +38,10 @@
 
 
 (defn ^{Test {:groups ["acceptance"]}}
-  register_autosubscribe [_]
+  simple_autosubscribe [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
-  (atest/register_autosubscribe nil))
+  (atest/simple_autosubscribe nil))
 
 (gen-class-testng)
 

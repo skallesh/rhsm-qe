@@ -17,6 +17,7 @@
                  [matchure "0.10.1"]]
   :dev-dependencies [[slamhound "1.2.0"]
                      [fn.trace "1.3.2.0-SNAPSHOT"]]
+  :plugins [[lein-eclipse "1.0.0"]]
   :repositories {"clojars.org" {:url "http://clojars.org/repo"
                                 :snapshots {:update :always}}}
   :javac-options {:debug "on"})
