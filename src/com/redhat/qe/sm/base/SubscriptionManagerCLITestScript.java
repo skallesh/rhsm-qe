@@ -327,6 +327,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	// Protected Methods ***********************************************************************
 
+
+	
 	protected String getServerUrl(String hostname, String port, String prefix) {
 		// https://hostname:port/prefix
 		if (!port.equals("")) port=(":"+port).replaceFirst("^:+", ":");
@@ -415,6 +417,19 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return Math.abs(randomGenerator.nextInt());
 	}
 	
+	/**
+	 * Randomize the input string case.  For example input="Hello World", output="HElLo wORlD"
+	 * @param input
+	 * @return
+	 */
+	protected String randomizeCaseOfCharactersInString(String input) {
+		String output = "";
+		for (int i=0; i<input.length(); i++) {
+			String c = input.substring(i, i+1);
+			output+=randomGenerator.nextInt(2)==0? c.toUpperCase():c.toLowerCase();
+		}
+		return output;
+	}
 	
 
 	// Protected Inner Data Class ***********************************************************************
