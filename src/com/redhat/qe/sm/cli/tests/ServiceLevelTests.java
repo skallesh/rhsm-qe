@@ -111,7 +111,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-			groups={"blockedByBug-796468"},
+			groups={"blockedByBug-796468","blockedByBug-815479"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelListWithInvalidOrg_Test() {
@@ -183,6 +183,13 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<String> serviceLevelsActual = clienttasks.getCurrentlyAvailableServiceLevels();		
 		Assert.assertTrue(serviceLevelsExpected.containsAll(serviceLevelsActual)&&serviceLevelsActual.containsAll(serviceLevelsExpected), "The actual service levels available to the current consumer "+serviceLevelsActual+" match the expected list of service levels available to the org '"+org+"' "+serviceLevelsExpected+".");
 
+		// assert that exempt service levels do NOT appear as valid service levels
+		for (String sm_exemptServiceLevel : sm_exemptServiceLevels) {
+			for (String serviceLevel : serviceLevelsExpected) {
+				Assert.assertTrue(!serviceLevel.toUpperCase().equals(sm_exemptServiceLevel.toUpperCase()), "Regardless of case, available service level '"+serviceLevel+"' should NOT match exempt service level '"+sm_exemptServiceLevel+"'.");
+			}
+		}
+		
 		// subscribe with each service level and assert that the current service level persists the requested service level
 		for (String serviceLevel : serviceLevelsExpected) {
 			clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);

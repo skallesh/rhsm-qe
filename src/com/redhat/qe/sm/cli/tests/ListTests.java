@@ -721,6 +721,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// get all the valid service levels available to this org	
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+//TODO			ll.add(Arrays.asList(new Object[] {null,	serviceLevel.toLowerCase()}));
+//TODO			ll.add(Arrays.asList(new Object[] {null,	serviceLevel.toUpperCase()}));
 		}
 		ll.add(Arrays.asList(new Object[] {null,	""}));
 		ll.add(Arrays.asList(new Object[] {null,	"FOO"}));

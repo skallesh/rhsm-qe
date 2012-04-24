@@ -622,7 +622,7 @@ public class SubscriptionManagerTasks {
 		//	Stdout: This org does not have any subscriptions with service levels.
 		//	Stderr:
 		//	ExitCode: 0
-		if (result.getStdout().equals("This org does not have any subscriptions with service levels.")) return serviceLevels;
+		if (result.getStdout().trim().equals("This org does not have any subscriptions with service levels.")) return serviceLevels;
 
 		
 		//	[root@jsefler-r63-server ~]# subscription-manager service-level --list

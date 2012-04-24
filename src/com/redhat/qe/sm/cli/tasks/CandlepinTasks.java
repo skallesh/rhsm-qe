@@ -2724,7 +2724,7 @@ schema generation failed
 				// assert the deleted subscription cannot be GET
 				jsonSubscription = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/subscriptions/"+subscriptionId));
 				Assert.assertTrue(jsonSubscription.has("displayMessage"),"Attempts to GET a deleted subscription fails with a displayMessage.");
-				Assert.assertEquals(jsonSubscription.getString("displayMessage"),"Subscription with id "+subscriptionId+" could not be found");
+				Assert.assertEquals(jsonSubscription.getString("displayMessage"),"Subscription with id "+subscriptionId+" could not be found.");
 			}
 		}
 		
