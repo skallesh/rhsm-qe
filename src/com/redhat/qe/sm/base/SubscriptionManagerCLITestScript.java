@@ -431,6 +431,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return output;
 	}
 	
+	protected boolean isStringSimpleASCII(String str) {
+		// Reference: http://www.asciitable.com/
+	    for (int i = 0, n = str.length(); i < n; i++) {
+	        if (str.charAt(i) > 127) { return false; }
+	    }
+	    return true;
+	}
+	
 
 	// Protected Inner Data Class ***********************************************************************
 	
