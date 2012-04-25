@@ -798,7 +798,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 789007 - Migrate with normal user (non org admin) user .
 	// TODO https://tcms.engineering.redhat.com/case/130762/?from_plan=5223
-	
+	// TODO Bug 816377 - rhn-migrate-classic-to-rhsm throws traceback when subscription-manager-migration-data is not installed
 	
 	
 	// Configuration methods ***********************************************************************
@@ -1420,13 +1420,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				
 				// bugzillas
 				Object bugzilla = null;
-				if (rhnChannel.contains("-rhev-agent-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+				if (rhnChannel.contains("-rhev-agent-") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
 					bugzilla = new BlockedByBzBug("786278");
 				}
 				if (rhnChannel.contains("-vt-")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786278 - RHN Channels for -rhev- and -vt- in the channel-cert-mapping.txt are not mapped to a productId
 					bugzilla = new BlockedByBzBug("786278");
+				}
+				if (rhnChannel.startsWith("rhel-i386-rhev-agent-") /* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
+					// Bug 816364 - channel-cert-mapping.txt is missing a mapping for product 150 "Red Hat Enterprise Virtualization" on i386
+					bugzilla = new BlockedByBzBug("816364");
 				}
 				if (rhnChannel.endsWith("-beta") && clienttasks.redhatReleaseX.equals("5")/* && channelsToProductCertFilenamesMap.get(rhnChannel).equalsIgnoreCase("none")*/) { 
 					// Bug 786203 - all RHN *beta Channels in channel-cert-mapping.txt are mapped to "none" instead of valid productId
