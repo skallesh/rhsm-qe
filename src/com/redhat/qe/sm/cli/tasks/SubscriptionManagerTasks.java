@@ -462,7 +462,14 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
 		}
 		
-		SubscriptionManagerCLITestScript.sleep(10000);	// give the rhsmcertd time to make its initial check in with the candlepin server and update the certs
+		// give the rhsmcertd time to make its initial check-in with the candlepin server and update the certs
+		// I've seen this take 10 to 15 seconds as demonstrated here...
+		//	1334786048260 Testing service rhsmcertd restart...
+		//	Wed Apr 18 17:54:11 2012: healing check started: interval = 1440
+		//	Wed Apr 18 17:54:11 2012: cert check started: interval = 240
+		//	Wed Apr 18 17:54:21 2012: certificates updated
+		//	Wed Apr 18 17:54:26 2012: certificates updated
+		SubscriptionManagerCLITestScript.sleep(20000);	// 20 seconds	
 
 		// assert the rhsmcertd log file reflected newly updated certificates...
 		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "certificates updated");
