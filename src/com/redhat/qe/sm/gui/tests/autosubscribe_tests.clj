@@ -65,8 +65,7 @@
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForNoProductsSubscribable"
-                       "blockedByBug-743704"]
-              :dependsOnMethods ["register_autosubscribe"]}}
+                       "blockedByBug-743704"]}}
   no_products_subscribable [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
@@ -95,8 +94,7 @@
           (verify (not (tasks/compliance?)))))))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForNoProductsInstalled"]
-              :dependsOnMethods ["register_autosubscribe"]}}
+                       "configureProductCertDirForNoProductsInstalled"]}}
   no_products_installed [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
@@ -104,7 +102,7 @@
   (verify (= 0 (tasks/warn-count)))
   (verify (tasks/compliance?)))
 
- (defn ^{Test {:groups ["autosubscribe"
+(defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]}}
   simple_autosubscribe [_]
    (.runCommandAndWait @clientcmd "subscription-manager unregister")
