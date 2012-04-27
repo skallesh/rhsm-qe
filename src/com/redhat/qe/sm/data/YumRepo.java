@@ -51,22 +51,6 @@ public class YumRepo extends AbstractCommandLineData {
 		return string.trim();
 	}
 	
-	//@Override
-	public boolean equals(Object obj) {
-		AbstractCommandLineData certObj = (AbstractCommandLineData)obj;
-		for(Field certField:certObj.getClass().getDeclaredFields()){
-			
-			try {
-				Field correspondingField = this.getClass().getField(certField.getName());
-				if (correspondingField.get(this)==null && certField.get(certObj)==null) continue;
-				if (!correspondingField.get(this).equals(certField.get(certObj))) return false;
-			} catch (Exception e)  {
-				log.warning("Exception caught while comparing abstraction fields: " + e.getMessage());
-				return false;
-			}
-		}
-		return true;
-	}
 	
 	/**
 	 * @param stdoutCatOfRedhatRepoFile - stdout from "cat /etc/yum.repos.d/redhat.repo"
