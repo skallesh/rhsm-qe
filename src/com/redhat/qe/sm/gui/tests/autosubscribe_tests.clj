@@ -138,8 +138,13 @@
   (verify
    (tasks/substring? @common-sla
                      (.getStdout (.runCommandAndWait @clientcmd "subscription-manager service-level"))))
-  ;; TODO: some steps to verify gui is in sync after bug 815563
-  )
+  (let [_ (tasks/ui click :system-preferences)
+        _ (tasks/ui waittillguiexist :system-preferences-dialog)
+        sla-slected? (tasks/ui showing? :system-preferences-dialog @common-sla)
+        _ (tasks/ui click :close-system-prefs)]
+    (verify sla-slected?)))
+
+
 
 (defn ^{Test {:groups ["autosubscribe"
                        "configureProductCertDirForSomeProductsSubscribable"]

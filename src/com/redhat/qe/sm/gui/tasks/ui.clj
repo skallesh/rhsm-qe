@@ -42,7 +42,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :firstboot-proxy-dialog "Advanced Network Configuration"
                 :import-window "Provide a Subscription Certificate"
                 :file-chooser "Select A File"
-                :subscribe-system-dialog "Subscribe System"}))
+                :subscribe-system-dialog "Subscribe System"
+                :system-preferences-dialog "System Preferences"}))
 
 
 (def elements
@@ -182,7 +183,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :file-chooser)
       {:text-entry-toggle "Type a file name"
        :file-cancel "Cancel"
-       :file-open "Open"}) ))
+       :file-open "Open"})
+    (define-elements (windows :system-preferences-dialog)
+      {:close-system-prefs "Close"}) ))
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
