@@ -184,7 +184,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	//      TODO NESTED LANG LOOP...  for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do for C in list refresh register subscribe unregister unsubscribe clean config environments facts identity import orgs redeem repos; do echo ""; echo "# LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS"; LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS; done; done;
 	// TODO Bug 765905 - add man pages for subscription-manager-migration
 	// TODO Bug 812104 - Unable to tab complete new subscription-manager modules (release and service-level)
-	
+	// TODO Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working
 	
 	// Configuration Methods ***********************************************************************
 	
