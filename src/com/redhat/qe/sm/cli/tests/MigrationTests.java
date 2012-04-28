@@ -222,7 +222,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		Assert.assertTrue(verifiedMatchForAllMigrationProductCertFiles,"All of the migration productCerts in directory '"+baseProductsDir+"' match the current rhn-definition.git product certs for this release.");
-		//Assert.assertEquals(migrationProductCerts.size(), rhnDefnitionProductCerts.size(),"The number of migration product certs in directory '"+baseProductsDir+"' matches the current number of rhn-definition.git product certs for this release.");
 	}
 	
 	
