@@ -2247,4 +2247,30 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}	
 		return ll;
 	}
+	
+	@DataProvider(name="getAllAvailableServicelevelData")
+	public Object[][] getAllAvailableServicelevelDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableServicelevelDataAsListOfLists());
+	}
+	protected List<List<Object>>getAllAvailableServicelevelDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
+		String org = sm_clientOrg;
+		if (org==null) {
+			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
+			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
+		}
+		// get all the valid service levels available to this org
+ 		if (sm_serverOld) {
+	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
+	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+	 		}
+ 		} else
+		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
+			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+		}
+		
+		return ll;
+	}
 }

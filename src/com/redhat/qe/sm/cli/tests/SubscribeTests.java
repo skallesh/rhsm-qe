@@ -624,13 +624,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests"},
+			groups={"debigTest","AcceptanceTests"},
 			dataProvider="getSubscribeWithAutoAndServicelevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeWithAutoAndServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
+		// system was already registered by dataProvider="getSubscribeWithAutoAndServicelevelData"
+
 		String initialConsumerServiceLevel = clienttasks.getCurrentServiceLevel();
 		
 		// start fresh by returning all entitlements
@@ -660,6 +662,46 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
  
+	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
+			groups={"AcceptanceTests"},
+			dataProvider="getAllAvailableServicelevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAutosubscribeWithServicelevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+		
+		// system was already registered by dataProvider="getSubscribeWithAutoAndServicelevelData"
+		if (clienttasks.getCurrentConsumerId()==null) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		}
+		
+		// start fresh by returning all entitlements
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+	
+		// autosubscribe specifying a valid service level and get the installed product status
+		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null).getStdout());
+		
+		// autosubscribe specifying a mixed case service level and get the installed product status
+		String mixedCaseServiceLevel = randomizeCaseOfCharactersInString(serviceLevel);
+		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.subscribe(true, mixedCaseServiceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null).getStdout());
+
+		// assert that the two lists are identical (independent of the serviceLevel case specified during autosubscribe)
+		Assert.assertEquals(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The subscribe output displayed the same number of installed product status's as the number of installed product certs.");
+		Assert.assertTrue(installedProductsAfterAutosubscribedRegisterWithServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel) && installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithServiceLevel), "Autosubscribe with serviceLevel '"+mixedCaseServiceLevel+"' yielded the same installed product status as autosubscribe with serviceLevel '"+serviceLevel+"'.");
+		
+		// assert that each of the consumed ProductSubscriptions match the specified service level
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after autosubscribing with service level '"+mixedCaseServiceLevel+"'."); 
+		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+			if (sm_exemptServiceLevels.contains(productSubscription.serviceLevel.toUpperCase())) {
+				log.warning("After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
+			} else {
+				Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
+						"After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
+			}
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with an unavailable service level",
 			groups={},
 			enabled=true)

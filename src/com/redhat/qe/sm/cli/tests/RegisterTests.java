@@ -210,7 +210,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
 			groups={"AcceptanceTests"},
-			dataProvider="getRegisterWithAutosubscribeAndServicelevelData",
+			dataProvider="getAllAvailableServicelevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void RegisterWithAutosubscribeAndServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
@@ -230,6 +230,38 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				log.warning("After autosubscribed registration with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 			} else {
 				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
+			}
+		}
+	}
+	
+	
+	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
+			groups={"AcceptanceTests"},
+			dataProvider="getAllAvailableServicelevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyAutosubscribedRegistrationWithServicelevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+			
+		// register with autosubscribe specifying a valid service level and get the installed product status
+		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, true, null, null, null, null).getStdout());
+		
+		// register with autosubscribe specifying a mixed case service level and get the installed product status
+		String mixedCaseServiceLevel = randomizeCaseOfCharactersInString(serviceLevel);
+		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, mixedCaseServiceLevel, null, (String)null, true, null, null, null, null).getStdout());
+
+		// assert that the two lists are identical (independent of the serviceLevel case specified during registration)
+		Assert.assertEquals(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The registration output displayed the same number of installed product status's as the number of installed product certs.");
+		Assert.assertTrue(installedProductsAfterAutosubscribedRegisterWithServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel) && installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithServiceLevel), "Autosubscribed registration with serviceLevel '"+mixedCaseServiceLevel+"' yielded the same installed product status as autosubscribed registration with serviceLevel '"+serviceLevel+"'.");
+		
+		// assert that each of the consumed ProductSubscriptions match the specified service level
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after registering with autosubscribe and service level '"+mixedCaseServiceLevel+"'."); 
+		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+			if (sm_exemptServiceLevels.contains(productSubscription.serviceLevel.toUpperCase())) {
+				log.warning("After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
+			} else {
+				Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
+						"After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
 			}
 		}
 	}
@@ -1281,33 +1313,6 @@ Expected Results:
 										ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("672233"),	name,	Integer.valueOf(255),	null,	maxCharsStderr}));
 
 
-		return ll;
-	}
-	
-	
-	@DataProvider(name="getRegisterWithAutosubscribeAndServicelevelData")
-	public Object[][] getRegisterWithAutosubscribeAndServicelevelDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithAutosubscribeAndServicelevelDataAsListOfLists());
-	}
-	protected List<List<Object>>getRegisterWithAutosubscribeAndServicelevelDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		
-		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
-		String org = sm_clientOrg;
-		if (org==null) {
-			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
-			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
-		}
-		// get all the valid service levels available to this org
- 		if (sm_serverOld) {
-	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
-	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
-	 		}
- 		} else
-		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
-			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
-		}
-		
 		return ll;
 	}
 }
