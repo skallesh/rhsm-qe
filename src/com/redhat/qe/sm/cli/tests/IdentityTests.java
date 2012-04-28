@@ -400,6 +400,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getConsumerCertDirDataAsListOfLists(){
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (clienttasks==null) return ll;
 
 		// String consumerCertDir
 		ll.add(Arrays.asList(new Object[]{null,	clienttasks.consumerCertDir}));
