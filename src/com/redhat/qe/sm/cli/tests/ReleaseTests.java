@@ -17,10 +17,6 @@ import com.redhat.qe.tools.SSHCommandResult;
 /**
  * @author jsefler
  *
- *
- * How to get the expected release list
- * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
- * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
  */
 
 @Test(groups={"ReleaseTests","AcceptanceTest"})
@@ -180,8 +176,32 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 
 	// TODO
 	// Test against stage to ensure releaseVer --list returns all the valid values for rhel5 and rhel6
+	/*
+	 * How to get the expected release list
+	 * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
+	 * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
 
-	
+	From Bug 802245 - 6.0 entry should not in release listing file
+	Steps to Reproduce:
+	Register to Server and subscribe to one entitlement pool.
+	#curl --cert ./6878290551698585530.pem --key ./6878290551698585530-key.pem -k
+	https://cdn.redhat.com/content/dist/rhel/client/6/listing
+
+	Actual results:
+	6.0 
+	6.1 
+	6.2 
+	6Client
+
+	Expected results:
+	6.1
+	6.2
+	6Client
+
+	Additional info:
+	The same problem happened on QA
+	CDN:https://cdn.rcm-qa.redhat.com/content/eus/rhel/server/6/listing.
+	*/
 	
 
 	
