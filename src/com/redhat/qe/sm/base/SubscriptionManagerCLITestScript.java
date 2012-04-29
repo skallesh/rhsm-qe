@@ -2054,7 +2054,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+clientOrg+"/pools?listall=true"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			String id = jsonPool.getString("id");
+			
+			// exclude sub pools that were generated from consumption of a parent pool
+			// including these has cause tests to mysteriously fail because the pool can be deleted if the source entitlement is revoked which can happen if the current consumer who has generated this subpool unregisters before the test that uses this data provider is executed. 
+			if (!jsonPool.isNull("sourceEntitlement")) continue;
 			
 			ll.add(Arrays.asList(new Object[]{jsonPool}));
 		}

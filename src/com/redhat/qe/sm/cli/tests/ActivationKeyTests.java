@@ -44,7 +44,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	public void AttemptRegisterWithUnknownActivationKey_Test(Object blockedByBug, String unknownActivationKeyName, String org) {
 		
 		SSHCommandResult sshCommandResult = clienttasks.register_(null, null, org, null, null, null, null, null, null, null, unknownActivationKeyName, true, null, null, null, null);
-		// FIXME isSimpleASCII is a crappy workaround for this case which I don't know how to fix:
+		// FIXME isSimpleASCII is a really crappy workaround for this case which I don't know how to fix properly:
 		// ACTUAL Stderr: Activation key 'ak_na_testov�n�' not found for organization 'admin'.
 		// EDXPECTED Stderr: Activation key 'ak_na_testování' not found for organization 'admin'.
 		//Assert.assertEquals(sshCommandResult.getStderr().trim(), String.format("Activation key '%s' not found for organization '%s'.",unknownActivationKeyName, org), "Stderr message from an attempt to register with an unknown activation key.");
