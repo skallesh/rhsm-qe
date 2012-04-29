@@ -185,6 +185,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 765905 - add man pages for subscription-manager-migration
 	// TODO Bug 812104 - Unable to tab complete new subscription-manager modules (release and service-level)
 	// TODO Bug 817117 - bash-completion of subscription-manager environments --<TAB><TAB> is not working
+	// TODO Bug 817390 - bash-completion of subscription-manager subscribe --<TAB><TAB> is not finding --servicelevel option
+	
 	
 	// Configuration Methods ***********************************************************************
 	

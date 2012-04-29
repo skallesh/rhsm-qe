@@ -187,7 +187,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(serviceLevelsExpected.containsAll(serviceLevelsActual)&&serviceLevelsActual.containsAll(serviceLevelsExpected), "The actual service levels available to the current consumer "+serviceLevelsActual+" match the expected list of service levels available to the org '"+org+"' "+serviceLevelsExpected+".");
 
 		// assert that exempt service levels do NOT appear as valid service levels
-		for (String sm_exemptServiceLevel : sm_exemptServiceLevels) {
+		for (String sm_exemptServiceLevel : sm_exemptServiceLevelsInUpperCase) {
 			for (String serviceLevel : serviceLevelsExpected) {
 				Assert.assertTrue(!serviceLevel.toUpperCase().equals(sm_exemptServiceLevel.toUpperCase()), "Regardless of case, available service level '"+serviceLevel+"' should NOT match exempt service level '"+sm_exemptServiceLevel+"'.");
 			}
@@ -246,7 +246,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		clienttasks.listConsumedProductSubscriptions();
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			if (sm_exemptServiceLevels.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
+			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 				log.warning("After autosubscribed registration with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 			} else {
 				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
@@ -277,12 +277,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after registering with autosubscribe and service level '"+mixedCaseServiceLevel+"'."); 
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-			if (sm_exemptServiceLevels.contains(productSubscription.serviceLevel.toUpperCase())) {
+			// tolerate exemptServiceLevels
+			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				log.warning("After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
-			} else {
-				Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
-						"After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
+				continue;
 			}
+			
+			Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
+					"After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
 		}
 	}
 	
@@ -340,6 +342,13 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+
+			// tolerate exemptServiceLevels
+			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
+				log.warning("After autosubscribing, this EntitlementCert provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"'.");
+				continue;
+			}
+			
 			if ((serviceLevel==null || serviceLevel.equals("")) && initialConsumerServiceLevel.equals("")) {
 				log.info("When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer's has no sericelevel preference, then the servicelevel of the granted entitlement certs can be anything.  This one is '"+entitlementCert.orderNamespace.supportLevel+"'.");
 			} else if ((serviceLevel==null || serviceLevel.equals("")) && !initialConsumerServiceLevel.equals("")){
@@ -376,7 +385,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		// assert that each of the autosubscribed entitlements come from a pool that supports the original service level
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			
+			// tolerate exemptServiceLevels
+			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
+				log.warning("After autosubscribing, this EntitlementCert provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"'.");
+				continue;
+			}
+
+			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed EntitlementCert was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 		}
 	}
 	@Test(	description="subscription-manager: subscribe with auto without specifying any service level; assert the service level used matches whatever the consumer's current preference level is set",
@@ -425,12 +441,15 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after autosubscribing with service level '"+mixedCaseServiceLevel+"'."); 
 		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-			if (sm_exemptServiceLevels.contains(productSubscription.serviceLevel.toUpperCase())) {
+			
+			// tolerate exemptServiceLevels
+			if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
 				log.warning("After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
-			} else {
-				Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
-						"After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
+				continue;
 			}
+			
+			Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
+						"After autosubscribe with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
 		}
 	}
 	
