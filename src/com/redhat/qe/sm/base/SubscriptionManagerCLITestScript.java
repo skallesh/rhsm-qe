@@ -2248,17 +2248,17 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
-	@DataProvider(name="getAllAvailableServicelevelData")
-	public Object[][] getAllAvailableServicelevelDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableServicelevelDataAsListOfLists());
+	@DataProvider(name="getAllAvailableServiceLevelData")
+	public Object[][] getAllAvailableServiceLevelDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableServiceLevelDataAsListOfLists());
 	}
-	protected List<List<Object>>getAllAvailableServicelevelDataAsListOfLists() throws JSONException, Exception {
+	protected List<List<Object>>getAllAvailableServiceLevelDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
 		String org = sm_clientOrg;
 		if (org==null) {
-			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServicelevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
+			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
 			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		}
 		// get all the valid service levels available to this org

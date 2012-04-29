@@ -186,85 +186,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
-			groups={"blockedByBug-795798"},
-			enabled=true)
-	public void RegisterWithAutosubscribeAndUnavailableServicelevel_Test() throws JSONException, Exception {
-
-		// attempt the registration
-		String unavailableServiceLevel = "FOO";
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, unavailableServiceLevel, null, (String)null, true, null, null, null, null);
-		String msg = "Cannot set a service level for a consumer that is not available to its organization."; // before Bug 795798 - Cannot set a service level for a consumer that is not available to its organization.
-		msg = String.format("Service level %s is not available to consumers of organization %s.",unavailableServiceLevel,sm_clientOrg);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255));
-		Assert.assertTrue(sshCommandResult.getStdout().trim().contains(msg), "Stdout message contains: "+msg);
-		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr message from an attempt to register with autosubscribe and an unavailable servicelevel.");
-
-		// despite a failed attempt to set a service level, we should still be registered
-		Assert.assertNotNull(clienttasks.getCurrentConsumerId(), "Despite a failed attempt to set a service level during register with autosubscribe, we should still be registered");
-		
-		// since the autosubscribe was aborted, we should not be consuming and entitlements
-		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(), "Due to a failed attempt to set a service level during register with autosubscribe, we should not be consuming any entitlements.");	
-	}
-	
-	
-	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the entitlements granted match the requested service level",
-			groups={"AcceptanceTests"},
-			dataProvider="getAllAvailableServicelevelData",
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithAutosubscribeAndServicelevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
-		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
-
-		// register with autosubscribe specifying a valid service level
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, true, null, null, null, null));
-		
-		// get the current consumer object and assert that the serviceLevel persisted
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
-		Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to register with autosubscribe and a servicelevel persisted the servicelevel setting on the current consumer object.");
-		
-		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
-		clienttasks.listConsumedProductSubscriptions();
-		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
-			if (sm_exemptServiceLevels.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
-				log.warning("After autosubscribed registration with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
-			} else {
-				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
-			}
-		}
-	}
-	
-	
-	@Test(	description="subscription-manager: register with autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
-			groups={"AcceptanceTests"},
-			dataProvider="getAllAvailableServicelevelData",
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void VerifyAutosubscribedRegistrationWithServicelevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
-			
-		// register with autosubscribe specifying a valid service level and get the installed product status
-		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, true, null, null, null, null).getStdout());
-		
-		// register with autosubscribe specifying a mixed case service level and get the installed product status
-		String mixedCaseServiceLevel = randomizeCaseOfCharactersInString(serviceLevel);
-		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, mixedCaseServiceLevel, null, (String)null, true, null, null, null, null).getStdout());
-
-		// assert that the two lists are identical (independent of the serviceLevel case specified during registration)
-		Assert.assertEquals(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.size(), clienttasks.getCurrentProductCertFiles().size(), "The registration output displayed the same number of installed product status's as the number of installed product certs.");
-		Assert.assertTrue(installedProductsAfterAutosubscribedRegisterWithServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel) && installedProductsAfterAutosubscribedRegisterWithMixedCaseServiceLevel.containsAll(installedProductsAfterAutosubscribedRegisterWithServiceLevel), "Autosubscribed registration with serviceLevel '"+mixedCaseServiceLevel+"' yielded the same installed product status as autosubscribed registration with serviceLevel '"+serviceLevel+"'.");
-		
-		// assert that each of the consumed ProductSubscriptions match the specified service level
-		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		if (consumedProductSubscriptions.isEmpty()) log.warning("No entitlements were granted after registering with autosubscribe and service level '"+mixedCaseServiceLevel+"'."); 
-		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-			if (sm_exemptServiceLevels.contains(productSubscription.serviceLevel.toUpperCase())) {
-				log.warning("After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides an exempt service level '"+productSubscription.serviceLevel+"'.");
-			} else {
-				Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(mixedCaseServiceLevel),
-						"After autosubscribed registration with service level '"+mixedCaseServiceLevel+"', this consumed ProductSubscription provides a service level '"+productSubscription.serviceLevel+"' that is a case insensitive match to '"+mixedCaseServiceLevel+"'.");
-			}
-		}
-	}
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
@@ -376,7 +297,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
-
+	
 	
 	@Test(	description="subscription-manager-cli: register with --force",
 			groups={"blockedByBug-623264"},
@@ -681,7 +602,7 @@ Expected Results:
 		
 	}
 	
-
+	
 	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
 			groups={"blockedByBug-667953","blockedByBug-669208"},
 			enabled=true)
@@ -816,6 +737,7 @@ Expected Results:
 		Assert.assertTrue(!result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
 	}
 	
+	
 	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
 			groups={},
 			enabled=true)
@@ -833,6 +755,7 @@ Expected Results:
 		Assert.assertEquals(result.getStderr().trim(), "ERROR: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
 	}
+	
 	
 	@Test(	description="subscription-manager: attempt register to --environment without --org option should fail",
 			groups={},
