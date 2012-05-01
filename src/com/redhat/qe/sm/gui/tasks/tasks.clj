@@ -16,9 +16,7 @@
             com.redhat.qe.sm.gui.tasks.ui) ;;need to load ui even if we don't refer to it because of the extend-protocol in there.
   (:import [com.redhat.qe.tools RemoteFileTasks]
            [com.redhat.qe.sm.cli.tasks CandlepinTasks]
-           [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]
-           ;[org.apache.xmlrpc XmlRpcException]
-           ))
+           [com.redhat.qe.sm.base SubscriptionManagerBaseTestScript]))
 
 
 (def ui gnome.ldtp/action) ;;alias action in ldtp to ui here

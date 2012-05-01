@@ -9,8 +9,7 @@
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
             com.redhat.qe.sm.gui.tasks.ui)
-  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]
-           [org.apache.xmlrpc XmlRpcException]))
+  (:import [org.testng.annotations BeforeClass BeforeGroups Test DataProvider]))
 
 (def gui-facts (atom nil))
 (def cli-facts (atom nil))
@@ -65,9 +64,9 @@
   (let [version (:version (@installed-certs product))
         arch (:arch (@installed-certs product))
         guiversion (try (tasks/ui getcellvalue :installed-view index 1)
-                        (catch XmlRpcException e nil))
+                        (catch Exception e nil))
         guiarch (try (tasks/ui getcellvalue :installed-view index 2)
-                     (catch XmlRpcException e nil))]
+                     (catch Exception e nil))]
     (verify (= version guiversion))
     (verify (= arch guiarch))))
 

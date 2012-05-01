@@ -16,8 +16,7 @@
             Test
             DataProvider]
            [com.redhat.qe.sm.cli.tests ComplianceTests]
-           [com.redhat.qe.auto.testng BzChecker]
-           [org.apache.xmlrpc XmlRpcException]))
+           [com.redhat.qe.auto.testng BzChecker]))
 
 (def somedir (ComplianceTests/productCertDirForSomeProductsSubscribable))
 (def alldir (ComplianceTests/productCertDirForAllProductsSubscribable))
