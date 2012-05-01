@@ -4,20 +4,19 @@ import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.Repo;
+import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
  * @author jsefler
  *
- *
- * How to get the expected release list
- * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
- * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
  */
 
 @Test(groups={"ReleaseTests","AcceptanceTest"})
@@ -102,155 +101,109 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after attempting to unset it.");
 	}
 	
+	
+	@Test(	description="after subscribing to all available subscriptions, assert that content with url paths that reference $releasever are substituted with the consumers current release preference",
+			groups={"blockedByBug-807407"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyReleaseverSubstitutionInRepoLists_Test() throws JSONException, Exception {
+		
+		// make sure we are newly registered
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);
+
+		// subscribe to all available subscriptions
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		
+		// get current list of Repos and YumRepos before setting a release version preference
+		List<Repo> reposBeforeSettingReleaseVer = clienttasks.getCurrentlySubscribedRepos();
+		List<YumRepo> yumReposBeforeSettingReleaseVer = clienttasks.getCurrentlySubscribedYumRepos();
+		
+		boolean skipTest = true;
+		for (Repo repo : reposBeforeSettingReleaseVer) {
+			if (repo.repoUrl.contains("$releasever")) {
+				skipTest = false; break;
+			}
+		}
+		if (skipTest) throw new SkipException("After subscribing to all available subscriptions, could not find any enabled content with a repoUrl that employs $releasever");
+
+		Assert.assertEquals(reposBeforeSettingReleaseVer.size(), yumReposBeforeSettingReleaseVer.size(), "The subscription-manager repos list count should match the yum reposlist count.");
+		
+		// now let's set a release version preference
+		String releaseVer = "TestRelease-1.0";
+		clienttasks.release(null, releaseVer, null, null, null);
+
+		// assert that each of the Repos after setting a release version preference substitutes the $releasever
+		for (Repo repoAfter : clienttasks.getCurrentlySubscribedRepos()) {
+			Repo repoBefore = Repo.findFirstInstanceWithMatchingFieldFromList("repoName", repoAfter.repoName, reposBeforeSettingReleaseVer);
+			Assert.assertNotNull(repoBefore,"Found the the same repoName from the subscription-manager repos --list after setting a release version preference.");
+			
+			if (!repoBefore.repoUrl.contains("$releasever")) {
+				Assert.assertEquals(repoAfter.repoUrl, repoBefore.repoUrl,
+						"After setting a release version preference, the subscription-manager repos --list reported repoUrl for '"+repoAfter.repoName+"' should remain unchanged since it did not contain the yum $releasever variable.");
+			} else {
+				Assert.assertEquals(repoAfter.repoUrl, repoBefore.repoUrl.replaceAll("\\$releasever", releaseVer),
+						"After setting a release version preference, the subscription-manager repos --list reported repoUrl for '"+repoAfter.repoName+"' should have a variable substitution for $releasever.");
+			}
+		}
+		
+		
+		// assert that each of the YumRepos after setting a release version preference actually substitutes the $releasever
+		for (YumRepo yumRepoAfter : clienttasks.getCurrentlySubscribedYumRepos()) {
+			YumRepo yumRepoBefore = YumRepo.findFirstInstanceWithMatchingFieldFromList("id", yumRepoAfter.id, yumReposBeforeSettingReleaseVer);
+			Assert.assertNotNull(yumRepoBefore,"Found the the same repo id from the yum repolist after setting a release version preference.");
+			
+			if (!yumRepoBefore.baseurl.contains("$releasever")) {
+				Assert.assertEquals(yumRepoAfter.baseurl, yumRepoBefore.baseurl,
+						"After setting a release version preference, the yum repolist reported baseurl for '"+yumRepoAfter.id+"' should remain unchanged since it did not contain the yum $releasever variable.");
+			} else {
+				Assert.assertEquals(yumRepoAfter.baseurl, yumRepoBefore.baseurl.replaceAll("\\$releasever", releaseVer),
+						"After setting a release version preference, the yum repolist reported baseurl for '"+yumRepoAfter.id+"' should have a variable substitution for $releasever.");
+			}
+		}
+		
+		// now let's unset the release version preference
+		clienttasks.release(null, "", null, null, null);
+		
+		// assert that each of the Repos and YumRepos after unsetting the release version preference where restore to their original values (containing $releasever)
+		List<Repo> reposAfterSettingReleaseVer = clienttasks.getCurrentlySubscribedRepos();
+		List<YumRepo> yumReposAfterSettingReleaseVer = clienttasks.getCurrentlySubscribedYumRepos();
+		
+		Assert.assertTrue(reposAfterSettingReleaseVer.containsAll(reposBeforeSettingReleaseVer) && reposBeforeSettingReleaseVer.containsAll(reposAfterSettingReleaseVer),
+				"After unsetting the release version preference, all of the subscription-manager repos --list were restored to their original values.");
+		Assert.assertTrue(yumReposAfterSettingReleaseVer.containsAll(yumReposBeforeSettingReleaseVer) && yumReposBeforeSettingReleaseVer.containsAll(yumReposAfterSettingReleaseVer),
+				"After unsetting the release version preference, all of the yum repolist were restored to their original values.");
+	}
 
 	// TODO
-	// SubscribeToAllAndAndSetAReleaseAndMakeSureTheReposList AND YumReposList Substitues for $releaseVer
-	// SubscribeToAllAndAndUnSetReleaseAndMakeSureTheReposListDoesNOTSubstitutes for $releaseVer bug 807407 	
 	// Test against stage to ensure releaseVer --list returns all the valid values for rhel5 and rhel6
-	// ReleaseListWithInvalidCredentials_Test
-	//	ReleaseListWithInvalidCredentials_Test() {
+	/*
+	 * How to get the expected release list
+	 * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
+	 * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
+
+	From Bug 802245 - 6.0 entry should not in release listing file
+	Steps to Reproduce:
+	Register to Server and subscribe to one entitlement pool.
+	#curl --cert ./6878290551698585530.pem --key ./6878290551698585530-key.pem -k
+	https://cdn.redhat.com/content/dist/rhel/client/6/listing
+
+	Actual results:
+	6.0 
+	6.1 
+	6.2 
+	6Client
+
+	Expected results:
+	6.1
+	6.2
+	6Client
+
+	Additional info:
+	The same problem happened on QA
+	CDN:https://cdn.rcm-qa.redhat.com/content/eus/rhel/server/6/listing.
+	*/
 	
-	
-	
-//	@Test(	description="subscription-manager: service-level --show (when not registered)",
-//			groups={},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void ServiceLevelShowWhenNotRegistered_Test() {
-//		
-//		// make sure we are not registered
-//		clienttasks.unregister(null, null, null);
-//		
-//		SSHCommandResult result;
-//		
-//		// with credentials
-//		result = clienttasks.service_level_(true, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-//		Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
-//		
-//		// without credentials
-//		result = clienttasks.service_level_(true, null, null, null, null, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-//		Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
-//	}
-//	
-//	@Test(	description="subscription-manager: service-level --list (when not registered)",
-//			groups={},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void ServiceLevelListWhenNotRegistered_Test() {
-//		
-//		// make sure we are not registered
-//		clienttasks.unregister(null, null, null);
-//		
-//		SSHCommandResult result = clienttasks.service_level_(null, true, null, null, null, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list without being registered");
-//		Assert.assertEquals(result.getStdout().trim(),"Error: you must register or specify --username and password to list service levels", "Stdout from service-level --list without being registered");
-//	}
-//	
-//	
-//	@Test(	description="subscription-manager: service-level --list (with invalid credentials)",
-//			groups={},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void ServiceLevelListWithInvalidCredentials_Test() {
-//		String x = String.valueOf(getRandInt());
-//		SSHCommandResult result;
-//				
-//		// test while unregistered
-//		clienttasks.unregister(null, null, null);
-//		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
-//		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
-//		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
-//
-//		// test while registered
-//		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null);
-//		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
-//		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
-//		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
-//	}
-//	
-//	
-//	@Test(	description="subscription-manager: service-level --list (with invalid org)",
-//			groups={"blockedByBug-796468"},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void ServiceLevelListWithInvalidOrg_Test() {
-//		String x = String.valueOf(getRandInt());
-//		SSHCommandResult result;
-//				
-//		// test while unregistered
-//		clienttasks.unregister(null, null, null);
-//		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-//		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
-//		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
-//
-//		// test while registered
-//		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null);
-//		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
-//		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-//		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
-//		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
-//	}
-//	
-//	
-//	
-//	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
-//			groups={},
-//			enabled=false) // assertions in this test are already a subset of ServiceLevelShowAvailable_Test
-//	//@ImplementsNitrateTest(caseId=)
-//	public void ServiceLevelShowAfterRegisteringWithoutServiceLevel_Test() throws JSONException, Exception  {
-//		SSHCommandResult result;
-//				
-//		// register with no service-level
-//		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,(List<String>)null,true,null,null,null,null));
-//		
-//		// get the current consumer object and assert that the serviceLevel persisted
-//		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
-//		Assert.assertEquals(jsonConsumer.get("serviceLevel"), JSONObject.NULL, "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value null.");
-//		
-//		result = clienttasks.service_level(true, false, null, null, null, null, null, null);
-//		Assert.assertEquals(result.getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level should be null.");
-//	}
-//	
-//	
-//	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
-//			groups={"AcceptanceTests"},
-//			dataProvider="getRegisterCredentialsExcludingNullOrgData",
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void ServiceLevelShowAvailable_Test(String username, String password, String org) throws JSONException, Exception  {
-//		SSHCommandResult result;
-//				
-//		// register with no service-level
-//		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,(List<String>)null,true,null,null,null,null));
-//		
-//		// get the current consumer object and assert that the serviceLevel is empty (value is "")
-//		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(username,password,sm_serverUrl,"/consumers/"+consumerId));
-//		// Assert.assertEquals(jsonConsumer.get("serviceLevel"), JSONObject.NULL, "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value null.");	// original value was null
-//		Assert.assertEquals(jsonConsumer.get("serviceLevel"), "", "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value empty.");
-//	
-//		// assert that "Current service level:" is empty
-//		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "When the system has been registered without a service level, the current service level value should be empty.");
-//		Assert.assertEquals(clienttasks.service_level(null,null,null,null,null,null,null,null).getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level value should be empty.");
-//
-//		// get all the valid service levels available to this org	
-//		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*username or*/sm_serverAdminUsername, /*password or*/sm_serverAdminPassword, sm_serverUrl, org);
-//		
-//		// assert that all the valid service levels are returned by service-level --list
-//		List<String> serviceLevelsActual = clienttasks.getCurrentlyAvailableServiceLevels();		
-//		Assert.assertTrue(serviceLevelsExpected.containsAll(serviceLevelsActual)&&serviceLevelsActual.containsAll(serviceLevelsExpected), "The actual service levels available to the current consumer "+serviceLevelsActual+" match the expected list of service levels available to the org '"+org+"' "+serviceLevelsExpected+".");
-//
-//		// subscribe with each service level and assert that the current service level persists the requested service level
-//		for (String serviceLevel : serviceLevelsExpected) {
-//			clienttasks.subscribe(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);
-//			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "When the system has auto subscribed specifying a service level, the current service level should be persisted.");
-//
-//		}
-//	}
+
 	
 	
 	

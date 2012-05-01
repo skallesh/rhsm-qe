@@ -101,10 +101,10 @@ public class InstalledProduct extends AbstractCommandLineData {
 	}
 	
 	/**
-	 * @param stdoutListingOfProductCerts - stdout from "subscription-manager --list --installed"
+	 * @param stdoutListingOfInstalledProducts - stdout from "subscription-manager --list --installed"
 	 * @return
 	 */
-	static public List<InstalledProduct> parse(String stdoutListingOfProductCerts) {
+	static public List<InstalledProduct> parse(String stdoutListingOfInstalledProducts) {
 		/* [root@jsefler-onprem-62server ~]# subscription-manager list --installed
 		+-------------------------------------------+
 		    Installed Product Status
@@ -155,7 +155,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-			addRegexMatchesToList(pat, stdoutListingOfProductCerts, productCertList, field);
+			addRegexMatchesToList(pat, stdoutListingOfInstalledProducts, productCertList, field);
 		}
 		
 		List<InstalledProduct> productCerts = new ArrayList<InstalledProduct>();

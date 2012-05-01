@@ -473,8 +473,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		listResult = clienttasks.list_(true,true,null,null,null,null,null,null,null);
 		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		
-		// determine the subset of expected pools with a matching servicelevel
-		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("serviceLevel", servicelevel, allAvailableSubscriptionPools);
+		// determine the subset of expected pools with a case-insensitive matching servicelevel
+		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allAvailableSubscriptionPools);
 
 		// list all available filtered by servicelevel
 		listResult = clienttasks.list_(true,true,null,null,servicelevel,null,null,null,null);
@@ -491,7 +491,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		
 		// determine the subset of expected pools with a matching servicelevel
-		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithMatchingFieldFromList("serviceLevel", servicelevel, availableSubscriptionPools);
+		expectedSubscriptionPools = SubscriptionPool.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, availableSubscriptionPools);
 		
 		// list available filtered by servicelevel
 		listResult = clienttasks.list_(false,true,null,null,servicelevel,null,null,null,null);
@@ -585,7 +585,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
 			return;	
 		}
-//debugTesting if (true) return;
+//debugTesting
+if (true) return;
 	
 		// Awesome OS for 0 sockets
 		name = "Awesome OS for systems with sockets value=0";
@@ -721,8 +722,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		// get all the valid service levels available to this org	
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
-//TODO			ll.add(Arrays.asList(new Object[] {null,	serviceLevel.toLowerCase()}));
-//TODO			ll.add(Arrays.asList(new Object[] {null,	serviceLevel.toUpperCase()}));
+			ll.add(Arrays.asList(new Object[] {null,	randomizeCaseOfCharactersInString(serviceLevel)}));	// run again with the serviceLevel case randomized
 		}
 		ll.add(Arrays.asList(new Object[] {null,	""}));
 		ll.add(Arrays.asList(new Object[] {null,	"FOO"}));

@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

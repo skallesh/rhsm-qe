@@ -327,6 +327,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 	// Protected Methods ***********************************************************************
 
+
+	
 	protected String getServerUrl(String hostname, String port, String prefix) {
 		// https://hostname:port/prefix
 		if (!port.equals("")) port=(":"+port).replaceFirst("^:+", ":");
@@ -415,6 +417,27 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return Math.abs(randomGenerator.nextInt());
 	}
 	
+	/**
+	 * Randomize the input string case.  For example input="Hello World", output="HElLo wORlD"
+	 * @param input
+	 * @return
+	 */
+	protected String randomizeCaseOfCharactersInString(String input) {
+		String output = "";
+		for (int i=0; i<input.length(); i++) {
+			String c = input.substring(i, i+1);
+			output+=randomGenerator.nextInt(2)==0? c.toUpperCase():c.toLowerCase();
+		}
+		return output;
+	}
+	
+	protected boolean isStringSimpleASCII(String str) {
+		// Reference: http://www.asciitable.com/
+	    for (int i = 0, n = str.length(); i < n; i++) {
+	        if (str.charAt(i) > 127) { return false; }
+	    }
+	    return true;
+	}
 	
 
 	// Protected Inner Data Class ***********************************************************************
@@ -2031,7 +2054,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+clientOrg+"/pools?listall=true"));	
 		for (int i = 0; i < jsonPools.length(); i++) {
 			JSONObject jsonPool = (JSONObject) jsonPools.get(i);
-			String id = jsonPool.getString("id");
+			
+			// exclude sub pools that were generated from consumption of a parent pool
+			// including these has cause tests to mysteriously fail because the pool can be deleted if the source entitlement is revoked which can happen if the current consumer who has generated this subpool unregisters before the test that uses this data provider is executed. 
+			if (!jsonPool.isNull("sourceEntitlement")) continue;
 			
 			ll.add(Arrays.asList(new Object[]{jsonPool}));
 		}
@@ -2222,6 +2248,32 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				}
 			}
 		}	
+		return ll;
+	}
+	
+	@DataProvider(name="getAllAvailableServiceLevelData")
+	public Object[][] getAllAvailableServiceLevelDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableServiceLevelDataAsListOfLists());
+	}
+	protected List<List<Object>>getAllAvailableServiceLevelDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		
+		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
+		String org = sm_clientOrg;
+		if (org==null) {
+			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
+			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
+		}
+		// get all the valid service levels available to this org
+ 		if (sm_serverOld) {
+	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
+	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+	 		}
+ 		} else
+		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
+			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+		}
+		
 		return ll;
 	}
 }
