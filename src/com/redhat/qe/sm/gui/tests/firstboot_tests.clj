@@ -8,8 +8,7 @@
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations AfterClass BeforeClass BeforeGroups Test]))
 
-(defn ^{BeforeClass {:groups ["setup"]}}
-  start_firstboot [_]
+(defn start_firstboot []
   (tasks/start-firstboot)
   (tasks/ui click :firstboot-forward)
   (tasks/ui click :license-yes)
@@ -27,8 +26,7 @@
   (tasks/ui click :firstboot-forward)
   (assert ( = 1 (tasks/ui guiexist :firstboot-window "Choose Server"))))
 
-(defn ^{AfterClass {:groups ["setup"]}}
-  kill_firstboot [_]
+(defn kill_firstboot []
   (.runCommand @clientcmd "killall -9 firstboot")
   (tasks/sleep 5000))
 
@@ -39,12 +37,22 @@
   (tasks/set-conf-file-value "proxy_password" ""))
 
 (defn reset_firstboot []
-  (kill_firstboot nil)
+  (kill_firstboot)
   (.runCommand @clientcmd "subscription-manager clean")
   (zero-proxy-values)
-  (start_firstboot nil))
-  
-  
+  (start_firstboot))
+
+(defn ^{BeforeClass {:groups ["setup"]}}
+  firstboot_init [_]
+  ;; new rhsm and classic have to be totally clean for this to run
+  (.runCommand @clientcmd "subscription-manager clean")
+  (let [sysidpath "/etc/sysconfig/rhn/systemid"]
+    (.runCommand @clientcmd (str "[ -f " sysidpath " ] && rm " sysidpath ))))
+
+(defn ^{AfterClass {:groups ["setup"]}}
+  firstboot_cleanup [_]
+  (kill_firstboot))
+
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_auth [_]
   (reset_firstboot)
@@ -122,7 +130,7 @@
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
   firstboot_skip_register [_]
-  (kill_firstboot nil)
+  (kill_firstboot)
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (.runCommandAndWait @clientcmd (str "subscription-manager register"
                                       " --username " (@config :username)
