@@ -48,8 +48,8 @@
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_auth [_]
   (reset_firstboot)
-  (tasks/ui click :register-rhn)
-  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :register-rhsm)
+  ;(tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :basicauth-proxy-hostname)
         port (@config :basicauth-proxy-port)
         username (@config :basicauth-proxy-username)
@@ -63,8 +63,8 @@
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_enable_proxy_noauth [_]
   (reset_firstboot)
-  (tasks/ui click :register-rhn)
-  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :register-rhsm)
+  ;(tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :noauth-proxy-hostname)
         port (@config :noauth-proxy-port)]
     (tasks/enableproxy-noauth hostname port true)
@@ -76,8 +76,8 @@
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_disable_proxy [_]
   (reset_firstboot)
-  (tasks/ui click :register-rhn)
-  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :register-rhsm)
+  ;(tasks/ui uncheck :rhn-classic-mode)
   (tasks/disableproxy true)
   (tasks/ui click :firstboot-forward)
   (tasks/checkforerror)
@@ -86,8 +86,8 @@
 
 (defn firstboot_register_invalid_user [user pass recovery]
   (reset_firstboot)
-  (tasks/ui click :register-rhn)
-  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :register-rhsm)
+  ;(tasks/ui uncheck :rhn-classic-mode)
   (tasks/ui click :firstboot-forward)
   (let [test-fn (fn [username password expected-error-type]
                   (try+
@@ -103,14 +103,22 @@
                   (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
-  firstboot_check_back_button [_]
+  firstboot_check_back_button_state [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (reset_firstboot)
-  (tasks/ui click :register-rhn)
-  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/ui click :register-rhsm)
+  ;(tasks/ui uncheck :rhn-classic-mode)
   (tasks/ui click :firstboot-forward)
   (tasks/firstboot-register (@config :username) (@config :password))
-  (verify (= 0 (tasks/ui hasstate :firstboot-back "Sensitive"))))
+  (verify (= 1 (tasks/ui hasstate :firstboot-back "Sensitive"))))
+
+(defn ^{Test {:groups ["firstboot"]
+              :dependsOnMethods ["firstboot_check_back_button_state"]}}
+  firstboot_check_back_button [_]
+  (tasks/ui click :firstboot-back)
+  (verify (tasks/ui showing? :firstboot-user))
+  (let [output (.getStdout (.runCommandAndWait @clientcmd "subscription-manager identity"))]
+    (verify (tasks/substring? "This system is not yet registered" output))))
 
 (defn ^{Test {:groups ["firstboot" "blockedByBug-642660"]}}
   firstboot_skip_register [_]
@@ -120,11 +128,13 @@
                                       " --username " (@config :username)
                                       " --password " (@config :password)
                                       " --org " (@config :owner-key)))
-  (start_firstboot nil)
-  (tasks/ui click :register-rhn)
-  (tasks/ui uncheck :rhn-classic-mode)
+  (tasks/start-firstboot)
   (tasks/ui click :firstboot-forward)
-  (verify (tasks/ui showing? :firstboot-window "My Installed Software")))
+  (tasks/ui click :license-yes)
+  (tasks/ui click :firstboot-forward)
+  (verify (tasks/ui showing?
+                    :firstboot-window
+                    "Your system was registered for updates during installation.")))
 
 (data-driven firstboot_register_invalid_user {Test {:groups ["firstboot"]}}
   [["sdf" "sdf" :invalid-credentials]
