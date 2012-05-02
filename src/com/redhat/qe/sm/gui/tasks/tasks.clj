@@ -257,7 +257,7 @@
   (ui waittillwindownotexist :progress-dialog 30)
   (checkforerror))
 
-;; TODO write this with better airities
+;; TODO: write this with better airities
 (defn search
   "Performs a subscription search within subscription-manager-gui."
   ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 

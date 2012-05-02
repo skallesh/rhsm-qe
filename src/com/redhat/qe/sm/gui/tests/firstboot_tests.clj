@@ -154,9 +154,9 @@
   [["badusername" "badpassword" :invalid-credentials]])
 
 
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=742416
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=700601
-;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=705170
+;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=742416
+;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=700601
+;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=705170
 
 (gen-class-testng)
 

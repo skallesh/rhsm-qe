@@ -231,6 +231,7 @@
       (verify (not-nil? (some #{e} seen))))))
 
 (comment
+  ;; TODO:
 (defn ^{Test {:groups ["subscribe" "blockedByBug-740831"]}}
   check_subscribe_greyout [_]
   ))
@@ -341,9 +342,9 @@
       (to-array-2d prods)
       prods)))
 
-  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=683550
-  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691784
-  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=691788
-  ;; TODO https://bugzilla.redhat.com/show_bug.cgi?id=727631
+  ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=683550
+  ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=691784
+  ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=691788
+  ;; TODO: https://bugzilla.redhat.com/show_bug.cgi?id=727631
 
 (gen-class-testng)

@@ -205,7 +205,7 @@
   (verify (= 1 (tasks/ui guiexist :main-window))))
 
 (comment
-  ;TODO depending on bug 748312
+  ;; TODO: depending on bug 748312
   (defn ^{Test {:groups ["import"
                          "blockedByBug-702075"
                          "blockedByBug-748912"]}}
