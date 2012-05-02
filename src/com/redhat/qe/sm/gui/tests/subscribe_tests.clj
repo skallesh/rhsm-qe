@@ -259,7 +259,7 @@
         (tasks/open-contract-selection s)
         (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
           (if (>= row 0)
-            (let [contract (tasks/ui getcellvalue :contract-selection-table row 1)
+            (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
                   pool (ctasks/get-pool-id (@config :username)
                                           (@config :password)
                                           (@config :owner-key)
