@@ -470,7 +470,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
 		options.add("--regenerate");
-		options.add("--force");	// result of https://bugzilla.redhat.com/show_bug.cgi?id=678151
+		options.add("--force");
 		options.add("--proxy=PROXY_URL");
 		options.add("--proxyuser=PROXY_USER");
 		options.add("--proxypassword=PROXY_PASSWORD");

@@ -253,7 +253,6 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 805690 - gpgcheck for repo metadata is ignored 
 	
 	
-	
 	// Configuration methods ***********************************************************************
 	
 	

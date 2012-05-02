@@ -25,7 +25,7 @@ public class ProductCert extends AbstractCommandLineData {
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
-	public String id;
+	public String id;			// comes from the Subject: CN=Red from the Red Hat Product ID [a81db0cc-f72c-4386-a60d-dd6d1e037378]
 	public String issuer;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
@@ -37,7 +37,7 @@ public class ProductCert extends AbstractCommandLineData {
 	
 	// TODO get rid of these since they are in productNamespace
 	public String productName;	// comes from the ProductNamespace
-	public String productId;	// comes from the ProductNamespace (this is the hash for example the 69 in 69.pem)
+	public String productId;	// comes from the ProductNamespace (this is the OID hash for example the 69 - found in 69.pem)
 
 
 	public ProductCert(String rawCertificate, Map<String, String> certData){

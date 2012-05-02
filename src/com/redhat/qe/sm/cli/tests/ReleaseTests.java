@@ -186,6 +186,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	Register to Server and subscribe to one entitlement pool.
 	#curl --cert ./6878290551698585530.pem --key ./6878290551698585530-key.pem -k
 	https://cdn.redhat.com/content/dist/rhel/client/6/listing
+[root@jsefler-63server ~]# curl --cert /etc/pki/entitlement/2580206138540098374.pem --key /etc/pki/entitlement/2580206138540098374-key.pem -k https://cdn.redhat.com/content/dist/rhel/server/5/listing
 
 	Actual results:
 	6.0 
@@ -209,7 +210,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 
 	// Candidates for an automated Test:
-	
+	// TODO Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed 
 	
 		
 	// Configuration methods ***********************************************************************

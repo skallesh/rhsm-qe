@@ -585,8 +585,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
 			return;	
 		}
-//debugTesting
-if (true) return;
+//debugTesting if (true) return;
 	
 		// Awesome OS for 0 sockets
 		name = "Awesome OS for systems with sockets value=0";
@@ -697,6 +696,11 @@ if (true) return;
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 		}
+		
+		
+		// TODO: To get the product certs, use the CandlepinTasks REST API:
+        //"url": "/products/{product_uuid}/certificate", 
+        //"GET"
 
 	}	
 

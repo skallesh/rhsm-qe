@@ -30,6 +30,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String productName;
+	public String productId;
 	public String version;
 	public String arch;
 	public String status;
@@ -40,9 +41,10 @@ public class InstalledProduct extends AbstractCommandLineData {
 		super(productData);
 	}
 	
-	public InstalledProduct(String productName, String version, String arch, String status, Calendar startDate, Calendar endDate) {
+	public InstalledProduct(String productName, String productId, String version, String arch, String status, Calendar startDate, Calendar endDate) {
 		super(null);
 		this.productName = productName;
+		this.productId = productId;
 		this.version = version;
 		this.arch = arch;
 		this.status = status;
@@ -55,6 +57,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productName != null)		string += String.format(" %s='%s'", "productName",productName);
+		if (productId != null)			string += String.format(" %s='%s'", "productId",productId);
 		if (version != null)			string += String.format(" %s='%s'", "version",version);
 		if (arch != null)				string += String.format(" %s='%s'", "arch",arch);
 		if (status != null)				string += String.format(" %s='%s'", "status",status);
@@ -63,31 +66,32 @@ public class InstalledProduct extends AbstractCommandLineData {
 		
 		return string.trim();
 	}
-	
-	@Override
-	public boolean equals(Object obj){
-		InstalledProduct that = (InstalledProduct) obj;
-		
-		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
-		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
-		
-		if (that.version!=null && !that.version.equals(this.version)) return false;
-		if (this.version!=null && !this.version.equals(that.version)) return false;
-		
-		if (that.arch!=null && !that.arch.equals(this.arch)) return false;
-		if (this.arch!=null && !this.arch.equals(that.arch)) return false;
-		
-		if (that.status!=null && !that.status.equals(this.status)) return false;
-		if (this.status!=null && !this.status.equals(that.status)) return false;
-		
-		if (that.startDate!=null && !that.startDate.equals(this.startDate)) return false;
-		if (this.startDate!=null && !this.startDate.equals(that.startDate)) return false;
-		
-		if (that.endDate!=null && !that.endDate.equals(this.endDate)) return false;
-		if (this.endDate!=null && !this.endDate.equals(that.endDate)) return false;
-		
-		return true;
-	}
+
+// DELETEME: The super.equals was fixed which should mean that this Override is not needed anymore.
+//	@Override
+//	public boolean equals(Object obj){
+//		InstalledProduct that = (InstalledProduct) obj;
+//		
+//		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
+//		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
+//		
+//		if (that.version!=null && !that.version.equals(this.version)) return false;
+//		if (this.version!=null && !this.version.equals(that.version)) return false;
+//		
+//		if (that.arch!=null && !that.arch.equals(this.arch)) return false;
+//		if (this.arch!=null && !this.arch.equals(that.arch)) return false;
+//		
+//		if (that.status!=null && !that.status.equals(this.status)) return false;
+//		if (this.status!=null && !this.status.equals(that.status)) return false;
+//		
+//		if (that.startDate!=null && !that.startDate.equals(this.startDate)) return false;
+//		if (this.startDate!=null && !this.startDate.equals(that.startDate)) return false;
+//		
+//		if (that.endDate!=null && !that.endDate.equals(this.endDate)) return false;
+//		if (this.endDate!=null && !this.endDate.equals(that.endDate)) return false;
+//		
+//		return true;
+//	}
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
@@ -110,30 +114,13 @@ public class InstalledProduct extends AbstractCommandLineData {
 		    Installed Product Status
 		+-------------------------------------------+
 		
-		ProductName:        	Awesome OS for S390 Bits 
-		Version:            	3.11                     
-		Arch:               	s390x                    
-		Status:             	Not Subscribed           
-		Starts:             	09/19/2011               
-		Expires:            	09/20/2011               
-		
-		
-		ProductName:        	Stackable with Awesome OS for x86_64 Bits
-		Version:            	3.11                     
-		Arch:               	x86_64                   
-		Status:             	Not Subscribed           
-		Starts:             	09/19/2011               
-		Expires:            	09/20/2011               
-		
-		
 		ProductName:        	Awesome OS Developer Basic
 		Version:            	1.0                      
 		Arch:               	ALL                      
 		Status:             	Not Subscribed           
 		Starts:             	09/19/2011               
 		Expires:            	09/20/2011               
-		
-		
+				
 		ProductName:        	Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390 Bits
 		Version:            	3.11                     
 		Arch:               	x86_64,i686,ia64,ppc,ppc64,s390x,s390
@@ -141,11 +128,29 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Starts:             	09/19/2011               
 		Expires:            	09/20/2011  
 		*/
+		/*
+		Product Name:         	Red Hat Enterprise Linux Server
+		Product ID:           	69                       
+		Version:              	6.3                      
+		Arch:                 	x86_64                   
+		Status:               	Not Subscribed           
+		Starts:               	                         
+		Expires:              	                         
+
+		Product Name:         	Awesome OS Workstation Bits
+		Product ID:           	27060                    
+		Version:              	6.1                      
+		Arch:                 	ALL                      
+		Status:               	Subscribed               
+		Starts:               	04/30/2012               
+		Expires:              	04/30/2013  
+		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field		regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("productName",	"^Product Name:(.*)");
+		regexes.put("productId",	"^Product ID:(.*)");
 		regexes.put("version",		"^Version:(.*)");
 		regexes.put("arch",			"^Arch:(.*)");
 		regexes.put("status",		"^Status:(.*)");

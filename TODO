@@ -71,12 +71,15 @@ GUI TODO:
   Add (checkforerror) in subscribe during progress bar
   
   verify content of product list in "my installed software"
-  
-CLI TASKS
-  https://bugzilla.redhat.com/show_bug.cgi?id=607162
-  https://bugzilla.redhat.com/show_bug.cgi?id=727970
 
-  
+CLI TODO
+  These are kept in the source code.  Use Eclipse's Window / Show View / Tasks
+  Most all of the CLITests.java files have a comment block like this:
+  // Candidates for an automated Test:
+  // TODO Bug 9999 - summary of bug
+
+CLI TCMS Tests identified as automatible
+
   https://tcms.engineering.redhat.com/case/55826/?from_plan=2851
   https://tcms.engineering.redhat.com/case/50223/?from_plan=2851
   https://tcms.engineering.redhat.com/case/50224/?from_plan=2851
