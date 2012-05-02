@@ -60,7 +60,7 @@
   (let [certlocation (str (.getValidImportCertificate @importtests))
         certdir (tasks/conf-file-value "entitlementCertDir")
         cert (last (split certlocation #"/"))
-        key (clojure.string/replace ".pem" "-key.pem" cert)
+        key (clojure.string/replace cert ".pem" "-key.pem")
         command (str "openssl x509 -text -in "
                      certlocation
                      " | grep 2312.9.4.1: -A 1 | grep -v 2312.9.4.1")
