@@ -152,7 +152,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				log.info("Existing productCert file '"+existingProductCertFile+"' is mapped in '"+channelCertMappingFilename+"'.");
 			} else {
 				log.warning("Existing productCert file '"+existingProductCertFile+"' is NOT mapped in '"+channelCertMappingFilename+"'.");
+				
+				// TEMPORARY WORKAROUND FOR BUG
+				/* Notes: http://entitlement.etherpad.corp.redhat.com/Entitlement02MAY12 
+			    /product_ids/rhel-6.3/ComputeNode-ScalableFileSystem-x86_64-21b36280d242-175.pem  is not mapped to any RHN Channels in /cdn/product-baseline.json  (SEEMS  WRONG)
+			    (dgregor) channel won't exist until 6.3 GA.  suggest we pick this up in 6.4
+			    (jsefler) TODO update automated test with pre-6.3GA work-around
+			    /product_ids/rhel-6.3/Server-HPN-ppc64-fff6dded9725-173.pem  is not mapped to  any RHN Channels in /cdn/product-baseline.json   (SEEMS WRONG)
+			    (dgregor) channel won't exist until 6.3 GA.  suggest we pick this up in 6.4
+			    (jsefler) TODO update automated test with pre-6.3GA work-around
+			    */
+				if (existingProductCertFile.endsWith("-173.pem") && clienttasks.redhatReleaseXY.equals("6.3")) {
+					log.warning("Ignoring that existing productCert file '"+existingProductCertFile+"' is NOT mapped in '"+channelCertMappingFilename+"' until release 6.4 as recommended by dgregor.");
+				} else
+				if (existingProductCertFile.endsWith("-175.pem") && clienttasks.redhatReleaseXY.equals("6.3")) {
+					log.warning("Ignoring that existing productCert file '"+existingProductCertFile+"' is NOT mapped in '"+channelCertMappingFilename+"' until release 6.4 as recommended by dgregor.");
+				} else
+				// END OF WORKAROUND
 				allExitingProductCertFilesAreMapped = false;
+				
 			}
 		}
 		Assert.assertTrue(allExitingProductCertFilesAreMapped,"All of the existing productCert files in directory '"+baseProductsDir+"' are mapped to a channel in '"+channelCertMappingFilename+"'.");

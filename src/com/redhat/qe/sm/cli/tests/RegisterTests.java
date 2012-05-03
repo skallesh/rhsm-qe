@@ -189,7 +189,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
-			groups={"debugTest","RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
 			enabled=true)
 	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
 
