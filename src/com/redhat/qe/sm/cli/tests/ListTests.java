@@ -464,7 +464,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-800933","blockedByBug-800999"},
 			dataProvider="getListAvailableWithServicelevelData",
 			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
+			@ImplementsNitrateTest(caseId=157228)
 	public void ListAvailableWithServicelevel_Test(Object bugzilla, String servicelevel) throws Exception {
 		SSHCommandResult listResult;
 		List<SubscriptionPool> expectedSubscriptionPools, filteredSubscriptionPools;

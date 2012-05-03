@@ -16,6 +16,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -132,7 +133,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
 			groups={"blockedByBug-796468","blockedByBug-815479"},
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=165509)
 	public void ServiceLevelListWithInvalidOrg_Test() {
 		String x = String.valueOf(getRandInt());
 		SSHCommandResult result;
@@ -157,7 +158,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
 			groups={},
 			enabled=false) // assertions in this test are already a subset of ServiceLevelShowAvailable_Test
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157213)
 	public void ServiceLevelShowAfterRegisteringWithoutServiceLevel_Test() throws JSONException, Exception  {
 		SSHCommandResult result;
 				
@@ -177,9 +178,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=155949)
 	public void ServiceLevelShowAvailable_Test(String username, String password, String org) throws JSONException, Exception  {
-		SSHCommandResult result;
 				
 		// register with no service-level
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null));
@@ -341,7 +341,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157229)	// 147971
 	public void AutoSubscribeWithServiceLevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
@@ -440,7 +440,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
 	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		
 		// system was already registered by dataProvider="getSubscribeWithAutoAndServiceLevelData"
@@ -484,7 +484,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			dataProvider="getExemptInstalledProductAndServiceLevelData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157229)
 	public void VerifyInstalledProductsProvidedByAvailablePoolsWithExemptServiceLevelAreAutoSubscribedRegardlessOfServiceLevel_Test(Object bugzilla, String installedProductId, String serviceLevel) {
 		
 		// randomize the case of the service level
