@@ -165,6 +165,9 @@
   "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
   [_ subscription contract]
   (try+
+   (.runCommandAndWait @clientcmd "subscription-manager unsubscribe --all")
+   (tasks/sleep 3000)
+   (tasks/search)
    (tasks/open-contract-selection subscription)
     (tasks/ui selectrow :contract-selection-table contract)
     (let [line (tasks/ui gettablerowindex :contract-selection-table contract)
@@ -177,8 +180,11 @@
                            (tasks/ui generatekeyevent
                                      (str (repeat-cmd 6 "<right> ")
                                           "<space>"
-                                          (when num (str " " num " <enter>")))))]
+                                          (when num (str " "
+                                                         (repeat-cmd (.length max) "<backspace> ")
+                                                         num " <enter>")))))]
       (enter-quantity available)
+      (tasks/sleep 500)
       (tasks/ui click :subscribe-contract-selection)
       (tasks/checkforerror)
       (tasks/wait-for-progress-bar)
@@ -187,7 +193,7 @@
             count (tasks/ui getcellvalue :my-subscriptions-view row 3)]
         (verify (= count available))))
     (tasks/unsubscribe subscription)
-    (catch [:type :subscription-not-available] _)
+    (catch [:type :item-not-available] _)
     (catch [:type :wrong-consumer-type]
         {:keys [log-warning]} (log-warning))))
 
