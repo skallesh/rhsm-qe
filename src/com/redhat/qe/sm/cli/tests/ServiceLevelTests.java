@@ -1,18 +1,33 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.ProductCert;
+import com.redhat.qe.sm.data.ProductNamespace;
 import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**
@@ -233,7 +248,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithAvailableServiceLevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+	public void RegisterWithAvailableServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 
 		// register with autosubscribe specifying a valid service level
@@ -261,7 +276,17 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyRegisterWithServiceLevelIsCaseInsensitive(Object bugzulla, String serviceLevel) {
-			
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("Hosted candlepin server '"+sm_serverHostname+"' does not yet support this test execution.");
+		}
+		}
+		// END OF WORKAROUND
+		
 		// register with autosubscribe specifying a valid service level and get the installed product status
 		List<InstalledProduct> installedProductsAfterAutosubscribedRegisterWithServiceLevel= InstalledProduct.parse(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, serviceLevel, null, (String)null, true, null, null, null, null).getStdout());
 		
@@ -455,7 +480,49 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	
+	@Test(	description="installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)",
+			groups={"AcceptanceTests"},
+			dataProvider="getExemptInstalledProductAndServiceLevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyInstalledProductsProvidedByAvailablePoolsWithExemptServiceLevelAreAutoSubscribedRegardlessOfServiceLevel_Test(Object bugzilla, String installedProductId, String serviceLevel) {
+		
+		// randomize the case of the service level
+		String seRvICElevEl = randomizeCaseOfCharactersInString(serviceLevel);
+		log.info("This test will be conducted with a randomized serviceLevel value: "+seRvICElevEl);
+
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			seRvICElevEl = serviceLevel;
+			log.warning("This test will NOT be conducted with a randomized serviceLevel value.  Testing with serviceLevel: "+seRvICElevEl);
+		}
+		}
+		// END OF WORKAROUND
+		
+		// register with autosubscribe and a randomize case serviceLevel
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, seRvICElevEl, null, (List<String>)null, true, false, null, null, null);
+		
+		// assert that the installed ProductId is "Subscribed"
+		InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", installedProductId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertEquals(installedProduct.status, "Subscribed", "After registering with autosubscribe and serviceLevel '"+seRvICElevEl+"' the following installed exempt product should be subscribed: "+installedProduct);
+		
+		// EXTRA CREDIT: assert that the consumed ProductSubscription that provides the installed exempt product is among the known exempt service levels.
+		// WARNING: THIS MAY NOT BE AN APPROPRIATE ASSERTION WHEN THE EXEMPT PRODUCT HAPPENS TO ALSO BE PROVIDED BY A SUBSCRIPTION THAT COINCIDENTY PROVIDES ANOTHER INSTALLED PRODUCT
+		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
+				if (productNamespace.id.equals(installedProductId)) {
+					BigInteger serialNumber = clienttasks.getSerialNumberFromEntitlementCertFile(entitlementCert.file);
+					ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", serialNumber, productSubscriptions);
+					Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"Installed exempt product '"+installedProduct+"' is entitled by consumed productSubscription '"+productSubscription+"' that provides one of the exempt service levels '"+sm_exemptServiceLevelsInUpperCase+"'.");
+				}
+			}
+		}
+	}
+		
 	
 
 	// Candidates for an automated Test:
@@ -463,7 +530,50 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 		
 	// Configuration methods ***********************************************************************
-
+	@BeforeClass(groups="setup")
+	public void createSubscriptionsProvidingProductWithExemptServiceLevels() throws JSONException, Exception {
+		String name,productId, serviceLevel;
+		List<String> providedProductIds = new ArrayList<String>();
+		Map<String,String> attributes = new HashMap<String,String>();
+		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
+		if (server==null) {
+			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
+			return;	
+		}
+//debugTesting if (true) return;
+	
+		// TestExempt Product Subscription
+		name = "TestExempt Product Subscription";
+		productId = "test-exempt-product";
+		serviceLevel = "TestExempt SLA";
+		providedProductIds.clear();
+		providedProductIds.add("99000");
+		attributes.clear();
+		attributes.put("support_level", serviceLevel);
+		attributes.put("support_level_exempt", "true");
+		attributes.put("version", "0.1");
+		//attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "45");
+		// delete already existing subscription and products
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
+		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
+		attributes.put("type", "SVC");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+		// now install the product certificate
+		JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0)+"/certificate"));
+		String cert = jsonProductCert.getString("cert");
+		String key = jsonProductCert.getString("key");
+		client.runCommandAndWait("echo \""+cert+"\" > "+clienttasks.productCertDir+"/TestExemptProduct"+providedProductIds.get(0)+"_.pem");
+		if (!sm_exemptServiceLevelsInUpperCase.contains(serviceLevel.toUpperCase())) {
+			sm_exemptServiceLevelsInUpperCase.add(serviceLevel.toUpperCase());
+		}
+	}
 
 	
 	
@@ -475,4 +585,53 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	// Data Providers ***********************************************************************
 	
 
+	@DataProvider(name="getExemptInstalledProductAndServiceLevelData")
+	public Object[][] getExemptInstalledProductAndServiceLevelDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getExemptInstalledProductAndServiceLevelDataAsListOfLists());
+	}
+	/**
+	 * @return List of [Object bugzilla, String installedProductId, String serviceLevel]
+	 */
+	protected List<List<Object>>getExemptInstalledProductAndServiceLevelDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+	
+		// get the available service levels
+		List<String> serviceLevels = new ArrayList<String>();
+		for (List<Object> availableServiceLevelData : getAllAvailableServiceLevelDataAsListOfLists()) {
+			serviceLevels.add((String)availableServiceLevelData.get(1));
+		}
+		
+		// get all of the installed products
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		
+		// process the available SubscriptionPools looking for provided productIds from a pool that has an exempt service level
+		for (List<Object> subscriptionPoolsData : getAvailableSubscriptionPoolsDataAsListOfLists()) {
+			SubscriptionPool subscriptionPool = (SubscriptionPool) subscriptionPoolsData.get(0);
+
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+subscriptionPool.poolId));	
+			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+			String value = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level_exempt");
+			
+			// skip this subscriptionPool when "support_level_exempt" productAttribute is NOT true
+			if (value==null) continue;
+			if (!Boolean.valueOf(value)) continue;
+			
+			// process each of the provided products (exempt) to see if it is installed
+			for (int i = 0; i < jsonProvidedProducts.length(); i++) {
+				JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(i);
+				String productId = jsonProvidedProduct.getString("productId");
+				
+				// is productId installed?
+				if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", productId, installedProductCerts)!=null) {
+					// found an installed exempt product, add a row for each of the service levels
+					for (String serviceLevel : serviceLevels) {
+						// Object bugzilla, String installedProductId, String serviceLevel
+						ll.add(Arrays.asList(new Object[]{null, productId, serviceLevel}));
+					}
+				}
+			}
+		}
+		
+		return ll;
+	}
 }

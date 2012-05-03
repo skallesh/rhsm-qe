@@ -711,6 +711,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getGoodRegistrationDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getGoodRegistrationDataAsListOfLists());
 	}
+	/**
+	 * @return List of [String username, String password, String owner]
+	 */
 	protected List<List<Object>> getGoodRegistrationDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
@@ -741,6 +744,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists() {
 		return getAvailableSubscriptionPoolsDataAsListOfLists(false);
 	}
+	/**
+	 * @return List of [SubscriptionPool pool]
+	 */
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists(boolean all) {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
@@ -841,6 +847,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
+	/**
+	 * @return List of [String username, String password, String org]
+	 */
 	protected List<List<Object>> getRegisterCredentialsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
@@ -954,6 +963,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAllConsumedProductSubscriptionsDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllConsumedProductSubscriptionsDataAsListOfLists());
 	}
+	/**
+	 * @return List of [ProductSubscription productSubscription]
+	 */
 	protected List<List<Object>> getAllConsumedProductSubscriptionsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
@@ -981,6 +993,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAllEntitlementCertsDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllEntitlementCertsDataAsListOfLists());
 	}
+	/**
+	 * @return List of [EntitlementCert entitlementCert]
+	 */
 	protected List<List<Object>> getAllEntitlementCertsDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
@@ -1028,9 +1043,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	*/
+	/**
+	 * @return List of [String productId, JSONArray bundledProductDataAsJSONArray]
+	 */
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
 		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
 	}
+	/**
+	 * @return List of [String productId, JSONArray bundledProductDataAsJSONArray]
+	 */
 	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystem) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
@@ -1225,6 +1246,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getNonAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists());
 	}
+	/**
+	 * @return List of [String productId]
+	 */
 	protected List<List<Object>> getNonAvailableSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
@@ -2039,6 +2063,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAllJSONPoolsDataAs2dArray() throws Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllJSONPoolsDataAsListOfLists());
 	}
+	/**
+	 * @return List of [JSONObject jsonPool]
+	 */
 	protected List<List<Object>> getAllJSONPoolsDataAsListOfLists() throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
@@ -2079,6 +2106,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return TestNGUtils.convertListOfListsTo2dArray(getAllFutureSystemSubscriptionPoolsDataAsListOfLists());
 	}
 	
+	/**
+	 * @return List of [SubscriptionPool pool]
+	 */
 	protected List<List<Object>>getAllFutureSystemSubscriptionPoolsDataAsListOfLists() throws ParseException, JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
@@ -2095,6 +2125,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
+	/**
+	 * @return List of [JSONObject jsonPool]
+	 */
 	protected List<List<Object>> getAllFutureJSONPoolsDataAsListOfLists(ConsumerType consumerType) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
@@ -2127,6 +2160,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return ll;
 	}
 	
+	/**
+	 * @return List of [JSONObject jsonSubscription]
+	 */
 	protected List<List<Object>> getAllFutureJSONSubscriptionsDataAsListOfLists(ConsumerType consumerType) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 
@@ -2172,7 +2208,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 	
 	
-	
+	/**
+	 * @return List of [SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools]
+	 */
 	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
 		
@@ -2255,6 +2293,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	public Object[][] getAllAvailableServiceLevelDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getAllAvailableServiceLevelDataAsListOfLists());
 	}
+	/**
+	 * @return List of [Object bugzilla, String serviceLevel]
+	 */
 	protected List<List<Object>>getAllAvailableServiceLevelDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		

@@ -228,7 +228,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity regenerate with invalid username and password (attempt with and without force) (negative test)",
-			groups={"blockedByBug-678151"},
+			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void IdentityRegenerateWithInvalidUsernameAndPasword_Test() {
@@ -347,7 +347,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Candidates for an automated Test:
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=678151
+	// TODO Bug 607162 - (FAIL)Testcase : 256969 register to Candlepin, then muck with your identity certs (for fun and profit)
 	// TODO Bug 813296 - Consumer could not get correct info after being deleted from server side
 	
 	

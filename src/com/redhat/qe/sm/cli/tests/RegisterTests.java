@@ -290,7 +290,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
 		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
 		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product was autosubscribed."); 
-		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(fakeProductCert.productName,null,null,"Subscribed",null,null),
+		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(fakeProductCert.productName,null,null,null,"Subscribed",null,null),
 				"As expected, ProductName '"+fakeProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
 
 		// WARNING The following two asserts lead to misleading failures when the entitlementCertFile that we using to fake as a tmpProductCertFile happens to have multiple bundled products inside.  This is why we search for an available pool that provides one product early in this test.
@@ -1106,18 +1106,6 @@ Expected Results:
 		String password=sm_clientPassword;
 		String owner=sm_clientOrg;
 
-		// flatten all the ConsumerType values into a comma separated list
-//		String consumerTypesAsString = "";
-//		for (ConsumerType type : ConsumerType.values()) consumerTypesAsString+=type+",";
-//		consumerTypesAsString = consumerTypesAsString.replaceAll(",$", "");
-		
-		// get all of the registerable consumer types
-		/* curl -k -u admin:admin https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumertypes | python -mjson.tool
-		 * FIXME THIS FAILS AGAINST STAGE ENV; REMOVE THE throws JSONException, Exception AND WRAP IN TRY CATCH; THE CHANGE THE PROPERTIES sm.consumerTypes INPUT TO BE NON_REGISTERABLE CONSUMER TYPES.
-		 * curl --insecure --user CHANGE-ME:CHANGE-ME --request GET http://rubyvip.web.stage.ext.phx2.redhat.com/clonepin/candlepin/consumertypes | python -mjson.tool
-		 */
-//		List <String> registerableConsumerTypes = Arrays.asList(getProperty("sm.consumerTypes", consumerTypesAsString).trim().split(" *, *")); // registerable consumer types
-//		List <String> registerableConsumerTypes = sm_consumerTypes;
 		List <String> registerableConsumerTypes = new ArrayList<String> ();
 		JSONArray jsonConsumerTypes = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/consumertypes"));	
 		for (int i = 0; i < jsonConsumerTypes.length(); i++) {
