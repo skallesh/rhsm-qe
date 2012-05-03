@@ -20,6 +20,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -253,11 +254,21 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296"},
+			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466"/*,"blockedByBug-813296"*/},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyIdentityIsBackedUpWhenConsumerIsDeletedServerSide_Test(Object bugzilla, String consumerCertDir) throws Exception {
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+		String bugId = "813296"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("This test is blocked by Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id="+bugId);
+		}
+		}
+		// END OF WORKAROUND
 		
 		// set the rhsm.consumerCertDir (DO NOT USE SubscriptionTasks.config(...))
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",consumerCertDir);

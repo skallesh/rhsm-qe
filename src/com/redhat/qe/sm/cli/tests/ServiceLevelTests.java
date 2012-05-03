@@ -448,7 +448,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			throw new SkipException("This test is blocked by Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=818319");
+			throw new SkipException("This test is blocked by Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id="+bugId);
 		}
 		}
 		// END OF WORKAROUND
