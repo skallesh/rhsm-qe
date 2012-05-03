@@ -437,11 +437,21 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
  
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
-			groups={"AcceptanceTests"},
+			groups={/*"blockedByBug-818319",*/"AcceptanceTests"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
 	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("This test is blocked by Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=818319");
+		}
+		}
+		// END OF WORKAROUND
 		
 		// system was already registered by dataProvider="getSubscribeWithAutoAndServiceLevelData"
 		if (clienttasks.getCurrentConsumerId()==null) {
@@ -481,7 +491,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)",
-			groups={"AcceptanceTests"},
+			groups={/*"blockedByBug-818319",*/"AcceptanceTests"},
 			dataProvider="getExemptInstalledProductAndServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)
