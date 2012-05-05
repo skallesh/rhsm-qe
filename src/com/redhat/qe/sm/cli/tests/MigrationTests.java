@@ -62,7 +62,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -71,7 +71,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -283,6 +283,65 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
 				"The subscription-manager-migration-data file '"+channelCertMappingFilename+"' maps RHN Channel '"+productBaselineRhnChannel+"' to the same productId as dictated in the CDN Product Baseline.");
 	}
+	
+	
+	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
+			groups={"AcceptanceTests"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyChannelCertMappingFileSupportsRhnClassicBaseAndAvailableChildChannel_Test(Object bugzilla, String classicRhnChannel) {
+		
+		// SPECIAL CASES.....
+		
+		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-beta-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-cf-ae-1-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// (degregor 5/4/2012) CloudForms Application Engine isn't shipping anytime soon, so we decided to remove the CDN repos.  While the channels are there in RHN, no one has access to them.
+		if (classicRhnChannel.matches("rhel-.+-6-cf-ae-1(-.*|$)")) {
+			log.warning("(degregor 5/4/2012) CloudForms Application Engine isn't shipping anytime soon, so we decided to remove the CDN repos.  While the channels are there in RHN, no one has access to them.");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-htb' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.817 - WARNING: RHN Classic channel 'rhel-x86_64-server-6-htb-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.827 - WARNING: RHN Classic channel 'sam-rhel-x86_64-server-6-htb' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.828 - WARNING: RHN Classic channel 'sam-rhel-x86_64-server-6-htb-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// (degregor 5/4/2012) We intentionally exclude HTB channels from the migration script.  It's not a supported use case.
+		if (classicRhnChannel.matches(".+-htb(-.*|$)")) {
+			log.warning("(degregor 5/4/2012) We intentionally exclude HTB channels from the migration script.  It's not a supported use case.");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		// 201205032049:22.819 - WARNING: RHN Classic channel 'rhel-x86_64-server-clusteredstorage-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.820 - WARNING: RHN Classic channel 'rhel-x86_64-server-ei-replication-6' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.820 - WARNING: RHN Classic channel 'rhel-x86_64-server-ei-replication-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.820 - WARNING: RHN Classic channel 'rhel-x86_64-server-ei-replication-6-beta-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.820 - WARNING: RHN Classic channel 'rhel-x86_64-server-ei-replication-6-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'. 
+		// (degregor 5/4/2012) The above channels aren't used.
+		if (classicRhnChannel.matches("rhel-.+-ei-replication-6(-.*|$)")  || classicRhnChannel.matches("rhel-.+-clusteredstorage-6(-.*|$)")) {
+			log.warning("(degregor 5/4/2012) The above channels aren't used.");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		// 201205032049:22.827 - WARNING: RHN Classic channel 'rhn-tools-rhel-x86_64-server-6' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.827 - WARNING: RHN Classic channel 'rhn-tools-rhel-x86_64-server-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.827 - WARNING: RHN Classic channel 'rhn-tools-rhel-x86_64-server-6-beta-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205032049:22.827 - WARNING: RHN Classic channel 'rhn-tools-rhel-x86_64-server-6-debuginfo' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// (degregor 5/4/2012) RHN Tools content doesn't get delivered through CDN.
+		if (classicRhnChannel.startsWith("rhn-tools-rhel-")) {
+			log.warning("(degregor 5/4/2012) RHN Tools content doesn't get delivered through CDN.");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+	}
+	
 	
 	
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
@@ -1376,9 +1435,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 //		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"--cli-only --force",	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 
 		return ll;
-		
-		
-
 	}
 	
 	
@@ -1526,6 +1582,51 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName
 				ll.add(Arrays.asList(new Object[]{bugzilla,	rhnChannel,	productId,	productName}));
 			}
+		}
+		
+		return ll;
+	}
+	
+	
+	@DataProvider(name="getRhnClassicBaseAndAvailableChildChannelsData")
+	public Object[][] getRhnClassicBaseAndAvailableChildChannelsDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRhnClassicBaseAndAvailableChildChannelsDataAsListOfLists());
+	}
+	protected List<List<Object>> getRhnClassicBaseAndAvailableChildChannelsDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (clienttasks==null) return ll;
+		
+		// add the base channel
+		ll.add(Arrays.asList(new Object[]{null,	rhnBaseChannel}));
+		
+		// add the child channels
+		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
+			
+			// bugzillas
+			Object bugzilla = null;
+			if (rhnAvailableChildChannel.matches("sam-rhel-.+-server-6-beta.*")) {	// sam-rhel-x86_64-server-6-beta-debuginfo
+				// Bug 819092 - channels for sam-rhel-<ARCH>-server-6-beta-* are not yet mapped to product certs in rcm/rhn-definitions.git
+				bugzilla = new BlockedByBzBug("819092");
+			}
+			if (rhnAvailableChildChannel.matches("rhel-.+-rhui-2(-.*|$)")) {	// rhel-x86_64-server-6-rhui-2-debuginfo
+				// Bug 819089 - channels for rhel-<ARCH>-rhui-2-* are not yet mapped to product certs in rcm/rhn-definitions.git
+				bugzilla = new BlockedByBzBug("819089");
+			}
+			if (rhnAvailableChildChannel.matches("rhel-.+-server-6-mrg-.*")) {	// rhel-x86_64-server-6-mrg-grid-execute-2-debuginfo rhel-x86_64-server-6-mrg-messaging-2-debuginfo
+				// Bug 819088 - channels for rhel-<ARCH>-server-6-mrg-* are not yet mapped to product certs in rcm/rhn-definitions.git 
+				bugzilla = new BlockedByBzBug("819088");
+			}
+			if (rhnAvailableChildChannel.matches("rhel-.+-server-v2vwin-6(-.*|$)")) {	// rhel-x86_64-server-v2vwin-6-beta-debuginfo
+				// Bug 817791 - v2vwin content does not exist in CDN
+				bugzilla = new BlockedByBzBug("817791");
+			}
+			if (rhnAvailableChildChannel.matches("rhel-.+-fastrack-6(-.*|$)")) {	// rhel-x86_64-server-ha-fastrack-6-debuginfo
+				// Bug 818202 - Using subscription-manager, some repositories like fastrack are not available as they are in rhn.
+				bugzilla = new BlockedByBzBug("818202");
+			}
+			
+			ll.add(Arrays.asList(new Object[]{bugzilla,	rhnAvailableChildChannel}));
+
 		}
 		
 		return ll;
