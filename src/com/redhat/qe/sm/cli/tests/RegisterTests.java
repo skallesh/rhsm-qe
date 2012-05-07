@@ -1191,7 +1191,7 @@ Expected Results:
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
 	}
 	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		String username=sm_clientUsername;
 		String password=sm_clientPassword;
 		String owner=sm_clientOrg;
