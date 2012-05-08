@@ -519,7 +519,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// determine the subset of expected pools with a matching servicelevel
-		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
+		// CASE SENSITIVE expectedProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
+		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
 
 		// list consumed filtered by servicelevel
 		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null);
