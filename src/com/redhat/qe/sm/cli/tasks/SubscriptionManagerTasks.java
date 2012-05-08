@@ -766,6 +766,7 @@ public class SubscriptionManagerTasks {
 	public List<ProductCert> getCurrentProductCerts(String providingTag) {
 		List<ProductCert> prodctCertsProvidingTag = new ArrayList<ProductCert>();
 		for (ProductCert productCert : getCurrentProductCerts()) {
+			if (productCert.productNamespace.providedTags==null) continue;
 			List<String> providedTags = Arrays.asList(productCert.productNamespace.providedTags.split("\\s*,\\s*"));
 			if (providedTags.contains(providingTag)) prodctCertsProvidingTag.add(productCert);
 		}
