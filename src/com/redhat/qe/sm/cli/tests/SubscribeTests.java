@@ -658,7 +658,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			} else if (sm_exemptServiceLevelsInUpperCase.contains(CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level").toUpperCase())) {
 				log.warning("Pool '"+poolId+"' returned by the dry-run results provides the exempt service-level '"+CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level")+"'.");
 			} else {
-				Assert.assertEquals(CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level"), serviceLevel,"Pool '"+poolId+"' returned by the dry-run results provides the requested service-level '"+serviceLevel+"'.");
+				String support_level = CandlepinTasks.getPoolProductAttributeValue(jsonPool, "support_level");
+				//CASE SENSITIVE ASSERTION Assert.assertEquals(support_level, serviceLevel,"Pool '"+poolId+"' returned by the dry-run results provides the requested service-level '"+serviceLevel+"'.");
+				Assert.assertTrue(serviceLevel.equalsIgnoreCase(support_level),"Pool '"+poolId+"' returned by the dry-run results provides a case-insensitive support_level '"+support_level+"' match to the requested service-level '"+serviceLevel+"'.");
 			}
 			
 			Assert.assertNotNull(subscriptionPool,"Pool '"+poolId+"' returned by the dry-run results for service-level '"+serviceLevel+"' was found in the list --available.");
@@ -689,7 +691,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				} else if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 					log.warning("After autosubscribe with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 				} else {
-					Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel,"The service level provided by the entitlement cert granted after autsubscribe with service level match.");
+					//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel,"The service level provided by the entitlement cert granted after autosubscribe matches the requested servicelevel.");
+					Assert.assertTrue(serviceLevel.equalsIgnoreCase(entitlementCert.orderNamespace.supportLevel),"Ignoring case, the service level provided by the entitlement cert granted after autosubscribe matches the requested servicelevel.");
 				}
 			}
 		}
