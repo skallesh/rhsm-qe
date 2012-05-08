@@ -2,7 +2,9 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -357,7 +359,69 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 	
-	
+//	@Test(	description="when registering to an existing consumerid, the facts for the system should be updated automatically upon registering",
+//			groups={"debugTest"/*"blockedByBug-810236*/}, dependsOnGroups={},
+//			enabled=true)
+//	//@ImplementsNitrateTest(caseId=)
+//	public void RegisteringWithConsumerIdShouldAlsoUpdateFacts_Test() {
+//		clienttasks.deleteFactsFileWithOverridingValues();
+//	
+//		// create a test fact
+//		Map<String,String> factsMap = new HashMap<String,String>();
+//		String testFactName1 = "test.fact.1";
+//		String testFactValue1 = "Ying";
+//		factsMap.put(testFactName1,testFactValue1);
+//		clienttasks.createFactsFileWithOverridingValues(factsMap);
+//		
+//		// register to create a valid system consumer that will pick up the temporary test fact
+//		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null, null));
+//		
+//		// assert that the current facts --list includes the test fact
+//		Assert.assertEquals(clienttasks.getFactValue(testFactName1), testFactValue1, "The test fact '"+testFactName1+"' should be defined for consumer '"+consumerId+"' since this system is registered as this consumer.");
+//		
+//		// clean the system and delete the test facts
+//		clienttasks.clean(null,null,null);
+//		clienttasks.deleteFactsFileWithOverridingValues();
+//		
+//		// create a new test fact
+//		factsMap.clear();
+//		String testFactName2 = "test.fact.2";
+//		String testFactValue2 = "Yang";
+//		factsMap.put(testFactName2,testFactValue2);
+//		clienttasks.createFactsFileWithOverridingValues(factsMap);
+//		
+//		// re-register to the existing consumerid
+//		Assert.assertEquals(clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+//		
+//		// assert that the original consumerId's test fact has been removed from the consumer and the new one exists.
+//		Assert.assertNull(clienttasks.getFactValue(testFactName1), "System fact '"+testFactName1+"' should not exist for consumerid '"+consumerId+"' when a new system has registered to this consumerid.");
+//		
+//		// assert that the new consumerId's test fact is listed
+//		Assert.assertEquals(clienttasks.getFactValue(testFactName2), testFactValue2, "The test fact '"+testFactName2+"' should be defined for consumer '"+consumerId+"' which implies that a consumer who has registerd to and existing consumerid will automatically update facts for the new system.");
+//	}
+	@Test(	description="when registering to an existing consumerid, the facts for the system should be updated automatically upon registering",
+			groups={"debugTest"/*"blockedByBug-810236*/}, dependsOnGroups={},
+			enabled=false)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisteringWithConsumerIdShouldAlsoUpdateFacts_Test() throws JSONException, Exception {
+		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
+
+		// register client1 and retain the consumerid and system.name
+		String consumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null, null));
+		String client1SystemNameFact = client1tasks.getFactValue("system.name");
+		client1tasks.clean(null,null,null);
+		
+		// register client2 to the existing consumerid and assert...
+		Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
+		String client2SystemNameFact = client2tasks.getFactValue("system.name");
+		//Assert.assertTrue(!client1SystemNameFact.equals(client2SystemNameFact),"Upon registering a second system to consumerid '"+consumerId+"', the system.name fact should be automatically updated to the new system facts.");
+		
+		JSONObject jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		JSONObject jsonFacts = jsonConsumer.getJSONObject("facts");
+		log.info("Consumer '"+consumerId+"' facts on the candlepin server are: \n"+jsonFacts.toString(5));
+		
+		
+	}
 
 	
 	// Candidates for an automated Test:
