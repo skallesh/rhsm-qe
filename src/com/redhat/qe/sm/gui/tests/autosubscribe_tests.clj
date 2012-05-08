@@ -51,8 +51,10 @@
   (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
-  (reset! common-sla (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue))
-  (reset! sla-list (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues)))
+  (reset! common-sla (.toUpperCase
+                      (ComplianceTests/allProductsSubscribableByOneCommonServiceLevelValue)))
+  (reset! sla-list (map #(.toUpperCase %)
+                        (seq (ComplianceTests/allProductsSubscribableByMoreThanOneCommonServiceLevelValues))))
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/start-app))
 
