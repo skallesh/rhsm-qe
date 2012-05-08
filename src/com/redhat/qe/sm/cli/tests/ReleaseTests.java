@@ -1,5 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 
 import org.json.JSONException;
@@ -10,7 +12,11 @@ import org.testng.annotations.Test;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.EntitlementCert;
+import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.Repo;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -173,46 +179,84 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(yumReposAfterSettingReleaseVer.containsAll(yumReposBeforeSettingReleaseVer) && yumReposBeforeSettingReleaseVer.containsAll(yumReposAfterSettingReleaseVer),
 				"After unsetting the release version preference, all of the yum repolist were restored to their original values.");
 	}
-
-	// TODO
-	// Test against stage to ensure releaseVer --list returns all the valid values for rhel5 and rhel6
-	/*
-	 * How to get the expected release list
-	 * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
-	 * http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
-
-	From Bug 802245 - 6.0 entry should not in release listing file
-	Steps to Reproduce:
-	Register to Server and subscribe to one entitlement pool.
-	#curl --cert ./6878290551698585530.pem --key ./6878290551698585530-key.pem -k
-	https://cdn.redhat.com/content/dist/rhel/client/6/listing
-[root@jsefler-63server ~]# curl --cert /etc/pki/entitlement/2580206138540098374.pem --key /etc/pki/entitlement/2580206138540098374-key.pem -k https://cdn.redhat.com/content/dist/rhel/server/5/listing
-
-	Actual results:
-	6.0 
-	6.1 
-	6.2 
-	6Client
-
-	Expected results:
-	6.1
-	6.2
-	6Client
-
-	Additional info:
-	The same problem happened on QA
-	CDN:https://cdn.rcm-qa.redhat.com/content/eus/rhel/server/6/listing.
-	*/
 	
+	
+	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
+			groups={"blockedByBug-818298"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyReleaseListMatchesCDN_Test() throws JSONException, Exception {
+		
+		// make sure we are newly registered
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);
 
+		// get the current base RHEL product cert
+		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
+		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
+		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		
+		// find an available RHEL subscription pool that provides for this base RHEL product cert
+		List<SubscriptionPool> rhelSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools(rhelProductCert.productId, sm_serverUrl);
+		if (rhelSubscriptionPools.isEmpty()) throw new SkipException("Cannot find an available SubscriptionPool that provides for this installed RHEL Product: "+rhelProductCert);
+		SubscriptionPool rhelSubscriptionPool = rhelSubscriptionPools.get(0);	// choose one
+		
+		// subscribe to the RHEL subscription
+		File rhelEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool);
+		File rhelEntitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(rhelEntitlementCertFile);
+		
+		// get the expected release listing from the CDN for this major RHEL release/variant
+		// http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
+		// http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
+		//[root@jsefler-63server ~]# curl --cert /etc/pki/entitlement/2580206138540098374.pem --key /etc/pki/entitlement/2580206138540098374-key.pem -k https://cdn.redhat.com/content/dist/rhel/server/5/listing
+		String listingUrl =  clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+"/content/dist/rhel/"+clienttasks.variant.toLowerCase()+"/"+clienttasks.redhatReleaseX+"/listing";
+		String command = String.format("curl --stderr /dev/null --insecure --cert %s --key %s %s" , rhelEntitlementCertFile.getPath(), rhelEntitlementCertKeyFile.getPath(), listingUrl);
+		log.info("Determining the expected release listing...");
+		SSHCommandResult result = client.runCommandAndWait(command);
+		List<String> expectedReleases = Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*"));
+		
+		// get the actual release listing
+		List<String> actualReleases = clienttasks.getCurrentlyAvailableReleases();
+		
+		// assert that they are eqivalent
+		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list matches the CDN listing file after being granted an entitlement from SubscriptionPool: "+rhelSubscriptionPool);
+	}
+	
+	@Test(	description="register to a RHEL subscription and verify that release --list excludes 6.0",
+			groups={"blockedByBug-802245"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyReleaseListExcludes60ForAgainstRhel6_Test() throws JSONException, Exception {
+		
+		// make sure we are newly registered with autosubscribe
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);
+
+		// get the current base RHEL product cert
+		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
+		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
+		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		
+		// assert that it was autosubscribed
+		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertNotNull(rhelInstalledProduct, "Our base installed RHEL product was autosubscribed during registration.");
+
+		// get the actual release listing
+		List<String> actualReleases = clienttasks.getCurrentlyAvailableReleases();
+		
+		// assert that the list excludes 6.0, but includes the current X.Y release
+		String release60 = "6.0";
+		Assert.assertTrue(!actualReleases.contains(release60), "The subscription-manager releases list should exclude '"+release60+"' since '"+clienttasks.command+"' did not exist in RHEL Release '"+release60+"'.");
+		Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
+	}
 	
 	
 	
 
 	// Candidates for an automated Test:
-	// TODO Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed 
 	
-		
+	
+	
 	// Configuration methods ***********************************************************************
 
 

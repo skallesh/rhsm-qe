@@ -2009,6 +2009,27 @@ schema generation failed
 		return getPoolProductAttributeValue(jsonPool,productAttributeName);
 	}
 	
+	public static List<String> getPoolProvidedProductIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		List<String> providedProductIds = new ArrayList<String>();
+		
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// loop through all of the providedProducts for this jsonPool
+		JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+		for (int j = 0; j < jsonProvidedProducts.length(); j++) {
+			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(j);
+			String productId = jsonProvidedProduct.getString("productId");
+			
+			// append the productId for this provided product
+			providedProductIds.add(productId);
+		}
+		
+		// return the value for the named productAttribute
+		return providedProductIds;
+	}
+	
 	public static String getPoolAttributeValue (String authenticator, String password, String url, String poolId, String attributeName) throws JSONException, Exception {
 
 		// get the pool for the authenticator

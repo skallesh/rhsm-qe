@@ -655,11 +655,23 @@ public class SubscriptionManagerTasks {
 		//	6.2
 		//	6Workstation
 		List<String> releases =  new ArrayList<String>();
-		for (String release : result.getStdout().trim().split("\\n")) {
+		for (String release : result.getStdout().trim().split("\\s*\\n\\s*")) {
 			if (!release.isEmpty())	releases.add(release);
 		}
 		
 		return releases;
+	}
+	
+	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String serverUrl) throws JSONException, Exception {
+		List<SubscriptionPool> subscriptionPoolsProvidingProductId = new ArrayList<SubscriptionPool>();
+
+		
+		for (SubscriptionPool subscriptionPool : getCurrentlyAvailableSubscriptionPools()) {
+			if (CandlepinTasks.getPoolProvidedProductIds(currentlyRegisteredUsername, currentlyRegisteredPassword, serverUrl, subscriptionPool.poolId).contains(providingProductId)) {
+				subscriptionPoolsProvidingProductId.add(subscriptionPool);
+			}
+		}
+		return subscriptionPoolsProvidingProductId;
 	}
 	
 	/**
@@ -749,6 +761,15 @@ public class SubscriptionManagerTasks {
 		String certificates = sshCommandRunner.getStdout();
 		return ProductCert.parse(certificates);
 		
+	}
+	
+	public List<ProductCert> getCurrentProductCerts(String providingTag) {
+		List<ProductCert> prodctCertsProvidingTag = new ArrayList<ProductCert>();
+		for (ProductCert productCert : getCurrentProductCerts()) {
+			List<String> providedTags = Arrays.asList(productCert.productNamespace.providedTags.split("\\s*,\\s*"));
+			if (providedTags.contains(providingTag)) prodctCertsProvidingTag.add(productCert);
+		}
+		return prodctCertsProvidingTag;
 	}
 	
 	/**
