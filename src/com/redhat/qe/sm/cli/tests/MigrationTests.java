@@ -339,6 +339,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
+		// 201205080442:43.007 - WARNING: RHN Classic channel 'rhel-x86_64-server-highavailability-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205080442:43.008 - WARNING: RHN Classic channel 'rhel-x86_64-server-largefilesystem-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205080442:43.010 - WARNING: RHN Classic channel 'rhel-x86_64-server-loadbalance-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// (degregor 5/8/2012) These channels are not used and can be ignored.
+		if (classicRhnChannel.matches("rhel-.+-highavailability-6-beta") || classicRhnChannel.matches("rhel-.+-largefilesystem-6-beta") || classicRhnChannel.matches("rhel-.+-loadbalance-6-beta")) {
+			log.warning("(degregor 5/8/2012) These channels are not used and can be ignored.");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
+		// 201205080556:10.326 - WARNING: RHN Classic channel 'rhel-x86_64-server-hts-6' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// 201205080556:10.326 - WARNING: RHN Classic channel 'rhel-x86_64-server-hts-6-beta' is NOT mapped in the file '/usr/share/rhsm/product/RHEL-6/channel-cert-mapping.txt'.
+		// (degregor 5/8/2012) We're not delivering Hardware Certification (aka hts) bits through the CDN at this point.
+		if (classicRhnChannel.matches("rhel-.+-hts-6(-.*|$)")) {
+			log.warning("(degregor 5/8/2012) We're not delivering Hardware Certification (aka hts) bits through the CDN at this point.");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
 	
