@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1737,6 +1738,24 @@ schema generation failed
 		
 		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
 	}
+	
+	public static Map<String,String> getConsumerFacts(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
+
+		JSONObject jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerId));
+		JSONObject jsonFacts = jsonConsumer.getJSONObject("facts");
+		log.finest("Consumer '"+consumerId+"' facts on the candlepin server are: \n"+jsonFacts.toString(5));
+		Map<String,String> factsMap = new HashMap<String,String>();
+		
+		Iterator<String> factKeysIter = jsonFacts.keys();
+		while (factKeysIter.hasNext()) {
+			String factName = factKeysIter.next();
+			String factValue = jsonFacts.getString(factName);
+			factsMap.put(factName, factValue);
+		}
+		return factsMap;
+	}
+	
+	
 	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 	

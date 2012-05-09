@@ -359,69 +359,58 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	}
 
 	
-//	@Test(	description="when registering to an existing consumerid, the facts for the system should be updated automatically upon registering",
-//			groups={"debugTest"/*"blockedByBug-810236*/}, dependsOnGroups={},
-//			enabled=true)
-//	//@ImplementsNitrateTest(caseId=)
-//	public void RegisteringWithConsumerIdShouldAlsoUpdateFacts_Test() {
-//		clienttasks.deleteFactsFileWithOverridingValues();
-//	
-//		// create a test fact
-//		Map<String,String> factsMap = new HashMap<String,String>();
-//		String testFactName1 = "test.fact.1";
-//		String testFactValue1 = "Ying";
-//		factsMap.put(testFactName1,testFactValue1);
-//		clienttasks.createFactsFileWithOverridingValues(factsMap);
-//		
-//		// register to create a valid system consumer that will pick up the temporary test fact
-//		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null, null));
-//		
-//		// assert that the current facts --list includes the test fact
-//		Assert.assertEquals(clienttasks.getFactValue(testFactName1), testFactValue1, "The test fact '"+testFactName1+"' should be defined for consumer '"+consumerId+"' since this system is registered as this consumer.");
-//		
-//		// clean the system and delete the test facts
-//		clienttasks.clean(null,null,null);
-//		clienttasks.deleteFactsFileWithOverridingValues();
-//		
-//		// create a new test fact
-//		factsMap.clear();
-//		String testFactName2 = "test.fact.2";
-//		String testFactValue2 = "Yang";
-//		factsMap.put(testFactName2,testFactValue2);
-//		clienttasks.createFactsFileWithOverridingValues(factsMap);
-//		
-//		// re-register to the existing consumerid
-//		Assert.assertEquals(clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
-//		
-//		// assert that the original consumerId's test fact has been removed from the consumer and the new one exists.
-//		Assert.assertNull(clienttasks.getFactValue(testFactName1), "System fact '"+testFactName1+"' should not exist for consumerid '"+consumerId+"' when a new system has registered to this consumerid.");
-//		
-//		// assert that the new consumerId's test fact is listed
-//		Assert.assertEquals(clienttasks.getFactValue(testFactName2), testFactValue2, "The test fact '"+testFactName2+"' should be defined for consumer '"+consumerId+"' which implies that a consumer who has registerd to and existing consumerid will automatically update facts for the new system.");
-//	}
 	@Test(	description="when registering to an existing consumerid, the facts for the system should be updated automatically upon registering",
-			groups={"debugTest"/*"blockedByBug-810236*/}, dependsOnGroups={},
-			enabled=false)
+			groups={"blockedByBug-810236"}, dependsOnGroups={},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisteringWithConsumerIdShouldAlsoUpdateFacts_Test() throws JSONException, Exception {
+	public void AssertFactsUpdateWhenRegisteringWithConsumerId_Test() throws JSONException, Exception {
 		if (client1==null || client2==null) throw new SkipException("This test requires two clients.");
 
-		// register client1 and retain the consumerid and system.name
+		// give client1 a custom fact
+		client1tasks.deleteFactsFileWithOverridingValues();
+		Map<String,String> customFactsMap = new HashMap<String,String>();
+		String client1CustomFactName = "custom.fact.client1";
+		customFactsMap.clear();
+		customFactsMap.put(client1CustomFactName,client1tasks.hostname);
+		client1tasks.createFactsFileWithOverridingValues(customFactsMap);
+		
+		// register client1 and get the original facts for consumerid from client1
 		String consumerId = client1tasks.getCurrentConsumerId(client1tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, null, null, null, null));
-		String client1SystemNameFact = client1tasks.getFactValue("system.name");
+		Map<String,String> client1FactsMap = client1tasks.getFacts();
+		
+		// get consumerid's facts from Candlepin
+		Map<String,String> consumer1FactsMap = CandlepinTasks.getConsumerFacts(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
+		JSONObject jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		log.info("Consumer '"+consumerId+"' facts on the candlepin server are: \n"+jsonConsumer.getJSONObject("facts").toString(5));
+		
+		// assert that the candlepin's view of consumerid's facts are identical to the local client1's system facts
+		Assert.assertTrue(doSystemFactsMatchConsumerFacts(consumerId, client1FactsMap, consumer1FactsMap),"The facts on consumer '"+consumerId+"' known to the candlepin server are equivalent to the subscription-manager facts --list on client system '"+client1tasks.hostname+"'.");
+		
 		client1tasks.clean(null,null,null);
 		
-		// register client2 to the existing consumerid and assert...
+		
+		// give client2 a custom fact
+		client2tasks.deleteFactsFileWithOverridingValues();
+		String client2CustomFactName = "custom.fact.client2";
+		customFactsMap.clear();
+		customFactsMap.put(client2CustomFactName,client2tasks.hostname);
+		client2tasks.createFactsFileWithOverridingValues(customFactsMap);
+		
+		// register client2 to the existing consumerid and get the facts from client2
 		Assert.assertEquals(client2tasks.getCurrentConsumerId(client2tasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null, (String)null, null, null, null, null, null)), consumerId, "Registering to an existing consumerId should return the same consumerId.");
-		String client2SystemNameFact = client2tasks.getFactValue("system.name");
-		//Assert.assertTrue(!client1SystemNameFact.equals(client2SystemNameFact),"Upon registering a second system to consumerid '"+consumerId+"', the system.name fact should be automatically updated to the new system facts.");
-		
-		JSONObject jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
-		JSONObject jsonFacts = jsonConsumer.getJSONObject("facts");
-		log.info("Consumer '"+consumerId+"' facts on the candlepin server are: \n"+jsonFacts.toString(5));
-		
-		
+		Map<String,String> client2FactsMap = client2tasks.getFacts();
+
+		// get consumerid's facts from Candlepin again
+		Map<String,String> consumer2FactsMap = CandlepinTasks.getConsumerFacts(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
+		jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		log.info("Consumer '"+consumerId+"' facts on the candlepin server are now: \n"+jsonConsumer.getJSONObject("facts").toString(5));
+
+		// now assert that candlepin's view of the consumerid facts has been automatically updated to those from client2 system facts who just registered to existing consumer
+		Assert.assertTrue(doSystemFactsMatchConsumerFacts(consumerId, client2FactsMap, consumer2FactsMap),"The facts on consumer '"+consumerId+"' known to the candlepin server have automatically been updated after client system '"+client2tasks.hostname+"' registered using an existing consumerId.");
+		Assert.assertTrue(!consumer2FactsMap.containsKey(client1CustomFactName),"After client2 "+client2tasks.hostname+" registered to existing consumerId '"+consumerId+"', the original custom fact '"+client1CustomFactName+"' set by original client1 system '"+client1tasks.hostname+"' is has been automatically cleaned from the consumer facts known on the candlepin server.");
 	}
+	
+
 
 	
 	// Candidates for an automated Test:
@@ -472,7 +461,38 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 
-	
+	protected boolean doSystemFactsMatchConsumerFacts(String consumerId, Map<String,String> systemFactsMap, Map<String,String> consumerFactsMap) {
+		boolean mapsAreEqual=true;
+		for (Map<String,String> m : Arrays.asList(systemFactsMap,consumerFactsMap)) {	// normalize boolean facts
+			for (String k : m.keySet()) {
+				if (m.get(k).equalsIgnoreCase(Boolean.TRUE.toString())) m.put(k,Boolean.TRUE.toString());
+				if (m.get(k).equalsIgnoreCase(Boolean.FALSE.toString())) m.put(k,Boolean.FALSE.toString());
+			}
+		}
+		for (String key : consumerFactsMap.keySet()) {
+			if (key.equals("system.name") || key.equals("system.uuid")) {log.info("Skipping comparison of extended fact '"+key+"'.");continue;}
+			if (systemFactsMap.containsKey(key) && !systemFactsMap.get(key).equals(consumerFactsMap.get(key))) {
+				log.warning("Consumer '"+consumerId+"' on client "+client1tasks.hostname+" has a local system fact '"+key+"' value '"+systemFactsMap.get(key)+"' which does not match value '"+consumerFactsMap.get(key)+"' from the remote candlepin API.");
+				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");continue;}
+				mapsAreEqual=false;
+			} else if (!systemFactsMap.containsKey(key)) {
+				log.warning("Consumer '"+consumerId+"' from the remote candlepin API has a fact '"+key+"' which is absent from the local system facts on client "+client1tasks.hostname+".");
+				mapsAreEqual=false;	
+			}
+		}
+		for (String key : systemFactsMap.keySet()) {
+			if (key.equals("system.name") || key.equals("system.uuid")) {log.info("Skipping comparison of extended fact '"+key+"'.");continue;}
+			if (consumerFactsMap.containsKey(key) && !consumerFactsMap.get(key).equals(systemFactsMap.get(key))) {
+				log.warning("Consumer '"+consumerId+"' from the remote candlepin API has a system fact '"+key+"' value '"+consumerFactsMap.get(key)+"' which does not match value '"+systemFactsMap.get(key)+"' from the local system fact on client "+client1tasks.hostname+".");
+				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");continue;}
+				mapsAreEqual=false;
+			} else if (!consumerFactsMap.containsKey(key)) {
+				log.warning("Consumer '"+consumerId+"' on client "+client1tasks.hostname+" has a fact '"+key+"' which is absent from the remote candlepin API.");
+				mapsAreEqual=false;	
+			}
+		}
+		return mapsAreEqual;
+	}
 
 	
 	

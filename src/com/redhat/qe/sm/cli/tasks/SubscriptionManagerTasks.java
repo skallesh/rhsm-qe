@@ -856,41 +856,102 @@ public class SubscriptionManagerTasks {
 	 * @return The fact value that subscription-manager lists for factName is returned.  If factName is not listed, null is returned.
 	 */
 	public String getFactValue(String factName) {
-		SSHCommandResult result = facts_(true, false, null, null, null);
-		
+		Map<String,String> factsMap = getFacts();
+		if (!factsMap.containsKey(factName)) {
+			log.warning("Did not find fact '"+factName+"' in the facts list on system '"+hostname+"'.");
+			return null;
+		}
+		return (factsMap.get(factName));
+// DELETEME OLD IMPLEMENTATION
+//		SSHCommandResult result = facts_(true, false, null, null, null);
+//		
+//		// # subscription-manager facts --list
+//		// cpu.architecture: x86_64
+//		// cpu.bogomips: 4600.03
+//		// cpu.core(s)_per_socket: 1
+//		// cpu.cpu(s): 2
+//		// uname.sysname: Linux
+//		// uname.version: #1 SMP Mon Mar 21 10:20:35 EDT 2011
+//		// virt.host_type: ibm_systemz
+//		// ibm_systemz-zvm
+//		// uname.sysname: Linux
+//		// network.ipaddr: 10.16.66.203
+//		// system.compliant: False
+//		
+//		String factNameRegex = factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");
+//		//String regex=factNameRegex+":(.*)";	// works with single-line fact values
+//		String regex=factNameRegex+":(.*(\n.*?)+)(?:^.+?:|$)";	// works with multi-line fact values
+//		
+//		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+//		Matcher matcher = pattern.matcher(result.getStdout());
+//		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
+//		if (!matcher.find()) {
+//			log.warning("Did not find fact '"+factName+"'.");
+//			return null;
+//		}
+//
+////		log.fine("Matches: ");
+////		do {
+////			log.fine(matcher.group());
+////		} while (matcher.find());
+//		return matcher.group(1).trim();	// return the contents of the first capturing group
+	}
+	
+	/**
+	 * @return Map of the system's facts
+	 */
+	public Map<String,String> getFacts() {
+		Map<String,String> factsMap = new HashMap<String,String>();
+		List<String> factNames = new ArrayList<String>();
+
+		SSHCommandResult factsList = facts_(true, false, null, null, null);
+		String factsListAsString = factsList.getStdout().trim();
 		// # subscription-manager facts --list
 		// cpu.architecture: x86_64
 		// cpu.bogomips: 4600.03
 		// cpu.core(s)_per_socket: 1
 		// cpu.cpu(s): 2
+		// dmi.system.uuid: a2e71856-6778-7975-772a-21750aa3eeb0
+		// dmi.system.version: Not Specified
 		// uname.sysname: Linux
 		// uname.version: #1 SMP Mon Mar 21 10:20:35 EDT 2011
 		// virt.host_type: ibm_systemz
 		// ibm_systemz-zvm
 		// uname.sysname: Linux
 		// network.ipaddr: 10.16.66.203
-		// system.compliant: False
+		// system.entitlements_valid: invalid
+		// system.name: jsefler-r63-server.usersys.redhat.com
+		// system.uuid: 1c404f7f-a77b-4afa-8748-0532f05435b5
+		// uname.machine: x86_64
 		
-		String factNameRegex = factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");
-		//String regex=factNameRegex+":(.*)";	// works with single-line fact values
-		String regex=factNameRegex+":(.*(\n.*?)+)(?:^.+?:|$)";	// works with multi-line fact values
-		
-		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-		Matcher matcher = pattern.matcher(result.getStdout());
-		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
-		if (!matcher.find()) {
-			log.warning("Did not find fact '"+factName+"'.");
-			return null;
+		String factNameRegex="^[\\w\\.\\(\\)-]+: ";
+		Pattern pattern = Pattern.compile(factNameRegex, Pattern.MULTILINE);
+		Matcher matcher = pattern.matcher(factsListAsString);
+		while (matcher.find()) {
+			matcher.group();
+			factNames.add(matcher.group());
 		}
-
-//		log.fine("Matches: ");
-//		do {
-//			log.fine(matcher.group());
-//		} while (matcher.find());
-		return matcher.group(1).trim();	// return the contents of the first capturing group
+		
+		int fromIndex=0;
+		for (int f = 0; f < factNames.size(); f++) {
+			String thisFactName = factNames.get(f);
+			String thisFactValue;
+			String nextFactName;
+			if (f==factNames.size()-1) {
+				thisFactValue = factsListAsString.substring(factsListAsString.indexOf(thisFactName,fromIndex)+thisFactName.length());	
+			} else {
+				nextFactName = factNames.get(f+1);
+				thisFactValue = factsListAsString.substring(factsListAsString.indexOf(thisFactName,fromIndex)+thisFactName.length(), factsListAsString.indexOf(nextFactName,fromIndex));
+			}
+			fromIndex = factsListAsString.indexOf(thisFactName,fromIndex)+thisFactName.length();
+			thisFactName = thisFactName.replaceFirst(": $", "");
+			thisFactValue = thisFactValue.replaceFirst("\n$","");
+			factsMap.put(thisFactName, thisFactValue);
+		}
+		
+		return factsMap;
 	}
 	
-
 	/**
 	 * @param factsMap - map of key/values pairs that will get written as JSON to a facts file that will override the true facts on the system.  Note: subscription-manager facts --update may need to be called after this method to realize the override.
 	 */
