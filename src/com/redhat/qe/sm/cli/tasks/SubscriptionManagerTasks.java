@@ -8,8 +8,10 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -662,9 +664,46 @@ public class SubscriptionManagerTasks {
 		return releases;
 	}
 	
+	
+	/**
+	 * @return list of the expected releases currently available based on the currently enabled repo content and this major RHEL release
+	 */
+	public List<String> getCurrentlyExpectedReleases() {
+		HashSet<String> expectedReleaseSet = new HashSet<String>();
+		String baseurl = getConfFileParameter(rhsmConfFile, "rhsm", "baseurl");
+		
+		//log.info("Determining the expected release listing...");
+		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
+			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				if (contentNamespace.type.equalsIgnoreCase("yum")) {
+					if (contentNamespace.enabled.equalsIgnoreCase(Boolean.TRUE.toString()) || contentNamespace.enabled.equals("1")) {	// Bug 820639 - subscription-manager release --list should exclude listings from disabled repos
+						if (contentNamespace.downloadUrl.contains("$releasever")) {
+							if (contentNamespace.downloadUrl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
+								// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
+								String listingUrl =  contentNamespace.downloadUrl.startsWith("http")? "":baseurl;
+								listingUrl += contentNamespace.downloadUrl.split("/\\$releasever/")[0];
+								listingUrl += "/listing";
+								String command = String.format("curl --stderr /dev/null --insecure --cert %s --key %s %s" , entitlementCert.file.getPath(), getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCert.file).getPath(), listingUrl);
+								SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
+								//	[root@qe-blade-13 ~]# curl --stderr /dev/null --insecure --cert /etc/pki/entitlement/2013167262444796312.pem --key /etc/pki/entitlement/2013167262444796312-key.pem https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/6/listing
+								//	6.1
+								//	6.2
+								//	6Server
+								expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+							}
+						}
+					}
+				}
+			}
+		}
+		return new ArrayList<String>(expectedReleaseSet);
+	}
+	
+	
+	
+	
 	public List<SubscriptionPool> getCurrentlyAvailableSubscriptionPools(String providingProductId, String serverUrl) throws JSONException, Exception {
 		List<SubscriptionPool> subscriptionPoolsProvidingProductId = new ArrayList<SubscriptionPool>();
-
 		
 		for (SubscriptionPool subscriptionPool : getCurrentlyAvailableSubscriptionPools()) {
 			if (CandlepinTasks.getPoolProvidedProductIds(currentlyRegisteredUsername, currentlyRegisteredPassword, serverUrl, subscriptionPool.poolId).contains(providingProductId)) {

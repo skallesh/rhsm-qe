@@ -182,7 +182,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
-			groups={"blockedByBug-818298"},
+			groups={"blockedByBug-818298","blockedByBug-820639"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListMatchesCDN_Test() throws JSONException, Exception {
@@ -205,21 +205,14 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		File rhelEntitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhelSubscriptionPool);
 		File rhelEntitlementCertKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(rhelEntitlementCertFile);
 		
-		// get the expected release listing from the CDN for this major RHEL release/variant
-		// http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/5/listing
-		// http://cdn-internal.rcm-test.redhat.com/content/dist/rhel/server/6/listing
-		//[root@jsefler-63server ~]# curl --cert /etc/pki/entitlement/2580206138540098374.pem --key /etc/pki/entitlement/2580206138540098374-key.pem -k https://cdn.redhat.com/content/dist/rhel/server/5/listing
-		String listingUrl =  clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl")+"/content/dist/rhel/"+clienttasks.variant.toLowerCase()+"/"+clienttasks.redhatReleaseX+"/listing";
-		String command = String.format("curl --stderr /dev/null --insecure --cert %s --key %s %s" , rhelEntitlementCertFile.getPath(), rhelEntitlementCertKeyFile.getPath(), listingUrl);
-		log.info("Determining the expected release listing...");
-		SSHCommandResult result = client.runCommandAndWait(command);
-		List<String> expectedReleases = Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*"));
+		// get the currently expected release listing based on the currently enabled repos
+		List<String> expectedReleases = clienttasks.getCurrentlyExpectedReleases();
 		
 		// get the actual release listing
 		List<String> actualReleases = clienttasks.getCurrentlyAvailableReleases();
 		
-		// assert that they are eqivalent
-		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list matches the CDN listing file after being granted an entitlement from SubscriptionPool: "+rhelSubscriptionPool);
+		// assert that they are equivalent
+		Assert.assertTrue(expectedReleases.containsAll(actualReleases) && actualReleases.containsAll(expectedReleases), "The actual subscription-manager releases list "+actualReleases+" matches the expected consolidated CDN listing "+expectedReleases+" after being granted an entitlement from subscription product: "+rhelSubscriptionPool.productId);
 	}
 	
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 6.0",
