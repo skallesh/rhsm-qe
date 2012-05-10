@@ -672,7 +672,7 @@ public class SubscriptionManagerTasks {
 		HashSet<String> expectedReleaseSet = new HashSet<String>();
 		String baseurl = getConfFileParameter(rhsmConfFile, "rhsm", "baseurl");
 		
-		//log.info("Determining the expected release listing...");
+		// loop through all of the currently entitled repo urls
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.type.equalsIgnoreCase("yum")) {
@@ -697,6 +697,28 @@ public class SubscriptionManagerTasks {
 			}
 		}
 		return new ArrayList<String>(expectedReleaseSet);
+		
+		// ^^ TODO On second thought, it would technically be more correct to loop over the current YumRepo object rather than the Entitlement Certs since a repo enablement could have been manually overridden
+// TODO work in progress
+//		for (YumRepo yumRepo : getCurrentlySubscribedYumRepos()()) {
+//					if (yumRepo.enabled) {	// Bug 820639 - subscription-manager release --list should exclude listings from disabled repos
+//						if (yumRepo.baseurl.contains("$releasever")) {
+//							if (yumRepo.baseurl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
+//								// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
+//								String listingUrl =  yumRepo.baseurl.startsWith("http")? "":baseurl;
+//								listingUrl += yumRepo.baseurl.split("/\\$releasever/")[0];
+//								listingUrl += "/listing";
+//								String command = String.format("curl --stderr /dev/null --insecure --cert %s --key %s %s" , entitlementCert.file.getPath(), getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCert.file).getPath(), listingUrl);
+//								SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
+//								//	[root@qe-blade-13 ~]# curl --stderr /dev/null --insecure --cert /etc/pki/entitlement/2013167262444796312.pem --key /etc/pki/entitlement/2013167262444796312-key.pem https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/6/listing
+//								//	6.1
+//								//	6.2
+//								//	6Server
+//								expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+//							}
+//						}
+//					}
+//		}
 	}
 	
 	
@@ -901,39 +923,6 @@ public class SubscriptionManagerTasks {
 			return null;
 		}
 		return (factsMap.get(factName));
-// DELETEME OLD IMPLEMENTATION
-//		SSHCommandResult result = facts_(true, false, null, null, null);
-//		
-//		// # subscription-manager facts --list
-//		// cpu.architecture: x86_64
-//		// cpu.bogomips: 4600.03
-//		// cpu.core(s)_per_socket: 1
-//		// cpu.cpu(s): 2
-//		// uname.sysname: Linux
-//		// uname.version: #1 SMP Mon Mar 21 10:20:35 EDT 2011
-//		// virt.host_type: ibm_systemz
-//		// ibm_systemz-zvm
-//		// uname.sysname: Linux
-//		// network.ipaddr: 10.16.66.203
-//		// system.compliant: False
-//		
-//		String factNameRegex = factName.replaceAll("\\(","\\\\(").replaceAll("\\)","\\\\)");
-//		//String regex=factNameRegex+":(.*)";	// works with single-line fact values
-//		String regex=factNameRegex+":(.*(\n.*?)+)(?:^.+?:|$)";	// works with multi-line fact values
-//		
-//		Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-//		Matcher matcher = pattern.matcher(result.getStdout());
-//		//Assert.assertTrue(matcher.find(),"Found fact "+factName);
-//		if (!matcher.find()) {
-//			log.warning("Did not find fact '"+factName+"'.");
-//			return null;
-//		}
-//
-////		log.fine("Matches: ");
-////		do {
-////			log.fine(matcher.group());
-////		} while (matcher.find());
-//		return matcher.group(1).trim();	// return the contents of the first capturing group
 	}
 	
 	/**
