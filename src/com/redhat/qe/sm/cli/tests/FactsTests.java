@@ -341,7 +341,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		clienttasks.deleteFactsFileWithOverridingValues();
 		
 		// get the value of cpu_sockets as determined by subscription-manager facts
-		String cpu_sockets = clienttasks.getFactValue("cpu_socket(s)");
+		String cpu_sockets = clienttasks.getFactValue("cpu.cpu_socket(s)");
 		
 		if (clienttasks.redhatRelease.contains("release 5")) {
 			//String sockets = clienttasks.sockets;

@@ -219,7 +219,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-802245"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListExcludes60ForAgainstRhel6_Test() throws JSONException, Exception {
+	public void VerifyReleaseListExcludes60OnRhel6System_Test() throws JSONException, Exception {
 		
 		// make sure we are newly registered with autosubscribe
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);
@@ -240,7 +240,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// assert that the list excludes 6.0, but includes the current X.Y release
 		String release60 = "6.0";
 		Assert.assertTrue(!actualReleases.contains(release60), "The subscription-manager releases list should exclude '"+release60+"' since '"+clienttasks.command+"' did not exist in RHEL Release '"+release60+"'.");
-		Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
+		//NOT PRACTICAL SINCE CONTENT FROM THIS Y-STREAM MAY NOT BE AVAILABLE UNTIL GA Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
 	}
 	
 	
