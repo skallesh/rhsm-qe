@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1738,6 +1739,24 @@ schema generation failed
 		return BigInteger.valueOf(jsonSerialCandidate.getLong("serial"));	// FIXME not sure which key to get since they both "serial" and "id" appear to have the same value
 	}
 	
+	public static Map<String,String> getConsumerFacts(String authenticator, String password, String url, String consumerId) throws JSONException, Exception {
+
+		JSONObject jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerId));
+		JSONObject jsonFacts = jsonConsumer.getJSONObject("facts");
+		log.finest("Consumer '"+consumerId+"' facts on the candlepin server are: \n"+jsonFacts.toString(5));
+		Map<String,String> factsMap = new HashMap<String,String>();
+		
+		Iterator<String> factKeysIter = jsonFacts.keys();
+		while (factKeysIter.hasNext()) {
+			String factName = factKeysIter.next();
+			String factValue = jsonFacts.getString(factName);
+			factsMap.put(factName, factValue);
+		}
+		return factsMap;
+	}
+	
+	
+	
 	public static boolean isEnvironmentsSupported (String authenticator, String password, String url) throws JSONException, Exception {
 	
 		// ask the candlepin server for all of its resources and search for a match to "environments"
@@ -2007,6 +2026,27 @@ schema generation failed
 		
 		// return the value for the named productAttribute
 		return getPoolProductAttributeValue(jsonPool,productAttributeName);
+	}
+	
+	public static List<String> getPoolProvidedProductIds (String authenticator, String password, String url, String poolId) throws JSONException, Exception {
+		List<String> providedProductIds = new ArrayList<String>();
+		
+		// get the pool for the authenticator
+		// # curl -k --request GET --user testuser1:password  --header 'accept: application/json' --header 'content-type: application/json'  https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/pools/8a90f8c63196bb20013196bc7d120281 | python -mjson.tool
+		JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(authenticator,password,url,"/pools/"+poolId));	
+		
+		// loop through all of the providedProducts for this jsonPool
+		JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+		for (int j = 0; j < jsonProvidedProducts.length(); j++) {
+			JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(j);
+			String productId = jsonProvidedProduct.getString("productId");
+			
+			// append the productId for this provided product
+			providedProductIds.add(productId);
+		}
+		
+		// return the value for the named productAttribute
+		return providedProductIds;
 	}
 	
 	public static String getPoolAttributeValue (String authenticator, String password, String url, String poolId, String attributeName) throws JSONException, Exception {

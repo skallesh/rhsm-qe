@@ -45,7 +45,7 @@ public class ProductCert extends AbstractCommandLineData {
 		this.serialNumber = new BigInteger(serialString.replaceAll(":", ""),16);	// strip out the colons and convert to a number
 		this.rawCertificate = rawCertificate;
 		List<ProductNamespace> productNamespaces = ProductNamespace.parse(this.rawCertificate);
-		if (productNamespaces.size()!=1) Assert.fail("Error: expected only one ProductNamespace when parsing raw ceritificate for ProductCert.");
+		if (productNamespaces.size()!=1) Assert.fail("Error: expected only one ProductNamespace when parsing raw certificate for ProductCert.");
 		this.productNamespace = productNamespaces.get(0);
 		this.productName = productNamespace.name;	// extract the product name
 		this.productId = productNamespace.id;		// extract the hash
@@ -307,7 +307,7 @@ public class ProductCert extends AbstractCommandLineData {
 			if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificates.");
 			Map<String,String> certData = certDataList.get(0);
 			
-			// create a new EntitlementCert
+			// create a new ProductCert
 			productCerts.add(new ProductCert(rawCertificate, certData));
 		}
 		

@@ -16,6 +16,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.Assert;
 import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -132,7 +133,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: service-level --list (with invalid org)",
 			groups={"blockedByBug-796468","blockedByBug-815479"},
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=165509)
 	public void ServiceLevelListWithInvalidOrg_Test() {
 		String x = String.valueOf(getRandInt());
 		SSHCommandResult result;
@@ -142,14 +143,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		if (sm_serverOld) {Assert.assertEquals(result.getStderr().trim(), "ERROR: The service-level command is not supported by the server."); throw new SkipException("Skipping this test since service-level is gracefully not supported when configured against an old candlepin server.");}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null);
 		result = clienttasks.service_level_(null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
-		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
 	}
 	
@@ -157,7 +158,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
 			groups={},
 			enabled=false) // assertions in this test are already a subset of ServiceLevelShowAvailable_Test
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157213)
 	public void ServiceLevelShowAfterRegisteringWithoutServiceLevel_Test() throws JSONException, Exception  {
 		SSHCommandResult result;
 				
@@ -177,9 +178,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=155949)
 	public void ServiceLevelShowAvailable_Test(String username, String password, String org) throws JSONException, Exception  {
-		SSHCommandResult result;
 				
 		// register with no service-level
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null));
@@ -264,7 +264,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 				log.warning("After autosubscribed registration with service level '"+serviceLevel+"', this autosubscribed entitlement provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 			} else {
-				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
+				//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
+				Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel),"Ignoring case, this autosubscribed entitlement provides the requested service level '"+serviceLevel+"' from entitled orderNamespace: "+entitlementCert.orderNamespace);
 			}
 		}
 	}
@@ -341,7 +342,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			groups={"AcceptanceTests"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157229)	// 147971
 	public void AutoSubscribeWithServiceLevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
@@ -369,7 +370,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
 
 			// tolerate exemptServiceLevels
-			if (sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
+			if (entitlementCert.orderNamespace.supportLevel!=null && sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
 				log.warning("After autosubscribing, this EntitlementCert provides an exempt service level '"+entitlementCert.orderNamespace.supportLevel+"'.");
 				continue;
 			}
@@ -379,7 +380,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			} else if ((serviceLevel==null || serviceLevel.equals("")) && !initialConsumerServiceLevel.equals("")){
 				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,initialConsumerServiceLevel, "When specifying a servicelevel of null or \"\" during an autosubscribe and the current consumer has a sericelevel preference set, then the servicelevel of the granted entitlement certs must match the current consumer's service level preference.");
 			} else {
-				Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel, "This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+				//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel,serviceLevel, "This autosubscribed entitlement was filled from a subscription order that provides the requested service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+				Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel), "Ignoring case, this autosubscribed entitlement was filled from a subscription order that provides the requested service level'"+serviceLevel+"': "+entitlementCert.orderNamespace);
 			}
 		}
 	}
@@ -417,7 +419,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				continue;
 			}
 
-			Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed EntitlementCert was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			//CASE SENSITIVE ASSERTION Assert.assertEquals(entitlementCert.orderNamespace.supportLevel, serviceLevel,"This autosubscribed EntitlementCert was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
+			Assert.assertTrue(entitlementCert.orderNamespace.supportLevel.equalsIgnoreCase(serviceLevel),"Ignoring case, this autosubscribed EntitlementCert was filled from a subscription order that provides the original service level '"+serviceLevel+"': "+entitlementCert.orderNamespace);
 		}
 	}
 	@Test(	description="subscription-manager: subscribe with auto without specifying any service level; assert the service level used matches whatever the consumer's current preference level is set",
@@ -437,11 +440,21 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
  
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
-			groups={"AcceptanceTests"},
+			groups={/*"blockedByBug-818319",*/"AcceptanceTests"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
 	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (sm_serverType.equals(CandlepinType.hosted)) {
+		String bugId = "818319"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			throw new SkipException("This test is blocked by Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id="+bugId);
+		}
+		}
+		// END OF WORKAROUND
 		
 		// system was already registered by dataProvider="getSubscribeWithAutoAndServiceLevelData"
 		if (clienttasks.getCurrentConsumerId()==null) {
@@ -481,10 +494,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="installed products provided by available pools with an exempt service level should be auto-subscribed regardless of what service level is specified (or is not specified)",
-			groups={"AcceptanceTests"},
+			groups={/*"blockedByBug-818319",*/"AcceptanceTests"},
 			dataProvider="getExemptInstalledProductAndServiceLevelData",
 			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
+	@ImplementsNitrateTest(caseId=157229)
 	public void VerifyInstalledProductsProvidedByAvailablePoolsWithExemptServiceLevelAreAutoSubscribedRegardlessOfServiceLevel_Test(Object bugzilla, String installedProductId, String serviceLevel) {
 		
 		// randomize the case of the service level

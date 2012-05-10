@@ -464,7 +464,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-800933","blockedByBug-800999"},
 			dataProvider="getListAvailableWithServicelevelData",
 			enabled=true)
-			//@ImplementsNitrateTest(caseId=)
+			@ImplementsNitrateTest(caseId=157228)
 	public void ListAvailableWithServicelevel_Test(Object bugzilla, String servicelevel) throws Exception {
 		SSHCommandResult listResult;
 		List<SubscriptionPool> expectedSubscriptionPools, filteredSubscriptionPools;
@@ -519,7 +519,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		
 		// determine the subset of expected pools with a matching servicelevel
-		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
+		// CASE SENSITIVE expectedProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
+		expectedProductSubscriptions = ProductSubscription.findAllInstancesWithCaseInsensitiveMatchingFieldFromList("serviceLevel", servicelevel, allConsumedProductSubscriptions);
 
 		// list consumed filtered by servicelevel
 		listResult = clienttasks.list_(false,false,true,null,servicelevel,null,null,null,null);
