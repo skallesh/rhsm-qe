@@ -31,7 +31,6 @@ import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -1525,9 +1524,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					List<String> productIds = new ArrayList<String>(); productIds.add(productId);
 					cdnProductBaselineChannelMap.put(rhnChannel, productIds);
 				}
-//debugging special case: if (!Arrays.asList("rhel-x86_64-client-supplementary-5","rhel-x86_64-client-5","rhel-i386-client-supplementary-5","rhel-i386-client-5").contains(rhnChannel)) continue;			
-
-				
+		
 				// filter out all RHN Channels not associated with this release  (e.g., assume that an rhn channel containing "-5-" or ends in "-5" is only applicable to rhel5 
 				if (!(rhnChannel.contains("-"+clienttasks.redhatReleaseX+"-") || rhnChannel.endsWith("-"+clienttasks.redhatReleaseX))) continue;
 				
@@ -1601,6 +1598,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
 					bugzilla = new BlockedByBzBug("811633");
 				}
+				if (rhnChannel.contains("-dts-") && clienttasks.redhatReleaseXY.equals("6.3")) { 
+					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
+					bugzilla = new BlockedByBzBug("820749");
+				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName
 				ll.add(Arrays.asList(new Object[]{bugzilla,	rhnChannel,	productId,	productName}));
@@ -1620,7 +1621,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (clienttasks==null) return ll;
 		
 		// add the base channel
-		ll.add(Arrays.asList(new Object[]{null,	rhnBaseChannel}));
+		if (rhnBaseChannel!=null) ll.add(Arrays.asList(new Object[]{null,	rhnBaseChannel}));
 		
 		// add the child channels
 		for (String rhnAvailableChildChannel : rhnAvailableChildChannels) {
