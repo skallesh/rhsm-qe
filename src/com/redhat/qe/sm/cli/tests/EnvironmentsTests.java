@@ -241,7 +241,7 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (servertasks==null) return ll;
 		if (clienttasks==null) return ll;
 		
-		String stdoutMsg = "This system does not support environments.";
+		String stdoutMsg = "ERROR: Server does not support environments.";
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		String x = String.valueOf(getRandInt());
 		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
