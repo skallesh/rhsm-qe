@@ -2207,11 +2207,94 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 
 	
-	
+// DELETEME
+//	/**
+//	 * @return List of [SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools]
+//	 */
+//	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
+//		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
+//		
+//		// get the owner key for clientusername, clientpassword
+//		String consumerId = clienttasks.getCurrentConsumerId();
+//		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null));
+//		//String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverHostname, sm_serverPort, sm_serverPrefix, sm_clientUsername, sm_clientPassword, consumerId);
+//
+//		
+//		List<SubscriptionPool> allAvailablePools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+//		
+//		// iterate through all available pools looking for those that contain products with content that modify other products
+//		for (SubscriptionPool modifierPool : allAvailablePools) {
+//			JSONObject jsonModifierPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+modifierPool.poolId));	
+//			
+//			// iterate through each of the providedProducts
+//			JSONArray jsonModifierProvidedProducts = jsonModifierPool.getJSONArray("providedProducts");
+//			for (int i = 0; i < jsonModifierProvidedProducts.length(); i++) {
+//				JSONObject jsonModifierProvidedProduct = (JSONObject) jsonModifierProvidedProducts.get(i);
+//				String modifierProvidedProductId = jsonModifierProvidedProduct.getString("productId");
+//				
+//				// get the productContents
+//				JSONObject jsonProduct = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/products/"+modifierProvidedProductId));	
+//				JSONArray jsonProductContents = jsonProduct.getJSONArray("productContent");
+//				for (int j = 0; j < jsonProductContents.length(); j++) {
+//					JSONObject jsonProductContent = (JSONObject) jsonProductContents.get(j);
+//					JSONObject jsonContent = jsonProductContent.getJSONObject("content");
+//					
+//					// get the label and modifiedProductIds for each of the productContents
+//					String label = jsonContent.getString("label");
+//					String requiredTags = jsonContent.getString("requiredTags"); // comma separated string
+//					if (requiredTags.equals("null")) requiredTags = null;
+//					JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
+//					List<String> modifiedProductIds = new ArrayList<String>();
+//					for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
+//						String modifiedProductId = (String) jsonModifiedProductIds.get(k);
+//						modifiedProductIds.add(modifiedProductId);
+//					}
+//					
+//					// does this pool contain productContents that modify other products?
+//					if (modifiedProductIds.size()>0) {
+//						
+//						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
+//						// yes, now its time to find the subscriptions that provide the modifiedProductIds
+//						for (SubscriptionPool providingPool : allAvailablePools) {
+//							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+providingPool.poolId));	
+//							
+//							// iterate through each of the providedProducts
+//							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");
+//							for (int l = 0; l < jsonProvidingProvidedProducts.length(); l++) {
+//								JSONObject jsonProvidingProvidedProduct = (JSONObject) jsonProvidingProvidedProducts.get(l);
+//								String providingProvidedProductId = jsonProvidingProvidedProduct.getString("productId");
+//								if (modifiedProductIds.contains(providingProvidedProductId)) {
+//									
+//									// NOTE: This test takes a long time to run when there are many providingPools.
+//									// To reduce the execution time, let's simply limit the number of providing pools tested to 2,
+//									// otherwise this block of code could be commented out for a more thorough test.
+//									boolean thisPoolProductIdIsAlreadyInProvidingPools = false;
+//									for (SubscriptionPool providedPool : providingPools) {
+//										if (providedPool.productId.equals(providingPool.productId)) {
+//											thisPoolProductIdIsAlreadyInProvidingPools=true; break;
+//										}
+//									}
+//									if (thisPoolProductIdIsAlreadyInProvidingPools||providingPools.size()>=2) break;
+//									
+//									providingPools.add(providingPool); break; // FIXME I THINK THE BREAK IS A TYPO SHOULD BE REMOVED
+//								}
+//							}
+//						}
+//										
+//						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
+//					}
+//				}
+//			}
+//		}	
+//		return ll;
+//	}
 	/**
+	 * @param limitProvidingPoolsCount This test takes a long time to run when there are many providingPools.
+	 * To reduce the execution time, use limitProvidingPoolsCount to limit the number of providing pools tested,
+	 * otherwise pass null to to include all providingPools in the data for a most complete test.
 	 * @return List of [SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools]
 	 */
-	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {
+	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitProvidingPoolsCount) throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// get the owner key for clientusername, clientpassword
@@ -2255,7 +2338,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						
 						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
 						// yes, now its time to find the subscriptions that provide the modifiedProductIds
-						for (SubscriptionPool providingPool : allAvailablePools) {
+						LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool providingPool : allAvailablePools) {
 							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+providingPool.poolId));	
 							
 							// iterate through each of the providedProducts
@@ -2265,18 +2348,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 								String providingProvidedProductId = jsonProvidingProvidedProduct.getString("productId");
 								if (modifiedProductIds.contains(providingProvidedProductId)) {
 									
-									// NOTE: This test takes a long time to run when there are many providingPools.
-									// To reduce the execution time, let's simply limit the number of providing pools tested to 2,
-									// otherwise this block of code could be commented out for a more thorough test.
+									// no need to add this providingPool if the product it represents was already added to the providingPools
 									boolean thisPoolProductIdIsAlreadyInProvidingPools = false;
 									for (SubscriptionPool providedPool : providingPools) {
 										if (providedPool.productId.equals(providingPool.productId)) {
 											thisPoolProductIdIsAlreadyInProvidingPools=true; break;
 										}
 									}
-									if (thisPoolProductIdIsAlreadyInProvidingPools||providingPools.size()>=2) break;
+									if (thisPoolProductIdIsAlreadyInProvidingPools) break;
 									
-									providingPools.add(providingPool); break;
+									providingPools.add(providingPool);
+									
+									if (limitProvidingPoolsCount!=null && providingPools.size()>=limitProvidingPoolsCount) break LOOP_FOR_ALL_AVAILABLE_POOLS;
 								}
 							}
 						}
@@ -2288,6 +2371,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}	
 		return ll;
 	}
+
 	
 	@DataProvider(name="getAllAvailableServiceLevelData")
 	public Object[][] getAllAvailableServiceLevelDataAs2dArray() throws JSONException, Exception {

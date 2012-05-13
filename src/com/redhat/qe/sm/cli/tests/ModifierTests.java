@@ -129,7 +129,7 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	
 	@DataProvider(name="getModifierSubscriptionData")
 	public Object[][] getModifierSubscriptionDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getModifierSubscriptionDataAsListOfLists());
+		return TestNGUtils.convertListOfListsTo2dArray(getModifierSubscriptionDataAsListOfLists(2));
 	}
 // MOVED UP TO SUPERCLASS
 //	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists() throws JSONException, Exception {

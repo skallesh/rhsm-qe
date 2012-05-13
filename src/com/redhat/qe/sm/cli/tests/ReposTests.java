@@ -46,6 +46,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
+
 		log.info("Following is a list of previously subscribed repos...");
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
 		
@@ -285,7 +286,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
-		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists();
+		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists(null);
 	}
 	
 	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
