@@ -559,7 +559,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// TestExempt Product Subscription
 		name = "TestExempt Product Subscription";
 		productId = "test-exempt-product";
-		serviceLevel = "TestExempt SLA";
+		serviceLevel = "Test-Exempt SLA";
 		providedProductIds.clear();
 		providedProductIds.add("99000");
 		attributes.clear();
