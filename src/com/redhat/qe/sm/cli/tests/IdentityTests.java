@@ -313,7 +313,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		result = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
-		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");		// TODO stderr and stdout might switch on a hosted server; need to verify after fix for bug 813296
 		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
 		List<ProductSubscription> consumedProductSubscriptions = ProductSubscription.parse(clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout());
 		result = clienttasks.unsubscribe_(null, consumedProductSubscriptions.get(0).serialNumber, null, null, null);
