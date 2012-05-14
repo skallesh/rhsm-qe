@@ -2289,12 +2289,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 //		return ll;
 //	}
 	/**
-	 * @param limitProvidingPoolsCount This test takes a long time to run when there are many providingPools.
-	 * To reduce the execution time, use limitProvidingPoolsCount to limit the number of providing pools tested,
-	 * otherwise pass null to to include all providingPools in the data for a most complete test.
-	 * @return List of [SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools]
+	 * @param limitPoolsModifiedCount This test takes a long time to run when there are many poolsModified.
+	 * To reduce the execution time, use limitPoolsModifiedCount to limit the number of modifies pools tested,
+	 * otherwise pass null to to include all poolsModified in the data for a more complete test.
+	 * @return List of [SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified]
 	 */
-	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitProvidingPoolsCount) throws JSONException, Exception {
+	protected List<List<Object>> getModifierSubscriptionDataAsListOfLists(Integer limitPoolsModifiedCount) throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();	if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// get the owner key for clientusername, clientpassword
@@ -2324,8 +2324,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					
 					// get the label and modifiedProductIds for each of the productContents
 					String label = jsonContent.getString("label");
-					String requiredTags = jsonContent.getString("requiredTags"); // comma separated string
-					if (requiredTags.equals("null")) requiredTags = null;
+					String requiredTags = jsonContent.isNull("requiredTags")? null:jsonContent.getString("requiredTags"); // comma separated string
 					JSONArray jsonModifiedProductIds = jsonContent.getJSONArray("modifiedProductIds");
 					List<String> modifiedProductIds = new ArrayList<String>();
 					for (int k = 0; k < jsonModifiedProductIds.length(); k++) {
@@ -2336,35 +2335,35 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					// does this pool contain productContents that modify other products?
 					if (modifiedProductIds.size()>0) {
 						
-						List<SubscriptionPool> providingPools = new ArrayList<SubscriptionPool>();
-						// yes, now its time to find the subscriptions that provide the modifiedProductIds
-						LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool providingPool : allAvailablePools) {
-							JSONObject jsonProvidingPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+providingPool.poolId));	
+						List<SubscriptionPool> poolsModified = new ArrayList<SubscriptionPool>();
+						// yes, now its time to find the pools that provide the modifiedProductIds and therefore are considered to be the pools that provide products that are modified
+						LOOP_FOR_ALL_AVAILABLE_POOLS: for (SubscriptionPool poolModified : allAvailablePools) {
+							JSONObject jsonPoolModified = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+poolModified.poolId));	
 							
-							// iterate through each of the providedProducts
-							JSONArray jsonProvidingProvidedProducts = jsonProvidingPool.getJSONArray("providedProducts");
-							for (int l = 0; l < jsonProvidingProvidedProducts.length(); l++) {
-								JSONObject jsonProvidingProvidedProduct = (JSONObject) jsonProvidingProvidedProducts.get(l);
-								String providingProvidedProductId = jsonProvidingProvidedProduct.getString("productId");
-								if (modifiedProductIds.contains(providingProvidedProductId)) {
+							// iterate through each of the providedProducts of the poolModified
+							JSONArray jsonPoolModifiedProvidedProducts = jsonPoolModified.getJSONArray("providedProducts");
+							for (int l = 0; l < jsonPoolModifiedProvidedProducts.length(); l++) {
+								JSONObject jsonPoolModifiedProvidedProduct = (JSONObject) jsonPoolModifiedProvidedProducts.get(l);
+								if (modifiedProductIds.contains(jsonPoolModifiedProvidedProduct.getString("productId"))) {
 									
-									// no need to add this providingPool if the product it represents was already added to the providingPools
-									boolean thisPoolProductIdIsAlreadyInProvidingPools = false;
-									for (SubscriptionPool providedPool : providingPools) {
-										if (providedPool.productId.equals(providingPool.productId)) {
-											thisPoolProductIdIsAlreadyInProvidingPools=true; break;
-										}
-									}
-									if (thisPoolProductIdIsAlreadyInProvidingPools) break;
+// DELETEME - BAD IDEA SINCE IT GIVES THE ILLUSION THAT ANOTHER POOL INSTANCE ON THE SAME SUBSCRIPTION (second contract number) APPEARS AS THOUGH IT DOES NOT QUALIFY AS A MODIFIED POOL
+//									// no need to add this poolModified if the product it represents was already added to the poolsModified
+//									boolean thisPoolModifiedProductIdIsAlreadyInPoolsModified = false;
+//									for (SubscriptionPool pool : poolsModified) {
+//										if (pool.productId.equals(poolModified.productId)) {
+//											thisPoolModifiedProductIdIsAlreadyInPoolsModified=true; break;
+//										}
+//									}
+//									if (thisPoolModifiedProductIdIsAlreadyInPoolsModified) break;
 									
-									providingPools.add(providingPool);
+									poolsModified.add(poolModified);
 									
-									if (limitProvidingPoolsCount!=null && providingPools.size()>=limitProvidingPoolsCount) break LOOP_FOR_ALL_AVAILABLE_POOLS;
+									if (limitPoolsModifiedCount!=null && poolsModified.size()>=limitPoolsModifiedCount) break LOOP_FOR_ALL_AVAILABLE_POOLS;
 								}
 							}
 						}
 										
-						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, providingPools}));
+						ll.add(Arrays.asList(new Object[]{modifierPool, label, modifiedProductIds, requiredTags, poolsModified}));
 					}
 				}
 			}

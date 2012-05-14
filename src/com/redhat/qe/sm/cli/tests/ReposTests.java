@@ -65,8 +65,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			String label = (String)row.get(1);
 			List<String> modifiedProductIds = (List<String>)row.get(2);
 			String requiredTags = (String)row.get(3);
-			List<SubscriptionPool> providingPools = (List<SubscriptionPool>)row.get(4);
-			if (providingPools.contains(pool)) {
+			List<SubscriptionPool> poolsModified = (List<SubscriptionPool>)row.get(4);
+			if (poolsModified.contains(pool)) {
 				if (priorSubscribedPools.contains(modifierPool)) {
 					// the modifier's content should now be available in the repos too
 					EntitlementCert modifierEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(modifierPool);						

@@ -33,12 +33,12 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 
-	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist when providing subscriptions are entitled",
+	@Test(	description="verify content label for modifier subscription (EUS) is only available in yum repolist after providing subscriptions are entitled",
 			groups={"AcceptanceTests","blockedByBug-804227"},
 			dependsOnGroups={},
 			dataProvider="getModifierSubscriptionData",
 			enabled=true)
-	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListWhenProvidingPoolsAreSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> providingPools) {
+	public void VerifyContentLabelForModifierSubscriptionIsOnlyAvailableInYumRepoListAfterTheModifiesPoolIsSubscribed_Test(SubscriptionPool modifierPool, String label, List<String> modifiedProductIds, String requiredTags, List<SubscriptionPool> poolsModified) {
 		
 		// make sure we are not subscribed to anything
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -55,34 +55,34 @@ public class ModifierTests extends SubscriptionManagerCLITestScript {
 				"After subscribing to modifier pool for productId '"+modifierPool.productId+"', yum repolist all does not include (repo id) '"+label+"' because at least one of the providing product subscription(s) being modified is not yet subscribed to.");
 
 		log.info("Now individually subscribe to each of the subscribing products being modified and assert that once both the modifier pool and product subscription being modified are both subscribed, then the modifier (repo id) '"+label+"' will become available.");
-		for (SubscriptionPool providingPool : providingPools) {
-			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(providingPool));
+		for (SubscriptionPool pool : poolsModified) {
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
 			if (areAllRequiredTagsProvided) {
 				Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
-					"Having subscribed to both the modifier pool and its providing pool for productId '"+providingPool.productId+"', now the modifier pool's (repo id) '"+label+"' is available in yum repolist all.");
+					"Having subscribed to both the modifier pool and the pool it modifies for productId '"+pool.productId+"', now the modifier pool's (repo id) '"+label+"' is available in yum repolist all.");
 			} else {
 				Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 						"Because not all of the requiredTags '"+requiredTags+"' for content label '"+label+"' are not 100% provided by the currently installed product certs, we are blocked from seeing the repo id label '"+label+"' in yum repolist all.");				
 			}
 			clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
 			Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
-					"After unsubscribing from the providing pool for productId '"+providingPool.productId+"', yum repolist all no longer includes (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
+					"After unsubscribing from the modified pool for productId '"+pool.productId+"', yum repolist all no longer includes (repo id) '"+label+"' from modifier productId '"+modifierPool.productId+"'.");
 		}
 		
-		log.info("Now let's subscribe to the providing pools first before subscribing to the modifier.");
+		log.info("Now let's subscribe to the pool being modified first before subscribing to the modifier.");
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 				"Yum repolist now excludes label (repo id) '"+label+"' since we are not subscribed to anything.");
 //		for (SubscriptionPool providingPool : providingPools) {
 //			clienttasks.subscribeToSubscriptionPool(providingPool);
 //		}
-		List<String> providingPoolIds = new ArrayList<String>();
-		for (SubscriptionPool providingPool : providingPools) providingPoolIds.add(providingPool.poolId);
-		clienttasks.subscribe(null, null, providingPoolIds, null, null, null, null, null, null, null, null);
+		List<String> modifiedPoolIds = new ArrayList<String>();
+		for (SubscriptionPool pool : poolsModified) modifiedPoolIds.add(pool.poolId);
+		clienttasks.subscribe(null, null, modifiedPoolIds, null, null, null, null, null, null, null, null);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(modifierPool));
 		if (areAllRequiredTagsProvided) {
 			Assert.assertTrue(clienttasks.getYumRepolist("all").contains(label),
-					"Having subscribed to all of its possible providing pools and the modifier pool, the modifier pool's (repo id) '"+label+"' is immediately be available in yum repolist all.");
+					"Having subscribed to all of the pools modified and the modifier pool, the modifier pool's (repo id) '"+label+"' is immediately be available in yum repolist all.");
 		} else {
 			Assert.assertFalse(clienttasks.getYumRepolist("all").contains(label),
 					"Because not all of the requiredTags '"+requiredTags+"' for content label '"+label+"' are not 100% provided by the currently installed product certs, we are blocked from seeing the repo id label '"+label+"' in yum repolist all.");
