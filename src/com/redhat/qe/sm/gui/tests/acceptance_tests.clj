@@ -40,6 +40,7 @@
 (defn ^{Test {:groups ["acceptance"]}}
   simple_autosubscribe [_]
   (atest/setup nil)
+  (.configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel @atest/complytests)
   (atest/simple_autosubscribe nil))
 
 (gen-class-testng)
