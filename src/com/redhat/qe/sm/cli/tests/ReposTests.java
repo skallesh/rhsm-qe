@@ -46,6 +46,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAvailableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
+
 		log.info("Following is a list of previously subscribed repos...");
 		List<Repo> priorRepos = clienttasks.getCurrentlySubscribedRepos();
 		
@@ -64,8 +65,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			String label = (String)row.get(1);
 			List<String> modifiedProductIds = (List<String>)row.get(2);
 			String requiredTags = (String)row.get(3);
-			List<SubscriptionPool> providingPools = (List<SubscriptionPool>)row.get(4);
-			if (providingPools.contains(pool)) {
+			List<SubscriptionPool> poolsModified = (List<SubscriptionPool>)row.get(4);
+			if (poolsModified.contains(pool)) {
 				if (priorSubscribedPools.contains(modifierPool)) {
 					// the modifier's content should now be available in the repos too
 					EntitlementCert modifierEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(modifierPool);						
@@ -285,7 +286,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	@BeforeClass(groups={"setup"})
 	public void setupBeforeClass() throws JSONException, Exception {
 		currentProductCerts = clienttasks.getCurrentProductCerts();
-		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists();
+		modifierSubscriptionData = getModifierSubscriptionDataAsListOfLists(null);
 	}
 	
 	@BeforeGroups(groups={"setup"}, value={"unsubscribeAllBeforeThisTest"})
