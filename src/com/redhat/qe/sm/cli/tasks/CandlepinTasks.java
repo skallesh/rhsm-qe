@@ -501,8 +501,14 @@ schema generation failed
 		//	    "upstreamUuid": null
 		//	}
 		
+
 		// update the org and return it too
-		return new JSONObject(putResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org, jsonOrg));
+		jsonOrg = new JSONObject(putResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org, jsonOrg));
+		if (jsonOrg.has("displayMessage")) {
+			//log.warning("Attempt to update org '"+org+"' failed: "+jsonOrg.getString("displayMessage"));
+			Assert.fail("Attempt to update org '"+org+"' failed: "+jsonOrg.getString("displayMessage"));
+		}
+		return jsonOrg;
 	}
 	
 	static public void exportConsumerUsingRESTfulAPI(String owner, String password, String url, String consumerKey, String intoExportZipFile) throws Exception {

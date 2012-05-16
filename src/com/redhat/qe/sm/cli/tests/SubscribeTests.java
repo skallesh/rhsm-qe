@@ -626,7 +626,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void CandlepinConsumerEntitlementsDryrunWithServiceLevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+	public void CandlepinConsumerEntitlementsDryrunWithServiceLevel_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 	    //"GET"
 	    //"url": "/consumers/{consumer_uuid}/entitlements/dry-run?service_level=#{service_level}", 
@@ -1077,10 +1077,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>>getSubscribeWithAutoAndServiceLevelDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = getAllAvailableServiceLevelDataAsListOfLists(); if (!isSetupBeforeSuiteComplete) return ll;
-
+		
+		// not the most accurate way to set org, but will work since most tests using this dataProvider do not use the org parameter
+		String org = ll.isEmpty()? null:(String) ll.get(0).get(1);
+		
 		// throw in null and "" as a possible service levels
-		ll.add(Arrays.asList(new Object[] {null,	null}));
-		ll.add(Arrays.asList(new Object[] {null,	""}));
+		// Object bugzilla, String org, String serviceLevel
+		ll.add(Arrays.asList(new Object[] {null,	org,	null}));
+		ll.add(Arrays.asList(new Object[] {null,	org,	""}));
 		
 		return ll;
 		
@@ -1101,7 +1105,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 // 		} else
 //		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
 //			
-//			// Object bugzulla, String serviceLevel
+//			// Object bugzilla, String serviceLevel
 //			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
 //		}
 //		// throw in null and "" as a possible service level
