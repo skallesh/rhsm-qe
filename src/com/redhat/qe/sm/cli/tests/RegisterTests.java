@@ -316,7 +316,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
 		Assert.assertTrue(InstalledProduct.parse(sshCommandResult.getStdout()).isEmpty(),
 				"The Installed Product Current Status should be empty when attempting to register with autosubscribe without any product certs installed.");
-		Assert.assertEquals(clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed products to list",
+		Assert.assertEquals(clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed Products to list",
 				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
 
 		// subscribe to the first available pool that provides one product (whose product cert was also originally installed)
