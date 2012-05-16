@@ -188,8 +188,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
-			enabled=true)
-	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
+			enabled=false)
+	public void RegisterWithAutosubscribe_TestOLD() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");
@@ -285,6 +285,96 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
 
+	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
+			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			enabled=true)
+	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
+
+		log.info("RegisterWithAutosubscribe_Test Strategy:");
+		log.info(" 1. Change the rhsm.conf configuration for productCertDir to point to a new temporary product cert directory.");
+		log.info(" 2. Register with autosubscribe and assert that no product binding has occurred.");
+		log.info(" 3. Using the candlepin REST API, we will find an available pool that provides a product that we have installed.");
+		log.info(" 4. Copy the installed product to a temporary product cert directory so that we can isolated the expected product that will be autosubscribed.");
+		log.info(" 5. Reregister with autosubscribe and assert that the temporary product has been bound.");
+
+		// get the product certs that are currently installed
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		
+		// create a clean temporary productCertDir and change the rhsm.conf to point to it
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+tmpProductCertDir, Integer.valueOf(0)); // incase something was leftover from a prior run
+		RemoteFileTasks.runCommandAndAssert(client, "mkdir "+tmpProductCertDir, Integer.valueOf(0));
+		this.productCertDir = clienttasks.productCertDir;	// store the original productCertDir
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+
+		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary directory
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, true, false, null, null, null);
+
+		//[root@jsefler-r63-server ~]# subscription-manager register --username testuser1 --password password --auto --org admin
+		//The system has been registered with id: 243ea73d-01bb-458d-a7a5-2d61fde69494 
+		//Installed Product Current Status:
+		
+		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
+		Assert.assertTrue(InstalledProduct.parse(sshCommandResult.getStdout()).isEmpty(),
+				"The Installed Product Current Status should be empty when attempting to register with autosubscribe without any product certs installed.");
+		Assert.assertEquals(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null).getStdout().trim(),"No installed products to list",
+				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
+
+		// subscribe to the first available pool that provides one product (whose product cert was also originally installed)
+		File tmpProductCertFile = null;
+		OUTERLOOP: for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
+			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+			if (jsonProvidedProducts.length()==1) {	// FIXME: I doubt this check is needed anymore
+				JSONObject jsonProvidedProduct = jsonProvidedProducts.getJSONObject(0);
+				String productId = jsonProvidedProduct.getString("productId");
+				
+				// now install the product that this pool will cover to our tmpProductCertDir
+				/* NOT WORKING IN STAGE SINCE THE /products/{PRODUCT_ID}/certificate PATH APPEARS BLACK-LISTED
+				JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId+"/certificate"));
+				String cert = jsonProductCert.getString("cert");
+				String key = jsonProductCert.getString("key");
+				tmpProductCertFile = new File(tmpProductCertDir+File.separator+"AutosubscribeProduct_"+productId+".pem");
+				client.runCommandAndWait("echo \""+cert+"\" > "+tmpProductCertFile);
+				break;
+				*/
+				
+				// now search for an existing installed product that matches and install it as our new tmpProductCert
+				for (ProductCert productCert : installedProductCerts) {
+					if (productCert.productId.equals(productId)) {
+						tmpProductCertFile = new File(tmpProductCertDir+File.separator+"AutosubscribeProduct_"+productId+".pem");
+						client.runCommandAndWait("cp "+productCert.file+" "+tmpProductCertFile);
+						break OUTERLOOP;
+					}
+				}
+			}
+		}
+		if (tmpProductCertFile==null) throw new SkipException("Could not find an available pool that provides only one product with which to test register with --autosubscribe.");
+		ProductCert tmpProductCert = clienttasks.getProductCertFromProductCertFile(tmpProductCertFile);
+		
+		// reregister with autosubscribe and assert that the product is bound
+		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, true, false, null, null, null);
+		
+		// assert that the sshCommandResult from register indicates the tmpProductCert was subscribed
+		
+		/* # subscription-manager register --username=testuser1 --password=password --org=admin --autosubscribe
+		The system has been registered with id: f95fd9bb-4cc8-428e-b3fd-d656b14bfb89 
+		Installed Product Current Status:
+
+		ProductName:         	Awesome OS for S390X Bits
+		Status:               	Subscribed  
+		*/
+
+		// assert that our tmp product install appears to have been autosubscribed
+		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, Boolean.TRUE, null, null, null, null).getStdout()));
+		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
+		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
+		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
+		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
+		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product appears installed."); 
+		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(tmpProductCert.productName,null,null,"Subscribed",null,null),
+				"As expected, ProductName '"+tmpProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
+	}
 	
 	@Test(	description="subscription-manager-cli: register with --force",
 			groups={"blockedByBug-623264"},
@@ -901,27 +991,27 @@ Expected Results:
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"te_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));
 		} else {
 			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"de_DE.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"de_DE.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Ungültiger Benutzername oder Passwort. Um ein Login anzulegen, besuchen Sie bitte https://www.redhat.com/wapps/ugc/register.html"}));
 			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "El nombre de usuario o contraseña es inválido. Para crear un nombre de usuario, por favor visite https://www.redhat.com/wapps/ugc/register.html"}));
 			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Nom d'utilisateur ou mot de passe non valide. Pour créer une connexion, veuillez visiter https://www.redhat.com/wapps/ugc/register.html"}));
 			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Nome utente o password non valide. Per creare un login visitare https://www.redhat.com/wapps/ugc/register.html"}));
 			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ユーザー名かパスワードが無効です。ログインを作成するには、https://www.redhat.com/wapps/ugc/register.html に進んでください"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ko_KR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "잘못된 인증 정보"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ko_KR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "사용자 이름 또는 암호가 잘못되었습니다. 로그인을 만들려면, https://www.redhat.com/wapps/ugc/register.html으로 이동해 주십시오."}));
 			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Nome do usuário e senha incorretos. Por favor visite https://www.redhat.com/wapps/ugc/register.html para a criação do logon."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ru_RU.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Недопустимые реквизиты"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ru_RU.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Неверное имя пользователя или пароль. Для создания учётной записи перейдите к https://www.redhat.com/wapps/ugc/register.html"}));
 			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "无效用户名或者密码。要创建登录，请访问 https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"zh_TW.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無效的認證"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"as_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "অবৈধ পৰিচয়"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"bn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "অবৈধ পরিচয়"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"zh_TW.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無效的使用者名稱或密碼。若要建立登錄帳號，請至 https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"as_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "অবৈধ ব্যৱহাৰকাৰী নাম অথবা পাছৱাৰ্ড। এটা লগিন সৃষ্টি কৰিবলে, অনুগ্ৰহ কৰি চাওক https://www.redhat.com/wapps/ugc/register.html"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"bn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ব্যবহারকারীর নাম অথবা পাসওয়ার্ড বৈধ নয়। লগ-ইন প্রস্তুত করার জন্য অনুগ্রহ করে https://www.redhat.com/wapps/ugc/register.html পরিদর্শন করুন"}));
 			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध उपयोक्तानाम या कूटशब्द. लॉगिन करने के लिए, कृपया https://www.redhat.com/wapps/ugc/register.html भ्रमण करें"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"mr_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध श्रेय"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"gu_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "અયોગ્ય શ્રેય"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"mr_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध वापरकर्तानाव किंवा पासवर्ड. प्रवेश निर्माण करण्यासाठी, कृपया https://www.redhat.com/wapps/ugc/register.html येथे भेट द्या"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"gu_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "અયોગ્ય વપરાશકર્તાનામ અથવા પાસવર્ડ. લૉગિનને બનાવવા માટે, મહેરબાની કરીને https://www.redhat.com/wapps/ugc/register.html મુલાકાત લો"}));
 			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವ ಗುಪ್ತಪದ. ಒಂದು ಲಾಗಿನ್ ಅನ್ನು ರಚಿಸಲು, ದಯವಿಟ್ಟು https://www.redhat.com/wapps/ugc/register.html ಗೆ ತೆರಳಿ"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ml_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "തെറ്റായ ആധികാരികതകള്‍"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"or_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ଅବୈଧ ପ୍ରାଧିକରଣ"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ml_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "തെറ്റായ ഉപയോക്തൃനാമം അല്ലെങ്കില്<200d> രഹസ്യവാക്ക്. പ്രവേശനത്തിനായി, ദയവായി https://www.redhat.com/wapps/ugc/register.html സന്ദര്<200d>ശിയ്ക്കുക"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"or_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ଅବୈଧ ଚାଳକନାମ କିମ୍ବା ପ୍ରବେଶ ସଂକେତ। ଗୋଟିଏ ଲଗଇନ ନିର୍ମାଣ କରିବା ପାଇଁ, ଦୟାକରି https://www.redhat.com/wapps/ugc/register.html କୁ ପରିଦର୍ଶନ କରନ୍ତୁ"}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"pa_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ਗਲਤ ਯੂਜ਼ਰ-ਨਾਂ ਜਾਂ ਪਾਸਵਰਡ। ਲਾਗਇਨ ਬਣਾਉਣ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ ਇਹ ਵੇਖੋ https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ta_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "தவறான சான்றுகள்"}));	// TODO need translation
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"te_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));	// TODO need translation
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ta_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "தவறான பயனர்பெயர் அல்லது கடவுச்சொல். ஒரு உட்புகுவை உருவாக்குவதற்கு, https://www.redhat.com/wapps/ugc/register.html பார்வையிடவும்"}));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"te_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "చెల్లని వాడుకరిపేరు లేదా సంకేతపదము. లాగిన్ సృష్టించుటకు, దయచేసి https://www.redhat.com/wapps/ugc/register.html దర్శించండి"}));
 		}
 		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
 		if (!sm_usernameWithUnacceptedTC.equals("")) {
