@@ -891,7 +891,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			JSONObject jsonData = new JSONObject();
 			List<String> expectedGuestIdsOnHostA = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++}); 
 			jsonData.put("guestIds", expectedGuestIdsOnHostA);
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData.toString());
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData);
 			
 			// get the host consumer and assert that it has all the guestIds just PUT
 			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
@@ -914,7 +914,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			// call Candlepin API to PUT some guestIds onto the host consumer B
 			List<String> expectedGuestIdsOnHostB = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++}); 
 			jsonData.put("guestIds", expectedGuestIdsOnHostB);
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData.toString());
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData);
 
 			// get the host consumer and assert that it has all the guestIds just PUT
 			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
@@ -989,7 +989,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonData = new JSONObject();
 		List<String> expectedGuestIds = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++}); 
 		jsonData.put("guestIds", expectedGuestIds);
-		String result = CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfGuest, jsonData.toString());
+		String result = CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfGuest, jsonData);
 		
 		// assert that ^ PUT request failed
 		// TODO assert the result
@@ -1031,7 +1031,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			for (String guestId :  Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++})) expectedGuestIdsOnHostA.add(guestId);
 
 			jsonData.put("guestIds", expectedGuestIdsOnHostA);
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData.toString());
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA, jsonData);
 			
 			// get the host consumer and assert that it has all the guestIds just PUT
 			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostA));
@@ -1057,7 +1057,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 			log.info("Simulating the moving of guestId '"+expectedGuestIdsOnHostA.get(expectedGuestIdsOnHostA.size()-1)+"' from host consumer A to host consumer B by PUTting it on the list of guestIds for host consumer B...");
 			List<String> expectedGuestIdsOnHostB = Arrays.asList(new String[]{"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++,"test-guestId"+k++}); 
 			jsonData.put("guestIds", expectedGuestIdsOnHostB);
-			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData.toString());
+			CandlepinTasks.putResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB, jsonData);
 
 			// get the host consumer and assert that it has all the guestIds just PUT
 			jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerIdOfHostB));
