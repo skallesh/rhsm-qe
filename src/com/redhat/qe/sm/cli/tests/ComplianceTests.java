@@ -563,7 +563,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		// copy the products to productCertDirForAllProductsSubscribableByOneCommonServiceLevel
 		if (allProductsSubscribableByOneCommonServiceLevelDeterminable) {
 			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-				if (allProductsSubscribableByOneCommonServiceLevelCandidates.contains(productCert.id)) {
+				if (allProductsSubscribableByOneCommonServiceLevelCandidates.contains(productCert.productId)) {
 					RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribableByOneCommonServiceLevel, 0);
 				}
 			}
@@ -595,7 +595,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			
 			// copy the products to productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel
 			for (ProductCert productCert : clienttasks.getCurrentProductCerts()) {
-				if (allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.contains(productCert.id)) {
+				if (allProductsSubscribableByMoreThanOneCommonServiceLevelCandidates.contains(productCert.productId)) {
 					RemoteFileTasks.runCommandAndAssert(client, "cp "+productCert.file+" "+productCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel, 0);
 				}
 			}
