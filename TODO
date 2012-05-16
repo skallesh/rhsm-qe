@@ -12,6 +12,7 @@ GUI DONE:
   https://bugzilla.redhat.com/show_bug.cgi?id=712980
   https://bugzilla.redhat.com/show_bug.cgi?id=656896
   https://bugzilla.redhat.com/show_bug.cgi?id=706384
+  https://bugzilla.redhat.com/show_bug.cgi?id=703920 <  check_contract_selection_dates
     
   https://tcms.engineering.redhat.com/case/70205/?from_plan=2110
   
@@ -21,7 +22,6 @@ GUI LIMBO:
   https://bugzilla.redhat.com/show_bug.cgi?id=683151 < rhsm icon
   https://bugzilla.redhat.com/show_bug.cgi?id=629670#c4 < rhsm icon
   https://bugzilla.redhat.com/show_bug.cgi?id=700601 < firstboot starting with a bad locale not sure if I should automate
-  https://bugzilla.redhat.com/show_bug.cgi?id=705170 < firstboot, not fixed due to pending redesign
   https://bugzilla.redhat.com/show_bug.cgi?id=696020 < only repo on i686 box
   https://bugzilla.redhat.com/show_bug.cgi?id=707041 < date picker throws traceback
   https://bugzilla.redhat.com/show_bug.cgi?id=704069 < bug in different locale
@@ -30,9 +30,6 @@ GUI LIMBO:
     
 GUI TODO:
 
-  https://bugzilla.redhat.com/show_bug.cgi?id=703920
-
-  https://bugzilla.redhat.com/show_bug.cgi?id=740788
   https://bugzilla.redhat.com/show_bug.cgi?id=740377
   https://bugzilla.redhat.com/show_bug.cgi?id=745965
   https://bugzilla.redhat.com/show_bug.cgi?id=755861
@@ -44,6 +41,7 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=818040
   https://bugzilla.redhat.com/show_bug.cgi?id=766778
   https://bugzilla.redhat.com/show_bug.cgi?id=704408
+  https://bugzilla.redhat.com/show_bug.cgi?id=818040 < Stage only, put in acceptance tests
   
   https://tcms.engineering.redhat.com/case/44125/?from_plan=2806
   https://tcms.engineering.redhat.com/case/72669/?from_plan=2806
