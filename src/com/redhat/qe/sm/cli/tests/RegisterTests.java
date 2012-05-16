@@ -192,8 +192,8 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "AcceptanceTests"},
-			enabled=true)
-	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
+			enabled=false)
+	public void RegisterWithAutosubscribe_TestOLD() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");
@@ -289,7 +289,97 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)")+" - Subscribed", "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
 		Assert.assertNotNull(ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", autoSubscribedProduct.productName, clienttasks.getCurrentlyConsumedProductSubscriptions()),"Expected ProductSubscription with ProductName '"+autoSubscribedProduct.productName+"' is consumed after registering with autosubscribe.");
 	}
+	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
+			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			enabled=true)
+	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
 
+		log.info("RegisterWithAutosubscribe_Test Strategy:");
+		log.info(" 1. Change the rhsm.conf configuration for productCertDir to point to a new temporary product cert directory.");
+		log.info(" 2. Register with autosubscribe and assert that no product binding has occurred.");
+		log.info(" 3. Using the candlepin REST API, we will find an available pool that provides a product that we have installed.");
+		log.info(" 4. Copy the installed product to a temporary product cert directory so that we can isolated the expected product that will be autosubscribed.");
+		log.info(" 5. Reregister with autosubscribe and assert that the temporary product has been bound.");
+
+		// get the product certs that are currently installed
+		List<ProductCert> installedProductCerts = clienttasks.getCurrentProductCerts();
+		
+		// create a clean temporary productCertDir and change the rhsm.conf to point to it
+		RemoteFileTasks.runCommandAndAssert(client, "rm -rf "+tmpProductCertDir, Integer.valueOf(0)); // incase something was leftover from a prior run
+		RemoteFileTasks.runCommandAndAssert(client, "mkdir "+tmpProductCertDir, Integer.valueOf(0));
+		this.productCertDir = clienttasks.productCertDir;	// store the original productCertDir
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
+
+		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary directory
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, true, false, null, null, null);
+
+		//[root@jsefler-r63-server ~]# subscription-manager register --username testuser1 --password password --auto --org admin
+		//The system has been registered with id: 243ea73d-01bb-458d-a7a5-2d61fde69494 
+		//Installed Product Current Status:
+		
+		// pre-fix for blockedByBug-678049 Assert.assertContainsNoMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "register with autosubscribe should NOT appear to have subscribed to something when there are no installed products.");
+		Assert.assertTrue(InstalledProduct.parse(sshCommandResult.getStdout()).isEmpty(),
+				"The Installed Product Current Status should be empty when attempting to register with autosubscribe without any product certs installed.");
+		Assert.assertEquals(clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null).getStdout().trim(),"No installed Products to list",
+				"Since we changed the productCertDir configuration to an empty location, we should not appear to have any products installed.");
+
+		// subscribe to the first available pool that provides one product (whose product cert was also originally installed)
+		File tmpProductCertFile = null;
+		OUTERLOOP: for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
+			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+			if (jsonProvidedProducts.length()==1) {	// FIXME: I doubt this check is needed anymore
+				JSONObject jsonProvidedProduct = jsonProvidedProducts.getJSONObject(0);
+				String productId = jsonProvidedProduct.getString("productId");
+				
+				// now install the product that this pool will cover to our tmpProductCertDir
+				/* NOT WORKING IN STAGE SINCE THE /products/{PRODUCT_ID}/certificate PATH APPEARS BLACK-LISTED
+				JSONObject jsonProductCert = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId+"/certificate"));
+				String cert = jsonProductCert.getString("cert");
+				String key = jsonProductCert.getString("key");
+				tmpProductCertFile = new File(tmpProductCertDir+File.separator+"AutosubscribeProduct_"+productId+".pem");
+				client.runCommandAndWait("echo \""+cert+"\" > "+tmpProductCertFile);
+				break;
+				*/
+				
+				// now search for an existing installed product that matches and install it as our new tmpProductCert
+				for (ProductCert productCert : installedProductCerts) {
+					if (productCert.productId.equals(productId)) {
+						tmpProductCertFile = new File(tmpProductCertDir+File.separator+"AutosubscribeProduct_"+productId+".pem");
+						client.runCommandAndWait("cp "+productCert.file+" "+tmpProductCertFile);
+						break OUTERLOOP;
+					}
+				}
+			}
+		}
+		if (tmpProductCertFile==null) throw new SkipException("Could not find an available pool that provides only one product with which to test register with --autosubscribe.");
+		ProductCert tmpProductCert = clienttasks.getProductCertFromProductCertFile(tmpProductCertFile);
+		
+		// reregister with autosubscribe and assert that the product is bound
+		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, (String)null, true, false, null, null, null);
+		
+		// assert that the sshCommandResult from register indicates the tmpProductCert was subscribed
+		
+		/* # subscription-manager register --username=testuser1 --password=password --org=admin --autosubscribe
+		The system has been registered with id: f95fd9bb-4cc8-428e-b3fd-d656b14bfb89 
+		Installed Product Current Status:
+
+		ProductName:         	Awesome OS for S390X Bits
+		Status:               	Subscribed  
+		*/
+
+		// assert that our tmp product install appears to have been autosubscribed
+		InstalledProduct autoSubscribedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("status", "Subscribed", InstalledProduct.parse(clienttasks.list_(null, null, null, null, Boolean.TRUE, null, null, null).getStdout()));
+		Assert.assertNotNull(autoSubscribedProduct,	"We appear to have autosubscribed to our fake product install.");
+		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^Subscribed to Products:", "The stdout from register with autotosubscribe indicates that we have subscribed to something");
+		// pre-fix for blockedByBug-678049 Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "^\\s+"+autoSubscribedProduct.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"), "Expected ProductName '"+autoSubscribedProduct.productName+"' was reported as autosubscribed in the output from register with autotosubscribe.");
+		//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), ".* - Subscribed", "The stdout from register with autotosubscribe indicates that we have automatically subscribed at least one of this system's installed products to an available subscription pool.");
+		List<InstalledProduct> autosubscribedProductStatusList = InstalledProduct.parse(sshCommandResult.getStdout());
+		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product appears installed."); 
+		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(tmpProductCert.productName,"Subscribed",null,null,null,null),
+				"As expected, ProductName '"+tmpProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
+	}
+	
 	
 	@Test(	description="subscription-manager-cli: register with --force",
 			groups={"blockedByBug-623264"},
