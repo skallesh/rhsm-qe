@@ -34,9 +34,7 @@
                          :client-hostname "sm.client1.hostname"
                          :username "sm.client1.username"
                          :password "sm.client1.password"
-                         :owner-key (DefaultMapKey.
-                                      "sm.client1.org"
-                                      "admin")
+                         :owner-key "sm.client1.org"
                          :username1 "sm.client2.username"
                          :password1 "sm.client2.password"
                          :ssh-user (DefaultMapKey.

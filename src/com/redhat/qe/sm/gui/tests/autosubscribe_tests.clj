@@ -108,15 +108,15 @@
   simple_autosubscribe [_]
    (.runCommandAndWait @clientcmd "subscription-manager unregister")
    (tasks/restart-app)
-  (verify (dirsetup? one-sla-dir))
+   (verify (dirsetup? one-sla-dir))
    (let [beforesubs (tasks/warn-count)
-        dircount (trim (.getStdout
-                          (.runCommandAndWait
-                           @clientcmd
-                           (str "ls " one-sla-dir " | wc -l"))))
-          user (@config :username)
-          pass (@config :password)
-          key  (@config :owner-key)
+         dircount (trim (.getStdout
+                         (.runCommandAndWait
+                          @clientcmd
+                          (str "ls " one-sla-dir " | wc -l"))))
+         user (@config :username)
+         pass (@config :password)
+         key  (@config :owner-key)
          ownername (ctasks/get-owner-display-name user pass key)]
      (verify (= (str beforesubs)
                dircount))

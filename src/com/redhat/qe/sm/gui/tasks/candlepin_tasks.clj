@@ -90,10 +90,11 @@
 (defn get-owner-display-name
   "Given a owner key (org key) this returns the owner's display name"
   [username password orgkey]
-  (CandlepinTasks/getOrgDisplayNameForOrgKey  username
-                                              password
-                                              (server-url)
-                                              orgkey))
+  (if orgkey
+    (CandlepinTasks/getOrgDisplayNameForOrgKey  username
+                                                password
+                                                (server-url)
+                                                orgkey)))
 
 (defn get-pool-id
   "Get the pool ID for a given subscription/contract pair."
