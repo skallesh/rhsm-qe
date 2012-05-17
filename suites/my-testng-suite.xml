@@ -1,0 +1,36 @@
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<!-- Running on the command line:  java -cp `lein classpath` org.testng.TestNG [testng options] [suitefile] -->
+<suite name="My TestSuite">
+
+	<!-- PLACE HOLDER FOR MY TESTS... -->
+	<test name="My Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="MyTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	
+	<!-- WORKING EXAMPLE: CleanTests... -->
+	<test name="CLI: Clean Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="CleanTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+
+	
+</suite>

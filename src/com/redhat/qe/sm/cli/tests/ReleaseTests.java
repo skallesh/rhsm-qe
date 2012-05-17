@@ -219,7 +219,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-802245"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListExcludes60OnRhel6System_Test() throws JSONException, Exception {
+	public void VerifyReleaseListExcludes60OnRHEL6System_Test() throws JSONException, Exception {
+		if (!clienttasks.redhatReleaseX.equals("6")) throw new SkipException("This test is only applicable on RHEL6.");
 		
 		// make sure we are newly registered with autosubscribe
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);
@@ -240,6 +241,36 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// assert that the list excludes 6.0, but includes the current X.Y release
 		String release60 = "6.0";
 		Assert.assertTrue(!actualReleases.contains(release60), "The subscription-manager releases list should exclude '"+release60+"' since '"+clienttasks.command+"' did not exist in RHEL Release '"+release60+"'.");
+		//NOT PRACTICAL SINCE CONTENT FROM THIS Y-STREAM MAY NOT BE AVAILABLE UNTIL GA Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
+	}
+	
+	@Test(	description="register to a RHEL subscription and verify that release --list excludes 5.6, 5.5, 5.4, 5.3, 5.2, 5.1, 5.0",
+			groups={"blockedByBug-785989"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyReleaseListExcludes56OnRHEL5System_Test() throws JSONException, Exception {
+		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is only applicable on RHEL5.");
+		
+		// make sure we are newly registered with autosubscribe
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);
+
+		// get the current base RHEL product cert
+		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
+		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
+		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
+		ProductCert rhelProductCert = rhelProductCerts.get(0);
+		
+		// assert that it was autosubscribed
+		InstalledProduct rhelInstalledProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts());
+		Assert.assertNotNull(rhelInstalledProduct, "Our base installed RHEL product was autosubscribed during registration.");
+
+		// get the actual release listing
+		List<String> actualReleases = clienttasks.getCurrentlyAvailableReleases();
+		
+		// assert that the list excludes 5.6, 5.5, 5.4, 5.3, 5.2, 5.1, 5.0, but includes the current X.Y release
+		for (String release: new String[]{"5.6","5.5","5.4","5.3","5.2","5.1","5.0"}) {
+			Assert.assertTrue(!actualReleases.contains(release), "The subscription-manager releases list should exclude '"+release+"' since '"+clienttasks.command+"' did not exist in RHEL Release '"+release+"'.");
+		}
 		//NOT PRACTICAL SINCE CONTENT FROM THIS Y-STREAM MAY NOT BE AVAILABLE UNTIL GA Assert.assertTrue(actualReleases.contains(clienttasks.redhatReleaseXY), "The subscription-manager releases list should include '"+clienttasks.redhatReleaseXY+"' since it is the current RHEL Release under test.");
 	}
 	

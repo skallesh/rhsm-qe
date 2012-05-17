@@ -323,10 +323,10 @@ schema generation failed
 	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path) throws Exception {
 		return putResourceUsingRESTfulAPI(authenticator,password,url,path,null);
 	}
-	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, String jsonData) throws Exception {
+	static public String putResourceUsingRESTfulAPI(String authenticator, String password, String url, String path, JSONObject jsonData) throws Exception {
 		PutMethod put = new PutMethod(url+path);
 		if (jsonData != null) {
-			put.setRequestEntity(new StringRequestEntity(jsonData, "application/json", null));
+			put.setRequestEntity(new StringRequestEntity(jsonData.toString(), "application/json", null));
 			put.addRequestHeader("accept", "application/json");
 			put.addRequestHeader("content-type", "application/json");
 		}
@@ -455,33 +455,60 @@ schema generation failed
 	 * @throws Exception
 	 */
 	static public JSONObject refreshPoolsUsingRESTfulAPI(String user, String password, String url, String owner) throws Exception {
-//		PutMethod put = new PutMethod("https://"+server+":"+port+prefix+"/owners/"+owner+"/subscriptions");
-//		String response = getHTTPResponseAsString(client, put, owner, password);
-//				
-//		return new JSONObject(response);
 		return new JSONObject(putResourceUsingRESTfulAPI(user, password, url, "/owners/"+owner+"/subscriptions"));
 	}
 	
 	static public JSONObject setAutohealForConsumer(String authenticator, String password, String url, String consumerid, Boolean autoheal) throws Exception {
-
 		return setAttributeForConsumer(authenticator, password, url, consumerid, "autoheal", autoheal);
 	}
 	
-	static public JSONObject setAttributeForConsumer(String authenticator, String password, String url, String consumerid, String attributeName, Boolean attributeValue) throws Exception {
+	static public JSONObject setAttributeForConsumer(String authenticator, String password, String url, String consumerid, String attributeName, Object attributeValue) throws Exception {
 
 //		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request PUT --data '{"autoheal":false}' --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7
-//		[root@jsefler-onprem-62server tmp]# 
-//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET  --header 'accept:application/json' --header 'content-type: application/json' https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -m simplejson/tool |  grep heal
-//		  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//		                                 Dload  Upload   Total   Spent    Left  Speed
-//		100 13921    0 13921    0     0  64077      0 --:--:-- --:--:-- --:--:-- 99435
+//		[root@jsefler-onprem-62server tmp]# curl -k -u testuser1:password --request GET --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/consumers/562bbb5b-9645-4eb0-8be8-cd0413d531a7 | python -m simplejson/tool |  grep heal
 //		    "autoheal": false, 
 //		[root@jsefler-onprem-62server tmp]# 
 		
 		JSONObject jsonData = new JSONObject();
-		jsonData.put(attributeName, attributeValue.toString());
-		putResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid, jsonData.toString());
+		
+		// update the consumer
+		jsonData.put(attributeName, attributeValue);
+		String httpResponse = putResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid, jsonData);
+		// result will be null; not a string representation of the jsonConsumer!  
+		
+		// get the updated consumer and return it
 		return new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/consumers/"+consumerid));
+	}
+	
+	static public JSONObject setAttributeForOrg(String authenticator, String password, String url, String org, String attributeName, Object attributeValue) throws Exception {
+
+		// workaround for bug Bug 821797 - Owner update does not properly allow for partial updates
+		// get the current org as a JSONObject and then overlay the entire object with the updated attributeValue
+		JSONObject jsonOrg = new JSONObject(getResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org));
+		jsonOrg.put(attributeName, attributeValue);
+		
+		//	[root@jsefler-63server ~]# curl -k -u admin:admin --request PUT --data '{   "contentPrefix": null,     "created": "2012-05-15T00:07:23.109+0000",     "defaultServiceLevel": "PREMIUM",   "displayName": "Admin Owner",    "href": "/owners/admin",     "id": "8a90f814374dd1f101374dd216e50002",     "key": "admin",     "parentOwner": null,    "updated": "2012-05-15T00:07:23.109+0000",     "upstreamUuid": null}' --header 'accept:application/json' --header 'content-type: application/json' --stderr /dev/null https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/owners/admin | python -msimplejson/tool
+		//	{
+		//	    "contentPrefix": null, 
+		//	    "created": "2012-05-15T00:07:23.109+0000", 
+		//	    "defaultServiceLevel": "PREMIUM", 
+		//	    "displayName": "Admin Owner", 
+		//	    "href": "/owners/admin", 
+		//	    "id": "8a90f814374dd1f101374dd216e50002", 
+		//	    "key": "admin", 
+		//	    "parentOwner": null, 
+		//	    "updated": "2012-05-15T14:08:50.700+0000", 
+		//	    "upstreamUuid": null
+		//	}
+		
+
+		// update the org and return it too
+		jsonOrg = new JSONObject(putResourceUsingRESTfulAPI(authenticator, password, url, "/owners/"+org, jsonOrg));
+		if (jsonOrg.has("displayMessage")) {
+			//log.warning("Attempt to update org '"+org+"' failed: "+jsonOrg.getString("displayMessage"));
+			Assert.fail("Attempt to update org '"+org+"' failed: "+jsonOrg.getString("displayMessage"));
+		}
+		return jsonOrg;
 	}
 	
 	static public void exportConsumerUsingRESTfulAPI(String owner, String password, String url, String consumerKey, String intoExportZipFile) throws Exception {

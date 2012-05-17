@@ -248,7 +248,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithAvailableServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
+	public void RegisterWithAvailableServiceLevel_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 
 		// register with autosubscribe specifying a valid service level
@@ -276,7 +276,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyRegisterWithServiceLevelIsCaseInsensitive(Object bugzulla, String serviceLevel) {
+	public void VerifyRegisterWithServiceLevelIsCaseInsensitive(Object bugzilla, String org, String serviceLevel) {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
@@ -343,7 +343,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157229)	// 147971
-	public void AutoSubscribeWithServiceLevel_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+	public void AutoSubscribeWithServiceLevel_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 		
 		// ensure system is registered
@@ -400,7 +400,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String serviceLevel = serviceLevelsExpected.get(randomGenerator.nextInt(serviceLevelsExpected.size()));
 		
 		//clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, serviceLevel, null, (String)null, null, false, null, null, null);
-		AutoSubscribeWithServiceLevel_Test(null,serviceLevel);
+		AutoSubscribeWithServiceLevel_Test(null,null,serviceLevel);
 
 		// return all entitlements
 		clienttasks.unsubscribe(true, null, null, null, null);
@@ -429,14 +429,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithNullServiceLevel_Test() throws JSONException, Exception {
-		AutoSubscribeWithServiceLevel_Test(null,null);
+		AutoSubscribeWithServiceLevel_Test(null,null,null);
 	}
 	@Test(	description="subscription-manager: subscribe with auto specifying a service level of \"\"; assert the service level is unset and the autosubscribe proceeds without any service level preference",
 			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithBlankServiceLevel_Test() throws JSONException, Exception {
-		AutoSubscribeWithServiceLevel_Test(null,"");
+		AutoSubscribeWithServiceLevel_Test(null,null,"");
 	}
 	
  
@@ -445,7 +445,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
-	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzulla, String serviceLevel) throws JSONException, Exception {
+	public void VerifyAutoSubscribeWithServiceLevelIsCaseInsensitive_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		
 		// TEMPORARY WORKAROUND FOR BUG
 		if (sm_serverType.equals(CandlepinType.hosted)) {
@@ -538,6 +538,46 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 		
 	
+	@Test(	description="Using curl, set the default service level for an org and then register using org credentials to verify consumer's service level",
+			groups={},
+			dataProvider="getAllAvailableServiceLevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void SetDefaultServiceLevelForOrgAndRegister_Test(Object bugzilla, String org, String defaultServiceLevel) throws JSONException, Exception {
+		
+		// update the defaultServiceLevel on the Org
+		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, org, "defaultServiceLevel", defaultServiceLevel);
+		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), defaultServiceLevel, "The defaultServiceLevel update to org '"+org+"' appears successful on the candlepin server.");
+		
+		// register and assert the consumer's service level is set to the new org default
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), defaultServiceLevel, "Immediately upon registering, the consumer's service level preference was set to the org's default.");
+	}
+	
+	
+	@Test(	description="Using curl, unset the default service level for an org and then register using org credentials to verify consumer's service level is not set",
+			groups={},
+			dependsOnMethods={"SetDefaultServiceLevelForOrgAndRegister_Test"}, alwaysRun=true,
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsetDefaultServiceLevelForOrgAndRegister_Test() throws JSONException, Exception {
+		
+		// update the defaultServiceLevel on the Org (setting to "" will nullify the attribute on the org; setting to JSONObject.NULL does not work)
+		JSONObject jsonOrg = CandlepinTasks.setAttributeForOrg(sm_clientUsername, sm_clientPassword, sm_serverUrl, sm_clientOrg, "defaultServiceLevel", "");
+		Assert.assertEquals(jsonOrg.get("defaultServiceLevel"), JSONObject.NULL, "The defaultServiceLevel update to the org appears successful on the candlepin server.");
+		
+		// register and assert the consumer's service level is not set
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "Immediately upon registering, the consumer's service level preference was set to the org's default (which was unset).");
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 
 	// Candidates for an automated Test:
 	
@@ -554,12 +594,12 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
 			return;	
 		}
-//debugTesting if (true) return;
+//debugTesting	if (true) return;
 	
 		// TestExempt Product Subscription
 		name = "TestExempt Product Subscription";
 		productId = "test-exempt-product";
-		serviceLevel = "TestExempt SLA";
+		serviceLevel = "Test-Exempt SLA";
 		providedProductIds.clear();
 		providedProductIds.add("99000");
 		attributes.clear();
@@ -612,7 +652,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// get the available service levels
 		List<String> serviceLevels = new ArrayList<String>();
 		for (List<Object> availableServiceLevelData : getAllAvailableServiceLevelDataAsListOfLists()) {
-			serviceLevels.add((String)availableServiceLevelData.get(1));
+			// availableServiceLevelData :   Object bugzilla, String org, String serviceLevel
+			serviceLevels.add((String)availableServiceLevelData.get(2));
 		}
 		
 		// get all of the installed products

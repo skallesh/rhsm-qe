@@ -2388,14 +2388,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
 			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		}
+		
 		// get all the valid service levels available to this org
+		// Object bugzilla, String org, String serviceLevel
  		if (sm_serverOld) {
 	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
-	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+	 			ll.add(Arrays.asList(new Object[] {null,	org,	serviceLevel}));
 	 		}
  		} else
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
-			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[] {null,	org,	serviceLevel}));
 		}
 		
 		return ll;
