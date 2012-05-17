@@ -871,7 +871,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server be a hosted system that accepts credentials for '"+sm_clientUsername+"' to RHN Classic.");
-		clienttasks.unregister(null,null,null);
+	    removeProxyServerConfigurations();	// cleanup from prior tests
+	    clienttasks.unregister(null,null,null);
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
 		
