@@ -61,7 +61,6 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 684941 - Deleting a product with a subscription gives ugly error
 	// TODO Bug 629708 - import/export validation error wrapped
 	// TODO Bug 744536 - [ALL LANG] [RHSM CLI] unsubscribe module _unexpected 'ascii' code can't decode ...message.
-	// TODO Bug 811294 - [kn_IN] missing the Knin Language rhsm.mo file (create a test that asserts the installation of all lang rhsm.mo files)
 	
 	// Data Providers ***********************************************************************
 	

@@ -39,6 +39,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Translation Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.TranslationTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Register Tests">
 		<classes>
 			<class name="com.redhat.qe.sm.cli.tests.RegisterTests" />
