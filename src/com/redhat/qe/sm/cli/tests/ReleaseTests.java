@@ -289,7 +289,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UsingNoAuthProxyCommandLineArgsVerifyReleaseListMatchesCDN_Test() throws JSONException, Exception {
+	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyCommandLineArgs_Test() throws JSONException, Exception {
 		verifyReleaseListMatchesCDN(sm_noauthproxyHostname,sm_noauthproxyPort,null,null);
 	}
 	
@@ -298,7 +298,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UsingBasicAuthProxyCommandLineArgsVerifyReleaseListMatchesCDN_Test() {
+	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyCommandLineArgs_Test() {
 		verifyReleaseListMatchesCDN(sm_basicauthproxyHostname,sm_basicauthproxyPort,sm_basicauthproxyUsername,sm_basicauthproxyPassword);
 	}
 	
@@ -307,7 +307,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-822965"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UsingNoAuthProxyViaRhsmConfFileVerifyReleaseListMatchesCDN_Test() throws JSONException, Exception {
+	public void VerifyReleaseListMatchesCDNUsingNoAuthProxyViaRhsmConfFile_Test() throws JSONException, Exception {
 		clienttasks.config(false, false, true, Arrays.asList(
 				new String[]{"server","proxy_hostname",sm_noauthproxyHostname},
 				new String[]{"server","proxy_port",sm_noauthproxyPort}));
@@ -319,7 +319,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-822965"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UsingBasicAuthProxyViaRhsmConfFileVerifyReleaseListMatchesCDN_Test() {
+	public void VerifyReleaseListMatchesCDNUsingBasicAuthProxyViaRhsmConfFile_Test() {
 		clienttasks.config(false, false, true, Arrays.asList(
 				new String[]{"server","proxy_hostname",sm_basicauthproxyHostname},
 				new String[]{"server","proxy_port",sm_basicauthproxyPort},
