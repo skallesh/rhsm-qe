@@ -339,7 +339,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
-	@BeforeClass (alwaysRun=true)
+	@BeforeClass (groups="setup")
 	public void rememberServerProxyConfigs() {
 		if (clienttasks==null) return;
 		
@@ -349,8 +349,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		serverProxyPassword	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "proxy_password");
 	}
 	
-	@BeforeMethod (alwaysRun=true)
-	@AfterClass (alwaysRun=true)
+	@BeforeMethod (groups="setup")
+	@AfterClass (groups="setup")
 	public void restoreServerProxyConfigs() {
 		if (clienttasks==null) return;
 		

@@ -1,8 +1,11 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +22,7 @@ import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.data.Translation;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
@@ -121,11 +125,43 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="verify that rhsm.mo is installed for each of the supported locales",
 			groups={"AcceptanceTests"},
 			dataProvider="getSupportedLocalesData",
-			enabled=true)
+			enabled=false)	// replaced by VerifyOnlyExpectedTranslationFilesAreInstalled_Test
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationFileIsInstalled_Test(Object bugzilla, String locale) {
-		String localeFile = localeFile(locale);
-		Assert.assertTrue(RemoteFileTasks.testExists(client, localeFile),"Supported locale file '"+localeFile+"' is installed.");
+		File localeFile = localeFile(locale);
+		Assert.assertTrue(RemoteFileTasks.testExists(client, localeFile.getPath()),"Supported locale file '"+localeFile+"' is installed.");
+		if (!translationFileMap.keySet().contains(localeFile)) Assert.fail("Something went wrong in TranslationTests.buildTranslationFileMap().  File '"+localeFile+"' was not found in the translationFileMap.keySet().");
+	}
+	
+	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
+			groups={"AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyOnlyExpectedTranslationFilesAreInstalled_Test() {
+		List<File> supportedTranslationFiles = new ArrayList<File>();
+		for (String supportedLocale : supportedLocales) supportedTranslationFiles.add(localeFile(supportedLocale));
+		log.info("Expected locales include: "+supportedLocales);
+		
+		// assert no unexpected translation files are installed
+		boolean unexpectedTranslationFilesFound = false;
+		for (File translationFile : translationFileMap.keySet()) {
+			if (!supportedTranslationFiles.contains(translationFile)) {
+				unexpectedTranslationFilesFound = true;
+				log.warning("Unexpected translation file '"+translationFile+"' is installed.");
+			}
+		}
+		// assert that all expected translation files are installed
+		boolean allExpectedTranslationFilesFound = true;
+		for (File translationFile : supportedTranslationFiles) {
+			if (!translationFileMap.keySet().contains(translationFile)) {
+				log.warning("Expected translation file '"+translationFile+"' is NOT installed.");
+				allExpectedTranslationFilesFound = false;
+			} else {
+				log.info("Expected translation file '"+translationFile+"' is installed.");
+			}
+		}
+		Assert.assertTrue(!unexpectedTranslationFilesFound, "No unexpected translation files were found installed.");
+		Assert.assertTrue(allExpectedTranslationFilesFound, "All expected translation files were found installed.");
 	}
 	
 	
@@ -141,21 +177,38 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 
 	
 	// Configuration Methods ***********************************************************************
-	
+	@BeforeClass (groups="setup")
+	public void buildTranslationFileMap() {
+		if (clienttasks==null) return;
+		
+		//List<File> translationFiles =  new ArrayList<File>();
+		SSHCommandResult translationFileListingResult = client.runCommandAndWait("rpm -ql subscription-manager | grep rhsm.mo");
+		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
+			if (translationFilePath.isEmpty()) continue; // skip empty lines
+			
+			File translationFile = new File(translationFilePath);
+			//translationFiles.add(translationFile);
+			
+			SSHCommandResult msgunfmtListingResult = client.runCommandAndWaitWithoutLogging("msgunfmt "+translationFilePath);
+			translationFileMap.put(translationFile, Translation.parse(msgunfmtListingResult.getStdout()));
+		}
+	}
 
 	
 	
 	// Protected Methods ***********************************************************************
 	List<String> supportedLocales = Arrays.asList("as","bn","de","es","fr","gu","hi","it","ja","kn","ko","ml","mr","or","pa","pt","pt_BR","ru","ta","te","zh_CN","zh_TW"); 
 	List<String> supportedLangs = Arrays.asList("as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru-RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	Map<File,List<Translation>> translationFileMap = new HashMap<File, List<Translation>>();
 
+	
 	protected List<String> newList(String item) {
 		List <String> newList = new ArrayList<String>();
 		newList.add(item);
 		return newList;
 	}
-	protected String localeFile(String locale) {
-		return "/usr/share/locale/"+locale+"/LC_MESSAGES/rhsm.mo";
+	protected File localeFile(String locale) {
+		return new File("/usr/share/locale/"+locale+"/LC_MESSAGES/rhsm.mo");
 	}
 	
 	
