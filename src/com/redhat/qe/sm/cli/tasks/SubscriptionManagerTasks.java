@@ -642,11 +642,14 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
+	 * @param proxy TODO
+	 * @param proxyusername TODO
+	 * @param proxypassword TODO
 	 * @return list of the releases returned by subscription-manager release --list (must already be registered)
 	 */
-	public List<String> getCurrentlyAvailableReleases() {
+	public List<String> getCurrentlyAvailableReleases(String proxy, String proxyusername, String proxypassword) {
 		
-		SSHCommandResult result = release(true,null,null,null,null);
+		SSHCommandResult result = release(true,null,proxy,proxyusername,proxypassword);
 		
 		//	[root@jsefler-r63-workstation ~]# subscription-manager release --list
 		//	5.7
@@ -2234,11 +2237,15 @@ public class SubscriptionManagerTasks {
 	 * config without asserting results
 	 */
 	public SSHCommandResult config_(Boolean list, Boolean remove, Boolean set, List<String[]> listOfSectionNameValues) {
-
+		
 		// assemble the command
 		String command = this.command;				command += " config";
 		if (list!=null && list)						command += " --list";
 		for (String[] section_name_value : listOfSectionNameValues) {
+			// double quote the value when necessary
+			if (listOfSectionNameValues.size()>2 && section_name_value[2].equals("")) section_name_value[2] = "\"\"";	// double quote blank values
+			if (listOfSectionNameValues.size()>2 && section_name_value[2].contains(" ")) section_name_value[2] = "\""+section_name_value[2]+"\"";	// double quote value containing spaces (probably never used)
+
 			if (remove!=null && remove)				command += String.format(" --remove=%s.%s", section_name_value[0],section_name_value[1]);  // expected format section.name
 			if (set!=null && set)					command += String.format(" --%s.%s=%s", section_name_value[0],section_name_value[1],section_name_value[2]);  // expected format section.name=value
 		}
