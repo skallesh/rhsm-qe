@@ -138,9 +138,8 @@ public class Translation extends AbstractCommandLineData {
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field	regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		// TODO regex pattern is work in progress
-		regexes.put("msgid",	"msgid (.*)");
-		regexes.put("msgstr",	"msgstr (.*)");
+		regexes.put("msgid",	"msgid (\".*\"(\\n\".*\")*)");
+		regexes.put("msgstr",	"msgstr (\".*\"(\\n\".*\")*)");
 		
 		List<Map<String,String>> translationMapList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
@@ -149,8 +148,16 @@ public class Translation extends AbstractCommandLineData {
 		}
 		
 		List<Translation> translations = new ArrayList<Translation>();
-		for(Map<String,String> translationMap : translationMapList)
+		for(Map<String,String> translationMap : translationMapList) {
+			
+			// dequote the multi-line values
+			for (String key : translationMap.keySet()) {
+				String value = translationMap.get(key);
+				String dequotedValue = value.replaceAll("\"\n\"", "").replaceFirst("^\"", "").replaceFirst("\"$", "").replaceAll("\\\\n", "\n");
+				translationMap.put(key, dequotedValue);
+			}
 			translations.add(new Translation(translationMap));
+		}
 		return translations;
 	}
 }
