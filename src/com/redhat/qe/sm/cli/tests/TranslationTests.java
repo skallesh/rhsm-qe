@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -164,7 +166,27 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(allExpectedTranslationFilesFound, "All expected translation files were found installed.");
 	}
 	
-	
+	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
+			groups={/*"AcceptanceTest"*/},
+			dataProvider="getTranslationFileData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyTranslationFileContainsAllMsgids_Test(File translationFile) {
+		List<Translation> translationList = translationFileMap.get(translationFile);
+		boolean translationFilePassed=true;
+		for (String msgid : translationMsgidSet) {
+			int numMsgidOccurances=0;
+			for (Translation translation : translationList) {
+				if (translation.msgid.equals(msgid)) numMsgidOccurances++;
+			}
+			if (numMsgidOccurances!=1) {
+				log.warning("Expected 1 occurance (actual='"+numMsgidOccurances+"') of the following msgid in translation file '"+translationFile+"':  msgid \""+msgid+"\"");
+				translationFilePassed=false;
+			}
+		}
+		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSet.size()+") were found in translation file '"+translationFile+"'.");
+	}
+
 	
 	
 	
@@ -193,13 +215,27 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			translationFileMap.put(translationFile, Translation.parse(msgunfmtListingResult.getStdout()));
 		}
 	}
+	
+	@BeforeClass (groups="setup",dependsOnMethods={"buildTranslationFileMap"})
+	public void buildTranslationMsgidSet() {
+		if (clienttasks==null) return;
+		
+		// assemble a unique set of msgids
+		for (File translationFile : translationFileMap.keySet()) {
+			List<Translation> translationList = translationFileMap.get(translationFile);
+			for (Translation translation : translationList) {
+				translationMsgidSet.add(translation.msgid);
+			}
+		}
+	}
 
 	
 	
 	// Protected Methods ***********************************************************************
-	List<String> supportedLocales = Arrays.asList("as","bn","de","es","fr","gu","hi","it","ja","kn","ko","ml","mr","or","pa","pt","pt_BR","ru","ta","te","zh_CN","zh_TW"); 
-	List<String> supportedLangs = Arrays.asList("as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru-RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	List<String> supportedLocales = Arrays.asList(	"as",	"bn",	"de",	"es",	"fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt",	"pt_BR","ru",	"ta",	"te",	"zh_CN","zh_TW"); 
+	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_PT","pt_BR","ru-RU","ta_IN","te_IN","zh_CN","zh_TW"); 
 	Map<File,List<Translation>> translationFileMap = new HashMap<File, List<Translation>>();
+	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
 
 	
 	protected List<String> newList(String item) {
@@ -232,8 +268,21 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		}
 		return ll;
 	}
-
-		
+	
+	
+	@DataProvider(name="getTranslationFileData")
+	public Object[][] getTranslationFileDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFileDataAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFileDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		for (File translationFile : translationFileMap.keySet()) {
+			ll.add(Arrays.asList(new Object[] {translationFile}));
+		}
+		return ll;
+	}
+	
+	
 	@DataProvider(name="getTranslatedCommandLineHelpData")
 	public Object[][] getTranslatedCommandLineHelpDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getTranslatedCommandLineHelpDataAsListOfLists());
