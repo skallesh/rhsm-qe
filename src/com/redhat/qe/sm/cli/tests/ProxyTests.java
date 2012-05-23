@@ -507,8 +507,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager : release --list using a proxy server (Positive and Negative Variations)",
-			groups={},
-			dataProvider="getReleaseListAttemptsUsingProxyServerData",
+			groups={"blockedByBug-822965","blockedByBug-824530"},
+			dataProvider="getReleaseAttemptsUsingProxyServerData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void ReleaseListAttemptsUsingProxyServer_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr) {
@@ -525,8 +525,8 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
-			groups={},
-			dataProvider="getReleaseListAttemptsUsingProxyServerViaRhsmConfigData",
+			groups={"blockedByBug-822965","blockedByBug-824530"},
+			dataProvider="getReleaseAttemptsUsingProxyServerViaRhsmConfigData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void ReleaseListAttemptsUsingProxyServerViaRhsmConfig_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
@@ -1251,30 +1251,6 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 				ll.add(Arrays.asList(new Object[]{	null,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
-		}
-		return TestNGUtils.convertListOfListsTo2dArray(ll);
-	}
-	
-	
-	@DataProvider(name="getReleaseListAttemptsUsingProxyServerData")
-	public Object[][] getReleaseListAttemptsUsingProxyServerDataAs2dArray() {
-		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
-		// nullify the blockedByBug parameter since this function was never blocked by any bug
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("822965"),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
-		}
-		return TestNGUtils.convertListOfListsTo2dArray(ll);
-	}
-	
-	
-	@DataProvider(name="getReleaseListAttemptsUsingProxyServerViaRhsmConfigData")
-	public Object[][] getReleaseListAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
-		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-		// nullify the blockedByBug parameter since this function was never blocked by any bug
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("822965"),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
