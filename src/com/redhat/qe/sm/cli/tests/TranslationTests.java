@@ -32,7 +32,26 @@ import com.redhat.qe.tools.SSHCommandResult;
  * @author jsefler
  * References:
  *   Engineering Localization Services: https://home.corp.redhat.com/node/53593
- */
+ *   http://git.fedorahosted.org/git/?p=subscription-manager.git;a=blob;f=po/pt.po;h=0854212f4fab348a25f0542625df343653a4a097;hb=RHEL6.3
+ *   Here is the raw rhsm.po file for LANG=pt
+ *   http://git.fedorahosted.org/git/?p=subscription-manager.git;a=blob;f=po/pt.po;hb=RHEL6.3
+ *   
+ *   https://engineering.redhat.com/trac/LocalizationServices
+ *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nRHEL6LanguageSupportCriteria
+ *   
+ *   https://translate.zanata.org/zanata/project/view/subscription-manager/iter/0.99.X/stats
+ *   
+ *   https://fedora.transifex.net/projects/p/fedora/
+ *   
+ *   http://translate.sourceforge.net/wiki/
+ *   http://translate.sourceforge.net/wiki/toolkit/index
+ *   http://translate.sourceforge.net/wiki/toolkit/pofilter
+ *   http://translate.sourceforge.net/wiki/toolkit/pofilter_tests
+ *   http://translate.sourceforge.net/wiki/toolkit/installation
+ *   
+ *   https://github.com/translate/translate
+ *   
+ **/
 @Test(groups={"TranslationTests"})
 public class TranslationTests extends SubscriptionManagerCLITestScript{
 	
@@ -136,7 +155,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests", "blockedByBug-824100"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyOnlyExpectedTranslationFilesAreInstalled_Test() {
@@ -167,11 +186,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
-			groups={/*"AcceptanceTest"*/},
+			groups={"AcceptanceTest"},
 			dataProvider="getTranslationFileData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationFileContainsAllMsgids_Test(File translationFile) {
+	public void VerifyTranslationFileContainsAllMsgids_Test(Object bugzilla, File translationFile) {
 		List<Translation> translationList = translationFileMap.get(translationFile);
 		boolean translationFilePassed=true;
 		for (String msgid : translationMsgidSet) {
@@ -187,7 +206,37 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSet.size()+") were found in translation file '"+translationFile+"'.");
 	}
 
-	
+	@Test(	description="run pofilter translate tests on the translation file",
+			groups={"debugTest"},
+			dataProvider="getTranslationFilePofilterTestData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void pofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+		log.info("For an explanation of pofilter test '"+pofilterTest+"', see: http://translate.sourceforge.net/wiki/toolkit/pofilter_tests");
+		
+		File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
+		
+		// execute the pofilter test
+		String pofilterCommand = "pofilter -t "+pofilterTest;
+		SSHCommandResult pofilterResult = client.runCommandAndWait(pofilterCommand+" "+translationPoFile);
+		Assert.assertEquals(pofilterResult.getExitCode(), new Integer(0), "Successfully executed the pofilter tests.");
+		
+		// convert the pofilter test results into a list of failed Translation objects for simplified handling of special cases 
+		List<Translation> pofilterFailedTranslations = Translation.parse(pofilterResult.getStdout());
+		
+		// remove the first translation which contains only meta data
+		if (!pofilterFailedTranslations.isEmpty() && pofilterFailedTranslations.get(0).msgid.equals("")) pofilterFailedTranslations.remove(0);
+		
+		// ignore the following special cases of acceptable results..........
+		if (pofilterTest.equals("unchanged")) {
+			Translation ignoreTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", "%s [OPTIONS]", pofilterFailedTranslations);
+			if (ignoreTranslation!=null) {
+				log.info("Ignoring result of pofiliter test '"+pofilterTest+"' for msgid: "+ignoreTranslation.msgid);
+				pofilterFailedTranslations.remove(ignoreTranslation);
+			}
+		}
+		Assert.assertEquals(pofilterFailedTranslations.size(),0, "Discounting the ignored test results, the number of failed pofilter '"+pofilterTest+"' tests for translation file '"+translationFile+"'.");
+	}
 	
 	
 	
@@ -211,7 +260,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			File translationFile = new File(translationFilePath);
 			//translationFiles.add(translationFile);
 			
-			SSHCommandResult msgunfmtListingResult = client.runCommandAndWaitWithoutLogging("msgunfmt "+translationFilePath);
+			// decompile the rhsm.mo file into its original-like rhsm.po file
+			log.info("Decompiling the rhsm.mo file...");
+			File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
+			RemoteFileTasks.runCommandAndAssert(client,"msgunfmt --no-wrap "+translationFile+ " -o "+translationPoFile,new Integer(0));
+			
+			// parse the translations from the rhsm.mo into the translationFileMap
+			SSHCommandResult msgunfmtListingResult = client.runCommandAndWaitWithoutLogging("msgunfmt --no-wrap "+translationFilePath);
 			translationFileMap.put(translationFile, Translation.parse(msgunfmtListingResult.getStdout()));
 		}
 	}
@@ -232,8 +287,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Protected Methods ***********************************************************************
-	List<String> supportedLocales = Arrays.asList(	"as",	"bn",	"de",	"es",	"fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt",	"pt_BR","ru",	"ta",	"te",	"zh_CN","zh_TW"); 
-	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_PT","pt_BR","ru-RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
+	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru-RU","ta_IN","te_IN","zh_CN","zh_TW"); 
 	Map<File,List<Translation>> translationFileMap = new HashMap<File, List<Translation>>();
 	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
 
@@ -277,7 +332,48 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>> getTranslationFileDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (File translationFile : translationFileMap.keySet()) {
-			ll.add(Arrays.asList(new Object[] {translationFile}));
+			BlockedByBzBug bugzilla = null;
+			// Bug 824100 - pt_BR translations are outdated for subscription-manager 
+			if (translationFile.getPath().contains("/pt_BR/")) bugzilla = new BlockedByBzBug("824100");
+			// Bug 824184 - [ta_IN] translations for subscription-manager are missing (95% complete)
+			if (translationFile.getPath().contains("/ta/") || translationFile.getPath().contains("/ta_IN/")) bugzilla = new BlockedByBzBug("824184");
+			
+			ll.add(Arrays.asList(new Object[] {bugzilla,	translationFile}));
+		}
+		return ll;
+	}
+	
+	@DataProvider(name="getTranslationFilePofilterTestData")
+	public Object[][] getTranslationFilePofilterTestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFilePofilterTestDataAsListOfLists());
+	}
+	protected List<List<Object>> getTranslationFilePofilterTestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>();
+		// see http://translate.sourceforge.net/wiki/toolkit/pofilter_tests
+		//	Critical -- can break a program
+		//    	accelerators, escapes, newlines, nplurals, printf, tabs, variables, xmltags, dialogsizes
+		//	Functional -- may confuse the user
+		//    	acronyms, blank, emails, filepaths, functions, gconf, kdecomments, long, musttranslatewords, notranslatewords, numbers, options, purepunc, sentencecount, short, spellcheck, urls, unchanged
+		//	Cosmetic -- make it look better
+		//    	brackets, doublequoting, doublespacing, doublewords, endpunc, endwhitespace, puncspacing, simplecaps, simpleplurals, startcaps, singlequoting, startpunc, startwhitespace, validchars
+		//	Extraction -- useful mainly for extracting certain types of string
+		//    	compendiumconflicts, credits, hassuggestion, isfuzzy, isreview, untranslated
+
+		List<String> pofilterTests = Arrays.asList(
+				//	Critical -- can break a program
+				"accelerators","escapes","newlines","nplurals","printf","tabs","variables","xmltags",
+				//	Functional -- may confuse the user
+				"blank","emails","filepaths","gconf","long","notranslatewords","numbers","options","short","urls","unchanged",
+				//	Cosmetic -- make it look better
+				"doublewords",
+				//	Extraction -- useful mainly for extracting certain types of string
+				"untranslated");
+pofilterTests = Arrays.asList("accelerators","escapes"/* TODO ,"unchanged"*/);
+		for (File translationFile : translationFileMap.keySet()) {
+			for (String pofilterTest : pofilterTests) {
+				BlockedByBzBug bugzilla = null;
+				ll.add(Arrays.asList(new Object[] {bugzilla,	pofilterTest,	translationFile}));
+			}
 		}
 		return ll;
 	}

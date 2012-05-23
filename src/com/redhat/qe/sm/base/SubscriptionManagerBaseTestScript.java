@@ -124,6 +124,8 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_rhnDefinitionsGitRepository		= getProperty("sm.rhn.definitionsGitRepository","");
 	public String sm_rhnDefinitionsProductBaselineFile	= getProperty("sm.rhn.definitionsProductBaselineFile","");
 
+	public String sm_translateToolkitGitRepository		= getProperty("sm.translate.toolkitGitRepository","");
+
 	protected List<String> sm_exemptServiceLevelsInUpperCase	= new ArrayList<String>();
 	protected List<String> sm_rhnDefinitionsProductCertsDirs	= new ArrayList<String>();
 	protected List<String> sm_clientUsernames					= new ArrayList<String>();
