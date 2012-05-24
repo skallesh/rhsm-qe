@@ -68,36 +68,6 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
 	}
 	
-	@Test(	description="subscription-manager: attempt redeem without --email option using LANG",
-			groups={"blockedByBug-766577","AcceptanceTests"},
-			enabled=false)	// TODO PASSES ON THE COMMAND LINE BUT FAILS WHEN RUN THROUGH AUTOMATION - NOTE STDOUT DISPLAYS DOUBLE BYTE BUT NOT STDERR
-	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRedeemWithoutEmailUsingLang_Test() {
-		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
-		String lang = "de_DE";
-		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));
-		String command = String.format("%s %s redeem", lang==null?"":"LANG="+lang+".UTF-8", clienttasks.command);
-client.runCommandAndWait(command+" --help");
-		SSHCommandResult redeemResult = client.runCommandAndWait(command);
-
-		// bug766577
-		// 201112191709:14.807 - FINE: ssh root@jsefler-onprem-5server.usersys.redhat.com LANG=de_DE subscription-manager redeem
-		// 201112191709:17.276 - FINE: Stdout: 
-		// 201112191709:17.277 - FINE: Stderr: 'ascii' codec can't encode character u'\xf6' in position 20: ordinal not in range(128)
-		// 201112191709:17.277 - FINE: ExitCode: 255
-		
-		// [root@jsefler-onprem-5server ~]# LANG=de_DE.UTF-8 subscription-manager redeem
-		// E-Mail-Adresse ist nötig zur Benachrichtigung
-
-		// assert redemption results
-		//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
-		Assert.assertEquals(redeemResult.getStderr().trim(), "");
-		Assert.assertEquals(redeemResult.getStdout().trim(), "E-Mail-Adresse ist nötig zur Benachrichtigung","Redeem should require that the email option be specified.");
-		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
-	}
-	
 	@Test(	description="subscription-manager: attempt redeem with --email option (against a standalone candlepin server)",
 			groups={"blockedByBug-726791"},
 			enabled=true)

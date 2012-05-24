@@ -465,7 +465,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
 	}
-
+	
 	
 	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
 			groups={},
@@ -474,7 +474,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)	
 	public void ReleaseAttemptsUsingProxyServerViaRhsmConfig_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
 		// setup for test
-		String moduleTask = "list";
+		String moduleTask = "release";
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 	
@@ -503,6 +503,62 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	
+	
+	
+	@Test(	description="subscription-manager : release --list using a proxy server (Positive and Negative Variations)",
+			groups={"blockedByBug-822965","blockedByBug-824530"},
+			dataProvider="getReleaseAttemptsUsingProxyServerData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void ReleaseListAttemptsUsingProxyServer_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr) {
+		// setup for test
+		String moduleTask = "release --list";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, false, null, null, null);
+		
+		SSHCommandResult attemptResult = clienttasks.release_(true, null, proxy, proxyuser, proxypassword);
+		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+	}
+	
+	
+	@Test(	description="subscription-manager : release using a proxy server after setting rhsm.config parameters (Positive and Negative Variations)",
+			groups={"blockedByBug-822965","blockedByBug-824530"},
+			dataProvider="getReleaseAttemptsUsingProxyServerViaRhsmConfigData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void ReleaseListAttemptsUsingProxyServerViaRhsmConfig_Test(Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+		// setup for test
+		String moduleTask = "release --list";
+		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, false, null, null, null);
+	
+		// pad the tail of basicauthproxyLog with a message
+		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
+		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
+		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
+		
+		// set the config parameters
+		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+
+		// attempt the moduleTask with the proxy options
+		SSHCommandResult attemptResult = clienttasks.release_(true, null, proxy, proxyuser, proxypassword);
+		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
+		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
+		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
+
+		// assert the tail of proxyLog shows the proxyLogRegex
+		if (proxyLogRegex!=null) {
+			//SSHCommandResult proxyLogResult = RemoteFileTasks.runCommandAndAssert(proxyRunner,"tail -1 "+proxyLog, Integer.valueOf(0));
+			//SSHCommandResult proxyLogResult = proxyRunner.runCommandAndWait("(LINES=''; IFS=$'\n'; for line in $(tac "+proxyLog+"); do if [[ $line = '"+proxyLogMarker+"' ]]; then break; fi; LINES=${LINES}'\n'$line; done; echo -e $LINES) | grep "+clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy simultaneously
+			//Assert.assertContainsMatch(proxyLogResult.getStdout(), proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+			String proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
+			Assert.assertContainsMatch(proxyLogResult, proxyLogRegex, "The proxy server appears to be logging the expected connection attempts to the candlepin server.");
+		}
+	}
 	
 	
 	// REDEEM Test methods ***********************************************************************
@@ -1001,7 +1057,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3).equals(sm_clientOrg)) ll.add(l);
+			if (l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg) ll.add(l);
 		}
 		return ll;
 	}
@@ -1009,7 +1065,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			// only include dataProvided rows where username, password, and org are valid
-			if (l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3).equals(sm_clientOrg)) ll.add(l);
+			if (l.get(1).equals(sm_clientUsername) && l.get(2).equals(sm_clientPassword) && l.get(3)==sm_clientOrg) ll.add(l);
 		}
 		return ll;
 	}

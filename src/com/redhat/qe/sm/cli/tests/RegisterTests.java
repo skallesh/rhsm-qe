@@ -143,25 +143,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: attempt to register to a Candlepin server using bogus credentials and check for localized strings results",
-			groups={"AcceptanceTests"},
-			dataProvider="getInvalidRegistrationWithLocalizedStringsData")
-	@ImplementsNitrateTest(caseId=41691)
-	public void AttemptLocalizedRegistrationWithInvalidCredentials_Test(Object meta, String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex) {
-
-		// ensure we are unregistered
-		clienttasks.unregister(null, null, null);
-		
-		log.info("Attempting to register to a candlepin server using invalid credentials and expecting output in language "+(lang==null?"DEFAULT":lang));
-		String command = String.format("%s %s register --username=%s --password=%s", lang==null?"":"LANG="+lang, clienttasks.command, username, password);
-		RemoteFileTasks.runCommandAndAssert(client, command, exitCode, stdoutRegex, stderrRegex);
-		
-		// assert that the consumer cert and key have NOT been dropped
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerKeyFile()),0, "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client,clienttasks.consumerCertFile()),0, "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
-	}
-	
-
 	@Test(	description="subscription-manager-cli: attempt to register a user who has unaccepted Terms and Conditions",
 			groups={},
 			enabled=true)
@@ -170,7 +151,18 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String username = sm_usernameWithUnacceptedTC;
 		String password = sm_passwordWithUnacceptedTC;
 		if (username.equals("")) throw new SkipException("Must specify a username who has not accepted Terms & Conditions before attempting this test.");
-		AttemptLocalizedRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null, "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc");
+
+		// ensure we are unregistered
+		clienttasks.unregister(null, null, null);
+		
+		log.info("Attempting to register to a candlepin server using invalid credentials");
+		String stderrRegex = "You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc";
+		String command = String.format("%s register --username=%s --password=%s", clienttasks.command, username, password);
+		RemoteFileTasks.runCommandAndAssert(client, command, new Integer(255), null, stderrRegex);
+		
+		// assert that a consumer cert and key have NOT been installed
+		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with invalid credentials.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with invalid credentials.");
 	}
 	
 	
@@ -182,10 +174,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		String username = sm_disabledUsername;
 		String password = sm_disabledPassword;
 		if (username.equals("")) throw new SkipException("Must specify a username who has been disabled before attempting this test.");
-		AttemptLocalizedRegistrationWithInvalidCredentials_Test(null, null,username,password,255, null,"The user has been disabled, if this is a mistake, please contact customer service.");
+		
+		// ensure we are unregistered
+		clienttasks.unregister(null, null, null);
+		
+		log.info("Attempting to register to a candlepin server using disabled credentials");
+		String stderrRegex = "The user has been disabled, if this is a mistake, please contact customer service.";
+		String command = String.format("%s register --username=%s --password=%s", clienttasks.command, username, password);
+		RemoteFileTasks.runCommandAndAssert(client, command, new Integer(255), null, stderrRegex);
+		
+		// assert that a consumer cert and key have NOT been installed
+		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with disabled credentials.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with disabled credentials.");
 	}
-	
-	
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
@@ -598,30 +599,6 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				"The list of consumed products after reregistering is identical.");
 	}
 	
-	@Test(	description="attempt LANG=C subscription-manager register",
-			groups={"blockedByBug-729988"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithFallbackCLocale_Test() {
-
-		//	[root@rhsm-compat-rhel61 ~]# LANG=C subscription-manager register --username stage_test_12 --password redhat 1>/tmp/stdout 2>/tmp/stderr
-		//	[root@rhsm-compat-rhel61 ~]# echo $?
-		//	255
-		//	[root@rhsm-compat-rhel61 ~]# cat /tmp/stdout 
-		//	[root@rhsm-compat-rhel61 ~]# cat /tmp/stderr
-		//	'NoneType' object has no attribute 'lower'
-		//	[root@rhsm-compat-rhel61 ~]# 
-		
-		for(String lang: new String[]{"C","us"}) {
-			clienttasks.unregister(null, null, null);
-			String command = String.format("%s register --username %s --password %s", clienttasks.command,sm_clientUsername,sm_clientPassword);
-			if (sm_clientOrg!=null) command += String.format(" --org %s", sm_clientOrg);
-			SSHCommandResult sshCommandResult = clienttasks.runCommandWithLang(lang,clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+" "+(sm_clientOrg!=null?"--org "+sm_clientOrg:""));
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0),"ExitCode after register with LANG="+lang+" fallback locale.");
-			//Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with LANG="+lang+" fallback locale.");
-			//Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with LANG="+lang+" fallback locale.");
-		}
-	}
 	
 	/**
 	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
@@ -1025,167 +1002,6 @@ Expected Results:
 	}
 	
 	
-	@DataProvider(name="getInvalidRegistrationWithLocalizedStringsData")
-	public Object[][] getInvalidRegistrationWithLocalizedStringsDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationWithLocalizedStringsAsListOfLists());
-	}
-	protected List<List<Object>> getInvalidRegistrationWithLocalizedStringsAsListOfLists(){
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		if (servertasks==null) return ll;
-		if (clienttasks==null) return ll;
-		
-		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
-
-		// String lang, String username, String password, Integer exitCode, String stdoutRegex, String stderrRegex
-		
-		// registration test for a user who is invalid
-		ll.add(Arrays.asList(new Object[]{null, "en_US.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, uErrMsg}));
-		
-		// registration test for a user who with "invalid credentials" (translated)
-		//if (!isServerOnPremises)	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),	"de_DE.UTF-8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
-		//else 						ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                      	"de_DE.UTF-8", clientusername+getRandInt(), clientpassword+getRandInt(), 255, null, isServerOnPremises? "Ungültige Berechtigungnachweise"/*"Ungültige Mandate"*//*"Ungültiger Benutzername oder Kennwort"*/:"Ungültiger Benutzername oder Kennwort. So erstellen Sie ein Login, besuchen Sie bitte https://www.redhat.com/wapps/ugc"}));
-		if (sm_serverType.equals(CandlepinType.standalone)) {
-			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Invalid Credentials"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),		"de_DE.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Ungültige Berechtigungnachweise"}));
-			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenciales inválidas"}));
-			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Informations d’identification invalides"}));
-			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenziali invalide"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無効な識別情報"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ko_KR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "잘못된 인증 정보"}));
-			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Credenciais inválidas"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ru_RU.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Недопустимые учетные данные"}));
-			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "无效证书"}));
-			ll.add(Arrays.asList(new Object[]{null,								"zh_TW.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無效的認證"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"as_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "অবৈধ পৰিচয়"}));
-			ll.add(Arrays.asList(new Object[]{null,								"bn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "অবৈধ পরিচয়"}));
-			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध श्रेय"}));
-			ll.add(Arrays.asList(new Object[]{null,								"mr_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध श्रेय"}));
-			ll.add(Arrays.asList(new Object[]{null,								"gu_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "અયોગ્ય શ્રેય"}));
-			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಪರಿಚಯಪತ್ರ"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"ml_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "തെറ്റായ ആധികാരികതകള്‍"}));
-			ll.add(Arrays.asList(new Object[]{null,								"or_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ଅବୈଧ ପ୍ରାଧିକରଣ"}));
-			ll.add(Arrays.asList(new Object[]{null,								"pa_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ਗਲਤ ਕਰੀਡੈਂਸ਼ਲ"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ta_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "தவறான சான்றுகள்"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("683914"),		"te_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "చెల్లని ప్రమాణాలు"}));
-		} else {
-			ll.add(Arrays.asList(new Object[]{null,								"en_US.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Invalid username or password. To create a login, please visit https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"de_DE.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Ungültiger Benutzername oder Passwort. Um ein Login anzulegen, besuchen Sie bitte https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"es_ES.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "El nombre de usuario o contraseña es inválido. Para crear un nombre de usuario, por favor visite https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"fr_FR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Nom d'utilisateur ou mot de passe non valide. Pour créer une connexion, veuillez visiter https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"it_IT.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Nome utente o password non valide. Per creare un login visitare https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"ja_JP.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ユーザー名かパスワードが無効です。ログインを作成するには、https://www.redhat.com/wapps/ugc/register.html に進んでください"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ko_KR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "사용자 이름 또는 암호가 잘못되었습니다. 로그인을 만들려면, https://www.redhat.com/wapps/ugc/register.html으로 이동해 주십시오."}));
-			ll.add(Arrays.asList(new Object[]{null,								"pt_BR.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Nome do usuário e senha incorretos. Por favor visite https://www.redhat.com/wapps/ugc/register.html para a criação do logon."}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ru_RU.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "Неверное имя пользователя или пароль. Для создания учётной записи перейдите к https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{null,								"zh_CN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "无效用户名或者密码。要创建登录，请访问 https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"zh_TW.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "無效的使用者名稱或密碼。若要建立登錄帳號，請至 https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"as_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "অবৈধ ব্যৱহাৰকাৰী নাম অথবা পাছৱাৰ্ড। এটা লগিন সৃষ্টি কৰিবলে, অনুগ্ৰহ কৰি চাওক https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"bn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ব্যবহারকারীর নাম অথবা পাসওয়ার্ড বৈধ নয়। লগ-ইন প্রস্তুত করার জন্য অনুগ্রহ করে https://www.redhat.com/wapps/ugc/register.html পরিদর্শন করুন"}));
-			ll.add(Arrays.asList(new Object[]{null,								"hi_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध उपयोक्तानाम या कूटशब्द. लॉगिन करने के लिए, कृपया https://www.redhat.com/wapps/ugc/register.html भ्रमण करें"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"mr_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "अवैध वापरकर्तानाव किंवा पासवर्ड. प्रवेश निर्माण करण्यासाठी, कृपया https://www.redhat.com/wapps/ugc/register.html येथे भेट द्या"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"gu_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "અયોગ્ય વપરાશકર્તાનામ અથવા પાસવર્ડ. લૉગિનને બનાવવા માટે, મહેરબાની કરીને https://www.redhat.com/wapps/ugc/register.html મુલાકાત લો"}));
-			ll.add(Arrays.asList(new Object[]{null,								"kn_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ಅಮಾನ್ಯವಾದ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವ ಗುಪ್ತಪದ. ಒಂದು ಲಾಗಿನ್ ಅನ್ನು ರಚಿಸಲು, ದಯವಿಟ್ಟು https://www.redhat.com/wapps/ugc/register.html ಗೆ ತೆರಳಿ"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ml_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "തെറ്റായ ഉപയോക്തൃനാമം അല്ലെങ്കില്<200d> രഹസ്യവാക്ക്. പ്രവേശനത്തിനായി, ദയവായി https://www.redhat.com/wapps/ugc/register.html സന്ദര്<200d>ശിയ്ക്കുക"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"or_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ଅବୈଧ ଚାଳକନାମ କିମ୍ବା ପ୍ରବେଶ ସଂକେତ। ଗୋଟିଏ ଲଗଇନ ନିର୍ମାଣ କରିବା ପାଇଁ, ଦୟାକରି https://www.redhat.com/wapps/ugc/register.html କୁ ପରିଦର୍ଶନ କରନ୍ତୁ"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"pa_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "ਗਲਤ ਯੂਜ਼ਰ-ਨਾਂ ਜਾਂ ਪਾਸਵਰਡ। ਲਾਗਇਨ ਬਣਾਉਣ ਲਈ, ਕਿਰਪਾ ਕਰਕੇ ਇਹ ਵੇਖੋ https://www.redhat.com/wapps/ugc/register.html"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"ta_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "தவறான பயனர்பெயர் அல்லது கடவுச்சொல். ஒரு உட்புகுவை உருவாக்குவதற்கு, https://www.redhat.com/wapps/ugc/register.html பார்வையிடவும்"}));
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("706197"),		"te_IN.UTF-8", sm_clientUsername+getRandInt(), sm_clientPassword+getRandInt(), 255, null, "చెల్లని వాడుకరిపేరు లేదా సంకేతపదము. లాగిన్ సృష్టించుటకు, దయచేసి https://www.redhat.com/wapps/ugc/register.html దర్శించండి"}));
-		}
-		// registration test for a user who has not accepted Red Hat's Terms and conditions (translated)  Man, why did you do something?
-		if (!sm_usernameWithUnacceptedTC.equals("")) {
-			if (sm_serverType.equals(CandlepinType.hosted))	ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"615362","642805"}),"de_DE.UTF-8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"}));
-			else											ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("615362"),                       "de_DE.UTF-8", sm_usernameWithUnacceptedTC, sm_passwordWithUnacceptedTC, 255, null, "Mensch, warum hast du auch etwas zu tun?? Bitte besuchen https://www.redhat.com/wapps/ugc!!!!!!!!!!!!!!!!!!"}));
-		}
-		
-		// registration test for a user who has been disabled (translated)
-		if (!sm_disabledUsername.equals("")) {
-			ll.add(Arrays.asList(new Object[]{null, "en_US.UTF-8", sm_disabledUsername, sm_disabledPassword, 255, null,"The user has been disabled, if this is a mistake, please contact customer service."}));
-		}
-		// [root@jsefler-onprem-server ~]# for l in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do echo ""; echo ""; echo "# LANG=$l.UTF-8 subscription-manager clean --help"; LANG=$l.UTF-8 subscription-manager clean --help; done;
-		/* TODO reference for locales
-		[root@jsefler-onprem03 ~]# rpm -lq subscription-manager | grep locale
-		/usr/share/locale/as_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/bn_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/de_DE/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/en_US/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/es_ES/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/fr_FR/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/gu_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/hi_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/it_IT/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/ja_JP/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/kn_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/ko_KR/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/ml_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/mr_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/or_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/pa_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/pt_BR/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/ru_RU/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/ta_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/te_IN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/zh_CN/LC_MESSAGES/rhsm.mo
-		/usr/share/locale/zh_TW/LC_MESSAGES/rhsm.mo
-		*/
-		
-		// TODO HERE IS A COMMAND FOR GETTING THE EXPECTED TRANSLATION MESSAGE STRINGS
-		/* msgunfmt /usr/share/locale/de/LC_MESSAGES/rhsm.mo
-		msgid "%prog [options]"
-		msgstr "%prog [Optionen]"
-
-		msgid "%s (first date of invalid entitlements)"
-		msgstr "%s (erster Tag mit ungültigen Berechtigungen)"
-		*/
-		
-		/* python script that alikins wrote to pad a language strings with _
-	    #!/usr/bin/python
-	     
-	    import polib
-	    import sys
-	     
-	    path = sys.argv[1]
-	    pofile = polib.pofile(path)
-	     
-	    for entry in pofile:
-	    orig = entry.msgstr
-	    new = orig + "_"*40
-	    entry.msgstr = new
-	     
-	    pofile.save(path)
-	    */
-
-		/* TODO Here is a script from alikins that will report untranslated strings
-		#!/usr/bin/python
-		
-		# NEEDS polib from http://pypi.python.org/pypi/polib
-		# or easy_install polib
-		 
-		import glob
-		import polib
-		 
-		#FIXME
-		PO_PATH = "po/"
-		 
-		po_files = glob.glob("%s/*.po" % PO_PATH)
-		 
-		for po_file in po_files:
-		  print
-		  print po_file
-		  p = polib.pofile(po_file)
-		  for entry in p.untranslated_entries():
-		    for line in entry.occurrences:
-		      print "%s:%s" % (line[0], line[1])
-		    print "\t%s" % entry.msgid
-		 
-		  for entry in p.fuzzy_entries():
-		    for line in entry.occurrences:
-		      print "%s:%s" % (line[0], line[1])
-		    print "\t%s" % entry.msgid
-		 */
-		return ll;
-	}
-	
-
 	@DataProvider(name="getRegisterWithNameAndTypeData")
 	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
@@ -1237,8 +1053,7 @@ Expected Results:
 
 		return ll;
 	}
-	
-	
+		
 	
 	@DataProvider(name="getRegisterWithNameData")
 	public Object[][] getRegisterWithNameDataAs2dArray() {
