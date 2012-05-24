@@ -217,7 +217,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
 		
 		// execute the pofilter test
-		String pofilterCommand = "pofilter -t "+pofilterTest;
+		String pofilterCommand = "pofilter --gnome -t "+pofilterTest;
 		SSHCommandResult pofilterResult = client.runCommandAndWait(pofilterCommand+" "+translationPoFile);
 		Assert.assertEquals(pofilterResult.getExitCode(), new Integer(0), "Successfully executed the pofilter tests.");
 		
