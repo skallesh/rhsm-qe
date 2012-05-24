@@ -44,7 +44,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-739671", "blockedByBug-740377"},
 			dataProvider="getAvailableStackableSubscriptionPoolsData")
 	//@ImplementsNitrateTest(caseId=)
-	public void StackEachPoolToAchieveCompliance(List<SubscriptionPool> stackableSubscriptionPools) throws JSONException, Exception{
+	public void StackEachPoolToAchieveCompliance_Test(List<SubscriptionPool> stackableSubscriptionPools) throws JSONException, Exception{
 		
 		// loop through the pools to determine the minimum socket count for which one of each stackable pool is needed to achieve compliance
 		int minimumSockets=0;
