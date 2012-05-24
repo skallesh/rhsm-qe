@@ -43,7 +43,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :import-window "Provide a Subscription Certificate"
                 :file-chooser "Select A File"
                 :subscribe-system-dialog "Subscribe System"
-                :system-preferences-dialog "System Preferences"}))
+                :system-preferences-dialog "System Preferences"
+                :help-dialog "Subscription Manager Manual"}))
 
 
 (def elements
@@ -70,7 +71,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :view-system-facts
                                     :proxy-configuration
                                     :import-certificate
-                                    :help])
+                                    :help
+                                    :calendar])
 		    {:more-search-options "More search options"
                      :contains-the-text "Text in Subscription"
                      :date-entry "date-entry"

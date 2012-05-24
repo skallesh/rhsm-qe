@@ -46,6 +46,17 @@
     (verify (tasks/substring? "subscription-manager-gui is already running" output))
     (verify (not (tasks/substring? "Traceback" output)))))
 
+(defn ^{Test {:groups ["system"
+                       "blockedByBug-747014"]}}
+  check_help_button [_]
+  (try
+    (tasks/restart-app)
+    (tasks/ui click :help)
+    (tasks/sleep 3000)
+    (verify (= 1 (tasks/ui guiexist :help-dialog)))
+    (tasks/ui closewindow :help-dialog)
+    (finally (tasks/restart-app))))
+
 ;; TODO
 ;; https://bugzilla.redhat.com/show_bug.cgi?id=747014 < help button
 

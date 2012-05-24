@@ -93,7 +93,9 @@
             {:keys [log-warning]} (log-warning))))
 
 
-(defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-766778"
+                       "blockedByBug-723248"]
               :dataProvider "subscriptions"}}
   check_quantity_scroller
   "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
@@ -197,10 +199,60 @@
     (catch [:type :wrong-consumer-type]
         {:keys [log-warning]} (log-warning))))
 
+(defn ^{Test {:groups ["subscribe" "blockedByBug-755861"]
+              :dataProvider "multi-entitle"}}
+  check_quantity_subscribe_traceback [_ subscription contract]
+  (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
+        output (tasks/get-logging @clientcmd
+                                  ldtpd-log
+                                  "multi-subscribe-tracebacks"
+                                  nil
+                                  (check_quantity_subscribe nil subscription contract))]
+    (verify (not (tasks/substring? "Traceback" output)))))
+
+(comment
+  ;; TODO: this is not in rhel6.3 branch, finish when that is released
+  ;; https://bugzilla.redhat.com/show_bug.cgi?id=801434
+  (defn ^{Test {:groups ["subscribe"
+                         "blockedByBug-801434"
+                         "blockedByBug-707041"]}}
+    check_date_chooser_traceback [_]
+    (try
+      (let [ldtpd-log "/var/log/ldtpd/ldtpd.log"
+            output (tasks/get-logging @clientcmd
+                                      ldtp-log
+                                      "date-chooser-tracebacks"
+                                      nil
+                                      (do 
+                                        (tasks/ui selecttab :all-available-subscriptions)
+                                        (tasks/ui click :calendar)
+                                        (tasks/checkforerror)))]
+        (verify (not (tasks/substring? "Traceback" output))))
+      (finally (tasks/restart-app))))
+  
+  (defn ^{Test {:groups ["subscribe"
+                         "blockedByBug-704408"
+                         "blockedByBug-801434"]
+                :dependsOnMethods ["check_date_chooser_traceback"]}}
+    check_blank_date_click [_]
+    (try
+      (tasks/ui selecttab :all-available-subscriptions)
+      (tasks/ui settextvalue :date-entry "")
+      ;;try clicking to another tab/area
+      (tasks/ui selecttab :my-subscriptions)
+      (tasks/checkforerror)
+      (tasks/ui selecttab :all-available-subscriptions)
+      ;; try changing the date
+      (tasks/ui click :calendar)
+      (tasks/checkforerror)
+      (tasks/ui click :today)
+      ;; verify that today's date was filled in here...
+      (finally (tasks/restart-app)))) )
+
 (defn ^{Test {:groups ["subscribe"
                        "blockedByBug-688454"
                        "blockedByBug-704408"]}}
-  check_blank_date [_]
+  check_blank_date_search [_]
   (try
     (tasks/ui selecttab :all-available-subscriptions)
     (tasks/ui settextvalue :date-entry "")

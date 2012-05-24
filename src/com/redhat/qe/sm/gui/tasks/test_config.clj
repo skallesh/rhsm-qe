@@ -21,8 +21,9 @@
 
 (defn property-map [map]
   (zipmap (keys map)
-      (for [v (vals map) ]
-        (System/getProperty (mapkey v) (default v)))))
+          (for [v (vals map)]
+            (let [val (System/getProperty (mapkey v) (default v))]
+              (if (= "" val) nil val)))))
 
 (defn get-properties []
   (let [m (property-map {:binary-path (DefaultMapKey.
