@@ -2,5 +2,6 @@
 .classpath
 checkouts
 *.swp
+*.swo
 tmp/*.*
 .lein-deps-sum
