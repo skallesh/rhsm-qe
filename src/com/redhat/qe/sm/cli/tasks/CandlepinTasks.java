@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -93,7 +95,7 @@ public class CandlepinTasks {
 	public String statusVersion = "";
 	public boolean statusStandalone = false;	// default to false since /status on stage is not readable and is expected to be false
 	public String statusTimeUTC = "";
-
+	
 	static {
 		MultiThreadedHttpConnectionManager connectionManager = new MultiThreadedHttpConnectionManager();
       	client = new HttpClient(connectionManager);
@@ -189,8 +191,27 @@ public class CandlepinTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"; gem install buildr", Integer.valueOf(0), "1 gem installed", null);	// probably only needs to be run once
 		*/
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && bundle install", Integer.valueOf(0), "Your bundle is complete!", null);	// Your bundle is complete! Use `bundle show [gemname]` to see where a bundled gem is installed.
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+
+		
+		// TODO cleanup this messy os version detection
+		String redhatRelease = sshCommandRunner.runCommandAndWait("cat /etc/redhat-release").getStdout().trim();
+		// [root@fsharath-candlepin ~]# cat /etc/redhat-release 
+		// Fedora release 16 (Verne)
+		Pattern pattern = Pattern.compile("\\d+");
+		Matcher matcher = pattern.matcher(redhatRelease);
+		Assert.assertTrue(matcher.find(),"Extracted redhatReleaseX '"+matcher.group()+"' from '"+redhatRelease+"'");
+		Integer redhatReleaseX = Integer.valueOf(matcher.group());
+		
+		// restart some services
+		if (redhatReleaseX>=16)	{	// the Fedora 16+ way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop ntpd.service && ntpdate clock.redhat.com && systemctl start ntpd.service", Integer.valueOf(0));	// Stdout: 24 May 17:53:28 ntpdate[20993]: adjust time server 66.187.233.4 offset -0.000287 sec
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "systemctl stop postgresql.service && systemctl start postgresql.service", Integer.valueOf(0));
+		} else {	// the old Fedora way...
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service ntpd stop && ntpdate clock.redhat.com && service ntpd start && chkconfig ntpd on", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting ntpd(.*?):\\s+\\[  OK  \\]", null);	// Starting ntpd:  [  OK  ]		// Starting ntpd (via systemctl):  [  OK  ]
+			RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "service postgresql stop && service postgresql start", /*Integer.valueOf(0) DON"T CHECK EXIT CODE SINCE IT RETURNS 1 WHEN STOP FAILS EVEN THOUGH START SUCCEEDS*/null, "Starting postgresql(.*?):\\s+\\[  OK  \\]", null);	// Starting postgresql service: [  OK  ]	// Starting postgresql (via systemctl):  [  OK  ]
+		}
+		
+		
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "export TESTDATA=1 && export FORCECERT=1 && export GENDB=1 && export HOSTNAME="+hostname+" && export IMPORTDIR="+serverImportDir+" && cd "+serverInstallDir+"/proxy && buildconf/scripts/deploy", Integer.valueOf(0), "Initialized!", null);
 		// Update 1/21/2011                                    ^^^^^^ TESTDATA is new for master branch                                             ^^^^^^ IMPORTDIR applies to branches <= BETA
 
