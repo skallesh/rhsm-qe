@@ -15,7 +15,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -630,6 +629,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 	    //"GET"
 	    //"url": "/consumers/{consumer_uuid}/entitlements/dry-run?service_level=#{service_level}", 
+		
+		//  on the first call to this dataProvided test, unsubscribe all subscriptions OR just unregister to a clean state
+		// this will remove any prior subscribed modifier entitlements to avoid test logic errors in this test.
+		if (firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test) {
+			clienttasks.unsubscribe(true, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
+			firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = false;
+		}
 
 		// store the initial state of the system
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -722,6 +728,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		unsubscribeRandomly();
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 	}
+	private boolean firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = true;
 	
 	
 
@@ -948,7 +955,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-
+	
 	
 	// Data Providers ***********************************************************************
 
