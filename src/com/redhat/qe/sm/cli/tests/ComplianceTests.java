@@ -66,11 +66,13 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			Assert.assertEquals(productSubscription.serviceLevel, servicelevel,
-				"When a system has been registered with autosubscribe specifying a common service level, then all consumed product subscriptions must provide that service level.");
+			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe specifying a common service level, then all consumed product subscriptions must provide that service level.");
+			Assert.assertTrue(servicelevel.equalsIgnoreCase(productSubscription.serviceLevel),
+				"When a system has been registered with autosubscribe specifying a common service level '"+servicelevel+"', then this auto consumed product subscription ("+productSubscription+") must provide case-insensitive match to the requested service level.");
+
 		}
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), servicelevel,
-			"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
+				"When a system has been registered with autosubscribe specifying a common service level, then the consumer's service level prefernce should be set to that value.");
 	
 		// test autosubscribe (without service level) and assert that the consumed subscriptions provide the same service level as persisted during register
 		clienttasks.unsubscribe(true, null, null, null, null);
@@ -80,8 +82,9 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(clienttasks.getFactValue(factNameForSystemCompliance), factValueForSystemCompliance,
 				"When a system has products installed for which ALL are covered by available subscription pools with a common service level, the system should become compliant (see value for fact '"+factNameForSystemCompliance+"')");
 		for (ProductSubscription productSubscription : clienttasks.getCurrentlyConsumedProductSubscriptions()) {
-			Assert.assertEquals(productSubscription.serviceLevel, servicelevel,
-				"When a system has been registered with autosubscribe without specifying a common service level, then all consumed product subscriptions must provide the consumer's service level preference.");
+			//CASE SENSITIVE ASSERTION Assert.assertEquals(productSubscription.serviceLevel, servicelevel, "When a system has been registered with autosubscribe without specifying a common service level, then all consumed product subscriptions must provide the consumer's service level preference.");
+			Assert.assertTrue(servicelevel.equalsIgnoreCase(productSubscription.serviceLevel),
+				"When a system has been registered with autosubscribe without specifying a common service level, then this auto consumed product subscription ("+productSubscription+") must provide a case-insensitive match to the consumer's service level preference '"+servicelevel+"'.");
 		}
 	}
 	
