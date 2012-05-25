@@ -209,11 +209,10 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="run pofilter translate tests on the translation file",
 			groups={"debugTest"},
 			dataProvider="getTranslationFilePofilterTestData",
-			enabled=true)
+			enabled=false)
 	//@ImplementsNitrateTest(caseId=)
 	public void pofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
 		log.info("For an explanation of pofilter test '"+pofilterTest+"', see: http://translate.sourceforge.net/wiki/toolkit/pofilter_tests");
-		
 		File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
 		
 		// execute the pofilter test
@@ -228,13 +227,21 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		if (!pofilterFailedTranslations.isEmpty() && pofilterFailedTranslations.get(0).msgid.equals("")) pofilterFailedTranslations.remove(0);
 		
 		// ignore the following special cases of acceptable results..........
+		List<String> ignorableMsgIds = Arrays.asList();
 		if (pofilterTest.equals("unchanged")) {
-			Translation ignoreTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", "%s [OPTIONS]", pofilterFailedTranslations);
+			ignorableMsgIds = Arrays.asList("close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8");
+		}
+		
+		// pluck out the ignorable pofilter test results
+		for (String msgid : ignorableMsgIds) {
+			Translation ignoreTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgid, pofilterFailedTranslations);
 			if (ignoreTranslation!=null) {
 				log.info("Ignoring result of pofiliter test '"+pofilterTest+"' for msgid: "+ignoreTranslation.msgid);
 				pofilterFailedTranslations.remove(ignoreTranslation);
 			}
 		}
+		
+		// assert that there are no failed pofilter translation test results
 		Assert.assertEquals(pofilterFailedTranslations.size(),0, "Discounting the ignored test results, the number of failed pofilter '"+pofilterTest+"' tests for translation file '"+translationFile+"'.");
 	}
 	
@@ -368,7 +375,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 				"doublewords",
 				//	Extraction -- useful mainly for extracting certain types of string
 				"untranslated");
-pofilterTests = Arrays.asList("accelerators","escapes"/* TODO ,"unchanged"*/);
+// debugTesting
+pofilterTests = Arrays.asList("unchanged");
 		for (File translationFile : translationFileMap.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
