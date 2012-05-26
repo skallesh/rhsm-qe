@@ -1,6 +1,8 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import org.testng.SkipException;
 import org.testng.annotations.Test;
@@ -11,6 +13,7 @@ import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.Repo;
+import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 
 /**
@@ -24,7 +27,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *		https://cdn.redhat.com/content/dist/rhel/rhui/server/5Server/x86_64/rhui/1.2/iso/rhel-5.5-rhui-1.2-x86_64.iso
  * 
  */
-@Test(groups={"RHUITests","AcceptanceTests"})
+@Test(groups={"debugTest","RHUITests","AcceptanceTests"})
 public class RHUITests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
@@ -46,8 +49,24 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConsumeRHUISubscriptionProduct_Test() {
+		
+		// assert that the RHUI ProductId is found in the all available list
+		List<SubscriptionPool> allAvailableSubscriptionPools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		Assert.assertNotNull(SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_rhuiSubscriptionProductId, allAvailableSubscriptionPools), "RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' is available for consumption when the client arch is ignored.");
+		
+		// assert that the RHUI ProductId is found in the available list only on x86_64,x86 arches
+		List<String> supportedArches = Arrays.asList("x86_64","x86","i386","i686");
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		SubscriptionPool rhuiPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", sm_rhuiSubscriptionProductId, availableSubscriptionPools);
+		if (!supportedArches.contains(clienttasks.arch)) {
+			Assert.assertNull(rhuiPool, "RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' should NOT be available for consumption on a system whose arch ("+clienttasks.arch+") is NOT among the supported arches "+supportedArches);
+			throw new SkipException("Cannot consume RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' subscription on a system whose arch ("+clienttasks.arch+") is NOT among the supported arches "+supportedArches);
+		}
+		Assert.assertNotNull(rhuiPool, "RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' is available for consumption on a system whose arch ("+clienttasks.arch+") is among the supported arches "+supportedArches);
+
+		
 		// Subscribe to the RHUI subscription productId
-		entitlementCertFile = clienttasks.subscribeToProductId(sm_rhuiSubscriptionProductId);
+		entitlementCertFile = clienttasks.subscribeToSubscriptionPool(rhuiPool);
 	}
 	
 	@Test(	description="download an expected RHUI iso from an expected yum repoUrl",
