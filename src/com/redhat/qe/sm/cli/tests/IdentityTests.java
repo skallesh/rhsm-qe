@@ -285,9 +285,9 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		String consumerKey_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerKeyFile()).getStdout().trim();
 		
 		// Subscribe to a randomly available pool...
-		log.info("Subscribe to a randomly available pool...");
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		if (pools.size()<=0) throw new SkipException("No susbcriptions are available for which an entitlement could be granted.");
+		log.info("Subscribe to a randomly available pool...");
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		File entitlementCertFile = clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		//EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(entitlementCertFile);
