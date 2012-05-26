@@ -661,9 +661,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			for (String rhsmIconHelpCommand : new String[]{rhsmIconCommand+" -?", rhsmIconCommand+" --help"}) {
 				List <String> usages = new ArrayList<String>();
 				String usage = rhsmIconCommand+" [OPTIONS]";
-				usage = rhsmIconCommand+" [OPTIONS]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
-				//if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
+				usage = rhsmIconCommand+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
 				usages.add(usage);
+				if (!Arrays.asList("6.1","5.7","6.2","5.8","6.3").contains(clienttasks.redhatReleaseXY)) // skip the following rhsmIconHelpCommand usage test since bug 771756 was not fixed until 5.9
 				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, rhsmIconHelpCommand, optionsRegex, rhsmIconOptions}));
 			}

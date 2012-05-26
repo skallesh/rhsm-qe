@@ -27,7 +27,7 @@ import com.redhat.qe.tools.RemoteFileTasks;
  *		https://cdn.redhat.com/content/dist/rhel/rhui/server/5Server/x86_64/rhui/1.2/iso/rhel-5.5-rhui-1.2-x86_64.iso
  * 
  */
-@Test(groups={"debugTest","RHUITests","AcceptanceTests"})
+@Test(groups={"RHUITests","AcceptanceTests"})
 public class RHUITests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
