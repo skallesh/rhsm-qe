@@ -2887,9 +2887,12 @@ public class SubscriptionManagerTasks {
 		else
 			Assert.assertTrue(sshCommandResult.getStdout().startsWith("Success"), "The subscribe stdout reports: Success");
 
-		// assert the exit code was a success
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
-		
+		// assert the exit code was not a failure
+		if (auto)
+			Assert.assertNotSame(sshCommandResult.getExitCode(), Integer.valueOf(255), "The exit code from the subscribe --auto command does not indicate a failure (exit code 0 indicates an entitlement was granted, 1 indicates an entitlement was not granted, 255 indicates a failure).");
+		else
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
+			
 		return sshCommandResult;
 	}
 	

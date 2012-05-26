@@ -356,7 +356,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		
 		// autosubscribe with a valid service level
-		clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null);
+		SSHCommandResult subscribeResult = clienttasks.subscribe(true,serviceLevel,(String)null,(String)null,(String)null,null,null,null,null, null, null);
 		
 		// get the current consumer object and assert that the serviceLevel persisted
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+clienttasks.getCurrentConsumerId()));
@@ -365,9 +365,11 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		} else {
 			Assert.assertEquals(jsonConsumer.get("serviceLevel"), serviceLevel, "The call to subscribe with auto and a servicelevel persisted the servicelevel setting on the current consumer object.");			
 		}
-
+		
 		// assert that each of the autosubscribed entitlements come from a pool that supports the specified service level
-		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+		List<EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		if (subscribeResult.getExitCode().intValue()==1) Assert.assertEquals(entitlementCerts.size(), 0, "When subscribe --auto returns an exitCode of 1, then no entitlements should have been granted.");
+		for (EntitlementCert entitlementCert : entitlementCerts) {
 
 			// tolerate exemptServiceLevels
 			if (entitlementCert.orderNamespace.supportLevel!=null && sm_exemptServiceLevelsInUpperCase.contains(entitlementCert.orderNamespace.supportLevel.toUpperCase())) {
