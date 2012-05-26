@@ -3836,6 +3836,11 @@ repolist: 3,394
 		//	red-hat-enterprise-linux-6-entitlement-alpha-optional-debug-rpms-updates       Red Hat Enterprise Linux 6 Entitlement Alpha - Opti disabled
 		//	repolist: 3,394
 		
+		//	[root@athlon6 ~]# yum repolist enabled --disableplugin=rhnplugin
+		//	Loaded plugins: product-id, refresh-packagekit, security, subscription-manager
+		//	No plugin match for: rhnplugin
+		//	Updating certificate-based repositories.
+		//	repolist: 0
 		
 		String[] availRepos = sshCommandRunner.getStdout().split("\\n");
 		
@@ -3847,9 +3852,9 @@ repolist: 3,394
 				repolistStartLn = i + 1;
 			else if (availRepos[i].startsWith("repolist:"))
 				repolistEndLn = i;
-		
-		for(int i=repolistStartLn;i<repolistEndLn;i++)
-			repos.add(availRepos[i].split(" ")[0]);
+		if (repolistStartLn>0)
+			for(int i=repolistStartLn;i<repolistEndLn;i++)
+				repos.add(availRepos[i].split(" ")[0]);
 		
 		return repos;
 	}

@@ -94,12 +94,15 @@ public class YumRepo extends AbstractCommandLineData {
 		proxy_password = redhat
 		*/
 		
+		List<YumRepo> yumRepos = new ArrayList<YumRepo>();
+		
 		// begin by finding all the yumRepoIds
 		List<String> yumRepoIds = new ArrayList<String>();
 		Matcher m = Pattern.compile("^(\\[.*\\])", Pattern.MULTILINE).matcher(stdoutCatOfRedhatRepoFile);
 		while (m.find()) yumRepoIds.add(m.group(1));
 		
-		List<YumRepo> yumRepos = new ArrayList<YumRepo>();
+		// if no yumRepoIds, then no yumRepos
+		if (yumRepoIds.isEmpty()) return yumRepos;
 		
 		
 		// begin by splitting the yumRepos and processing each yumRepo individually

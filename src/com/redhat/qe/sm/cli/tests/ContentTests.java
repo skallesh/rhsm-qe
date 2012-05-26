@@ -315,6 +315,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 		}
+		if (yumRepos.isEmpty()) throw new SkipException("Since no Red Hat repos were found in '"+clienttasks.redhatRepoFile+"', there are no gpgcheck values to verify.");
 	}
 	
 	
