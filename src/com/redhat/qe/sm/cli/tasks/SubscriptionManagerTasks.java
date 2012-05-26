@@ -2771,6 +2771,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
 		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
+		List<ProductCert> productCerts = getCurrentProductCerts();
 		List<EntitlementCert> entitlementCerts = getCurrentEntitlementCerts();
 		int numContentNamespaces = 0;
 		for (EntitlementCert entitlementCert : entitlementCerts) {
@@ -2779,8 +2780,15 @@ public class SubscriptionManagerTasks {
 			if (entitlementCert.validityNotBefore.after(now) || entitlementCert.validityNotAfter.before(now)) continue;
 
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+				// we should NOT count contentNamespaces from for which all required tags are not provided by the installed product certs
+				if (!areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, productCerts)) {
+					log.warning("None of the currently installed product certs provide the required tags '"+contentNamespace.requiredTags+"' for entitled content namespace: "+contentNamespace.name);
+					continue;
+				}
+
 				numContentNamespaces++;
 			}
+			
 		}
 
 		if (numContentNamespaces==0) {

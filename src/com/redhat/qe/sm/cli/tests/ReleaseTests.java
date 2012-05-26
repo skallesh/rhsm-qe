@@ -387,10 +387,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		// assert that we are subscribed to RHEL
 		//if (!InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts()).status.equals("Subscribed")) {
 		if (!InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", rhelProductCert.productName, InstalledProduct.parse(registerResult.getStdout())).status.equals("Subscribed")) {
-			if (sm_serverType.equals(CandlepinType.standalone))
-				throw new SkipException("Autosubscribe failed to find and subscribe to a RHEL subscription for installed RHEL product cert:"+rhelProductCert);
-			else
-				Assert.fail("Autosubscribe failed to find and subscribe to a RHEL subscription for installed RHEL product cert:"+rhelProductCert);			
+			clienttasks.listAvailableSubscriptionPools();
+			throw new SkipException("Autosubscribe could not find an available subscription that provides RHEL content for installed RHEL product:"+rhelProductCert.productNamespace);
 		}
 		// ^^ that is faster, but the following is more reliable...
 		/*
