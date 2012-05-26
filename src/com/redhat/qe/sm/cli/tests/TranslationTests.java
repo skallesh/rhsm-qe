@@ -207,7 +207,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	}
 
 	@Test(	description="run pofilter translate tests on the translation file",
-			groups={"debugTest"},
+			groups={},
 			dataProvider="getTranslationFilePofilterTestData",
 			enabled=false)
 	//@ImplementsNitrateTest(caseId=)
@@ -228,9 +228,26 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		
 		// ignore the following special cases of acceptable results..........
 		List<String> ignorableMsgIds = Arrays.asList();
+		if (pofilterTest.equals("accelerators")) {
+			if (translationFile.getPath().contains("/hi/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
+			if (translationFile.getPath().contains("/ru/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
+		}
+		if (pofilterTest.equals("newlines")) {
+			ignorableMsgIds = Arrays.asList(
+					"Optional language to use for email notification when subscription redemption is complete. Examples: en-us, de-de",
+					"\n"+"Unable to register.\n"+"For further assistance, please contact Red Hat Global Support Services.",
+					"Tip: Forgot your login or password? Look it up at http://red.ht/lost_password",
+					"Unable to perform refresh due to the following exception: %s",
+					""+"This migration script requires the system to be registered to RHN Classic.\n"+"However this system appears to be registered to '%s'.\n"+"Exiting.",
+					"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once.",
+					// bug 825397	""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.",	// the Subscription Redemption dialog actually expands to accommodate the message, therefore we could ignore it	// bug 825397 should fix this
+					// bug 825388	""+"We have detected that you have multiple service level\n"+"agreements on various products. Please select how you\n"+"want them assigned.", // bug 825388 or 825397 should fix this
+					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.");	
+		}
 		if (pofilterTest.equals("unchanged")) {
 			ignorableMsgIds = Arrays.asList("close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8");
 		}
+
 		
 		// pluck out the ignorable pofilter test results
 		for (String msgid : ignorableMsgIds) {
@@ -344,7 +361,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			if (translationFile.getPath().contains("/pt_BR/")) bugzilla = new BlockedByBzBug("824100");
 			// Bug 824184 - [ta_IN] translations for subscription-manager are missing (95% complete)
 			if (translationFile.getPath().contains("/ta/") || translationFile.getPath().contains("/ta_IN/")) bugzilla = new BlockedByBzBug("824184");
-			
+
 			ll.add(Arrays.asList(new Object[] {bugzilla,	translationFile}));
 		}
 		return ll;
@@ -375,11 +392,20 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 				"doublewords",
 				//	Extraction -- useful mainly for extracting certain types of string
 				"untranslated");
-// debugTesting
-pofilterTests = Arrays.asList("unchanged");
+// debugTesting pofilterTests = Arrays.asList("newlines");
 		for (File translationFile : translationFileMap.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
+				// Bug 825362	[es_ES] failed pofilter accelerator tests for subscription-manager translations 
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/es_ES/")) bugzilla = new BlockedByBzBug("825362");
+				// Bug 825367	[zh_CN] failed pofilter accelerator tests for subscription-manager translations 
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/zh_CN/")) bugzilla = new BlockedByBzBug("825367");
+				// Bug 825397	Many translated languages fail the pofilter newlines test
+				if (pofilterTest.equals("newlines") && !(translationFile.getPath().contains("/zh_CN/")||translationFile.getPath().contains("/ru/")||translationFile.getPath().contains("/ja/"))) bugzilla = new BlockedByBzBug("825397");			
+				// Bug 825393	[ml_IN][es_ES] translations should not use character ¶ for a new line. 
+				if (pofilterTest.equals("newlines") && translationFile.getPath().contains("/ml/")) bugzilla = new BlockedByBzBug("825393");
+				if (pofilterTest.equals("newlines") && translationFile.getPath().contains("/es_ES/")) bugzilla = new BlockedByBzBug("825393");
+
 				ll.add(Arrays.asList(new Object[] {bugzilla,	pofilterTest,	translationFile}));
 			}
 		}
