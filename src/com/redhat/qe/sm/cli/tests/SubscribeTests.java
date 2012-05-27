@@ -46,7 +46,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
 	
-	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id; and assert the subscription pool is not available when it does not match the installed software.",
+	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
 			groups={"AcceptanceTests","blockedByBug-660713"},
 			enabled=true)
@@ -176,6 +176,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
+		// TODO I BELIEVE THIS FINAL BLOCK OF TESTING IS INACCURATE jsefler 5/27/2012
+		// I THINK IT SHOULD BE CHECKING HARDWARE SOCKETS AND NOT INSTALLED SOFTWARE
+		/*
 		// check if this subscription matches the installed software and then test for availability
 		boolean subscriptionProductIdMatchesInstalledSoftware = false;
 		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
@@ -185,11 +188,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
 		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
-		if (subscriptionProductIdMatchesInstalledSoftware) {
-			Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' matches the installed software and is available for subscribing when listing --available.");
+		if (currentlyInstalledProductCerts.isEmpty()) {
+			log.info("A final assertion to verify that SubscriptionPool with ProductId '"+productId+"' is available based on matching installed software is not applicable when the list of installed software is empty.");
 		} else {
-			Assert.assertNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' does NOT match the installed software and is only available for subscribing when listing --all --available.");
+			if (subscriptionProductIdMatchesInstalledSoftware) {
+				Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' matches the installed software and is available for subscribing when listing --available.");
+			} else {
+				Assert.assertNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' does NOT match the installed software and is only available for subscribing when listing --all --available.");
+			}
 		}
+		*/
 		
 	}
 	
@@ -443,11 +451,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareAndSoftwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
+	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
 	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 
-		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,false);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 			String productId = (String)subscriptionPoolProductDatum.get(0);
@@ -473,6 +481,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void InititiateAutoSubscribe_Test() throws Exception {
+		
+		// re-calculate the subscriptionPoolProductData accounting for a match to installed system software
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.unregister(null, null, null);

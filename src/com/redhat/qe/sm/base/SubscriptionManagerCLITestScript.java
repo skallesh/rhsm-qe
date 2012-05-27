@@ -1028,7 +1028,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	@DataProvider(name="getAvailableSystemSubscriptionPoolProductData")
 	public Object[][] getAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists(true, true));
+		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists(true, false));
 	}
 
 	/**
@@ -1265,7 +1265,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
 
 		// String systemProductId, JSONArray bundledProductDataAsJSONArray
-		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
+		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,false);
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();

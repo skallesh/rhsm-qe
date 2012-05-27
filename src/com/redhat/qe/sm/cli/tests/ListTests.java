@@ -69,12 +69,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that satisfy the hardware and software are listed as available",
+	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that satisfy the system hardware are listed as available",
 			groups={"AcceptanceTests", "blockedByBugzilla-712502","unsubscribeBeforeGroup"},
 			dataProvider="getAvailableSystemSubscriptionPoolProductData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41678)
-	public void EnsureHardwareAndSoftwareMatchingSubscriptionsAreListedAsAvailable_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
+	public void EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test(String productId, JSONArray bundledProductDataAsJSONArray) {
 //if(!productId.equals("null-sockets")) throw new SkipException("debugging...");		
 		// implicitly registered in dataProvider; no need to register with force; saves time
 		//clienttasks.register(clientusername, clientpassword, null, null, null, null, true, null, null, null);
@@ -83,7 +83,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that do NOT satisfy the hardware and installed software are NOT listed as available",
+	@Test(	description="subscription-manager-cli: list available subscriptions - verify that among all the subscriptions available to this consumer, those that do NOT satisfy the hardware are NOT listed as available",
 			groups={"AcceptanceTests", "blockedByBugzilla-712502","unsubscribeBeforeGroup"},
 			dataProvider="getNonAvailableSystemSubscriptionPoolProductData",
 			enabled=true)

@@ -812,9 +812,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 	
 			// assert that we are consuming some entitlements (for at least the base product cert)
+			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags
 			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
 			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
+			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
 			Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
 		}
