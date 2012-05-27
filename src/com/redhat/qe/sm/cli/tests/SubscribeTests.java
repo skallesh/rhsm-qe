@@ -46,12 +46,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
 	
-	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id; and assert the subscription pool is not available when it does not match the installed software.",
-			dataProvider="getSystemSubscriptionPoolProductData",
+	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id; and assert the subscription pool is not available when it does not match the installed software.",
+			dataProvider="getAllSystemSubscriptionPoolProductData",
 			groups={"AcceptanceTests","blockedByBug-660713"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void SubscribeToExpectedSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
+	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
 //if (!productId.equals("awesomeos-zero-sockets")) throw new SkipException("debugging");
 		
 		// begin test with a fresh register
@@ -447,14 +447,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 
-		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
-		List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
+		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 			String productId = (String)subscriptionPoolProductDatum.get(0);
-			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availableSubscriptionPoolsBeforeAutosubscribe);
+			SubscriptionPool subscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, availableSubscriptionPools);
 			Assert.assertNotNull(subscriptionPool, "Expecting SubscriptionPool with ProductId '"+productId+"' to be available to registered user '"+sm_clientUsername+"'.");
 		}
-		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPoolsBeforeAutosubscribe) {
+		for (SubscriptionPool availableSubscriptionPool : availableSubscriptionPools) {
 			boolean productIdFound = false;
 			for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 				if (availableSubscriptionPool.productId.equals((String)subscriptionPoolProductDatum.get(0))) {
@@ -479,7 +479,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		
 		// get the expected subscriptionPoolProductIdData
-		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false, true);
 		
 		// autosubscribe
 		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);
@@ -548,7 +548,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		// get the expected subscriptionPoolProductIdData
 		String sm_debug_dataProviders_minimize = getProperty("sm.debug.dataProviders.minimize","$NULL");
 		System.setProperty("sm.debug.dataProviders.minimize","false");
-		//List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists();
 		System.setProperty("sm.debug.dataProviders.minimize",sm_debug_dataProviders_minimize);
 		
 		// search the subscriptionPoolProductData for a bundledProduct matching the productCert's productName
@@ -601,7 +600,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 		
 		// get the expected subscriptionPoolProductIdData
-		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false);
+		//NOT USED subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false, true);
 		
 		// autosubscribe once
 		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);

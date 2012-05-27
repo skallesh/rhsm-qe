@@ -37,6 +37,7 @@ import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.Org;
+import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -1021,39 +1022,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 	
-	@DataProvider(name="getSystemSubscriptionPoolProductData")
-	public Object[][] getSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists());
+	@DataProvider(name="getAllSystemSubscriptionPoolProductData")
+	public Object[][] getAllAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists(false, false));
 	}
-	/* HARDCODED IMPLEMENTATION THAT READS FROM systemSubscriptionPoolProductData
-	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws JSONException {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-				
-		for (int j=0; j<systemSubscriptionPoolProductData.length(); j++) {
-			JSONObject poolProductDataAsJSONObject = (JSONObject) systemSubscriptionPoolProductData.get(j);
-			String systemProductId = poolProductDataAsJSONObject.getString("systemProductId");
-			JSONArray bundledProductDataAsJSONArray = poolProductDataAsJSONObject.getJSONArray("bundledProductData");
-
-			// String systemProductId, JSONArray bundledProductDataAsJSONArray
-			ll.add(Arrays.asList(new Object[]{systemProductId, bundledProductDataAsJSONArray}));
-
-			// minimize the number of dataProvided rows (useful during automated testcase development)
-			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
-		}
-		
-		return ll;
+	@DataProvider(name="getAvailableSystemSubscriptionPoolProductData")
+	public Object[][] getAvailableSystemSubscriptionPoolProductDataAs2dArray() throws Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getSystemSubscriptionPoolProductDataAsListOfLists(true, true));
 	}
-	*/
+
 	/**
+	 * @param matchSystemSoftware TODO
 	 * @return List of [String productId, JSONArray bundledProductDataAsJSONArray]
 	 */
-	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists() throws Exception {
-		return getSystemSubscriptionPoolProductDataAsListOfLists(true);
-	}
-	/**
-	 * @return List of [String productId, JSONArray bundledProductDataAsJSONArray]
-	 */
-	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystem) throws Exception {
+	protected List<List<Object>> getSystemSubscriptionPoolProductDataAsListOfLists(boolean matchSystemHardware, boolean matchSystemSoftware) throws Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		List <String> productIdsAddedToSystemSubscriptionPoolProductData = new ArrayList<String>();
 
@@ -1064,6 +1046,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
+		
+		// get the currently installed product certs
+		List<ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		
 		// process all of the subscriptions belonging to ownerKey
 		JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/subscriptions"));	
@@ -1157,7 +1142,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	
 							// if the socket count on this client exceeds the sockets attribute, then this subscription should NOT be available to this client
 							if (Integer.valueOf(attributeValue) < Integer.valueOf(clienttasks.sockets)) {
-								if (matchSystem) productAttributesPassRulesCheck = false;
+								if (matchSystemHardware) productAttributesPassRulesCheck = false;
 							}
 						}
 					}
@@ -1166,14 +1151,16 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (productAttributesPassRulesCheck) {
 				
 				// process this subscription's providedProducts
+				Boolean atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts = false; // assumed
 				JSONArray jsonBundledProductData = new JSONArray();
 				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
+				if (jsonProvidedProducts.length()==0) atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts = true;	// effectively true when no content is defined
 				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
 					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
 					String providedProductName = jsonProvidedProduct.getString("name");
 					String providedProductId = jsonProvidedProduct.getString("id");
 
-					
+					// process this providedProducts attributes
 					JSONArray jsonProvidedProductAttributes = jsonProvidedProduct.getJSONArray("attributes");
 					boolean providedProductAttributesPassRulesCheck = true; // assumed
 					for (int l = 0; l < jsonProvidedProductAttributes.length(); l++) {
@@ -1229,13 +1216,36 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 						jsonBundledProductData.put(bundledProduct);
 					}
-				}
-				// Example:
-				// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
+					
+					
+					
+					// process this providedProducts content					
+					JSONArray jsonProvidedProductProductContents = jsonProvidedProduct.getJSONArray("productContent");
+					for (int l = 0; l < jsonProvidedProductProductContents.length(); l++) {
+						JSONObject jsonProvidedProductProductContent = (JSONObject) jsonProvidedProductProductContents.get(l);
+						JSONObject content = (JSONObject) jsonProvidedProductProductContent.getJSONObject("content");
+						String requiredTags = content.getString("requiredTags");
+						if (clienttasks.areAllRequiredTagsProvidedByProductCerts(requiredTags, productCerts)) {
+							atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts=true; break;
+						}
+					}
 
-				// String systemProductId, JSONArray bundledProductDataAsJSONArray
-				ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
-				productIdsAddedToSystemSubscriptionPoolProductData.add(productId);
+					
+					
+				}
+
+				if (matchSystemSoftware && atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts) {
+				
+					// Example:
+					// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
+	
+					// String systemProductId, JSONArray bundledProductDataAsJSONArray
+					ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
+					productIdsAddedToSystemSubscriptionPoolProductData.add(productId);
+				} else if (!matchSystemSoftware) {
+					ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
+					productIdsAddedToSystemSubscriptionPoolProductData.add(productId);		
+				}
 			}
 		}
 		
@@ -1255,7 +1265,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List <String> productIdsAddedToNonAvailableSystemSubscriptionPoolProductData = new ArrayList<String>();
 
 		// String systemProductId, JSONArray bundledProductDataAsJSONArray
-		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true);
+		List<List<Object>> availSystemSubscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
 		
 		// get the owner key for clientusername, clientpassword
 		String consumerId = clienttasks.getCurrentConsumerId();
