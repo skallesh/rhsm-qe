@@ -147,6 +147,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		// http://www.centos.org/docs/5/html/5.2/Deployment_Guide/s1-yum-useful-variables.html
 		String arch =  Arrays.asList("i686","i486","i386").contains(clienttasks.arch)? "i386":clienttasks.arch;	// http://www.centos.org/docs/5/html/5.2/Deployment_Guide/s1-yum-useful-variables.html
 		if (!sm_rhuiDownloadIso.contains(arch)) throw new SkipException("When this system's arch ("+arch+") is substituted into the repoUrl ("+repoUrl+"), it will not find RHUI ISO ("+sm_rhuiDownloadIso+") for downloading.");	// RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
+		if (!clienttasks.releasever.contains("Server") && sm_rhuiDownloadIso.contains("Server")) throw new SkipException("This system release is '"+clienttasks.releasever+"'.  RHUI ISO '"+sm_rhuiDownloadIso+"' requires Server for downloading.");	// RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
 		repoUrl = repoUrl.replaceFirst("\\$releasever", clienttasks.releasever);
 		repoUrl = repoUrl.replaceFirst("\\$basearch", arch);
 
