@@ -2558,14 +2558,15 @@ public class SubscriptionManagerTasks {
 			// END OF WORKAROUND
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("System has been un-registered."), "The unregister command was a success.");
 			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unregister command indicates a success.");
-		} else {
+		} else if (sshCommandResult.getExitCode()==1) {
 			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."),"The unregister command was not necessary.  It was already unregistered");
-			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The unregister command returned exit code 1 meaning that it was already unregistered.");
-		} 
+		} else {
+			Assert.assertTrue(sshCommandResult.getExitCode()!=255, "An unexpected exit code was returned by the unregister command.");		
+		}
 		
 		// assert that the consumer cert and key have been removed
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerKeyFile()),0, "Consumer key file '"+this.consumerKeyFile()+"' does NOT exist after unregister.");
-		Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner,this.consumerCertFile()),0, "Consumer cert file '"+this.consumerCertFile()+" does NOT exist after unregister.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(sshCommandRunner,this.consumerKeyFile()), "Consumer key file '"+this.consumerKeyFile()+"' does NOT exist after unregister.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(sshCommandRunner,this.consumerCertFile()), "Consumer cert file '"+this.consumerCertFile()+" does NOT exist after unregister.");
 		
 		// assert that all of the entitlement certs have been removed (Actually, the entitlementCertDir should get removed)
 		Assert.assertTrue(getCurrentEntitlementCertFiles().size()==0, "All of the entitlement certificates have been removed after unregister.");
