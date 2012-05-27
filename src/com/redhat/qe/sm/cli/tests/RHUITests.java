@@ -22,10 +22,30 @@ import com.redhat.qe.tools.RemoteFileTasks;
  * Red Hat Update Infrastructure
  * Reference:
  * RHEL6 http://documentation-stage.bne.redhat.com/docs/en-US/Red_Hat_Update_Infrastructure/2.0/html/Installation_Guide/sect-Installation_Guide-Installation_Requirements-Package_Installation.html
+ *      https://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/6/6Server/x86_64/rhui/2.0/iso/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
  * RHEL5 http://docs.redhat.com/docs/en-US/Red_Hat_Update_Infrastructure/1.2/html/Installation_Guide/chap-Installation_Guide-Installation.html
  *		https://cdn.redhat.com/content/dist/rhel/rhui/server/5Server/i386/rhui/1.2/iso/rhel-5.5-rhui-1.2-i386.iso
  *		https://cdn.redhat.com/content/dist/rhel/rhui/server/5Server/x86_64/rhui/1.2/iso/rhel-5.5-rhui-1.2-x86_64.iso
  * 
+ * To see the content available for download:
+ * RHEL6
+[root@storm ~]# curl --cert /etc/pki/entitlement/1126131111567895623.pem --key /etc/pki/entitlement/1126131111567895623-key.pem -k https://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/6/6Server/x86_64/rhui/2.0/iso
+RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
+RHEL-6.2-RHUI-2.0.3-20120322.0-Server-x86_64-DVD1.iso
+RHEL-6.2-RHUI-2.0.2-20120309.0-Server-x86_64-DVD1.iso
+RHEL-6.2-RHUI-2.0.3-20120409.0-Server-x86_64-DVD1.iso
+RHEL-6.2-RHUI-2.0.2-20120309.0-Server-x86_64-DVD1.iso.sha1sum
+RHEL-6.2-RHUI-2.0.2-20120309.0-Server-x86_64-DVD1.iso.sha256sum
+RHEL-6.2-RHUI-2.0.3-20120322.0-Server-x86_64-DVD1.iso.sha1sum
+RHEL-6.2-RHUI-2.0.3-20120322.0-Server-x86_64-DVD1.iso.sha256sum
+RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso
+RHEL-6.2-RHUI-2.0.3-20120409.0-Server-x86_64-DVD1.iso.sha1sum
+RHEL-6.2-RHUI-2.0.3-20120409.0-Server-x86_64-DVD1.iso.sha256sum
+RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso.sha1sum
+RHEL-6.2-RHUI-2.0.3-20120416.0-Server-x86_64-DVD1.iso.sha256sum
+[root@storm ~]# curl --cert /etc/pki/entitlement/1126131111567895623.pem --key /etc/pki/entitlement/1126131111567895623-key.pem -k https://cdn.rcm-qa.redhat.com/content/dist/rhel/rhui/server/6/6Server/i386/rhui/2.0/iso
+[root@storm ~]# 
+
  */
 @Test(groups={"RHUITests","AcceptanceTests"})
 public class RHUITests extends SubscriptionManagerCLITestScript {
@@ -72,7 +92,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	@Test(	description="download an expected RHUI iso from an expected yum repoUrl",
 			groups={},
 			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
-			enabled=false)
+			enabled=false)	// this download file method will NOT work for a file
 	//@ImplementsNitrateTest(caseId=)
 	public void DownloadRHUIISOFromYumRepo_Test() {
 		if (sm_rhuiDownloadIso.equals("")) throw new SkipException("Skipping this test when no value was given for the RHUI Download ISO");
@@ -117,14 +137,24 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertNotNull(contentNamespaceForIso,"Found expected ContentNamespace to repoId '"+sm_rhuiRepoIdForIsos+"' for rhui isos after subscribe to '"+sm_rhuiSubscriptionProductId+"'.");
 		String repoUrl = clienttasks.baseurl+contentNamespaceForIso.downloadUrl;
+		/* This technique to find the repoUrl will not work
+		Repo repoForIso = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", sm_rhuiRepoIdForIsos, clienttasks.getCurrentlySubscribedRepos());
+		Assert.assertNotNull(repoForIso,"Found entitled repo '"+sm_rhuiRepoIdForIsos+"' for rhui isos after subscribe to '"+sm_rhuiSubscriptionProductId+"'.");
+		String repoUrl = repoForIso.repoUrl;
+		*/
+		
+		// substitute the yum vars
+		// http://www.centos.org/docs/5/html/5.2/Deployment_Guide/s1-yum-useful-variables.html
+		String arch =  Arrays.asList("i686","i486","i386").contains(clienttasks.arch)? "i386":clienttasks.arch;	// http://www.centos.org/docs/5/html/5.2/Deployment_Guide/s1-yum-useful-variables.html
+		if (!sm_rhuiDownloadIso.contains(arch)) throw new SkipException("When this system's arch ("+arch+") is substituted into the repoUrl ("+repoUrl+"), it will not find RHUI ISO ("+sm_rhuiDownloadIso+") for downloading.");	// RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
 		repoUrl = repoUrl.replaceFirst("\\$releasever", clienttasks.releasever);
-		repoUrl = repoUrl.replaceFirst("\\$basearch", clienttasks.arch);
+		repoUrl = repoUrl.replaceFirst("\\$basearch", arch);
 
 		File entitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCertFile);
 		// $ wget  --certificate=<Content Certificate>	https://cdn.redhat.com/content/dist/rhel/rhui/server/6/6Server/x86_64/rhui/2.0/iso/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
 		// wget --no-check-certificate --certificate=/etc/pki/entitlement/7658526340059785943.pem --private-key=/etc/pki/entitlement/7658526340059785943-key.pem --output-document=/tmp/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso -- https://cdn.redhat.com/content/dist/rhel/rhui/server/6/6Server/x86_64/rhui/2.0/iso/RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
 		RemoteFileTasks.runCommandAndAssert(client, "wget --no-check-certificate --certificate="+entitlementCertFile+" --private-key="+entitlementKeyFile+" --output-document="+downloadedIsoFile+" -- "+repoUrl+"/"+sm_rhuiDownloadIso, 0/*, stdoutRegex, stderrRegex*/);
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, downloadedIsoFile.getPath()), 1,"Expected RHUI Download ISO was downloaded.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, downloadedIsoFile.getPath()),"Expected RHUI Download ISO was downloaded.");
 	}
 	
 	
