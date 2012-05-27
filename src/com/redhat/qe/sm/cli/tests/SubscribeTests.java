@@ -26,6 +26,7 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
+import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -45,7 +46,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
 	
-	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id",
+	@Test(	description="subscription-manager-cli: subscribe consumer to an expected subscription pool product id; and assert the subscription pool is not available when it does not match the installed software.",
 			dataProvider="getSystemSubscriptionPoolProductData",
 			groups={"AcceptanceTests","blockedByBug-660713"},
 			enabled=true)
@@ -58,8 +59,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 
 		// assert the subscription pool with the matching productId is available
-//		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
-		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		SubscriptionPool pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());	// clienttasks.getCurrentlyAvailableSubscriptionPools() is tested at the conclusion of this test
 		Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' is available for subscribing.");
 
 		List<ProductCert> currentlyInstalledProductCerts = clienttasks.getCurrentProductCerts();
@@ -96,7 +96,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+bundledProductName+"' is consumed after subscribing to pool for ProductId '"+productId+"'.");
 
 			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
-			Boolean invokeWorkaroundWhileBugIsOpen = true;
+			Boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED ERRATA
 			try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("The workaround while this bug is open is to skip the assertion that: Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
@@ -175,6 +175,22 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				}
 			}
 		}
+		
+		// check if this subscription matches the installed software and then test for availability
+		boolean subscriptionProductIdMatchesInstalledSoftware = false;
+		for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
+			if (clienttasks.areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, currentlyInstalledProductCerts)) {
+				subscriptionProductIdMatchesInstalledSoftware=true; break;
+			}
+		}
+		clienttasks.unsubscribeFromSerialNumber(entitlementCert.serialNumber);
+		pool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", productId, clienttasks.getCurrentlyAvailableSubscriptionPools());
+		if (subscriptionProductIdMatchesInstalledSoftware) {
+			Assert.assertNotNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' matches the installed software and is available for subscribing when listing --available.");
+		} else {
+			Assert.assertNull(pool, "Expected SubscriptionPool with ProductId '"+productId+"' does NOT match the installed software and is only available for subscribing when listing --all --available.");
+		}
+		
 	}
 	
 	
