@@ -2,6 +2,7 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
@@ -43,7 +44,8 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		
 		// Subscribe to a randomly available pool...
 		log.info("Subscribe to a randomly available pool...");
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		if (pools.isEmpty()) throw new SkipException("There are no available pools at all to get entitlements from.  Cannot attempt this test.");
 		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		
