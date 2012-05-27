@@ -443,11 +443,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dependsOnGroups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
+	// Note: The objective if this test is essentially the same as ListTests.EnsureHardwareAndSoftwareMatchingSubscriptionsAreListedAsAvailable_Test() and ListTests.EnsureNonHardwareMatchingSubscriptionsAreNotListedAsAvailable_Test(), but its implementation is slightly different
 	public void VerifyAvailablePoolsPassTheHardwareRulesCheck_Test() throws Exception {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
 
-		List<List<Object>> subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
+		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(true,true);
 		List<SubscriptionPool> availableSubscriptionPools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		for (List<Object> subscriptionPoolProductDatum : subscriptionPoolProductData) {
 			String productId = (String)subscriptionPoolProductDatum.get(0);
@@ -465,7 +465,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			Assert.assertTrue(productIdFound, "Available SubscriptionPool with ProductId '"+availableSubscriptionPool.productId+"' passes the hardware rules check.");
 		}
 	}
-	
+	protected List<List<Object>> subscriptionPoolProductData;
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
 			groups={"AcceptanceTests","AutoSubscribeAndVerify", "blockedByBug-680399", "blockedByBug-734867", "blockedByBug-740877"},
@@ -478,11 +478,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.unregister(null, null, null);
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
 		
-		// get the expected subscriptionPoolProductIdData
-		subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false, true);
-		
 		// autosubscribe
-		sshCommandResultFromAutosubscribe = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);
+		sshCommandResultFromAutosubscribe = clienttasks.subscribe(true,null,(String)null,null,null,null,null,null,null,null,null);
 		
 		/* RHEL57 RHEL61 Example Results...
 		# subscription-manager subscribe --auto
@@ -535,7 +532,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Status:               	Subscribed               
 		*/
 	}
-	protected List<List<Object>> subscriptionPoolProductData;
 	
 	
 	@Test(	description="subscription-manager-cli: autosubscribe consumer and verify expected subscription pool product id are consumed",
@@ -545,12 +541,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyInstalledProductCertWasAutoSubscribed_Test(ProductCert productCert) throws Exception {
-		// get the expected subscriptionPoolProductIdData
-		String sm_debug_dataProviders_minimize = getProperty("sm.debug.dataProviders.minimize","$NULL");
-		System.setProperty("sm.debug.dataProviders.minimize","false");
-		System.setProperty("sm.debug.dataProviders.minimize",sm_debug_dataProviders_minimize);
 		
 		// search the subscriptionPoolProductData for a bundledProduct matching the productCert's productName
+		// (subscriptionPoolProductData was set in a prior test methods that this test depends on)
 		String subscriptionPoolProductId = null;
 		for (List<Object> row : subscriptionPoolProductData) {
 			JSONArray bundledProductDataAsJSONArray = (JSONArray)row.get(1);
@@ -576,7 +569,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		// assert the installed product status matches the expected status 
 		Assert.assertEquals(installedProduct.status,expectedSubscribeStatus,
-				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is "+expectedSubscribeStatus.toLowerCase()+".");
+				"As expected, the Installed Product Status reflects that the autosubscribed ProductName '"+productCert.productName+"' is "+expectedSubscribeStatus.toLowerCase()+".  (Note: a \"Not Subscribed\" status is expected when the subscription does not match the hardware socket requirements or the required tags on all the subscription content is not satisfied by any of the installed software.)");
 
 		// assert that the sshCommandResultOfAutosubscribe showed the expected Subscribe Status for this productCert
 		// RHEL57 RHEL61		Assert.assertContainsMatch(sshCommandResultFromAutosubscribe.getStdout().trim(), "^\\s+"+productCert.productName.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)"+" - "+expectedSubscribeStatus),
@@ -586,7 +579,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(autosubscribedProduct.status,expectedSubscribeStatus,
 				"As expected, ProductName '"+productCert.productName+"' was reported as '"+expectedSubscribeStatus+"' in the output from register with autotosubscribe.");
 	}
-//	List<SubscriptionPool> availableSubscriptionPoolsBeforeAutosubscribe;
 	SSHCommandResult sshCommandResultFromAutosubscribe;
 	
 	
@@ -598,9 +590,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// before testing, make sure all the expected subscriptionPoolProductId are available
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-		
-		// get the expected subscriptionPoolProductIdData
-		//NOT USED subscriptionPoolProductData = getSystemSubscriptionPoolProductDataAsListOfLists(false, true);
 		
 		// autosubscribe once
 		SSHCommandResult result1 = clienttasks.subscribe(Boolean.TRUE,null,(String)null,null,null,null,null,null,null, null, null);
