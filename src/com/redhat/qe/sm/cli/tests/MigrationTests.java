@@ -812,11 +812,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 	
 			// assert that we are consuming some entitlements (for at least the base product cert)
-			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags
+			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
 			Assert.assertTrue(!clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
 			
 			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
-			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags
+			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
 			Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
 		}
@@ -1601,6 +1601,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
 					bugzilla = new BlockedByBzBug("811633");
 				}
+				if (productId.equals("183") || productId.equals("184") || productId.equals("185")) {
+					// Bug 825603 - channel-cert-mapping.txt is missing a mapping for JBoss product ids 183,184,185
+					bugzilla = new BlockedByBzBug("825603");
+				}
 				if (rhnChannel.contains("-dts-") && clienttasks.redhatReleaseXY.equals("6.3")) { 
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugzilla = new BlockedByBzBug("820749");
@@ -1642,6 +1646,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-6-mrg-.*")) {	// rhel-x86_64-server-6-mrg-grid-execute-2-debuginfo rhel-x86_64-server-6-mrg-messaging-2-debuginfo
 				// Bug 819088 - channels for rhel-<ARCH>-server-6-mrg-* are not yet mapped to product certs in rcm/rhn-definitions.git 
 				bugzilla = new BlockedByBzBug("819088");
+			}
+			if (rhnAvailableChildChannel.matches("rhel-.+-hpc-node-6-mrg-.*")) {	// rhel-x86_64-hpc-node-6-mrg-grid-execute-2  rhel-x86_64-hpc-node-6-mrg-grid-execute-2-debuginfo  rhel-x86_64-hpc-node-6-mrg-management-2  rhel-x86_64-hpc-node-6-mrg-management-2-debuginfo
+				// Bug 825608 - channels for rhel-<ARCH>-hpc-node-6-mrg-* are not yet mapped to product certs in rcm/rhn-definitions.git
+				bugzilla = new BlockedByBzBug("825608");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-v2vwin-6(-.*|$)")) {	// rhel-x86_64-server-v2vwin-6-beta-debuginfo
 				// Bug 817791 - v2vwin content does not exist in CDN
