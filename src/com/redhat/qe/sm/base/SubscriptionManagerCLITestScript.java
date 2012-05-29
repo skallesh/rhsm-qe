@@ -1151,10 +1151,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			if (productAttributesPassRulesCheck) {
 				
 				// process this subscription's providedProducts
-				Boolean atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts = false; // assumed
+				Boolean atLeastOneProvidedProductIsInstalled = false; // assumed
 				JSONArray jsonBundledProductData = new JSONArray();
 				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
-				if (jsonProvidedProducts.length()==0) atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts = true;	// effectively true when no content is defined
+				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductIsInstalled = true;	// effectively true when no provided products are installed
 				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
 					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
 					String providedProductName = jsonProvidedProduct.getString("name");
@@ -1218,23 +1218,12 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					}
 					
 					
-					
-					// process this providedProducts content					
-					JSONArray jsonProvidedProductProductContents = jsonProvidedProduct.getJSONArray("productContent");
-					for (int l = 0; l < jsonProvidedProductProductContents.length(); l++) {
-						JSONObject jsonProvidedProductProductContent = (JSONObject) jsonProvidedProductProductContents.get(l);
-						JSONObject content = (JSONObject) jsonProvidedProductProductContent.getJSONObject("content");
-						String requiredTags = content.getString("requiredTags");
-						if (clienttasks.areAllRequiredTagsProvidedByProductCerts(requiredTags, productCerts)) {
-							atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts=true; break;
-						}
-					}
-
-					
+					// is this provided product already installed
+					if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, productCerts) != null) atLeastOneProvidedProductIsInstalled=true;
 					
 				}
 
-				if (matchSystemSoftware && atLeastOneProductContentRequiredTagsIsProvidedByInstalledProductCerts) {
+				if (matchSystemSoftware && atLeastOneProvidedProductIsInstalled) {
 				
 					// Example:
 					// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>

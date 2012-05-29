@@ -2561,7 +2561,7 @@ public class SubscriptionManagerTasks {
 		} else if (sshCommandResult.getExitCode()==1) {
 			Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is currently not registered."),"The unregister command was not necessary.  It was already unregistered");
 		} else {
-			Assert.assertTrue(sshCommandResult.getExitCode()!=255, "An unexpected exit code was returned by the unregister command.");		
+			Assert.fail("An unexpected exit code ("+sshCommandResult.getExitCode()+") was returned when attempting to unregister.");		
 		}
 		
 		// assert that the consumer cert and key have been removed
