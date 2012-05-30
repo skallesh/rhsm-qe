@@ -3,7 +3,8 @@
 	[com.redhat.qe.sm.gui.tasks.tasks])
   (:require [com.redhat.qe.sm.gui.tasks.test-config :as config]
             [clojure.tools.logging :as log])
-  (:import [org.testng.annotations BeforeSuite AfterSuite]))
+  (:import [org.testng.annotations BeforeSuite AfterSuite]
+           org.testng.SkipException))
   
 (defn- restart-vnc []
   (.runCommandAndWait @config/clientcmd "service vncserver restart")
@@ -12,6 +13,9 @@
 (defn ^{BeforeSuite {:groups ["setup"]}}
   startup [_]
   (config/init)
+  (let [arch (.arch @config/cli-tasks)]
+    (if-not (some #(= arch %) '("i386" "i486" "i586" "i686" "x86_64"))
+      (throw (SkipException. (str "Arch '" arch "' is not supported for GUI testing.")))))
   (restart-vnc)
   (connect)
   (start-app))
