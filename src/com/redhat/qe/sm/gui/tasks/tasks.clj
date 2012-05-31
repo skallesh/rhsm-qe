@@ -197,17 +197,17 @@
            (ui click :register)
            (checkforerror 10)))
        (ui waittillnotshowing :registering 1800)  ;; 30 minutes
-       ;; handle sla selection
-       (if (= 1 (ui guiexist :subscribe-system-dialog))
-         (do
-           (if auto-select-sla
-             (do 
-               (if (= 1 (ui guiexist :sla-forward)) ;; sla selection is presented
-                 (do (when sla (ui click :subscribe-system-dialog sla))
-                     (ui click :sla-forward)))
-               (ui click :sla-subscribe))
-             ;; else leave sla dialog open
-             (when sla (ui click :subscribe-system-dialog sla)))))))
+       ))
+   (if (= 1 (ui guiexist :subscribe-system-dialog))
+     (do
+       (if auto-select-sla
+         (do 
+           (if (= 1 (ui guiexist :sla-forward)) ;; sla selection is presented
+             (do (when sla (ui click :subscribe-system-dialog sla))
+                 (ui click :sla-forward)))
+           (ui click :sla-subscribe))
+         ;; else leave sla dialog open
+         (when sla (ui click :subscribe-system-dialog sla)))))
    (checkforerror)
    (catch Object e
      (if (substring? "No service levels" (:msg e))
