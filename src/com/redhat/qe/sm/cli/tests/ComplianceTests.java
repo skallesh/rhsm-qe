@@ -447,7 +447,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		
 		// create maps of serviceLevel-to-productIds and productIds-to-serviceLevel
 		Map<String,Set<String>> serviceLevelToProductIdsMap = new HashMap<String,Set<String>>();
-		for (EntitlementCert entitlementCert : clienttasks.getCurrentEntitlementCerts()) {
+		for (EntitlementCert entitlementCert : entitlementCerts) {
 			String serviceLevel = entitlementCert.orderNamespace.supportLevel;
 			
 			// skip all entitlements without a service level
@@ -538,6 +538,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 		boolean allProductsSubscribableByOneCommonServiceLevelDeterminable=true;
 		OUT: do {
 			String serviceLevelCandidate = getKeyToLongestMap(serviceLevelToProductIdsMap);
+			Assert.assertNotNull(serviceLevelCandidate, "If the key to the longest map of serviceLevel to ProductIds is null, then there are probably no subscriptions available.");
 			// does this candidate have all candidate products?
 			if (serviceLevelToProductIdsMap.get(serviceLevelCandidate).containsAll(allProductsSubscribableByOneCommonServiceLevelCandidates)) {
 				// is there another serviceLevel that has all candidate products?

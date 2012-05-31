@@ -1605,7 +1605,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 825603 - channel-cert-mapping.txt is missing a mapping for JBoss product ids 183,184,185
 					bugzilla = new BlockedByBzBug("825603");
 				}
-				if (rhnChannel.contains("-dts-") && clienttasks.redhatReleaseXY.equals("6.3")) { 
+				if (rhnChannel.contains("-dts-")) { 
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugzilla = new BlockedByBzBug("820749");
 				}

@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONException;
 import org.testng.annotations.AfterGroups;
@@ -67,7 +69,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			String requiredTags = (String)row.get(3);
 			List<SubscriptionPool> poolsModified = (List<SubscriptionPool>)row.get(4);
 			if (poolsModified.contains(pool)) {
-				if (priorSubscribedPools.contains(modifierPool)) {
+				if (priorSubscribedPoolIds.contains(modifierPool.poolId)) {
 					// the modifier's content should now be available in the repos too
 					EntitlementCert modifierEntitlementCert = clienttasks.getEntitlementCertCorrespondingToSubscribedPool(modifierPool);						
 
@@ -82,7 +84,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
-		priorSubscribedPools.add(pool);
+		priorSubscribedPoolIds.add(pool.poolId);
 		
 		log.info("Following is the new list of subscribed repos after subscribing to pool: "+pool);			
 		List<Repo> actualRepos = clienttasks.getCurrentlySubscribedRepos();
@@ -119,7 +121,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// randomly decide to unsubscribe from the pool only for the purpose of saving on accumulated logging and avoid a java heap memory error
 		//if (randomGenerator.nextInt(2)==1) clienttasks.unsubscribe(null, entitlementCert.serialNumber, null, null, null); AND ALSO REMOVE pool FROM priorSubscribedPools
 	}
-	protected List<SubscriptionPool> priorSubscribedPools=new ArrayList<SubscriptionPool>();
+	protected Set<String> priorSubscribedPoolIds=new HashSet<String>();
 	
 	
 	@Test(	description="subscription-manager: subscribe to a future pool and verify that NO content namespaces are represented in the repos list",
