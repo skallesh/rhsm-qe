@@ -362,6 +362,13 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 607162 - (FAIL)Testcase : 256969 register to Candlepin, then muck with your identity certs (for fun and profit)
 	// TODO Bug 813296 - Consumer could not get correct info after being deleted from server side
+	// TODO Bug 827035 - Teach rhsmcertd to refresh the identity certificate 
+	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate
+	// TODO Bug 827032 - Support autoregen of identity certificates 
+	
+	
+	
+	
 	
 	
 	
