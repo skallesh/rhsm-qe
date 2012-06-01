@@ -539,7 +539,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 705068 - product-id plugin displays "duration"
 	// TODO Bug 740773 - product cert lost after installing a pkg from cdn-internal.rcm-test.redhat.com
 	// TODO Bug 806457 - If yum runs with no enabled or active repo's, we delete the product cert 
-	
+	// TODO Bug 818383 - Yum Plugin usability Improvements 
 	
 	// Configuration Methods ***********************************************************************
 	
