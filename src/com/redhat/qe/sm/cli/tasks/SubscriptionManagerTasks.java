@@ -3331,8 +3331,8 @@ public class SubscriptionManagerTasks {
 	public void assertNoAvailableSubscriptionPoolsToList(boolean ignoreMuliEntitlementSubscriptionPools, String assertMsg) {
 		boolean invokeWorkaroundWhileBugIsOpen = true;
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=613635 - jsefler 7/14/2010
-		invokeWorkaroundWhileBugIsOpen = true;
+		// TEMPORARY WORKAROUND FOR BUG
+		invokeWorkaroundWhileBugIsOpen = false; // true;	// Status: CLOSED ERRATA	// Bug 613635 - “connection.UEPConnection instance “ displays while availability check
 		try {String bugId="613635"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No available subscription pools to list$",assertMsg);
@@ -3340,8 +3340,8 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=622839 - jsefler 8/10/2010
-		invokeWorkaroundWhileBugIsOpen = true;
+		// TEMPORARY WORKAROUND FOR BUG
+		invokeWorkaroundWhileBugIsOpen = false; // true;	// Status: CLOSED ERRATA	// Bug 622839 - extraneous user hash code appears in stdout after executing list --available
 		try {String bugId="622839"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No available subscription pools to list$",assertMsg);
@@ -3349,8 +3349,8 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=623657 - jsefler 8/12/2010
-		invokeWorkaroundWhileBugIsOpen = true;
+		// TEMPORARY WORKAROUND FOR BUG
+		invokeWorkaroundWhileBugIsOpen = false; // true;	// Status: CLOSED DUPLICATE of bug 623481	// Bug 623657 - extraneous self.conn output appears in stdout after executing list --available
 		try {String bugId="623657"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			Assert.assertContainsMatch(listAvailableSubscriptionPools().getStdout(),"^No available subscription pools to list$",assertMsg);
