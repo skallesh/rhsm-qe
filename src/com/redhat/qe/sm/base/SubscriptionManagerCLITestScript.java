@@ -1084,9 +1084,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				String attributeName = jsonProductAttribute.getString("name");
 				String attributeValue = jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
-					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-					if (productSupportedArches.contains("X86")) {productSupportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
-					if (!productSupportedArches.contains("ALL") && !productSupportedArches.contains(clienttasks.arch.toUpperCase())) {
+					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
+					if (!productSupportedArches.contains("ALL") && !productSupportedArches.contains(clienttasks.arch)) {
 						productAttributesPassRulesCheck = false;
 					}
 				}
@@ -1152,9 +1152,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				
 				// process this subscription's providedProducts
 				Boolean atLeastOneProvidedProductIsInstalled = false; // assumed
+				Boolean atLeastOneProvidedProductSatisfiesArch = false; // assumed
 				JSONArray jsonBundledProductData = new JSONArray();
 				JSONArray jsonProvidedProducts = (JSONArray) jsonSubscription.getJSONArray("providedProducts");
 				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductIsInstalled = true;	// effectively true when no provided products are installed
+				if (jsonProvidedProducts.length()==0) atLeastOneProvidedProductSatisfiesArch = true;	// effectively true when no provided products are installed
 				for (int k = 0; k < jsonProvidedProducts.length(); k++) {
 					JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
 					String providedProductName = jsonProvidedProduct.getString("name");
@@ -1173,13 +1175,15 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						 * For this reason, I am commenting out all the providedProductAttributesPassRulesCheck = false; ... (except "type")
 						 */
 						if (attributeName.equals("arch")) {
-							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().toUpperCase().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
-							if (supportedArches.contains("X86")) {supportedArches.addAll(Arrays.asList("I386","I486","I586","I686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
+							List<String> supportedArches = new ArrayList<String>(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
+							if (supportedArches.contains("x86")) {supportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general term to cover all 32-bit intel micrprocessors 
 							if (!productSupportedArches.containsAll(supportedArches)) {
 								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' ARCH ATTRIBUTE '"+attributeValue+"' IS NOT A SUBSET OF THE TOP LEVEL PRODUCT '"+productId+"' ARCH ATTRIBUTE '"+productSupportedArches+"'.");
 							}
-							if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch.toUpperCase())) {
+							if (!supportedArches.contains("ALL") && !supportedArches.contains(clienttasks.arch)) {
 								//providedProductAttributesPassRulesCheck = false;
+							} else {
+								atLeastOneProvidedProductSatisfiesArch = true;
 							}
 						}
 						if (attributeName.equals("variant")) {
@@ -1222,16 +1226,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					if (ProductCert.findFirstInstanceWithMatchingFieldFromList("productId", providedProductId, productCerts) != null) atLeastOneProvidedProductIsInstalled=true;
 					
 				}
-
-				if (matchSystemSoftware && atLeastOneProvidedProductIsInstalled) {
 				
-					// Example:
-					// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
-	
-					// String systemProductId, JSONArray bundledProductDataAsJSONArray
+				
+				// Example:
+				// < {systemProductId:'awesomeos-modifier', bundledProductData:<{productName:'Awesome OS Modifier Bits'}>} , {systemProductId:'awesomeos-server', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-server-basic', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-workstation-basic', bundledProductData:<{productName:'Awesome OS Workstation Bits'}>} , {systemProductId:'awesomeos-server-2-socket-std', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-prem', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-4-socket-prem',bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'awesomeos-server-2-socket-bas', bundledProductData:<{productName:'Awesome OS Server Bits'},{productName:'Clustering Bits'},{productName:'Shared Storage Bits'},{productName:'Management Bits'},{productName:'Large File Support Bits'},{productName:'Load Balancing Bits'}>} , {systemProductId:'awesomeos-virt-4', bundledProductData:<{productName:'Awesome OS Server Bits'}>} , {systemProductId:'management-100', bundledProductData:<{productName:'Management Add-On'}>} , {systemProductId:'awesomeos-scalable-fs', bundledProductData:<{productName:'Awesome OS Scalable Filesystem Bits'}>}>
+				// String systemProductId, JSONArray bundledProductDataAsJSONArray
+				if (matchSystemSoftware && atLeastOneProvidedProductIsInstalled) {
 					ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
 					productIdsAddedToSystemSubscriptionPoolProductData.add(productId);
-				} else if (!matchSystemSoftware) {
+				} else if (matchSystemHardware && atLeastOneProvidedProductSatisfiesArch) {
+					ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
+					productIdsAddedToSystemSubscriptionPoolProductData.add(productId);		
+				} else if (!matchSystemSoftware && !matchSystemHardware) {
 					ll.add(Arrays.asList(new Object[]{productId, jsonBundledProductData}));
 					productIdsAddedToSystemSubscriptionPoolProductData.add(productId);		
 				}
