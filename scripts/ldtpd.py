@@ -67,7 +67,7 @@ ldtp2commands = ['activatetext', 'activatewindow', 'appendtext', 'check', 'check
 
 _ldtp_methods = filter(lambda fn: inspect.isfunction(getattr(ldtp,fn)),  dir(ldtp))
 _supported_methods = filter(lambda x: x in ldtp2commands, _ldtp_methods)
-_additional_methods = ['closewindow']
+_additional_methods = ['closewindow', 'maximizewindow']
 for item in _additional_methods: _supported_methods.append(item)
 _supported_methods.sort()
 
@@ -190,18 +190,36 @@ class AllMethods:
     gobject.idle_add(gtk.main_quit)
     gtk.main()
     return success
-        
+
+  def _maximizewindow(self,window_name):
+    screen = wnck.screen_get_default()
+    while gtk.events_pending():
+      gtk.main_iteration()
+
+    windows = screen.get_windows()
+    success = 0
+    for w in windows:
+      current_window = w.get_name()
+      if self._window_search(current_window,window_name):
+        w.maximize()
+        success = 1
+        break
+
+    gobject.idle_add(gtk.main_quit)
+    gtk.main()
+    return success
+
   def _dispatch(self,method,params):
     if method in _supported_methods:
+      paramslist = list(params)
       if method == "hasstate":
-        paramslist = list(params)
         paramslist[2]=self._translate_state(paramslist[2])
         params = tuple(paramslist)
       elif method == "closewindow":
-        paramslist = list(params)
         return self._closewindow(paramslist[0])
+      elif method == "maximizewindow":
+        return self._maximizewindow(paramslist[0])  
       elif method == "getobjectproperty":
-        paramslist = list(params)
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
         params = tuple(paramslist)
 
