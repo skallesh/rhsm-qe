@@ -11,7 +11,8 @@
                  [org.jdom/jdom "1.1"]
                  [postgresql/postgresql "8.4-701.jdbc4"]
                  [webui-framework "1.0.2-SNAPSHOT"]
-                 [gnome.ldtp "1.1.0-SNAPSHOT"]
+                 [gnome.ldtp "1.1.0-SNAPSHOT"
+                  :exclusions [org.clojure/clojure]]
                  [test_clj.testng "1.0.1-SNAPSHOT"]
                  [clj-http "0.1.3"]
                  [matchure "0.10.1"]]
