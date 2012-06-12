@@ -172,7 +172,8 @@
                                            :skip-autosubscribe skip-autosubscribe
                                            :owner owner))}))
   (ui click :register-system)
-  (ui waittillguiexist :redhat-login)
+  (ui waittillguiexist :register-dialog)
+  
   (ui settextvalue :redhat-login username)
   (ui settextvalue :password password)
   (when system-name-input

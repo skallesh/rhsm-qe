@@ -111,7 +111,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :register-cancel "cancel_button"
          :owners "ownerSelectVbox"
          :owner-view "tbl0"
-         :registering "Registering"})
+         :registering "Registering"
+         :register-proxy-conf "Proxy Configuration"
+         :register-import-cert "Import Certificates"})
     (define-elements (windows :subscribe-system-dialog)
       {:sla-subscribe "Subscribe"
        :sla-forward "Forward"
