@@ -51,7 +51,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String guiCommand = clienttasks.command+"-gui";
 		// is the guiCommand installed?
-		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
+		if (client.runCommandAndWait("rpm -q "+guiCommand).getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+": nothing appropriate",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
@@ -71,7 +71,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) throw new SkipException("A client connection is needed for this test.");
 		String command = "rhsm-icon"; //iconCommand = "rhsm-compliance-icon"; // prior to bug 771726
 		// is the command installed?
-		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {
+		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
 			log.warning("In this test we tested only the existence of the man page; NOT the content.");
@@ -632,7 +632,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		}
 		
 		// rhsm-icon OPTIONS
-		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gnome").getStdout().contains("is not installed")) {	// test only when the rpm is installed
+		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {	// test only when the rpm is installed
 			//[root@jsefler-onprem-5server ~]# rhsm-icon -?
 			//Usage:
 			//  rhsm-icon [OPTION...] rhsm icon
