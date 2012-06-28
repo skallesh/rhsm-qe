@@ -113,9 +113,9 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		
 		// negative tests that require the system to be unregistered first...
 		clienttasks.unregister(null,null,null);
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]".replace("Usage","usage")}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]".replace("Usage","usage")}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]".replace("Usage","usage")}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --installed --servicelevel=foo",		new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
