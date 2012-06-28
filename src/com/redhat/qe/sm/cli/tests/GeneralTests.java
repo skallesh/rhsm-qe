@@ -110,14 +110,21 @@ public class GeneralTests extends SubscriptionManagerCLITestScript{
 		// due to design changes, this is a decent place to dump old commands that have been removed
 		
 		// String command, int expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		
+		// negative tests that require the system to be unregistered first...
+		clienttasks.unregister(null,null,null);
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --product=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --product", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --regtoken=FOO",				new Integer(2),		clienttasks.command+": error: no such option: --regtoken", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" unsubscribe --pool=FOO",					new Integer(2),		clienttasks.command+": error: no such option: --pool", "Usage: subscription-manager unsubscribe [OPTIONS]"}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --installed --servicelevel=foo",		new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									new Integer(255),	"This system is not yet registered. Try 'subscription-manager register --help' for more information.",	""}));
+		
+		// negative tests that require the system to be registered first...
+		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --username "+sm_clientUsername+" --password "+sm_clientPassword+(sm_clientOrg==null?"":" --org "+sm_clientOrg),									new Integer(0),	null,	""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe",									new Integer(255),	"Error: This command requires that you specify a pool with --pool or use --auto.",	""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --auto",				new Integer(255),	"Error: Only one of --pool or --auto may be used with this command.", ""}));
 		ll.add(Arrays.asList(new Object[]{clienttasks.command+" subscribe --pool=123 --servicelevel=foo",	new Integer(255),	"Error: Must use --auto with --servicelevel.", ""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" register --servicelevel=foo",				new Integer(255),	"Error: Must use --autosubscribe with --servicelevel.", ""}));
-		ll.add(Arrays.asList(new Object[]{clienttasks.command+" list --installed --servicelevel=foo",		new Integer(255),	"Error: --servicelevel is only applicable with --available or --consumed", ""}));
 
 		return ll;
 	}

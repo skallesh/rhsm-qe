@@ -64,7 +64,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		// assert redemption results
 		//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
 		Assert.assertEquals(redeemResult.getStderr().trim(), "");
-		Assert.assertEquals(redeemResult.getStdout().trim(), "email is required for notification","Redeem should require that the email option be specified.");
+		//Assert.assertEquals(redeemResult.getStdout().trim(), "email is required for notification","Redeem should require that the email option be specified.");
+		Assert.assertEquals(redeemResult.getStdout().trim(), "Error: This command requires that you specify an email address with --email.","Redeem should require that the email option be specified.");
 		Assert.assertEquals(redeemResult.getExitCode(), Integer.valueOf(255),"Exit code from redeem when executed without an email option.");
 	}
 	

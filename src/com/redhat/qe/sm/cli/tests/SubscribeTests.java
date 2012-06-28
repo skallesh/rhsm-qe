@@ -216,7 +216,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			groups={"blockedByBug-584137"},
-			enabled=false)
+			enabled=false)	// old/disabled test from ssalevan
 	public void SubscribeToASingleEntitlementByProductID_Test(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");

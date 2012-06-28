@@ -54,12 +54,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+guiCommand).getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,1,null,"^No manual entry for "+guiCommand);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+": nothing appropriate",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 			throw new SkipException(guiCommand+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+guiCommand,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+guiCommand,0,"^"+guiCommand+" ",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -74,12 +74,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -94,7 +94,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page cannot be installed.");
 		} else if (!clienttasks.redhatReleaseX.equals("5")) {
 			log.info("The man page for '"+command+"' should only be installed on RHEL5.");
@@ -104,7 +104,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 		}
 	}
 	
@@ -119,12 +119,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,1,null,"^No manual entry for "+command);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+": nothing appropriate",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 			throw new SkipException(command+" is not installed and therefore its man page is also not installed.");
 		} else {
 			RemoteFileTasks.runCommandAndAssert(client,"man -P cat "+command,0);
 			RemoteFileTasks.runCommandAndAssert(client,"whatis "+command,0,"^"+command+" ",null);
-			log.warning("In this test we tested only the existence of the man page; NOT the content.");
+			log.warning("In this test we only assert the existence of the man page; NOT the contents!");
 		}
 	}
 	
