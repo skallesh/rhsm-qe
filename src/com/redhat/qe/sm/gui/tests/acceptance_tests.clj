@@ -8,8 +8,11 @@
             [com.redhat.qe.sm.gui.tests.register-tests :as rtest]
             [com.redhat.qe.sm.gui.tests.subscribe-tests :as stest]
             [com.redhat.qe.sm.gui.tests.autosubscribe-tests :as atest])
-  (:import [org.testng.annotations Test BeforeClass DataProvider]))
-
+  (:import [org.testng.annotations
+            Test
+            BeforeClass
+            AfterClass
+            DataProvider]))
 
 (defn ^{Test {:groups ["acceptance"]}}
   register [_]
@@ -42,6 +45,12 @@
   (atest/setup nil)
   (.configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel @atest/complytests)
   (atest/simple_autosubscribe nil))
+
+(defn ^{AfterClass {:groups ["cleanup"]}}
+  cleanup [_]
+  (.runCommandAndWait @clientcmd "subscription-manager unregister")
+  (.configureProductCertDirAfterClass @atest/complytests)
+  (tasks/restart-app))
 
 (gen-class-testng)
 
