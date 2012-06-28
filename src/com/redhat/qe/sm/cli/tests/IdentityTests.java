@@ -313,7 +313,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		result = clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
-		// Note: I don't know why, but the stdout/stderr results are switched between a hosted and a standalone serverType respond, asserting a workaround...
+		// Note: I don't know why, but the stdout/stderr results are switched between a hosted and a standalone serverType response, asserting a workaround...
 		//Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
 		//Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStdout().trim()+result.getStderr().trim(),expectedMsg, "Feedback expected after the consumer has been deleted on the server-side.");
