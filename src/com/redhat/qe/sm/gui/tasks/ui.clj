@@ -109,11 +109,12 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
          :skip-autobind "auto_bind"
          :register "register_button"
          :register-cancel "cancel_button"
-         :owners "ownerSelectVbox"
-         :owner-view "tbl0"
+         :owner-view "owner_treeview"
          :registering "Registering"
-         :register-proxy-conf "Proxy Configuration"
-         :register-import-cert "Import Certificates"})
+         :register-proxy-conf "proxy_button"
+         :register-server "server_entry"
+         :default-server "default_button"
+         })
     (define-elements (windows :subscribe-system-dialog)
       {:sla-subscribe "Subscribe"
        :sla-forward "Forward"

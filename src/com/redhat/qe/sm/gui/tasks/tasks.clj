@@ -26,6 +26,9 @@
   [ms]
   (. Thread (sleep ms)))
 
+(defn bool [i]
+  (= 1 i))
+
 (def is-boolean?
   (fn [expn]
     (or
@@ -137,7 +140,11 @@
 (defn unregister
   "Unregisters subscripton manager by clicking the 'unregister' button."
   []
-  (if (ui showing? :register-system)
+  (if (or
+       ;rhel6
+       (ui showing? :register-system)
+       ;rhel5 - add 'visible?' helper in gnome.ldtp later
+       (bool (ui hasstate :register-system "VISIBLE")))
     (throw+ {:type :not-registered
             :msg "Tried to unregister when already unregistered."}))
   (ui click :unregister-system)
@@ -151,12 +158,14 @@
                                skip-autosubscribe
                                owner
                                sla
-                               auto-select-sla]
+                               auto-select-sla
+                               server]
                         :or {system-name-input nil
                              skip-autosubscribe true
                              owner nil
                              sla nil
-                             auto-select-sla true}}]
+                             auto-select-sla true
+                             server nil}}]
   (if (ui showing? :unregister-system)
     (throw+ {:type :already-registered
              :username username
@@ -164,37 +173,46 @@
              :system-name-input system-name-input
              :skip-autosubscribe skip-autosubscribe
              :owner owner
+             :sla sla
+             :auto-select-sla auto-select-sla
+             :server server
              :unregister-first (fn []
                                  (unregister)
                                  (register username
                                            password
                                            :system-name-input system-name-input
                                            :skip-autosubscribe skip-autosubscribe
-                                           :owner owner))}))
+                                           :owner owner
+                                           :sla sla
+                                           :auto-select-sla auto-select-sla
+                                           :server server))}))
   (ui click :register-system)
   (ui waittillguiexist :register-dialog)
-  
+  ;server selection screen
+  (when server (ui settextvalue :register-server server))
+  (ui click :register)
+  ;login screen
   (ui settextvalue :redhat-login username)
   (ui settextvalue :password password)
   (when system-name-input
     (ui settextvalue :system-name system-name-input))
-  (if skip-autosubscribe 
-   (ui check :skip-autobind)
-   (ui uncheck :skip-autobind))  
-  (try+ 
+  (if skip-autosubscribe
+    (ui check :skip-autobind)
+    (ui uncheck :skip-autobind))
+  (try+
    (ui click :register)
    (checkforerror 10)
    (if (= 1 (ui guiexist :register-dialog))
      (do
        ;; handle owner selection
-       (if (= 1 (ui waittillshowing :owners 30))
+       (if (= 1 (ui waittillshowing :owner-view 30))
          (do
-           (when owner (do 
+           (when owner (do
                          (if-not (ui rowexist? :owner-view owner)
                            (throw+ {:type :owner-not-available
                                     :name owner
                                     :msg (str "Not found in 'Owner Selection':" owner)})
-                           (ui selectrow :owner-view owner))))    
+                           (ui selectrow :owner-view owner))))
            (ui click :register)
            (checkforerror 10)))
        (ui waittillnotshowing :registering 1800)  ;; 30 minutes
@@ -202,7 +220,7 @@
    (if (= 1 (ui guiexist :subscribe-system-dialog))
      (do
        (if auto-select-sla
-         (do 
+         (do
            (if (= 1 (ui guiexist :sla-forward)) ;; sla selection is presented
              (do (when sla (ui click :subscribe-system-dialog sla))
                  (ui click :sla-forward)))
