@@ -571,7 +571,8 @@ public class SubscriptionManagerTasks {
 	}
 	public void stop_rhsmcertd (){
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(3),"^rhsmcertd is stopped$",null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
 	}
 	
 	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
