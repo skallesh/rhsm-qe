@@ -312,7 +312,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	
 	// Protected Methods ***********************************************************************
 	List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
-	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru-RU","ta_IN","te_IN","zh_CN","zh_TW"); 
+	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
 	Map<File,List<Translation>> translationFileMap = new HashMap<File, List<Translation>>();
 	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
 
