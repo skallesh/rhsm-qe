@@ -538,7 +538,7 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
+		// TEMPORARY WORKAROUND FOR BUG
 		/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA; setting invokeWorkaroundWhileBugIsOpen to false to save execution time
 		String bugId1="752572"; 
 		String bugId2="759199"; 
@@ -594,16 +594,28 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentServiceLevel() {
 		
-		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null);
 		
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: Standard
 		//
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: 
-		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
 		
-		//return serviceLevel.isEmpty()?null:serviceLevel;
+		// [root@jsefler-59server ~]# subscription-manager service-level --show --list
+		// Service level preference not set
+		// +-------------------------------------------+
+		//                Available Service Levels
+		// +-------------------------------------------+
+		// PREMIUM
+		// STANDARD
+		// NONE
+		// [root@jsefler-59server ~]# 
+
+
+		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
+		serviceLevel = serviceLevel.replace("Service level preference not set", "");	// decided not to use serviceLevel=null when the service level is not set because the json value of the consumer's service level will be "" instead of null which effectively means the service level is not set.
+
 		return serviceLevel;
 	}
 	
@@ -629,7 +641,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
-		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null);
 		
 		List<String> serviceLevels = new ArrayList<String>();
 		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
@@ -2102,13 +2114,15 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * service_level without asserting results
+	 * @param set TODO
 	 */
-	public SSHCommandResult service_level_(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " service-level";
 		if (show!=null && show)			command += " --show";
 		if (list!=null && list)			command += " --list";
+		if (set!=null)					command += " --set="+set;
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
 		if (org!=null)					command += " --org="+org;
@@ -2122,10 +2136,11 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager service-level"
+	 * @param set TODO
 	 */
-	public SSHCommandResult service_level(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level(Boolean show, Boolean list, String set, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = service_level_(show, list, username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = service_level_(show, list, set, username, password, org, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		/*
@@ -2154,13 +2169,15 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert the "Current service level: "
-		String regex = "Current service level: ";
-		if (show!=null && show) {	// when explicitly asked to show
-			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
-		} else if (list!=null && list) {	// when explicitly asked to list but not show
-			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
-		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
-			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
+		String serviceLevelSetMsg = "Current service level: ";
+		String serviceLevelNotSetMsg = "Service level preference not set";
+		if ((show!=null && show) // when explicitly asked to show
+			|| ((show==null || !show) && (list==null || !list) && (set==null)) ){	// or when no options are explicity asked, then the default behavior is --show
+			if (!sshCommandResult.getStdout().contains(serviceLevelNotSetMsg)) {
+				Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelSetMsg),"Stdout from service-level (with option --show) contains the expected feedback: "+serviceLevelSetMsg);
+			} else {
+				Assert.assertFalse(sshCommandResult.getStdout().contains(serviceLevelSetMsg),"Stdout from service-level (with option --show) contains the expected feedback: "+serviceLevelNotSetMsg);
+			}
 		}
 		
 		// assert the exit code was a success
