@@ -604,6 +604,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--org=ORG");
 		options.add("--show");
 		options.add("--list");
+		options.add("--set=SERVICE_LEVEL");
+		options.add("--unset");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

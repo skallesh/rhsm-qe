@@ -44,7 +44,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: service-level (when not registered)",
-			groups={},
+			groups={"blockedByBug-826856"/*,"blockedByBug-837036"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelWhenNotRegistered_Test() {
@@ -55,19 +55,26 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		
 		// with credentials
-		result = clienttasks.service_level_(null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
+		result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		if (sm_clientOrg!=null) {
+			result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --show without being registered");
+		}
 		
 		// without credentials
-		result = clienttasks.service_level_(null, null, null, null, null, null, null, null, null);
+		result = clienttasks.service_level_(null, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
 	}
 	
 	
 	@Test(	description="subscription-manager: service-level --show (when not registered)",
-			groups={},
+			groups={"blockedByBug-826856",/*"blockedByBug-837036"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelShowWhenNotRegistered_Test() {
@@ -78,14 +85,21 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult result;
 		
 		// with credentials
-		result = clienttasks.service_level_(true, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
+		result = clienttasks.service_level_(true, null, null, null, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
+		if (sm_clientOrg!=null) {
+			result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --show without being registered");
+		}
 		
 		// without credentials
-		result = clienttasks.service_level_(true, null, null, null, null, null, null, null, null);
+		result = clienttasks.service_level_(true, null, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --show without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --show without being registered");
 	}
 	
 	
@@ -98,9 +112,69 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null);
 		
-		SSHCommandResult result = clienttasks.service_level_(null, true, null, null, null, null, null, null, null);
+		SSHCommandResult result = clienttasks.service_level_(null, true, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list without being registered");
-		Assert.assertEquals(result.getStdout().trim(),"Error: you must register or specify --username and password to list service levels", "Stdout from service-level --list without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"Error: you must register or specify --username and --password to list service levels", "Stdout from service-level --list without being registered");
+	}
+	
+	
+	@Test(	description="subscription-manager: service-level --set (when not registered)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelSetWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister(null, null, null);
+		
+		SSHCommandResult result;
+		
+		// with credentials
+		result = clienttasks.service_level_(null, null, "FOO", null, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --set without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
+		if (sm_clientOrg!=null) {
+			result = clienttasks.service_level_(null, null, "FOO", null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --set without being registered");
+		}
+		
+		// without credentials
+		result = clienttasks.service_level_(null, null, "FOO", null, null, null, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --set without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --set without being registered");
+	}
+	
+	
+	@Test(	description="subscription-manager: service-level --unset (when not registered)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelUnsetWhenNotRegistered_Test() {
+		
+		// make sure we are not registered
+		clienttasks.unregister(null, null, null);
+		
+		SSHCommandResult result;
+		
+		// with credentials
+		result = clienttasks.service_level_(null, null, null, true, sm_clientUsername, sm_clientPassword, /*sm_clientOrg*/null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --unset without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
+		if (sm_clientOrg!=null) {
+			result = clienttasks.service_level_(null, null, null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --unset without being registered");
+		}
+		
+		// without credentials
+		result = clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
+		//Assert.assertEquals(result.getStdout().trim(),"Error: This system is currently not registered.", "Stdout from service-level --unset without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"This system is not yet registered. Try 'subscription-manager register --help' for more information.", "Stdout from service-level --unset without being registered");
 	}
 	
 	
@@ -114,7 +188,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				
 		// test while unregistered
 		clienttasks.unregister(null, null, null);
-		result = clienttasks.service_level_(null, true, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null);
+		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
 		//if (sm_serverOld) {Assert.assertEquals(result.getStdout().trim(), "Error: you must register or specify --org."); throw new SkipException("service-level --list with invalid credentials against an old candlepin server is not supported.");}
 		if (sm_serverOld) {Assert.assertEquals(result.getStderr().trim(), "ERROR: The service-level command is not supported by the server."); throw new SkipException("Skipping this test since service-level is gracefully not supported when configured against an old candlepin server.");}
@@ -123,7 +197,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null);
-		result = clienttasks.service_level_(null, true, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null);
+		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword+x, sm_clientOrg, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid credentials");
 		Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "Stderr from service-level --list with invalid credentials");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
@@ -140,7 +214,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 				
 		// test while unregistered
 		clienttasks.unregister(null, null, null);
-		result = clienttasks.service_level_(null, true, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
+		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		if (sm_serverOld) {Assert.assertEquals(result.getStderr().trim(), "ERROR: The service-level command is not supported by the server."); throw new SkipException("Skipping this test since service-level is gracefully not supported when configured against an old candlepin server.");}
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
 		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
@@ -148,7 +222,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
 		// test while registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null);
-		result = clienttasks.service_level_(null, true, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
+		result = clienttasks.service_level_(null, true, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg+x, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --list with invalid org");
 		Assert.assertEquals(result.getStderr().trim(), String.format("Organization with id %s could not be found.",sm_clientOrg+x), "Stderr from service-level --list with invalid org");
 		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --list with invalid credentials");
@@ -169,7 +243,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
 		Assert.assertEquals(jsonConsumer.get("serviceLevel"), JSONObject.NULL, "The call to register without a servicelevel leaves the current consumer object serviceLevel attribute value null.");
 		
-		result = clienttasks.service_level(true, false, null, null, null, null, null, null, null);
+		result = clienttasks.service_level(true, false, null, null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level should be null.");
 	}
 	
@@ -192,7 +266,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 		// assert that "Current service level:" is empty
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "When the system has been registered without a service level, the current service level value should be empty.");
-		Assert.assertEquals(clienttasks.service_level(null,null,null,null,null,null,null,null, null).getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level value should be empty.");
+		//Assert.assertEquals(clienttasks.service_level(null,null,null,null,null,null,null,null, null).getStdout().trim(), "Current service level:", "When the system has been registered without a service level, the current service level value should be empty.");
+		Assert.assertEquals(clienttasks.service_level(null,null,null,null,null,null,null,null, null, null).getStdout().trim(), "Service level preference not set", "When the system has been registered without a service level, the current service level value should be empty.");
 
 		// get all the valid service levels available to this org	
 		List<String> serviceLevelsExpected = CandlepinTasks.getServiceLevelsForOrgKey(/*username or*/sm_serverAdminUsername, /*password or*/sm_serverAdminPassword, sm_serverUrl, org);
@@ -221,7 +296,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	
-	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
+	@Test(	description="subscription-manager: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
 			groups={"blockedByBug-795798"},
 			enabled=true)
 	public void RegisterWithUnavailableServiceLevel_Test() {
@@ -572,6 +647,106 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "Immediately upon registering, the consumer's service level preference was set to the org's default (which was unset).");
 	}
+	
+	
+	
+	
+	@Test(	description="subscription-manager: service-level --set (with unavailable serviceLevel)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelSetWithUnavailableServiceLevel_Test() {
+			
+		// test while registered
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null);
+		
+		String unavailableSericeLevel = "FOO";
+		SSHCommandResult result = clienttasks.service_level_(null, null, unavailableSericeLevel, null, null, null, null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with unavailable serviceLevel");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Service level %s is not available to consumers of organization admin.",unavailableSericeLevel), "Stderr from service-level --set with unavailable serviceLevel");
+		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with unavailable serviceLevel");
+	}
+	
+	
+	@Test(	description="subscription-manager: service-level --set (with exempt serviceLevel should be treated as unavailable)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelSetWithExemptServiceLevel_Test() {
+			
+		// test while registered
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null, null);
+		
+		String exemptSericeLevel = sm_exemptServiceLevelsInUpperCase.get(SubscriptionManagerCLITestScript.randomGenerator.nextInt(sm_exemptServiceLevelsInUpperCase.size()));
+		SSHCommandResult result = clienttasks.service_level_(null, null, exemptSericeLevel, null, null, null, null, null, null, null);
+		log.info("An exempt service level should be treated as an unavailable service level when attempting to set.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set with exempt serviceLevel");
+		Assert.assertEquals(result.getStderr().trim(), String.format("Service level %s is not available to consumers of organization admin.",exemptSericeLevel), "Stderr from service-level --set with exempt serviceLevel");
+		Assert.assertEquals(result.getStdout().trim(), "", "Stdout from service-level --set with exempt serviceLevel");
+	}
+	
+	
+	@Test(	description="subscription-manager: service-level --set (with available serviceLevel)",
+			groups={},
+			dataProvider="getAllAvailableServiceLevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelSetWithAvailableServiceLevel_Test(Object bugzilla, String org, String serviceLevel) {
+		
+		// register (if not already registered)
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null);
+
+		clienttasks.service_level(null, null, serviceLevel, null, null, null, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The --set serviceLevel matches the current --show serviceLevel.");
+	}
+	
+	
+	@Test(	description="subscription-manager: service-level --set should accept \"\" to effectively unset",
+			groups={},
+			dataProvider="getAllAvailableServiceLevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsetServiceLevel_Test(Object bugzilla, String org, String serviceLevel) {
+		
+		ServiceLevelSetWithAvailableServiceLevel_Test(bugzilla,org,serviceLevel);
+		clienttasks.service_level(null, null, "", null, null, null, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "The serviceLevel can effectively be unset by setting a value of \"\".");
+	}
+	
+	
+	@Test(	description="subscription-manager: service-level --set (with case insensitivity) is preserved throughtout an identity regeneration",
+			groups={},
+			dataProvider="getAllAvailableServiceLevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelSetWithAvailableServiceLevelIsPreservedThroughIdentityRegeneration_Test(Object bugzilla, String org, String serviceLevel) {
+		
+		// register (if not already registered)
+		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null);
+		
+		serviceLevel = randomizeCaseOfCharactersInString(serviceLevel);
+		clienttasks.service_level(null, null, serviceLevel, null, null, null, null, null, null, null);
+		clienttasks.identity(null,null,true,null,null,null,null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The --set serviceLevel matches the current --show serviceLevel even after an identity regeneration.");
+	}
+	
+	
+	
+	
+	@Test(	description="subscription-manager: service-level --unset after setting an available service level",
+			groups={},
+			dataProvider="getAllAvailableServiceLevelData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelUnsetAfterSet_Test(Object bugzilla, String org, String serviceLevel) {
+		
+		ServiceLevelSetWithAvailableServiceLevel_Test(bugzilla,org,serviceLevel);
+		clienttasks.service_level(null, null, null, true, null, null, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "The serviceLevel is unset after calling with the --unset option.");
+	}
+	
+	
+	
 	
 	
 	

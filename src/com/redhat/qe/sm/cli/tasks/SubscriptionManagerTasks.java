@@ -594,7 +594,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentServiceLevel() {
 		
-		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null);
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null, null);
 		
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: Standard
@@ -641,7 +641,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
-		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null, null);
 		
 		List<String> serviceLevels = new ArrayList<String>();
 		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
@@ -2114,15 +2114,26 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * service_level without asserting results
-	 * @param set TODO
+	 * @param show
+	 * @param list
+	 * @param set
+	 * @param unset TODO
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " service-level";
 		if (show!=null && show)			command += " --show";
 		if (list!=null && list)			command += " --list";
-		if (set!=null)					command += " --set="+set;
+		if (set!=null)					command += " --set="+String.format("\"%s\"", set);
+		if (unset!=null && unset)		command += " --unset";
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
 		if (org!=null)					command += " --org="+org;
@@ -2136,11 +2147,21 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager service-level"
-	 * @param set TODO
+	 * @param show
+	 * @param list
+	 * @param set
+	 * @param unset TODO
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult service_level(Boolean show, Boolean list, String set, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = service_level_(show, list, set, username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = service_level_(show, list, set, unset, username, password, org, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		/*
@@ -2165,19 +2186,42 @@ public class SubscriptionManagerTasks {
 		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
 		} else {
-			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
+			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) does not contain the banner regex: "+bannerRegex);	
 		}
 		
 		// assert the "Current service level: "
-		String serviceLevelSetMsg = "Current service level: ";
+		String serviceLevelMsg = "Current service level: ";
 		String serviceLevelNotSetMsg = "Service level preference not set";
 		if ((show!=null && show) // when explicitly asked to show
-			|| ((show==null || !show) && (list==null || !list) && (set==null)) ){	// or when no options are explicity asked, then the default behavior is --show
+			|| ((show==null || !show) && (list==null || !list) && (set==null) && (unset==null || !unset)) ){	// or when no options are explicity asked, then the default behavior is --show
 			if (!sshCommandResult.getStdout().contains(serviceLevelNotSetMsg)) {
-				Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelSetMsg),"Stdout from service-level (with option --show) contains the expected feedback: "+serviceLevelSetMsg);
+				Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelMsg),"Stdout from service-level (with option --show) contains the expected feedback: "+serviceLevelMsg);
 			} else {
-				Assert.assertFalse(sshCommandResult.getStdout().contains(serviceLevelSetMsg),"Stdout from service-level (with option --show) contains the expected feedback: "+serviceLevelNotSetMsg);
+				Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelMsg),"Stdout from service-level (without option --show) does not contain feedback: "+serviceLevelNotSetMsg);
 			}
+		}
+		
+		// assert the "Service level set to: "
+		String serviceLevelSetMsg = "Service level set to: ";
+		if (set!=null) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelSetMsg+set),"Stdout from service-level (with option --set) contains the expected feedback: "+serviceLevelSetMsg+set);
+		} else {
+			// TEMPORARY WORKAROUND FOR BUG
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="835050"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Skipping service-level unset feedback message while this bug is open.");
+			} else
+			// END OF WORKAROUND
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelSetMsg),"Stdout from service-level (without option --set) does not contain feedback: "+serviceLevelSetMsg);
+		}
+		
+		// assert the "Service level preference has been unset"
+		String serviceLevelUnsetMsg = "Service level preference has been unset";
+		if (unset!=null && unset) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelUnsetMsg),"Stdout from service-level (with option --unset) contains the expected feedback: "+serviceLevelUnsetMsg);
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelUnsetMsg),"Stdout from service-level (without option --unset) does not contain the feedback: "+serviceLevelUnsetMsg);
 		}
 		
 		// assert the exit code was a success
