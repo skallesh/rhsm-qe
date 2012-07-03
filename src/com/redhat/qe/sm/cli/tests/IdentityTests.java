@@ -364,7 +364,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 813296 - Consumer could not get correct info after being deleted from server side
 	// TODO Bug 827035 - Teach rhsmcertd to refresh the identity certificate 
 	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate
-	// TODO Bug 827032 - Support autoregen of identity certificates 
+	// TODO Bug 827032 - Support autoregen of identity certificates
+	// TODO Bug 834558 - Teach rhsmcertd to refresh the identity certificate 
 	
 	
 	

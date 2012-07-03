@@ -103,7 +103,8 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null);
 		
 		// assert environmentsResult results
-		Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org","Environments should require that the org option be specified.");
+		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org","Environments should require that the org option be specified.");
+		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organizaiton with --org","Environments should require that the org option be specified.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
 
 	}
@@ -241,7 +242,8 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 		if (servertasks==null) return ll;
 		if (clienttasks==null) return ll;
 		
-		String stdoutMsg = "ERROR: Server does not support environments.";
+		//String stdoutMsg = "ERROR: Server does not support environments.";
+		String stdoutMsg = "Error: Server does not support environments.";
 		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
 		String x = String.valueOf(getRandInt());
 		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
