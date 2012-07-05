@@ -72,18 +72,6 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		return ((SubscriptionPool)obj).poolId.equals(this.poolId);
 	}
 	
-	public SubscriptionPool(String subscriptionLine) throws ParseException{
-		super(null);
-		
-		String[] components = subscriptionLine.split("\\t");
-		
-		subscriptionName = components[0].trim();
-		endDate = /*this.*/parseDateString(components[1].trim());
-		poolId = components[2].trim();
-		quantity = components[3].trim();	// Integer.parseInt(components[3].trim());
-		associatedProductIDs = new ArrayList<ProductSubscription>();
-	}
-	
 	public SubscriptionPool(String subscriptionName,
 			Calendar startDate,
 			Calendar endDate,
@@ -246,19 +234,30 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		Expires:              	04/18/2013               
 		Machine Type:         	physical  
 		
+		
+		// after changes from: Bug 806986 - Subscription-Manager should refer to subscription name and product name
+		Subscription Name:    	Awesome OS Server Basic
+		Pool Id:              	8a90f8143830683f013830694a6a0278
+		Quantity:             	5
+		Service Level:        	None
+		Service Type:         	Self-Support
+		Multi-Entitlement:    	No
+		Ends:                 	06/26/2013
+		Machine Type:         	physical
+
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("subscriptionName",			"Product Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
-		regexes.put("productId",				"Product Id:(.*)");
+		regexes.put("subscriptionName",			"Subscription Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
+		regexes.put("productId",				"Product Id:(.*)");	// removed by Bug 806986 - Subscription-Manager should refer to subscription name and product name
 		regexes.put("poolId",					"Pool Id:(.*)");
 		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
 		regexes.put("serviceLevel",				"Service Level:(.*)");
 		regexes.put("serviceType",				"Service Type:(.*)");
 		regexes.put("multiEntitlement",			"Multi-Entitlement:(.*)");
-		regexes.put("endDate",					"Expires:(.*)");
+		regexes.put("endDate",					"Ends:(.*)");
 		regexes.put("machineType",				"Machine Type:(.*)");
 	
 		List<Map<String,String>> listOfAvailableSubscriptionMaps = new ArrayList<Map<String,String>>();

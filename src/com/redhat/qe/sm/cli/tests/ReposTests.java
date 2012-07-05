@@ -182,7 +182,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
 			enabled=true,
-			groups={"blockedByBug-724809","blockedByBug-807360"})
+			groups={"blockedByBug-724809","blockedByBug-807360","blockedByBug-837447"})
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsEmptyWhenNotRegistered_Test(){
 		

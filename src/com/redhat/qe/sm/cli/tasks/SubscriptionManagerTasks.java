@@ -538,7 +538,7 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
 
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=752572 - jsefler 11/9/2011
+		// TEMPORARY WORKAROUND FOR BUG
 		/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA; setting invokeWorkaroundWhileBugIsOpen to false to save execution time
 		String bugId1="752572"; 
 		String bugId2="759199"; 
@@ -548,7 +548,8 @@ public class SubscriptionManagerTasks {
 		} else {
 		// END OF WORKAROUND
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+"\n.* cert check started: interval = "+certFrequency,null);
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+"\n.* cert check started: interval = "+certFrequency,null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+" minute\\(s\\)\n.* cert check started: interval = "+certFrequency+" minute\\(s\\)",null);
 		}
 		
 		// give the rhsmcertd time to make its initial check-in with the candlepin server and update the certs
@@ -570,7 +571,8 @@ public class SubscriptionManagerTasks {
 	}
 	public void stop_rhsmcertd (){
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
+//		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(3),"^rhsmcertd is stopped$",null);  // exit code 3 = program not running		// reference Bug 232163; Bug 679812
 	}
 	
 	public void waitForRegexInRhsmcertdLog(String logRegex, int timeoutMinutes) {
@@ -593,16 +595,28 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentServiceLevel() {
 		
-		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null);
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null, null);
 		
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: Standard
 		//
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: 
-		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
 		
-		//return serviceLevel.isEmpty()?null:serviceLevel;
+		// [root@jsefler-59server ~]# subscription-manager service-level --show --list
+		// Service level preference not set
+		// +-------------------------------------------+
+		//                Available Service Levels
+		// +-------------------------------------------+
+		// PREMIUM
+		// STANDARD
+		// NONE
+		// [root@jsefler-59server ~]# 
+
+
+		String serviceLevel = result.getStdout().split("\\+-+\\+")[0].replaceFirst(".*:", "").trim();
+		serviceLevel = serviceLevel.replace("Service level preference not set", "");	// decided not to use serviceLevel=null when the service level is not set because the json value of the consumer's service level will be "" instead of null which effectively means the service level is not set.
+
 		return serviceLevel;
 	}
 	
@@ -628,7 +642,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
-		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null, null);
 		
 		List<String> serviceLevels = new ArrayList<String>();
 		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
@@ -2101,13 +2115,26 @@ public class SubscriptionManagerTasks {
 
 	/**
 	 * service_level without asserting results
+	 * @param show
+	 * @param list
+	 * @param set
+	 * @param unset TODO
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult service_level_(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " service-level";
 		if (show!=null && show)			command += " --show";
 		if (list!=null && list)			command += " --list";
+		if (set!=null)					command += " --set="+String.format("\"%s\"", set);
+		if (unset!=null && unset)		command += " --unset";
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
 		if (org!=null)					command += " --org="+org;
@@ -2121,10 +2148,21 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * "subscription-manager service-level"
+	 * @param show
+	 * @param list
+	 * @param set
+	 * @param unset TODO
+	 * @param username
+	 * @param password
+	 * @param org
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
 	 */
-	public SSHCommandResult service_level(Boolean show, Boolean list, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = service_level_(show, list, username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = service_level_(show, list, set, unset, username, password, org, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		/*
@@ -2149,17 +2187,42 @@ public class SubscriptionManagerTasks {
 		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list) contains the expected banner regex: "+bannerRegex);
 		} else {
-			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) should not contains the banner regex: "+bannerRegex);	
+			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without option --list) does not contain the banner regex: "+bannerRegex);	
 		}
 		
 		// assert the "Current service level: "
-		String regex = "Current service level: ";
-		if (show!=null && show) {	// when explicitly asked to show
-			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --show) contains the expected regex: "+regex);
-		} else if (list!=null && list) {	// when explicitly asked to list but not show
-			Assert.assertTrue(!Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (with option --list, but not --show) should not contains the regex: "+regex);	
-		} else if ((show==null || !show) && (list==null || !list)) {	// when no options are explicity asked, then the default behavior is --show
-			Assert.assertTrue(Pattern.compile(".*"+regex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from service-level (without options --show --list) contains the expected regex: "+regex);		
+		String serviceLevelMsg = "Current service level: ";
+		String serviceLevelNotSetMsg = "Service level preference not set";
+		if ((show!=null && show) // when explicitly asked to show
+			|| ((show==null || !show) && (list==null || !list) && (set==null) && (unset==null || !unset)) ){	// or when no options are explicity asked, then the default behavior is --show
+			if (!sshCommandResult.getStdout().contains(serviceLevelNotSetMsg)) {
+				Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelMsg),"Stdout from service-level (with option --show) contains the expected feedback: "+serviceLevelMsg);
+			} else {
+				Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelMsg),"Stdout from service-level (without option --show) does not contain feedback: "+serviceLevelNotSetMsg);
+			}
+		}
+		
+		// assert the "Service level set to: "
+		String serviceLevelSetMsg = "Service level set to: ";
+		if (set!=null) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelSetMsg+set),"Stdout from service-level (with option --set) contains the expected feedback: "+serviceLevelSetMsg+set);
+		} else {
+			// TEMPORARY WORKAROUND FOR BUG
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {String bugId="835050"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Skipping service-level unset feedback message while this bug is open.");
+			} else
+			// END OF WORKAROUND
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelSetMsg),"Stdout from service-level (without option --set) does not contain feedback: "+serviceLevelSetMsg);
+		}
+		
+		// assert the "Service level preference has been unset"
+		String serviceLevelUnsetMsg = "Service level preference has been unset";
+		if (unset!=null && unset) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelUnsetMsg),"Stdout from service-level (with option --unset) contains the expected feedback: "+serviceLevelUnsetMsg);
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelUnsetMsg),"Stdout from service-level (without option --unset) does not contain the feedback: "+serviceLevelUnsetMsg);
 		}
 		
 		// assert the exit code was a success
@@ -3000,7 +3063,7 @@ public class SubscriptionManagerTasks {
 				String personProductId = poolProductDataAsJSONObject.getString("personProductId");
 				JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
 				String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
-				if (poolProductId.equals(systemProductId)) { // special case when pool's productId is really a personal subpool
+				if (poolProductId==systemProductId) { // special case when pool's productId is really a personal subpool
 					poolProductId = personProductId;
 					isSubpool = true;
 					break;
@@ -3141,9 +3204,12 @@ public class SubscriptionManagerTasks {
 			log.info("The new entitlement certificate file is: "+newCertFile);
 			
 			// assert that the productId from the pool matches the entitlement productId
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/5/2010
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=650278 - jsefler 11/05/2010
+			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=806986 - jsefler 06/28/2012
 			boolean invokeWorkaroundWhileBugIsOpen = true;
-			try {String bugId="650278"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			String bugId1="650278"; 
+			String bugId2="806986"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")"); log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				log.warning("Skipping assert that the productId from the pool matches the entitlement productId");
 			} else {
@@ -3153,8 +3219,8 @@ public class SubscriptionManagerTasks {
 			Assert.assertEquals(entitlementCert.orderNamespace.productId, poolProductId, isSubpool?
 					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating Personal SubscriptionPool productId '"+poolProductId+"' after subscribing to the subpool.":
 					"New EntitlementCert productId '"+entitlementCert.orderNamespace.productId+"' matches originating SubscriptionPool productId '"+poolProductId+"' after subscribing to the pool.");
-			Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, newCertFile.getPath()), 1,"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
-			Assert.assertEquals(RemoteFileTasks.testFileExists(sshCommandRunner, newCertKeyFile.getPath()), 1,"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertFile.getPath()),"New EntitlementCert file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
+			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, newCertKeyFile.getPath()),"New EntitlementCert key file exists after subscribing to SubscriptionPool '"+pool.poolId+"'.");
 			}
 
 		

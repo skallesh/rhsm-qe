@@ -47,23 +47,10 @@ public class ProductSubscription extends AbstractCommandLineData {
 			this.productName = "";
 	}
 	
-	/**
-	 * UNTESTED/UNUSED METHOD FROM ssalevan
-	 * @param subscriptionLine
-	 * @throws ParseException
-	 */
-	public ProductSubscription(String subscriptionLine) throws ParseException{
-		super(null);
-		
-		String[] components = subscriptionLine.split("\\t");
-		
-		productName = components[0].trim();
-		isActive = components[1].toLowerCase().contains("true");
-		endDate = /*this.*/parseDateString(components[2].trim());
-	}
+
 	
 	/**
-	 * UNTESTED/UNUSED METHOD FROM ssalevan
+	 * UNMAINTAINED METHOD FROM ssalevan
 	 * @param productName
 	 * @param fromPool
 	 */
@@ -174,13 +161,34 @@ public class ProductSubscription extends AbstractCommandLineData {
 		Service Type :        	                         
 		Begins:               	02/18/2012               
 		Expires:              	04/18/2013  
+		
+		
+		
+		// new format introduced in rhel59
+		Subscription Name:    	Awesome OS Server Bundled (2 Sockets, Standard Support)
+		Provides:             	Clustering Bits
+		                      	Awesome OS Server Bits
+		                      	Shared Storage Bits
+		                      	Management Bits
+		                      	Large File Support Bits
+		                      	Load Balancing Bits
+		Contract:             	37
+		Account:              	12331131231
+		Serial Number:        	2857634102142738253
+		Active:               	True
+		Quantity Used:        	1
+		Service Level:        	Standard
+		Service Type:         	L1-L3
+		Starts:               	06/26/2012
+		Ends:                 	06/26/2013
+
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
 
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("productName",			"Product Name:(.*)");
+		regexes.put("productName",			"Subscription Name:(.*)");
 		regexes.put("contractNumber",		"Contract Number:(.*)");
 		regexes.put("accountNumber",		"Account Number:(.*)");
 		regexes.put("serialNumber",			"Serial Number:(.*)");
@@ -188,8 +196,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 		regexes.put("quantityUsed",			"Quantity Used:(.*)");
 		regexes.put("serviceLevel",			"Service Level:(.*)");
 		regexes.put("serviceType",			"Service Type:(.*)");
-		regexes.put("startDate",			"Begins:(.*)");
-		regexes.put("endDate",				"Expires:(.*)");
+		regexes.put("startDate",			"Starts:(.*)");
+		regexes.put("endDate",				"Ends:(.*)");
 		
 		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

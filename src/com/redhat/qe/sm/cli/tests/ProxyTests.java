@@ -292,7 +292,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		// setup for test
 		String moduleTask = "service-level";
 		
-		SSHCommandResult attemptResult = clienttasks.service_level_(null, true, username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.service_level_(null, true, null, null, username, password, org, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -318,7 +318,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
 
 		// attempt the moduleTask with the proxy options
-		SSHCommandResult attemptResult = clienttasks.service_level_(null, true, username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult attemptResult = clienttasks.service_level_(null, true, null, null, username, password, org, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
 		if (stderr!=null)	Assert.assertEquals(attemptResult.getStderr().trim(), stderr, "The stderr from an attempt to "+moduleTask+" using a proxy server.");
@@ -1173,7 +1173,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				// Stderr:
 				// ExitCode: 0
 				l.set(7, Integer.valueOf(0));	// exitCode
-				l.set(8,"ERROR: Server does not support environments.");
+				l.set(8,"Error: Server does not support environments.");
 				l.set(9,"");
 			}
 			ll.add(l);
@@ -1199,7 +1199,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 				// Stderr:
 				// ExitCode: 0
 				l.set(11, Integer.valueOf(0));	// exitCode
-				l.set(12,"ERROR: Server does not support environments.");
+				l.set(12,"Error: Server does not support environments.");
 				l.set(13,"");
 			}
 			ll.add(l);

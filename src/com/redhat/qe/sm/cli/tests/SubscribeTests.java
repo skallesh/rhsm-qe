@@ -7,7 +7,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -48,11 +50,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713"},
+			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {
-//if (!productId.equals("awesomeos-zero-sockets")) throw new SkipException("debugging");
 		
 		// begin test with a fresh register
 		clienttasks.unregister(null, null, null);
@@ -216,7 +217,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			groups={"blockedByBug-584137"},
-			enabled=false)
+			enabled=false)	// old/disabled test from ssalevan
 	public void SubscribeToASingleEntitlementByProductID_Test(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");
@@ -278,19 +279,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		SSHCommandResult result = clienttasks.subscribe_(null,null,pool.poolId,null,null, null, null, null, null, null, null);
 
 		if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,pool.poolId)) {
-			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),
+//			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId),
+			Assert.assertEquals(result.getStdout().trim(), String.format("Successfully consumed a subscription for: %s",pool.subscriptionName),
 				"subscribe command allows multi-entitlement pools to be subscribed to by the same consumer more than once.");
 			BigInteger serial2 = CandlepinTasks.getConsumersNewestEntitlementSerialCorrespondingToSubscribedPoolId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId, pool.poolId);
 			Assert.assertNotSame(serial1,serial2,
 				"Upon subscribing to a multi-entitlement pool '"+pool.poolId+"' for the second time, the newly granted entilement's serial '"+serial2+"' number differs from the first '"+serial1+"'.");
-			Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem")==1,
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem"),
 				"After subscribing to multi-entitlement pool '"+pool.poolId+"' for the second time, the first granted entilement cert file still exists.");
-			Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.entitlementCertDir+File.separator+serial2+".pem")==1,
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial2+".pem"),
 				"After subscribing to multi-entitlement pool '"+pool.poolId+"' for the second time, the second granted entilement cert file exists.");
 		} else {
 			Assert.assertEquals(result.getStdout().trim(), "This consumer is already subscribed to the product matching pool with id '"+pool.poolId+"'.",
 				"subscribe command returns proper message when the same consumer attempts to subscribe to a non-multi-entitlement pool more than once.");
-			Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem")==1,
+			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.entitlementCertDir+File.separator+serial1+".pem"),
 				"After attempting to subscribe to pool '"+pool.poolId+"' for the second time, the first granted entilement cert file still exists.");
 		}
 	}
@@ -307,9 +309,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    
 		// assemble a list of all the available SubscriptionPool ids with duplicates and bad ids
 		List <String> poolIds = new ArrayList<String>();
+		Map <String,String> poolNames= new HashMap<String,String>();
 		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			poolIds.add(pool.poolId);
 			poolIds.add(pool.poolId); // add a duplicate poolid
+			poolNames.put(pool.poolId, pool.subscriptionName);
 		}
 		String badPoolId1 = "bad123", badPoolId2 = "bad_POOLID"; 
 		poolIds.add(0, badPoolId1); // insert a bad poolid
@@ -338,13 +342,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The subscribe result for an invalid pool '"+poolId+"' contains: "+subscribeResultMessage);
 			}
 			else if (CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword,sm_serverUrl,poolId)) {
-				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);
+//				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);
+				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));
 				subscribeResultMessage += "\n"+subscribeResultMessage;
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for a multi-entitlement pool '"+poolId+"' contains: "+subscribeResultMessage);
 			} else if (false) {
 				// TODO case when there are no entitlements remaining for the duplicate subscribe
 			} else {
-				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);
+//				subscribeResultMessage = String.format("Successfully consumed a subscription from the pool with id %s.",poolId);
+				subscribeResultMessage = String.format("Successfully consumed a subscription for: %s",poolNames.get(poolId));
 				subscribeResultMessage += "\n"+"This consumer is already subscribed to the product matching pool with id '"+poolId+"'.";
 				Assert.assertTrue(subscribeResult.getStdout().contains(subscribeResultMessage),"The duplicate subscribe result for pool '"+poolId+"' contains: "+subscribeResultMessage);			
 			}
@@ -645,15 +651,16 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	    //"GET"
 	    //"url": "/consumers/{consumer_uuid}/entitlements/dry-run?service_level=#{service_level}", 
 		
+		String consumerId = clienttasks.getCurrentConsumerId();
+		
 		//  on the first call to this dataProvided test, unsubscribe all subscriptions OR just unregister to a clean state
 		// this will remove any prior subscribed modifier entitlements to avoid test logic errors in this test.
 		if (firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test) {
-			clienttasks.unsubscribe(true, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
+			if (consumerId!=null) clienttasks.unsubscribe(true, null, null, null, null);	//OR clienttasks.unregister(null,null,null);
 			firstcalltoCandlepinConsumerEntitlementsDryrunWithServiceLevel_Test = false;
 		}
 
 		// store the initial state of the system
-		String consumerId = clienttasks.getCurrentConsumerId();
 		if (consumerId==null) consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, null, false, null, null, null));
 		String initialServiceLevel = clienttasks.getCurrentServiceLevel();
 		List<EntitlementCert> initialEntitlementCerts = clienttasks.getCurrentEntitlementCerts();
@@ -894,7 +901,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			if (quantity>1 && !CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId)) {
 				Assert.assertTrue(subscribeResult.getStdout().contains("Multi-entitlement not supported for pool with id '"+pool.poolId+"'."),"Subscribe attempt to non-multi-entitlement pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than one.");				
 			} else if (pool.quantity.equalsIgnoreCase("unlimited") || quantity <= Integer.valueOf(pool.quantity)) {
-				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
+//				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
+				Assert.assertTrue(subscribeResult.getStdout().contains(String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)),"Subscribe to pool '"+pool.poolId+"' was successful when subscribing with --quantity less than or equal to the pool's availability.");
 			} else {
 				Assert.assertTrue(subscribeResult.getStdout().contains("No entitlements are available from the pool with id '"+pool.poolId+"'."),"Subscribe to pool '"+pool.poolId+"' was NOT successful when subscribing with --quantity greater than the pool's availability.");
 			}
@@ -1063,10 +1071,14 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null,							pool,	"Two",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"-1",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722554"),	pool,	"0",												Integer.valueOf(255),	"^Error: Quantity must be a positive number.$".replace("number","integer")/* due to bug 746262*/,	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
-			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("746262"),	pool,	"+2",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	pool.quantity,										Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)+1),	Integer.valueOf(1),		"^"+String.format("No entitlements are available from the pool with id '%s'.",pool.poolId)+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {null,							pool,	String.valueOf(Integer.valueOf(pool.quantity)*10),	Integer.valueOf(1),		"^"+String.format("No entitlements are available from the pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
@@ -1075,7 +1087,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		pool= poolWithMultiEntitlementNo;
 		if (pool!=null) {
-			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool with a \"multi-entitlement\" product attribute set to no."}));
@@ -1083,7 +1096,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 		pool= poolWithMultiEntitlementNull;
 		if (pool!=null) {
-			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+//			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription from the pool with id %s.",pool.poolId)+"$",	null}));
+			ll.add(Arrays.asList(new Object[] {null,							pool,	"1",												Integer.valueOf(0),		"^"+String.format("Successfully consumed a subscription for: %s",pool.subscriptionName)+"$",	null}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("722975"),	pool,	"2",												Integer.valueOf(1),		"^"+String.format("Multi-entitlement not supported for pool with id '%s'.",pool.poolId)+"$",	null}));
 		} else {
 			ll.add(Arrays.asList(new Object[] {null,	null,	null,	null,	null,	"Could NOT find an available subscription pool without a \"multi-entitlement\" product attribute."}));

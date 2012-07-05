@@ -127,8 +127,10 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Status:             	Not Subscribed           
 		Starts:             	09/19/2011               
 		Expires:            	09/20/2011  
-		*/
-		/*
+
+
+
+
 		Product Name:         	Red Hat Enterprise Linux Server
 		Product ID:           	69                       
 		Version:              	6.3                      
@@ -144,6 +146,16 @@ public class InstalledProduct extends AbstractCommandLineData {
 		Status:               	Subscribed               
 		Starts:               	04/30/2012               
 		Expires:              	04/30/2013  
+		
+		
+		Product Name:         	Load Balancing Bits
+		Product ID:           	37070
+		Version:              	1.0
+		Arch:                 	ALL
+		Status:               	Subscribed
+		Starts:               	06/26/2012
+		Ends:                 	06/26/2013
+
 		*/
 		
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -155,7 +167,7 @@ public class InstalledProduct extends AbstractCommandLineData {
 		regexes.put("arch",			"^Arch:(.*)");
 		regexes.put("status",		"^Status:(.*)");
 		regexes.put("startDate",	"^Starts:(.*)");
-		regexes.put("endDate",		"^Expires:(.*)");
+		regexes.put("endDate",		"^Ends:(.*)");
 		
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
