@@ -74,54 +74,61 @@ _supported_methods.sort()
 
 #create a class with all ldtp methods as attributes
 class AllMethods:
-  def _translate_state(self,value):        
-    #states enum from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
-    #hint: state = $line_number - 80
-    states = ['INVALID',
-              'ACTIVE',
-              'ARMED',
-              'BUSY',
-              'CHECKED',
-              'COLLAPSED',
-              'DEFUNCT',
-              'EDITABLE',
-              'ENABLED',
-              'EXPANDABLE',
-              'EXPANDED',
-              'FOCUSABLE',
-              'FOCUSED',
-              'HORIZONTAL',
-              'ICONIFIED',
-              'MODAL',
-              'MULTI_LINE',
-              'MULTISELECTABLE',
-              'OPAQUE',
-              'PRESSED',
-              'RESIZABLE',
-              'SELECTABLE',
-              'SELECTED',
-              'SENSITIVE',
-              'SHOWING',
-              'SINGLE_LINE',
-              'STALE',
-              'TRANSIENT',
-              'VERTICAL',
-              'VISIBLE',
-              'MANAGES_DESCENDANTS',
-              'INDETERMINATE',
-              'TRUNCATED',
-              'REQUIRED',
-              'INVALID_ENTRY',
-              'SUPPORTS_AUTOCOMPLETION',
-              'SELECTABLE_TEXT',
-              'IS_DEFAULT',
-              'VISITED',
-              'LAST_DEFINED']
-    
-    if value in states: 
-      return states.index(value)
+  #states class variable
+  #states enum from /usr/include/at-spi-1.0/cspi/spi-statetypes.h as part of at-spi-devel
+  #hint: state = $line_number - 80
+  states = ['INVALID',
+            'ACTIVE',
+            'ARMED',
+            'BUSY',
+            'CHECKED',
+            'COLLAPSED',
+            'DEFUNCT',
+            'EDITABLE',
+            'ENABLED',
+            'EXPANDABLE',
+            'EXPANDED',
+            'FOCUSABLE',
+            'FOCUSED',
+            'HORIZONTAL',
+            'ICONIFIED',
+            'MODAL',
+            'MULTI_LINE',
+            'MULTISELECTABLE',
+            'OPAQUE',
+            'PRESSED',
+            'RESIZABLE',
+            'SELECTABLE',
+            'SELECTED',
+            'SENSITIVE',
+            'SHOWING',
+            'SINGLE_LINE',
+            'STALE',
+            'TRANSIENT',
+            'VERTICAL',
+            'VISIBLE',
+            'MANAGES_DESCENDANTS',
+            'INDETERMINATE',
+            'TRUNCATED',
+            'REQUIRED',
+            'INVALID_ENTRY',
+            'SUPPORTS_AUTOCOMPLETION',
+            'SELECTABLE_TEXT',
+            'IS_DEFAULT',
+            'VISITED',
+            'LAST_DEFINED']
+
+  def _translate_state(self,value):
+    if value in self.states:
+      return self.states.index(value)
     else:
       return value
+
+  def _translate_number(self,num):
+    if num in xrange(len(self.states)):
+      return self.states[num]
+    else:
+      return num
 
   def _getobjectproperty(self, window, object):
     getobjectlist = getattr(ldtp,"getobjectlist")
@@ -225,7 +232,7 @@ class AllMethods:
 
       function = getattr(ldtp,method)
       retval = function(*params)
-      
+
       if retval == None:
         retval = 0
       elif (retval == -1) and (method == "gettablerowindex"):
@@ -234,6 +241,9 @@ class AllMethods:
         retval = self._quickgettablerowindex(paramslist[0],
                                              paramslist[1],
                                              paramslist[2])
+      elif method == "getallstates":
+        retval = [self._translate_number(state) for state in retval]
+
       return retval
   pass
 
