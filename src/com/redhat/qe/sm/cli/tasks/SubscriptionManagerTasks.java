@@ -3226,8 +3226,11 @@ public class SubscriptionManagerTasks {
 		
 			// assert that consumed ProductSubscriptions has NOT decreased
 			List<ProductSubscription> afterProductSubscriptions = getCurrentlyConsumedProductSubscriptions();
-			Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
-					"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+			//this assertion was valid prior to bug Bug 801187 - collapse list of provided products for subscription-manager list --consumed
+			//Assert.assertTrue(afterProductSubscriptions.size() >= beforeProductSubscriptions.size() && afterProductSubscriptions.size() > 0,
+			//		"The list of currently consumed product subscriptions has increased (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), or has remained the same after subscribing (using poolID="+pool.poolId+") to pool: "+pool+"  Note: The list of consumed product subscriptions can remain the same when all the products from this subscription pool are a subset of those from a previously subscribed pool.");
+			Assert.assertTrue(afterProductSubscriptions.size() == beforeProductSubscriptions.size()+1,
+					"The list of currently consumed product subscriptions has increased by 1 (from "+beforeProductSubscriptions.size()+" to "+afterProductSubscriptions.size()+"), after subscribing to pool: "+pool);
 		}
 		
 		return newCertFile;

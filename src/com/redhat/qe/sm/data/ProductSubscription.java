@@ -22,7 +22,8 @@ public class ProductSubscription extends AbstractCommandLineData {
 	protected static String simpleDateFormat = "MM/dd/yyyy";	// 04/24/2011 https://bugzilla.redhat.com/show_bug.cgi?id=695234  https://bugzilla.redhat.com/show_bug.cgi?id=699442
 	
 	// abstraction fields
-	public String productName;
+	public String productName;	// TODO change to subscriptionName as well as all the "productName" references in the testcases
+	public List<String> provides;	// list of provided product names
 	public BigInteger serialNumber;	// Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
 	public Integer contractNumber;
 	public BigInteger accountNumber;
@@ -66,6 +67,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productName != null)	string += String.format(" %s='%s'", "productName",productName);
+		if (provides != null)		string += String.format(" %s='%s'", "provides",provides);
 		if (serialNumber != null)	string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (contractNumber != null)	string += String.format(" %s='%s'", "contractNumber",contractNumber);
 		if (accountNumber != null)	string += String.format(" %s='%s'", "accountNumber",accountNumber);
@@ -106,82 +108,103 @@ public class ProductSubscription extends AbstractCommandLineData {
 	 */
 	static public List<ProductSubscription> parse(String stdoutListOfConsumedProducts) {
 		/*
-		# subscription-manager-cli list --consumed
+		[root@jsefler-63server ~]# subscription-manager list --consumed
 		+-------------------------------------------+
-    		Consumed Product Subscriptions
+		    Consumed Product Subscriptions
 		+-------------------------------------------+
 		
-		Name:               	High availability (cluster suite)
-		ContractNumber:       	0                        
-		SerialNumber:       	17                       
-		Active:             	True                     
-		Begins:             	2010-07-01               
-		Expires:            	2011-07-01   
-		
-		ProductName:        	Red Hat Enterprise Linux 6 Entitlement Alpha
-		ContractNumber:     	1970595                  
-		SerialNumber:       	1151289234191548136      
-		Active:             	True                     
-		Begins:             	2010-10-25               
-		Expires:            	2011-01-24   
-		
-		ProductName:        	Smart Management (RHN Management & Provisioning)
-		ContractNumber:     	12                       
-		AccountNumber:      	12331131231              
-		SerialNumber:       	11292428201405242        
-		Active:             	True                     
-		Begins:             	2010-12-14               
-		Expires:            	2011-12-15   
-		
-		ProductName:        	Awesome OS Server Bundled
-		ContractNumber:     	1391380943               
-		AccountNumber:      	None                     
-		SerialNumber:       	1669803970633823565      
-		Active:             	True                     
-		Begins:             	2011-04-07               
-		Expires:            	2011-04-08     
-		
-		ProductName:        	Awesome OS Server Bits   
-		ContractNumber:     	63                       
-		AccountNumber:      	12331131231              
-		SerialNumber:       	4575117615078692123      
-		Active:             	True                     
-		QuantityUsed:       	1                        
-		Begins:             	04/13/2011               
-		Expires:            	09/12/2012  
-		
-		
-		Product Name:         	Awesome OS Server Bits   
-		Contract Number:      	102                      
+		Product Name:         	Clustering Bits          
+		Contract Number:      	7                        
 		Account Number:       	12331131231              
-		Serial Number:        	4600280714779411996      
+		Serial Number:        	7790755495115731621      
 		Active:               	True                     
 		Quantity Used:        	1                        
-		Service Level:        	                         
-		Service Type :        	                         
-		Begins:               	02/18/2012               
-		Expires:              	04/18/2013  
+		Service Level:        	Premium                  
+		Service Type :        	Level 3                  
+		Begins:               	06/02/2012               
+		Expires:              	08/02/2013               
+		
+		Product Name:         	Load Balancing Bits      
+		Contract Number:      	7                        
+		Account Number:       	12331131231              
+		Serial Number:        	7790755495115731621      
+		Active:               	True                     
+		Quantity Used:        	1                        
+		Service Level:        	Premium                  
+		Service Type :        	Level 3                  
+		Begins:               	06/02/2012               
+		Expires:              	08/02/2013               
+		
+		Product Name:         	Awesome OS Server Bits   
+		Contract Number:      	7                        
+		Account Number:       	12331131231              
+		Serial Number:        	7790755495115731621      
+		Active:               	True                     
+		Quantity Used:        	1                        
+		Service Level:        	Premium                  
+		Service Type :        	Level 3                  
+		Begins:               	06/02/2012               
+		Expires:              	08/02/2013               
+		
+		Product Name:         	Shared Storage Bits      
+		Contract Number:      	7                        
+		Account Number:       	12331131231              
+		Serial Number:        	7790755495115731621      
+		Active:               	True                     
+		Quantity Used:        	1                        
+		Service Level:        	Premium                  
+		Service Type :        	Level 3                  
+		Begins:               	06/02/2012               
+		Expires:              	08/02/2013               
+		
+		Product Name:         	Management Bits          
+		Contract Number:      	7                        
+		Account Number:       	12331131231              
+		Serial Number:        	7790755495115731621      
+		Active:               	True                     
+		Quantity Used:        	1                        
+		Service Level:        	Premium                  
+		Service Type :        	Level 3                  
+		Begins:               	06/02/2012               
+		Expires:              	08/02/2013               
+		
+		Product Name:         	Large File Support Bits  
+		Contract Number:      	7                        
+		Account Number:       	12331131231              
+		Serial Number:        	7790755495115731621      
+		Active:               	True                     
+		Quantity Used:        	1                        
+		Service Level:        	Premium                  
+		Service Type :        	Level 3                  
+		Begins:               	06/02/2012               
+		Expires:              	08/02/2013         
+		*/
 		
 		
+		/* the following new format introduced in rhel59 consolidates the listing above
+		 * Bug 801187 - collapse list of provided products for subscription-manager list --consumed
+		[root@jsefler-59server ~]# subscription-manager list --consumed
+		+-------------------------------------------+
+		   Consumed Product Subscriptions
+		+-------------------------------------------+
 		
-		// new format introduced in rhel59
-		Subscription Name:    	Awesome OS Server Bundled (2 Sockets, Standard Support)
+		Subscription Name:    	Awesome OS Server Bundled
 		Provides:             	Clustering Bits
 		                      	Awesome OS Server Bits
 		                      	Shared Storage Bits
 		                      	Management Bits
 		                      	Large File Support Bits
 		                      	Load Balancing Bits
-		Contract:             	37
+		Contract:             	7
 		Account:              	12331131231
-		Serial Number:        	2857634102142738253
+		Serial Number:        	2062941382077886001
 		Active:               	True
 		Quantity Used:        	1
-		Service Level:        	Standard
-		Service Type:         	L1-L3
-		Starts:               	06/26/2012
-		Ends:                 	06/26/2013
-
+		Service Level:        	Premium
+		Service Type:         	Level 3
+		Starts:               	06/02/2012
+		Ends:                 	08/02/2013
+		
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
@@ -189,8 +212,9 @@ public class ProductSubscription extends AbstractCommandLineData {
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("productName",			"Subscription Name:(.*)");
-		regexes.put("contractNumber",		"Contract Number:(.*)");
-		regexes.put("accountNumber",		"Account Number:(.*)");
+		regexes.put("provides",				"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
+		regexes.put("contractNumber",		"Contract:(.*)");
+		regexes.put("accountNumber",		"Account:(.*)");
 		regexes.put("serialNumber",			"Serial Number:(.*)");
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("quantityUsed",			"Quantity Used:(.*)");
