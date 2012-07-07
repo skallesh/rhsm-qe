@@ -554,17 +554,38 @@ public class SubscriptionManagerTasks {
 		
 		// give the rhsmcertd time to make its initial check-in with the candlepin server and update the certs
 		// I've seen this take 10 to 15 seconds as demonstrated here...
+		
+		// when registered...
 		//	1334786048260 Testing service rhsmcertd restart...
 		//	Wed Apr 18 17:54:11 2012: healing check started: interval = 1440
 		//	Wed Apr 18 17:54:11 2012: cert check started: interval = 240
 		//	Wed Apr 18 17:54:21 2012: certificates updated
 		//	Wed Apr 18 17:54:26 2012: certificates updated
-		SubscriptionManagerCLITestScript.sleep(20000);	// 20 seconds	
+		
+		// when not registered...
+		//	1341610172422 Testing service rhsmcertd restart...
+		//	Fri Jul  6 17:30:48 2012: Loading configuration from command line
+		//	Fri Jul  6 17:30:48 2012: Cert Frequency: 14400 seconds
+		//	Fri Jul  6 17:30:48 2012: Heal Frequency: 86400 seconds
+		//	Fri Jul  6 17:30:48 2012: healing check started: interval = 1440 minute(s)
+		//	Fri Jul  6 17:30:48 2012: cert check started: interval = 240 minute(s)
+		//	Fri Jul  6 17:30:48 2012: update failed (255), retry will occur on next run
+		//	Fri Jul  6 17:30:49 2012: update failed (255), retry will occur on next run
+
 
 		// assert the rhsmcertd log file reflected newly updated certificates...
-		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "certificates updated");
-		Assert.assertContainsMatch(rhsmcertdLogResult, ".*certificates updated\\n.*certificates updated", "The rhsmcertd is logging its restart.");
+		int i=0, delay=10;
+		String rhsmcertdLogResult,updateRegex;
+		if (this.currentlyRegisteredUsername==null)	updateRegex = ".*update failed \\(255\\), retry will occur on next run\\n.*update failed \\(255\\), retry will occur on next run";	// when NOT registered
+		else										updateRegex = ".*certificates updated\\n.*certificates updated";
+		do {	// retry every 10 seconds (up to a minute) for the expected update certificates regex in the rhsmcertd log
+			SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
+			rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, "update").trim();
+			if (rhsmcertdLogResult.matches(updateRegex)) break;
+		} while (delay*i < 60);
+		Assert.assertTrue(rhsmcertdLogResult.matches(updateRegex), "Expected certificate update regex '"+updateRegex+"' is being logged to rhsmcertd log during a restart.");
 
+		
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
 		}
@@ -625,7 +646,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentRelease() {
 		
-		SSHCommandResult result = release(null, null, null, null, null);
+		SSHCommandResult result = release(null, null, null, null, null, null, null);
 		
 		//	[root@jsefler-r63-server ~]# subscription-manager release
 		//	Release: foo
@@ -676,7 +697,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentlyAvailableReleases(String proxy, String proxyusername, String proxypassword) {
 		
-		SSHCommandResult result = release(true,null,proxy,proxyusername,proxypassword);
+		SSHCommandResult result = release_(null,true,null,null,proxy, proxyusername, proxypassword);
 		
 		//	[root@jsefler-r63-workstation ~]# subscription-manager release --list
 		//	5.7
@@ -686,6 +707,14 @@ public class SubscriptionManagerTasks {
 		//	6.1
 		//	6.2
 		//	6Workstation
+		
+		// Bug 824979 - No message for "subscription-manager release --list" with no subscriptions
+		// result when no releases are available
+		// FINE: ssh root@jsefler-59server.usersys.redhat.com subscription-manager release --list
+		// FINE: Stdout: 
+		// FINE: Stderr: No release versions available, please check subscriptions.
+		// FINE: ExitCode: 255
+		
 		List<String> releases =  new ArrayList<String>();
 		for (String release : result.getStdout().trim().split("\\s*\\n\\s*")) {
 			if (!release.isEmpty())	releases.add(release);
@@ -2192,7 +2221,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert the "Current service level: "
 		String serviceLevelMsg = "Current service level: ";
-		String serviceLevelNotSetMsg = "Service level preference not set";
+		String serviceLevelNotSetMsg = "Service level preference not set";	// Bug 825286 - subscription-manager service-level --show
 		if ((show!=null && show) // when explicitly asked to show
 			|| ((show==null || !show) && (list==null || !list) && (set==null) && (unset==null || !unset)) ){	// or when no options are explicity asked, then the default behavior is --show
 			if (!sshCommandResult.getStdout().contains(serviceLevelNotSetMsg)) {
@@ -2235,14 +2264,24 @@ public class SubscriptionManagerTasks {
 	// release module tasks ************************************************************
 
 	/**
-	 * release without asserting results
+	 * SSHCommand subscription-manager release [parameters] without asserting any results
+	 * @param show
+	 * @param list
+	 * @param set
+	 * @param unset
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult release_(Boolean list, String set, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult release_(Boolean show, Boolean list, String set, Boolean unset, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " release";
+		if (show!=null && show)			command += " --show";
 		if (list!=null && list)			command += " --list";
 		if (set!=null)					command += " --set="+(set.equals("")?"\"\"":set);	// quote an empty string
+		if (unset!=null && unset)		command += " --unset";
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -2252,11 +2291,19 @@ public class SubscriptionManagerTasks {
 	}
 	
 	/**
-	 * "subscription-manager release"
+	 * SSHCommand subscription-manager release [parameters]
+	 * @param show
+	 * @param list
+	 * @param set
+	 * @param unset
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return SSHCommandResult stdout, stderr, exitCode
 	 */
-	public SSHCommandResult release(Boolean list, String set, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult release(Boolean show, Boolean list, String set, Boolean unset, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = release_(list, set, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = release_(show, list, set, unset, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		if (list==null)
@@ -2743,8 +2790,9 @@ public class SubscriptionManagerTasks {
 		if (entitlementCertFiles.isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No consumed subscription pools to list"), "No consumed subscription pools to list");
 		} else {
-			//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Consumed Product Subscriptions"); // produces too much logging
 			String title = "Consumed Product Subscriptions";
+			title = "Consumed Subscriptions";	// changed in https://bugzilla.redhat.com/show_bug.cgi?id=806986#c10
+			//Assert.assertContainsMatch(sshCommandResult.getStdout(), title); // produces too much logging
 			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of consumed products is entitled '"+title+"'.");
 		}
 
@@ -3385,17 +3433,22 @@ public class SubscriptionManagerTasks {
 		Assert.fail("Do not know how to assert subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively when registered as type="+currentlyRegisteredType);
 		return poolsBeforeSubscribe;
 	}
-	public void subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively() {
+	/**
+	 * @return list of all the currently available subscription pools that about to be subscribed
+	 */
+	public List<SubscriptionPool> subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively() {
 
 		// assemble a list of all the available SubscriptionPool ids
 		List<String> poolIds = new ArrayList<String>();
-		for (SubscriptionPool pool : getCurrentlyAllAvailableSubscriptionPools()) {
-			poolIds.add(pool.poolId);
-		}
+		List<SubscriptionPool> subscriptionPools = getCurrentlyAllAvailableSubscriptionPools();
+		for (SubscriptionPool pool : subscriptionPools) poolIds.add(pool.poolId);
+
 		if (!poolIds.isEmpty()) subscribe(null,null,poolIds, null, null, null, null, null,null,null,null);
 		
 		// assert
 		assertNoAvailableSubscriptionPoolsToList(true,"Asserting that no available subscription pools remain after simultaneously subscribing to them all available.");
+		
+		return subscriptionPools;
 	}
 	
 	public void assertNoAvailableSubscriptionPoolsToList(boolean ignoreMuliEntitlementSubscriptionPools, String assertMsg) {
@@ -3498,8 +3551,8 @@ public class SubscriptionManagerTasks {
 		String certFilePath = entitlementCertDir+"/"+serialNumber+".pem";
 		String certKeyFilePath = entitlementCertDir+"/"+serialNumber+"-key.pem";
 		File certFile = new File(certFilePath);
-		boolean certFileExists = RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==1? true:false;
-		if (certFileExists) Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==1,
+		boolean certFileExists = RemoteFileTasks.testExists(sshCommandRunner,certFilePath);
+		if (certFileExists) Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner,certKeyFilePath),
 				"Entitlement Certificate file with serial '"+serialNumber+"' ("+certFilePath+") and corresponding key file ("+certKeyFilePath+") exist before unsubscribing.");
 		List<File> beforeEntitlementCertFiles = getCurrentEntitlementCertFiles();
 
@@ -3526,7 +3579,7 @@ public class SubscriptionManagerTasks {
 		}
 		
 		// assert the entitlement certFilePath is removed
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certFilePath)==0,
+		Assert.assertTrue(!RemoteFileTasks.testExists(sshCommandRunner,certFilePath),
 				"Entitlement Certificate with serial '"+serialNumber+"' ("+certFilePath+") has been removed.");
 
 		// assert the entitlement certKeyFilePath is removed
@@ -3537,7 +3590,7 @@ public class SubscriptionManagerTasks {
 		boolean assertCertKeyFilePathIsRemoved = true;
 		if (invokeWorkaroundWhileBugIsOpen) log.warning("Skipping the assertion that the Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed while bug is open."); else
 		// END OF WORKAROUND
-		Assert.assertTrue(RemoteFileTasks.testFileExists(sshCommandRunner,certKeyFilePath)==0,
+		Assert.assertTrue(!RemoteFileTasks.testExists(sshCommandRunner,certKeyFilePath),
 				"Entitlement Certificate key with serial '"+serialNumber+"' ("+certKeyFilePath+") has been removed.");
 
 		// assert that only ONE entitlement cert file was removed

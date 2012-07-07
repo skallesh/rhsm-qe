@@ -254,7 +254,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: assert that the consumer cert is backed up when a server-side deletion is detected.",
-			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296"},
+			groups={"AcceptanceTests","ConsumerDeletedServerSideTests","blockedByBug-814466","blockedByBug-813296","blockedByBug-838187"},
 			dataProvider="getConsumerCertDirData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -273,13 +273,10 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// set the rhsm.consumerCertDir (DO NOT USE SubscriptionTasks.config(...))
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"consumerCertDir",consumerCertDir);
 		
-		// make sure that rhsmcertd will not interfere
-		//clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile,"certfrequency","240");
-		clienttasks.config(null, null, true, new String[]{"rhsmcertd","certfrequency","240"});
-		clienttasks.restart_rhsmcertd(null, null, false);
 		
 		// register and remember the original consumer identity
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, true, null, null, null, null);
+		clienttasks.config(null, null, true, new String[]{"rhsmcertd","certfrequency","240"}); clienttasks.restart_rhsmcertd(null, null, false);	// make sure that rhsmcertd will not interfere with test
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		String consumerCert_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerCertFile()).getStdout().trim();
 		String consumerKey_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerKeyFile()).getStdout().trim();
@@ -338,15 +335,27 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(result.getStdout().trim(),"",			"Stdout expected after the consumer has been deleted on the server-side.");
 		Assert.assertEquals(result.getStderr().trim(),expectedMsg,	"Stderr expected after the consumer has been deleted on the server-side.");
 		}
+		result = clienttasks.unregister_(null, null, null);
+		Assert.assertEquals(result.getExitCode(),new Integer(255),	"Exitcode expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStdout().trim(),expectedMsg,	"Stdout expected after the consumer has been deleted on the server-side.");
+		Assert.assertEquals(result.getStderr().trim(),"",			"Stderr expected after the consumer has been deleted on the server-side.");
+
 		
 		// restart rhsmcertd
-		clienttasks.restart_rhsmcertd(null, null, false);
+		try {
+			clienttasks.restart_rhsmcertd(null, null, false);
+		} catch (AssertionError e) {
+			// expecting an AssertionError on restart since the consumer has been deleted.
+			//	Fri Jul  6 20:15:03 2012: certificates updated
+			//	Fri Jul  6 20:15:04 2012: update failed (255), retry will occur on next run
+			log.warning(e.getMessage()+"  However, since the consumer has been deleted server side, this expected assertion will be ignored.");
+		}
 		
 		// assert that the consumer has been backed up and assert the md5sum matches
 		String consumerCertFileOld = clienttasks.consumerCertDir+".old/cert.pem";
 		String consumerCertKeyOld = clienttasks.consumerCertDir+".old/key.pem";
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, consumerCertFileOld), 1, "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer cert should be copied to: "+consumerCertFileOld);
-		Assert.assertEquals(RemoteFileTasks.testFileExists(client, consumerCertKeyOld), 1, "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer key should be copied to: "+consumerCertKeyOld);
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerCertFileOld), "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer cert should be copied to: "+consumerCertFileOld);
+		Assert.assertTrue(RemoteFileTasks.testExists(client, consumerCertKeyOld), "For emergency recovery after rhsmcertd triggers, the server-side deleted consumer key should be copied to: "+consumerCertKeyOld);
 		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertFileOld).getStdout().replaceAll(consumerCertFileOld, "").trim(), consumerCert_md5sum.replaceAll(clienttasks.consumerCertFile(), "").trim(), "After the deleted consumer cert is backed up, its md5sum matches that from the original consumer cert.");
 		Assert.assertEquals(client.runCommandAndWait("md5sum "+consumerCertKeyOld).getStdout().replaceAll(consumerCertKeyOld, "").trim(), consumerKey_md5sum.replaceAll(clienttasks.consumerKeyFile(), "").trim(), "After the deleted consumer key is backed up, its md5sum matches that from the original consumer key.");
 		

@@ -73,7 +73,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: facts (without --list or --update)",
 			groups={"blockedByBug-654429"},
-			enabled=true)
+			enabled=false)	// was enabled before Bug 811594 - [RFE] facts command should default to list
 	//@ImplementsNitrateTest(caseId=)
 	public void FactsWithoutListOrUpdate_Test() {
 		
@@ -84,6 +84,24 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertEquals(result.getStdout().trim(),clienttasks.msg_NeedListOrUpdateOption,
 				"stdout from facts without --list or --update");
 	}
+	@Test(	description="subscription-manager: facts (without --list or --update) should default to --list",
+			groups={"blockedByBug-811594"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void Facts_Test() {
+		
+		SSHCommandResult listResult = clienttasks.facts(true, null, null, null, null);
+		SSHCommandResult defaultResult = clienttasks.facts(null, null, null, null, null);
+		
+		log.info("Asserting that that the default facts result without specifying any options is the same as the result from facts --list...");
+		Assert.assertEquals(defaultResult.getExitCode(), listResult.getExitCode(),
+				"exitCode from facts without options should match exitCode from the facts --list");
+		Assert.assertEquals(defaultResult.getStderr(), listResult.getStderr(),
+				"stderr from facts without options should match stderr from the facts --list");
+		Assert.assertEquals(defaultResult.getStdout(), listResult.getStdout(),
+				"stdout from facts without options should match stdout from the facts --list");
+	}
+	
 	
 	@Test(	description="subscription-manager: facts and rules: consumer facts list",
 			groups={"AcceptanceTests"}, dependsOnGroups={},
@@ -473,6 +491,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			if (key.equals("system.name") || key.equals("system.uuid")) {log.info("Skipping comparison of extended fact '"+key+"'.");continue;}
 			if (systemFactsMap.containsKey(key) && !systemFactsMap.get(key).equals(consumerFactsMap.get(key))) {
 				log.warning("Consumer '"+consumerId+"' on client "+client1tasks.hostname+" has a local system fact '"+key+"' value '"+systemFactsMap.get(key)+"' which does not match value '"+consumerFactsMap.get(key)+"' from the remote candlepin API.");
+				if (key.equals("net.interface.sit0.mac_address")) {log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");continue;}
 				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");continue;}
 				mapsAreEqual=false;
 			} else if (!systemFactsMap.containsKey(key)) {
@@ -484,6 +503,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			if (key.equals("system.name") || key.equals("system.uuid")) {log.info("Skipping comparison of extended fact '"+key+"'.");continue;}
 			if (consumerFactsMap.containsKey(key) && !consumerFactsMap.get(key).equals(systemFactsMap.get(key))) {
 				log.warning("Consumer '"+consumerId+"' from the remote candlepin API has a system fact '"+key+"' value '"+consumerFactsMap.get(key)+"' which does not match value '"+systemFactsMap.get(key)+"' from the local system fact on client "+client1tasks.hostname+".");
+				if (key.equals("net.interface.sit0.mac_address")) {log.warning("Skipping comparison of fact '"+key+"'.  The local system value appears to change unpredictably.  The current value on the system '"+systemFactsMap.get(key)+"' may be acceptably different than the value on the consumer '"+consumerFactsMap.get(key)+"';  see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=838123");continue;}
 				if (systemFactsMap.get(key).equals("Unknown") && consumerFactsMap.get(key).trim().equals("")) {log.info("Ignoring mismatch for fact '"+key+"'; see Bugzilla https://bugzilla.redhat.com/show_bug.cgi?id=722248");continue;}
 				mapsAreEqual=false;
 			} else if (!consumerFactsMap.containsKey(key)) {

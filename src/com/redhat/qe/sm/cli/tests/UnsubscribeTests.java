@@ -152,14 +152,14 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(description="Attempt to unsubscribe when not registered",
-			groups={"blockedByBug-735338"},
+			groups={"blockedByBug-735338","blockedByBug-838146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List)null,true,false,null, null, null);
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,false,null, null, null);
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(0);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
 		
@@ -181,8 +181,28 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 		SSHCommandResult result = clienttasks.unsubscribe_(null, BigInteger.valueOf(-123), null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "Asserting exit code when attempting to unsubscribe from an invalid serial number.");
-		Assert.assertEquals(result.getStderr().trim(), "'-123' is not a valid serial number");
+		Assert.assertEquals(result.getStderr().trim(), "Error: '-123' is not a valid serial number");
 		Assert.assertEquals(result.getStdout().trim(), "");
+
+	}
+	
+	
+	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions",
+			groups={"blockedByBug-812388"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsubscribeFromAll_Test() {
+	
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null, null, null);
+		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		
+		// unsubscribe from all and assert # subscriptions are unsubscribed
+		SSHCommandResult result = clienttasks.unsubscribe(true, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",pools.size()),"Expected feedback when unsubscribing from all the currently consumed subscriptions.");
+		
+		// now attempt to unsubscribe from all again and assert 0 subscriptions are unsubscribed
+		result = clienttasks.unsubscribe(true, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), String.format("This machine has been unsubscribed from %s subscriptions",0),"Expected feedback when unsubscribing from all when no subscriptions are currently consumed.");
 
 	}
 	

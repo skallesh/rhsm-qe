@@ -624,6 +624,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--proxypassword=PROXY_PASSWORD");
 		options.add("--set=RELEASE");
 		options.add("--list");
+		options.add("--unset");
+		options.add("--show");	// Bug 812153 - release command should have a --show option which is the default
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

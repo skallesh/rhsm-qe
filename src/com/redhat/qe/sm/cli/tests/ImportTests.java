@@ -416,7 +416,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: unsubscribe from an imported entitlement (while not registered)",
-			groups={"blockedByBug-735338"},
+			groups={"blockedByBug-735338","blockedByBug-838146"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportACertificateAndUnsubscribeWhileNotRegistered_Test() {

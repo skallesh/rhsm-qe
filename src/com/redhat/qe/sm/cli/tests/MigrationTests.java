@@ -47,9 +47,12 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *		https://docspace.corp.redhat.com/docs/DOC-71135 (PRODUCT CERTS)
  *		https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
  *
- *
+ *	// OLD LOCATION
  *	git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree
+ *  
+ *  git clone git://git.app.eng.bos.redhat.com/rcm/rcm-metadata.git
+ *  http://git.app.eng.bos.redhat.com/?p=rcm/rcm-metadata.git;a=tree
  *  
  *  product 150 is at
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree;f=product_ids/rhev-3.0;hb=HEAD

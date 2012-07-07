@@ -166,8 +166,8 @@ public class InstalledProduct extends AbstractCommandLineData {
 		regexes.put("version",		"^Version:(.*)");
 		regexes.put("arch",			"^Arch:(.*)");
 		regexes.put("status",		"^Status:(.*)");
-		regexes.put("startDate",	"^Starts:(.*)");
-		regexes.put("endDate",		"^Ends:(.*)");
+		regexes.put("startDate",	"^Starts:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
+		regexes.put("endDate",		"^Ends:(.*)");		// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		
 		List<Map<String,String>> productCertList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

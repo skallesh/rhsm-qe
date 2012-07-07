@@ -213,15 +213,15 @@ public class ProductSubscription extends AbstractCommandLineData {
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("productName",			"Subscription Name:(.*)");
 		regexes.put("provides",				"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
-		regexes.put("contractNumber",		"Contract:(.*)");
-		regexes.put("accountNumber",		"Account:(.*)");
+		regexes.put("contractNumber",		"Contract:(.*)");	// Bug 818355 - Terminology Change: Contract Number -> Contract
+		regexes.put("accountNumber",		"Account:(.*)");	// Bug 818339 - Terminology Change: Account Number -> Account
 		regexes.put("serialNumber",			"Serial Number:(.*)");
 		regexes.put("isActive",				"Active:(.*)");
 		regexes.put("quantityUsed",			"Quantity Used:(.*)");
 		regexes.put("serviceLevel",			"Service Level:(.*)");
 		regexes.put("serviceType",			"Service Type:(.*)");
-		regexes.put("startDate",			"Starts:(.*)");
-		regexes.put("endDate",				"Ends:(.*)");
+		regexes.put("startDate",			"Starts:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
+		regexes.put("endDate",				"Ends:(.*)");	// Bug 812373 - Terminology Change to Subscription-Manager list --installed & --consumed
 		
 		List<Map<String,String>> productList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){

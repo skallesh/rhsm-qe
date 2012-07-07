@@ -734,7 +734,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --unset after setting an available service level",
-			groups={},
+			groups={"blockedByBug-829803","blockedByBug-829812"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)

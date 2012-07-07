@@ -236,22 +236,24 @@ public class SubscriptionPool extends AbstractCommandLineData {
 		
 		
 		// after changes from: Bug 806986 - Subscription-Manager should refer to subscription name and product name
-		Subscription Name:    	Awesome OS Server Basic
-		Pool Id:              	8a90f8143830683f013830694a6a0278
-		Quantity:             	5
-		Service Level:        	None
-		Service Type:         	Self-Support
+		Subscription Name:    	Awesome OS Workstation Basic
+		SKU:                  	awesomeos-workstation-basic
+		Pool Id:              	8a90f8753859805a01385981646002d4
+		Quantity:             	10
+		Service Level:        	Standard
+		Service Type:         	L1-L3
 		Multi-Entitlement:    	No
-		Ends:                 	06/26/2013
+		Ends:                 	07/04/2013
 		Machine Type:         	physical
+
 
 		*/
 
 		Map<String,String> regexes = new HashMap<String,String>();
 		
 		// abstraction field					regex pattern (with a capturing group) Note: the captured group will be trim()ed
-		regexes.put("subscriptionName",			"Subscription Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
-		regexes.put("productId",				"Product Id:(.*)");	// removed by Bug 806986 - Subscription-Manager should refer to subscription name and product name
+		regexes.put("subscriptionName",			"Subscription Name:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// was "Product Name"; changed by Bug 806986	// this assumes that ProductName is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
+		regexes.put("productId",				"SKU:(.*)");	// was "Product Id"; changed by Bug 806986
 		regexes.put("poolId",					"Pool Id:(.*)");
 		regexes.put("quantity",					"Quantity:(.*)");	// https://bugzilla.redhat.com/show_bug.cgi?id=612730
 		regexes.put("serviceLevel",				"Service Level:(.*)");

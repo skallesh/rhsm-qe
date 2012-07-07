@@ -46,15 +46,15 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		SSHCommandResult result;
 		
-		result = clienttasks.release_(null, null, null, null, null);
+		result = clienttasks.release_(null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release without being registered");
 		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
 
-		result = clienttasks.release_(true, null, null, null, null);
+		result = clienttasks.release_(null, true, null, null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release --list without being registered");
 		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
 
-		result = clienttasks.release_(null, "FOO", null, null, null);
+		result = clienttasks.release_(null, null, "FOO", null, null, null, null);
 		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from calling release --set without being registered");
 		Assert.assertEquals(result.getStdout().trim(), clienttasks.msg_ConsumerNotRegistered, "Stdout from release without being registered");
 	}
@@ -68,21 +68,47 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
-		SSHCommandResult result = clienttasks.release(null, null, null, null, null);
+		SSHCommandResult result = clienttasks.release(null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release without having set it");
 	}
 	
 	
 	@Test(	description="attempt to get the subscription-manager release list without having subscribed to any entitlements",
-			groups={},
+			groups={"blockedByBug-824979"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptToGetReleaseListWithoutHavingAnyEntitlements_Test() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
-
+		
+		// assert no releases are listed
 		Assert.assertTrue(clienttasks.getCurrentlyAvailableReleases(null, null, null).isEmpty(), "No releases should be available without having been entitled to anything.");
+
+		// assert feedback from release --list 
+		SSHCommandResult result = clienttasks.release_(null,true,null,null,null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --list without any entitlements");
+		Assert.assertEquals(result.getStderr().trim(), "No release versions available, please check subscriptions.", "stderr from release --list without any entitlements");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "exitCode from release --list without any entitlements");
+
+	}
+	
+	
+	@Test(	description="attempt to set the subscription-manager release value that is not currently available",
+			groups={"blockedByBug-818205"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptToSetAnUnavailableReleaseValue_Test() {
+		
+		// make sure we are newly registered
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		
+		// assert feedback from release --list 
+		String unavailableRelease = "Foo_1.0";
+		SSHCommandResult result = clienttasks.release_(null, null, unavailableRelease, null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "", "stdout from release release --set with an unavailable value");
+		Assert.assertEquals(result.getStderr().trim(), String.format("No releases match '%s'.  Consult 'release --list' for a full listing.", unavailableRelease), "stderr from release --set with an unavailable value");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "exitCode from release --set with an unavailable value");
 	}
 	
 	
@@ -93,26 +119,100 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void GetTheReleaseAfterSettingTheRelease_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
-
-		clienttasks.release(null, "Foo", null, null, null);
-		Assert.assertEquals(clienttasks.getCurrentRelease(), "Foo", "The release value retrieved after setting the release.");
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		
+		// are any releases available?
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
+		if (availableReleases.isEmpty()) throw new SkipException("When no releases are available, this test must be skipped.");
+		
+		// randomly pick an available release and set it
+		String release = availableReleases.get(randomGenerator.nextInt(availableReleases.size()));
+		clienttasks.release(null, null, release, null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentRelease(), release, "The release value retrieved after setting the release.");
 	}
 	
 	
-	@Test(	description="assert that the subscription-manager release can be unset",
+	@Test(	description="assert that the subscription-manager release can be unset by setting it to \"\".",
 			groups={"blockedByBug-807822","blockedByBug-814385"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsetTheReleaseAfterSettingTheRelease_Test() {
+	public void UnsetTheReleaseBySettingAnEmptyString_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		
+		// are any releases available?
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
+		if (availableReleases.isEmpty()) throw new SkipException("When no releases are available, this test must be skipped.");
+		
+		// randomly pick an available release and set it
+		String release = availableReleases.get(randomGenerator.nextInt(availableReleases.size()));
+		clienttasks.release(null, null, release, null, null, null, null);
+		
+		// attempt to unset by setting an empty string...
+		SSHCommandResult result = clienttasks.release(null, null, "", null, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after setting it to \"\".");
+		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after setting it to \"\".");	// DEV choose to implement this differently https://bugzilla.redhat.com/show_bug.cgi?id=807822#c2
+	}
+	
+	
+	@Test(	description="assert that the subscription-manager release can be unset by using the unset option.",
+			groups={"blockedByBug-807822","blockedByBug-814385"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void UnsetTheRelease_Test() {
+		
+		// make sure we are newly registered
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		
+		// are any releases available?
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
+		if (availableReleases.isEmpty()) throw new SkipException("When no releases are available, this test must be skipped.");
+		
+		// randomly pick an available release and set it
+		String release = availableReleases.get(randomGenerator.nextInt(availableReleases.size()));
+		clienttasks.release(null, null, release, null, null, null, null);
+		
+		// attempt to unset by using the uset option...
+		SSHCommandResult result = clienttasks.release(null, null, null, true, null, null, null);
+		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after unsetting.");
+		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after unsetting it.");
+	}
+	
+	
+	@Test(	description="assert that subscription-manager release without any options defaults to --show",
+			groups={"blockedByBug-812153"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReleaseShow_Test() {
+		
+		// make sure we are newly registered
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		
+		// are any releases available?
+		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
+		//if (availableReleases.isEmpty()) availableReleases.add("");	// fake an empty release
+		if (availableReleases.isEmpty()) throw new SkipException("When no releases are available, this test must be skipped.");
+		
+		// randomly pick an available release
+		String release = availableReleases.get(randomGenerator.nextInt(availableReleases.size()));
+		
+		// verify feedback from the release --show results match the default release results (after setting an available release)
+		clienttasks.release(null, null, release, null, null, null, null);
+		SSHCommandResult defaultResult = clienttasks.release(null, null, null, null, null, null, null);
+		SSHCommandResult showResult = clienttasks.release(true, null, null, null, null, null, null);
+		Assert.assertEquals(defaultResult.getStdout(), showResult.getStdout(), "stdout feedback comparison between release --show and release without options.");
+		Assert.assertEquals(defaultResult.getStderr(), showResult.getStderr(), "stderr feedback comparison between release --show and release without options.");
+		Assert.assertEquals(defaultResult.getExitCode(), showResult.getExitCode(), "exitCode feedback comparison between release --show and release without options.");
 
-		clienttasks.release(null, "Foo", null, null, null);
-		SSHCommandResult result = clienttasks.release(null, "", null, null, null);
-		//Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after attempting to unset it.");	// DEV choose to implement this differently https://bugzilla.redhat.com/show_bug.cgi?id=807822#c2
-		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after attempting to unset it.");
+		// verify feedback from the release --show results match the default release results (after unsetting the release)
+		clienttasks.release(null, null, null, true, null, null, null);
+		defaultResult = clienttasks.release(null, null, null, null, null, null, null);
+		showResult = clienttasks.release(true, null, null, null, null, null, null);
+		Assert.assertEquals(defaultResult.getStdout(), showResult.getStdout(), "stdout feedback comparison between release --show and release without options.");
+		Assert.assertEquals(defaultResult.getStderr(), showResult.getStderr(), "stderr feedback comparison between release --show and release without options.");
+		Assert.assertEquals(defaultResult.getExitCode(), showResult.getExitCode(), "exitCode feedback comparison between release --show and release without options.");
+
 	}
 	
 	
@@ -144,7 +244,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		
 		// now let's set a release version preference
 		String releaseVer = "TestRelease-1.0";
-		clienttasks.release(null, releaseVer, null, null, null);
+		clienttasks.release(null, null, releaseVer, null, null, null, null);
 
 		// assert that each of the Repos after setting a release version preference substitutes the $releasever
 		for (Repo repoAfter : clienttasks.getCurrentlySubscribedRepos()) {
@@ -176,7 +276,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// now let's unset the release version preference
-		clienttasks.release(null, "", null, null, null);
+		clienttasks.release(null, null, "", null, null, null, null);
 		
 		// assert that each of the Repos and YumRepos after unsetting the release version preference where restore to their original values (containing $releasever)
 		List<Repo> reposAfterSettingReleaseVer = clienttasks.getCurrentlySubscribedRepos();
