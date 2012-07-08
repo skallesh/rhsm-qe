@@ -62,7 +62,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level (implies --show) without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --show without being registered");
 		}
 		
 		// without credentials
@@ -92,7 +92,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, null, null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --show without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --show without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --show without being registered");
 		}
 		
 		// without credentials
@@ -137,7 +137,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, "FOO", null, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --set without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --set without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --set without being registered");
 		}
 		
 		// without credentials
@@ -167,7 +167,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		if (sm_clientOrg!=null) {
 			result = clienttasks.service_level_(null, null, null, true, sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null);
 			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode from service-level --unset without being registered");
-			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list command", "Stdout from service-level --unset without being registered");
+			Assert.assertEquals(result.getStdout().trim(),"Error: --org is only supported with the --list option", "Stdout from service-level --unset without being registered");
 		}
 		
 		// without credentials
