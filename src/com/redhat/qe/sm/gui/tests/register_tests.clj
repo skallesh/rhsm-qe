@@ -26,7 +26,7 @@
      (tasks/register user pass))
    (catch [:type :already-registered]
        {:keys [unregister-first]} (unregister-first)))
-  (verify (action exists? :unregister-system))
+  (verify (not (tasks/ui showing? :register-system)))
   (if owner
     (do 
       (tasks/ui click :view-system-facts)

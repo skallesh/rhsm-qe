@@ -20,9 +20,9 @@
 
 (defn register []
   (try+ (tasks/register (@config :username) (@config :password))
-        (verify (action exists? :unregister-system))
         (catch [:type :already-registered]
-            {:keys [unregister-first]} (unregister-first))))
+            {:keys [unregister-first]} (unregister-first)))
+  (verify (not (tasks/ui showing? :register-system))))
 
 (defn ^{Test {:groups ["proxy"]}}
   enable_proxy_auth [_]

@@ -166,7 +166,7 @@
                              sla nil
                              auto-select-sla true
                              server nil}}]
-  (if (ui showing? :unregister-system)
+  (if-not (ui showing? :register-system)
     (throw+ {:type :already-registered
              :username username
              :password password
