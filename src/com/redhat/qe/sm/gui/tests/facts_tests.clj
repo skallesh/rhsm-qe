@@ -69,7 +69,7 @@
                   (tasks/ui selectrowindex :installed-view index)
                   (tasks/ui gettextvalue :arch)
                      (catch Exception e nil))]
-    (verify (= version guiversion))
+    (when-not (= 0 guiversion) (verify (= version guiversion)))
     (verify (= arch guiarch))))
 
 ;; run ^^this^^ in the console with:
