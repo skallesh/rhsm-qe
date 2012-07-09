@@ -23,6 +23,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 	
 	// abstraction fields
 	public String productName;	// TODO change to subscriptionName as well as all the "productName" references in the testcases
+	public String productId;
 	public List<String> provides;	// list of provided product names
 	public BigInteger serialNumber;	// Long serialNumber;	// Integer serialNumber; // serialNumber=290624661330496 is out of range for an Integer
 	public Integer contractNumber;
@@ -67,6 +68,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		
 		String string = "";
 		if (productName != null)	string += String.format(" %s='%s'", "productName",productName);
+		if (productId != null)		string += String.format(" %s='%s'", "productId",productId);
 		if (provides != null)		string += String.format(" %s='%s'", "provides",provides);
 		if (serialNumber != null)	string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (contractNumber != null)	string += String.format(" %s='%s'", "contractNumber",contractNumber);
@@ -185,7 +187,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		 * Bug 801187 - collapse list of provided products for subscription-manager list --consumed
 		[root@jsefler-59server ~]# subscription-manager list --consumed
 		+-------------------------------------------+
-		   Consumed Product Subscriptions
+		   Consumed Subscriptions
 		+-------------------------------------------+
 		
 		Subscription Name:    	Awesome OS Server Bundled
@@ -195,6 +197,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 		                      	Management Bits
 		                      	Large File Support Bits
 		                      	Load Balancing Bits
+		SKU:                  	awesomeos-server
 		Contract:             	7
 		Account:              	12331131231
 		Serial Number:        	2062941382077886001
@@ -212,6 +215,7 @@ public class ProductSubscription extends AbstractCommandLineData {
 
 		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
 		regexes.put("productName",			"Subscription Name:(.*)");
+		regexes.put("productId",			"SKU:(.*)");		// Bug 806986 - Subscription-Manager should refer to subscription name and product name
 		regexes.put("provides",				"Provides:(.*(\\n.*?)+)^\\w+\\s?\\w+:");	// this assumes that Provides is NOT last in its subscription grouping since ^\w+\s?\w+: represents the start of the next property so as to capture a multi-line value
 		regexes.put("contractNumber",		"Contract:(.*)");	// Bug 818355 - Terminology Change: Contract Number -> Contract
 		regexes.put("accountNumber",		"Account:(.*)");	// Bug 818339 - Terminology Change: Account Number -> Account

@@ -1244,6 +1244,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			}
 		}
 		
+		// minimize the number of dataProvided rows (useful during automated testcase development)
+		if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) ll=ll.subList(0,1);
+
 		return ll;
 		
 	}

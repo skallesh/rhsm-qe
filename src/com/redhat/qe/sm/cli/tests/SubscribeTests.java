@@ -87,28 +87,34 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		currentlyInstalledProducts = clienttasks.getCurrentlyInstalledProducts();
 		List<ProductSubscription> currentlyConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
 
+		// after subscribing to a pool, assert that its corresponding productSubscription is found among the currently consumed productSubscriptions
+		ProductSubscription consumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", pool.productId, currentlyConsumedProductSubscriptions);
+		Assert.assertNotNull(consumedProductSubscription, "The consumed ProductSubscription corresponding to the subscribed SubscriptionPool productId '"+pool.productId+"' was found among the list of consumed ProductSubscriptions.");
+
+		// assemble a list of expected bundled product names
+		List<String> bundledProductNames = new ArrayList<String>();
+		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
+			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
+			String bundledProductId = bundledProductAsJSONObject.getString("productId");
+			String bundledProductName = bundledProductAsJSONObject.getString("productName");
+			bundledProductNames.add(bundledProductName);
+		}
+		
+		// assert that the consumed product subscription provides all the expected bundled products.
+		Assert.assertTrue(consumedProductSubscription.provides.containsAll(bundledProductNames),"The consumed productSubscription provides all of the expected bundled product names "+bundledProductNames+" after subscribing to pool: "+pool);
+		Assert.assertEquals(consumedProductSubscription.provides.size(),bundledProductNames.size(),"The consumed productSubscription provides for exactly the number of expected products");
+		
+		// assert the dates of the consumed product subscription match the originating subscription pool
+		Assert.assertEquals(ProductSubscription.formatDateString(consumedProductSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
+				"Consumed productSubscription expires on the same DAY as the originating subscription pool.");
+		//FIXME	Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
+
 		// assert the expected products are consumed
 		for (int j=0; j<bundledProductDataAsJSONArray.length(); j++) {
 			JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductDataAsJSONArray.get(j);
-			String bundledProductName = bundledProductAsJSONObject.getString("productName");
 			String bundledProductId = bundledProductAsJSONObject.getString("productId");
-			
-			ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName", bundledProductName, currentlyConsumedProductSubscriptions);
-			Assert.assertNotNull(productSubscription, "Expected ProductSubscription with ProductName '"+bundledProductName+"' is consumed after subscribing to pool for ProductId '"+productId+"'.");
-
-			// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=660713 - jsefler 12/12/2010
-			Boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED ERRATA
-			try {String bugId="660713"; if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				log.warning("The workaround while this bug is open is to skip the assertion that: Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
-			} else {
-			// END OF WORKAROUND
-				
-			// assert the dates match
-			Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate),ProductSubscription.formatDateString(pool.endDate),
-					"Consumed ProductSubscription Expires on the same DAY as the originating subscription pool.");
-			//FIXME	Assert.assertTrue(productSubscription.startDate.before(entitlementCert.validityNotBefore), "Consumed ProductSubscription Began before the validityNotBefore date of the new entitlement: "+entitlementCert);
-			}
+			String bundledProductName = bundledProductAsJSONObject.getString("productName");
+			bundledProductNames.add(bundledProductName);
 			
 			// find the corresponding productNamespace from the entitlementCert
 			ProductNamespace productNamespace = null;
@@ -163,8 +169,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					//Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(productSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+productSubscription);					
 					if (installedProduct.status.equals("Subscribed")) {
 						// assert the valid date range on the installed product match the validity period of the product subscription
-						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(productSubscription.endDate), "Installed Product '"+bundledProductName+"' expires on the same DAY as the consumed ProductSubscription: "+productSubscription);
-						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(productSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+productSubscription);
+						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.endDate), ProductSubscription.formatDateString(consumedProductSubscription.endDate), "Installed Product '"+bundledProductName+"' expires on the same DAY as the consumed ProductSubscription: "+consumedProductSubscription);
+						Assert.assertEquals(InstalledProduct.formatDateString(installedProduct.startDate), ProductSubscription.formatDateString(consumedProductSubscription.startDate), "Installed Product '"+bundledProductName+"' starts on the same DAY as the consumed ProductSubscription: "+consumedProductSubscription);
 					} else {
 						// assert the date range on the installed product is None
 						Assert.assertNull(installedProduct.startDate, "Installed Product '"+bundledProductName+"' start date range should be None/null when today's status is NOT fully Subscribed.");
@@ -177,7 +183,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 		
-		// TODO I BELIEVE THIS FINAL BLOCK OF TESTING IS INACCURATE jsefler 5/27/2012
+
+		
+		// TODO I BELIEVE THIS FINAL BLOCK OF TESTING IS INACCURATE - jsefler 5/27/2012
 		// I THINK IT SHOULD BE CHECKING HARDWARE SOCKETS AND NOT INSTALLED SOFTWARE
 		/*
 		// check if this subscription matches the installed software and then test for availability
