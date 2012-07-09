@@ -65,7 +65,9 @@
         arch (:arch (@installed-certs product))
         guiversion (try (tasks/ui getcellvalue :installed-view index 1)
                         (catch Exception e nil))
-        guiarch (try (tasks/ui getcellvalue :installed-view index 2)
+        guiarch (try
+                  (tasks/ui selectrowindex :installed-view index)
+                  (tasks/ui gettextvalue :arch)
                      (catch Exception e nil))]
     (verify (= version guiversion))
     (verify (= arch guiarch))))

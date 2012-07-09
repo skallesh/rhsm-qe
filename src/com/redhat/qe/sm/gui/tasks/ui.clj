@@ -55,7 +55,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :update-certificates
                                     :all-available-subscriptions
                                     :my-subscriptions
-                                    :my-installed-software
+                                    :my-installed-products
                                     :search
                                     :subscribe
                                     :all-subscriptions-view
@@ -82,7 +82,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                      :update-certificates "Update"
                      :autosubscribe "Auto-subscribe"}
                     ;dynamic text fields for details sections:
-                    (text-field [:certificate-status
+                    (text-field [:arch
+                                 :certificate-status
                                  :installed-subscription
                                  :product
                                  :support-type
@@ -198,7 +199,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def tabs (define-tabs (elements :main-tabgroup)
 	    (same-name capitalize [:all-available-subscriptions 
 				   :my-subscriptions
-				   :my-installed-software])))
+				   :my-installed-products])))
 		  
 
 (def all-elements (merge windows elements tabs))
