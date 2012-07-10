@@ -15,6 +15,7 @@
                  [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
                  [com.redhat.qe/assertions "1.0.2"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
+                 [com.redhat.qe/tools.verify "1.0.1-SNAPSHOT"]
                  [gnome.ldtp "1.1.0-SNAPSHOT"
                   :exclusions [org.clojure/clojure]]
                  [test_clj.testng "1.0.1-SNAPSHOT"]

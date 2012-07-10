@@ -3,7 +3,7 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd
                                                        cli-tasks)]
-        [com.redhat.qe.verify :only (verify)]
+        [tools.verify :only (verify)]
         [clojure.string :only (split-lines split)]
         clojure.pprint
         gnome.ldtp)

@@ -3,7 +3,7 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
         [slingshot.slingshot :only (try+ throw+)]
-        [com.redhat.qe.verify :only (verify)]
+        [tools.verify :only (verify)]
         [clojure.string :only (split
                                split-lines
                                trim)]

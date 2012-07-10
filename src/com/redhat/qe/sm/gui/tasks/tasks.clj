@@ -5,7 +5,7 @@
                                                        auth-proxyrunner
                                                        noauth-proxyrunner)]
         [slingshot.slingshot :only [throw+ try+]]
-        [com.redhat.qe.verify :only (verify)]
+        [tools.verify :only (verify)]
         [clojure.string :only (split
                                split-lines)]
         matchure

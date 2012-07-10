@@ -5,7 +5,7 @@
                                                        auth-proxyrunner
                                                        noauth-proxyrunner)]
         [slingshot.slingshot :only (try+ throw+)]
-        [com.redhat.qe.verify :only (verify)]
+        [tools.verify :only (verify)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks])
   (:import [org.testng.annotations Test BeforeClass AfterClass]))
