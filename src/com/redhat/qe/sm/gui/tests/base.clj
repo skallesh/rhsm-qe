@@ -7,7 +7,10 @@
            org.testng.SkipException))
   
 (defn- restart-vnc []
-  (.runCommandAndWait @config/clientcmd "service vncserver restart")
+  (.runCommandAndWait @config/clientcmd "service vncserver stop")
+  ( . Thread (sleep 5000))
+  (.runCommandAndWait @config/clientcmd "rm -f /tmp/.X2-lock; rm -f /tmp/.X11-unix/X2")
+  (.runCommandAndWait @config/clientcmd "service vncserver start")
   ( . Thread (sleep 10000)))
 
 (defn ^{BeforeSuite {:groups ["setup"]}}
