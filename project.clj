@@ -14,6 +14,7 @@
                  [com.redhat.qe/testng-listeners "1.0.0"]
                  [com.redhat.qe/ssh-tools "1.0.1-SNAPSHOT"]
                  [com.redhat.qe/assertions "1.0.2"]
+                 [com.redhat.qe/bz-checker "1.0.3-SNAPSHOT"]
                  [com.redhat.qe/bugzilla-testng "1.0.4"]
                  [com.redhat.qe/verify-testng "1.0.0-SNAPSHOT"]
                  [org.uncommons/reportng "1.1.3"]
