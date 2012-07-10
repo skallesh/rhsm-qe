@@ -7,7 +7,7 @@ import java.util.List;
 import org.testng.SkipException;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.Assert;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.ContentNamespace;

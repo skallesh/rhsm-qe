@@ -22,7 +22,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,17 +41,14 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.FilePart;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 
-import com.redhat.qe.api.helper.TestHelper;
+import com.redhat.qe.Assert;
 import com.redhat.qe.auto.selenium.Base64;
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BzChecker;
-import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -159,14 +155,14 @@ public class CandlepinTasks {
 		
 		// clear out the tomcat6 log file (catalina.out)
 		if (RemoteFileTasks.testExists(sshCommandRunner, tomcat6LogFile)) {
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, LogMessageUtil.action());	
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "echo \"\" > "+tomcat6LogFile, TestRecords.action());	
 		}
 		
 		// clear out the candlepin/hornetq to prevent the following:
 		// catalina.out: java.lang.OutOfMemoryError: Java heap space
 		// deploy.sh: /usr/lib64/ruby/gems/1.8/gems/rest-client-1.6.1/lib/restclient/abstract_response.rb:48:in `return!': 404 Resource Not Found (RestClient::ResourceNotFound)
 		if (RemoteFileTasks.testExists(sshCommandRunner, "/var/lib/candlepin/hornetq/")) {
-			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /var/lib/candlepin/hornetq/", LogMessageUtil.action());	
+			RemoteFileTasks.runCommandAndWait(sshCommandRunner, "rm -rf /var/lib/candlepin/hornetq/", TestRecords.action());	
 		}
 		
 		// copy the patch file used to enable testing the redeem module to the candlepin proxy dir
@@ -284,7 +280,7 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
 
 	}
 	
@@ -446,12 +442,21 @@ schema generation failed
 			RequestEntity entity =  ((PostMethod)method).getRequestEntity();
 			log.finer("HTTP Request entity: " + (entity==null?"":((StringRequestEntity)entity).getContent()));
 		}
-		log.finer("HTTP Request Headers: " + TestHelper.interpose(", ", (Object[])method.getRequestHeaders()));
+		log.finer("HTTP Request Headers: " + interpose(", ", (Object[])method.getRequestHeaders()));
 		int responseCode = client.executeMethod(method);
 		log.finer("HTTP server returned: " + responseCode) ;
 		return method;
 	}
 	
+	public static String interpose(String separator, Object... items){
+		StringBuffer sb = new StringBuffer();
+		Iterator<Object> it = Arrays.asList(items).iterator();
+		while (it.hasNext()){
+		sb.append(it.next().toString());
+		if (it.hasNext()) sb.append(separator);
+		}
+		return sb.toString();
+	}	
 	protected static void setCredentials(HttpClient client, String server, int port, String username, String password) {
 		if (!username.equals(""))
 			client.getState().setCredentials(

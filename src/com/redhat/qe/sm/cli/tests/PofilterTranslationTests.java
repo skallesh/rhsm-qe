@@ -8,8 +8,8 @@ import java.util.List;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.data.Translation;
 import com.redhat.qe.tools.SSHCommandResult;

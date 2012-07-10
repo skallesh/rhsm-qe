@@ -1,6 +1,5 @@
 package com.redhat.qe.sm.data;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +7,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**

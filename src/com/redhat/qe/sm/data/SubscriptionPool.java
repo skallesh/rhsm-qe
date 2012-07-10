@@ -1,7 +1,6 @@
 package com.redhat.qe.sm.data;
 
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;

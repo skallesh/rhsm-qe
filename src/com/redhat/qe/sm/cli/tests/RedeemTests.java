@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
@@ -14,15 +13,12 @@ import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
-import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 
 /**

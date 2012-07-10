@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,15 +19,13 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
-import com.redhat.qe.auto.testng.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -50,7 +47,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
-			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986"},
+			groups={"debugTest","AcceptanceTests","blockedByBug-660713","blockedByBug-806986"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void SubscribeToSubscriptionPoolProductId_Test(String productId, JSONArray bundledProductDataAsJSONArray) throws Exception {

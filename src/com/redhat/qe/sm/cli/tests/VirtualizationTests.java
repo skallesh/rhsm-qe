@@ -17,11 +17,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
-import com.redhat.qe.auto.testng.LogMessageUtil;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -247,7 +247,7 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 		
 		log.info("We will remove virt-what for this test...");
 		
-		RemoteFileTasks.runCommandAndWait(client,"rm -f "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"rm -f "+virtWhatFile, TestRecords.action());
 		log.info("Now let's run the subscription-manager facts --list and assert the results...");
 		
 		// virt.is_guest
@@ -1155,17 +1155,17 @@ public class VirtualizationTests extends SubscriptionManagerCLITestScript {
 	
 	protected void forceVirtWhatToReturnGuest(String hypervisorType) {
 		// Note: when client is a guest, virt-what returns stdout="<hypervisor type>" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo -e 'echo -e \""+hypervisorType+"\"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo -e 'echo -e \""+hypervisorType+"\"' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, TestRecords.action());
 	}
 	
 	protected void forceVirtWhatToReturnHost() {
 		// Note: when client is a host, virt-what returns stdout="" and exitcode=0
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'exit 0' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, TestRecords.action());
 	}
 	
 	protected void forceVirtWhatToFail() {
 		// Note: when virt-what does not know if the system is on bare metal or on a guest, it returns a non-zero value
-		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"echo '#!/bin/bash - ' > "+virtWhatFile+"; echo 'echo \"virt-what is about to exit with code 255\"; exit 255' >> "+virtWhatFile+"; chmod a+x "+virtWhatFile, TestRecords.action());
 	}
 	
 	

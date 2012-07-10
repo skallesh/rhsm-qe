@@ -1,6 +1,5 @@
 package com.redhat.qe.sm.data;
 
-import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

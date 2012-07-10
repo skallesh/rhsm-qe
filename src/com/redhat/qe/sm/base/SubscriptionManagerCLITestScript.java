@@ -30,8 +30,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BzChecker;
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;

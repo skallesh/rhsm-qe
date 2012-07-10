@@ -4,17 +4,13 @@ import java.io.File;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterGroups;
@@ -23,12 +19,10 @@ import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.Assert;
 import com.redhat.qe.auto.testng.TestNGUtils;
-import com.redhat.qe.sm.base.ConsumerType;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -141,7 +135,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenSomeProductsAreSubscribable_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
-		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, TestRecords.action());
 
 		// verify the stdout message
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
@@ -215,7 +209,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsTCMS(id="")
 	public void VerifyRhsmCompliancedWhenNoProductsAreSubscribable_Test() {
 		String command = clienttasks.rhsmComplianceD+" -s -d";
-		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client, "echo 'Testing "+command+"' >> "+clienttasks.varLogMessagesFile, TestRecords.action());
 
 		// verify the stdout message
 		RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0), rhsmComplianceDStdoutMessageWhenNonCompliant, null);
@@ -297,7 +291,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 
 		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
 		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
-		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
 		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhnSystemIdFile)==1, "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 
 		// now assert compliance

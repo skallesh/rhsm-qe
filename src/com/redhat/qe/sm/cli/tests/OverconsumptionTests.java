@@ -10,8 +10,8 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.Assert;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.cli.tasks.SubscriptionManagerTasks;
@@ -131,8 +131,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		log.info("Now we will attempt to subscribe both clients concurrently to pool: "+pool);
 		String client1command = String.format("%s subscribe --pool=%s", client1tasks.command, pool.poolId);
 		String client2command = String.format("%s subscribe --pool=%s", client2tasks.command, pool.poolId);
-		client1.runCommand(client1command, LogMessageUtil.action());
-		client2.runCommand(client2command, LogMessageUtil.action());
+		client1.runCommand(client1command, TestRecords.action());
+		client2.runCommand(client2command, TestRecords.action());
 		client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 		client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 		SSHCommandResult result1 = client1.getSSHCommandResult();
@@ -207,8 +207,8 @@ public class OverconsumptionTests extends SubscriptionManagerCLITestScript{
 		log.info("Now we will attempt to subscribe both clients (only one should succeed) concurrently to pool: "+pool);
 		String client1command = String.format("%s subscribe --pool=%s", client1tasks.command, pool.poolId);
 		String client2command = String.format("%s subscribe --pool=%s", client2tasks.command, pool.poolId);
-		client1.runCommand(client1command, LogMessageUtil.action());
-		client2.runCommand(client2command, LogMessageUtil.action());
+		client1.runCommand(client1command, TestRecords.action());
+		client2.runCommand(client2command, TestRecords.action());
 		client1.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 		client2.waitForWithTimeout(new Long(10*60*1000)); // timeout after 10 min
 		SSHCommandResult result1 = client1.getSSHCommandResult();

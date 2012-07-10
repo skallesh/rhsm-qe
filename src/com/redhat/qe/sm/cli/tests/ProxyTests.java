@@ -16,13 +16,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
-import com.redhat.qe.auto.testng.BlockedByBzBug;
-import com.redhat.qe.auto.testng.LogMessageUtil;
+import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
-import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
@@ -81,7 +80,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt to register
 		SSHCommandResult attemptResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, proxy, proxyuser, proxypassword);
@@ -151,7 +150,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.unregister_(proxy, proxyuser, proxypassword);
@@ -207,7 +206,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.identity_(username, password, Boolean.TRUE, Boolean.TRUE, proxy, proxyuser, proxypassword);
@@ -261,7 +260,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.orgs_(username, password, proxy, proxyuser, proxypassword);
@@ -315,7 +314,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.service_level_(null, true, null, null, username, password, org, proxy, proxyuser, proxypassword);
@@ -369,7 +368,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.environments_(username, password, org, proxy, proxyuser, proxypassword);
@@ -427,7 +426,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.list_(null,Boolean.TRUE,null,null,null, null, proxy, proxyuser, proxypassword);
@@ -485,7 +484,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.release_(null, null, null, null, proxy, proxyuser, proxypassword);
@@ -542,7 +541,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.release_(null, true, null, null, proxy, proxyuser, proxypassword);
@@ -599,7 +598,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.redeem_("proxytester@redhat.com","en-us",proxy, proxyuser, proxypassword);
@@ -657,7 +656,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.facts_(null,Boolean.TRUE,proxy, proxyuser, proxypassword);
@@ -715,7 +714,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.refresh_(proxy, proxyuser, proxypassword);
@@ -777,7 +776,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 		
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.subscribe_(null,null,pool.poolId,null,null,null, null, null, proxy, proxyuser, proxypassword);
@@ -835,7 +834,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		
 		// set the config parameters
 		updateConfFileProxyParameters(proxy_hostnameConfig, proxy_portConfig, proxy_userConfig, proxy_passwordConfig);
-		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client,"grep proxy "+clienttasks.rhsmConfFile,TestRecords.action());
 
 		// attempt the moduleTask with the proxy options
 		SSHCommandResult attemptResult = clienttasks.unsubscribe_(Boolean.TRUE, null,proxy, proxyuser, proxypassword);
@@ -868,7 +867,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (String proxyConfig : proxyConfigs) clienttasks.commentConfFileParameter(clienttasks.rhsmConfFile, proxyConfig);
 		
 		log.info("Following are the current proxy parameters configured in config file: "+clienttasks.rhsmConfFile);
-		RemoteFileTasks.runCommandAndWait(client, "grep proxy_ "+clienttasks.rhsmConfFile, LogMessageUtil.action());
+		RemoteFileTasks.runCommandAndWait(client, "grep proxy_ "+clienttasks.rhsmConfFile, TestRecords.action());
 		
 		log.info("Attempt to register with the above proxy config parameters configured (expecting success)...");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);

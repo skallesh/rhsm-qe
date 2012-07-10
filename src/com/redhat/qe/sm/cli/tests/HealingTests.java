@@ -3,7 +3,7 @@ package com.redhat.qe.sm.cli.tests;
 import org.json.JSONObject;
 import org.testng.annotations.Test;
 
-import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.Assert;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 

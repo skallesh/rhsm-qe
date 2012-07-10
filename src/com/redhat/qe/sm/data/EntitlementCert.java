@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import com.redhat.qe.auto.testng.Assert;
+import com.redhat.qe.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
