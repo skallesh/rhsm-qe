@@ -16,7 +16,7 @@
             Test
             DataProvider]
            [com.redhat.qe.sm.cli.tests ComplianceTests]
-           [com.redhat.qe.auto.testng BzChecker]))
+           [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def somedir (ComplianceTests/productCertDirForSomeProductsSubscribable))
 (def alldir (ComplianceTests/productCertDirForAllProductsSubscribable))
