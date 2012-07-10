@@ -1,7 +1,7 @@
 (ns com.redhat.qe.sm.gui.tests.register-tests
   (:use [test-clj.testng :only [gen-class-testng data-driven]]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config)]
-        [tools.verify :only (verify)]
+        [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only (try+ throw+)]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]

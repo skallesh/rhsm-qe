@@ -2,7 +2,7 @@
   (:use [test-clj.testng :only (gen-class-testng data-driven)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
-        [tools.verify :only (verify)]
+        [com.redhat.qe.verify :only (verify)]
         [slingshot.slingshot :only (try+ throw+)]
         [clojure.string :only (split)]
         gnome.ldtp)

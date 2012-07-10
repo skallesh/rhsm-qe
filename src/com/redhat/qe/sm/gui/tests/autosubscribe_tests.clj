@@ -1,7 +1,7 @@
 (ns com.redhat.qe.sm.gui.tests.autosubscribe-tests
   (:use [test-clj.testng :only (gen-class-testng)]
         [com.redhat.qe.sm.gui.tasks.test-config :only (config clientcmd)]
-        [tools.verify :only (verify)]
+        [com.redhat.qe.verify :only (verify)]
         [clojure.string :only (trim split)]
         [slingshot.slingshot :only [throw+ try+]]
         gnome.ldtp)
@@ -16,7 +16,7 @@
             Test
             DataProvider]
            [com.redhat.qe.sm.cli.tests ComplianceTests]
-           [com.redhat.qe.auto.bugzilla BzChecker]))
+           [com.redhat.qe.auto.testng BzChecker]))
 
 (def somedir (ComplianceTests/productCertDirForSomeProductsSubscribable))
 (def alldir (ComplianceTests/productCertDirForAllProductsSubscribable))
