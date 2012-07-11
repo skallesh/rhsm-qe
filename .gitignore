@@ -3,5 +3,5 @@
 checkouts
 *.swp
 *.swo
-tmp/*.*
+tmp/*
 .lein-deps-sum

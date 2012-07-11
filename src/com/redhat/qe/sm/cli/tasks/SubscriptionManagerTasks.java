@@ -1760,6 +1760,10 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
+	public SSHCommandResult register(String username, String password, String org) {
+		return register(username, password, org, null, null, null, null, false, null, null, (List<String>)null, false, false, null, null, null);
+	}	
+	
 	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
