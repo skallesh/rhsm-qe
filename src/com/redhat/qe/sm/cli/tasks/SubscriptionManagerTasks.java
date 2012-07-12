@@ -1078,7 +1078,7 @@ public class SubscriptionManagerTasks {
 			String subscriptionName = jsonPool.getString("productName");
 			String productId = jsonPool.getString("productId");
 			String poolId = jsonPool.getString("id");
-			String quantity = jsonPool.getString("quantity");
+			String quantity = Integer.toString(jsonPool.getInt("quantity"));	// = jsonPool.getString("quantity");
 			String endDate = jsonPool.getString("endDate");
 			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(username,password, SubscriptionManagerBaseTestScript.sm_serverUrl, poolId);
 			SubscriptionPool fromPool = new SubscriptionPool(subscriptionName,productId,poolId,quantity,multiEntitlement,endDate);
