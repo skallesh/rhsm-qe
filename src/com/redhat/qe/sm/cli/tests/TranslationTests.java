@@ -200,7 +200,8 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		}
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSet.size()+") were found in translation file '"+translationFile+"'.");
 	}
-
+	
+	@Deprecated	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java
 	@Test(	description="run pofilter translate tests on the translation file",
 			groups={},
 			dataProvider="getTranslationFilePofilterTestData",
@@ -361,11 +362,13 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		}
 		return ll;
 	}
-	
+
+	@Deprecated	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java
 	@DataProvider(name="getTranslationFilePofilterTestData")
 	public Object[][] getTranslationFilePofilterTestDataAs2dArray() {
 		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFilePofilterTestDataAsListOfLists());
 	}
+	@Deprecated	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java
 	protected List<List<Object>> getTranslationFilePofilterTestDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		// see http://translate.sourceforge.net/wiki/toolkit/pofilter_tests

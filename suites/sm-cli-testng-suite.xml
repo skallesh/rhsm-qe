@@ -52,6 +52,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Pofilter Translation Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="PofilterTranslationTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Register Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />
