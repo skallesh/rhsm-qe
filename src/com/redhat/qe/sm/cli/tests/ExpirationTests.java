@@ -296,8 +296,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		Assert.assertNotNull(poolId,"Found newly created pool corresponding to the newly created subscription with id: "+jsonSubscription.getString("id"));
-		log.info("The newly created subscription pool with id '"+poolId+"' will start in '"+startingMinutesFromNow+"' minutes from now.");
-		log.info("The newly created subscription pool with id '"+poolId+"' will expire in '"+endingMinutesFromNow+"' minutes from now.");
+		log.info("The newly created subscription pool with id '"+poolId+"' will start '"+startingMinutesFromNow+"' minutes from now.");
+		log.info("The newly created subscription pool with id '"+poolId+"' will expire '"+endingMinutesFromNow+"' minutes from now.");
 		return poolId; // return poolId to the newly available SubscriptionPool
 		
 	}
