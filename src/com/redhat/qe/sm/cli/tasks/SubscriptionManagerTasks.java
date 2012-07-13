@@ -3926,6 +3926,7 @@ repolist: 3,394
 	 * @return array of repo labels returned from a call to yum repolist [options]
 	 */
 	public ArrayList<String> getYumRepolist(String options){
+		if (options==null) options="";
 		ArrayList<String> repos = new ArrayList<String>();
 		sshCommandRunner.runCommandAndWait("killall -9 yum");
 		sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
@@ -3934,16 +3935,16 @@ repolist: 3,394
 		if (this.redhatRelease.contains("release 5")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="697087"; 
-			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			try {if (invokeWorkaroundWhileBugIsOpen && BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				// avoid "yum repolist" and assemble the list of repos directly from the redhat repo file
 				List<YumRepo> yumRepoList =   getCurrentlySubscribedYumRepos();
 				for (YumRepo yumRepo : yumRepoList) {
-					if		(options.equals("all"))													repos.add(yumRepo.id);
-					else if (options.equals("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
-					else if (options.equals("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.id);
-					else if (options.equals("")			&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
+					if		(options.startsWith("all"))													repos.add(yumRepo.id);
+					else if (options.startsWith("enabled")	&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
+					else if (options.startsWith("disabled")	&& yumRepo.enabled.equals(Boolean.FALSE))	repos.add(yumRepo.id);
+					else if (options.equals("")				&& yumRepo.enabled.equals(Boolean.TRUE))	repos.add(yumRepo.id);
 				}
 				sshCommandRunner.runCommandAndWait("yum repolist "+options+" --disableplugin=rhnplugin"); // --disableplugin=rhnplugin helps avoid: up2date_client.up2dateErrors.AbuseError
 				return repos;
@@ -3951,7 +3952,7 @@ repolist: 3,394
 		}
 		// END OF WORKAROUND
 		
-		// WARNING: DO NOT MAKE ANYMORE CALLS TO sshCommandRunner.runCommand* IN THE REST OF THIS METHOD.
+		// WARNING: DO NOT MAKE ANYMORE CALLS TO sshCommandRunner.runCommand* DURING EXECUTION OF THE REMAINDER OF THIS METHOD.
 		// getYumRepolistPackageCount() ASSUMES sshCommandRunner.getStdout() CAME FROM THE CALL TO yum repolist
 
 		// Example sshCommandRunner.getStdout()
