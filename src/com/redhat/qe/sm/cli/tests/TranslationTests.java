@@ -295,7 +295,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	public void buildTranslationMsgidSet() {
 		if (clienttasks==null) return;
 		
-		// assemble a unique set of msgids
+		// assemble a unique set of msgids (by taking the union of all the msgids from all of the translation files.)
+		// TODO: My assumption that the union of all the msgids from the translation files completely matches
+		//       the currently extracted message ids from the source code is probably incorrect.
+		//       There could be extra msgids in the translation files that were left over from the last round
+		//       of translations and are no longer applicable (should be excluded from this union algorithm).
 		for (File translationFile : translationFileMap.keySet()) {
 			List<Translation> translationList = translationFileMap.get(translationFile);
 			for (Translation translation : translationList) {
