@@ -128,11 +128,11 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	@Test(	description="assert that the subscription-manager release can be unset by setting it to \"\".",
+	@Test(	description="assert that the subscription-manager release can nolonger be unset by setting it to \"\".",
 			groups={"blockedByBug-807822","blockedByBug-814385"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsetTheReleaseBySettingAnEmptyString_Test() {
+	public void AttemptToUnsetTheReleaseWithAnEmptyString_Test() {
 		
 		// make sure we are newly registered
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
@@ -146,9 +146,11 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		clienttasks.release(null, null, release, null, null, null, null);
 		
 		// attempt to unset by setting an empty string...
-		SSHCommandResult result = clienttasks.release(null, null, "", null, null, null, null);
-		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after setting it to \"\".");
-		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after setting it to \"\".");	// DEV choose to implement this differently https://bugzilla.redhat.com/show_bug.cgi?id=807822#c2
+		SSHCommandResult result = clienttasks.release_(null, null, "", null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255), "ExitCode when attempting to unset the release with \"\".");
+		Assert.assertEquals(result.getStderr().trim(), "No releases match ''.  Consult 'release --list' for a full listing.", "Stderr when attempting to unset the release with \"\".");
+		Assert.assertEquals(result.getStdout(), "", "Stdout when attempting to unset the release with \"\".");
+		Assert.assertEquals(clienttasks.getCurrentRelease(), release, "The release value should still be set after a failed attempt to unset it with \"\".");
 	}
 	
 	
@@ -169,10 +171,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		String release = availableReleases.get(randomGenerator.nextInt(availableReleases.size()));
 		clienttasks.release(null, null, release, null, null, null, null);
 		
-		// attempt to unset by using the uset option...
+		// unset by using the unset option...
 		SSHCommandResult result = clienttasks.release(null, null, null, true, null, null, null);
-		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after unsetting.");
-		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release after unsetting it.");
+		Assert.assertEquals(clienttasks.getCurrentRelease(), "", "The release value retrieved after unsetting should be not set.");
 	}
 	
 	
@@ -239,7 +240,10 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(reposBeforeSettingReleaseVer.size(), yumReposBeforeSettingReleaseVer.size(), "The subscription-manager repos list count should match the yum reposlist count.");
 		
 		// now let's set a release version preference
-		String releaseVer = "TestRelease-1.0";
+		String releaseVer = "TestRelease-1.0";	// cannot do this anymore, the value must be valid
+		List<String> availableReleaseVers = clienttasks.getCurrentlyAvailableReleases(null, null, null);
+		if (availableReleaseVers.isEmpty()) throw new SkipException("Cannot complete this test when there are no releases available to set.");
+		releaseVer = availableReleaseVers.get(randomGenerator.nextInt(availableReleaseVers.size()));	// randomly pick an available release for testing
 		clienttasks.release(null, null, releaseVer, null, null, null, null);
 
 		// assert that each of the Repos after setting a release version preference substitutes the $releasever
@@ -272,8 +276,8 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// now let's unset the release version preference
-		clienttasks.release(null, null, "", null, null, null, null);
-		
+		clienttasks.release(null, null, null, true, null, null, null);
+
 		// assert that each of the Repos and YumRepos after unsetting the release version preference where restore to their original values (containing $releasever)
 		List<Repo> reposAfterSettingReleaseVer = clienttasks.getCurrentlySubscribedRepos();
 		List<YumRepo> yumReposAfterSettingReleaseVer = clienttasks.getCurrentlySubscribedYumRepos();

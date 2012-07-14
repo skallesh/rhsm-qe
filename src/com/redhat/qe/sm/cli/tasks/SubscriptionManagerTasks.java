@@ -2346,7 +2346,10 @@ public class SubscriptionManagerTasks {
 //		}
 		
 		if (set!=null) {
-		 Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set).trim(),"Stdout from release --set with a value.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), String.format("Release set to: %s", set).trim(),"Stdout from release --set with a value.");
+		}
+		if (unset!=null) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Release preference has been unset","Stdout from release --unset.");
 		}
 		
 		// assert the exit code was a success
