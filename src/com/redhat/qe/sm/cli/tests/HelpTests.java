@@ -706,8 +706,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String rhnMigrateClassicToRhsmCommand = MigrationTests.rhnMigrateTool; 
 			options.clear();
 			options.add("-f, --force");
-			options.add("-c, --cli-only");
+			options.add("-g, --gui");
 			options.add("-n, --no-auto");
+			options.add("-s SERVICELEVEL, --servicelevel=SERVICELEVEL");
 			options.add("-h, --help");
 			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
 				List <String> usages = new ArrayList<String>();
