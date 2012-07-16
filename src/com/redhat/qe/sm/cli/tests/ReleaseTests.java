@@ -355,7 +355,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="register to a RHEL subscription and verify that release --list excludes 5.6, 5.5, 5.4, 5.3, 5.2, 5.1, 5.0",
-			groups={"blockedByBug-785989"},
+			groups={"blockedByBug-785989","blockedByBug-840509"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyReleaseListExcludes56OnRHEL5System_Test() throws JSONException, Exception {
