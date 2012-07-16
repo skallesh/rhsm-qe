@@ -78,17 +78,20 @@ public class PofilterTranslationTests extends TranslationTests{
 			}
 			log.info("Successfull created \"notranslatefile\" file");
 		}
+		
 		// execute the pofilter test
-		//String pofilterCommand = "pofilter --gnome -t "+pofilterTest+" --notranslatefile "+fileName;
-		String pofilterCommand = "pofilter --gnome -t "+pofilterTest; 
+		String pofilterCommand = "pofilter --gnome -t "+pofilterTest+" --notranslatefile "+fileName;
+		//String pofilterCommand = "pofilter --gnome -t "+pofilterTest; 
 		SSHCommandResult pofilterResult = client.runCommandAndWait(pofilterCommand+" "+translationPoFile);
 		Assert.assertEquals(pofilterResult.getExitCode(), new Integer(0), "Successfully executed the pofilter tests.");
 		
 		// convert the pofilter test results into a list of failed Translation objects for simplified handling of special cases 
 		List<Translation> pofilterFailedTranslations = Translation.parse(pofilterResult.getStdout());
 		
+		
 		// remove the first translation which contains only meta data
 		if (!pofilterFailedTranslations.isEmpty() && pofilterFailedTranslations.get(0).msgid.equals("")) pofilterFailedTranslations.remove(0);
+		
 		
 		// ignore the following special cases of acceptable results..........
 		List<String> ignorableMsgIds = Arrays.asList();
@@ -175,7 +178,7 @@ public class PofilterTranslationTests extends TranslationTests{
 			List <String> ignoreMsgIDs = new ArrayList<String>();
 			for(Translation pofilterFailedTranslation : pofilterFailedTranslations) {
 				// Parsing mgID and msgStr for FilePaths ending ' ' (space) 
-				Pattern filePath = Pattern.compile("/.+/.+? ");  
+				Pattern filePath = Pattern.compile("/.*?( |$)", Pattern.MULTILINE);  
 				Matcher filePathMsgID = filePath.matcher(pofilterFailedTranslation.msgid);
 				Matcher filePathMsgStr = filePath.matcher(pofilterFailedTranslation.msgstr);
 				ArrayList<String> filePathsInID = new ArrayList<String>();
@@ -188,18 +191,23 @@ public class PofilterTranslationTests extends TranslationTests{
 					filePathsInStr.add(filePathMsgStr.group());
 				}
 				// If the lists are equal in size, then compare the contents of msdID->filePath and msgStr->filePath
-				if(filePathsInID.size() == filePathsInStr.size()) {
+				//if(filePathsInID.size() == filePathsInStr.size()) {
 					for(int i=0;i<filePathsInID.size();i++) {
 						// If the msgID->filePath ends with '.', remove '.' and compare with msgStr->filePath
+						if(filePathsInID.get(i).trim().startsWith("//")) {
+							ignoreMsgIDs.add(pofilterFailedTranslation.msgid);
+							continue;
+						}
+						//contains("//")) ignoreMsgIDs.add(pofilterFailedTranslation.msgid);
 						if(filePathsInID.get(i).trim().charAt(filePathsInID.get(i).trim().length()-1) == '.') {
-							String filePathStr = filePathsInID.get(i).trim().substring(0, filePathsInID.get(i).trim().length()-1);
-							if(filePathStr.equals(filePathsInStr.get(i).trim())) ignoreMsgIDs.add(pofilterFailedTranslation.msgid);
+							String filePathID = filePathsInID.get(i).trim().substring(0, filePathsInID.get(i).trim().length()-1);
+							if(filePathID.equals(filePathsInStr.get(i).trim())) ignoreMsgIDs.add(pofilterFailedTranslation.msgid);
 						}
-						else {
+						/*else {
 							if(filePathsInID.get(i).trim().equals(filePathsInStr.get(i).trim())) ignoreMsgIDs.add(pofilterFailedTranslation.msgid);
-						}
+						}*/
 					}
-				}
+				//}
 			}
 			ignorableMsgIds = ignoreMsgIDs;
 		}
@@ -216,8 +224,22 @@ public class PofilterTranslationTests extends TranslationTests{
 			ignorableMsgIds = Arrays.asList("Subscription Subscriptions Box","Subscription Subscriptions Label");
 		}
 		if (pofilterTest.equals("unchanged")) {
-			ignorableMsgIds = Arrays.asList("close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n",
-											"prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer");
+			List<String> conditionalIgnorableMsgIdsSpanish 	= Arrays.asList("no");
+			List<String> conditionalIgnorableMsgIdsFrench 	= Arrays.asList("Options","Type","Version","page 2","%prog [options]");
+			List<String> conditionalIgnorableMsgIdsGerman 	= Arrays.asList("<b>Account:</b>","<b>python-rhsm Version:</b> %s","<b>Subscription Management Service Version:</b> %s","Login:","Name","Name:                 \t%s","Status","Status:               \t%s","Version","Version:              \t%s","_System","integer","long integer","name: %s");
+			List<String> conditionalIgnorableMsgIdsPortugese= Arrays.asList("Status","Status:               \t%s","<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>subscription management service version:</b> %s","Login:","Virtual","_Help","hostname[:port][/prefix]","org id: %s");
+			List<String> conditionalIgnorableMsgIdsTamil    = Arrays.asList("org id: %s");
+			List<String> conditionalIgnorableMsgIdsBengali  = Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Validity Applet","Subscription Validity Applet");
+			
+			ignorableMsgIds = Arrays.asList("close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","python-rhsm: %s","register_details_label","register_progressbar","subscription-manager: %s","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n");
+			
+			if     (translationFile.getPath().contains("/bn_IN/")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsBengali);
+			else if(translationFile.getPath().contains("/ta_IN/")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsTamil);
+			else if(translationFile.getPath().contains("/pt_BR/")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsPortugese);
+			else if(translationFile.getPath().contains("/de_DE/")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsGerman);
+			else if(translationFile.getPath().contains("/es_ES/")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsSpanish);
+			else if(translationFile.getPath().contains("/fr/"))    ignorableMsgIds.addAll(conditionalIgnorableMsgIdsFrench);
+			
 		}
 		// pluck out the ignorable pofilter test results
 		for (String msgid : ignorableMsgIds) {
@@ -306,11 +328,11 @@ public class PofilterTranslationTests extends TranslationTests{
 		
 		// debugTesting
 		
-		// Tests completed 	-> 	"escapes","accelerators","newlines","printf","tabs","variables","xmltags","blank","emails","filepaths","gconf","long","short","notranslatewords","unchanged","variables"		
+		// Tests completed 	-> 	"escapes","accelerators","newlines","printf","tabs","variables","xmltags","blank","emails","filepaths","gconf","long","short","notranslatewords","unchanged","variables","options"		
 		// Ambiguous		-> 	"nplurals","printf","variables"			
 		// TODO				->  		
 				
-		pofilterTests = Arrays.asList("notranslatewords");
+		//pofilterTests = Arrays.asList("escapes","accelerators","newlines","printf","tabs","variables","xmltags","blank","emails","filepaths","gconf","long","short","notranslatewords","unchanged","variables","options");
 
 		for (File translationFile : translationFileMap.keySet()) {
 			for (String pofilterTest : pofilterTests) {
