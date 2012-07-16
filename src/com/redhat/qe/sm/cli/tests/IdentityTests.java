@@ -274,7 +274,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// register and remember the original consumer identity
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, true, null, null, null, null);
-		clienttasks.config(null, null, true, new String[]{"rhsmcertd","certfrequency","240"}); clienttasks.restart_rhsmcertd(null, null, false);	// make sure that rhsmcertd will not interfere with test
+		clienttasks.config(null, null, true, new String[]{"rhsmcertd","certfrequency","240"}); clienttasks.restart_rhsmcertd(null, null, false, true);	// make sure that rhsmcertd will not interfere with test
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		String consumerCert_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerCertFile()).getStdout().trim();
 		String consumerKey_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerKeyFile()).getStdout().trim();
@@ -340,14 +340,15 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		
 		// restart rhsmcertd
-		try {
-			clienttasks.restart_rhsmcertd(null, null, false);
-		} catch (AssertionError e) {
-			// expecting an AssertionError on restart since the consumer has been deleted.
-			//	Fri Jul  6 20:15:03 2012: certificates updated
-			//	Fri Jul  6 20:15:04 2012: update failed (255), retry will occur on next run
-			log.warning(e.getMessage()+"  However, since the consumer has been deleted server side, this expected assertion will be ignored.");
-		}
+//		try {
+//			clienttasks.restart_rhsmcertd(null, null, false, null);
+//		} catch (AssertionError e) {
+//			// expecting an AssertionError on restart since the consumer has been deleted.
+//			//	Fri Jul  6 20:15:03 2012: certificates updated
+//			//	Fri Jul  6 20:15:04 2012: update failed (255), retry will occur on next run
+//			log.warning(e.getMessage()+"  However, since the consumer has been deleted server side, this expected assertion will be ignored.");
+//		}
+		clienttasks.restart_rhsmcertd(null, null, false, false);	// assertCertificatesUpdate=false since the consumer has been deleted server side and the cert updates should fail
 		
 		// assert that the consumer has been backed up and assert the md5sum matches
 		String consumerCertFileOld = clienttasks.consumerCertDir+".old/cert.pem";

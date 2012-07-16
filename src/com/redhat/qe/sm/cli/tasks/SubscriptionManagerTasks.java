@@ -482,9 +482,10 @@ public class SubscriptionManagerTasks {
 	 * Update the rhsmcertd frequency configurations in /etc/rhsm/rhsm.conf file and restart the rhsmcertd service.
 	 * @param certFrequency - Frequency of certificate refresh (in minutes) (passing null will not change the current value)
 	 * @param healFrequency - Frequency of subscription auto healing (in minutes) (passing null will not change the current value)
-	 * @param waitForMinutes - after restarting, should we wait for the next certFrequency refresh?
+	 * @param waitForMinutes - after restarting, should we wait for the next certFrequency refresh? - TODO THIS PARAM IS IGNORED AS OF 07/16/2012
+	 * @param assertCertificatesUpdate if NULL, do not wait for certificate updates; if TRUE, wait and assert rhsmcertd logs Certificates updated; if FALSE, wait and assert rhsmcertd logs Update failed
 	 */
-	public void restart_rhsmcertd (Integer certFrequency, Integer healFrequency, boolean waitForMinutes){
+	public void restart_rhsmcertd (Integer certFrequency, Integer healFrequency, boolean waitForMinutes, Boolean assertCertificatesUpdate){
 //		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
 //		updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
 		
@@ -501,18 +502,22 @@ public class SubscriptionManagerTasks {
 		RemoteFileTasks.markFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker);
 		
 		// TEMPORARY WORKAROUND FOR BUG
-		String bugId="804227";  // may also need to include 804228
-		boolean invokeWorkaroundWhileBugIsOpen = true;
+		String bugId="804227"; //  Status: 	CLOSED ERRATA
+		boolean invokeWorkaroundWhileBugIsOpen = false;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			throw new SkipException("Restart rhsmcertd has no workaround for Bugzilla "+bugId+".");
 		}
 		// END OF WORKAROUND
 		
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=691137 - jsefler 03/26/2011
+		//	[root@jsefler-63server ~]# service rhsmcertd restart
+		//	Stopping rhsmcertd                                         [  OK  ]
+		//	Starting rhsmcertd 2 1440                                  [  OK  ]
+
+		// TEMPORARY WORKAROUND FOR BUG
 		if (this.arch.equals("s390x") || this.arch.equals("ppc64")) {
-			/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA
-			/*String*/ bugId="691137";
+			bugId="691137";	// Status: 	CLOSED ERRATA
+			invokeWorkaroundWhileBugIsOpen = false;
 			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				RemoteFileTasks.runCommandAndWait(sshCommandRunner,"service rhsmcertd restart", TestRecords.action());
@@ -521,25 +526,37 @@ public class SubscriptionManagerTasks {
 			}
 		} else {
 		// END OF WORKAROUND
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
+			
+		/* VALID PRIOR TO BUG 818978:
+		 * RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
+		 */
 		}
+		
+		// NEW FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
+		//	[root@jsefler-59server ~]# service rhsmcertd restart
+		//	Stopping rhsmcertd...                                      [  OK  ]
+		//	Starting rhsmcertd...                                      [  OK  ]
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
+
+		
 		// # service rhsmcertd restart
 		// rhsmcertd (pid 10172 10173) is running...
 		
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
+		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
+
 		// # tail -f /var/log/rhsm/rhsmcertd.log
 		// Wed Nov  9 15:21:54 2011: started: interval = 1440 minutes
 		// Wed Nov  9 15:21:54 2011: started: interval = 240 minutes
 		// Wed Nov  9 15:21:55 2011: certificates updated
 		// Wed Nov  9 15:21:55 2011: certificates updated
-
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62 branch
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+\\) is running...$",null);		// master/RHEL58 branch
-		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// tolerate 1 or 2 pids for RHEL62 or RHEL58; don't really care which it is since the next assert is really sufficient
-
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		/*boolean*/ invokeWorkaroundWhileBugIsOpen = false; // Current bug status is: CLOSED ERRATA; setting invokeWorkaroundWhileBugIsOpen to false to save execution time
-		String bugId1="752572"; 
-		String bugId2="759199"; 
+		String bugId1="752572";	// Status: 	CLOSED ERRATA
+		String bugId2="759199";	// Status: 	CLOSED ERRATA
+		invokeWorkaroundWhileBugIsOpen = false;
 		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for Bugzillas:  https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+" https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2);} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping assert of the rhsmcertd logging of the started: interval certFrequency and healFrequency while bug "+bugId1+" or "+bugId2+" is open.");
@@ -547,7 +564,9 @@ public class SubscriptionManagerTasks {
 		// END OF WORKAROUND
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),"(.*started: interval = "+healFrequency+" minutes\n.*started: interval = "+certFrequency+" minutes)|(.*started: interval = "+certFrequency+" minutes\n.*started: interval = "+healFrequency+" minutes)",null);
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+"\n.* cert check started: interval = "+certFrequency,null);
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+" minute\\(s\\)\n.* cert check started: interval = "+certFrequency+" minute\\(s\\)",null);
+		/* VALID PRIOR TO BUG 818978:
+		 * RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -4 "+rhsmcertdLogFile,Integer.valueOf(0),".* healing check started: interval = "+healFrequency+" minute\\(s\\)\n.* cert check started: interval = "+certFrequency+" minute\\(s\\)",null);
+		 */
 		}
 		
 		// give the rhsmcertd time to make its initial check-in with the candlepin server and update the certs
@@ -572,6 +591,7 @@ public class SubscriptionManagerTasks {
 
 
 		// assert the rhsmcertd log file reflected newly updated certificates...
+		/* VALID PRIOR TO BUG 818978:
 		int i=0, delay=10;
 		String rhsmcertdLogResult,updateRegex;
 		if (this.currentlyRegisteredUsername==null)	updateRegex = ".*update failed \\(255\\), retry will occur on next run\\n.*update failed \\(255\\), retry will occur on next run";	// when NOT registered
@@ -582,10 +602,62 @@ public class SubscriptionManagerTasks {
 			if (rhsmcertdLogResult.matches(updateRegex)) break;
 		} while (delay*i < 60);
 		Assert.assertTrue(rhsmcertdLogResult.matches(updateRegex), "Expected certificate update regex '"+updateRegex+"' is being logged to rhsmcertd log during a restart.");
-
+		*/
 		
+		//	[root@jsefler-59server ~]# tail -f /var/log/rhsm/rhsmcertd.log
+		//  1342466941476 Testing service rhsmcertd restart...
+		//	Mon Jul 16 13:23:56 2012 [INFO] rhsmcertd is shutting down...
+		//	Mon Jul 16 13:23:56 2012 [INFO] Starting rhsmcertd...
+		//	Mon Jul 16 13:23:56 2012 [INFO] Healing interval: 1440.0 minute(s) [86400 second(s)]
+		//	Mon Jul 16 13:23:56 2012 [INFO] Cert check interval: 2.0 minute(s) [120 second(s)]
+		//	Mon Jul 16 13:23:56 2012 [INFO] Waiting 120 second(s) [2.0 minute(s)] before running updates.
+		//	Mon Jul 16 13:25:56 2012 [WARN] (Healing) Update failed (255), retry will occur on next run.
+		//	Mon Jul 16 13:25:57 2012 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+		//	Mon Jul 16 13:27:56 2012 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+		
+		//  1342466941944 Testing service rhsmcertd restart...
+		//	Mon Jul 16 14:30:20 2012 [INFO] rhsmcertd is shutting down...
+		//	Mon Jul 16 14:30:20 2012 [INFO] Starting rhsmcertd...
+		//	Mon Jul 16 14:30:20 2012 [INFO] Healing interval: 1440.0 minute(s) [86400 second(s)]
+		//	Mon Jul 16 14:30:20 2012 [INFO] Cert check interval: 2.0 minute(s) [120 second(s)]
+		//	Mon Jul 16 14:30:20 2012 [INFO] Waiting 120 second(s) [2.0 minute(s)] before running updates.
+		//	Mon Jul 16 14:32:25 2012 [INFO] (Healing) Certificates updated.
+		//	Mon Jul 16 14:32:29 2012 [INFO] (Cert Check) Certificates updated.
+		//	Mon Jul 16 14:34:22 2012 [INFO] (Cert Check) Certificates updated.
+
+		String rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
+		Integer hardWaitForFirstUpdateCheck = 120; // this is a dev hard coded wait (seconds) before the first check for updates is attempted  REFERENCE BUG 818978#c2
+		String rhsmcertdLogResultExpected;
+		rhsmcertdLogResultExpected = String.format(" Starting rhsmcertd...");																										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+		rhsmcertdLogResultExpected = String.format(" Healing interval: %.1f minute(s) [%d second(s)]",healFrequency*1.0,healFrequency*60);											Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+		rhsmcertdLogResultExpected = String.format(" Cert check interval: %.1f minute(s) [%d second(s)]",certFrequency*1.0,certFrequency*60);										Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+		rhsmcertdLogResultExpected = String.format(" Waiting %d second(s) [%.1f minute(s)] before running updates.",hardWaitForFirstUpdateCheck,hardWaitForFirstUpdateCheck/60.0 );	Assert.assertTrue(rhsmcertdLogResult.contains(rhsmcertdLogResultExpected),"Tail of rhsmcertd log contains the expected restart message '"+rhsmcertdLogResultExpected+"'.");
+
+		/* IGNORED
 		if (waitForMinutes && certFrequency!=null) {
 			SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		}
+		*/
+		
+		// assert the rhsmcertd log for messages stating the cert and heal frequencies have be logged
+		if (assertCertificatesUpdate!=null) {
+			// Waiting 120 second(s) [2.0 minute(s)] before running updates.
+			SubscriptionManagerCLITestScript.sleep(hardWaitForFirstUpdateCheck*1000);
+			
+			// assert these cert and heal update/fail messages are logged (but give the system up to a minute to do it)
+			String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";
+			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
+//			if (this.currentlyRegisteredUsername==null)	updateRegex = ".*update failed \\(255\\), retry will occur on next run\\n.*update failed \\(255\\), retry will occur on next run";	// when NOT registered
+//			else										updateRegex = ".*certificates updated\\n.*certificates updated";
+			int i=0, delay=10;
+			do {	// retry every 10 seconds (up to a minute) for the expected update messages in the rhsmcertd log
+				SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
+				rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
+				if (rhsmcertdLogResult.contains(healMsg) && rhsmcertdLogResult.contains(certMsg)) break;
+			} while (delay*i < 60);
+			Assert.assertTrue(rhsmcertdLogResult.contains(healMsg),"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
+			Assert.assertTrue(rhsmcertdLogResult.contains(certMsg),"Tail of rhsmcertd log contains the expected restart message '"+certMsg+"'.");
+
 		}
 	}
 	public void stop_rhsmcertd (){
@@ -1743,7 +1815,7 @@ public class SubscriptionManagerTasks {
 		String bugId="639417"; 
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			restart_rhsmcertd(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), null, false);
+			restart_rhsmcertd(Integer.valueOf(getConfFileParameter(rhsmConfFile, "certFrequency")), null, false, null);
 		}
 		// END OF WORKAROUND
 		

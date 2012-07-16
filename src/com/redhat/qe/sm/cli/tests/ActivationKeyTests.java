@@ -753,7 +753,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			}
 			systemConsumerIds.clear();
 		}
-		clienttasks.restart_rhsmcertd(null,null,false);
+		clienttasks.restart_rhsmcertd(null,null,false, null);
 	}
 
 	@BeforeClass(groups="setup")

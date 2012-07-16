@@ -531,7 +531,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	public void setupBeforeClass() throws Exception {
 		
 		// restart rhsmcertd with a longer certFrequency
-		clienttasks.restart_rhsmcertd(240, null, false);
+		clienttasks.restart_rhsmcertd(240, null, false, null);
 		
 		// register
 		//clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'

@@ -182,7 +182,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	public void checkTimeBeforeClass() throws Exception{
 		checkTime("candlepin server", server);
 		checkTime("client", client);
-		clienttasks.restart_rhsmcertd(1, null, false);
+		clienttasks.restart_rhsmcertd(1, null, false, null);
 	}
 	
 //	@BeforeMethod

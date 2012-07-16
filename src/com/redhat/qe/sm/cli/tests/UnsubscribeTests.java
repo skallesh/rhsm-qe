@@ -92,7 +92,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 
 		// restart the rhsm cert deamon
 		int certFrequency = 1;
-		clienttasks.restart_rhsmcertd(certFrequency, null, false);
+		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
 		
 		// move the copied entitlement certificate from /tmp to location /etc/pki/entitlement/product
 		// Note: this is malicious activity (user is trying to continue using entitlement certs that have been unsubscribed)
