@@ -767,11 +767,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (expectedMigrationProductCertFilenames==null) expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
 		
 		// execute rhn-migrate-classic-to-rhsm with options
-		String expectedMsg;
+		String sendServiceLevel = null;
 		List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(rhnUsername,rhnPassword,rhnServiceLevels.contains(serviceLevel)?null:String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1)) ,options);
+		if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the promting by the migration tool for a valid service level
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(rhnUsername,rhnPassword,sendServiceLevel,options);
 		
 		// assert the exit code
+		String expectedMsg;
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
@@ -848,7 +850,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				} else {
 					Assert.assertTrue(!sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" does not contain message: "+expectedMsg);
 				}
-				expectedMsg = String.format("Subscribing to service level %s",	""/*FIXME serviceLevel*/);
+				expectedMsg = String.format("Subscribing to service level %s",	(sendServiceLevel==null&&serviceLevel!=null)? serviceLevel:"");	// FIXME This logic could be more thorough 
 				Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
 
 				for (ProductSubscription productSubscription : consumedProductSubscriptions) {
@@ -871,10 +873,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, List<String> expectedProductCertFilenames) {
+	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String serviceLevel, List<String> expectedProductCertFilenames) {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
-		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options,null,null);
+		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options,serviceLevel,expectedProductCertFilenames);
 	}
 	
 	
@@ -1225,20 +1227,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	/**
 	 * Call rhn-migrate-classic-to-rhsm without asserting results.
-	 * @param username
-	 * @param password
+	 * @param sendUsername - interactive keystrokes to enter at the prompt for username
+	 * @param sendPassword - interactive keystrokes to enter at the prompt for passwprd
+	 * @param sendServiceLevel - interactive keystrokes to enter at the prompt for servicelevel
 	 * @param options
 	 * @return
 	 */
-	protected SSHCommandResult executeRhnMigrateClassicToRhsmWithOptions(String username, String password, String serviceLevel, String options) {
+	protected SSHCommandResult executeRhnMigrateClassicToRhsmWithOptions(String sendUsername, String sendPassword, String sendServiceLevel, String options) {
 		// assemble an ssh command using expect to simulate an interactive supply of credentials to the rhn-migrate-classic-to-rhsm command
-		String promptedUsernames=""; if (username!=null) for (String u : username.split("\\n")) {
+		// RHN Username: 
+		String promptedUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
 			promptedUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
 		}
-		String promptedPasswords=""; if (password!=null) for (String p : password.split("\\n")) {
+		// Password: 
+		String promptedPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
 			promptedPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
 		}
-		//	You have entered an invalid choice.
+		
+		//  Service level "stANDArD" is not available.		<== WHEN --servicelevel="stANDArD" WAS ENTERED AS A COMMAND LINE OPTION
+		//	You have entered an invalid choice.				<== WHEN "stANDArD" WAS ENTERED AT THE PROMPT
 		//	Please select a service level agreement for this system.
 		//	1. Standard
 		//	2. Layered
@@ -1247,7 +1254,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	5. Premium
 		//	6. No service level preference
 		//	? 
-		String promptedServiceLevels=""; if (serviceLevel!=null) for (String s : serviceLevel.split("\\n")) {
+		String promptedServiceLevels=""; if (sendServiceLevel!=null) for (String s : sendServiceLevel.split("\\n")) {
 			promptedServiceLevels += "expect \\\"Please select a service level agreement for this system.\\\"; send "+s+"\\\r;";	// ? 
 		}
 		if (options==null) options="";
@@ -1496,8 +1503,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// test the service levels too
 		for (String serviceLevel : rhnServiceLevels) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1.subList(0, 1),	"-f", serviceLevel,	null}));	
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2.subList(0, 1),	"-f", randomizeCaseOfCharactersInString(serviceLevel),	null}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f", serviceLevel,	null}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f", randomizeCaseOfCharactersInString(serviceLevel),	null}));	
 		}
 
 		return ll;
