@@ -211,7 +211,13 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 					SubscriptionPool pool = new SubscriptionPool(productId,poolId);
 					
 					// get the value of the sockets attribute
-					// test if the sockets attribute value is not numeric (e.g. "null")
+					// test if the sockets attribute value is not numeric (e.g. null)
+					if (jsonAttribute.isNull("value")) {
+						// do not mark productAttributesPassRulesCheck = false;
+						log.info("Since this sockets value is null, Subscription Pool "+pool+" may or may not be available depending on other facts besides "+factName+" (e.g. arch).");
+						break;						
+					}
+					// test if the sockets attribute value is not numeric (e.g. "zero")
 					try {Integer.valueOf(jsonAttribute.getString("value"));}
 					catch (NumberFormatException e) {
 						// do not mark productAttributesPassRulesCheck = false;
