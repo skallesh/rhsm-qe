@@ -87,7 +87,8 @@ public class RefreshTests extends SubscriptionManagerCLITestScript {
 		String marker = "SM TestClass marker "+String.valueOf(System.currentTimeMillis());	// using a timestamp on the class marker will help identify the test class during which a denial is logged
 		RemoteFileTasks.markFile(client, clienttasks.varLogMessagesFile, marker);
 		//clienttasks.rhsmcertdServiceRestart(null,null,false);
-		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd \\d+ \\d+\\[  OK  \\]$",null);	
+		//RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd \\d+ \\d+\\[  OK  \\]$",null);		// RHEL63
+		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd\\.\\.\\.\\[  OK  \\]$",null);	
 		//RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid \\d+ \\d+\\) is running...$",null);	// RHEL62
 		RemoteFileTasks.runCommandAndAssert(client,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd \\(pid( \\d+){1,2}\\) is running...$",null);	// RHEL62 or RHEL58
 		
