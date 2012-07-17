@@ -1082,7 +1082,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			for (int j = 0; j < jsonProductAttributes.length(); j++) {
 				JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
 				String attributeName = jsonProductAttribute.getString("name");
-				String attributeValue = jsonProductAttribute.getString("value");
+				//String attributeValue = jsonProductAttribute.getString("value");
+				String attributeValue = jsonProductAttribute.isNull("value")? null:jsonProductAttribute.getString("value");
 				if (attributeName.equals("arch")) {
 					productSupportedArches.addAll(Arrays.asList(attributeValue.trim().split(" *, *")));	// Note: the arch attribute can be a comma separated list of values
 					if (productSupportedArches.contains("x86")) {productSupportedArches.addAll(Arrays.asList("i386","i486","i586","i686"));}  // Note" x86 is a general arch to cover all 32-bit intel micrprocessors 
@@ -1127,11 +1128,11 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 						
 						SOCKETS:
 						{
-							// if the sockets attribute is not numeric (e.g. "null"),  then this subscription should be available to this client
+							// if the sockets attribute is not numeric (e.g. null or "unlimited"),  then this subscription should be available to this client
 							try {Integer.valueOf(attributeValue);}
 							catch (NumberFormatException e) {
 								// do not mark productAttributesPassRulesCheck = false;
-								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' IS QUESTIONABLE.  ITS HAS A '"+attributeName+"' PRODUCT ATTRIBUTE OF '"+attributeValue+"' WHICH IS NOT NUMERIC.  SIMPLY IGNORING THIS ATTRIBUTE.");
+								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' IS QUESTIONABLE.  IT HAS A '"+attributeName+"' PRODUCT ATTRIBUTE OF '"+attributeValue+"' WHICH IS NOT NUMERIC.  SIMPLY IGNORING THIS ATTRIBUTE.");
 								break SOCKETS;
 							}
 							
@@ -1168,7 +1169,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 					for (int l = 0; l < jsonProvidedProductAttributes.length(); l++) {
 						JSONObject jsonProvidedProductAttribute = (JSONObject) jsonProvidedProductAttributes.get(l);
 						String attributeName = jsonProvidedProductAttribute.getString("name");
-						String attributeValue = jsonProvidedProductAttribute.getString("value");
+						//String attributeValue = jsonProvidedProductAttribute.getString("value");
+						String attributeValue = jsonProvidedProductAttribute.isNull("value")? null:jsonProvidedProductAttribute.getString("value");
 						/* 6/17/2011 The availability of a Subscription depends only on its attributes and NOT the attributes of its provided products.
 						 * You will get ALL of its provided product even if they don't make arch/socket sense.
 						 * In this case you could argue that it is not subscription-manager's job to question the meaningfulness of the subscription and its provided products.
@@ -1207,9 +1209,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 							}
 						}
 						if (attributeName.equals("sockets")) {
-							if (!attributeValue.equals(productAttributeSocketsValue)) {
-								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' SOCKETS ATTRIBUTE '"+attributeValue+"' DOES NOT MATCH THE BASE SUBSCRIPTION PRODUCT '"+productId+"' SOCKETS ATTRIBUTE '"+productAttributeSocketsValue+"'.");
-							}
+//							if (!attributeValue.equals(productAttributeSocketsValue)) {
+//								log.warning("THE VALIDITY OF SUBSCRIPTION productName='"+productName+"' productId='"+productId+"' WITH PROVIDED PRODUCT '"+providedProductName+"' IS QUESTIONABLE.  THE PROVIDED PRODUCT '"+providedProductId+"' SOCKETS ATTRIBUTE '"+attributeValue+"' DOES NOT MATCH THE BASE SUBSCRIPTION PRODUCT '"+productId+"' SOCKETS ATTRIBUTE '"+productAttributeSocketsValue+"'.");
+//							}
 //							if (!productAttributeSocketsValue.equals("") && Integer.valueOf(attributeValue) > Integer.valueOf(productAttributeSocketsValue)) {
 //								//providedProductAttributesPassRulesCheck = false;
 //							}
@@ -1245,6 +1247,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		}
 		
 		// minimize the number of dataProvided rows (useful during automated testcase development)
+		// WARNING: When true, this will fail the VerifyAvailablePoolsPassTheHardwareRulesCheck_Test
 		if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) ll=ll.subList(0,1);
 
 		return ll;
@@ -2129,7 +2132,9 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			endDate.setTimeInMillis(dateFormat.parse(jsonPool.getString("endDate")).getTime());
 			Boolean multiEntitlement = CandlepinTasks.isPoolProductMultiEntitlement(sm_clientUsername,sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, jsonPool.getString("id"));
 
-			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), jsonPool.getString("quantity"), multiEntitlement, SubscriptionPool.formatDateString(endDate))}));
+			String quantity = String.valueOf(jsonPool.getInt("quantity"));
+			
+			ll.add(Arrays.asList(new Object[]{new SubscriptionPool(jsonPool.getString("productName"), jsonPool.getString("productId"), jsonPool.getString("id"), quantity, multiEntitlement, SubscriptionPool.formatDateString(endDate))}));
 		}
 		return ll;
 	}
