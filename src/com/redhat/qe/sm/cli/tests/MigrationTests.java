@@ -767,10 +767,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (expectedMigrationProductCertFilenames==null) expectedMigrationProductCertFilenames = getExpectedMappedProductCertFilenamesCorrespondingToChannels(rhnChannelsConsumed);
 		
 		// execute rhn-migrate-classic-to-rhsm with options
-		String sendServiceLevel = null;
-		List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
-		if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the promting by the migration tool for a valid service level
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(rhnUsername,rhnPassword,sendServiceLevel,options);
+//		String sendServiceLevel = null;
+//		List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
+//		if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the prompting by the migration tool for a valid service level
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(rhnUsername,rhnPassword,serviceLevel,options);
 		
 		// assert the exit code
 		String expectedMsg;
@@ -843,23 +843,39 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertTrue(!consumedProductSubscriptions.isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
 			
 			// assert the service levels being consumed match the requested serviceLevel
-			if (options.contains("-s ")) {
+			if (serviceLevel!=null) {
+				if (isInteger(serviceLevel) && Integer.valueOf(serviceLevel)<=rhnServiceLevels.size()) {
+					serviceLevel = rhnServiceLevels.get(Integer.valueOf(serviceLevel)-1);
+				}
+
+				List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
+//				if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the prompting by the migration tool for a valid service level
+
 				expectedMsg = String.format("Service level \"%s\" is not available.",	serviceLevel);
-				if (!rhnServiceLevels.contains(serviceLevel)) {
+				if (!rhnServiceLevelsToUpperCase.contains(serviceLevel.toUpperCase())) {
 					Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
 				} else {
 					Assert.assertTrue(!sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" does not contain message: "+expectedMsg);
 				}
-				expectedMsg = String.format("Subscribing to service level %s",	(sendServiceLevel==null&&serviceLevel!=null)? serviceLevel:"");	// FIXME This logic could be more thorough 
-				Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+				
+				expectedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
+				Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);			
 
-				for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-					Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevel+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
-					if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
-						log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
-						Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
-					} else {
-						Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevel),"When migrating from RHN Classic with a specified service level '"+serviceLevel+"', this auto consumed product subscription's service level should match: "+productSubscription);
+				if (isInteger(serviceLevel) && Integer.valueOf(serviceLevel)==rhnServiceLevels.size()+1) {
+					// when the specified noServiceLevel preference
+				} else {
+					// when a valid the servicelevel was either specified or chosen
+					expectedMsg = String.format("Service level set to: %s",serviceLevel);
+					Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+	
+					for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+						Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevel+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
+						if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
+							log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
+							Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
+						} else {
+							Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevel),"When migrating from RHN Classic with a specified service level '"+serviceLevel+"', this auto consumed product subscription's service level should match: "+productSubscription);
+						}
 					}
 				}
 			}
@@ -1488,6 +1504,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
 		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
 
+		String noServiceLevel = String.valueOf(rhnServiceLevels.size()+1);	// predict the index choice for "No service level preference"
+
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String serviceLevel, List<String> expectedProductCertFilenames
 		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n",		null,	null}));
 		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n",		null,	null}));
@@ -1495,16 +1513,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-n -f",	null,	null}));
 		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-n -f",	null,	null}));
 
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			null,	null}));
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			null,	null}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			noServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevel:null,	null}));
 		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"-c -f",	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f",		null,	null}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f",		null,	null}));
+		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f",		noServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f",		noServiceLevel,	null}));
 
 		// test the service levels too
 		for (String serviceLevel : rhnServiceLevels) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f", serviceLevel,	null}));	
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f", randomizeCaseOfCharactersInString(serviceLevel),	null}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f", serviceLevel,	null}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f", randomizeCaseOfCharactersInString(serviceLevel),	null}));	
 		}
 
 		return ll;
@@ -1521,6 +1539,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
 		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
+
+		String noServiceLevel = String.valueOf(rhnServiceLevels.size()+1);	// predict the index choice for "No service level preference"
 
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");

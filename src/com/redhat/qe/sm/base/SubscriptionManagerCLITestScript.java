@@ -441,6 +441,18 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	    return true;
 	}
 	
+	public boolean isInteger( String input )  
+	{  
+	   try  
+	   {  
+	      Integer.parseInt( input );  
+	      return true;  
+	   }  
+	   catch( Exception e)  
+	   {  
+	      return false;  
+	   }  
+	} 
 
 	// Protected Inner Data Class ***********************************************************************
 	
