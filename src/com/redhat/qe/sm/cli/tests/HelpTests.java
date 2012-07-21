@@ -221,6 +221,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//  -c, --check-period          How often to check for validity (in seconds)
 		//  -i INSTNUMBER, --instnumber=INSTNUMBER
 		
+		// ========================================================================================
 		// subscription-manager MODULES
 		List <String> modules = new ArrayList<String>();
 		modules.add("config");
@@ -245,7 +246,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s [options] MODULENAME --help",clienttasks.command);	// prior to Bug 796730 - subscription-manager usage statement
 			usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",clienttasks.command);
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("796730"), smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("796730"), smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
 		}
 		
@@ -316,7 +317,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -341,7 +342,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 
@@ -359,7 +360,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -377,7 +378,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -391,7 +392,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -408,7 +409,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("664581"), smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -427,7 +428,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -445,7 +446,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -465,7 +466,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -487,7 +488,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -503,7 +504,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -531,7 +532,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[]{null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[]{null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("628589"), smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -554,7 +555,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -570,7 +571,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -588,7 +589,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
@@ -611,7 +612,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 				
@@ -631,10 +632,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
 			if (clienttasks.redhatRelease.contains("release 5")) usage = usage.replaceFirst("^Usage", "usage"); // TOLERATE WORKAROUND FOR Bug 693527 ON RHEL5
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 		}
 		
+		// ========================================================================================
 		// rhsm-icon OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-gui").getStdout().contains("is not installed")) {	// test only when the rpm is installed
 			//[root@jsefler-onprem-5server ~]# rhsm-icon -?
@@ -654,7 +656,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//  --display=DISPLAY           X display to use
 			String rhsmIconCommand = "rhsm-icon"; 
 			List <String> rhsmIconOptions = new ArrayList<String>();
-			rhsmIconOptions.add("-h, --help");	//rhsmIconOptions.add("-?, --help");
+			//rhsmIconOptions.add("-h, --help");	// rhel6
+			rhsmIconOptions.add("-?, --help");		// rhel5
 			rhsmIconOptions.add("--help-all");
 			rhsmIconOptions.add("--help-gtk");
 			rhsmIconOptions.add("-c, --check-period");
@@ -668,7 +671,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				usage = rhsmIconCommand+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
 				usages.add(usage);
 				if (!Arrays.asList("6.1","5.7","6.2","5.8","6.3").contains(clienttasks.redhatReleaseXY)) // skip the following rhsmIconHelpCommand usage test since bug 771756 was not fixed until 5.9
-				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, rhsmIconHelpCommand, optionsRegex, rhsmIconOptions}));
 			}
 			List <String> rhsmIconGtkOptions = new ArrayList<String>();
@@ -680,10 +683,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			rhsmIconGtkOptions.add("--sync");
 			rhsmIconGtkOptions.add("--gtk-module=MODULES");
 			rhsmIconGtkOptions.add("--g-fatal-warnings");
-			rhsmIconGtkOptions.add("--gdk-debug=FLAGS");
-			rhsmIconGtkOptions.add("--gdk-no-debug=FLAGS");
-			rhsmIconGtkOptions.add("--gtk-debug=FLAGS");
-			rhsmIconGtkOptions.add("--gtk-no-debug=FLAGS");
+			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gdk-debug=FLAGS");
+			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gdk-no-debug=FLAGS");
+			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-debug=FLAGS");
+			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-no-debug=FLAGS");
 			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-gtk", optionsRegex, rhsmIconGtkOptions}));
 			List <String> rhsmIconAllOptions = new ArrayList<String>();
 			rhsmIconAllOptions.addAll(rhsmIconOptions);
@@ -691,6 +694,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-all", optionsRegex, rhsmIconAllOptions}));
 		}
 		
+		// ========================================================================================
 		// rhn-migrate-classic-to-rhsm OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
 			//[root@jsefler-onprem-5server ~]# rhn-migrate-classic-to-rhsm -h
@@ -715,11 +719,12 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				String usage = String.format("usage: %s [OPTIONS]",rhnMigrateClassicToRhsmCommand);
 				usage = String.format("Usage: %s [OPTIONS]",rhnMigrateClassicToRhsmCommand);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		
+		// ========================================================================================
 		// install-num-migrate-to-rhsm OPTIONS
 		if (!client.runCommandAndWait("rpm -q "+clienttasks.command+"-migration").getStdout().contains("is not installed")) {	// test only when the rpm is installed
 		if (clienttasks.redhatReleaseX.equals("5")) {	// test only on RHEL5
@@ -741,11 +746,48 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 				List <String> usages = new ArrayList<String>();
 				String usage = String.format("usage: %s [options]",rhnMigrateClassicToRhsmCommand);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|")+"$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
 				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		}
+		
+		// ========================================================================================
+		// rhsmcertd OPTIONS
+
+		//[root@nec-em15 ~]# rhsmcertd -?
+		//Usage:
+		//  rhsmcertd [OPTION...] 
+		//
+		//Help Options:
+		//  -?, --help                      Show help options
+		//  --help-all                      Show all help options
+		//  --help-rhsmcertd                rhsmcertd
+		//
+		//Application Options:
+		//  -c, --cert-interval=MINUTES     Interval to run cert check (in minutes)
+		//  -i, --heal-interval=MINUTES     Interval to run healing (in minutes)
+		//  -n, --now                       Run the initial checks immediatly, with no delay.
+		//  -d, --debug                     Show debug messages
+
+		String rhsmcertdCommand = "rhsmcertd"; 
+		options.clear();
+		options.add("-?, --help");
+		options.add("--help-all");
+		options.add("--help-rhsmcertd");
+		options.add("-c, --cert-interval=MINUTES");
+		options.add("-i, --heal-interval=MINUTES");
+		options.add("-n, --now");
+		options.add("-d, --debug");
+		for (String rhsmcertdHelpCommand : new String[]{rhsmcertdCommand+" -?", rhsmcertdCommand+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = rhsmcertdCommand+" [OPTIONS]";
+			usage = rhsmcertdCommand+" [OPTION...]";
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, rhsmcertdHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, rhsmcertdHelpCommand, optionsRegex, options}));
+		}
+
 		
 		return ll;
 	}
