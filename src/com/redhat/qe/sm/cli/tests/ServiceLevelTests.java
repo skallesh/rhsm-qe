@@ -298,8 +298,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		// subscribe with each service level and assert that the current service level persists the requested service level
 		for (String serviceLevel : serviceLevelsExpected) {
 			clienttasks.subscribe_(true, serviceLevel, (String)null, (String)null, (String)null, null, null, null, null, null, null);
-			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "When the system has auto subscribed specifying a service level, the current service level should be persisted.");
-
+			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "When the system is auto subscribed with the service level option, the service level should be persisted as the new preference.");
 		}
 	}
 		
