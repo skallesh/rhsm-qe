@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,6 +15,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
@@ -98,6 +100,16 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 				"exitCode from facts without options should match exitCode from the facts --list");
 		Assert.assertEquals(defaultResult.getStderr(), listResult.getStderr(),
 				"stderr from facts without options should match stderr from the facts --list");
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId = "838123"; boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			String fact = "net.interface.sit0.mac_address";
+			log.warning("Fact '"+fact+"' will be extracted and disregarded during the following facts list comparison since its value is not constant.");
+			Assert.assertEquals(defaultResult.getStdout().replaceFirst("net\\.interface\\.sit0\\.mac_address: [\\d:]+\\n", ""), listResult.getStdout().replaceFirst("net\\.interface\\.sit0\\.mac_address: [\\d:]+\\n", ""),
+					"stdout from facts without options should match stdout from the facts --list");
+		} else
+		// END OF WORKAROUND
 		Assert.assertEquals(defaultResult.getStdout(), listResult.getStdout(),
 				"stdout from facts without options should match stdout from the facts --list");
 	}
