@@ -192,11 +192,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="subscription-manager: list of consumed entitlements should display consumed product marketing name",
-			groups={},
+			groups={"debugTest"},
 			dataProvider="getAllEntitlementCertsData",
-			enabled=true)
+			enabled=false)	// this test implementation is no longer valid after the change in format for consumed product subscriptions (from many to one) - see bug 806986
+	@Deprecated
 	@ImplementsNitrateTest(caseId=48092, fromPlan=2481)
-	public void EnsureListConsumedMatchesProductsListedInTheEntitlementCerts_Test(EntitlementCert entitlementCert) {
+	public void EnsureListConsumedMatchesProductsListedInTheEntitlementCerts_Test_DEPRECATED(EntitlementCert entitlementCert) {
 
 		// assert: The list of consumed products matches the products listed in the entitlement cert
 		List<ProductSubscription> productSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
@@ -237,6 +238,57 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			Assert.assertEquals(ProductSubscription.formatDateString(correspondingProductSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDate from ProductSubscription in list --consumed matches endDate from OrderNamespace ("+OrderNamespace.formatDateString(entitlementCert.orderNamespace.endDate)+") after conversion from GMT in EntitlementCert to local time.");
 			}
 		}
+	}
+	@Test(	description="subscription-manager: list of consumed entitlements should display the provided product marketing names",
+			groups={},
+			dataProvider="getAllEntitlementCertsData",
+			enabled=true)	// this new test implementation was implemented due to change in list of consumed product subscriptions (from many to one) - see bug 806986
+	@ImplementsNitrateTest(caseId=48092, fromPlan=2481)
+	public void EnsureListConsumedMatchesProductsListedInTheEntitlementCerts_Test(EntitlementCert entitlementCert) {
+
+		// find the consumed product subscription corresponding to this entitlement cert and assert there is only one found
+		List<ProductSubscription> allConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		List<ProductSubscription> productSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", entitlementCert.serialNumber, allConsumedProductSubscriptions);
+		Assert.assertEquals(productSubscriptions.size(),1, "Found a single consumed product subscription with a matching serialNumber from this entitlementCert: "+entitlementCert);
+		ProductSubscription productSubscription = productSubscriptions.get(0);
+		List<String> providedProductNames = new ArrayList<String>();
+		for (ProductNamespace productNamespace : entitlementCert.productNamespaces) providedProductNames.add(productNamespace.name);
+
+		//	Subscription Name:    	Awesome OS Server Bundled (2 Sockets, Standard Support)
+		//	Provides:             	Clustering Bits
+		//	                      	Awesome OS Server Bits
+		//	                      	Shared Storage Bits
+		//	                      	Management Bits
+		//	                      	Large File Support Bits
+		//	                      	Load Balancing Bits
+		//	SKU:                  	awesomeos-server-2-socket-std
+		//	Contract:             	36
+		//	Account:              	12331131231
+		//	Serial Number:        	6683485045354827351
+		//	Active:               	True
+		//	Quantity Used:        	1
+		//	Service Level:        	Standard
+		//	Service Type:         	L1-L3
+		//	Starts:               	07/20/2012
+		//	Ends:                 	07/20/2013
+		
+		// assert all of the product subscription's fields match the entitlement cert
+		Assert.assertEquals(productSubscription.productName, entitlementCert.orderNamespace.productName, "productName from ProductSubscription in list --consumed matches productName from OrderNamespace in this entitlementCert");
+		Assert.assertTrue(productSubscription.provides.containsAll(providedProductNames) && providedProductNames.containsAll(productSubscription.provides), "The consumed product subscription provides all the expected products "+providedProductNames+" from the provided ProductNamespaces in the entitlementCert.");
+		Assert.assertEquals(productSubscription.productId, entitlementCert.orderNamespace.productId, "productId from ProductSubscription in list --consumed matches productId from OrderNamespace in this entitlementCert");
+		Assert.assertEquals(productSubscription.contractNumber, entitlementCert.orderNamespace.contractNumber, "contractNumber from ProductSubscription in list --consumed matches contractNumber from OrderNamespace in this entitlementCert");
+		Assert.assertEquals(productSubscription.accountNumber, entitlementCert.orderNamespace.accountNumber, "accountNumber from ProductSubscription in list --consumed matches accountNumber from OrderNamespace in this entitlementCert");
+		Calendar now = Calendar.getInstance();
+		if (now.after(entitlementCert.orderNamespace.startDate) && now.before(entitlementCert.orderNamespace.endDate)) {
+			Assert.assertTrue(productSubscription.isActive, "isActive is True when the current time ("+EntitlementCert.formatDateString(now)+") is between the start/end dates in this entitlementCert");
+		} else {
+			Assert.assertFalse(productSubscription.isActive, "isActive is False when the current time ("+EntitlementCert.formatDateString(now)+") is NOT between the start/end dates in this entitlementCert");
+		}
+		Assert.assertEquals(productSubscription.quantityUsed.toString(), entitlementCert.orderNamespace.quantityUsed, "quantityUsed from ProductSubscription in list --consumed matches quantityUsed from OrderNamespace in this entitlementCert");
+		Assert.assertEquals(productSubscription.serviceLevel, entitlementCert.orderNamespace.supportLevel, "serviceLevel from ProductSubscription in list --consumed matches supportLevel from OrderNamespace in this entitlementCert");
+		Assert.assertEquals(productSubscription.serviceType, entitlementCert.orderNamespace.supportType, "serviceType from ProductSubscription in list --consumed matches serviceType from OrderNamespace in this entitlementCert");
+		Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.startDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.startDate), "startDate from ProductSubscription in list --consumed matches startDate from OrderNamespace ("+OrderNamespace.formatDateString(entitlementCert.orderNamespace.startDate)+") after conversion from GMT in EntitlementCert to local time.");
+		Assert.assertEquals(ProductSubscription.formatDateString(productSubscription.endDate), ProductSubscription.formatDateString(entitlementCert.orderNamespace.endDate), "endDate from ProductSubscription in list --consumed matches endDate from OrderNamespace ("+OrderNamespace.formatDateString(entitlementCert.orderNamespace.endDate)+") after conversion from GMT in EntitlementCert to local time.");
 	}
 	
 	
