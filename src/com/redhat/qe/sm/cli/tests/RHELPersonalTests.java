@@ -545,6 +545,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void EnsureSystemAutosubscribeConsumesSubPool_Test() throws JSONException {
+		if (client2tasks==null) throw new SkipException("A second client system is required for this test.");
 //		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 		
 		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
@@ -589,6 +590,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	@ImplementsNitrateTest(caseId=61126)
 	public void EnsureUsersSubPoolIsNotAvailableToSystemsRegisterByAnotherUsernameUnderSameOwner_Test() throws JSONException {
+		if (client2tasks==null) throw new SkipException("A second client system is required for this test.");
 //		unsubscribeAndUnregisterMultipleSystemsAfterGroups();
 		
 		for (int j=0; j<sm_personSubscriptionPoolProductData.length(); j++) {
