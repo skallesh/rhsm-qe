@@ -231,9 +231,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: service-level --show (after registering without a service level)",
 			groups={},
-			enabled=false) // assertions in this test are already a subset of ServiceLevelShowAvailable_Test
+			enabled=false) // assertions in this test are already a subset of ServiceLevelShowAvailable_Test(...)
+	@Deprecated
 	@ImplementsNitrateTest(caseId=157213)
-	public void ServiceLevelShowAfterRegisteringWithoutServiceLevel_Test() throws JSONException, Exception  {
+	public void ServiceLevelShowAfterRegisteringWithoutServiceLevel_Test_DEPRECATED() throws JSONException, Exception  {
 		SSHCommandResult result;
 				
 		// register with no service-level

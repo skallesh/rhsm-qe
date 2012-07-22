@@ -70,10 +70,9 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// TODO Review the validity of this testcase with development (My observation is that expiringCert is NOT actually added to list of RevokedCerts
 	@Test(	description="Verify expired entitlement is added to the certifiate revocation list after the subscription expires",
 			groups={}, dependsOnMethods={"VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test"},
-			enabled=false)
+			enabled=false)	// TODO Review the validity of this testcase with development (My observation is that expiringCert is NOT actually added to list of RevokedCerts
 	public void VerifyExpiredEntitlementIsAddedToCertificateRevocationList_Test() throws Exception{
 		if (expiringCert==null) throw new SkipException("This test requires a successful run of a prior test whose entitlement cert has expired."); 
 

@@ -209,11 +209,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
-			enabled=false,	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.
 			groups={"blockedByBug-584137"},
-			dataProvider="getAvailableSubscriptionPoolsData")
+			dataProvider="getAvailableSubscriptionPoolsData",
+			enabled=false)	// Subscribing to a Subscription Pool using --product Id has been removed in subscription-manager-0.71-1.el6.i686.)
 	@ImplementsNitrateTest(caseId=41680)
-	public void SubscribeToValidSubscriptionsByProductID_Test(SubscriptionPool pool){
+	@Deprecated
+	public void SubscribeToValidSubscriptionsByProductID_Test_DEPRECATED(SubscriptionPool pool){
 //		sm.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 //		sm.subscribeToEachOfTheCurrentlyAvailableSubscriptionPools();
 		clienttasks.subscribeToSubscriptionPoolUsingProductId(pool);
@@ -223,7 +224,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using product ID",
 			groups={"blockedByBug-584137"},
 			enabled=false)	// old/disabled test from ssalevan
-	public void SubscribeToASingleEntitlementByProductID_Test(){
+	@Deprecated
+	public void SubscribeToASingleEntitlementByProductID_Test_DEPRECATED(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		SubscriptionPool MCT0696 = new SubscriptionPool("MCT0696", "696");
 		MCT0696.addProductID("Red Hat Directory Server");
@@ -260,12 +262,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	
-	// TODO DELETE TEST due to https://bugzilla.redhat.com/show_bug.cgi?id=670823
 	@Test(	description="subscription-manager-cli: subscribe consumer to an entitlement using registration token",
 			groups={"blockedByBug-584137"},
-			enabled=false)
+			enabled=false)	// Bug 670823 - if subscribe with regtoken is gone, then it should be removed from cli
+	@Deprecated
 	@ImplementsNitrateTest(caseId=41681)
-	public void SubscribeToRegToken_Test(){
+	public void SubscribeToRegToken_Test_DEPRECATED(){
 		clienttasks.unsubscribeFromEachOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.subscribeToRegToken(sm_regtoken);
 	}

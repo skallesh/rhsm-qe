@@ -142,8 +142,9 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			groups={"AcceptanceTests"},
 			dataProvider="getSupportedLocalesData",
 			enabled=false)	// replaced by VerifyOnlyExpectedTranslationFilesAreInstalled_Test
+	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyTranslationFileIsInstalled_Test(Object bugzilla, String locale) {
+	public void VerifyTranslationFileIsInstalled_Test_DEPRECATED(Object bugzilla, String locale) {
 		File localeFile = localeFile(locale);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, localeFile.getPath()),"Supported locale file '"+localeFile+"' is installed.");
 		if (!translationFileMap.keySet().contains(localeFile)) Assert.fail("Something went wrong in TranslationTests.buildTranslationFileMap().  File '"+localeFile+"' was not found in the translationFileMap.keySet().");
@@ -201,11 +202,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(translationFilePassed,"Exactly 1 occurance of all the expected translation msgids ("+translationMsgidSet.size()+") were found in translation file '"+translationFile+"'.");
 	}
 	
-	@Deprecated	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java
 	@Test(	description="run pofilter translate tests on the translation file",
 			groups={},
 			dataProvider="getTranslationFilePofilterTestData",
-			enabled=false)
+			enabled=false)	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java; disabling this test in favor of his
+	@Deprecated	
 	//@ImplementsNitrateTest(caseId=)
 	public void pofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
 		log.info("For an explanation of pofilter test '"+pofilterTest+"', see: http://translate.sourceforge.net/wiki/toolkit/pofilter_tests");

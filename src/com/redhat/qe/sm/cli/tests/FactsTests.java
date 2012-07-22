@@ -75,9 +75,10 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: facts (without --list or --update)",
 			groups={"blockedByBug-654429"},
-			enabled=false)	// was enabled before Bug 811594 - [RFE] facts command should default to list
+			enabled=false)	// was enabled before Bug 811594 - [RFE] facts command should default to list; replaced by Facts_Test()
+	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
-	public void FactsWithoutListOrUpdate_Test() {
+	public void FactsWithoutListOrUpdate_Test_DEPRECATED() {
 		
 		log.info("Assert that one need one must specify --list or --update...");		
 		SSHCommandResult result = clienttasks.facts_(false, false, null, null, null);

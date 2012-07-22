@@ -188,8 +188,9 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
-			enabled=false)
-	public void RegisterWithAutosubscribe_Test_OLD() throws JSONException, Exception {
+			enabled=false)	// the strategy for this test has been improved in the new implementation of RegisterWithAutosubscribe_Test() 
+	@Deprecated
+	public void RegisterWithAutosubscribe_Test_DEPRECATED() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" For DEV and QA testing purposes, we may not have valid products installed on the client, therefore we will fake an installed product by following this strategy:");

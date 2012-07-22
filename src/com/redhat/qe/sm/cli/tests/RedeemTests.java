@@ -132,7 +132,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	// This test is the hosted equivalent for CASE 2 from getOnPremisesMockAttemptToRedeemData
 	@Test(	description="subscription-manager: attempt redeem against a hosted candlepin server using a non-found Dell service tag",
 			groups={"AcceptanceTests","MockRedeemTests", "blockedByBug-688806"},
-			enabled=false)	// THIS TEST IS BLOCKED SINCE WE CANNOT CHANGE THE "canActivate" ATTRIBUTE
+			enabled=false)	// TODO THIS TEST IS BLOCKED SINCE WE CANNOT CHANGE THE "canActivate" ATTRIBUTE
 	//@ImplementsNitrateTest(caseId=)
 	public void HostedMockAttemptToRedeemUsingNonFoundDellServiceTag_Test() throws Exception {
 		String warning = "This mock test was authored for execution against a hosted candlepin server.";

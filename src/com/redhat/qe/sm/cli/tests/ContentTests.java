@@ -394,9 +394,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="verify redhat.repo file does not contain an excessive (more than two) number of successive blank lines",
 			groups={"blockedByBug-737145"},
-			enabled=false) // Disabling... this test takes too long to execute.  VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test effectively provides the same coverage.
-	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test() {
+			enabled=false) // Disabling... this test takes too long to execute.  VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test effectively provides the same test coverage.
+	@Deprecated
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyRedHatRepoFileDoesNotContainExcessiveBlankLines_Test_DEPRECATED() {
 		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}
@@ -492,9 +493,10 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 	@Test(	description="verify redhat.repo file is purged of successive blank lines by subscription-manager yum plugin",
 			groups={"AcceptanceTests","blockedByBug-737145"},
-			enabled=false)
+			enabled=false)	// was valid before bug fix 781510
+	@Deprecated
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId for
-	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test_BEFORE_BUG_FIX_781510() {
+	public void VerifyRedHatRepoFileIsPurgedOfBlankLinesByYumPlugin_Test_DEPRECATED() {
 		
 		// successive blank lines in redhat.repo must not exceed N
 		int N=2; String regex = "(\\n\\s*){"+(N+2)+",}"; 	//  (\n\s*){4,}

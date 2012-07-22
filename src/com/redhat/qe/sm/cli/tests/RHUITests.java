@@ -92,7 +92,8 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	@Test(	description="download an expected RHUI iso from an expected yum repoUrl",
 			groups={},
 			dependsOnMethods={"ConsumeRHUISubscriptionProduct_Test"},
-			enabled=false)	// this download file method will NOT work for a file
+			enabled=false)	// this download file methodology will NOT work for a file; replaced by DownloadRHUIISOFromFileRepo_Test()
+	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
 	public void DownloadRHUIISOFromYumRepo_Test() {
 		if (sm_rhuiDownloadIso.equals("")) throw new SkipException("Skipping this test when no value was given for the RHUI Download ISO");

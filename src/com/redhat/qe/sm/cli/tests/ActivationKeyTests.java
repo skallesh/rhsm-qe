@@ -418,6 +418,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 			groups={"blockedByBug-803773"},
 			dataProvider="getRegisterWithInternationalActivationKeyContainingPool_TestData",
 			enabled=false)
+	@Deprecated
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithInternationalActivationKeyContainingPool_Test(Object blockedByBug, String keyName, JSONObject jsonPool) throws JSONException, Exception {
 		RegisterWithActivationKeyContainingPoolWithQuantity_Test(blockedByBug, keyName, jsonPool, null);
