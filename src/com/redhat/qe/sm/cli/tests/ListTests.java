@@ -253,7 +253,19 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		ProductSubscription productSubscription = productSubscriptions.get(0);
 		List<String> providedProductNames = new ArrayList<String>();
 		for (ProductNamespace productNamespace : entitlementCert.productNamespaces) providedProductNames.add(productNamespace.name);
-
+		
+		// TEMPORARY WORKAROUND FOR BUG
+		if (entitlementCert.orderNamespace.supportLevel==null || entitlementCert.orderNamespace.supportType==null) {
+			String bugId = "842170";
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				throw new SkipException("While bug "+bugId+" is open, skipping assertion of consumed product subscription in list for entitlement's with a null support level/type.");
+			}
+		}
+		// END OF WORKAROUND
+		
+		
 		//	Subscription Name:    	Awesome OS Server Bundled (2 Sockets, Standard Support)
 		//	Provides:             	Clustering Bits
 		//	                      	Awesome OS Server Bits
