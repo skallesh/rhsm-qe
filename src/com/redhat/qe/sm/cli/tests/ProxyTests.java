@@ -516,6 +516,16 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, false, null, null, null);
 		
+		// alter the expected feedback when there is no subscribed RHEL product
+		if (!exitCode.equals(new Integer(255))) {
+			if (!clienttasks.isRhelProductCertSubscribed()) {
+				log.warning("Altering the expected feedback from release --list when there is no RHEL product installed with status Subscribed");
+				exitCode = new Integer(255);
+				stdout = "";
+				stderr = "No release versions available, please check subscriptions.";
+			}
+		}			
+		
 		SSHCommandResult attemptResult = clienttasks.release_(null, true, null, null, proxy, proxyuser, proxypassword);
 		if (exitCode!=null)	Assert.assertEquals(attemptResult.getExitCode(), exitCode, "The exit code from an attempt to "+moduleTask+" using a proxy server.");
 		if (stdout!=null)	Assert.assertEquals(attemptResult.getStdout().trim(), stdout, "The stdout from an attempt to "+moduleTask+" using a proxy server.");
@@ -534,6 +544,16 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		if (!username.equals(sm_clientUsername) || !password.equals(sm_clientPassword)) throw new SkipException("These dataProvided parameters are either superfluous or not meaningful for this test.");
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, false, null, null, null);
 	
+		// alter the expected feedback when there is no subscribed RHEL product
+		if (!exitCode.equals(new Integer(255))) {
+			if (!clienttasks.isRhelProductCertSubscribed()) {
+				log.warning("Altering the expected feedback from release --list when there is no RHEL product installed with status Subscribed");
+				exitCode = new Integer(255);
+				stdout = "";
+				stderr = "No release versions available, please check subscriptions.";
+			}
+		}
+		
 		// pad the tail of basicauthproxyLog with a message
 		String proxyLogMarker = System.currentTimeMillis()+" Testing "+moduleTask+" AttemptsUsingProxyServerViaRhsmConfig_Test from "+clienttasks.hostname+"...";
 		//RemoteFileTasks.runCommandAndAssert(proxyRunner,"echo '"+proxyLogMarker+"'  >> "+proxyLog, Integer.valueOf(0));
@@ -976,7 +996,7 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		String oErrMsg = /*"Organization/Owner bad-org does not exist."*/"Organization bad-org does not exist.";
 		if (sm_serverType.equals(CandlepinType.katello))	oErrMsg = "Couldn't find organization 'bad-org'";
 		
-		// Object blockedByBug, String username, String passwgetRegisterAttemptsUsingProxyServerDataord, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
+		// Object blockedByBug, String username, String password, String org, String proxy, String proxyuser, String proxypassword, Integer exitCode, String stdout, String stderr
 
 		// basic auth proxy test data...
 		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"755258","838242"}),	sm_clientUsername,	sm_clientPassword,	sm_clientOrg,	basicauthproxyUrl,		sm_basicauthproxyUsername,		sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null}));

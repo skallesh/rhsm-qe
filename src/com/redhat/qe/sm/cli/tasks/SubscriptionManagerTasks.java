@@ -962,12 +962,34 @@ public class SubscriptionManagerTasks {
 		}
 		return prodctCertsProvidingTag;
 	}
+
+	/**
+	 * @return the currently installed ProductCert that provides tag "rhel-5" or "rhel-6" depending on this redhat-release;
+	 * also asserts that at most only one product cert is installed that provides this tag;
+	 * returns null if not found
+	 */
+	public ProductCert getCurrentRhelProductCert() {
+		// get the current base RHEL product cert
+		String providingTag = "rhel-"+redhatReleaseX;
+		List<ProductCert> rhelProductCerts = getCurrentProductCerts(providingTag);
+		Assert.assertTrue(rhelProductCerts.size()<=1, "No more than one product cert is installed that provides RHEL tag '"+providingTag+"' (actual='"+rhelProductCerts.size()+"').");
+		if (rhelProductCerts.isEmpty()) return null; 
+		return rhelProductCerts.get(0);
+	}
+	
+	public boolean isRhelProductCertSubscribed() {
+		ProductCert rhelProductCert=getCurrentRhelProductCert();
+		if (rhelProductCert==null) return false;	// rhel product cert cannot be subscribed if a rhel product cert is not installed
+		InstalledProduct installedRhelProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, getCurrentlyInstalledProducts());
+		if (installedRhelProduct==null) Assert.fail("Could not find the installed product corresponding to the current RHEL product cert: "+rhelProductCert);
+		return installedRhelProduct.status.equals("Subscribed");
+	}
 	
 	/**
 	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
 	public ConsumerCert getCurrentConsumerCert() {
-		if (RemoteFileTasks.testFileExists(sshCommandRunner, this.consumerCertFile())!=1) {
+		if (!RemoteFileTasks.testExists(sshCommandRunner, this.consumerCertFile())) {
 			log.info("Currently, there is no consumer registered.");
 			return null;
 		}

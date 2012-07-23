@@ -476,11 +476,9 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		if (proxy_hostname!=null && proxy_port!=null) proxy+=":"+proxy_port;
 		
 		// get the current base RHEL product cert
-		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
-		List<ProductCert> rhelProductCerts = clienttasks.getCurrentProductCerts(providingTag);
-		Assert.assertEquals(rhelProductCerts.size(), 1, "Only one product cert is installed that provides RHEL tag '"+providingTag+"'");
-		ProductCert rhelProductCert = rhelProductCerts.get(0);
-
+		ProductCert rhelProductCert = clienttasks.getCurrentRhelProductCert();
+		Assert.assertNotNull(rhelProductCert, "Only one RHEL product cert is installed.");
+		
 		// make sure we are newly registered
 		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,proxy,proxy_username, proxy_password);
 
