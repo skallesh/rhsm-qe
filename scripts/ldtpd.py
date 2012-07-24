@@ -233,8 +233,8 @@ class AllMethods:
       function = getattr(ldtp,method)
       retval = function(*params)
 
-      if retval == None:
-        retval = 0
+      if (method == "gettextvalue") and (not isinstance(retval, str)):
+        retval = ""
       elif (retval == -1) and (method == "gettablerowindex"):
         paramslist = list(params)
         #use quick method for now
@@ -243,6 +243,9 @@ class AllMethods:
                                              paramslist[2])
       elif method == "getallstates":
         retval = [self._translate_number(state) for state in retval]
+
+      if retval == None:
+        retval = 0
 
       return retval
   pass

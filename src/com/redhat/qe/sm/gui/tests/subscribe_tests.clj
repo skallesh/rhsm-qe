@@ -20,9 +20,9 @@
 
 (defn allsearch
   ([filter]
-     (tasks/search {:match-system? false
+     (tasks/search :match-system? false
                    :do-not-overlap? false
-                   :contain-text filter}))
+                   :contain-text filter))
   ([] (allsearch nil)))
 
 (defn ^{BeforeClass {:groups ["setup"]}}

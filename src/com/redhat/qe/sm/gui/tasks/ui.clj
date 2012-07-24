@@ -44,7 +44,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :file-chooser "Select A File"
                 :subscribe-system-dialog "Subscribe System"
                 :system-preferences-dialog "System Preferences"
-                :help-dialog "Subscription Manager Manual"}))
+                :help-dialog "Subscription Manager Manual"
+                :filter-dialog "Filter Options"}))
 
 
 (def elements
@@ -61,21 +62,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :all-subscriptions-view
                                     :my-subscriptions-view
                                     :installed-view
-                                    :match-system
-                                    :match-installed
-                                    :do-not-overlap
-                                    :contain-text
-                                    :text-in-subscription
                                     :unsubscribe
                                     :system-preferences
                                     :view-system-facts
                                     :proxy-configuration
                                     :import-certificate
                                     :help
+                                    :filters
                                     :calendar])
-		    {:more-search-options "More search options"
-                     :contains-the-text "Text in Subscription"
-                     :date-entry "date-entry"
+		    {:date-entry "date-entry"
                      :register-system "Register System"
                      :redeem "Redeem a Subscription"
                      :unregister-system "Unregister"
@@ -148,16 +143,13 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
     (define-elements (windows :warning-dialog)
       {:warn-ok "OK"
        :warn-cancel "Cancel"})
-    ; subscription-assistant dialog no longer exists
-    (define-elements (windows :subscription-assistant-dialog)
-      {:first-date "*first date of invalid entitlements*"
-       :different-date "A different date:"
-       :assistant-date-entry "date-entry"
-       :update "Update"
-       :assistant-subscribe "subscribe button"
-       :subscription-product-view "Invalid Product List"
-       :assistant-subscription-view "Subscription List"
-       :check-all "Check/uncheck all products"})
+    (define-elements (windows :filter-dialog)
+      (merge (same-name capitalize [:match-system
+                                    :match-installed
+                                    :do-not-overlap])
+             {:contain-the-text "Text in Subscription"
+              :clear-filters "Clear"
+              :close-filters "Close"}))
     (define-elements (windows :firstboot-window)
       {:firstboot-back "Back"
        :firstboot-forward "Forward"

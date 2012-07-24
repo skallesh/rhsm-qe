@@ -277,31 +277,56 @@
   (checkforerror))
 
 ;; TODO: write this with better airities
+
 (defn search
   "Performs a subscription search within subscription-manager-gui."
-  ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
-  (ui selecttab :all-available-subscriptions)
-  (ui click :more-search-options)
-  (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
-    (ui (setchecked match-system?) :match-system)
-    (ui (setchecked do-not-overlap?) :do-not-overlap)
-    (ui (setchecked match-installed?) :match-installed))
-  (ui click :more-search-options)
-  (if active-on ;BZ#675777
-    (ui settextvalue :date-entry active-on))
-  (if contain-text
-    (ui settextvalue :contains-the-text contain-text)
-    (ui settextvalue :contains-the-text ""))
-  (ui click :search)
-  (wait-for-progress-bar)) 
-  ([{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
+  [& {:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
      :or {match-system? true
           do-not-overlap? true
           match-installed? false
           contain-text nil
           active-on nil}}]
-     (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
-  ([] (search {})))
+  (ui selecttab :all-available-subscriptions)
+  (ui click :filters)
+  (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
+    (ui (setchecked match-system?) :match-system)
+    (ui (setchecked do-not-overlap?) :do-not-overlap)
+    (ui (setchecked match-installed?) :match-installed))
+  (if contain-text
+    (ui settextvalue :contain-the-text contain-text)
+    (ui settextvalue :contain-the-text ""))
+  (ui click :close-filters)
+  (if active-on ;BZ#675777
+    (ui settextvalue :date-entry active-on))
+  (ui click :search)
+  (wait-for-progress-bar))
+
+(comment
+  (defn search
+    "Performs a subscription search within subscription-manager-gui."
+    ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
+       (ui selecttab :all-available-subscriptions)
+       (ui click :more-search-options)
+       (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
+         (ui (setchecked match-system?) :match-system)
+         (ui (setchecked do-not-overlap?) :do-not-overlap)
+         (ui (setchecked match-installed?) :match-installed))
+       (ui click :more-search-options)
+       (if active-on ;BZ#675777
+         (ui settextvalue :date-entry active-on))
+       (if contain-text
+         (ui settextvalue :contains-the-text contain-text)
+         (ui settextvalue :contains-the-text ""))
+       (ui click :search)
+       (wait-for-progress-bar)) 
+    ([{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
+       :or {match-system? true
+            do-not-overlap? true
+            match-installed? false
+            contain-text nil
+            active-on nil}}]
+       (search match-system?, do-not-overlap?, match-installed?, contain-text, active-on))
+    ([] (search {}))))
 
 (defn is-item?
   "Determines if an item in a table is a dropdown or an item."
