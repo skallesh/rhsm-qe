@@ -36,7 +36,9 @@ import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
+import com.redhat.qe.sm.data.Repo;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -52,6 +54,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
 
+	@BeforeGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
+	public void beforeRegisterWithCredentials_Test() {
+		if (clienttasks==null) return;
+		clienttasks.unregister_(null, null, null);
+	}
 	@Test(	description="subscription-manager-cli: register to a Candlepin server",
 			groups={"RegisterWithCredentials_Test", "AcceptanceTests"},
 			dataProvider="getRegisterCredentialsData")
@@ -63,7 +70,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister_(null, null, null);
 		
 		// determine this user's ability to register
-		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, (String)null, null, false, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register_(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
 			
 		// determine this user's available subscriptions
 		List<SubscriptionPool> allAvailableSubscriptionPools=null;
@@ -117,11 +124,60 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		//Assert.assertContainsMatch(registerResult.getStdout().trim(), "[a-f,0-9,\\-]{36} "+/*username*/clienttasks.hostname);	// applicable to RHEL61 and RHEL57 
 		Assert.assertContainsMatch(registerResult.getStdout().trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 	}
+	@AfterGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
+	public void generateRegistrationReportTableAfterRegisterWithCredentials_Test() {
+		
+		// now dump out the list of userData to a file
+	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
+	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
+	    try {
+	    	Writer output = new BufferedWriter(new FileWriter(file));
+			
+			// write out the rows of the table
+			output.write("<html>\n");
+			output.write("<table border=1>\n");
+			output.write("<h2>Candlepin Registration Report</h2>\n");
+			//output.write("<h3>(generated on "+dateFormat.format(System.currentTimeMillis())+")</h3>");
+			output.write("Candlepin hostname= <b>"+sm_serverHostname+"</b><br>\n");
+			output.write(dateFormat.format(System.currentTimeMillis())+"\n");
+			output.write("<tr><th>Username/<BR>Password</th><th>OrgKey</th><th>Register Result</th><th>All Available Subscriptions<BR>(to system consumers)</th></tr>\n");
+			for (RegistrationData registeredConsumer : registrationDataList) {
+				if (registeredConsumer.ownerKey==null) {
+					output.write("<tr bgcolor=#F47777>");
+				} else {output.write("<tr>");}
+				if (registeredConsumer.username!=null) {
+					output.write("<td valign=top>"+registeredConsumer.username+"/<BR>"+registeredConsumer.password+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.ownerKey!=null) {
+					output.write("<td valign=top>"+registeredConsumer.ownerKey+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.registerResult!=null) {
+					output.write("<td valign=top>"+registeredConsumer.registerResult.getStdout()+registeredConsumer.registerResult.getStderr()+"</td>");
+				} else {output.write("<td/>");};
+				if (registeredConsumer.allAvailableSubscriptionPools!=null) {
+					output.write("<td valign=top><ul>");
+					for (SubscriptionPool availableSubscriptionPool : registeredConsumer.allAvailableSubscriptionPools) {
+						output.write("<li>"+availableSubscriptionPool+"</li>");
+					}
+					output.write("</ul></td>");
+				} else {output.write("<td/>");};
+				output.write("</tr>\n");
+			}
+			output.write("</table>\n");
+			output.write("</html>\n");
+		    output.close();
+		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using bogus credentials",
 			groups={},
-			dataProvider="getInvalidRegistrationData")
+			dataProvider="getAttemptRegistrationWithInvalidCredentials_Test")
 //	@ImplementsNitrateTest(caseId={41691, 47918})
 	@ImplementsNitrateTest(caseId=47918)
 	public void AttemptRegistrationWithInvalidCredentials_Test(Object meta, String username, String password, String owner, ConsumerType type, String name, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
@@ -131,13 +187,43 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 //DO NOT		clienttasks.unregister();
 		
 		// attempt the registration
-		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, owner, null, type, name, consumerId, autosubscribe, null, null, (String)null, force, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(username, password, owner, null, type, name, consumerId, autosubscribe, null, null, (String)null, null, null, force, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode);
 		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex);
 		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex);
 	}
+	@DataProvider(name="getAttemptRegistrationWithInvalidCredentials_Test")
+	public Object[][] getAttemptRegistrationWithInvalidCredentials_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getAttemptRegistrationWithInvalidCredentials_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getAttemptRegistrationWithInvalidCredentials_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
+		String randomString = String.valueOf(getRandInt());
+
+		// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
+		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+randomString+" does not exist."*/"Organization "+randomString+" does not exist."}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
+
+		// force a successful registration, and then...
+		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
+													sm_clientUsername,		sm_clientPassword,					sm_clientOrg,	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",					null}));
+
+		// ... try to register again even though the system is already registered
+		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,		sm_clientPassword,					null,			null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
+
+		return ll;
+	}
+	
 	
 	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has unaccepted Terms and Conditions",
@@ -163,6 +249,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
 	@Test(	description="subscription-manager-cli: attempt to register a user who has been disabled",
 			groups={},
 			enabled=true)
@@ -184,6 +271,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerKeyFile()), "Consumer key file '"+clienttasks.consumerKeyFile()+"' does NOT exist after an attempt to register with disabled credentials.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client,clienttasks.consumerCertFile()), "Consumer cert file '"+clienttasks.consumerCertFile()+" does NOT exist after an attempt to register with disabled credentials.");
 	}
+	
 	
 	
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
@@ -209,7 +297,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 
 		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary directory
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, null, false, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, null, null, null, false, null, null, null);
 
 		//[root@jsefler-r63-server ~]# subscription-manager register --username testuser1 --password password --auto --org admin
 		//The system has been registered with id: 243ea73d-01bb-458d-a7a5-2d61fde69494 
@@ -256,7 +344,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		
 		// reregister with autosubscribe and assert that the product is bound
 		clienttasks.unregister(null, null, null);
-		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, null, false, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, null, null, null, false, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the fakeProductCert was subscribed
 		/* # subscription-manager register --username=testuser1 --password=password
@@ -318,7 +406,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", tmpProductCertDir);
 
 		// Register and assert that no products appear to be installed since we changed the productCertDir to a temporary directory
-		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, true, false, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, null, null, true, false, null, null, null);
 
 		//[root@jsefler-r63-server ~]# subscription-manager register --username testuser1 --password password --auto --org admin
 		//The system has been registered with id: 243ea73d-01bb-458d-a7a5-2d61fde69494 
@@ -363,7 +451,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		ProductCert tmpProductCert = clienttasks.getProductCertFromProductCertFile(tmpProductCertFile);
 		
 		// reregister with autosubscribe and assert that the product is bound
-		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, true, false, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, Boolean.TRUE, null, null, (String)null, null, null, true, false, null, null, null);
 		
 		// assert that the sshCommandResult from register indicates the tmpProductCert was subscribed
 		
@@ -388,6 +476,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
 	@Test(	description="subscription-manager-cli: register with --force",
 			groups={"blockedByBug-623264"},
 			enabled=true)
@@ -397,7 +486,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// make sure you are first registered
-		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, false, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, null, false, null, null, null);
 		String firstConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// subscribe to a random pool (so as to consume an entitlement)
@@ -407,11 +496,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
 		
 		// attempt to register again and assert that you are warned that the system is already registered
-		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, false, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, null, false, null, null, null);
 		Assert.assertTrue(sshCommandResult.getStdout().startsWith("This system is already registered."),"Expecting: This system is already registered.");
 		
 		// register with force
-		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
+		sshCommandResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null, null, null, (String)null, null, null, Boolean.TRUE, false, null, null, null);
 		String secondConsumerId = clienttasks.getCurrentConsumerId();
 		
 		// assert the stdout reflects a new consumer
@@ -426,18 +515,19 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	
 	@Test(	description="subscription-manager-cli: register with --name",
-			dataProvider="getRegisterWithNameData",
+			dataProvider="getRegisterWithName_TestData",
 			groups={},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=62352) // caseIds=81089 81090 81091
-	public void RegisterWithName_Test(Object meta, String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+	public void RegisterWithName_Test(Object bugzilla, String name, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
 		
 		// start fresh by unregistering
 		clienttasks.unregister(null, null, null);
 		
 		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,name,null, null, null, null, (String)null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,name,null, null, null, null, (String)null, null, null, null, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name=\""+name+"\" option:");
@@ -450,630 +540,11 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(consumerCert.name, name, "");
 		}
 	}
-	
-	
-	@Test(	description="subscription-manager-cli: register with --name and --type",
-			dataProvider="getRegisterWithNameAndTypeData",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithNameAndType_Test(Object meta, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
-		
-		// start fresh by unregistering
-		clienttasks.unregister(null, null, null);
-		
-		// register with a name
-		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null);
-		
-		// assert the sshCommandResult here
-		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
-		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+	@DataProvider(name="getRegisterWithName_TestData")
+	public Object[][] getRegisterWithName_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithName_TestDataAsListOfLists());
 	}
-	
-	
-	@Test(	description="assert that a consumer can register with a release value and that subscription-manager release will return the set value",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithRelease_Test() {
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,"Foo",(List<String>)null,true,null,null,null, null);		
-		Assert.assertEquals(clienttasks.getCurrentRelease(), "Foo", "The release value retrieved after registering with the release.");
-	}
-	
-	
-	/**
-	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
-		Actions:
-
-			* register a client to candlepin
-			* subscribe to a pool
-			* list consumed
-			* reregister
-
-	    Expected Results:
-
-	 		* check the identity cert has not changed
-	        * check the consumed entitlements have not changed
-	 */
-	@Test(	description="subscription-manager-cli: reregister basic registration",
-			groups={"blockedByBug-636843","AcceptanceTests"},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=56327)
-	public void ReregisterBasicRegistration_Test() {
-		
-		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
-		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,false, null, null, null));
-		
-		// take note of your identity cert before reregister
-		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
-		
-		// subscribe to a random pool
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		
-		// get a list of the consumed products
-		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		
-		// reregister
-		//clienttasks.reregister(null,null,null);
-		clienttasks.reregisterToExistingConsumer(sm_clientUsername,sm_clientPassword,consumerIdBefore);
-		
-		// assert that the identity cert has not changed
-		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
-		Assert.assertEquals(consumerCertBefore, consumerCertAfter, "The consumer identity cert has not changed after reregistering with consumerid.");
-		
-		// assert that the user is still consuming the same products
-		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(
-				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
-				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
-				"The list of consumed products after reregistering is identical.");
-	}
-	
-	
-	/**
-	 * https://tcms.engineering.redhat.com/case/56328/?from_plan=2476
-	 * 
-		Actions:
-
-	 		* register a client to candlepin (take note of the uuid returned)
-	 		* take note of your identity cert info using openssl x509
-	 		* subscribe to a pool
-	 		* list consumed
-	 		* ls /etc/pki/entitlement/products
-	 		* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak
-	 		* run the "reregister" command w/ username and passwd AND w/consumerid=<uuid>
-
-		Expected Results:
-
-	 		* after running reregister you should have a new identity cert
-	 		* after registering you should still the same products consumed (list consumed)
-	 		* the entitlement serials should be the same as before the registration
-	 */
-	@Test(	description="subscription-manager-cli: bad identity cert",
-			groups={"blockedByBug-624106"},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=56328)
-	public void ReregisterWithBadIdentityCert_Test() {
-		
-		// start fresh by unregistering and registering
-		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,false, null, null, null);
-		
-		// take note of your identity cert
-		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
-		
-		// subscribe to a random pool
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
-		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		
-		// get a list of the consumed products
-		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		
-		// Now.. mess up your identity..  by borking its content
-		log.info("Messing up the identity cert by borking its content...");
-		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile()+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile(), 0);
-		
-		// reregister w/ username, password, and consumerid
-		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
-		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
-		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerCertBefore.consumerid, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
-		
-		// assert that the identity cert has not changed
-		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
-		Assert.assertEquals(consumerCertBefore, consumerCertAfter, "The consumer identity cert has not changed after reregistering with consumerid.");
-	
-		// assert that the user is still consuming the same products
-		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(
-				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
-				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
-				"The list of consumed products after reregistering is identical.");
-	}
-	
-	
-	/**
-	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
-	 * 
-Actions:
-
-    * register with username and password and remember the consumerid
-    * subscribe to one or more subscriptions
-    * list the consumed subscriptions and remember them
-    * clean system
-    * assert that there are no entitlements on the system
-    * register with same username, password and existing consumerid
-    * assert that originally consumed subscriptions are once again being consumed
-
-	
-Expected Results:
-
-    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system
-	 * @throws Exception 
-	 * @throws JSONException 
-
-	 */
-	@Test(	description="register with existing consumerid should automatically refresh entitlements",
-			groups={},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=72845)
-	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() throws JSONException, Exception {
-		
-		// register with username and password and remember the consumerid
-		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null));
-		
-		// subscribe to one or more subscriptions
-		//// subscribe to a random pool
-		//List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
-		//SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
-		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
-		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-
-		// list the consumed subscriptions and remember them
-		List <ProductSubscription> originalConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		// also remember the current entitlement certs
-		List <EntitlementCert> originalEntitlementCerts= clienttasks.getCurrentEntitlementCerts();
-		
-		// clean system
-		clienttasks.clean(null, null, null);
-		
-		// assert that there are no entitlements on the system
-		//Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"There are NO consumed Product Subscriptions on this system after running clean");
-		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(),"There are NO Entitlement Certs on this system after running clean");
-		
-		// register with same username, password and existing consumerid
-		// Note: no need to register with force as running clean wipes system of all local registration data
-		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerId, null, null, null, (String)null, null, false, null, null, null);
-
-		// assert that originally consumed subscriptions are once again being consumed
-		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertEquals(consumedProductSubscriptions.size(),originalConsumedProductSubscriptions.size(), "The number of consumed Product Subscriptions after registering to an existing consumerid matches his original count.");
-		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-			Assert.assertContains(originalConsumedProductSubscriptions, productSubscription);
-		}
-		// assert that original entitlement certs are once on the system
-		List <EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
-		Assert.assertEquals(entitlementCerts.size(),originalEntitlementCerts.size(), "The number of Entitlement Certs on the system after registering to an existing consumerid matches his original count.");
-		for (EntitlementCert entitlementCert : entitlementCerts) {
-			Assert.assertContains(originalEntitlementCerts, entitlementCert);
-		}
-		
-	}
-	
-	
-	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
-			groups={"blockedByBug-667953","blockedByBug-669208"},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithAnEmptyRhsmFactsJsonFile_Test() {
-		
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
-		log.info("Emptying rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
-		client.runCommandAndWait("echo \"\" > "+clienttasks.rhsmFactsJsonFile, TestRecords.action());
-		SSHCommandResult result = client.runCommandAndWait("cat "+clienttasks.rhsmFactsJsonFile, TestRecords.action());
-		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
-		
-		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
-	}
-	
-	
-	@Test(	description="register with a missing /var/lib/rhsm/facts/facts.json file",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)	
-	public void RegisterWithAnMissingRhsmFactsJsonFile_Test() {
-		
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
-		log.info("Deleting rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
-		RemoteFileTasks.runCommandAndWait(client, "rm -f "+clienttasks.rhsmFactsJsonFile, TestRecords.action());
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
-		
-		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, Boolean.TRUE, false, null, null, null);
-	}
-	
-	
-	@Test(	description="register with interactive prompting for credentials",
-			groups={"blockedByBug-678151"},
-			dataProvider = "getInteractiveRegistrationData",
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void RegisterWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOrg, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
-		
-		// ensure we are unregistered
-		clienttasks.unregister(null,null,null);
-
-		// call register while providing a valid username at the interactive prompt
-		String command;
-		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
-			// assemble an ssh command using expect to simulate an interactive supply of credentials to the register command
-			String promptedUsernames=""; if (promptedUsername!=null) for (String username : promptedUsername.split("\\n")) {
-				promptedUsernames += "expect \\\"*Username:\\\"; send "+username+"\\\r;";
-			}
-			String promptedPasswords=""; if (promptedPassword!=null) for (String password : promptedPassword.split("\\n")) {
-				promptedPasswords += "expect \\\"*Password:\\\"; send "+password+"\\\r;";
-			}
-			// [root@jsefler-onprem-5server ~]# expect -c "spawn subscription-manager register; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
-			command = String.format("expect -c \"spawn %s register %s %s %s; %s %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"",
-					clienttasks.command,
-					commandLineUsername==null?"":"--username="+commandLineUsername,
-					commandLinePassword==null?"":"--password="+commandLinePassword,
-					commandLineOrg==null?"":"--org="+commandLineOrg,
-					promptedUsernames,
-					promptedPasswords);
-		} else {
-			// assemble an ssh command using echo and pipe to simulate an interactive supply of credentials to the register command
-			// [root@jsefler-stage-6server ~]# echo -e "testuser1" | subscription-manager register --password password --org=admin
-			String echoUsername= promptedUsername==null?"":promptedUsername;
-			String echoPassword = promptedPassword==null?"":promptedPassword;
-			String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";	// \n works;  \r does not work
-			command = String.format("echo -e \"%s\" | %s register %s %s %s",
-					echoUsername+n+echoPassword,
-					clienttasks.command,
-					commandLineUsername==null?"":"--username="+commandLineUsername,
-					commandLinePassword==null?"":"--password="+commandLinePassword,
-					commandLineOrg==null?"":"--org="+commandLineOrg);
-		}
-		// attempt to register with the interactive credentials
-		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
-		
-		// assert the sshCommandResult here
-		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The expected exit code from the register attempt.");
-		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout(), expectedStdoutRegex, "The expected stdout result from register while supplying interactive credentials.");
-		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr(), expectedStderrRegex, "The expected stderr result from register while supplying interactive credentials.");
-	}
-	
-	
-	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130"},
-			enabled=true)
-	@ImplementsNitrateTest(caseId=75972)	
-	public void InteroperabilityRegister_Test() {
-
-		// interoperabilityWarningMessage is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
-		String interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
-			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
-			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after message change from bug 730018...
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// during rhel59, terminology changes were made for "RHN Certificate-Based technology"
-		interoperabilityWarningMessage = 
-			"WARNING" +"\n\n"+
-			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
-			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends (except in a few cases) that customers only register once. " +"\n\n"+
-			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// during RHEL58, DEV trimmed whitespace from strings...
-		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
-		
-		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
-		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011
-		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
-			interoperabilityWarningMessage = clienttasks.getBrandingString("REGISTERED_TO_OTHER_WARNING");
-		}
-		*/
-		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
-		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The expected interoperability message starts with \"WARNING\".");
-		
-		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
-		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
-		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
-		
-		log.info("Attempt to register while already registered via RHN Classic...");
-		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
-//		Assert.assertContainsMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
-		Assert.assertTrue(result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
-
-		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
-		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, TestRecords.action());
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
-		result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
-		
-		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
-//		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
-		Assert.assertTrue(!result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
-	}
-	
-	
-	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRegisterToEnvironmentWhenCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
-		// ask the candlepin server if it supports environment
-		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
-		
-		// skip this test when candlepin supports environments
-		if (supportsEnvironments) throw new SkipException("Candlepin server '"+sm_serverHostname+"' appears to support environments, therefore this test is not applicable.");
-
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,"foo",null,null,null,null,null,null,(String)null,true, null, null, null, null);
-		
-		// assert results
-		Assert.assertEquals(result.getStderr().trim(), "Error: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
-	}
-	
-	
-	@Test(	description="subscription-manager: attempt register to --environment without --org option should fail",
-			groups={},
-			enabled=true)
-	//@ImplementsNitrateTest(caseId=)
-	public void AttemptRegisterToEnvironmentWithoutOrg_Test() throws JSONException, Exception {
-		// ask the candlepin server if it supports environment
-		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
-
-		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo",null,null,null,null,null,null,(String)null,true, null, null, null, null);
-
-		// skip this test when candlepin does not support environments
-		if (!supportsEnvironments) {
-			// but before we skip, we can verify that environments are unsupported by this server
-			Assert.assertEquals(result.getStderr().trim(), "Error: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
-			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
-			throw new SkipException("Candlepin server '"+sm_serverHostname+"' does not support environments, therefore this test is not applicable.");
-		}
-
-		// assert results when candlepin supports environments
-		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
-		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option.");
-	}
-	
-	
-	
-	// Candidates for an automated Test:
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=627685
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=668814
-	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669395
-	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically
-	// TODO Bug 719378 - White space in user name causes error 
-	
-	
-	// Protected Class Variables ***********************************************************************
-	
-	protected final String tmpProductCertDir = "/tmp/productCertDir";
-	protected String productCertDir = null;
-	
-	// Configuration methods ***********************************************************************
-
-	@AfterGroups(value={"RegisterWithAutosubscribe_Test","InteroperabilityRegister_Test"}, alwaysRun=true)
-	@AfterClass (alwaysRun=true)
-	public void cleaupAfterClass() {
-		if (clienttasks==null) return;
-		
-		// restore the originally configured productCertDir
-		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
-		
-		// delete temporary files and directories
-		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
-		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
-	}
-
-	
-	@BeforeGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
-	public void unregisterBeforeRegisterWithCredentials_Test() {
-		if (clienttasks==null) return;
-		clienttasks.unregister_(null, null, null);
-	}
-	@AfterGroups(value={"RegisterWithCredentials_Test"},alwaysRun=true)
-	public void generateRegistrationReportTableAfterRegisterWithCredentials_Test() {
-		
-		// now dump out the list of userData to a file
-	    File file = new File("CandlepinRegistrationReport.html"); // this will be in the automation.dir directory on hudson (workspace/automatjon/sm)
-	    DateFormat dateFormat = new SimpleDateFormat("MMM d HH:mm:ss yyyy z");
-	    try {
-	    	Writer output = new BufferedWriter(new FileWriter(file));
-			
-			// write out the rows of the table
-			output.write("<html>\n");
-			output.write("<table border=1>\n");
-			output.write("<h2>Candlepin Registration Report</h2>\n");
-			//output.write("<h3>(generated on "+dateFormat.format(System.currentTimeMillis())+")</h3>");
-			output.write("Candlepin hostname= <b>"+sm_serverHostname+"</b><br>\n");
-			output.write(dateFormat.format(System.currentTimeMillis())+"\n");
-			output.write("<tr><th>Username/<BR>Password</th><th>OrgKey</th><th>Register Result</th><th>All Available Subscriptions<BR>(to system consumers)</th></tr>\n");
-			for (RegistrationData registeredConsumer : registrationDataList) {
-				if (registeredConsumer.ownerKey==null) {
-					output.write("<tr bgcolor=#F47777>");
-				} else {output.write("<tr>");}
-				if (registeredConsumer.username!=null) {
-					output.write("<td valign=top>"+registeredConsumer.username+"/<BR>"+registeredConsumer.password+"</td>");
-				} else {output.write("<td/>");};
-				if (registeredConsumer.ownerKey!=null) {
-					output.write("<td valign=top>"+registeredConsumer.ownerKey+"</td>");
-				} else {output.write("<td/>");};
-				if (registeredConsumer.registerResult!=null) {
-					output.write("<td valign=top>"+registeredConsumer.registerResult.getStdout()+registeredConsumer.registerResult.getStderr()+"</td>");
-				} else {output.write("<td/>");};
-				if (registeredConsumer.allAvailableSubscriptionPools!=null) {
-					output.write("<td valign=top><ul>");
-					for (SubscriptionPool availableSubscriptionPool : registeredConsumer.allAvailableSubscriptionPools) {
-						output.write("<li>"+availableSubscriptionPool+"</li>");
-					}
-					output.write("</ul></td>");
-				} else {output.write("<td/>");};
-				output.write("</tr>\n");
-			}
-			output.write("</table>\n");
-			output.write("</html>\n");
-		    output.close();
-		    //log.info(file.getCanonicalPath()+" exists="+file.exists()+" writable="+file.canWrite());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-
-	
-	// Protected methods ***********************************************************************
-
-	protected void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
-		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+this.getRandInt()+" --password="+password+this.getRandInt()+" --force");
-		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
-				"Invalid username or password. To create a login, please visit https:\\/\\/www.redhat.com\\/wapps\\/ugc\\/register.html");
-	}
-	
-	
-	
-	// Data Providers ***********************************************************************
-
-	@DataProvider(name="getInvalidRegistrationData")
-	public Object[][] getInvalidRegistrationDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getInvalidRegistrationDataAsListOfLists());
-	}
-	protected List<List<Object>> getInvalidRegistrationDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		if (servertasks==null) return ll;
-		if (clienttasks==null) return ll;
-		
-		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
-		String randomString = String.valueOf(getRandInt());
-
-		// Object bugzilla, String username, String password, String owner, String type, String consumerId, Boolean autosubscribe, Boolean force, String debug, Integer exitCode, String stdoutRegex, String stderrRegex
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername+getRandInt(),		String.valueOf(getRandInt()),	null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		uErrMsg}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				null,							null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"You must specify an organization/owner for new consumers."*/"You must specify an organization for new consumers."}));
-		ll.add(Arrays.asList(new Object[] {null,							sm_clientUsername,					sm_clientPassword,				randomString,					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+randomString+" does not exist."*/"Organization "+randomString+" does not exist."}));
-		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("734114"),	sm_clientUsername,					sm_clientPassword,				"\"foo bar\"",					null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(255),	null,		/*"Organization/Owner "+"foo bar"+" does not exist."*/"Organization "+"foo bar"+" does not exist."}));
-
-		// force a successful registration, and then...
-		ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug(new String[]{"616065","669395"}),
-													sm_clientUsername,		sm_clientPassword,					sm_clientOrg,	null,	null,	null,		null,			Boolean.TRUE,	null,	Integer.valueOf(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",					null}));
-
-		// ... try to register again even though the system is already registered
-		ll.add(Arrays.asList(new Object[] {null,	sm_clientUsername,		sm_clientPassword,					null,			null,	null,	null,		null,			Boolean.FALSE,	null,	Integer.valueOf(1),		"This system is already registered. Use --force to override",					null}));
-
-		return ll;
-	}
-	
-	
-	@DataProvider(name="getInteractiveRegistrationData")
-	public Object[][] getInteractiveRegistrationDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getInteractiveRegistrationDataAsListOfLists());
-	}
-	protected List<List<Object>> getInteractiveRegistrationDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		if (servertasks==null) return ll;
-		if (clienttasks==null) return ll;
-		
-		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
-		String x = String.valueOf(getRandInt());
-		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
-			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
-			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\nThe system has been registered with id: [a-f,0-9,\\-]{36}",	null}));		
-		} else {
-			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
-			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
-			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));		
-		}
-		return ll;
-	}
-	
-	
-	@DataProvider(name="getRegisterWithNameAndTypeData")
-	public Object[][] getRegisterWithNameAndTypeDataAs2dArray() throws JSONException, Exception {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndTypeDataAsListOfLists());
-	}
-	protected List<List<Object>> getRegisterWithNameAndTypeDataAsListOfLists() throws JSONException, Exception {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		String username=sm_clientUsername;
-		String password=sm_clientPassword;
-		String owner=sm_clientOrg;
-
-		List <String> registerableConsumerTypes = new ArrayList<String> ();
-		JSONArray jsonConsumerTypes = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/consumertypes"));	
-		for (int i = 0; i < jsonConsumerTypes.length(); i++) {
-			JSONObject jsonConsumerType = (JSONObject) jsonConsumerTypes.get(i);
-			String consumerType = jsonConsumerType.getString("label");
-			registerableConsumerTypes.add(consumerType);
-		}
-		
-		// interate across all ConsumerType values and append rows to the dataProvider
-		for (ConsumerType type : ConsumerType.values()) {
-			String name = type.toString()+"_NAME";
-			
-			// decide what username and password to test with
-			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
-				username = sm_rhpersonalUsername;
-				password = sm_rhpersonalPassword;
-				owner = sm_rhpersonalOrg;
-			} else {
-				username = sm_clientUsername;
-				password = sm_clientPassword;
-				owner = sm_clientOrg;
-			}
-			
-			// String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
-			if (registerableConsumerTypes.contains(type.toString())) {
-				/* applicable to RHEL61 and RHEL57
-				if (type.equals(ConsumerType.person)) {
-					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("661130"),	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null}));
-				} else {
-					ll.add(Arrays.asList(new Object[]{null,  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
-				}
-				*/
-				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with id: [a-f,0-9,\\-]{36}",	null}));			
-			} else {
-				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type}));			
-	
-			}
-		}
-
-		return ll;
-	}
-		
-	
-	@DataProvider(name="getRegisterWithNameData")
-	public Object[][] getRegisterWithNameDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameDataAsListOfLists());
-	}
-	protected List<List<Object>> getRegisterWithNameDataAsListOfLists() {
+	protected List<List<Object>> getRegisterWithName_TestDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		String invalidNameStderr = "System name must consist of only alphanumeric characters, periods, dashes and underscores.";	// bugzilla 672233
@@ -1145,4 +616,764 @@ Expected Results:
 
 		return ll;
 	}
+	
+	
+	
+	@Test(	description="subscription-manager-cli: register with --name and --type",
+			dataProvider="getRegisterWithNameAndType_TestData",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithNameAndType_Test(Object bugzilla, String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		
+		// start fresh by unregistering
+		clienttasks.unregister(null, null, null);
+		
+		// register with a name
+		SSHCommandResult sshCommandResult = clienttasks.register_(username,password,owner,null,type,name,null, null, null, null, (String)null, null, null, null, null, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --name="+name+" --type="+type+" options:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --name="+name+" --type="+type+" options:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --name="+name+" --type="+type+" options:");
+	}
+	@DataProvider(name="getRegisterWithNameAndType_TestData")
+	public Object[][] getRegisterWithNameAndType_TestDataAs2dArray() throws JSONException, Exception {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithNameAndType_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithNameAndType_TestDataAsListOfLists() throws JSONException, Exception {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		String username=sm_clientUsername;
+		String password=sm_clientPassword;
+		String owner=sm_clientOrg;
+
+		List <String> registerableConsumerTypes = new ArrayList<String> ();
+		JSONArray jsonConsumerTypes = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,"/consumertypes"));	
+		for (int i = 0; i < jsonConsumerTypes.length(); i++) {
+			JSONObject jsonConsumerType = (JSONObject) jsonConsumerTypes.get(i);
+			String consumerType = jsonConsumerType.getString("label");
+			registerableConsumerTypes.add(consumerType);
+		}
+		
+		// interate across all ConsumerType values and append rows to the dataProvider
+		for (ConsumerType type : ConsumerType.values()) {
+			String name = type.toString()+"_NAME";
+			
+			// decide what username and password to test with
+			if (type.equals(ConsumerType.person) && !getProperty("sm.rhpersonal.username", "").equals("")) {
+				username = sm_rhpersonalUsername;
+				password = sm_rhpersonalPassword;
+				owner = sm_rhpersonalOrg;
+			} else {
+				username = sm_clientUsername;
+				password = sm_clientPassword;
+				owner = sm_clientOrg;
+			}
+			
+			// String username, String password, String owner, String name, ConsumerType type, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			if (registerableConsumerTypes.contains(type.toString())) {
+				/* applicable to RHEL61 and RHEL57
+				if (type.equals(ConsumerType.person)) {
+					ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("661130"),	username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+username,	null}));
+				} else {
+					ll.add(Arrays.asList(new Object[]{null,  							username,	password,	name,	type,	Integer.valueOf(0),	"[a-f,0-9,\\-]{36} "+name,	null}));			
+				}
+				*/
+				ll.add(Arrays.asList(new Object[]{null,  	username,	password,	owner,	name,	type,	Integer.valueOf(0),	"The system has been registered with id: [a-f,0-9,\\-]{36}",	null}));			
+			} else {
+				ll.add(Arrays.asList(new Object[]{ null,	username,	password,	owner,	name,	type,	Integer.valueOf(255),	null,	"No such consumer type: "+type}));			
+	
+			}
+		}
+
+		return ll;
+	}
+	
+	
+	
+	@Test(	description="assert that a consumer can register with a release value and that subscription-manager release will return the set value",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithRelease_Test() {
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,"Foo",(List<String>)null,null,null,true,null, null, null, null);		
+		Assert.assertEquals(clienttasks.getCurrentRelease(), "Foo", "The release value retrieved after registering with the release.");
+	}
+	
+	
+	
+	/**
+	 * https://tcms.engineering.redhat.com/case/56327/?from_plan=2476
+		Actions:
+
+			* register a client to candlepin
+			* subscribe to a pool
+			* list consumed
+			* reregister
+
+	    Expected Results:
+
+	 		* check the identity cert has not changed
+	        * check the consumed entitlements have not changed
+	 */
+	@Test(	description="subscription-manager-cli: reregister basic registration",
+			groups={"blockedByBug-636843","AcceptanceTests"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=56327)
+	public void ReregisterBasicRegistration_Test() {
+		
+		// start fresh by unregistering and registering
+		clienttasks.unregister(null, null, null);
+		String consumerIdBefore = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, false, null, null, null));
+		
+		// take note of your identity cert before reregister
+		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
+		
+		// subscribe to a random pool
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		
+		// get a list of the consumed products
+		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		
+		// reregister
+		//clienttasks.reregister(null,null,null);
+		clienttasks.reregisterToExistingConsumer(sm_clientUsername,sm_clientPassword,consumerIdBefore);
+		
+		// assert that the identity cert has not changed
+		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
+		Assert.assertEquals(consumerCertBefore, consumerCertAfter, "The consumer identity cert has not changed after reregistering with consumerid.");
+		
+		// assert that the user is still consuming the same products
+		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(
+				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
+				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
+				"The list of consumed products after reregistering is identical.");
+	}
+	
+	
+	
+	/**
+	 * https://tcms.engineering.redhat.com/case/56328/?from_plan=2476
+	 * 
+		Actions:
+
+	 		* register a client to candlepin (take note of the uuid returned)
+	 		* take note of your identity cert info using openssl x509
+	 		* subscribe to a pool
+	 		* list consumed
+	 		* ls /etc/pki/entitlement/products
+	 		* Now.. mess up your identity..  mv /etc/pki/consumer/cert.pem /bak
+	 		* run the "reregister" command w/ username and passwd AND w/consumerid=<uuid>
+
+		Expected Results:
+
+	 		* after running reregister you should have a new identity cert
+	 		* after registering you should still the same products consumed (list consumed)
+	 		* the entitlement serials should be the same as before the registration
+	 */
+	@Test(	description="subscription-manager-cli: bad identity cert",
+			groups={"blockedByBug-624106"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=56328)
+	public void ReregisterWithBadIdentityCert_Test() {
+		
+		// start fresh by unregistering and registering
+		clienttasks.unregister(null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null, null, false, null, null, null);
+		
+		// take note of your identity cert
+		ConsumerCert consumerCertBefore = clienttasks.getCurrentConsumerCert();
+		
+		// subscribe to a random pool
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		if (pools.isEmpty()) throw new SkipException("Cannot randomly pick a pool for subscribing when there are no available pools for testing."); 
+		SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		
+		// get a list of the consumed products
+		List<ProductSubscription> consumedProductSubscriptionsBefore = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		
+		// Now.. mess up your identity..  by borking its content
+		log.info("Messing up the identity cert by borking its content...");
+		RemoteFileTasks.runCommandAndAssert(client, "openssl x509 -noout -text -in "+clienttasks.consumerCertFile()+" > /tmp/stdout; mv /tmp/stdout -f "+clienttasks.consumerCertFile(), 0);
+		
+		// reregister w/ username, password, and consumerid
+		//clienttasks.reregister(client1username,client1password,consumerCertBefore.consumerid);
+		log.warning("The subscription-manager-cli reregister module has been eliminated and replaced by register --consumerid (b3c728183c7259841100eeacb7754c727dc523cd)...");
+		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerCertBefore.consumerid, null, null, null, (String)null, null, null, Boolean.TRUE, false, null, null, null);
+		
+		// assert that the identity cert has not changed
+		ConsumerCert consumerCertAfter = clienttasks.getCurrentConsumerCert();
+		Assert.assertEquals(consumerCertBefore, consumerCertAfter, "The consumer identity cert has not changed after reregistering with consumerid.");
+	
+		// assert that the user is still consuming the same products
+		List<ProductSubscription> consumedProductSubscriptionsAfter = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(
+				consumedProductSubscriptionsAfter.containsAll(consumedProductSubscriptionsBefore) &&
+				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
+				"The list of consumed products after reregistering is identical.");
+	}
+	
+	
+	
+	/**
+	 * https://tcms.engineering.redhat.com/case/72845/?from_plan=2476
+	 * 
+Actions:
+
+    * register with username and password and remember the consumerid
+    * subscribe to one or more subscriptions
+    * list the consumed subscriptions and remember them
+    * clean system
+    * assert that there are no entitlements on the system
+    * register with same username, password and existing consumerid
+    * assert that originally consumed subscriptions are once again being consumed
+
+	
+Expected Results:
+
+    * when registering a new system to an already existing consumer, all of the existing consumers entitlement certs should be downloaded to the new system
+	 * @throws Exception 
+	 * @throws JSONException 
+
+	 */
+	@Test(	description="register with existing consumerid should automatically refresh entitlements",
+			groups={},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=72845)
+	public void ReregisterWithConsumerIdShouldAutomaticallyRefreshEntitlements_Test() throws JSONException, Exception {
+		
+		// register with username and password and remember the consumerid
+		clienttasks.unregister(null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null));
+		
+		// subscribe to one or more subscriptions
+		//// subscribe to a random pool
+		//List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		//SubscriptionPool pool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
+		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(pool);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+
+		// list the consumed subscriptions and remember them
+		List <ProductSubscription> originalConsumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		// also remember the current entitlement certs
+		List <EntitlementCert> originalEntitlementCerts= clienttasks.getCurrentEntitlementCerts();
+		
+		// clean system
+		clienttasks.clean(null, null, null);
+		
+		// assert that there are no entitlements on the system
+		//Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"There are NO consumed Product Subscriptions on this system after running clean");
+		Assert.assertTrue(clienttasks.getCurrentEntitlementCerts().isEmpty(),"There are NO Entitlement Certs on this system after running clean");
+		
+		// register with same username, password and existing consumerid
+		// Note: no need to register with force as running clean wipes system of all local registration data
+		clienttasks.register(sm_clientUsername,sm_clientPassword,null,null,null,null,consumerId, null, null, null, (String)null, null, null, null, false, null, null, null);
+
+		// assert that originally consumed subscriptions are once again being consumed
+		List <ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertEquals(consumedProductSubscriptions.size(),originalConsumedProductSubscriptions.size(), "The number of consumed Product Subscriptions after registering to an existing consumerid matches his original count.");
+		for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+			Assert.assertContains(originalConsumedProductSubscriptions, productSubscription);
+		}
+		// assert that original entitlement certs are once on the system
+		List <EntitlementCert> entitlementCerts = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertEquals(entitlementCerts.size(),originalEntitlementCerts.size(), "The number of Entitlement Certs on the system after registering to an existing consumerid matches his original count.");
+		for (EntitlementCert entitlementCert : entitlementCerts) {
+			Assert.assertContains(originalEntitlementCerts, entitlementCert);
+		}
+		
+	}
+	
+	
+	
+	@Test(	description="register with an empty /var/lib/rhsm/facts/facts.json file",
+			groups={"blockedByBug-667953","blockedByBug-669208"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithAnEmptyRhsmFactsJsonFile_Test() {
+		
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		log.info("Emptying rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
+		client.runCommandAndWait("echo \"\" > "+clienttasks.rhsmFactsJsonFile, TestRecords.action());
+		SSHCommandResult result = client.runCommandAndWait("cat "+clienttasks.rhsmFactsJsonFile, TestRecords.action());
+		Assert.assertTrue(result.getStdout().trim().equals(""), "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' is empty.");
+		
+		log.info("Attempt to register with an empty rhsm facts file (expecting success)...");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, Boolean.TRUE, false, null, null, null);
+	}
+	
+	
+	
+	@Test(	description="register with a missing /var/lib/rhsm/facts/facts.json file",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)	
+	public void RegisterWithAnMissingRhsmFactsJsonFile_Test() {
+		
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==1, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' exists");
+		log.info("Deleting rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "rm -f "+clienttasks.rhsmFactsJsonFile, TestRecords.action());
+		Assert.assertTrue(RemoteFileTasks.testFileExists(client, clienttasks.rhsmFactsJsonFile)==0, "rhsm facts json file '"+clienttasks.rhsmFactsJsonFile+"' has been removed");
+		
+		log.info("Attempt to register with a missing rhsm facts file (expecting success)...");
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, Boolean.TRUE, false, null, null, null);
+	}
+	
+	
+	
+	@Test(	description="register with interactive prompting for credentials",
+			groups={"blockedByBug-678151"},
+			dataProvider = "getRegisterWithInteractivePromptingForCredentials_TestData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithInteractivePromptingForCredentials_Test(Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOrg, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		
+		// ensure we are unregistered
+		clienttasks.unregister(null,null,null);
+
+		// call register while providing a valid username at the interactive prompt
+		String command;
+		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
+			// assemble an ssh command using expect to simulate an interactive supply of credentials to the register command
+			String promptedUsernames=""; if (promptedUsername!=null) for (String username : promptedUsername.split("\\n")) {
+				promptedUsernames += "expect \\\"*Username:\\\"; send "+username+"\\\r;";
+			}
+			String promptedPasswords=""; if (promptedPassword!=null) for (String password : promptedPassword.split("\\n")) {
+				promptedPasswords += "expect \\\"*Password:\\\"; send "+password+"\\\r;";
+			}
+			// [root@jsefler-onprem-5server ~]# expect -c "spawn subscription-manager register; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; expect eof; catch wait reason; exit [lindex \$reason 3]"
+			command = String.format("expect -c \"spawn %s register %s %s %s; %s %s expect eof; catch wait reason; exit [lindex \\$reason 3]\"",
+					clienttasks.command,
+					commandLineUsername==null?"":"--username="+commandLineUsername,
+					commandLinePassword==null?"":"--password="+commandLinePassword,
+					commandLineOrg==null?"":"--org="+commandLineOrg,
+					promptedUsernames,
+					promptedPasswords);
+		} else {
+			// assemble an ssh command using echo and pipe to simulate an interactive supply of credentials to the register command
+			// [root@jsefler-stage-6server ~]# echo -e "testuser1" | subscription-manager register --password password --org=admin
+			String echoUsername= promptedUsername==null?"":promptedUsername;
+			String echoPassword = promptedPassword==null?"":promptedPassword;
+			String n = (promptedPassword!=null&&promptedUsername!=null)? "\n":"";	// \n works;  \r does not work
+			command = String.format("echo -e \"%s\" | %s register %s %s %s",
+					echoUsername+n+echoPassword,
+					clienttasks.command,
+					commandLineUsername==null?"":"--username="+commandLineUsername,
+					commandLinePassword==null?"":"--password="+commandLinePassword,
+					commandLineOrg==null?"":"--org="+commandLineOrg);
+		}
+		// attempt to register with the interactive credentials
+		SSHCommandResult sshCommandResult = client.runCommandAndWait(command);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode, "The expected exit code from the register attempt.");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout(), expectedStdoutRegex, "The expected stdout result from register while supplying interactive credentials.");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr(), expectedStderrRegex, "The expected stderr result from register while supplying interactive credentials.");
+	}
+	@DataProvider(name="getRegisterWithInteractivePromptingForCredentials_TestData")
+	public Object[][] getRegisterWithInteractivePromptingForCredentials_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithInteractivePromptingForCredentials_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithInteractivePromptingForCredentials_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		
+		String uErrMsg = servertasks.invalidCredentialsRegexMsg();
+		String x = String.valueOf(getRandInt());
+		if (client.runCommandAndWait("rpm -q expect").getExitCode().intValue()==0) {	// is expect installed?
+			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	uErrMsg,																	null}));
+			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(\nUsername: ){3}"+sm_clientUsername+"(\nPassword: ){3}"+"\nThe system has been registered with id: [a-f,0-9,\\-]{36}",	null}));		
+		} else {
+			// Object bugzilla, String promptedUsername, String promptedPassword, String commandLineUsername, String commandLinePassword, String commandLineOwner, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		null,						null,				sm_clientPassword,	sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword,			sm_clientUsername,	null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	null,						sm_clientPassword+x,		sm_clientUsername,	null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername,			sm_clientPassword,			null,				null,				sm_clientOrg,	new Integer(0),		"The system has been registered with id: [a-f,0-9,\\-]{36}",				null}));
+			ll.add(Arrays.asList(new Object[] {	null,	sm_clientUsername+x,		sm_clientPassword+x,		null,				null,				sm_clientOrg,	new Integer(255),	null,																		uErrMsg}));
+			ll.add(Arrays.asList(new Object[] {	null,	"\n\n"+sm_clientUsername,	"\n\n"+sm_clientPassword,	null,				null,				sm_clientOrg,	new Integer(0),		"(Username: ){3}The system has been registered with id: [a-f,0-9,\\-]{36}",	"(Warning: Password input may be echoed.\nPassword: \n){3}"}));		
+		}
+		return ll;
+	}
+	
+	
+	
+	@Test(	description="User is warned when already registered using RHN Classic",
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130"},
+			enabled=true)
+	@ImplementsNitrateTest(caseId=75972)	
+	public void InteroperabilityRegister_Test() {
+
+		// interoperabilityWarningMessage is defined in /usr/share/rhsm/subscription_manager/branding/__init__.py self.REGISTERED_TO_OTHER_WARNING
+		String interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
+			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
+			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after message change from bug 730018...
+		interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once. " +"\n\n"+
+			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// during rhel59, terminology changes were made for "RHN Certificate-Based technology"
+		interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends (except in a few cases) that customers only register once. " +"\n\n"+
+			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// during RHEL58, DEV trimmed whitespace from strings...
+		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
+		
+		// query the branding python file directly to get the default interoperabilityWarningMessage (when the subscription-manager rpm came from a git build - this assumes that any build of subscription-manager must have a branding module e.g. redhat_branding.py)
+		/* TEMPORARILY COMMENTING OUT SINCE JBOWES IS INCLUDING THIS BRANDING FILE IN THE PUBLIC REPO - jsefler 9/15/2011
+		if (client.runCommandAndWait("rpm -q subscription-manager").getStdout().contains(".git.")) {
+			interoperabilityWarningMessage = clienttasks.getBrandingString("REGISTERED_TO_OTHER_WARNING");
+		}
+		*/
+		String interoperabilityWarningMessageRegex = "^"+interoperabilityWarningMessage.replaceAll("\\(", "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\.", "\\\\.");
+		Assert.assertTrue(interoperabilityWarningMessage.startsWith("WARNING"), "The expected interoperability message starts with \"WARNING\".");
+		
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+		
+		log.info("Attempt to register while already registered via RHN Classic...");
+		SSHCommandResult result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		//Assert.assertTrue(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
+//		Assert.assertContainsMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager warns the registerer when the system is already registered via RHN Classic with the expected message.");
+		Assert.assertTrue(result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager warns the registerer when the system is already registered via RHN Classic with this expected message:\n"+interoperabilityWarningMessage);
+
+		log.info("Now let's make sure we are NOT warned when we are NOT already registered via RHN Classic...");
+		RemoteFileTasks.runCommandAndWait(client, "rm -rf "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is gone.");
+		result = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		
+		//Assert.assertFalse(result.getStdout().startsWith(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is not already registered via RHN Classic.");
+//		Assert.assertContainsNoMatch(result.getStdout(),interoperabilityWarningMessageRegex, "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
+		Assert.assertTrue(!result.getStdout().contains(interoperabilityWarningMessage), "subscription-manager does NOT warn registerer when the system is NOT already registered via RHN Classic.");
+	}
+	
+	
+	
+	@Test(	description="subscription-manager: attempt register to --environment when the candlepin server does not support environments should fail",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptRegisterToEnvironmentWhenCandlepinDoesNotSupportEnvironments_Test() throws JSONException, Exception {
+		// ask the candlepin server if it supports environment
+		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
+		
+		// skip this test when candlepin supports environments
+		if (supportsEnvironments) throw new SkipException("Candlepin server '"+sm_serverHostname+"' appears to support environments, therefore this test is not applicable.");
+
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,"foo",null,null,null,null,null,null,(String)null,null, null, true, null, null, null, null);
+		
+		// assert results
+		Assert.assertEquals(result.getStderr().trim(), "Error: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
+	}
+	
+	
+	
+	@Test(	description="subscription-manager: attempt register to --environment without --org option should fail",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptRegisterToEnvironmentWithoutOrg_Test() throws JSONException, Exception {
+		// ask the candlepin server if it supports environment
+		boolean supportsEnvironments = CandlepinTasks.isEnvironmentsSupported(sm_clientUsername, sm_clientPassword, sm_serverUrl);
+
+		SSHCommandResult result = clienttasks.register_(sm_clientUsername,sm_clientPassword,null,"foo",null,null,null,null,null,null,(String)null,null, null, true, null, null, null, null);
+
+		// skip this test when candlepin does not support environments
+		if (!supportsEnvironments) {
+			// but before we skip, we can verify that environments are unsupported by this server
+			Assert.assertEquals(result.getStderr().trim(), "Error: Server does not support environments.","Attempt to register to an environment on a server that does not support environments should be blocked.");
+			Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register to environment when the candlepin server does NOT support environments.");
+			throw new SkipException("Candlepin server '"+sm_serverHostname+"' does not support environments, therefore this test is not applicable.");
+		}
+
+		// assert results when candlepin supports environments
+		Assert.assertEquals(result.getStdout().trim(), "Error: Must specify --org to register to an environment.","Registering to an environment requires that the org be specified.");
+		Assert.assertEquals(result.getExitCode(), Integer.valueOf(255),"Exit code from register with environment option and without org option.");
+	}
+	
+	
+	
+	@BeforeGroups(value={"RegisterWithBaseurl_Test"}, alwaysRun=true)
+	public void beforeRegisterWithBaseurl_Test() {
+		if (clienttasks==null) return;
+		rhsm_baseurl = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "baseurl");
+	}
+	@Test(	description="subscription-manager-cli: register with --baseurl",
+			dataProvider="getRegisterWithBaseurl_TestData",
+			groups={"RegisterWithBaseurl_Test","AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithBaseurl_Test(Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex) {
+		// get original baseurl at the beginning of this test
+		//String baseurlBeforeTest = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl");
+		String baseurlBeforeTest = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl");
+		
+		// register with a baseurl
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, false, null, null, (String)null, null, baseurl, true, null, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null) Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --baseurl="+baseurl+" and other options:");
+		if (expectedStdoutRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --baseurl="+baseurl+" and other options:");
+		if (expectedStderrRegex!=null) Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrRegex,"Stderr after register with --baseurl="+baseurl+" and other options:");
+		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --baseurl="+baseurl+" and other options should not contain a Traceback.");
+	
+		// negative testcase assertions........
+		if (expectedExitCode.equals(new Integer(255))) {
+			// assert that the current config remains unchanged when the expectedExitCode is 255
+			//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlBeforeTest, "The rhsm configuration for baseurl should remain unchanged when attempting to register with an invalid baseurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl should remain unchanged when attempting to register with an invalid baseurl.");
+			
+			// nothing more to do after these negative testcase assertions
+			return;
+		}
+		
+		// positive testcase assertions........
+		// assert that the current config has been updated to the new expected baseurl
+		//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlConfigured, "The rhsm configuration for baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "baseurl"), baseurlConfigured, "The "+clienttasks.rhsmConfFile+" configuration for [rhsm] baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
+	
+//		// TODO maybe assert yumRepos  7/24/2012
+//		for (YumRepo yumRepo : clienttasks.getCurrentlySubscribedYumRepos()) {
+//			Assert.assertTrue(yumRepo.baseurl.matches("^"+baseurlConfigured.replaceFirst("/$","")+"/\\w+.*"),"Newly configured baseurl '"+baseurlConfigured+"' is utilized by yumRepo: "+yumRepo);
+//		}
+//		
+//		// TODO maybe assert repos --list  7/24/2012
+//		for (Repo repo : clienttasks.getCurrentlySubscribedRepos()) {
+//			Assert.assertTrue(repo.repoUrl.matches("^"+baseurlConfigured.replaceFirst("/$","")+"/\\w+.*"),"Newly configured baseurl '"+baseurlConfigured+"' is utilized by repo: "+repo);
+//		}
+
+	}
+	@AfterGroups(value={"RegisterWithBaseurl_Test"},alwaysRun=true)
+	public void afterRegisterWithBaseurl_Test() {
+		if (rhsm_baseurl!=null) clienttasks.config(null,null,true,new String[]{"rhsm","baseurl",rhsm_baseurl});
+	}
+	
+	@DataProvider(name="getRegisterWithBaseurl_TestData")
+	public Object[][] getRegisterWithBaseurl_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithBaseurl_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithBaseurl_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		String defaultHostname = "cdn.redhat.com";
+		
+		//  --baseurl=BASE_URL    base url for content in form of https://hostname:443/prefix
+
+		// Object bugzilla, String baseurl, String baseurlConfigured, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrRegex
+		// positive tests
+		ll.add(Arrays.asList(new Object[] {	null,							"https://myhost.example.com:900/myapp/",	"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://myhost.example.com:900/myapp/",		"http://myhost.example.com:900/myapp/",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"https://https:900/myapp/",					"https://https:900/myapp/",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"https://http:900/myapp/",					"https://http:900/myapp/",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842830"),	"http://http:900/myapp/",					"http://http:900/myapp/",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/myapp/",			"https://myhost.example.com:900/myapp/",	new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/myapp",				"https://myhost.example.com:900/myapp",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900/",					/*"https://myhost.example.com:900/"*/"https://myhost.example.com:900",			new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com:900",					"https://myhost.example.com:900",			new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com/",						/*"https://myhost.example.com/"*/"https://myhost.example.com",					new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com/myapp",					"https://myhost.example.com/myapp",			new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com/myapp/",				"https://myhost.example.com/myapp/",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost.example.com",						"https://myhost.example.com",				new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost-examp_e.com",						"https://myhost-examp_e.com",				new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"myhost",									"https://myhost",							new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"/myapp",									"https://"+defaultHostname+"/myapp",		new Integer(0),		null,			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							":900/myapp",								"https://"+defaultHostname+":900/myapp",	new Integer(0),		null,			null}));
+
+		// ignored tests
+		ll.add(Arrays.asList(new Object[] {	null,							"",											ll.get(ll.size()-1).get(2)/* last set */,	new Integer(0),		null,			null}));	
+	
+		// negative tests
+		ll.add(Arrays.asList(new Object[] {	null,							"https:/hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"https:hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"http//hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"http/hostname/prefix",						null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"ftp://hostname",							null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"git://hostname/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server URL has an invalid scheme. http:// and https:// are supported",			null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"https://hostname:/prefix",					null,			new Integer(255),	"Error parsing baseurl: Server url port could not be parsed",											null}));
+		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	"https://hostname:PORT/prefix",				null,			new Integer(255),	"Error parsing baseurl: Server url port should be numeric",												null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"https://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
+		ll.add(Arrays.asList(new Object[] {	null,							"http://",									null,			new Integer(255),	"Error parsing baseurl: Server URL is just a schema. Should include hostname, and/or port and path",	null}));
+		return ll;
+	}
+	
+	
+	
+	@BeforeGroups(value={"RegisterWithServerurl_Test"}, alwaysRun=true)
+	public void beforeRegisterWithServerurl_Test() {
+		if (clienttasks==null) return;
+		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+	}
+	@Test(	description="subscription-manager-cli: register with --serverurl",
+			dataProvider="getRegisterWithServerurl_TestData",
+			groups={"RegisterWithServerurl_Test","AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void RegisterWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+		// get original server at the beginning of this test
+		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
+		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+		
+		// register with a baseurl
+		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, false, null, null, (String)null, serverurl, null, true, null, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
+		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --serverurl="+serverurl+" and other options:");
+		if (expectedStderrMatch!=null)	Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrMatch,"Stderr after register with --serverurl="+serverurl+" and other options:");
+		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --serverurl="+serverurl+" and other options should not contain a Traceback.");
+		
+		// negative testcase assertions........
+		if (expectedExitCode.equals(new Integer(255))) {
+			// assert that the current config remains unchanged when the expectedExitCode is 255
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), prefixBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix should remain unchanged when attempting to register with an invalid serverurl.");
+			
+			// nothing more to do after these negative testcase assertions
+			return;
+		}
+		
+		// positive testcase assertions........
+		// assert that the current config has been updated to the new expected baseurl
+		//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlConfigured, "The rhsm configuration for baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), expectedHostname, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), expectedPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), expectedPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
+	}
+	@AfterGroups(value={"RegisterWithServerurl_Test"},alwaysRun=true)
+	public void afterRegisterWithServerurl_Test() {
+		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
+		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
+		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
+	}
+	
+	@DataProvider(name="getRegisterWithServerurl_TestData")
+	public Object[][] getRegisterWithServerurl_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithServerurl_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getRegisterWithServerurl_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		String defaultHostname = "subscription.rhn.redhat.com";
+		String defaultPort = "443";
+		String defaultPrefix = "/subscription";
+		String serverurl;
+		beforeRegisterWithServerurl_Test();	// will initialize server_hostname server_port server_prefix
+		
+		//  --serverurl=SERVER_URL      server url in the form of https://hostname:443/prefix
+
+		// Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdout, String expectedStderr
+		// positive tests
+		serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port)+server_prefix;			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		serverurl= "https://"+serverurl;																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		
+		if (server_port.equals(defaultPort)) {
+			serverurl= server_hostname+server_prefix;													ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
+		}
+		if (server_prefix.equals(defaultPrefix)) {
+			serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port);						ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
+		}
+		if (server_hostname.equals(defaultHostname)) {
+			serverurl= (server_port.isEmpty()?"":":"+server_port);										ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		}
+		
+		// ignored tests
+		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,							serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
+	
+		// negative tests
+		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,			null}));
+		serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842885"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX",			null}));
+		serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:"+defaultPort+defaultPrefix,			null}));
+		serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900"+defaultPrefix,					null}));
+		serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900/prefix",					null}));
+		serverurl= "https:/hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https:hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https//hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https/hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "ftp://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "git://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port could not be parsed",					null}));
+		serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",					null}));
+		serverurl= "https://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
+		serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
+		return ll;
+	}
+	
+	
+	
+	
+	
+	// Candidates for an automated Test:
+	// TODO Bug 627685 - subscription-manager-cli reregister without specifying consumerid may unintentionally remove entitlements
+	// TODO Bug 627665 - subscription-manager-cli reregister should not allow a --username to reregister using a --consumerid that belongs to someone else
+	// TODO Bug 668814 - firstboot and subscription-manager display "network error" on server 500
+	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string
+	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically
+	// TODO Bug 719378 - White space in user name causes error 
+	
+	
+	// Protected Class Variables ***********************************************************************
+	
+	protected final String tmpProductCertDir = "/tmp/productCertDir";
+	protected String productCertDir = null;
+	protected String rhsm_baseurl = null;
+	protected String server_hostname = null;
+	protected String server_port = null;
+	protected String server_prefix = null;
+	
+	// Configuration methods ***********************************************************************
+
+	@AfterGroups(value={"RegisterWithAutosubscribe_Test","InteroperabilityRegister_Test"}, alwaysRun=true)
+	@AfterClass (alwaysRun=true)
+	public void cleaupAfterClass() {
+		if (clienttasks==null) return;
+		
+		// restore the originally configured productCertDir
+		if (this.productCertDir!=null) clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "productCertDir", this.productCertDir);
+		
+		// delete temporary files and directories
+		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
+		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
+	}
+
+	// Protected methods ***********************************************************************
+
+	protected void checkInvalidRegistrationStrings(SSHCommandRunner sshCommandRunner, String username, String password){
+		sshCommandRunner.runCommandAndWait("subscription-manager-cli register --username="+username+this.getRandInt()+" --password="+password+this.getRandInt()+" --force");
+		Assert.assertContainsMatch(sshCommandRunner.getStdout(),
+				"Invalid username or password. To create a login, please visit https:\\/\\/www.redhat.com\\/wapps\\/ugc\\/register.html");
+	}
+	
+	
+	
+	// Data Providers ***********************************************************************
+
 }

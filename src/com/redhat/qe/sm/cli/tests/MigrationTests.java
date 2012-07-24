@@ -950,7 +950,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, true, null, null, null, null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsmWithOptions(sm_clientUsername,sm_clientPassword,null,null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" while already registered to RHSM.");
 		Assert.assertContainsMatch(sshCommandResult.getStdout(), "This machine appears to be already registered to Certificate-based RHN.  Exiting.", "The expected stdout result from call to "+rhnMigrateTool+" while already registered to RHSM.");
@@ -1014,7 +1014,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnPassword.equals("")) return;
 		
 		// determine the valid service levels available to a consumer registered with rhn credentials
-		clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, true, null, null, null, null);
+		clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
 		String rhnOrg = clienttasks.getCurrentlyRegisteredOwnerKey();
 		clienttasks.unregister(null, null, null);
 		rhnServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(sm_rhnUsername, sm_rhnPassword, sm_serverUrl, rhnOrg);		

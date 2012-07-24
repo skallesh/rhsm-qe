@@ -512,6 +512,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "register";
 		options.clear();
 		options.add("-h, --help");
+		options.add("--baseurl=BASE_URL");
+		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--type=CONSUMERTYPE");
 		options.add("--name=CONSUMERNAME");

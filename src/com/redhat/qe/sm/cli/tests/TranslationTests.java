@@ -31,9 +31,6 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   Here is the raw rhsm.po file for LANG=pt
  *   http://git.fedorahosted.org/git/?p=subscription-manager.git;a=blob;f=po/pt.po;hb=RHEL6.3
  *   
- *   https://engineering.redhat.com/trac/LocalizationServices
- *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nRHEL6LanguageSupportCriteria
- *   
  *   https://translate.zanata.org/zanata/project/view/subscription-manager/iter/0.99.X/stats
  *   
  *   https://fedora.transifex.net/projects/p/fedora/
@@ -45,6 +42,15 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   http://translate.sourceforge.net/wiki/toolkit/installation
  *   
  *   https://github.com/translate/translate
+ *   
+ *   RHEL5
+ *   Table 2.1. Red Hat Enterprise Linux 5 International Languages
+ *   http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/International_Language_Support_Guide/Red_Hat_Enterprise_Linux_International_Language_Support_Guide-Installing_and_supporting_languages.html
+ *   notice Sri Lanka 	Sinhala 	si_LK.UTF-8)
+ *   
+ *   RHEL6
+ *   https://engineering.redhat.com/trac/LocalizationServices
+ *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nRHEL6LanguageSupportCriteria
  *   
  **/
 @Test(groups={"TranslationTests"})
@@ -113,7 +119,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptRedeemWithoutEmailUsingLang_Test() {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, true, false, null, null, null);
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 		//SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null)
 		String lang = "de_DE";
 		log.info("Attempting to redeem without specifying email expecting output in language "+(lang==null?"DEFAULT":lang));

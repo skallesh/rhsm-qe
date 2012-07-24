@@ -88,7 +88,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null);
@@ -116,7 +116,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
 		String nickname = "Mr_"+sm_clientUsername;
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,nickname,null, null, null, null, (String)null, null, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,nickname,null, null, null, null, (String)null, null, null, null, false, null, null, null));
 		
 		// get the current identity
 		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null);
@@ -136,7 +136,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null);
 		ConsumerCert origConsumerCert = clienttasks.getCurrentConsumerCert();
 		
 		// regenerate the identity... and assert
@@ -166,7 +166,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null);
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, clienttasks.getCurrentConsumerId(registerResult));
 
 		// regenerate the identity using the same username and password as used during register... and assert
@@ -204,7 +204,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null));
 		//String ownerKey = CandlepinTasks.getOwnerOfConsumerId(serverHostname, serverPort, serverPrefix, serverAdminUsername, serverAdminPassword, consumerId).getString("key");
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
 
@@ -234,7 +234,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, false, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null);
 		
 		// retrieve the identity using the same username and password as used during register... and assert
 		log.info("Attempting to regenerate identity with an invalid username and password...");
@@ -273,7 +273,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		
 		// register and remember the original consumer identity
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, true, null, null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, true, null, null, null, null);
 		clienttasks.config(null, null, true, new String[]{"rhsmcertd","certfrequency","240"}); clienttasks.restart_rhsmcertd(null, null, false, true);	// make sure that rhsmcertd will not interfere with test
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
 		String consumerCert_md5sum = client.runCommandAndWait("md5sum "+clienttasks.consumerCertFile()).getStdout().trim();

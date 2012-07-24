@@ -157,7 +157,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	public void UnsubscribeFromSerialWhenNotRegistered_Test() {
 	
 		// first make sure we are subscribed to a pool
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,false,null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, false, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		SubscriptionPool pool = pools.get(0);
 		EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool(pool));
@@ -192,7 +192,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAll_Test() {
 	
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null, null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true, null, null, null, null);
 		List<SubscriptionPool> pools = clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
 		
 		// unsubscribe from all and assert # subscriptions are unsubscribed

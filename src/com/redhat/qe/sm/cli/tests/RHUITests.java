@@ -59,7 +59,7 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 	public void RegisterRHUIConsumer_Test() {
 		if (sm_rhuiUsername.equals("")) throw new SkipException("Skipping this test when no value was given for the RHUI Username");
 		// register the RHUI consumer
-		clienttasks.register(sm_rhuiUsername,sm_rhuiPassword,sm_rhuiOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,true,null, null, null, null);
+		clienttasks.register(sm_rhuiUsername,sm_rhuiPassword,sm_rhuiOrg,null,ConsumerType.RHUI,null,null,null,null,null,(String)null,null,null, true, null, null, null, null);
 		
 	}
 	

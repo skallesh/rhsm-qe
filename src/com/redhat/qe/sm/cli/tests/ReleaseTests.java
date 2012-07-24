@@ -63,7 +63,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void AttemptToGetReleaseWhenReleaseHasNotBeenSet_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		SSHCommandResult result = clienttasks.release(null, null, null, null, null, null, null);
 		Assert.assertEquals(result.getStdout().trim(), "Release not set", "Stdout from release without having set it");
 	}
@@ -76,7 +76,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void AttemptToGetReleaseListWithoutHavingAnyEntitlements_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		
 		// assert no releases are listed
 		Assert.assertTrue(clienttasks.getCurrentlyAvailableReleases(null, null, null).isEmpty(), "No releases should be available without having been entitled to anything.");
@@ -97,7 +97,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void AttemptToSetAnUnavailableReleaseValue_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		
 		// assert feedback from release --list 
 		String unavailableRelease = "Foo_1.0";
@@ -115,7 +115,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void GetTheReleaseAfterSettingTheRelease_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		
 		// are any releases available?
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
@@ -135,7 +135,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void AttemptToUnsetTheReleaseWithAnEmptyString_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		
 		// are any releases available?
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
@@ -161,7 +161,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void UnsetTheRelease_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		
 		// are any releases available?
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
@@ -184,7 +184,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void ReleaseShow_Test() {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);		
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);		
 		
 		// are any releases available?
 		List<String> availableReleases = clienttasks.getCurrentlyAvailableReleases(null, null, null);
@@ -220,7 +220,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void VerifyReleaseverSubstitutionInRepoLists_Test() throws JSONException, Exception {
 		
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null);
 
 		// subscribe to all available subscriptions
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -296,7 +296,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	public void VerifyReleaseListMatchesCDN_Test() throws JSONException, Exception {
 
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,true,null,null,null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null);
 
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
@@ -332,7 +332,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		if (!clienttasks.redhatReleaseX.equals("6")) throw new SkipException("This test is only applicable on RHEL6.");
 		
 		// make sure we are newly registered with autosubscribe
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);
 
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
@@ -362,7 +362,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		if (!clienttasks.redhatReleaseX.equals("5")) throw new SkipException("This test is only applicable on RHEL5.");
 		
 		// make sure we are newly registered with autosubscribe
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,null,null, null);
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, null, null, null);
 
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
@@ -480,7 +480,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 		Assert.assertNotNull(rhelProductCert, "Only one RHEL product cert is installed.");
 		
 		// make sure we are newly registered
-		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,true,null,proxy,proxy_username, proxy_password);
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(List<String>)null,null,null,true,null, proxy, proxy_username, proxy_password);
 
 		// assert that we are subscribed to RHEL
 		//if (!InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productId", rhelProductCert.productId, clienttasks.getCurrentlyInstalledProducts()).status.equals("Subscribed")) {

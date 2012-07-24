@@ -521,7 +521,7 @@ Fixed.  Thanks for catching that.
 			}
 			
 			// register
-			clienttasks.register(username, password, null, null, type, null, null, null, null, null, (String)null, true, false, null, null, null);
+			clienttasks.register(username, password, null, null, type, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 			currentRegisteredUsername = username;
 			currentlySubscribedProductIds.clear();
 		} else {
