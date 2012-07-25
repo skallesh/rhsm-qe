@@ -44,16 +44,18 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	 
+	/**
+	 * @author skallesh
+	 */
 	@Test(    description="subscription-manager: service-level --org (without --list option)",
-			            groups={"ServicelevelTest","blockedByBug-826856"},
+			            groups={"blockedByBug-826856"},
 			            enabled=true)
-	public void ServiceLevelListWithOrgWithoutList_Test() {
+	public void ServiceLevelWithOrgWithoutList_Test() {
 			      
 		   SSHCommandResult result;
-		   clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null, null, null);
-		   result = clienttasks.service_level_(null, null,sm_clientUsername, sm_serverOld, sm_clientPassword, sm_clientOrg, null, null,	null, null);
-			Assert.assertEquals(result.getStdout().trim(), "Error: --org is only applicable with --list");
-			           
+		   // NOT NEEDED clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null,null, null, null);
+		   result = clienttasks.service_level_(null, false, null, null, sm_clientUsername, sm_clientPassword, "MyOrg", null, null,	null);
+			Assert.assertEquals(result.getStdout().trim(), "Error: --org is only supported with the --list option");        
 		}
 	
 	
