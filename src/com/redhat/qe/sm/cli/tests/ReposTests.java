@@ -200,7 +200,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 		
 		// assert that the repos list is enabled.
-		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
+		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
 
 		// assert that the redhat.repo exists before and after a yum transaction
 		//Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),1,"When rhsm.manage_repos is configured on, the redhat.repo should exist after registration.");
@@ -208,13 +208,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"When rhsm.manage_repos is configured on, the redhat.repo should exist after yum transaction.");
 
 		// assert that the repos list is not entitled to use any repositories, but is enabled by configuration!
-		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
+		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
 
 		// NOW DISABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","0"});
 		
 		// assert that the repos list is disabled by configuration!
-		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration.");
+		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration.");
 
 		// trigger a yum transaction and assert that the redhat.repo no longer exists
 		clienttasks.getYumRepolist(null);
@@ -222,7 +222,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Even after subscribing to all subscription pools while rhsm.manage_repos is off, the redhat.repo is not generated.");
 	}
 	
@@ -240,7 +240,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 
 		// assert that the repos list is disabled.
-		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
 
 		// assert that the redhat.repo does NOT exist before and after a yum transaction
 		//Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"When rhsm.manage_repos is configured off, the redhat.repo should NOT exist after registration.");
@@ -249,7 +249,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		Assert.assertTrue(clienttasks.repos(true,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Even after subscribing to all subscription pools while rhsm.manage_repos is off, the redhat.repo is not generated.");
 
 		// NOW ENABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
@@ -262,6 +262,28 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.getYumRepolist(null);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"When rhsm.manage_repos is configured on, the redhat.repo file should now exist.");
 	}
+	
+	@Test(	description="subscription-manager: enable the repo.",
+			enabled=true,
+			groups={"EnableReposTests"})
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyEnableRepos_Test() throws JSONException, Exception{
+		
+		String repoName;	
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		
+				// trigger a yum transaction and assert that the redhat.repo now exists
+		
+		ArrayList<String> reposlist=clienttasks.getYumRepolist("all");
+		repoName= ((String)reposlist.get(2));
+		SSHCommandResult result=clienttasks.repos(false, null, null, null,repoName,null);
+		Assert.assertEquals(result.getStdout().trim(),"Repo " +repoName+"is enabled for this system", "Stdout from service-level --set without being registered");
+		
+		}
+	
+	
 	
 	
 	// Candidates for an automated Test:

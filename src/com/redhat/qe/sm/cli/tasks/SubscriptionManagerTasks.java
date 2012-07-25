@@ -2953,7 +2953,7 @@ public class SubscriptionManagerTasks {
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult repos_(Boolean list, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repos_(Boolean list, String proxy, String proxyuser, String proxypassword,String enable,String disable) {
 		
 		// assemble the command
 		String command = this.command;	command += " repos";
@@ -2961,14 +2961,16 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		if (disable!=null)				command += " --disable="+disable;
+		if (enable!=null)				command += " --enable="+enable;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 
-	public SSHCommandResult repos(Boolean list, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult repos(Boolean list, String proxy, String proxyuser, String proxypassword,String enable,String disable) {
 
-		SSHCommandResult sshCommandResult = repos_(list, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = repos_(list, proxy, proxyuser, proxypassword,enable,disable);
 		
 		// TODO assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
@@ -2985,7 +2987,7 @@ public class SubscriptionManagerTasks {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		SSHCommandResult sshCommandResult = repos_(Boolean.TRUE, null, null, null);
+		SSHCommandResult sshCommandResult = repos_(Boolean.TRUE, null, null, null,null,null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
 		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -4869,4 +4871,34 @@ repolist: 3,394
 	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
+	public SSHCommandResult subscribeInvalidFormat_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale,
+			 String proxy, String proxyuser, String proxypassword) {
+			
+			           if (poolIds!=null)
+			          for(int i=0;i<=poolIds.size();i++){
+			          String command = this.command;         command += "subscribe";
+			          if(poolIds.get(i++)!=null)
+			          command += " --pool="+poolIds.get(i) +" "+poolIds.get(i++) ;
+			          }
+			
+			              // run command without asserting results
+			          return sshCommandRunner.runCommandAndWait(command);
+			      }
+public void moveProductCertFiles(String filename,Boolean move) {
+		
+		//sshCommandRunner.runCommandAndWait("find /etc/pki/product/ -name '*.pem'");
+		sshCommandRunner.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
+		if(move==true){
+			sshCommandRunner.runCommandAndWait("mv "+productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
+				}else
+			sshCommandRunner.runCommandAndWait("mv "+ "/etc/pki/tmp/*.pem"+" " +productCertDir);
+			sshCommandRunner.runCommandAndWait("rm -rf "+ "/etc/pki/tmp1");
+		}
+
+
+public String getEntitlementCertFilesWithPermissions() {
+	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
+    return lsFiles;
+}
+	
 }

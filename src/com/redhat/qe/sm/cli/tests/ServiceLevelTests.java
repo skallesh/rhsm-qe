@@ -40,8 +40,23 @@ import com.redhat.qe.tools.SSHCommandResult;
 @Test(groups={"ServiceLevelTests"})
 public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 
-	
+		
 	// Test methods ***********************************************************************
+	
+	 
+	@Test(    description="subscription-manager: service-level --org (without --list option)",
+			            groups={"ServicelevelTest","blockedByBug-826856"},
+			            enabled=true)
+	public void ServiceLevelListWithOrgWithoutList_Test() {
+			      
+		   SSHCommandResult result;
+		   clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,null,null,null, null, null);
+		   result = clienttasks.service_level_(null, null,sm_clientUsername, sm_serverOld, sm_clientPassword, sm_clientOrg, null, null,	null, null);
+			Assert.assertEquals(result.getStdout().trim(), "Error: --org is only applicable with --list");
+			           
+		}
+	
+	
 	
 	@Test(	description="subscription-manager: service-level (when not registered)",
 			groups={"blockedByBug-826856"/*,"blockedByBug-837036"*/},

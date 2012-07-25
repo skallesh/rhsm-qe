@@ -37,6 +37,17 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	// Test Methods ***********************************************************************
 
+	@Test(    description="subscription-manager: facts --update (when not registered)",
+			            groups={"MyTestFacts","blockedByBug-707525"},
+			            enabled=true)
+	public void FactsUpdateWhenRegistered_Test() {
+			                       
+		 clienttasks.register(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, sm_clientUsernames, (String)null,null, false, null, null, null, null);
+		 SSHCommandResult result = clienttasks.facts(null, true,null, null, null);
+	     Assert.assertEquals(result.getStdout().trim(),"Successfully updated the system facts.");
+	}
+	
+	
 	@Test(	description="subscription-manager: facts --update (when not registered)",
 			groups={"blockedByBug-654429"},
 			enabled=true)

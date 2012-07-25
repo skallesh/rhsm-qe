@@ -10,6 +10,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,7 +45,28 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
-	
+
+	 @Test(   description="subscription-manager: subscribe multiple pools in incorrect format",
+			              groups={"MysubscribeTest","blockedByBug-772218"},
+			              enabled=true)
+			      public void VerifyIncorrectSubscriptionFromat() throws Exception
+			      {
+			 clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null,
+			 null, null);
+			          List <String> poolIds = new ArrayList<String>();
+			          for (SubscriptionPool pool :
+			 clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			          poolIds.add(pool.poolId);
+			          }
+			          SSHCommandResult subscribeResult =
+			 clienttasks.subscribeInvalidFormat_(null,null,poolIds,null,null,
+			 null,
+			 null, null, null, null, null);
+			          Assert.assertEquals(subscribeResult.getStdout(), "cannot parse argument:"+poolIds.get(1) );
+			      }
+			
+			 
+
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
 			groups={"AcceptanceTests","blockedByBug-660713","blockedByBug-806986"},
@@ -957,6 +979,20 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Configuration Methods ***********************************************************************
+	@Test(    description="subscription-manager: entitlement key files created with weak permissions",
+            groups={"MykeyTest","blockedByBug-720360"},
+            enabled=true)
+    public void VerifyKeyFilePermissions() throws Exception {
+        clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+        clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+        String subscribeResult=clienttasks.getEntitlementCertFilesWithPermissions();
+        Pattern p = Pattern.compile("[,\\s]+");
+        String[] result = p.split(subscribeResult);
+        for (int i=0; i<result.length; i++){
+               Assert.assertEquals(result[i], "-rw-------","permission for etc/pki/entitlement/<serial>-key.pem is -rw-------" );
+        i++;
+    }}
+	
 	
 	@AfterClass(groups={"setup"})
 	public void unregisterAllSystemConsumerIds() {
