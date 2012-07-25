@@ -298,6 +298,23 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+	@BeforeClass (groups="setup")
+	public void buildTranslationFileMapCandlepin() {
+		if (servertasks==null) return;
+		
+		SSHCommandResult candlepinTranslationFileListingResult = server.runCommandAndWait("ls /root/candlepin/po");
+		for (String translationFilePath : candlepinTranslationFileListingResult.getStdout().trim().split("\\n")) {
+			if (translationFilePath.isEmpty()) continue; // skip empty lines
+			if (!translationFilePath.endsWith(".po")) continue; // skip non po files 
+			
+			File translationFile = new File(translationFilePath);
+					
+			// parse the translations from the rhsm.mo into the translationFileMap
+			SSHCommandResult catListingResult = client.runCommandAndWaitWithoutLogging("cat "+translationFilePath);
+			translationFileMapCandlepin.put(translationFile, Translation.parse(catListingResult.getStdout()));
+		}
+	}
+	
 	@BeforeClass (groups="setup",dependsOnMethods={"buildTranslationFileMap"})
 	public void buildTranslationMsgidSet() {
 		if (clienttasks==null) return;
@@ -314,13 +331,12 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			}
 		}
 	}
-
-	
 	
 	// Protected Methods ***********************************************************************
 	List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
 	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
 	Map<File,List<Translation>> translationFileMap = new HashMap<File, List<Translation>>();
+	Map<File,List<Translation>> translationFileMapCandlepin = new HashMap<File, List<Translation>>();
 	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
 
 	
