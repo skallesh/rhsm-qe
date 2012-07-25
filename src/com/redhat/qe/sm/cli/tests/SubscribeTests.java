@@ -46,11 +46,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// Test methods ***********************************************************************
 
-	 @Test(   description="subscription-manager: subscribe multiple pools in incorrect format",
+	/**
+	 * @author skallesh
+	 */
+	@Test(   description="subscription-manager: subscribe multiple pools in incorrect format",
 			              groups={"MysubscribeTest","blockedByBug-772218"},
 			              enabled=true)
-			      public void VerifyIncorrectSubscriptionFromat() throws Exception
-			      {
+			      public void VerifyIncorrectSubscriptionFromat() {
 			 clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null,
 			 null, null);
 			          List <String> poolIds = new ArrayList<String>();
@@ -979,10 +981,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	// Configuration Methods ***********************************************************************
+	/**
+	 * @author skallesh
+	 */
 	@Test(    description="subscription-manager: entitlement key files created with weak permissions",
             groups={"MykeyTest","blockedByBug-720360"},
             enabled=true)
-    public void VerifyKeyFilePermissions() throws Exception {
+    public void VerifyKeyFilePermissions() {
         clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
         clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
         String subscribeResult=clienttasks.getEntitlementCertFilesWithPermissions();
