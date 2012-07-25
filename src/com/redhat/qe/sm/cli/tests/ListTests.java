@@ -22,6 +22,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
@@ -192,7 +193,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 	
 
 	@Test(	description="subscription-manager: list of consumed entitlements should display consumed product marketing name",
-			groups={"debugTest"},
+			groups={},
 			dataProvider="getAllEntitlementCertsData",
 			enabled=false)	// this test implementation is no longer valid after the change in format for consumed product subscriptions (from many to one) - see bug 806986
 	@Deprecated
@@ -815,10 +816,12 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		// get all the valid service levels available to this org	
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
-			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
+			Object bugzilla = null;
+			if (serviceLevel.equals("None")) bugzilla = new BlockedByBzBug("842170");
+			ll.add(Arrays.asList(new Object[] {bugzilla,	serviceLevel}));
 		}
-		ll.add(Arrays.asList(new Object[] {null,	""}));
-		ll.add(Arrays.asList(new Object[] {null,	"FOO"}));
+		ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("842170"),	""}));
+		ll.add(Arrays.asList(new Object[] {null,							"FOO"}));
 
 		
 		return ll;
