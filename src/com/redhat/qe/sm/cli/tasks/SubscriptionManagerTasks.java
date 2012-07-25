@@ -1714,7 +1714,7 @@ public class SubscriptionManagerTasks {
 		
 		// assemble the command
 		String command = this.command;											command += " register";
-		if (username!=null)														command += " --username="+username;
+		if (username!=null)														command += " --username="+String.format(username.contains(" ")?"\"%s\"":"%s", username);	// quote username containing spaces
 		if (password!=null)														command += " --password="+password;
 		if (org!=null)															command += " --org="+org;
 		if (environment!=null)													command += " --environment="+environment;
