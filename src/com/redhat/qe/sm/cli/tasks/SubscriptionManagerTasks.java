@@ -3813,7 +3813,34 @@ public class SubscriptionManagerTasks {
 	
 	
 	
+	// version module tasks ************************************************************
 	
+	/**
+	 * version without asserting results
+	 * @return result of the command line call to subscription-manager version
+	 */
+	public SSHCommandResult version_() {
+
+		// assemble the command
+		String command = this.command;	command += " version";	
+		
+		// run command without asserting results
+		return sshCommandRunner.runCommandAndWait(command);
+	}
+	
+	/**
+	 * version with asserting results
+	 * @return result of the command line call to subscription-manager version
+	 */
+	public SSHCommandResult version() {
+		
+		SSHCommandResult sshCommandResult = version_();
+
+		// assert results for a successful version
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the version command indicates a success.");
+		
+		return sshCommandResult; // from the version command
+	}
 	
 	
 	

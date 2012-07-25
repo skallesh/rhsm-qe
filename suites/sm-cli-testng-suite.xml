@@ -39,6 +39,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Version Tests">
+		<packages>
+			<package name="com.redhat.qe.sm.cli.tests" />
+		</packages>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="VersionTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Translation Tests">
 		<packages>
 			<package name="com.redhat.qe.sm.cli.tests" />

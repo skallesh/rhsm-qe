@@ -39,9 +39,35 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Version Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.VersionTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: Translation Tests">
 		<classes>
 			<class name="com.redhat.qe.sm.cli.tests.TranslationTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="AcceptanceTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
+	<test name="CLI: Pofilter Translation Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.PofilterTranslationTests" />
 		</classes>
 		<groups>
 			<run>
