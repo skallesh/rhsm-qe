@@ -57,7 +57,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 */
 	@Test(    description="subscription-manager: attempt register to with white space in the user name should fail",
-			  groups={"blockedByBug-719378"},
+			  groups={"registeredTests","blockedByBug-719378"},
 			              enabled=true)
 			
 	public void AttemptRegisterWithWhiteSpacesInUsername_Test() {

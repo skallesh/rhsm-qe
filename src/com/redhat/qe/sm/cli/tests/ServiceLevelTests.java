@@ -48,7 +48,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 */
 	@Test(    description="subscription-manager: service-level --org (without --list option)",
-			            groups={"blockedByBug-826856"},
+			            groups={"ServicelevelTest","blockedByBug-826856"},
 			            enabled=true)
 	public void ServiceLevelWithOrgWithoutList_Test() {
 			      
