@@ -1,9 +1,16 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeGroups;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
@@ -25,10 +32,15 @@ import com.redhat.qe.tools.SSHCommandResult;
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// Test methods ***********************************************************************
+	/**
+	 * @author skallesh
+	 * @throws JSONException 
+	 * @throws Exception
+	 */
 	@Test(	description="Auto-heal with SLA",
 			groups={"AutoHealWithSLA"},
 			enabled=true)	
-	public void VerifyAutohealWithSLA() throws Exception {
+	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
 		String availableService = null;	
 		String filename=null;
@@ -53,12 +65,15 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 }
 	
 	
+	/**
+	 * @author skallesh
+	 */
 	@Test(	description="Auto-heal for subscription",
 			groups={"AutoHeal"},
 			enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	
-	public void VerifyAutohealForSubscription() throws Exception {
+	public void VerifyAutohealForSubscription() {
 		Integer healFrequency=2;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		SSHCommandResult subscribeResult = clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
@@ -71,20 +86,24 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((certs.size()!=0),"autoheal is successful");
 	
 }
+	/**
+	 * @author skallesh
+	 * @throws JSONException
+	 * @throws Exception
+	 */
 	@Test(	description="Auto-heal with SLA",
 			groups={"AutoHealFailFOrSLA"},
 			enabled=true)	
-	public void VerifyAutohealFailForSLA() throws Exception {
+	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
 		String availableService = null;	
 		String filename=null;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		for (List<Object> availableServiceLevelData : getAllAvailableServiceLevelDataAsListOfLists()) {
 			availableService= ((String)availableServiceLevelData.get(2));
-		}
+		} //TODO what does this loop do?
 		SSHCommandResult subscribeResult = clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-		String installedProductsAsString= clienttasks.listInstalledProducts().getStdout();
-		List <InstalledProduct> installedProducts = InstalledProduct.parse(installedProductsAsString);
+		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : productCerts) {
 			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
@@ -150,9 +169,25 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration methods ***********************************************************************
+
+	protected Integer configuredHealFrequency = null;
+	@BeforeClass (groups="setup")
+	public void rememberConfiguredHealFrequency() {
+		if (clienttasks==null) return;
+		configuredHealFrequency	= Integer.valueOf(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", "healFrequency"));
+	}
 	
+	@AfterClass (groups="setup")
+	public void restoreConfiguredHealFrequency() {
+		if (clienttasks==null) return;
+		clienttasks.restart_rhsmcertd(null, configuredHealFrequency, false, null);
+	}
 	
-	
+	@AfterClass (groups="setup")
+	public void restoreProductCerts() {
+		if (clienttasks==null) return;
+		clienttasks.moveProductCertFiles(null,false);
+	}
 	
 	// Protected methods ***********************************************************************
 
