@@ -272,12 +272,14 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	// Candidates for an automated Test:
 	// TODO Bug 752321 - [ALL LANG] [RHSM CLI] Word [OPTIONS] is unlocalized and some message translation is still not complete
 	//      TODO NESTED LANG LOOP...  for L in en_US de_DE es_ES fr_FR it_IT ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW as_IN bn_IN hi_IN mr_IN gu_IN kn_IN ml_IN or_IN pa_IN ta_IN te_IN; do for C in list refresh register subscribe unregister unsubscribe clean config environments facts identity import orgs redeem repos; do echo ""; echo "# LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS"; LANG=$L.UTF8 subscription-manager $C --help | grep OPTIONS; done; done;
+	// TODO Create an equivalent test for candlepin    VerifyOnlyExpectedTranslationFilesAreInstalled_Test
+	// TODO Create an equivalent test for candlepin    VerifyTranslationFileContainsAllMsgids_Test
 
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass (groups="setup")
 	public void buildTranslationFileMap() {
-		if (clienttasks==null) return;
+		if (client==null) return;
 		
 		//List<File> translationFiles =  new ArrayList<File>();
 		SSHCommandResult translationFileListingResult = client.runCommandAndWait("rpm -ql subscription-manager | grep rhsm.mo");
@@ -285,7 +287,6 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			if (translationFilePath.isEmpty()) continue; // skip empty lines
 			
 			File translationFile = new File(translationFilePath);
-			//translationFiles.add(translationFile);
 			
 			// decompile the rhsm.mo file into its original-like rhsm.po file
 			log.info("Decompiling the rhsm.mo file...");
@@ -300,17 +301,16 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	
 	@BeforeClass (groups="setup")
 	public void buildTranslationFileMapCandlepin() {
-		if (servertasks==null) return;
+		if (server==null) return;
 		
-		SSHCommandResult candlepinTranslationFileListingResult = server.runCommandAndWait("ls /root/candlepin/po");
-		for (String translationFilePath : candlepinTranslationFileListingResult.getStdout().trim().split("\\n")) {
+		SSHCommandResult translationFileListingResult = server.runCommandAndWait("find "+sm_serverInstallDir+"/po -name *.po");
+		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
 			if (translationFilePath.isEmpty()) continue; // skip empty lines
-			if (!translationFilePath.endsWith(".po")) continue; // skip non po files 
 			
 			File translationFile = new File(translationFilePath);
 					
-			// parse the translations from the rhsm.mo into the translationFileMap
-			SSHCommandResult catListingResult = client.runCommandAndWaitWithoutLogging("cat "+translationFilePath);
+			// parse the translations from the po file into the translationFileMap
+			SSHCommandResult catListingResult = server.runCommandAndWaitWithoutLogging("cat "+translationFilePath);
 			translationFileMapCandlepin.put(translationFile, Translation.parse(catListingResult.getStdout()));
 		}
 	}

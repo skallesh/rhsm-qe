@@ -112,6 +112,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
 			servertasks.cleanOutCRL();
 			servertasks.deploy();
+			servertasks.setupTranslateToolkit(sm_translateToolkitGitRepository);
 			servertasks.reportAPI();
 			
 			// also connect to the candlepin server database

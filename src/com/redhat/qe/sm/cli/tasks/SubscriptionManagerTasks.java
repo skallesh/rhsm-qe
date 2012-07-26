@@ -67,7 +67,7 @@ public class SubscriptionManagerTasks {
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
 	public       String rhsmComplianceD		= null; // "/usr/libexec/rhsmd"; RHEL62 RHEL57		// /usr/libexec/rhsm-complianced; RHEL61
 	public final String rhnDefinitionsDir	= "/tmp/"+"rhnDefinitionsDir";
-	public final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
+
 	
 	//public final String msg_ConsumerNotRegistered		= "Consumer not registered. Please register using --username and --password";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=749332
 	//public final String msg_ConsumerNotRegistered		= "Error: You need to register this system by running `register` command.  Try register --help.";	// changed by bug https://bugzilla.redhat.com/show_bug.cgi?id=767790
@@ -296,6 +296,7 @@ public class SubscriptionManagerTasks {
 		
 		// git clone git://github.com/translate/translate.git
 		log.info("Cloning Translate Toolkit...");
+		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+translateToolkitDir, new Integer(0));
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");

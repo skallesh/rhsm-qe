@@ -284,6 +284,18 @@ schema generation failed
 
 	}
 	
+	public void setupTranslateToolkit(String gitRepository) {
+		if (gitRepository.equals("")) return;
+		
+		// git clone git://github.com/translate/translate.git
+		log.info("Cloning Translate Toolkit...");
+		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+translateToolkitDir, new Integer(0));
+		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
+	}
+	
 	public void cleanOutCRL() {
 		log.info("Cleaning out the certificate revocation list (CRL) "+candlepinCRLFile+"...");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -f "+candlepinCRLFile, 0);

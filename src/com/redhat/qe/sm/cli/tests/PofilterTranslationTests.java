@@ -18,7 +18,9 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.data.Translation;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 //import com.sun.org.apache.xalan.internal.xsltc.compiler.Pattern;
 import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 
@@ -52,51 +54,88 @@ public class PofilterTranslationTests extends TranslationTests{
 	
 	// Test Methods ***********************************************************************
 
-	@Test(	description="run pofilter translate tests on the translation file",
+	@Test(	description="run pofilter translate tests on subscription manager translation files",
 			groups={},
-			dataProvider="getTranslationFilePofilterTestData",
-			//dataProvider="getTranslationFilePofilterTestData",
+			dataProvider="getSubscriptionManagerTranslationFilePofilterTestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void pofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+	public void subscriptionManagerPofilter_Test(Object bugzilla, SSHCommandRunner sshCommandRunner, String pofilterTest, File translationFile) {
+		pofilter_Test(sshCommandRunner, pofilterTest, translationFile);
+	}
+	
+	@Test(	description="run pofilter translate tests on candlepin translation files",
+			groups={},
+			dataProvider="getCandlepinTranslationFilePofilterTestData",
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void candlepinPofilter_Test(Object bugzilla, SSHCommandRunner sshCommandRunner, String pofilterTest, File translationFile) {
+		pofilter_Test(sshCommandRunner, pofilterTest, translationFile);
+	}
+	
+
+
+	
+	
+	
+	
+	
+	// Candidates for an automated Test:
+	
+	// Configuration Methods ***********************************************************************
+	
+	
+	// Protected Methods ***********************************************************************
+	
+
+	// see http://translate.sourceforge.net/wiki/toolkit/pofilter_tests
+	//	Critical -- can break a program
+	//    	accelerators, escapes, newlines, nplurals, printf, tabs, variables, xmltags, dialogsizes
+	//	Functional -- may confuse the user
+	//    	acronyms, blank, emails, filepaths, functions, gconf, kdecomments, long, musttranslatewords, notranslatewords, numbers, options, purepunc, sentencecount, short, spellcheck, urls, unchanged
+	//	Cosmetic -- make it look better
+	//    	brackets, doublequoting, doublespacing, doublewords, endpunc, endwhitespace, puncspacing, simplecaps, simpleplurals, startcaps, singlequoting, startpunc, startwhitespace, validchars
+	//	Extraction -- useful mainly for extracting certain types of string
+	//    	compendiumconflicts, credits, hassuggestion, isfuzzy, isreview, untranslated
+	protected final List<String> pofilterTests = Arrays.asList(
+			//	Critical -- can break a program
+			"accelerators","escapes","newlines","printf","tabs","variables","xmltags",
+			//	Functional -- may confuse the user
+			"blank","emails","filepaths","gconf","long","notranslatewords","options","short","urls","unchanged",
+			//	Cosmetic -- make it look better
+			"doublewords",
+			//	Extraction -- useful mainly for extracting certain types of string
+			"untranslated");
+	// Tests completed 	-> 	"escapes","accelerators","newlines","printf","tabs","variables","xmltags","blank","emails","filepaths","gconf","long","short","notranslatewords","unchanged","variables","options"		
+	// Ambiguous		-> 	"nplurals","printf","variables"			
+	// TODO				-> 
+	
+	
+	protected void pofilter_Test(SSHCommandRunner sshCommandRunner, String pofilterTest, File translationFile) {
 		log.info("For an explanation of pofilter test '"+pofilterTest+"', see: http://translate.sourceforge.net/wiki/toolkit/pofilter_tests");
 		File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
 		
 		// if pofilter test -> notranslatewords, create a file with words that don't have to be translated to native language
-		//String fileName = (getProperty("automation.dir", "/tmp")+"/tmp/notranslatefile").replace("tmp/tmp", "tmp");
-		String fileName = "/tmp/notranslatefile";
-		if(pofilterTest.equals("notranslatewords")) {
-			String rmCommand = "rm "+fileName;
-			SSHCommandResult removeFile = null;
-			if(translationFile.toString().endsWith(".mo"))			// Client side  
-				removeFile = client.runCommandAndWait(rmCommand);
-			else if(translationFile.toString().endsWith(".po"))		// Server side 
-				removeFile = server.runCommandAndWait(rmCommand);
-			if(!removeFile.getStderr().contains("No such file or directory"))
-				Assert.assertEquals(removeFile.getExitCode(), new Integer(0), fileName+" deleted.");
-					
-			// The words that need not be translated can be added to the below list
+		final String notranslateFile = "/tmp/notranslatefile";
+		if (pofilterTest.equals("notranslatewords")) {
+			
+			// The words that need not be translated can be added this list
 			List<String> notranslateWords = Arrays.asList("Red Hat");
+			
+			// remove former notranslate file
+			sshCommandRunner.runCommandAndWait("rm -f "+notranslateFile);
+					
+			// echo all of the notranslateWords to the notranslateFile
 			for(String str : notranslateWords) {
-				String echoCommand = "echo "+str+" >> "+fileName;
-				SSHCommandResult writeData = null;
-				if(translationFile.toString().endsWith(".mo"))			// Client side
-					writeData = client.runCommandAndWait(echoCommand);
-				else if(translationFile.toString().endsWith(".po"))		// Server side
-					writeData = server.runCommandAndWait(echoCommand);
-				Assert.assertEquals(writeData.getExitCode(), new Integer(0), str+" successfully written into the file.");
+				String echoCommand = "echo \""+str+"\" >> "+notranslateFile;
+				sshCommandRunner.runCommandAndWait(echoCommand);
 			}
-			log.info("Successfull created \"notranslatefile\" file");
+			Assert.assertTrue(RemoteFileTasks.testExists(sshCommandRunner, notranslateFile),"The pofilter notranslate file '"+notranslateFile+"' has been created on the client.");
 		}
 		
 		// execute the pofilter test
-		String pofilterCommand = "pofilter --gnome -t "+pofilterTest+" --notranslatefile "+fileName;
-		//String pofilterCommand = "pofilter --gnome -t "+pofilterTest;
-		SSHCommandResult pofilterResult = null;
-		if(translationFile.toString().endsWith(".mo"))					// Client side
-			pofilterResult = client.runCommandAndWait(pofilterCommand+" "+translationPoFile);
-		else if (translationFile.toString().endsWith(".po"))			// Server side
-			pofilterResult = server.runCommandAndWait(pofilterCommand+" "+sm_serverInstallDir+"/po/"+translationFile);
+		String pofilterCommand = "pofilter --gnome -t "+pofilterTest;
+		if (pofilterTest.equals("notranslatewords")) pofilterCommand += " --notranslatefile="+notranslateFile;
+		SSHCommandResult pofilterResult = sshCommandRunner.runCommandAndWait(pofilterCommand+" "+translationPoFile);
 		Assert.assertEquals(pofilterResult.getExitCode(), new Integer(0), "Successfully executed the pofilter tests.");
 		
 		// convert the pofilter test results into a list of failed Translation objects for simplified handling of special cases 
@@ -286,29 +325,20 @@ public class PofilterTranslationTests extends TranslationTests{
 	}
 	
 	
-	
-	
-	
-	// Candidates for an automated Test:
-	
-	// Configuration Methods ***********************************************************************
-	
-	
-	// Protected Methods ***********************************************************************
-
-	
-	// Data Providers ***********************************************************************
-	@DataProvider(name="getTranslationFilePofilterTestData")
-	public Object[][] getTranslationFilePofilterTestDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getTranslationFilePofilterTestDataAsListOfLists());
-	}
-	
-	// Returns the tag character (Eg: <b> or </b> return_val = 'b')
+	/**
+	 * @param str
+	 * @return the tag character (Eg: <b> or </b> return_val = 'b')
+	 */
 	protected char parseElement(String str){
 		return str.charAt(str.length()-2);
 	}
 	
-	// Function checks whether every open tag has an appropriate close tag in order
+	/**
+	 * @param tags
+	 * @param temp
+	 * @param tagElement
+	 * @return whether every open tag has an appropriate close tag in order
+	 */
 	protected Boolean checkTags(Stack<String> tags, Stack<String> temp, String tagElement) {
 		// If there are no open tags in the stack -> return
 		if(tags.empty()) return false;
@@ -334,38 +364,19 @@ public class PofilterTranslationTests extends TranslationTests{
 		return true;
 	}
 	
-	protected List<List<Object>> getTranslationFilePofilterTestDataAsListOfLists() {
+	
+	
+	// Data Providers ***********************************************************************
+	
+	@DataProvider(name="getSubscriptionManagerTranslationFilePofilterTestData")
+	public Object[][] getSubscriptionManagerTranslationFilePofilterTestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionManagerTranslationFilePofilterTestDataAsListOfLists());
+	}
+	protected List<List<Object>> getSubscriptionManagerTranslationFilePofilterTestDataAsListOfLists() {
 		
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		// see http://translate.sourceforge.net/wiki/toolkit/pofilter_tests
-		//	Critical -- can break a program
-		//    	accelerators, escapes, newlines, nplurals, printf, tabs, variables, xmltags, dialogsizes
-		//	Functional -- may confuse the user
-		//    	acronyms, blank, emails, filepaths, functions, gconf, kdecomments, long, musttranslatewords, notranslatewords, numbers, options, purepunc, sentencecount, short, spellcheck, urls, unchanged
-		//	Cosmetic -- make it look better
-		//    	brackets, doublequoting, doublespacing, doublewords, endpunc, endwhitespace, puncspacing, simplecaps, simpleplurals, startcaps, singlequoting, startpunc, startwhitespace, validchars
-		//	Extraction -- useful mainly for extracting certain types of string
-		//    	compendiumconflicts, credits, hassuggestion, isfuzzy, isreview, untranslated
 
-		List<String> pofilterTests = Arrays.asList(
-				//	Critical -- can break a program
-				"accelerators","escapes","newlines","printf","tabs","variables","xmltags",
-				//	Functional -- may confuse the user
-				"blank","emails","filepaths","gconf","long","notranslatewords","options","short","urls","unchanged",
-				//	Cosmetic -- make it look better
-				"doublewords",
-				//	Extraction -- useful mainly for extracting certain types of string
-				"untranslated");
-				
-		// debugTesting
-		
-		// Tests completed 	-> 	"escapes","accelerators","newlines","printf","tabs","variables","xmltags","blank","emails","filepaths","gconf","long","short","notranslatewords","unchanged","variables","options"		
-		// Ambiguous		-> 	"nplurals","printf","variables"			
-		// TODO				->  		
-				
-		//pofilterTests = Arrays.asList("");
-
-		// Client side 
+		// Client side
 		
 		for (File translationFile : translationFileMap.keySet()) {
 			for (String pofilterTest : pofilterTests) {
@@ -500,10 +511,23 @@ public class PofilterTranslationTests extends TranslationTests{
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugzilla = new BlockedByBzBug("841011");
 				
-				ll.add(Arrays.asList(new Object[] {bugzilla,	pofilterTest,	translationFile}));
+				ll.add(Arrays.asList(new Object[] {bugzilla, client, pofilterTest, translationFile}));
 				 
 			}
 		}
+		
+		return ll;
+	}
+	
+	
+	
+	@DataProvider(name="getCandlepinTranslationFilePofilterTestData")
+	public Object[][] getCandlepinTranslationFilePofilterTestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getCandlepinTranslationFilePofilterTestDataAsListOfLists());
+	}
+	protected List<List<Object>> getCandlepinTranslationFilePofilterTestDataAsListOfLists() {
+		
+		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// Server side
 		
@@ -512,13 +536,13 @@ public class PofilterTranslationTests extends TranslationTests{
 				BlockedByBzBug bugzilla = null;
 				
 				// Bug 842450 - [ja_JP] failed pofilter newlines option test for candlepin translations
-				if (pofilterTest.equals("newlines") && translationFile.getPath().contains("ja")) bugzilla = new BlockedByBzBug("842450");
-				if (pofilterTest.equals("tabs") && translationFile.getPath().contains("ja")) bugzilla = new BlockedByBzBug("842450");
+				if (pofilterTest.equals("newlines") && translationFile.getName().equals("ja.po")) bugzilla = new BlockedByBzBug("842450");
+				if (pofilterTest.equals("tabs") && translationFile.getName().equals("ja.po")) bugzilla = new BlockedByBzBug("842450");
 				
 				// Bug 842784 - [ALL LANG] failed pofilter untranslated option test for candlepin translations
 				if (pofilterTest.equals("untranslated")) bugzilla = new BlockedByBzBug("842784");
 				
-				ll.add(Arrays.asList(new Object[] {bugzilla,	pofilterTest,	translationFile}));
+				ll.add(Arrays.asList(new Object[] {bugzilla, server, pofilterTest, translationFile}));
 			}
 		}
 		
