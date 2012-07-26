@@ -59,8 +59,8 @@ public class PofilterTranslationTests extends TranslationTests{
 			dataProvider="getSubscriptionManagerTranslationFilePofilterTestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void subscriptionManagerPofilter_Test(Object bugzilla, SSHCommandRunner sshCommandRunner, String pofilterTest, File translationFile) {
-		pofilter_Test(sshCommandRunner, pofilterTest, translationFile);
+	public void subscriptionManagerPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+		pofilter_Test(client, pofilterTest, translationFile);
 	}
 	
 	@Test(	description="run pofilter translate tests on candlepin translation files",
@@ -68,8 +68,8 @@ public class PofilterTranslationTests extends TranslationTests{
 			dataProvider="getCandlepinTranslationFilePofilterTestData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void candlepinPofilter_Test(Object bugzilla, SSHCommandRunner sshCommandRunner, String pofilterTest, File translationFile) {
-		pofilter_Test(sshCommandRunner, pofilterTest, translationFile);
+	public void candlepinPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
+		pofilter_Test(server, pofilterTest, translationFile);
 	}
 	
 
@@ -511,7 +511,7 @@ public class PofilterTranslationTests extends TranslationTests{
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugzilla = new BlockedByBzBug("841011");
 				
-				ll.add(Arrays.asList(new Object[] {bugzilla, client, pofilterTest, translationFile}));
+				ll.add(Arrays.asList(new Object[] {bugzilla, pofilterTest, translationFile}));
 				 
 			}
 		}
@@ -542,7 +542,7 @@ public class PofilterTranslationTests extends TranslationTests{
 				// Bug 842784 - [ALL LANG] failed pofilter untranslated option test for candlepin translations
 				if (pofilterTest.equals("untranslated")) bugzilla = new BlockedByBzBug("842784");
 				
-				ll.add(Arrays.asList(new Object[] {bugzilla, server, pofilterTest, translationFile}));
+				ll.add(Arrays.asList(new Object[] {bugzilla, pofilterTest, translationFile}));
 			}
 		}
 		
