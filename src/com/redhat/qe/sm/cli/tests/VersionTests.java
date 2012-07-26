@@ -87,7 +87,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version and type are reported by the subscription-manager version module",
-			groups={/*blockedByBug-843649*/},
+			groups={/*blockedByBug-843649*/"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenRegistered_Test() {
