@@ -88,7 +88,7 @@ public class CandlepinTasks {
 	// populated from curl --insecure --user testuser1:password --request GET https://jsefler-onprem-62candlepin.usersys.redhat.com:8443/candlepin/status | python -mjson.tool
 	public String statusRelease = "";
 	public boolean statusResult = true;
-	public String statusVersion = "";
+	public String statusVersion = "Unknown";
 	public boolean statusStandalone = false;	// default to false since /status on stage is not readable and is expected to be false
 	public String statusTimeUTC = "";
 	

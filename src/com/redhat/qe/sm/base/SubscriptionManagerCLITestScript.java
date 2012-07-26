@@ -173,7 +173,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				servertasks.statusStandalone	= jsonStatus.getBoolean("standalone");
 				} catch(Exception e){log.warning(e.getMessage());log.warning("You should upgrade your candlepin server!");}
 
-				//[root@jsefler-r63-server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -mjson.tool
+				//[root@jsefler-r63-server ~]# curl --insecure --user testuser1:password --request GET https://jsefler-f14-candlepin.usersys.redhat.com:8443/candlepin/status --stderr /dev/null | python -msimplejson/tool
 				//{
 				//    "release": "1", 
 				//    "result": true, 
@@ -193,7 +193,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 				Assert.assertTrue(servertasks.statusVersion.matches("\\d+\\.\\d+\\.\\d+"), "Candlepin version is matches d+.d+.d+");
 			}
 		} catch (Exception e) {
-			log.warning("Candlepin server '"+sm_serverHostname+"' is running version: UNKNOWN");
+			// Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
+			log.warning("Failed to get the Candlepin server '"+sm_serverHostname+"' version from the /status api.  Candlepin version: "+servertasks.statusVersion);
 		} 
 
 		

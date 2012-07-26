@@ -1798,12 +1798,18 @@ public class SubscriptionManagerTasks {
 
 	
 	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
-
+		
+		boolean alreadyRegistered = this.currentlyRegisteredUsername==null? false:true;
 		String msg;
 		SSHCommandResult sshCommandResult = register_(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
 	
-		// when already registered, just return without any assertions
-		if ((force==null || !force) && sshCommandResult.getStdout().startsWith("This system is already registered.")) return sshCommandResult;
+		// assert results when already registered
+		if ((force==null || !force) && alreadyRegistered) {
+			Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(1), "The exit code from the register command indicates we are already registered.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "This system is already registered. Use --force to override");	
+			Assert.assertEquals(sshCommandResult.getStderr().trim(), "");	
+			return sshCommandResult;
+		}
 
 		// assert results for a successful registration exit code
 		if (autosubscribe==null || !autosubscribe)	// https://bugzilla.redhat.com/show_bug.cgi?id=689608
