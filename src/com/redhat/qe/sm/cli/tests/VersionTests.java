@@ -97,7 +97,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 
 		// get the expected results
 		String expectedVersion = "remote entitlement server: "+servertasks.statusVersion;
-		String expectedType = "FIXTEST: UNKNOWN CANDLEPIN TYPE";
+		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
 		if (sm_serverType==CandlepinType.standalone)	expectedType = "subscription management service";
 		if (sm_serverType==CandlepinType.hosted)		expectedType = "subscription management service";	// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.sam)			expectedType = "SAM";		// TODO not sure if this is correct
