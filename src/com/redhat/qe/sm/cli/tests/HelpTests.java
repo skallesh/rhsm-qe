@@ -388,6 +388,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.clear();
 		options.add("-h, --help");
 		options.add("--list");
+		options.add("--enable=REPOID");
+		options.add("--disable=REPOID");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);

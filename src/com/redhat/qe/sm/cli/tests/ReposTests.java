@@ -38,9 +38,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
-			enabled=true,
 			groups={"AcceptanceTests","blockedByBug-807407"},
-			dataProvider="getAvailableSubscriptionPoolsData")
+			dataProvider="getAvailableSubscriptionPoolsData",
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
 
@@ -144,40 +144,92 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: after subscribing to all pools, verify that manual edits to enable repos in redhat.repo are preserved.",
-			enabled=true,
 			groups={},
-			dataProvider="getYumReposData")
+			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListPreservesManualEditsToEnablementOfRedhatRepos_Test(YumRepo yumRepo){
-
-		Repo repo = new Repo(yumRepo.name,yumRepo.id,yumRepo.baseurl,yumRepo.enabled);
-
-		// assert that the yumRepo is reported in the subscription-manager repos
-		List<Repo> currentlySubscribedRepos = clienttasks.getCurrentlySubscribedRepos();
-		Assert.assertTrue(currentlySubscribedRepos.contains(repo),"The yumRepo '"+yumRepo+"' is represented in the subscription-manager repos --list by: "+repo);
-		
-		// also verify that yumRepo is reported in the yum repolist
-		Assert.assertTrue(clienttasks.getYumRepolist(yumRepo.enabled?"enabled":"disabled").contains(yumRepo.id), "yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' before manually changing its enabled value.");
-	
-		// manually edit the redhat.repo and change the enabled parameter for this yumRepo
-		Boolean newEnabledValue = yumRepo.enabled? false:true;	// toggle the value
-		clienttasks.updateYumRepoParameter(clienttasks.redhatRepoFile,yumRepo.id,"enabled",newEnabledValue.toString());
-		Repo newRepo = new Repo(yumRepo.name,yumRepo.id,yumRepo.baseurl,newEnabledValue);
-
-		// verify that the change is preserved by subscription-manager repos --list
-		currentlySubscribedRepos = clienttasks.getCurrentlySubscribedRepos();
-		Assert.assertTrue(currentlySubscribedRepos.contains(newRepo),"yumRepo id '"+yumRepo.id+"' was manually changed to enabled="+newEnabledValue+" and the subscription-manager repos --list reflects the change as: "+newRepo);
-		Assert.assertFalse(currentlySubscribedRepos.contains(repo),"The original repo ("+repo+") is no longer found in subscription-manager repos --list.");
-		
-		// also verify the change is reflected in yum repolist
-		Assert.assertTrue(clienttasks.getYumRepolist(newEnabledValue?"enabled":"disabled").contains(yumRepo.id), "yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' which was manually changed to '"+newEnabledValue+"'.");
-		Assert.assertFalse(clienttasks.getYumRepolist(!newEnabledValue?"enabled":"disabled").contains(yumRepo.id), "yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' which was manually changed to '"+newEnabledValue+"'.");
+		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,true);
 	}
 
 	
+	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options) to repos in redhat.repo are preserved.",
+			groups={},
+			dataProvider="getRandomSubsetOfYumReposData",	// dataProvider="getYumReposData", takes too long to execute
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListPreservesEnablementOfRedhatRepos_Test(YumRepo yumRepo){
+		verifyTogglingTheEnablementOfRedhatRepo(yumRepo,false);
+	}
+	
+	
+	@Test(	description="subscription-manager: after subscribing to all pools, verify that edits (using subscription-manager --enable --disable options specified multiple times in a single call) to repos in redhat.repo are preserved.",
+			groups={"AcceptanceTests","blockedByBug-843915"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListPreservesSimultaneousEnablementOfRedhatRepos_Test(){
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		
+		// subscribe to all available subscription so as to populate the redhat.repo file
+		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+		
+		// get the current listing of repos
+		List<Repo> originalRepos = clienttasks.getCurrentlySubscribedRepos();	// determined by calling subscription-manager repos --list
+		//List<YumRepo> yumRepos = clienttasks.getCurrentlySubscribedYumRepos();	// determined by parsing /etc/yum.repos.d/redhat.repo
+		
+		// verify the repos listed and yumRepos are in sync
+		//for (Repo repo : originalRepos) {
+		//	Assert.assertNotNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repo.repoId, yumRepos),"Found yum repo id ["+repo.repoId+"] matching current repos --list item: "+repo);
+		//}
+		
+		// assemble a list enable and disable repoIds to be collectively toggled
+		List<String> enableRepoIds = new ArrayList<String>();
+		List<String> disableRepoIds = new ArrayList<String>();
+		for (Repo repo : originalRepos) {
+			if (repo.enabled) {
+				disableRepoIds.add(repo.repoId);
+			} else {
+				enableRepoIds.add(repo.repoId);
+			}
+		}
+		
+		// collectively toggle the enablement of the current repos
+		clienttasks.repos(null, enableRepoIds, enableRepoIds, null, null, null);
+		
+		// verify that the change is preserved by subscription-manager repos --list
+		List<Repo> toggledRepos = clienttasks.getCurrentlySubscribedRepos();	// determined by calling subscription-manager repos --list
+		//List<YumRepo> toggledYumRepos = clienttasks.getCurrentlySubscribedYumRepos();	// determined by parsing /etc/yum.repos.d/redhat.repo
+		
+		// assert enablement of all the original repos have been toggled
+		Assert.assertEquals(toggledRepos.size(), originalRepos.size(), "The count of repos listed should remain the same after collectively toggling their enablement.");
+		for (Repo originalRepo : originalRepos) {
+			Repo toggledRepo = Repo.findFirstInstanceWithMatchingFieldFromList("id", originalRepo.repoId, toggledRepos);
+			Assert.assertTrue(toggledRepo.enabled.equals(!originalRepo.enabled), "Repo ["+originalRepo.repoId+"] enablement has been toggled from '"+originalRepo.enabled+"' to '"+!originalRepo.enabled+"'.");
+		}
+		
+		// now remove and refresh entitlement certificates and again assert the toggled enablement is preserved
+		log.info("Remove and refresh entitlement certs...");
+		clienttasks.removeAllCerts(false,true, false);
+		clienttasks.refresh(null, null, null);
+		
+		// verify that the change is preserved by subscription-manager repos --list
+		toggledRepos = clienttasks.getCurrentlySubscribedRepos();	// determined by calling subscription-manager repos --list
+		//List<YumRepo> toggledYumRepos = clienttasks.getCurrentlySubscribedYumRepos();	// determined by parsing /etc/yum.repos.d/redhat.repo
+		
+		// assert enablement of all the original repos have been toggled
+		Assert.assertEquals(toggledRepos.size(), originalRepos.size(), "Even after refreshing certificates, the count of repos listed should remain the same after collectively toggling their enablement.");
+		for (Repo originalRepo : originalRepos) {
+			Repo toggledRepo = Repo.findFirstInstanceWithMatchingFieldFromList("id", originalRepo.repoId, toggledRepos);
+			Assert.assertTrue(toggledRepo.enabled.equals(!originalRepo.enabled), "Even after refreshing certificates, repo ["+originalRepo.repoId+"] enablement has been toggled from '"+originalRepo.enabled+"' to '"+!originalRepo.enabled+"'.");
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
-			enabled=true,
-			groups={"blockedByBug-724809","blockedByBug-807360","blockedByBug-837447"})
+			groups={"blockedByBug-724809","blockedByBug-807360","blockedByBug-837447"},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsEmptyWhenNotRegistered_Test(){
 		
@@ -187,9 +239,20 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: repos --list reports no entitlements when not registered",
+			groups={"blockedByBug-837447"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposListWhenNotRegistered_Test(){
+		clienttasks.unregister(null,null,null);
+		clienttasks.repos(true, (String)null, (String)null, null, null, null);
+		clienttasks.repos(null, (String)null, (String)null, null, null, null); // defaults to --list behavior in rhel59
+	}
+	
+	
 	@Test(	description="subscription-manager: set manage_repos to 0 and assert redhat.repo is removed.",
-			enabled=true,
-			groups={"blockedByBug-767620","blockedByBug-797996","ManageReposTests","AcceptanceTests"})
+			groups={"blockedByBug-767620","blockedByBug-797996","ManageReposTests","AcceptanceTests"},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsDisabledByConfigurationAfterRhsmManageReposIsConfiguredOff_Test() throws JSONException, Exception{
 		
@@ -200,7 +263,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 		
 		// assert that the repos list is enabled.
-		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
+		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
 
 		// assert that the redhat.repo exists before and after a yum transaction
 		//Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),1,"When rhsm.manage_repos is configured on, the redhat.repo should exist after registration.");
@@ -208,13 +271,13 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"When rhsm.manage_repos is configured on, the redhat.repo should exist after yum transaction.");
 
 		// assert that the repos list is not entitled to use any repositories, but is enabled by configuration!
-		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
+		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories, but is enabled by configuration!");
 
 		// NOW DISABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","0"});
 		
 		// assert that the repos list is disabled by configuration!
-		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration.");
+		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration.");
 
 		// trigger a yum transaction and assert that the redhat.repo no longer exists
 		clienttasks.getYumRepolist(null);
@@ -222,14 +285,14 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Even after subscribing to all subscription pools while rhsm.manage_repos is off, the redhat.repo is not generated.");
 	}
 	
 	
 	@Test(	description="subscription-manager: set manage_repos to 1 and assert redhat.repo is restored.",
-			enabled=true,
-			groups={"blockedByBug-767620","blockedByBug-797996","ManageReposTests"})
+			groups={"blockedByBug-767620","blockedByBug-797996","ManageReposTests"},
+			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsEnabledByConfigurationAfterRhsmManageReposIsConfiguredOn_Test() throws JSONException, Exception{
 		
@@ -240,7 +303,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 
 		// assert that the repos list is disabled.
-		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
 
 		// assert that the redhat.repo does NOT exist before and after a yum transaction
 		//Assert.assertEquals(RemoteFileTasks.testFileExists(client, clienttasks.redhatRepoFile),0,"When rhsm.manage_repos is configured off, the redhat.repo should NOT exist after registration.");
@@ -249,7 +312,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		Assert.assertTrue(clienttasks.repos(true,null,null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
+		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while rhsm.manage_repos is off.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Even after subscribing to all subscription pools while rhsm.manage_repos is off, the redhat.repo is not generated.");
 
 		// NOW ENABLE THE rhsm.manage_repos CONFIGURATION FILE PARAMETER
@@ -262,6 +325,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.getYumRepolist(null);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"When rhsm.manage_repos is configured on, the redhat.repo file should now exist.");
 	}
+	
 	
 	/**
 	 * @author skallesh
@@ -284,13 +348,15 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		ArrayList<String> reposlist=clienttasks.getYumRepolist("all");
 		repoName= ((String)reposlist.get(2));
 		//TODO use a randomGerator to get a repoName from the list;  what if there was not 2 repos?
-		SSHCommandResult result=clienttasks.repos(false, null, null, null,repoName,null);
+		SSHCommandResult result=clienttasks.repos(false, repoName, null, null,null,null);
 		Assert.assertEquals(result.getStdout().trim(),"Repo " +repoName+"is enabled for this system", "Stdout from service-level --set without being registered");
 		
 		//TODO need to correct the message above (was copy and pasted from a service level test
 		//TODO now that you asserted the feedback message, you should assert that repo really is enabled
+		//     DONE see ReposListPreservesEnablementOfRedhatRepos_Test - jsefler 7/27/2012
 		
 		//TODO also create a disable repos test
+		//     DONE see ReposListPreservesEnablementOfRedhatRepos_Test - jsefler 7/27/2012
 		
 		}
 	
@@ -335,6 +401,56 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	List<ProductCert> currentProductCerts=new ArrayList<ProductCert>();
 	List<List<Object>> modifierSubscriptionData = null;
 
+	/**
+	 * @param yumRepo
+	 * @param manually - if true, then toggling the enabled flag in yumRepo is performed manually using sed, otherwise subscription-manager repos --enable or --disable option is used
+	 */
+	public void verifyTogglingTheEnablementOfRedhatRepo(YumRepo yumRepo, boolean manually){
+
+		Repo repo = new Repo(yumRepo.name,yumRepo.id,yumRepo.baseurl,yumRepo.enabled);
+
+		// assert that the yumRepo is reported in the subscription-manager repos
+		List<Repo> currentlySubscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		Assert.assertTrue(currentlySubscribedRepos.contains(repo),"The yumRepo '"+yumRepo+"' is represented in the subscription-manager repos --list by: "+repo);
+		
+		// also verify that yumRepo is reported in the yum repolist
+		Assert.assertTrue(clienttasks.getYumRepolist(yumRepo.enabled?"enabled":"disabled").contains(yumRepo.id), "yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' before manually changing its enabled value.");
+	
+		// edit the redhat.repo and change the enabled parameter for this yumRepo
+		Boolean newEnabledValue = yumRepo.enabled? false:true;	// toggle the value
+		if (manually) {	// toggle the enabled flag manually
+			clienttasks.updateYumRepoParameter(clienttasks.redhatRepoFile,yumRepo.id,"enabled",newEnabledValue.toString());
+		} else if (newEnabledValue) {	// toggle the enabled flag using subscription-manager repos --enable
+			clienttasks.repos(null, yumRepo.id, null, null, null, null);
+		} else {	// toggle the enabled flag using subscription-manager repos --disable
+			clienttasks.repos(null, null, yumRepo.id, null, null, null);
+		}
+		Repo newRepo = new Repo(yumRepo.name,yumRepo.id,yumRepo.baseurl,newEnabledValue);
+
+		// verify that the change is preserved by subscription-manager repos --list
+		currentlySubscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		Assert.assertTrue(currentlySubscribedRepos.contains(newRepo),"yumRepo id '"+yumRepo.id+"' was manually changed to enabled="+newEnabledValue+" and the subscription-manager repos --list reflects the change as: "+newRepo);
+		Assert.assertFalse(currentlySubscribedRepos.contains(repo),"The original repo ("+repo+") is no longer found in subscription-manager repos --list.");
+		
+		// also verify the change is reflected in yum repolist
+		Assert.assertTrue(clienttasks.getYumRepolist(newEnabledValue?"enabled":"disabled").contains(yumRepo.id), "yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' which was manually changed to '"+newEnabledValue+"'.");
+		Assert.assertFalse(clienttasks.getYumRepolist(!newEnabledValue?"enabled":"disabled").contains(yumRepo.id), "yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' which was manually changed to '"+newEnabledValue+"'.");
+	
+		// now remove and refresh entitlement certificates and again assert the manual edits are preserved
+		log.info("Remove and refresh entitlement certs...");
+		clienttasks.removeAllCerts(false,true, false);
+		clienttasks.refresh(null, null, null);
+		
+		// verify that the change is preserved by subscription-manager repos --list (even after deleting and refreshing entitlement certs)
+		currentlySubscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		Assert.assertTrue(currentlySubscribedRepos.contains(newRepo),"yumRepo id '"+yumRepo.id+"' was manually changed to enabled="+newEnabledValue+" and even after deleting and refreshing certs, the subscription-manager repos --list reflects the change as: "+newRepo);
+		Assert.assertFalse(currentlySubscribedRepos.contains(repo),"The original repo ("+repo+") is no longer found in subscription-manager repos --list.");
+		
+		// also verify the change is reflected in yum repolist (even after deleting and refreshing entitlement certs)
+		Assert.assertTrue(clienttasks.getYumRepolist(newEnabledValue?"enabled":"disabled").contains(yumRepo.id), "even after deleting and refreshing certs, yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' which was manually changed to '"+newEnabledValue+"'.");
+		Assert.assertFalse(clienttasks.getYumRepolist(!newEnabledValue?"enabled":"disabled").contains(yumRepo.id), "even after deleting and refreshing certs, yum repolist properly reports the enablement of yumRepo id '"+yumRepo.id+"' which was manually changed to '"+newEnabledValue+"'.");
+	}
+
 	
 	// Data Providers ***********************************************************************
 	
@@ -362,4 +478,18 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		return ll;
 	}
 
+	
+	/**
+	 * @return a random subset (maximum 3) of data rows from getYumReposDataAsListOfLists() (useful to help reduce excessive test execution time)
+	 * @throws Exception
+	 */
+	@DataProvider(name="getRandomSubsetOfYumReposData")
+	public Object[][] getRandomSubsetYumReposDataAs2dArray() throws Exception {
+		int subMax = 3;	// maximum subset count of data rows to return
+		List<List<Object>> allData = getYumReposDataAsListOfLists();
+		if (allData.size() <= subMax) return TestNGUtils.convertListOfListsTo2dArray(allData);
+		List<List<Object>> subData = new ArrayList<List<Object>>();
+		for (int i = 0; i < subMax; i++) subData.add(allData.remove(randomGenerator.nextInt(allData.size())));
+		return TestNGUtils.convertListOfListsTo2dArray(subData);
+	}
 }

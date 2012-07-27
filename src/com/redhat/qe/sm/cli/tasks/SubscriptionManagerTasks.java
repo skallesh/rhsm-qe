@@ -1708,8 +1708,6 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
-	 * @param serverurl TODO
-	 * @param baseurl TODO
 	 */
 	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, List<String> activationkeys, String serverurl, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
@@ -1783,9 +1781,6 @@ public class SubscriptionManagerTasks {
 	
 	/**
 	 * register WITHOUT asserting results.
-	 * @param release TODO
-	 * @param serverurl TODO
-	 * @param baseurl TODO
 	 */
 	public SSHCommandResult register_(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		
@@ -1988,7 +1983,7 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getStdout().trim(), "All local data removed");
 		
 		// assert that the consumer cert directory is gone
-		Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,consumerCertDir)==1, consumerCertDir+" does NOT exist after clean.");
+		Assert.assertFalse(RemoteFileTasks.testExists(sshCommandRunner,consumerCertDir), consumerCertDir+" does NOT exist after clean.");
 		this.currentlyRegisteredUsername = null;
 		this.currentlyRegisteredPassword = null;
 		this.currentlyRegisteredOrg = null;
@@ -1997,7 +1992,7 @@ public class SubscriptionManagerTasks {
 		// assert that the entitlement cert directory is gone
 		//Assert.assertFalse(RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1, entitlementCertDir+" does NOT exist after clean.");
 		// assert that the entitlement cert directory is gone (or is empty)
-		if (RemoteFileTasks.testFileExists(sshCommandRunner,entitlementCertDir)==1) {
+		if (RemoteFileTasks.testExists(sshCommandRunner,entitlementCertDir)) {
 			Assert.assertEquals(sshCommandRunner.runCommandAndWait("ls "+entitlementCertDir).getStdout(), "", "The entitlement cert directory is empty after running clean.");
 		}
 
@@ -2011,9 +2006,6 @@ public class SubscriptionManagerTasks {
 	/**
 	 * import WITHOUT asserting results
 	 * @param certificates - list of paths to certificate files to be imported
-	 * @param proxy
-	 * @param proxyuser
-	 * @param proxypassword
 	 * @return
 	 */
 	public SSHCommandResult importCertificate_(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
@@ -2043,9 +2035,6 @@ public class SubscriptionManagerTasks {
 	/**
 	 * import with assertions that the results are a success"
 	 * @param certificates - list of paths to certificates file to be imported
-	 * @param proxy
-	 * @param proxyuser
-	 * @param proxypassword
 	 * @return
 	 */
 	public SSHCommandResult importCertificate(List<String> certificates/*, String proxy, String proxyuser, String proxypassword*/) {
@@ -2953,35 +2942,61 @@ public class SubscriptionManagerTasks {
 	// repos module tasks ************************************************************
 
 	/**
-	 * repos without asserting results
-	 * @param list TODO
-	 * @param proxy TODO
-	 * @param proxyuser TODO
-	 * @param proxypassword TODO
+	 * @return SSHCommandResult from subscription-manager repos [parameters] without asserting any results
 	 */
-	public SSHCommandResult repos_(Boolean list, String proxy, String proxyuser, String proxypassword,String enable,String disable) {
+	public SSHCommandResult repos_(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
 		
 		// assemble the command
-		String command = this.command;	command += " repos";
-		if (list!=null && list)			command += " --list";
-		if (proxy!=null)				command += " --proxy="+proxy;
-		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
-		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
-		if (disable!=null)				command += " --disable="+disable;
-		if (enable!=null)				command += " --enable="+enable;
+		String command = this.command;									command += " repos";
+		if (list!=null && list)											command += " --list";
+		if (enableRepos!=null)	for (String enableRepo : enableRepos)	command += " --enable="+enableRepo;
+		if (disableRepos!=null)	for (String disableRepo : disableRepos)	command += " --disable="+disableRepo;
+		if (proxy!=null)												command += " --proxy="+proxy;
+		if (proxyuser!=null)											command += " --proxyuser="+proxyuser;
+		if (proxypassword!=null)										command += " --proxypassword="+proxypassword;
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
 	}
+	public SSHCommandResult repos_(Boolean list, String enableRepo, String disableRepo, String proxy,String proxyuser,String proxypassword) {
+		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
+		List<String> disableRepos = disableRepo==null?null:Arrays.asList(new String[]{disableRepo});
+		return repos_(list, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
+	}
 
-	public SSHCommandResult repos(Boolean list, String proxy, String proxyuser, String proxypassword,String enable,String disable) {
+	/**
+	 * @return SSHCommandResult from subscription-manager repos [parameters]
+	 */
+	public SSHCommandResult repos(Boolean list, List<String> enableRepos, List<String> disableRepos, String proxy,String proxyuser,String proxypassword) {
 
-		SSHCommandResult sshCommandResult = repos_(list, proxy, proxyuser, proxypassword,enable,disable);
+		SSHCommandResult sshCommandResult = repos_(list, enableRepos, disableRepos, proxy,proxyuser,proxypassword);
 		
-		// TODO assert results...
+		// assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
 		
+		// assert the banner
+		String bannerRegex = "\\+-+\\+\\n\\s*Entitled Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+|The system is not entitled to use any repositories.";
+		if (list!=null && list) {	// when explicitly asked to list
+			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (with option --list) contains the expected banner regex: "+bannerRegex);
+		} else {
+			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (without option --list) does not contain the banner regex: "+bannerRegex);	
+		}
+		
+		if (enableRepos!=null) for (String enableRepo : enableRepos) {
+			String expectedStdout = "Repo "+enableRepo+" is enabled for this system.";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --enable includes expected feedback '"+expectedStdout+"'.");
+		}
+		if (disableRepos!=null) for (String disableRepo : disableRepos) {
+			String expectedStdout = "Repo "+disableRepo+" is disabled for this system.";
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --disable includes expected feedback '"+expectedStdout+"'.");
+		}
+		
 		return sshCommandResult;
+	}
+	public SSHCommandResult repos(Boolean list, String enableRepo, String disableRepo, String proxy,String proxyuser,String proxypassword) {
+		List<String> enableRepos = enableRepo==null?null:Arrays.asList(new String[]{enableRepo});
+		List<String> disableRepos = disableRepo==null?null:Arrays.asList(new String[]{disableRepo});
+		return repos(list, enableRepos, disableRepos, proxy, proxyuser, proxypassword);
 	}
 	
 	
@@ -2993,7 +3008,7 @@ public class SubscriptionManagerTasks {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		SSHCommandResult sshCommandResult = repos_(Boolean.TRUE, null, null, null,null,null);
+		SSHCommandResult sshCommandResult = repos_(true, (String)null, (String)null, null,null,null);
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
 		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
@@ -3026,6 +3041,7 @@ public class SubscriptionManagerTasks {
 
 		return sshCommandResult;
 	}
+	
 	
 	
 	// subscribe module tasks ************************************************************
