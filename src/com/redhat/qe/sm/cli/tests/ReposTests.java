@@ -39,7 +39,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: subscribe to a pool and verify that the newly entitled content namespaces are represented in the repos list",
 			groups={"AcceptanceTests","blockedByBug-807407"},
-			dataProvider="getAvailableSubscriptionPoolsData",
+			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
+			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListReportsGrantedContentNamespacesAfterSubscribingToPool_Test(SubscriptionPool pool) throws JSONException, Exception{
@@ -513,7 +514,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 
 	
 	/**
-	 * @return a random subset (maximum 3) of data rows from getYumReposDataAsListOfLists() (useful to help reduce excessive test execution time)
+	 * @return a random subset of data rows from getYumReposDataAsListOfLists() (maximum of 3 rows) (useful to help reduce excessive test execution time)
 	 * @throws Exception
 	 */
 	@DataProvider(name="getRandomSubsetOfYumReposData")

@@ -40,7 +40,8 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 
 	@Test(	description="subscription-manager Yum plugin: enable/disable",
 			groups={"EnableDisableYumRepoAndVerifyContentAvailable_Test","blockedByBug-804227"},
-			dataProvider="getAvailableSubscriptionPoolsData",
+			//dataProvider="getAvailableSubscriptionPoolsData",	// very thorough, but takes too long to execute and rarely finds more bugs
+			dataProvider="getRandomSubsetOfAvailableSubscriptionPoolsData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=41696,fromPlan=2479)
 	public void EnableDisableYumRepoAndVerifyContentAvailable_Test(SubscriptionPool pool) throws JSONException, Exception {

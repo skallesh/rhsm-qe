@@ -761,6 +761,19 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		return getAvailableSubscriptionPoolsDataAsListOfLists(false);
 	}
 	/**
+	 * @return a random subset of data rows from getAvailableSubscriptionPoolsDataAsListOfLists() (maximum of 3 rows) (useful to help reduce excessive test execution time)
+	 * @throws Exception
+	 */
+	@DataProvider(name="getRandomSubsetOfAvailableSubscriptionPoolsData")
+	public Object[][] getRandomSubsetOfAvailableSubscriptionPoolsDataAs2dArray() throws Exception {
+		int subMax = 3;	// maximum subset count of data rows to return
+		List<List<Object>> allData = getAvailableSubscriptionPoolsDataAsListOfLists();
+		if (allData.size() <= subMax) return TestNGUtils.convertListOfListsTo2dArray(allData);
+		List<List<Object>> subData = new ArrayList<List<Object>>();
+		for (int i = 0; i < subMax; i++) subData.add(allData.remove(randomGenerator.nextInt(allData.size())));
+		return TestNGUtils.convertListOfListsTo2dArray(subData);
+	}
+	/**
 	 * @return List of [SubscriptionPool pool]
 	 */
 	protected List<List<Object>> getAvailableSubscriptionPoolsDataAsListOfLists(boolean all) {
