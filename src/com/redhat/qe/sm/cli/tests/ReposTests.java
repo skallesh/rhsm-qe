@@ -232,10 +232,8 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListIsEmptyWhenNotRegistered_Test(){
-		
 		clienttasks.unregister(null,null,null);		
-		
-		Assert.assertEquals( clienttasks.getCurrentlySubscribedRepos().size(),0, "No repos are reported by subscription-manager repos --list when not registered.");
+		Assert.assertEquals(clienttasks.getCurrentlySubscribedRepos().size(),0, "No repos are reported by subscription-manager repos --list when not registered.");
 	}
 	
 	
@@ -245,8 +243,19 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposListWhenNotRegistered_Test(){
 		clienttasks.unregister(null,null,null);
-		clienttasks.repos(true, (String)null, (String)null, null, null, null);
-		clienttasks.repos(null, (String)null, (String)null, null, null, null); // defaults to --list behavior in rhel59
+		SSHCommandResult result = clienttasks.repos(true, (String)null, (String)null, null, null, null);
+		Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
+	}
+	
+	
+	@Test(	description="subscription-manager: repos (without any options) reports no entitlements when not registered (rhel63 and rhel58 previously reported 'Error: No options provided. Please see the help comand.')",
+			groups={"blockedByBug-837447"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposWhenNotRegistered_Test(){
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult result = clienttasks.repos(null, (String)null, (String)null, null, null, null); // defaults to --list behavior starting in rhel59
+		Assert.assertEquals(result.getStdout().trim(), "The system is not entitled to use any repositories.");
 	}
 	
 	
@@ -324,6 +333,30 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// trigger a yum transaction and assert that the redhat.repo now exists
 		clienttasks.getYumRepolist(null);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"When rhsm.manage_repos is configured on, the redhat.repo file should now exist.");
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt to enable an invalid repo id",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposEnableInvalidRepo_Test(){
+		SSHCommandResult result = clienttasks.repos_(null, "invalid-repo-id", null, null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from an attempt to enable an invalid-repo-id.");
+		Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
+	}
+	
+	
+	@Test(	description="subscription-manager: attempt to disable an invalid repo id",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposDisableInvalidRepo_Test(){
+		SSHCommandResult result = clienttasks.repos_(null, null, "invalid-repo-id", null, null, null);
+		Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from an attempt to disable an invalid-repo-id.");
+		Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");
+		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
 	
 	

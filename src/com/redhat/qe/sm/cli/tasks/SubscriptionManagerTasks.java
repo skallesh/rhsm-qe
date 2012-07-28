@@ -2975,12 +2975,14 @@ public class SubscriptionManagerTasks {
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
 		
 		// assert the banner
-		String bannerRegex = "\\+-+\\+\\n\\s*Entitled Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+|The system is not entitled to use any repositories.";
+		String bannerRegex = "\\+-+\\+\\n\\s*Entitled Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+";
+		bannerRegex += "|The system is not entitled to use any repositories.";
 		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (with option --list) contains the expected banner regex: "+bannerRegex);
-		} else {
-			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (without option --list) does not contain the banner regex: "+bannerRegex);	
 		}
+		//else {
+		//	Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (without option --list) does not contain the banner regex: "+bannerRegex);	
+		//}
 		
 		if (enableRepos!=null) for (String enableRepo : enableRepos) {
 			String expectedStdout = "Repo "+enableRepo+" is enabled for this system.";
@@ -3008,8 +3010,8 @@ public class SubscriptionManagerTasks {
 		Calendar now = new GregorianCalendar();
 		now.setTimeInMillis(System.currentTimeMillis());
 		
-		SSHCommandResult sshCommandResult = repos_(true, (String)null, (String)null, null,null,null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
+		SSHCommandResult sshCommandResult = repos(true, (String)null, (String)null, null,null,null);
+		//Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos --list command indicates a success.");
 		
 		//List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
 		List<ProductCert> productCerts = getCurrentProductCerts();
