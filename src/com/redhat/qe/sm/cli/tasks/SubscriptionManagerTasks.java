@@ -2974,7 +2974,14 @@ public class SubscriptionManagerTasks {
 		// assert results...
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the repos command indicates a success.");
 		
-		// assert the banner
+		// when rhsm.manage_repos is off, this feedback overrides all operations
+		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos"); if (manage_repos==null) manage_repos="1";
+		if (manage_repos.equals("0")) {
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
+			return sshCommandResult;
+		}
+		
+		// assert list feedback
 		String bannerRegex = "\\+-+\\+\\n\\s*Entitled Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+";
 		bannerRegex += "|The system is not entitled to use any repositories.";
 		if (list!=null && list) {	// when explicitly asked to list
@@ -2984,10 +2991,13 @@ public class SubscriptionManagerTasks {
 		//	Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (without option --list) does not contain the banner regex: "+bannerRegex);	
 		//}
 		
+		// assert the enable feedback
 		if (enableRepos!=null) for (String enableRepo : enableRepos) {
 			String expectedStdout = "Repo "+enableRepo+" is enabled for this system.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --enable includes expected feedback '"+expectedStdout+"'.");
 		}
+		
+		// assert the disable feedback
 		if (disableRepos!=null) for (String disableRepo : disableRepos) {
 			String expectedStdout = "Repo "+disableRepo+" is disabled for this system.";
 			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedStdout), "Stdout from repos --disable includes expected feedback '"+expectedStdout+"'.");
