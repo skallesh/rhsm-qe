@@ -788,7 +788,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	 		* the entitlement serials should be the same as before the registration
 	 */
 	@Test(	description="subscription-manager-cli: bad identity cert",
-			groups={"blockedByBug-624106"},
+			groups={"blockedByBug-624106","blockedByBug-844069","ReregisterWithBadIdentityCert_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=56328)
 	public void ReregisterWithBadIdentityCert_Test() {
@@ -829,7 +829,12 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 				consumedProductSubscriptionsBefore.size()==consumedProductSubscriptionsAfter.size(),
 				"The list of consumed products after reregistering is identical.");
 	}
-	
+	@AfterGroups(groups={"setup"},value={"ReregisterWithBadIdentityCert_Test"})
+	public void afterReregisterWithBadIdentityCert_Test() {
+		// needed in case ReregisterWithBadIdentityCert_Test fails to prevent succeeding tests from failing with an "Error loading certificate"
+		clienttasks.unregister_(null, null, null);	// give system an opportunity to clean it's consumerid with the server
+		clienttasks.clean(null, null, null);	// needed in case the system failed to unregister
+	}
 	
 	
 	/**
