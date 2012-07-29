@@ -1586,6 +1586,7 @@ public class SubscriptionManagerTasks {
 	public InstalledProduct getInstalledProductCorrespondingToProductCert(ProductCert productCert, List<InstalledProduct> fromInstalledProducts) {
 		for (InstalledProduct installedProduct : fromInstalledProducts) {
 			
+			/* IMPLEMENTATION BEFORE THE PRODUCT ID WAS INCLUDED AS A FIELD FOR InstalledProduct
 			// when a the product cert is missing OIDS, "None" is rendered in the list --installed
 			String name = productCert.productNamespace.name==null?"None":productCert.productNamespace.name;
 			String version = productCert.productNamespace.version==null?"None":productCert.productNamespace.version;
@@ -1596,6 +1597,8 @@ public class SubscriptionManagerTasks {
 				installedProduct.arch.equals(arch)) {
 				return installedProduct;
 			}
+			*/
+			if (productCert.productId.equals(installedProduct.productId)) return installedProduct;
 		}
 		return null; // not found
 	}

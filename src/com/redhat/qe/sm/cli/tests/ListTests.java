@@ -145,7 +145,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 
 		// assert some stdout
 		if (installedProducts.size()>0) {
-			Assert.assertContainsMatch(installedProductsAsString, "Installed Product Status");
+			String bannerTitle = "Installed Product Status";
+			Assert.assertTrue(installedProductsAsString.contains(bannerTitle), "The list of installed products is entitled '"+bannerTitle+"'.");
 		}
 		
 		// assert the number of installed product matches the product certs installed
