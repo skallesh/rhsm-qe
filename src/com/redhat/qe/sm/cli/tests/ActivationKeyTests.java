@@ -974,6 +974,10 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 
 			// Object blockedByBug, String keyName, JSONObject jsonPool
 			ll.add(Arrays.asList(new Object[] {blockedByBugs,	keyName, jsonPool,	addQuantity}));
+			
+			// minimize the number of dataProvided rows (useful during automated testcase development)
+			if (Boolean.valueOf(getProperty("sm.debug.dataProviders.minimize","false"))) break;
+
 		}
 		return ll;
 	}
