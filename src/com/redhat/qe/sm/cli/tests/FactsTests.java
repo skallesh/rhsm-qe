@@ -120,8 +120,9 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			String fact = "net.interface.sit0.mac_address";
+			String factRegex = "net\\.interface\\.sit0\\.mac_address: [A-F\\d:]+\\n";
 			log.warning("Fact '"+fact+"' will be extracted and disregarded during the following facts list comparison since its value is not constant.");
-			Assert.assertEquals(defaultResult.getStdout().replaceFirst("net\\.interface\\.sit0\\.mac_address: [\\d:]+\\n", ""), listResult.getStdout().replaceFirst("net\\.interface\\.sit0\\.mac_address: [\\d:]+\\n", ""),
+			Assert.assertEquals(defaultResult.getStdout().replaceFirst(factRegex, ""), listResult.getStdout().replaceFirst(factRegex, ""),
 					"stdout from facts without options should match stdout from the facts --list");
 		} else
 		// END OF WORKAROUND
