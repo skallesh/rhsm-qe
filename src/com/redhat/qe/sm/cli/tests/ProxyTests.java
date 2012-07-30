@@ -1290,7 +1290,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only block rows where stdout != null with BlockedByBzBug("732499")
 			if (l.get(8)!=null) {
-				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("732499"),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
+				// get the existing BlockedByBzBug 
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				// add Bug 732499 - 'gaierror' object has no attribute 'code' / 'error' object has no attribute 'code'
+				bugIds.add("732499");
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
 			} else {
 				ll.add(l);
 			}
@@ -1308,7 +1315,14 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			// only block rows where stdout != null with BlockedByBzBug("732499")
 			if (l.get(12)!=null) {
-				ll.add(Arrays.asList(new Object[]{	new BlockedByBzBug("732499"),	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
+				// get the existing BlockedByBzBug 
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				// add Bug 732499 - 'gaierror' object has no attribute 'code' / 'error' object has no attribute 'code'
+				bugIds.add("732499");
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
 			} else {
 				ll.add(l);
 			}
