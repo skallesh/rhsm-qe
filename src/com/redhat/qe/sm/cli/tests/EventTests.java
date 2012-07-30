@@ -18,6 +18,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.sm.base.ConsumerType;
+import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -160,6 +161,7 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 
 		// get the owner and consumer feeds before we test the firing of a new event
 		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+// 7/30/2012 TODO MAY WANT TO INCLUDE THIS CALL TO PREVENT AN AUTO 'ENTITLEMENT CREATED' EVENT CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerCert.consumerid, false);
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
