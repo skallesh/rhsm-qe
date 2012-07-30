@@ -383,8 +383,25 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			// Bug 824100 - pt_BR translations are outdated for subscription-manager 
 			if (translationFile.getPath().contains("/pt_BR/")) bugzilla = new BlockedByBzBug("824100");
 			// Bug 824184 - [ta_IN] translations for subscription-manager are missing (95% complete)
-			if (translationFile.getPath().contains("/ta/") || translationFile.getPath().contains("/ta_IN/")) bugzilla = new BlockedByBzBug("824184");
-
+			if (translationFile.getPath().contains("/ta/") ||
+				translationFile.getPath().contains("/ta_IN/")) bugzilla = new BlockedByBzBug("824184");
+			// Bug 844369 - msgids translations are missing for several languages
+			if (translationFile.getPath().contains("/es_ES/") ||
+				translationFile.getPath().contains("/ja/") ||
+				translationFile.getPath().contains("/as/") ||
+				translationFile.getPath().contains("/it/") ||
+				translationFile.getPath().contains("/ru/") ||
+				translationFile.getPath().contains("/zh_TW/") ||
+				translationFile.getPath().contains("/de_DE/") ||
+				translationFile.getPath().contains("/mr/") ||
+				translationFile.getPath().contains("/ko/") ||
+				translationFile.getPath().contains("/fr/") ||
+				translationFile.getPath().contains("/or/") ||
+				translationFile.getPath().contains("/te/") ||
+				translationFile.getPath().contains("/zh_CN/") ||
+				translationFile.getPath().contains("/hi/") ||
+				translationFile.getPath().contains("/kn/")) bugzilla = new BlockedByBzBug("844369");
+			
 			ll.add(Arrays.asList(new Object[] {bugzilla,	translationFile}));
 		}
 		return ll;
