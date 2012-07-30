@@ -526,7 +526,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that the current pool recognizes an increment in consumption
 		JSONObject jsonCurrentPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+jsonPool.getString("id")));
-		Assert.assertEquals(jsonCurrentPool.getInt("consumed"),jsonPool.getInt("consumed")+1,"The consumed entitlement from Pool '"+jsonPool.getString("id")+"' has incremented by one.");
+		Assert.assertEquals(jsonCurrentPool.getInt("consumed"),jsonPool.getInt("consumed")+1,"The consumed entitlement from Pool '"+jsonPool.getString("id")+"' has incremented by one to an expected total of '"+(jsonPool.getInt("consumed")+1)+"' consumed.");
 		
 		// finally do the test...
 		// create an activation key, add the current pool to the activation key with this valid quantity, and attempt to register with it.
@@ -539,7 +539,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key and add many pools to it and then register asserting all the pools get consumed",
-			groups={},
+			groups={"blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingMultiplePools_Test() throws JSONException, Exception {
