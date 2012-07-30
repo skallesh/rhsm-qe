@@ -189,7 +189,7 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(description="Verify the feedback after unsubscribing from all consumed subscriptions",
-			groups={"blockedByBug-812388"},
+			groups={"blockedByBug-812388","blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void UnsubscribeFromAll_Test() {
