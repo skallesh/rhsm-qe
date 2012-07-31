@@ -32,7 +32,7 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
-			groups={"AcceptanceTests","blockedByBug-706518"},
+			groups={"AcceptanceTests","blockedByBug-706518","blockedByBug-844368"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyBaseRHELProductCertIsInstalled_Test() {
