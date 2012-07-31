@@ -13,6 +13,7 @@ parser.add_option("-u", "--username", dest="username", help="Username")
 parser.add_option("-p", "--password", dest="password", help="Password")
 parser.add_option("-b", "--basechannel", dest="basechannel", help="List child channels for only this base channel")
 parser.add_option("-n", "--no-custom", dest="nocustom", action="store_true", default=False, help="Attempt to filter out custom channels (identified by no gpgkey)")
+parser.add_option("-a", "--available", dest="available", action="store_true", default=False, help="Only list the child channels that currently have available entitlements")
 parser.add_option("-s", "--server", dest="server", help="Server hostname rhn.redhat.com", default="rhn.redhat.com")
 (options, args) = parser.parse_args()
 
@@ -41,17 +42,27 @@ for chan in chan_list:
 
 # print a tree view of the channels
 for parent in parents:
+    
     if options.basechannel and options.basechannel != parent:
         continue
+    
     if options.nocustom:
         details = client.channel.software.getDetails(auth, parent)
         if details["channel_gpg_key_url"] == "":
             continue
     print parent
+    
     if child_map.has_key(parent):
-        for child in child_map[parent]:
+        for child in child_map[parent]:        
+            
+            if options.available:
+                availableEntitlements = client.channel.software.availableEntitlements(auth, child)
+                if availableEntitlements <= 0:
+                    continue
+            
             if options.nocustom:
                 details = client.channel.software.getDetails(auth, child)
                 if details["channel_gpg_key_url"] == "":
                     continue
+            
             print "  " + child
