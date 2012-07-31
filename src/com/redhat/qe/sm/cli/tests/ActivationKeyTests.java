@@ -605,7 +605,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
-			groups={},
+			groups={"blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
@@ -671,7 +671,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
-			groups={},
+			groups={"blockedByBug-844455"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
