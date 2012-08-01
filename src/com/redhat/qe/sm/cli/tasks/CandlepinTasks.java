@@ -308,8 +308,7 @@ schema generation failed
 	 * 
 	 */
 	public void updateConfigFileParameter(String parameter, String value){
-		Assert.assertEquals(
-				RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
+		Assert.assertEquals(RemoteFileTasks.searchReplaceFile(sshCommandRunner, defaultConfigFile, "^"+parameter+"\\s*=.*$", parameter+"="+value),
 				0,"Updated candlepin config parameter '"+parameter+"' to value: " + value);
 	}
 	

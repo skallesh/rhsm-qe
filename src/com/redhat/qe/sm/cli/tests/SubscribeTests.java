@@ -2,6 +2,8 @@ package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -60,13 +62,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			 clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			          poolIds.add(pool.poolId);
 			          }
+			          int j=randomGenerator.nextInt(poolIds.size());
+			          int i=randomGenerator.nextInt(poolIds.size());
+			          if(i==j){
+			        	j=randomGenerator.nextInt(poolIds.size());
+			          }else{
 			          SSHCommandResult subscribeResult =
-			 clienttasks.subscribeInvalidFormat_(null,null,poolIds,null,null,
-			 null,
-			 null, null, null, null, null);
-			          Assert.assertEquals(subscribeResult.getStdout(), "cannot parse argument:"+poolIds.get(1) );
-			      }
-			
+			 clienttasks.subscribeInvalidFormat_(null,null,poolIds.get(i),poolIds.get(j),null,null,null,null, null, null, null, null);
+			          Assert.assertEquals(subscribeResult.getStdout().trim(), "cannot parse argument: "+poolIds.get(j) );
+			      }}
 			 
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
@@ -970,17 +974,85 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
 	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
 	
-	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)
+	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 
+	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
 	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
-	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions
-	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.
+	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
+	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 */
+	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
+            groups={"VerifyFuturesubscription_Test"},
+            enabled=true)
+	public void VerifyFuturesubscription_Test() throws Exception{
+		Calendar now = new GregorianCalendar();
+		
+		String name=null;
+		JSONObject futureJSONPool = null;
+		InstalledProduct installedProductfuture = null;
+		now.setTimeInMillis(System.currentTimeMillis());
+		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
+			futureJSONPool = (JSONObject) l.get(0);
+		}
+		Calendar onDate = parse_iso8601DateString(futureJSONPool.getString("startDate")); 
+		onDate.add(Calendar.DATE, 1);
+		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
+		for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
+		for(SubscriptionPool result:clienttasks.listFutureSubscription_OnDate(true,onDateToTest)){
+			if(installed.productName==result.subscriptionName){
+			 clienttasks.subscribe(null, null,result.poolId, null, null, null, null, null, null, null, null);
+		}
+		}	
+		}
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			if(installedProduct.productName==name){
+				Assert.assertEquals(installedProductfuture.status, "Future Subscription");
+			}	
+		}
+		//System.out.println("product name  "+ name + " "+installedProduct.productName.toString() );
+		
+		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			if(installedProduct.productName==name){
+				Assert.assertEquals(installedProduct.status, "Subscribed");
+	}
+		}}
+	
+	/**
+	 * @author skallesh
+	 */
+	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
+            groups={"Verifyautosubscribe_Test"},
+            enabled=true)
+	public void Verifyautosubscribe_Test(){
+		InstalledProduct installedProductAfterAuto = null;
+		InstalledProduct installedProduct = null;
+     clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+	 clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
+	 List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		for (ProductCert productCert : productCerts) {
+			installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+		}
+		clienttasks.unsubscribe(true, null, null, null, null);
+		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
+		 List <InstalledProduct> installedProductsAfterAuto = clienttasks.getCurrentlyInstalledProducts();
+			List <ProductCert> productCertsAfterAuto = clienttasks.getCurrentProductCerts();
+			for (ProductCert productCertAfterAuto : productCertsAfterAuto) {
+				installedProductAfterAuto = clienttasks.getInstalledProductCorrespondingToProductCert(productCertAfterAuto,installedProductsAfterAuto);
+			}
+			Assert.assertEquals(installedProduct ,installedProductAfterAuto,"no change in the status");
+	}
 	
 	
-	// Configuration Methods ***********************************************************************
 	/**
 	 * @author skallesh
 	 */
@@ -998,7 +1070,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
         i++;
     }}
 	
-	
+	// Configuration Methods ***********************************************************************
 	@AfterClass(groups={"setup"})
 	public void unregisterAllSystemConsumerIds() {
 		if (clienttasks!=null) {

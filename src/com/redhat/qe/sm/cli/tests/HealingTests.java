@@ -31,6 +31,57 @@ import com.redhat.qe.tools.SSHCommandResult;
 @Test(groups={"HealingTests"})
 public class HealingTests extends SubscriptionManagerCLITestScript {
 	
+	
+	// Test methods ***********************************************************************
+		/**
+		 * @author skallesh
+		 * @throws JSONException 
+		 * @throws Exception
+		 */
+	@Test(	description="Auto-heal for partial subscription",
+			groups={"autohealPartial"},
+			enabled=true)	
+	public void VerifyAutohealForPartialSubscription() throws Exception {
+		Integer healFrequency=2;
+		String originalEntitlementCertDir;
+		InstalledProduct installedProduct;
+		String ProductName=null;
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
+		List <String> poolIds = new ArrayList<String>();
+		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+
+			if(pool.multiEntitlement){
+				poolIds.add(pool.poolId);
+				SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null,"1", null, null, null, null, null);
+			
+			}}
+		String installedProductsAsString= clienttasks.listInstalledProducts().getStdout();
+		List <InstalledProduct> installedProducts = InstalledProduct.parse(installedProductsAsString);
+		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		for (ProductCert productCert : productCerts) {
+			 installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+			if( installedProduct.status.toString().equalsIgnoreCase("Subscribed")){
+				ProductName =installedProduct.productId;
+				}}
+		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
+		clienttasks.unsubscribe(true, null, null, null, null); 
+		String poolId = null;
+		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools(ProductName,sm_serverUrl)) {
+			poolId = pool.poolId;    	
+         }
+		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolId, null, null,null, null, null, null, null, null);
+    	System.out.println("subscribe result "+ subscribeResult.getStdout());
+		for (ProductCert productCert : productCerts) {
+			InstalledProduct installedProductBeforeHaling = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+			 System.out.println("installedProductBeforeHaling is " + installedProductBeforeHaling.status.toString());
+		}
+		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+		
+		for (ProductCert productCert : productCerts) {
+			InstalledProduct installedProductAfterHaling = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+			 System.out.println("installedProductAfterHealing is " + installedProductAfterHaling.status.toString());
+		}
+	}
 	// Test methods ***********************************************************************
 	/**
 	 * @author skallesh
@@ -50,7 +101,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		}
 		SSHCommandResult subscribeResult = clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		SSHCommandResult result = clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, false);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
@@ -79,7 +130,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult subscribeResult = clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
 		//Assert.assertEquals(subscribeResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
 			
-		clienttasks.restart_rhsmcertd(null, healFrequency, true, false);
+		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
@@ -118,7 +169,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
 		
 		SSHCommandResult result = clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
-		clienttasks.restart_rhsmcertd(null, healFrequency, false, false);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);

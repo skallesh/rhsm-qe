@@ -383,7 +383,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		repoName= ((String)reposlist.get(2));
 		//TODO use a randomGerator to get a repoName from the list;  what if there was not 2 repos?
 		SSHCommandResult result=clienttasks.repos(false, repoName, null, null,null,null);
-		Assert.assertEquals(result.getStdout().trim(),"Repo " +repoName+"is enabled for this system", "Stdout from service-level --set without being registered");
+		Assert.assertEquals(result.getStdout().trim(),"Repo " +repoName+"is enabled for this system");
 		
 		//TODO need to correct the message above (was copy and pasted from a service level test
 		//TODO now that you asserted the feedback message, you should assert that repo really is enabled

@@ -658,9 +658,9 @@ public class SubscriptionManagerTasks {
 			} while (delay*i < 60);
 			Assert.assertTrue(rhsmcertdLogResult.contains(healMsg),"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
 			Assert.assertTrue(rhsmcertdLogResult.contains(certMsg),"Tail of rhsmcertd log contains the expected restart message '"+certMsg+"'.");
-
 		}
 	}
+	
 	public void stop_rhsmcertd (){
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd stop",Integer.valueOf(0));
 //		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd status",Integer.valueOf(0),"^rhsmcertd is stopped$",null);
@@ -3427,6 +3427,18 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
+	public List<SubscriptionPool> listFutureSubscription_OnDate(Boolean available,String ondate){
+		String command = this.command;		command += " list";	
+		
+		if (available!=null && available)	command += " --available";
+		
+		if (ondate!=null)					command += " --ondate="+ondate;
+		
+		
+		 sshCommandRunner.runCommandAndWait(command);	
+		 return SubscriptionPool.parse(sshCommandRunner.runCommandAndWait(command).getStdout());
+	}
+	
 	
 	/**
 	 * subscribe to the given SubscriptionPool without asserting results
@@ -4935,15 +4947,14 @@ repolist: 3,394
 	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
-	public SSHCommandResult subscribeInvalidFormat_(Boolean auto, String servicelevel, List<String> poolIds, List<String> productIds, List<String> regtokens, String quantity, String email, String locale,
+	public SSHCommandResult subscribeInvalidFormat_(Boolean auto, String servicelevel, String poolIdOne, String poolIdTwo,List<String> productIds, List<String> regtokens, String quantity, String email, String locale,
 			 String proxy, String proxyuser, String proxypassword) {
 			
-			           if (poolIds!=null)
-			          for(int i=0;i<=poolIds.size();i++){
-			          String command = this.command;         command += "subscribe";
-			          if(poolIds.get(i++)!=null)
-			          command += " --pool="+poolIds.get(i) +" "+poolIds.get(i++) ;
-			          }
+			       
+			          String command = this.command;         command += " subscribe";
+			          if (poolIdOne!=null && poolIdTwo !=null)
+			          command += " --pool="+poolIdOne +" "+poolIdTwo;
+			        
 			
 			              // run command without asserting results
 			          return sshCommandRunner.runCommandAndWait(command);
