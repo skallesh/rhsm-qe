@@ -70,7 +70,9 @@
                   (tasks/ui gettextvalue :arch)
                      (catch Exception e nil))]
     (when-not (= 0 guiversion) (verify (= version guiversion)))
-    (verify (= arch guiarch))))
+    (if (nil? arch)
+      (verify (or (= "" guiarch) (nil? guiarch)))
+      (verify (= arch guiarch)))))
 
 ;; run ^^this^^ in the console with:
 ;; (doseq [[p i] (ftest/get_installed_products nil :debug true)] (ftest/check_version_arch nil p i))

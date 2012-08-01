@@ -233,7 +233,8 @@ class AllMethods:
       function = getattr(ldtp,method)
       retval = function(*params)
 
-      if (method == "gettextvalue") and (not isinstance(retval, str)):
+      if (method == "gettextvalue") and not (isinstance(retval, str) or
+                                             isinstance(retval, unicode)):
         retval = ""
       elif (retval == -1) and (method == "gettablerowindex"):
         paramslist = list(params)
