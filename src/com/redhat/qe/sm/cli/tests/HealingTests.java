@@ -44,7 +44,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency=2;
 		String originalEntitlementCertDir;
-		InstalledProduct installedProduct;
+	
 		String ProductName=null;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
 		List <String> poolIds = new ArrayList<String>();
@@ -55,11 +55,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 				SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolIds, null, null,"1", null, null, null, null, null);
 			
 			}}
-		String installedProductsAsString= clienttasks.listInstalledProducts().getStdout();
-		List <InstalledProduct> installedProducts = InstalledProduct.parse(installedProductsAsString);
-		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
-		for (ProductCert productCert : productCerts) {
-			 installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			if( installedProduct.status.toString().equalsIgnoreCase("Subscribed")){
 				ProductName =installedProduct.productId;
 				}}
@@ -70,16 +66,15 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 			poolId = pool.poolId;    	
          }
 		SSHCommandResult subscribeResult = clienttasks.subscribe_(null, null, poolId, null, null,null, null, null, null, null, null);
-    	System.out.println("subscribe result "+ subscribeResult.getStdout());
-		for (ProductCert productCert : productCerts) {
-			InstalledProduct installedProductBeforeHaling = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
-			 System.out.println("installedProductBeforeHaling is " + installedProductBeforeHaling.status.toString());
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			Assert.assertEquals(installedProduct.status, "Partially Subscribed");
+
+			 
 		}
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		
-		for (ProductCert productCert : productCerts) {
-			InstalledProduct installedProductAfterHaling = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
-			 System.out.println("installedProductAfterHealing is " + installedProductAfterHaling.status.toString());
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			Assert.assertEquals(installedProduct.status, "Subscribed");
 		}
 	}
 	// Test methods ***********************************************************************
