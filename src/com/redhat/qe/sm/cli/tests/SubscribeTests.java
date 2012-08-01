@@ -993,10 +993,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
             enabled=true)
 	public void VerifyFuturesubscription_Test() throws Exception{
 		Calendar now = new GregorianCalendar();
-		
+		List<String> productname=new ArrayList<String>();
 		String name=null;
 		JSONObject futureJSONPool = null;
-		InstalledProduct installedProductfuture = null;
 		now.setTimeInMillis(System.currentTimeMillis());
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
 			futureJSONPool = (JSONObject) l.get(0);
@@ -1006,19 +1005,23 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
 		for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
-		for(SubscriptionPool result:clienttasks.listFutureSubscription_OnDate(true,onDateToTest)){
-			if(installed.productName==result.subscriptionName){
-			 clienttasks.subscribe(null, null,result.poolId, null, null, null, null, null, null, null, null);
+			productname.add(installed.productName);
+			
 		}
-		}	
-		}
-		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installedProduct.productName==name){
-				Assert.assertEquals(installedProductfuture.status, "Future Subscription");
-			}	
-		}
-		//System.out.println("product name  "+ name + " "+installedProduct.productName.toString() );
 		
+			
+		for(String ProductName:productname){
+			for(SubscriptionPool result:clienttasks.listFutureSubscription_OnDate(true,onDateToTest,ProductName)){
+		
+			 for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+					if(!(installedProduct.status.equals( "Future Subscription")))
+						
+						clienttasks.subscribe(null, null,result.poolId, null, null, null, null, null, null, null, null);							//Assert.assertEquals(installedProduct.status, "Future Subscription");
+						
+		}}
+		
+		}
+			
 		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installedProduct.productName==name){
@@ -1033,6 +1036,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
             groups={"Verifyautosubscribe_Test"},
             enabled=true)
 	public void Verifyautosubscribe_Test(){
+		clienttasks.createSocketsFile();
 		InstalledProduct installedProductAfterAuto = null;
 		InstalledProduct installedProduct = null;
      clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);

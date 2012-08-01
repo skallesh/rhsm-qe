@@ -3427,12 +3427,16 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
-	public List<SubscriptionPool> listFutureSubscription_OnDate(Boolean available,String ondate){
+	public List<SubscriptionPool> listFutureSubscription_OnDate(Boolean available,String ondate,String productname){
+		SSHCommandResult result=sshCommandRunner.runCommandAndWait("echo "+productname+" | cut -d "+"' '"+" -f1");
+		
+		
+		System.out.println(result.getStdout().trim()+ "   trimmed result");
 		String command = this.command;		command += " list";	
 		
-		if (available!=null && available)	command += " --available";
+		if (available!=null && available)	command += " --all --available";
 		
-		if (ondate!=null)					command += " --ondate="+ondate;
+		if (ondate!=null)					command += " --ondate="+ondate +" | grep " +result.getStdout().trim()+" -A6 -B3  | grep Yes -B6 -A1" ;
 		
 		
 		 sshCommandRunner.runCommandAndWait(command);	
@@ -4974,6 +4978,14 @@ public void moveProductCertFiles(String filename,Boolean move) {
 public String getEntitlementCertFilesWithPermissions() {
 	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
     return lsFiles;
+}
+public void createSocketsFile() {
+	SSHCommandResult result=sshCommandRunner.runCommandAndWait("ls -l /etc/rhsm/facts/ | grep socket.facts");
+	if(result.getStdout().trim().equals(null)){
+		sshCommandRunner.runCommandAndWait("cat >> /etc/rhsm/facts/socket.facts");
+		sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\"4\"}");
+		sshCommandRunner.runCommandAndWait("^C");
+	}
 }
 	
 }
