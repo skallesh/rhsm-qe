@@ -128,6 +128,7 @@ public class StackingTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 743710 - Subscription manager displays incorrect status for partially subscribed subscription
 	//      MAYBE THIS ONE BELONGS IN COMPLIANCE TESTS?
 	// TODO Bug 726409 - [RFE] Support for certificate stacking 
+	// TODO Bug 845126 - system.entitlements_valid goes from valid to partial after oversubscribing 
 		
 	// Configuration methods ***********************************************************************
 
