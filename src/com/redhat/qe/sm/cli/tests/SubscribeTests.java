@@ -27,6 +27,7 @@ import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
+import com.redhat.qe.sm.base.SubscriptionManagerBaseTestScript;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.EntitlementCert;
@@ -37,6 +38,7 @@ import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author ssalevan
@@ -45,7 +47,9 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 @Test(groups={"SubscribeTests"})
 public class SubscribeTests extends SubscriptionManagerCLITestScript{
-	
+	protected  SSHCommandRunner sshCommandRunner = null;
+	private String command;
+
 	// Test methods ***********************************************************************
 
 	/**
@@ -68,10 +72,37 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			        	j=randomGenerator.nextInt(poolIds.size());
 			          }else{
 			          SSHCommandResult subscribeResult =
-			 clienttasks.subscribeInvalidFormat_(null,null,poolIds.get(i),poolIds.get(j),null,null,null,null, null, null, null, null);
+			 subscribeInvalidFormat_(null,null,poolIds.get(i),poolIds.get(j),null,null,null,null, null, null, null, null);
 			          Assert.assertEquals(subscribeResult.getStdout().trim(), "cannot parse argument: "+poolIds.get(j) );
 			      }}
-			 
+	/**
+	 * @author skallesh
+	 * @param auto
+	 * @param servicelevel
+	 * @param poolIdOne
+	 * @param poolIdTwo
+	 * @param productIds
+	 * @param regtokens
+	 * @param quantity
+	 * @param email
+	 * @param locale
+	 * @param proxy
+	 * @param proxyuser
+	 * @param proxypassword
+	 * @return
+	 */
+	protected SSHCommandResult subscribeInvalidFormat_(Boolean auto, String servicelevel, String poolIdOne, String poolIdTwo,List<String> productIds, List<String> regtokens, String quantity, String email, String locale,
+			 String proxy, String proxyuser, String proxypassword) {
+			
+			       
+			          String command = clienttasks.command;         command += " subscribe";
+			          if (poolIdOne!=null && poolIdTwo !=null)
+			          command += " --pool="+poolIdOne +" "+poolIdTwo;
+			
+			              // run command without asserting results
+			          return sshCommandRunner.runCommandAndWait(command)
+;
+			      }
 
 	@Test(	description="subscription-manager-cli: subscribe consumer to subscription pool product id",	//; and assert the subscription pool is not available when it does not match the system hardware.",
 			dataProvider="getAllSystemSubscriptionPoolProductData",
@@ -963,7 +994,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		Assert.assertNotNull(entitlementCert,"Found the newly granted EntitlementCert on the client after subscribing to future subscription pool '"+pool.poolId+"'.");
 		Assert.assertTrue(entitlementCert.validityNotBefore.after(now), "The newly granted EntitlementCert is not valid until the future.  EntitlementCert: "+entitlementCert);
 		Assert.assertTrue(entitlementCert.orderNamespace.startDate.after(now), "The newly granted EntitlementCert's OrderNamespace starts in the future.  OrderNamespace: "+entitlementCert.orderNamespace);	
-	}
+	}	
 		
 	
 	// Candidates for an automated Test:
@@ -976,9 +1007,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 
 	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha
-	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed 
+	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed //working on
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
-	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions
+	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //working on
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
@@ -990,11 +1021,13 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
             groups={"VerifyFuturesubscription_Test"},
+         //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
             enabled=true)
 	public void VerifyFuturesubscription_Test() throws Exception{
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
 		Calendar now = new GregorianCalendar();
 		List<String> productname=new ArrayList<String>();
-		String name=null;
+		String ProductIds=null;
 		JSONObject futureJSONPool = null;
 		now.setTimeInMillis(System.currentTimeMillis());
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
@@ -1008,26 +1041,39 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			productname.add(installed.productName);
 			
 		}
-		
-			
-		for(String ProductName:productname){
-			for(SubscriptionPool result:clienttasks.listFutureSubscription_OnDate(true,onDateToTest,ProductName)){
-		
-			 for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-					if(!(installedProduct.status.equals( "Future Subscription")))
-						
-						clienttasks.subscribe(null, null,result.poolId, null, null, null, null, null, null, null, null);							//Assert.assertEquals(installedProduct.status, "Future Subscription");
+		List<String> FuturePool = listFutureSubscription_OnDate(true,onDateToTest);
+		for(String result:FuturePool){
+		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
+			ProductIds=installedProduct.productName;
+			 if(!(installedProduct.status.equals( "Future Subscription")))
+				System.out.println("result is  "+ result);		
+			clienttasks.subscribe(null, null,result, null, null, null, null, null, null, null, null);							
 						
 		}}
-		
-		}
-			
-		clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+	 	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installedProduct.productName==name){
+			if(installedProduct.productName==ProductIds){
 				Assert.assertEquals(installedProduct.status, "Subscribed");
 	}
 		}}
+	/**
+	 * @author skallesh
+	 * @param available
+	 * @param ondate
+	 * @return
+	 */
+	protected List<String> listFutureSubscription_OnDate(Boolean available,String ondate){
+		List<String> PoolId=new ArrayList<String>();
+		SSHCommandResult result=clienttasks.list_(true, true, null, null, null, ondate, null, null, null);
+		List<SubscriptionPool> Pool = SubscriptionPool.parse(result.getStdout());
+		for(SubscriptionPool availablePool:Pool){
+			if(availablePool.multiEntitlement){
+				PoolId.add(availablePool.poolId);
+			}
+		}
+		
+		return PoolId;
+	}
 	
 	/**
 	 * @author skallesh
@@ -1036,7 +1082,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
             groups={"Verifyautosubscribe_Test"},
             enabled=true)
 	public void Verifyautosubscribe_Test(){
-		clienttasks.createSocketsFile();
+		int socket=4;
+		clienttasks.createSocketsFile(socket);
 		InstalledProduct installedProductAfterAuto = null;
 		InstalledProduct installedProduct = null;
      clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -1053,7 +1100,39 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			for (ProductCert productCertAfterAuto : productCertsAfterAuto) {
 				installedProductAfterAuto = clienttasks.getInstalledProductCorrespondingToProductCert(productCertAfterAuto,installedProductsAfterAuto);
 			}
+			System.out.println(installedProduct +"  no change in status   " +installedProductAfterAuto);
 			Assert.assertEquals(installedProduct ,installedProductAfterAuto,"no change in the status");
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws JSONException 
+	 */
+	@Test(    description="Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ",
+            groups={"VerifyautosubscribeIgnoresSocketCount_Test"},
+            enabled=true)
+	public void VerifyautosubscribeIgnoresSocketCount_Test() throws JSONException{
+		int socketnum = 6;
+		List<String> SubscriptionId = new ArrayList<String>();
+		List<String> SubscriptionPools = new ArrayList<String>();
+		InstalledProduct installedProductAfterAuto = null;
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		for(SubscriptionPool SubscriptionPool: clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+			System.out.println((SubscriptionPool.multiEntitlement.FALSE)+ " is the non multi-enntiled product  "+SubscriptionPool.subscriptionName);
+		 if(!(SubscriptionPool.multiEntitlement)){
+			 SubscriptionId.add(SubscriptionPool.subscriptionName);
+			//	 sshCommandRunner.runCommandAndWait("curl -k -u admin:admin https://"+ sm_serverHostname+"/candlepin/pools/"+SubscriptionPool.poolId+" | python -mjson.tool | grep sockets -A3");
+		}}
+		
+
+		 clienttasks.createSocketsFile(socketnum);
+		
+		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
+		for ( InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
+				for(String pool:SubscriptionId){
+					Assert.assertEquals(pool,installedProductAfterAuto,"testfailed");
+				}
+			}
 	}
 	
 	
