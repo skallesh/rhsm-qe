@@ -3427,32 +3427,7 @@ public class SubscriptionManagerTasks {
 		
 		return newCertFile;
 	}
-	/**
-	 * @author skallesh
-	 * @param available
-	 * @param ondate
-	 * @param productname
-	 * @return
-	 * TODO Shwetha..
-	 * 1. Don't use productNames (ProductID is much better)
-	 * 2. Don't use grep blah -A6 -B3  | grep Yes -B6 -A1  This is very hard coded and means something very specific to your test. Therefore move it out of SubscriptionManagerTasks and make it a protected method next to your VerifyFuturesubscription_Test.
-	 * 3. I would recommend that you re-write this method to use the SubscriptionManager.list_(...) method and then use SubscriptionPool.parse(...) to get the list of SubscriptionPools and then you can loop through the pools looking for a multi-entitlement pool that provides the product you are trying to test.;
-	 */
-	public List<SubscriptionPool> listFutureSubscription_OnDate(Boolean available,String ondate,String productname){
-		SSHCommandResult result=sshCommandRunner.runCommandAndWait("echo "+productname+" | cut -d "+"' '"+" -f1");
-		
-		
-		System.out.println(result.getStdout().trim()+ "   trimmed result");
-		String command = this.command;		command += " list";	
-		
-		if (available!=null && available)	command += " --all --available";
-		
-		if (ondate!=null)					command += " --ondate="+ondate +" | grep " +result.getStdout().trim()+" -A6 -B3  | grep Yes -B6 -A1" ;
-		
-		
-		 sshCommandRunner.runCommandAndWait(command);	
-		 return SubscriptionPool.parse(sshCommandRunner.runCommandAndWait(command).getStdout());
-	}
+	
 	
 	
 	/**
@@ -4962,35 +4937,7 @@ repolist: 3,394
 	public void setLanguage(String lang){
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
-	/**
-	 * @author skallesh
-	 * @param auto
-	 * @param servicelevel
-	 * @param poolIdOne
-	 * @param poolIdTwo
-	 * @param productIds
-	 * @param regtokens
-	 * @param quantity
-	 * @param email
-	 * @param locale
-	 * @param proxy
-	 * @param proxyuser
-	 * @param proxypassword
-	 * @return
-	 * TODO Shwetha, this method is very specific to test VerifyIncorrectSubscriptionFromat(), please move it to the SubscribeTests.java as a protected method.  Move it to this class only if multiple test classes have a use for it. 
-	 */
-	public SSHCommandResult subscribeInvalidFormat_(Boolean auto, String servicelevel, String poolIdOne, String poolIdTwo,List<String> productIds, List<String> regtokens, String quantity, String email, String locale,
-			 String proxy, String proxyuser, String proxypassword) {
-			
-			       
-			          String command = this.command;         command += " subscribe";
-			          if (poolIdOne!=null && poolIdTwo !=null)
-			          command += " --pool="+poolIdOne +" "+poolIdTwo;
-			        
-			
-			              // run command without asserting results
-			          return sshCommandRunner.runCommandAndWait(command);
-			      }
+	
 public void moveProductCertFiles(String filename,Boolean move) {
 		
 		//sshCommandRunner.runCommandAndWait("find /etc/pki/product/ -name '*.pem'");
@@ -5007,11 +4954,13 @@ public String getEntitlementCertFilesWithPermissions() {
 	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
     return lsFiles;
 }
-public void createSocketsFile() {
+public void createSocketsFile(int number) {
 	SSHCommandResult result=sshCommandRunner.runCommandAndWait("ls -l /etc/rhsm/facts/ | grep socket.facts");
 	if(result.getStdout().trim().equals(null)){
 		sshCommandRunner.runCommandAndWait("cat >> /etc/rhsm/facts/socket.facts");
-		sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\"4\"}");
+		sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\""+number+"\"\",\"lscpu.cpu_socket(s)\": \""+number+"\"}");
+	//	{"cpu.cpu_socket(s)": "8","lscpu.cpu_socket(s)": "8"}
+
 		sshCommandRunner.runCommandAndWait("^C");
 	}
 }
