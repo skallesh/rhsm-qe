@@ -158,49 +158,53 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 	public void EntitlementCreated_Test() throws Exception {
 		
 		// test prerequisites
+		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		// 7/30/2012 updating consumer's autoheal to prevent an auto 'ENTITLEMENT CREATED' event
+		CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerCert.consumerid, false);
 
 		// get the owner and consumer feeds before we test the firing of a new event
-		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
-// 7/30/2012 TODO MAY WANT TO INCLUDE THIS CALL TO PREVENT AN AUTO 'ENTITLEMENT CREATED' EVENT CandlepinTasks.setAutohealForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerCert.consumerid, false);
 		String ownerKey = CandlepinTasks.getOwnerKeyOfConsumerId(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,consumerCert.consumerid);
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
  
         // fire a subscribe event
-		List<SubscriptionPool> pools = clienttasks.getCurrentlyAvailableSubscriptionPools();
 		//SubscriptionPool pool = pools.get(0); // pick the first pool
 		testPool = pools.get(randomGenerator.nextInt(pools.size())); // randomly pick a pool
 // debugTesting randomly picked standalone non-zero virt_limit pools
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-4", pools);
 //testPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId", "awesomeos-virt-unlimited", pools);
-		clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);
-		String[] newEventTitles = new String[]{"ENTITLEMENT CREATED"};
+		//clienttasks.subscribeToSubscriptionPoolUsingPoolId(testPool);	// RHEL59: THIS IS GENERATING EXTRA CONSUMER MODIFIED EVENTS THAT WE DON'T REALLY WANT TO TEST 
+		clienttasks.subscribe(null, null, testPool.poolId, null, null, null, null, null, null, null, null);
+		List<String> newEventTitles = new ArrayList<String>();
+		newEventTitles.add("ENTITLEMENT CREATED");
+		newEventTitles.add("CONSUMER MODIFIED");	// new in RHEL59 is an extra update on the consumer TODO find out what is causing this update - my guess is that it is coming from a release or service-level attribute.
 
 
-		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=721136 - jsefler 07/14/2011
-		boolean invokeWorkaroundWhileBugIsOpen = true;
-		String bugId="721136"; 
+		// TEMPORARY WORKAROUND FOR BUG
+		boolean invokeWorkaroundWhileBugIsOpen = false;	// Status: 	CLOSED CURRENTRELEASE
+		String bugId="721136"; // jsefler 07/14/2011 Bug 721136 - the content of the atom feeds has the same value for title and description
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
-			newEventTitles = new String[]{clienttasks.hostname+" consumed a subscription for product "+testPool.subscriptionName};
+			newEventTitles.clear(); newEventTitles.add(clienttasks.hostname+" consumed a subscription for product "+testPool.subscriptionName);
 		}
 		// END OF WORKAROUND
 		
 		// assert the consumer feed...
-        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles.toArray(new String[]{}));
         
         // adjust the expected events when the candlepin server is standalone and the pool has a non-zero virt_limit 
         String virt_limit = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, testPool.poolId, "virt_limit");
 		if (servertasks.statusStandalone && virt_limit!=null && !virt_limit.equals("0")) {
-			newEventTitles = new String[]{"ENTITLEMENT CREATED","POOL CREATED"};
+			newEventTitles.add(1, "POOL CREATED");
 		}
 		
 		// assert the owner feed...
-		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles);
+		assertTheNewOwnerFeed(ownerKey, oldOwnerFeed, newEventTitles.toArray(new String[]{}));
   
 		// assert the feed...
-		assertTheNewFeed(oldFeed, newEventTitles);
+		assertTheNewFeed(oldFeed, newEventTitles.toArray(new String[]{}));
 	}
 	
 	
@@ -801,6 +805,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(actualNewEventTitles.containsAll(newEventTitles), "The newest event feed entries for owner '"+ownerKey+"' contains (at a minimum) all of the expected new event titles.");
 	}
 	
+	/**
+	 * Same as assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, String[] newEventTitles), but without regard to order of newEventTitles
+	 */
 	protected void assertTheNewOwnerFeed(String ownerKey, SyndFeed oldOwnerFeed, List<String> newEventTitles) throws JSONException, Exception {
 //		int oldOwnerFeed_EntriesSize = oldOwnerFeed==null? 0 : oldOwnerFeed.getEntries().size();
 
@@ -855,6 +862,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+	/**
+	 * Same as assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, String[] newEventTitles), but without regard to order of newEventTitles
+	 */
 	protected void assertTheNewConsumerFeed(String ownerKey, String consumerUuid, SyndFeed oldConsumerFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 //		int oldConsumerFeed_EntriesSize = oldConsumerFeed==null? 0 : oldConsumerFeed.getEntries().size();
 
@@ -930,6 +940,9 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(actualNewEventTitles.containsAll(newEventTitles), "The newest event feed entries contains (at a minimum) all of the expected new event titles.");
 	}
 	
+	/**
+	 * Same as assertTheNewFeed(SyndFeed oldFeed, String[] newEventTitles), but without regard to order of newEventTitles
+	 */
 	protected void assertTheNewFeed(SyndFeed oldFeed, List<String> newEventTitles) throws IllegalArgumentException, IOException, FeedException {
 //		int oldFeed_EntriesSize = oldFeed==null? 0 : oldFeed.getEntries().size();
 		
