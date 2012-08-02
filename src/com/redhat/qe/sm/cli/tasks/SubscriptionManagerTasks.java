@@ -4954,6 +4954,11 @@ public String getEntitlementCertFilesWithPermissions() {
 	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
     return lsFiles;
 }
+/**
+ * @author skallesh
+ * @param number
+ * TODO Shwetha This method belogs next to your tests and should make use of SubscriptionManagerTasks.createFactsFileWithOverridingValues(...) and then after your test is done, call SubscriptionManagerTasks.deleteFactsFileWithOverridingValues ()
+ */
 public void createSocketsFile(int number) {
 	SSHCommandResult result=sshCommandRunner.runCommandAndWait("ls -l /etc/rhsm/facts/ | grep socket.facts");
 	if(result.getStdout().trim().equals(null)){
