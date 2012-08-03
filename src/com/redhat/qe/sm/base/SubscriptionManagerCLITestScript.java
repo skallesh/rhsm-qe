@@ -15,7 +15,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -245,7 +247,14 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
 		smt.setupRhnDefinitions(sm_rhnDefinitionsGitRepository);
 		smt.setupTranslateToolkit(sm_translateToolkitGitRepository);
-		
+
+		// create a facts file that will tell candlepin what version of x509 entitlement certificates this client understands;  removeAllFacts() should be called before this block of code!
+		if (sm_clientCertificateVersion!=null) {
+			Map<String,String> map = new HashMap<String,String>();
+			map.put("system.certificate_version",sm_clientCertificateVersion);
+			smt.createFactsFileWithOverridingValues(smt.certVersionFactsFilename, map);
+		}
+
 		// transfer a copy of the candlepin CA Cert from the candlepin server to the clients so we can test in secure mode
 		log.info("Copying Candlepin cert onto client to enable certificate validation...");
 		smt.installRepoCaCert(serverCaCertFile, sm_serverHostname.split("\\.")[0]+".pem");

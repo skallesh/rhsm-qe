@@ -61,7 +61,8 @@ public class SubscriptionManagerTasks {
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String factsDir			= "/etc/rhsm/facts";
-	public final String factsOverrideFile	= factsDir+"/override.facts";
+	public final String certVersionFactsFilename	= "/automation_forced_certificate_version.facts";
+	public final String overrideFactsFilename		= "/automation_override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
@@ -1136,6 +1137,9 @@ public class SubscriptionManagerTasks {
 	 * @param factsMap - map of key/values pairs that will get written as JSON to a facts file that will override the true facts on the system.  Note: subscription-manager facts --update may need to be called after this method to realize the override.
 	 */
 	public void createFactsFileWithOverridingValues (Map<String,String> factsMap) {
+		createFactsFileWithOverridingValues (factsDir+overrideFactsFilename, factsMap);
+	}
+	public void createFactsFileWithOverridingValues (String factsFilename, Map<String,String> factsMap) {
 		
 		// assemble an echo command and run it to create a facts file
 		String keyvaluesString = "";
@@ -1143,12 +1147,15 @@ public class SubscriptionManagerTasks {
 			keyvaluesString += String.format("\"%s\":\"%s\", ", key, factsMap.get(key));
 		}
 		keyvaluesString = keyvaluesString.replaceFirst(", *$", "");
-		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, factsOverrideFile);
+		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, factsDir+factsFilename);
         sshCommandRunner.runCommandAndWait(echoCommand);	// create an override facts file
 	}
 	public void deleteFactsFileWithOverridingValues () {
-		String deleteCommand = String.format("rm -f %s", factsOverrideFile);
-		sshCommandRunner.runCommandAndWait(deleteCommand);	// delete the override facts file
+		deleteFactsFileWithOverridingValues(overrideFactsFilename);	// delete the override facts file
+	}
+	public void deleteFactsFileWithOverridingValues (String factsFilename) {
+		String deleteCommand = String.format("rm -f %s", factsDir+factsFilename);
+		sshCommandRunner.runCommandAndWait(deleteCommand);
 	}
 	
 	/**

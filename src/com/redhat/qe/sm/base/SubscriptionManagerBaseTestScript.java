@@ -66,6 +66,9 @@ public class SubscriptionManagerBaseTestScript extends TestScript {
 	public String sm_clientUsername				= sm_client1Username;
 	public String sm_clientPassword				= sm_client1Password;
 	public String sm_clientOrg					= sm_client1Org;
+	
+	public String sm_clientCertificateVersion	= getProperty("sm.client.certificateVersion",null);
+
 
 // TODO RE-IMPLEMENT AS AN ALTERNATIVE FOR USE DURING STAGE TESTING
 //	public String sm_clientUsernames			= getProperty("sm.client.usernames","");
