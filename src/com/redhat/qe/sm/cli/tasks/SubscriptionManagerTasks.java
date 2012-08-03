@@ -4954,15 +4954,5 @@ public String getEntitlementCertFilesWithPermissions() {
 	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
     return lsFiles;
 }
-public void createSocketsFile(int number) {
-	SSHCommandResult result=sshCommandRunner.runCommandAndWait("ls -l /etc/rhsm/facts/ | grep socket.facts");
-	if(result.getStdout().trim().equals(null)){
-		sshCommandRunner.runCommandAndWait("cat >> /etc/rhsm/facts/socket.facts");
-		sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\""+number+"\"\",\"lscpu.cpu_socket(s)\": \""+number+"\"}");
-	//	{"cpu.cpu_socket(s)": "8","lscpu.cpu_socket(s)": "8"}
 
-		sshCommandRunner.runCommandAndWait("^C");
-	}
-}
-	
 }
