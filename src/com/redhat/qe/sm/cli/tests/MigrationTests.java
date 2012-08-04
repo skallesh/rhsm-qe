@@ -67,7 +67,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -76,7 +76,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -291,7 +291,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all of the classic RHN Channels available to a classically registered consumer are accounted for in the in the channel-cert-mapping.txt or is a known exception",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="getRhnClassicBaseAndAvailableChildChannelsData",
 			enabled=true)
@@ -1299,13 +1299,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult executeRhnMigrateClassicToRhsmWithOptions(String sendUsername, String sendPassword, String sendServiceLevel, String options) {
 		// assemble an ssh command using expect to simulate an interactive supply of credentials to the rhn-migrate-classic-to-rhsm command
 		// RHN Username: 
-		String promptedUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
-			promptedUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
+		String promptedRHNUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
+			promptedRHNUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
 		}
 		// Password: 
-		String promptedPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
-			promptedPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
+		String promptedRHNPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
+			promptedRHNPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
 		}
+		
+		// TODO 8/4/2012 learn from jesusr and awood how to handle thse new System Engine credentials
+		// System Engine Username: 
+		String promptedSEUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
+			promptedSEUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
+		}
+		// Password: 
+		String promptedSEPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
+			promptedSEPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
+		}
+		
 		
 		//  Service level "stANDArD" is not available.		<== WHEN --servicelevel="stANDArD" WAS ENTERED AS A COMMAND LINE OPTION
 		//	You have entered an invalid choice.				<== WHEN "stANDArD" WAS ENTERED AT THE PROMPT
@@ -1322,8 +1333,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		if (options==null) options="";
 		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; interact; catch wait reason; exit [lindex \$reason 3]"
-		String command = String.format("expect -c \"spawn %s %s; %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedUsernames, promptedPasswords, promptedServiceLevels);
-		//                                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
+		//String command = String.format("expect -c \"spawn %s %s; %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedServiceLevels);
+		////                                                                ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
+		String command = String.format("expect -c \"spawn %s %s; %s %s %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedSEUsernames, promptedSEPasswords, promptedServiceLevels);
+		//                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
 		return client.runCommandAndWait(command);
 	}
 	
