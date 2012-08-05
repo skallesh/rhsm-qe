@@ -1335,8 +1335,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; interact; catch wait reason; exit [lindex \$reason 3]"
 		//String command = String.format("expect -c \"spawn %s %s; %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedServiceLevels);
 		////                                                                ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
-		String command = String.format("expect -c \"spawn %s %s; %s %s %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedSEUsernames, promptedSEPasswords, promptedServiceLevels);
-		//                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
+		String command = String.format("expect -c \"set timeout 60; spawn %s %s; %s %s %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedSEUsernames, promptedSEPasswords, promptedServiceLevels);
+		//                                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
 		return client.runCommandAndWait(command);
 	}
 	
