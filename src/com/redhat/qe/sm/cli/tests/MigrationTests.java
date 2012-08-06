@@ -473,7 +473,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// END OF WORKAROUND
 		Assert.assertNull(clienttasks.getFactValue(migrationFromFact), "The migration fact '"+migrationFromFact+"' should NOT be set after running command: "+command);
 		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
-
+		// TODO RHEL5.9ASSERT THE migrationDateFact too
 		
 		// test --instnumber ................................................
 		log.info("Testing without the dryrun option...");
