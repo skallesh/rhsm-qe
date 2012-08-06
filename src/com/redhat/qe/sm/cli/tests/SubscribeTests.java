@@ -1046,8 +1046,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			ProductIds=installedProduct.productName;
 			 if(!(installedProduct.status.equals( "Future Subscription")))
-				System.out.println("result is  "+ result);		
-			clienttasks.subscribe(null, null,result, null, null, null, null, null, null, null, null);							
+				 clienttasks.subscribe(null, null,result, null, null, null, null, null, null, null, null);							
 						
 		}}
 	 	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
@@ -1085,8 +1084,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int socket=4;
 		Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
+		String filename="/socket.facts";
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues(factsMap);
+		clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
 		InstalledProduct installedProductAfterAuto = null;
 		InstalledProduct installedProduct = null;
      clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -1103,23 +1103,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			for (ProductCert productCertAfterAuto : productCertsAfterAuto) {
 				installedProductAfterAuto = clienttasks.getInstalledProductCorrespondingToProductCert(productCertAfterAuto,installedProductsAfterAuto);
 			}
-			System.out.println(installedProduct +"  no change in status   " +installedProductAfterAuto);
 			Assert.assertEquals(installedProduct ,installedProductAfterAuto,"no change in the status");
-	}/**
-	 * @author skallesh
-	 * @param number
-	 *//*
-	protected void createSocketsFile(int number) {
-		
-			SSHCommandResult result=sshCommandRunner.runCommandAndWait("touch /etc/rhsm/facts/socket.facts");
-			System.out.println("command is   "+sshCommandRunner.getCommand());
-			sshCommandRunner.runCommandAndWait("cat >> /etc/rhsm/facts/socket.facts");
-			sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\""+number+"\"\",\"lscpu.cpu_socket(s)\": \""+number+"\"}");
-		//	{"cpu.cpu_socket(s)": "8","lscpu.cpu_socket(s)": "8"}
-			sshCommandRunner.runCommandAndWait("^C");
-			System.out.println(sshCommandRunner.runCommandAndWait("^C").getStdout());
-		
-	}*/
+	}
 		
 	
 	
@@ -1134,37 +1119,35 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int socketnum = 0;
 		int socketvalue=0;
 		List<String> SubscriptionId = new ArrayList<String>();
-		List<String> SubscriptionPools = new ArrayList<String>();
-		InstalledProduct installedProductAfterAuto = null;
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		for(SubscriptionPool SubscriptionPool: clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
-			System.out.println((SubscriptionPool.multiEntitlement)+ " is the non multi-enntiled product  "+SubscriptionPool.subscriptionName);
 		 if(!(SubscriptionPool.multiEntitlement)){
 			 SubscriptionId.add(SubscriptionPool.subscriptionName);
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
-				System.out.println("product id is ....  "+poolProductSocketsAttribute+"    "+ SubscriptionPool.poolId);
 				if(!(poolProductSocketsAttribute==null)){
 					socketvalue=Integer.parseInt(poolProductSocketsAttribute);
+					if (socketvalue > socketnum) {
+						socketnum = socketvalue;
+		               }
 				}else{
 					socketvalue=0;
-
 				}
-				if (socketvalue > socketnum) {
-					socketnum = socketvalue;
-	               }
 		
 			}
 		 Map<String,String> factsMap = new HashMap<String,String>();
-			
-			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum));
-			clienttasks.createFactsFileWithOverridingValues(factsMap);
-			
+			String filename="/socket.facts";
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
+			clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
+	
 		}
-
 		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
-		for ( InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
+		for (InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
 				for(String pool:SubscriptionId){
-					Assert.assertEquals(pool,installedProductAfterAuto,"testfailed");
+					if(installedProductsAfterAuto.productName.contains(pool))
+				
+						if((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")){
+						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test failed");
+						}
 				}
 			}
 	}
