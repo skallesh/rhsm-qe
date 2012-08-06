@@ -386,26 +386,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			return;
 		}
-		if (classicRhnChannel.matches("rhel-.+-server-productivity-5-beta(-.+|$)")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
-			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
-			return;
-		}
-		if (classicRhnChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
-			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
-			return;
-		}
-		if (classicRhnChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
-			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
-			return;
-		}
-		if (classicRhnChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
-			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
-			return;
-		}
 		if (classicRhnChannel.startsWith("rhx-")) {	// rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5 etcetera
 			// Bug 840111 - various rhx channels are not yet mapped to product certs in rcm/rcm-metadata.git 
 			log.warning("(degregor 8/4/2012) RHX products are not currently supported in CDN - https://bugzilla.redhat.com/show_bug.cgi?id=840111#c2");
@@ -1851,19 +1831,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-productivity-5-beta(-.+|$)")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");
+				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
+				bugzilla = new BlockedByBzBug("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");
+				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
+				bugzilla = new BlockedByBzBug("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");
+				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
+				bugzilla = new BlockedByBzBug("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
 				// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
-				bugzilla = new BlockedByBzBug("840136");
+				bugzilla = new BlockedByBzBug("840136");	// CLOSED in favor of bug 840099
+				bugzilla = new BlockedByBzBug("840099");
 			}
 			if (rhnAvailableChildChannel.matches("rhel-.+-server-eucjp-5(-.+|$)")) {	// rhel-x86_64-server-eucjp-5 rhel-x86_64-server-eucjp-5-beta etc.
 				// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
