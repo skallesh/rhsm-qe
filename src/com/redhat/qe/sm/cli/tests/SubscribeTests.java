@@ -1083,7 +1083,10 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
             enabled=true)
 	public void Verifyautosubscribe_Test(){
 		int socket=4;
-		clienttasks.createSocketsFile(socket);
+		Map<String,String> factsMap = new HashMap<String,String>();
+		Integer moreSockets = 4;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		InstalledProduct installedProductAfterAuto = null;
 		InstalledProduct installedProduct = null;
      clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -1102,31 +1105,62 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 			System.out.println(installedProduct +"  no change in status   " +installedProductAfterAuto);
 			Assert.assertEquals(installedProduct ,installedProductAfterAuto,"no change in the status");
-	}
+	}/**
+	 * @author skallesh
+	 * @param number
+	 *//*
+	protected void createSocketsFile(int number) {
+		
+			SSHCommandResult result=sshCommandRunner.runCommandAndWait("touch /etc/rhsm/facts/socket.facts");
+			System.out.println("command is   "+sshCommandRunner.getCommand());
+			sshCommandRunner.runCommandAndWait("cat >> /etc/rhsm/facts/socket.facts");
+			sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\""+number+"\"\",\"lscpu.cpu_socket(s)\": \""+number+"\"}");
+		//	{"cpu.cpu_socket(s)": "8","lscpu.cpu_socket(s)": "8"}
+			sshCommandRunner.runCommandAndWait("^C");
+			System.out.println(sshCommandRunner.runCommandAndWait("^C").getStdout());
+		
+	}*/
+		
+	
 	
 	/**
 	 * @author skallesh
-	 * @throws JSONException 
+	 * @throws Exception 
 	 */
 	@Test(    description="Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ",
             groups={"VerifyautosubscribeIgnoresSocketCount_Test"},
             enabled=true)
-	public void VerifyautosubscribeIgnoresSocketCount_Test() throws JSONException{
-		int socketnum = 6;
+	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception{
+		int socketnum = 0;
+		int socketvalue=0;
 		List<String> SubscriptionId = new ArrayList<String>();
 		List<String> SubscriptionPools = new ArrayList<String>();
 		InstalledProduct installedProductAfterAuto = null;
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		for(SubscriptionPool SubscriptionPool: clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
-			System.out.println((SubscriptionPool.multiEntitlement.FALSE)+ " is the non multi-enntiled product  "+SubscriptionPool.subscriptionName);
+			System.out.println((SubscriptionPool.multiEntitlement)+ " is the non multi-enntiled product  "+SubscriptionPool.subscriptionName);
 		 if(!(SubscriptionPool.multiEntitlement)){
 			 SubscriptionId.add(SubscriptionPool.subscriptionName);
-			//	 sshCommandRunner.runCommandAndWait("curl -k -u admin:admin https://"+ sm_serverHostname+"/candlepin/pools/"+SubscriptionPool.poolId+" | python -mjson.tool | grep sockets -A3");
-		}}
-		
+				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
+				System.out.println("product id is ....  "+poolProductSocketsAttribute+"    "+ SubscriptionPool.poolId);
+				if(!(poolProductSocketsAttribute==null)){
+					socketvalue=Integer.parseInt(poolProductSocketsAttribute);
+				}else{
+					socketvalue=0;
 
-		 clienttasks.createSocketsFile(socketnum);
+				}
+				if (socketvalue > socketnum) {
+					socketnum = socketvalue;
+	               }
 		
+			}
+		 Map<String,String> factsMap = new HashMap<String,String>();
+			
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum));
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
+			
+		}
+
 		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
 		for ( InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
 				for(String pool:SubscriptionId){
