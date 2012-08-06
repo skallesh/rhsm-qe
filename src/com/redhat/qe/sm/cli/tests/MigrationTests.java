@@ -367,6 +367,52 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			return;
 		}
 		
+		
+		if (classicRhnChannel.matches("rhel-.+-server-5-mrg-.*")) {	// rhel-x86_64-server-5-mrg-grid-1 rhel-x86_64-server-5-mrg-grid-1-beta rhel-x86_64-server-5-mrg-grid-2 rhel-x86_64-server-5-mrg-grid-execute-1 rhel-x86_64-server-5-mrg-grid-execute-1-beta rhel-x86_64-server-5-mrg-grid-execute-2 etc.
+			// Bug 840102 - channels for rhel-<ARCH>-server-5-mrg-* are not yet mapped to product certs in rcm/rcm-metadata.git
+			log.warning("(degregor 8/4/2012) RHEL 5 MRG isn't currently supported in CDN (outside of RHUI) - https://bugzilla.redhat.com/show_bug.cgi?id=840102#c1");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-server-hpc-5(-.*|$)")) {	// rhel-x86_64-server-hpc-5-beta
+			// Bug 840103 - channel for rhel-x86_64-server-hpc-5-beta is not yet mapped to product cert in rcm/rcm-metadata.git
+			log.warning("(degregor 8/4/2012) The RHEL 5 HPC products is not currently supported in CDN - https://bugzilla.redhat.com/show_bug.cgi?id=840103#c1");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-server-rhev-hdk-2-5(-.+|$)")) {	// rhel-x86_64-server-rhev-hdk-2-5 rhel-x86_64-server-rhev-hdk-2-5-beta
+			// Bug 840108 - channels for rhel-<ARCH>-rhev-hdk-2-5-* are not yet mapped to product certs in rcm/rhn-definitions.git
+			log.warning("(degregor 8/4/2012) RHEV H Dev Kit is not currently supported in CDN - https://bugzilla.redhat.com/show_bug.cgi?id=840108#c1");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-server-productivity-5-beta(-.+|$)")) {	// rhel-x86_64-server-productivity-5-beta rhel-x86_64-server-productivity-5-beta-debuginfo
+			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-server-rhsclient-5(-.+|$)")) {	// rhel-x86_64-server-rhsclient-5 rhel-x86_64-server-rhsclient-5-debuginfo
+			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-server-xfs-5(-.+|$)")) {	// rhel-x86_64-server-xfs-5 rhel-x86_64-server-xfs-5-beta
+			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.matches("rhel-.+-server-5-shadow(-.+|$)")) {	// rhel-x86_64-server-5-shadow-debuginfo
+			// Bug 840136 - various rhel channels are not yet mapped to product certs in rcm/rcm-metadata.git
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		if (classicRhnChannel.startsWith("rhx-")) {	// rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5 etcetera
+			// Bug 840111 - various rhx channels are not yet mapped to product certs in rcm/rcm-metadata.git 
+			log.warning("(degregor 8/4/2012) RHX products are not currently supported in CDN - https://bugzilla.redhat.com/show_bug.cgi?id=840111#c2");
+			Assert.assertFalse(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+			return;
+		}
+		
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(classicRhnChannel), "RHN Classic channel '"+classicRhnChannel+"' is accounted for in subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 	}
 	
@@ -1253,13 +1299,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected SSHCommandResult executeRhnMigrateClassicToRhsmWithOptions(String sendUsername, String sendPassword, String sendServiceLevel, String options) {
 		// assemble an ssh command using expect to simulate an interactive supply of credentials to the rhn-migrate-classic-to-rhsm command
 		// RHN Username: 
-		String promptedUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
-			promptedUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
+		String promptedRHNUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
+			promptedRHNUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
 		}
 		// Password: 
-		String promptedPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
-			promptedPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
+		String promptedRHNPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
+			promptedRHNPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
 		}
+		
+		// TODO 8/4/2012 learn from jesusr and awood how to handle thse new System Engine credentials
+		// System Engine Username: 
+		String promptedSEUsernames=""; if (sendUsername!=null) for (String u : sendUsername.split("\\n")) {
+			promptedSEUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
+		}
+		// Password: 
+		String promptedSEPasswords=""; if (sendPassword!=null) for (String p : sendPassword.split("\\n")) {
+			promptedSEPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
+		}
+		
 		
 		//  Service level "stANDArD" is not available.		<== WHEN --servicelevel="stANDArD" WAS ENTERED AS A COMMAND LINE OPTION
 		//	You have entered an invalid choice.				<== WHEN "stANDArD" WAS ENTERED AT THE PROMPT
@@ -1276,7 +1333,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 		if (options==null) options="";
 		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; interact; catch wait reason; exit [lindex \$reason 3]"
-		String command = String.format("expect -c \"spawn %s %s; %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedUsernames, promptedPasswords, promptedServiceLevels);
+		//String command = String.format("expect -c \"spawn %s %s; %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedServiceLevels);
+		////                                                                ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
+		String command = String.format("expect -c \"set timeout 60; spawn %s %s; %s %s %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedSEUsernames, promptedSEPasswords, promptedServiceLevels);
 		//                                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
 		return client.runCommandAndWait(command);
 	}
@@ -1817,7 +1876,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 			
 			ll.add(Arrays.asList(new Object[]{bugzilla,	rhnAvailableChildChannel}));
-
 		}
 		
 		return ll;
