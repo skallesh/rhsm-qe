@@ -82,9 +82,10 @@
           (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
             (if (>= row 0)
               (let [startdate (tasks/ui getcellvalue :contract-selection-table row 3)
-                    enddate (tasks/ui getcellvalue :contract-selection-table row 4)]
-                (verify (not (nil? (re-matches #"\d+/\d+/\d+" startdate))))
-                (verify (not (nil? (re-matches #"\d+/\d+/\d+" enddate))))
+                    enddate (tasks/ui getcellvalue :contract-selection-table row 4)
+                    datex (tasks/get-locale-regex)]
+                (verify (not (nil? (re-matches datex startdate))))
+                (verify (not (nil? (re-matches datex enddate))))
                 (recur (dec row)))))
           (finally 
            (tasks/ui click :cancel-contract-selection)))

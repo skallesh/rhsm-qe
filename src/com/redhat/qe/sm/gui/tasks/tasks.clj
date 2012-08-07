@@ -654,10 +654,25 @@
   (let [redirect (if overwrite? ">" ">>")
         contents (if (string? facts) facts (json/json-str facts))
         command (str "echo '" contents "' " redirect " " path filename)]
-    (.RunCommandAndWait @clientcmd command)
+    (.runCommandAndWait @clientcmd command)
     (if update?
       (.runCommandAndWait @clientcmd "subscription-manager facts --update"))))
 
+(defn get-locale-regex
+  "Gets the correct formated locale date string and transforms it into a usable regex.
+    @locale : The locale to use eg: 'en_US' (optional)"
+  ([locale]
+     (let [cmd (str "python -c \"import locale; locale.setlocale(locale.LC_TIME,'"
+                    locale
+                    "'); print locale.nl_langinfo(locale.D_FMT)\"")
+           pyformat (clojure.string/trim (.getStdout (.runCommandAndWait @clientcmd cmd)))
+           transform (fn [s] (cond (= s "%d") "\\\\d{2}"
+                                  (= s "%m") "\\\\d{2}"
+                                  (= s "%y") "\\\\d{2}"
+                                  (= s "%Y") "\\\\d{4}"))]
+       (re-pattern (clojure.string/replace pyformat #"%\w{1}" #(transform %1)))))
+  ([]
+     (get-locale-regex nil)))
 
 (comment
   (defn build-installed-product-map
