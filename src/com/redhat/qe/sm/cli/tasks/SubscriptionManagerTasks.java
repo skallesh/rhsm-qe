@@ -682,6 +682,23 @@ public class SubscriptionManagerTasks {
 		// assert that the state was achieved within the timeout
 		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
+	
+	public void waitForRegexInRhsmLog(String logRegex) {
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -10 "+rhsmLogFile,Integer.valueOf(0));
+		String result=	sshCommandRunner.runCommandAndWait("tail -10 "+rhsmLogFile).getStdout().trim();
+		Pattern pattern = Pattern.compile(logRegex);
+        Matcher  matcher = pattern.matcher(result);
+        int count = 0;
+        while (matcher.find()){
+            count++;
+	}
+		
+		System.out.println(count + "is the value of rhsm logging");
+			// pause for the sleep interval
+			
+	
+		
+	}
 
 	/**
 	 * @return the current service level returned by subscription-manager service-level --show (must already be registered)

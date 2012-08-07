@@ -998,8 +998,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 	
 	// Candidates for an automated Test:
-	// TODO Bug 668032 - rhsm not logging subscriptions and products properly
-	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date
+	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //working on
+	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date 
 	// TODO Bug 664847 - Autobind logic should respect the architecture attribute
 	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
@@ -1009,12 +1009,31 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed //working on
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
-	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //working on
+	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //done --shwetha
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
 	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 */
+	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
+            groups={"VerifyRhsmLogging_Test"},
+         //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
+            enabled=true)
+	public void VerifyRhsmLogging_Test() throws Exception{
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
+		List<SubscriptionPool> result=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		for(SubscriptionPool pool :result){
+			if((pool.subscriptionName).contains("Bundled")){
+				clienttasks.subscribe(null, null,pool.poolId, null, null, null, null, null, null, null, null);
+		}}
+		
+		clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement>/*");
+					
+	}
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -1146,7 +1165,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 					if(installedProductsAfterAuto.productName.contains(pool))
 				
 						if((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")){
-						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test failed");
+						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test  has failed");
 						}
 				}
 			}
