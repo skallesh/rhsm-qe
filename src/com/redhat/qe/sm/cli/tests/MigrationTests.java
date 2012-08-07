@@ -67,7 +67,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -76,7 +76,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -761,7 +761,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"debugTest","AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169"},
+			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
