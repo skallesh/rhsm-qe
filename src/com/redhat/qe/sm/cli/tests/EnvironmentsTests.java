@@ -91,16 +91,21 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: attempt environments without --org option",
 			groups={},
-			dependsOnMethods={"VerifyThatCandlepinDoesNotSupportEnvironments_Test"},
+			//dependsOnMethods={"VerifyThatCandlepinDoesNotSupportEnvironments_Test"},	// TODO 08/07/2012 I don't think this method dependency is necessary
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptEnvironmentsWithoutOrg_Test() {
 		
 		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null);
-		
-		// assert environmentsResult results
-		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org","Environments should require that the org option be specified.");
-		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organizaiton with --org","Environments should require that the org option be specified.");
+		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
+		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
+		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organizaiton with --org", "Stdout from environments without specifying the --org option.");
+		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
+
+		environmentsResult = clienttasks.environments_(null,null,null,null,null,null);
+		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
+		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
+		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organizaiton with --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
 
 	}

@@ -89,7 +89,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 	
 	@Test(	description="subscription-manager: facts (without --list or --update)",
 			groups={"blockedByBug-654429"},
-			enabled=false)	// was enabled before Bug 811594 - [RFE] facts command should default to list; replaced by Facts_Test()
+			enabled=false)	// was enabled before Bug 811594 - [RFE] facts command should default to list; replaced by FactsDefaultsToFactsList_Test()
 	@Deprecated
 	//@ImplementsNitrateTest(caseId=)
 	public void FactsWithoutListOrUpdate_Test_DEPRECATED() {
@@ -105,7 +105,7 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 			groups={"blockedByBug-811594"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void Facts_Test() {
+	public void FactsDefaultsToFactsList_Test() {
 		
 		SSHCommandResult listResult = clienttasks.facts(true, null, null, null, null);
 		SSHCommandResult defaultResult = clienttasks.facts(null, null, null, null, null);

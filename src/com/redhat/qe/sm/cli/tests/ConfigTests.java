@@ -309,6 +309,25 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: config (without any options) should default to --list",
+			groups={"blockedByBug-811594"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ConfigDefaultsToConfigList_Test() {
+		
+		SSHCommandResult listResult = clienttasks.config(true, null, null, (String[])null);
+		SSHCommandResult defaultResult = clienttasks.config(null, null, null, (String[])null);
+		
+		log.info("Asserting that that the default config result without specifying any options is the same as the result from config --list...");
+		Assert.assertEquals(defaultResult.getExitCode(), listResult.getExitCode(),
+				"exitCode from config without options should be equivalent to exitCode from config --list");
+		Assert.assertEquals(defaultResult.getStderr(), listResult.getStderr(),
+				"stderr from config without options should be equivalent to stderr from config --list");
+		Assert.assertEquals(defaultResult.getStdout(), listResult.getStdout(),
+				"stdout from config without options should be equivalent to stdout from config --list");
+	}
+	
+	
 	
 	
 	

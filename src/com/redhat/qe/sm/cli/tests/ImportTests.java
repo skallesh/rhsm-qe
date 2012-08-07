@@ -438,6 +438,20 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: import (without any options) should fail",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptAnEntitlementImportWithoutOptions_Test() {
+
+		SSHCommandResult result = clienttasks.importCertificate_((String)null);
+		Assert.assertEquals(result.getExitCode(), new Integer(255),"exitCode from attempt to import without specifying a certificate");
+		Assert.assertEquals(result.getStdout().trim(), "Error: This command requires that you specify a certificate with --certificate.","stdout from import without options");
+		Assert.assertEquals(result.getStderr().trim(), "","stderr from import without options");
+	}
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	
