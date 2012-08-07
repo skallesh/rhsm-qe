@@ -44,25 +44,26 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency=2;
 		String productId=null;
+		String poolid=null;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
-		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
-		clienttasks.unsubscribe(true, null, null, null, null); 
-		
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if(pool.multiEntitlement){
 				for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-				if(!(installedProduct.status.equals("Partially Subscribed"))){
-				productId=installedProduct.productId;
-				
-				clienttasks.subscribe_(null, null, pool.poolId, null, null,null, null, null, null, null, null);
-				
-				}	
-			}}
-		}
+					if((installedProduct.productName).contains(pool.subscriptionName)){
+						poolid=pool.poolId;
+					}
+							
+				}
+			}
+		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
+		clienttasks.unsubscribe(true, null, null, null, null); 
+		clienttasks.subscribe_(null, null, poolid, null, null,null, null, null, null, null, null);
+						
+	}
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if(installedProduct.equals(productId))
+			if((installedProduct.productName).equals(productId))
 			Assert.assertEquals(installedProduct.status, "Subscribed");
 		}
 	}

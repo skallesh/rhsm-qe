@@ -682,6 +682,23 @@ public class SubscriptionManagerTasks {
 		// assert that the state was achieved within the timeout
 		Assert.assertFalse((t*retryMilliseconds > timeoutMinutes*60*1000), "The rhsmcertd log matches '"+logRegex+"' within '"+t*retryMilliseconds+"' milliseconds (timeout="+timeoutMinutes+" min)");
 	}
+	
+	public void waitForRegexInRhsmLog(String logRegex) {
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -10 "+rhsmLogFile,Integer.valueOf(0));
+		String result=	sshCommandRunner.runCommandAndWait("tail -10 "+rhsmLogFile).getStdout().trim();
+		Pattern pattern = Pattern.compile(logRegex);
+        Matcher  matcher = pattern.matcher(result);
+        int count = 0;
+        while (matcher.find()){
+            count++;
+	}
+		
+		System.out.println(count + "is the value of rhsm logging");
+			// pause for the sleep interval
+			
+	
+		
+	}
 
 	/**
 	 * @return the current service level returned by subscription-manager service-level --show (must already be registered)
@@ -4961,20 +4978,5 @@ public String getEntitlementCertFilesWithPermissions() {
 	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
     return lsFiles;
 }
-/**
- * @author skallesh
- * @param number
- * TODO Shwetha This method belogs next to your tests and should make use of SubscriptionManagerTasks.createFactsFileWithOverridingValues(...) and then after your test is done, call SubscriptionManagerTasks.deleteFactsFileWithOverridingValues ()
- */
-public void createSocketsFile(int number) {
-	SSHCommandResult result=sshCommandRunner.runCommandAndWait("ls -l /etc/rhsm/facts/ | grep socket.facts");
-	if(result.getStdout().trim().equals(null)){
-		sshCommandRunner.runCommandAndWait("cat >> /etc/rhsm/facts/socket.facts");
-		sshCommandRunner.runCommandAndWait("{\"cpu.cpu_socket(s)\":\""+number+"\"\",\"lscpu.cpu_socket(s)\": \""+number+"\"}");
-	//	{"cpu.cpu_socket(s)": "8","lscpu.cpu_socket(s)": "8"}
 
-		sshCommandRunner.runCommandAndWait("^C");
-	}
-}
-	
 }

@@ -998,8 +998,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 	
 	// Candidates for an automated Test:
-	// TODO Bug 668032 - rhsm not logging subscriptions and products properly
-	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date
+	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //working on
+	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date 
 	// TODO Bug 664847 - Autobind logic should respect the architecture attribute
 	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
@@ -1009,12 +1009,31 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed //working on
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
-	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //working on
+	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //done --shwetha
 	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
 	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 */
+	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
+            groups={"VerifyRhsmLogging_Test"},
+         //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
+            enabled=true)
+	public void VerifyRhsmLogging_Test() throws Exception{
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
+		List<SubscriptionPool> result=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
+		for(SubscriptionPool pool :result){
+			if((pool.subscriptionName).contains("Bundled")){
+				clienttasks.subscribe(null, null,pool.poolId, null, null, null, null, null, null, null, null);
+		}}
+		
+		clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement>/*");
+					
+	}
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -1046,8 +1065,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			ProductIds=installedProduct.productName;
 			 if(!(installedProduct.status.equals( "Future Subscription")))
-				System.out.println("result is  "+ result);		
-			clienttasks.subscribe(null, null,result, null, null, null, null, null, null, null, null);							
+				 clienttasks.subscribe(null, null,result, null, null, null, null, null, null, null, null);							
 						
 		}}
 	 	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
@@ -1083,7 +1101,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
             enabled=true)
 	public void Verifyautosubscribe_Test(){
 		int socket=4;
-		clienttasks.createSocketsFile(socket);
+		Map<String,String> factsMap = new HashMap<String,String>();
+		Integer moreSockets = 4;
+		String filename="/socket.facts";
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+		clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
 		InstalledProduct installedProductAfterAuto = null;
 		InstalledProduct installedProduct = null;
      clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -1100,37 +1122,51 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			for (ProductCert productCertAfterAuto : productCertsAfterAuto) {
 				installedProductAfterAuto = clienttasks.getInstalledProductCorrespondingToProductCert(productCertAfterAuto,installedProductsAfterAuto);
 			}
-			System.out.println(installedProduct +"  no change in status   " +installedProductAfterAuto);
 			Assert.assertEquals(installedProduct ,installedProductAfterAuto,"no change in the status");
 	}
+		
+	
 	
 	/**
 	 * @author skallesh
-	 * @throws JSONException 
+	 * @throws Exception 
 	 */
 	@Test(    description="Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ",
             groups={"VerifyautosubscribeIgnoresSocketCount_Test"},
             enabled=true)
-	public void VerifyautosubscribeIgnoresSocketCount_Test() throws JSONException{
-		int socketnum = 6;
+	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception{
+		int socketnum = 0;
+		int socketvalue=0;
 		List<String> SubscriptionId = new ArrayList<String>();
-		List<String> SubscriptionPools = new ArrayList<String>();
-		InstalledProduct installedProductAfterAuto = null;
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		for(SubscriptionPool SubscriptionPool: clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
-			System.out.println((SubscriptionPool.multiEntitlement.FALSE)+ " is the non multi-enntiled product  "+SubscriptionPool.subscriptionName);
 		 if(!(SubscriptionPool.multiEntitlement)){
 			 SubscriptionId.add(SubscriptionPool.subscriptionName);
-			//	 sshCommandRunner.runCommandAndWait("curl -k -u admin:admin https://"+ sm_serverHostname+"/candlepin/pools/"+SubscriptionPool.poolId+" | python -mjson.tool | grep sockets -A3");
-		}}
+				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
+				if(!(poolProductSocketsAttribute==null)){
+					socketvalue=Integer.parseInt(poolProductSocketsAttribute);
+					if (socketvalue > socketnum) {
+						socketnum = socketvalue;
+		               }
+				}else{
+					socketvalue=0;
+				}
 		
-
-		 clienttasks.createSocketsFile(socketnum);
-		
+			}
+		 Map<String,String> factsMap = new HashMap<String,String>();
+			String filename="/socket.facts";
+			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
+			clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
+	
+		}
 		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
-		for ( InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
+		for (InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
 				for(String pool:SubscriptionId){
-					Assert.assertEquals(pool,installedProductAfterAuto,"testfailed");
+					if(installedProductsAfterAuto.productName.contains(pool))
+				
+						if((installedProductsAfterAuto.status).equalsIgnoreCase("Subscribed")){
+						Assert.assertEquals("Subscribed", (installedProductsAfterAuto.status).trim(), "test  has failed");
+						}
 				}
 			}
 	}
