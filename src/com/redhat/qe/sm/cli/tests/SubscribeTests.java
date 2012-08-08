@@ -12,6 +12,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
@@ -998,9 +999,15 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 	
 	// Candidates for an automated Test:
+
 	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //working on
 	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date 
 	// TODO Bug 664847 - Autobind logic should respect the architecture attribute
+
+	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //done --shwetha
+	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date 
+	// TODO Bug 664847 - Autobind logic should respect the architecture attribute //working on
+
 	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
 	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
@@ -1024,6 +1031,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
          //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
             enabled=true)
 	public void VerifyRhsmLogging_Test() throws Exception{
+
+		Boolean actual=true;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
 		List<SubscriptionPool> result=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
 		for(SubscriptionPool pool :result){
@@ -1032,6 +1041,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}}
 		
 		clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement>/*");
+		Boolean flag=clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement");
+		Assert.assertEquals(flag, actual);
 					
 	}
 	/**
