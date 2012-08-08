@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONException;
@@ -20,6 +21,7 @@ import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
@@ -80,6 +82,50 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type when only registered classically",
+			groups={"RHNClassicTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void IdentityWhenRegisteredToRHNClassic_Test() {
+
+		// make sure we are not registered (to Candlepin)
+		clienttasks.unregister(null, null, null);
+		
+		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+
+		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
+		Assert.assertEquals(identityResult.getStdout().trim(), "remote entitlement server type: RHN Classic","Stdout when registered to RHN Classic, but not candlepin.");
+		Assert.assertEquals(identityResult.getStderr().trim(), "","Stderr when registered to RHN Classic, but not candlepin.");
+	}
+
+	
+	@Test(	description="subscription-manager-cli: identity should report RHN Classic remote server type and candlepin when over-registered",
+			groups={"RHNClassicTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void IdentityWhenRegisteredToRHNClassicAndCandlepin_Test() {
+
+		// make sure we are registered (to Candlepin)
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
+		
+		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+
+		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
+		List<String> expectedStdoutRegexs = new ArrayList<String>();
+		expectedStdoutRegexs.add("^Current identity is: "+consumerId);
+		expectedStdoutRegexs.add("^remote entitlement server type: RHN classic and subscription management service$");
+		for (String expectedStdoutRegex : expectedStdoutRegexs) {
+			Assert.assertTrue(Pattern.compile(expectedStdoutRegex, Pattern.MULTILINE/* | Pattern.DOTALL*/).matcher(identityResult.getStdout()).find(),"Stdout contains expected regex: "+expectedStdoutRegex);
+		}
+	}
+	
+	
 	@Test(	description="subscription-manager-cli: identity",
 			groups={},
 			enabled=true)
@@ -88,7 +134,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		
 		// start fresh by unregistering and registering
 		clienttasks.unregister(null, null, null);
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, null, null, null, (String)null, null, null, null, false, null, null, null));
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg));
 		
 		// get the current identity
 		SSHCommandResult identityResult = clienttasks.identity(null, null, null, null, null, null, null);
@@ -415,6 +461,12 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 	
+	@AfterGroups(groups={"setup"},value="RHNClassicTests")
+	public void removeRHNSystemIdFile() {
+		if (clienttasks!=null) {
+			client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
+		}
+	}
 	
 	// Protected Methods ***********************************************************************
 
