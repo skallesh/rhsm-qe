@@ -1052,7 +1052,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
 			futureJSONPool = (JSONObject) l.get(0);
 		}
-		Calendar onDate = parse_iso8601DateString(futureJSONPool.getString("startDate")); 
+		Calendar onDate = parseISO8601DateString(futureJSONPool.getString("startDate"),"GMT"); 
 		onDate.add(Calendar.DATE, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());

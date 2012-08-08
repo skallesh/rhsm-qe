@@ -6,6 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -441,6 +444,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
 		Assert.assertEquals(numProductCertFilenamesToBeCopied, expectedMigrationProductCertFilenames.size(),"The number of product certs to be copied.");
 		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "A dryrun should NOT install any product certs.");
+		Map<String,String> factMap = clienttasks.getFacts();
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "783278"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -451,9 +455,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			log.warning("Skipping the assertion of the fact '"+migrationFromFact+"' fact.");
 		} else
 		// END OF WORKAROUND
-		Assert.assertNull(clienttasks.getFactValue(migrationFromFact), "The migration fact '"+migrationFromFact+"' should NOT be set after running command: "+command);
-		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
-		// TODO RHEL5.9ASSERT THE migrationDateFact too
+		Assert.assertNull(factMap.get(migrationFromFact), "The migration fact '"+migrationFromFact+"' should NOT be set after running command: "+command);
+		Assert.assertNull(factMap.get(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
+		Assert.assertNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should NOT be set after running command: "+command);
 		
 		// test --instnumber ................................................
 		log.info("Testing without the dryrun option...");
@@ -468,9 +472,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
 			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
 		}
-		Assert.assertEquals(clienttasks.getFactValue(migrationFromFact), "install_number", "The migration fact '"+migrationFromFact+"' should be set after running command: "+command);
-		Assert.assertNull(clienttasks.getFactValue(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
-
+		//	[root@jsefler-rhel59 ~]# subscription-manager facts --list | grep migration
+		//	migration.install_number: 0000000e0017fc01
+		//	migration.migrated_from: install_number
+		//	migration.migration_date: 2012-08-08T11:11:15.818782
+		factMap = clienttasks.getFacts();
+		Assert.assertEquals(factMap.get(migrationFromFact), "install_number", "The migration fact '"+migrationFromFact+"' should be set after running command: "+command);
+		Assert.assertNull(factMap.get(migrationSystemIdFact), "The migration fact '"+migrationSystemIdFact+"' should NOT be set after running command: "+command);
+		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running command: "+command);
+		
+		// assert that the migrationDateFact was set within the last few seconds
+		int tol = 60; // tolerance in seconds
+		Calendar migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", null);	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
+		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
+		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds.");
+		
 		return result;
 	}
 	
@@ -842,7 +859,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Map<String,String> factMap = clienttasks.getFacts();
 		Assert.assertEquals(factMap.get(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		Assert.assertEquals(factMap.get(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
-		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");	// TODO assert the value of the migration date is today
+		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
+		
+		// assert that the migrationDateFact was set within the last few seconds
+		int tol = 60; // tolerance in seconds
+		Calendar migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", null);	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
+		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
+		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
+		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds.");
+
 		
 		// assert final RHSM status....
 		
