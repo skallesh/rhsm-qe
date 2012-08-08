@@ -1015,6 +1015,61 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
 	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
+
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 */
+	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
+            groups={"VerifyarchitectureForAutobind_Test"},
+         //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
+            enabled=true)
+	public void VerifyarchitectureForAutobind_Test() throws Exception{
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
+		Map<String, String> result=clienttasks.getFacts();
+		String arch=result.get("uname.machine");
+		List<String> cpu_arch=new ArrayList<String>();
+		String input ="x86_64|i686|ia64|ppc|ppc64|s390x|s390";
+		String[] values=input.split("\\|");
+		Boolean flag=false;
+		Boolean expected=true;
+		for(int i=0;i<values.length;i++){
+			cpu_arch.add(values[i]);
+		}
+        
+		
+		Pattern p = Pattern.compile(arch);
+        Matcher  matcher = p.matcher(input);
+        while (matcher.find()){
+        String pattern_=matcher.group();
+        cpu_arch.remove(pattern_);
+       
+        }
+		String architecture=cpu_arch.get(randomGenerator.nextInt(cpu_arch.size()));
+		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			if((pool.subscriptionName).contains(" "+architecture)){
+				flag=true;
+				Assert.assertEquals(flag, expected);
+			}
+				
+			}
+		
+		for(SubscriptionPool pools:clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+			if((pools.subscriptionName).contains(architecture)){
+				flag=true;
+				Assert.assertEquals(flag, expected);
+			}
+				
+			}
+		String filename="/test.facts";
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("uname.machine", String.valueOf(architecture));
+		clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
+		clienttasks.facts_(null, true, null, null, null);
+		}
+		
+					
 	
 	/**
 	 * @author skallesh
