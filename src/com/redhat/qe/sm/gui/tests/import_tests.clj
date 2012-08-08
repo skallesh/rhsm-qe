@@ -36,7 +36,8 @@
   (.runCommandAndWait @clientcmd (str "rm -rf " tmpcertpath))
   (.runCommandAndWait @clientcmd (str "mkdir " tmpcertpath)))
 
-(defn ^{AfterClass {:groups ["setup"]}}
+(defn ^{AfterClass {:groups ["setup"]
+                    :alwaysRun true}}
   cleanup_import [_]
   (.cleanupAfterClass @importtests)
   (tasks/restart-app))
