@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -999,15 +1000,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 	
 	// Candidates for an automated Test:
-
-	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //working on
-	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date 
-	// TODO Bug 664847 - Autobind logic should respect the architecture attribute
-
 	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //done --shwetha
-	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date 
+	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date //Done --shwetha
 	// TODO Bug 664847 - Autobind logic should respect the architecture attribute //working on
-
 	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
 	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
@@ -1022,6 +1017,26 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
 	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
 
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 */
+	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
+            groups={"VerifyEntitlementStart_Test"},
+             enabled=true)
+	public void VerifyEntitlementStart_Test() throws Exception {
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
+		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			Calendar end_date=pools.endDate;
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pools.poolId));	
+			String expireDate=new SimpleDateFormat("yyyy-MM-dd").format(end_date.getTime());
+			String startdate=jsonPool.getString("endDate");
+			String[] split_word=startdate.split("T");
+		    Assert.assertEquals(split_word[0], expireDate);
+			
+		}
+		}
+		
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -1074,7 +1089,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
 		clienttasks.facts_(null, true, null, null, null);
 		}
-		
 					
 	
 	/**
@@ -1086,7 +1100,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
          //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
             enabled=true)
 	public void VerifyRhsmLogging_Test() throws Exception{
-
 		Boolean actual=true;
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, false, null, null, null);
 		List<SubscriptionPool> result=clienttasks.getCurrentlyAllAvailableSubscriptionPools();
@@ -1095,7 +1108,6 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 				clienttasks.subscribe(null, null,pool.poolId, null, null, null, null, null, null, null, null);
 		}}
 		
-		clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement>/*");
 		Boolean flag=clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement");
 		Assert.assertEquals(flag, actual);
 					
