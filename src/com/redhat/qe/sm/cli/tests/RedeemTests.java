@@ -194,7 +194,8 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		// assert the redeemResult here
 		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
 		Assert.assertEquals(redeemResult.getStdout().trim(), "");
-		Assert.assertEquals(redeemResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
+		//Assert.assertEquals(redeemResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));	// this feedback has been changed 8/9/2012
+		Assert.assertEquals(redeemResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", "To Be Filled By O.E.M."));
 	}
 	
 	// Candidates for an automated Test:

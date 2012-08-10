@@ -464,7 +464,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			String startDate = futureJSONPool.getString("startDate");
 			
 			// add one day to this start date to use for subscription-manager list --ondate test (ASSUMPTION: these subscriptions last longer than one day)
-			Calendar onDate = parse_iso8601DateString(startDate); onDate.add(Calendar.DATE, 1);
+			Calendar onDate = parseISO8601DateString(startDate,"GMT"); onDate.add(Calendar.DATE, 1);
 			DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
 			
@@ -486,7 +486,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			JSONObject futureJSONPool = (JSONObject) l.get(0);
 			
 			// add one day to this start date to use for subscription-manager list --ondate test
-			Calendar onDate = parse_iso8601DateString(futureJSONPool.getString("startDate")); onDate.add(Calendar.DATE, 1);
+			Calendar onDate = parseISO8601DateString(futureJSONPool.getString("startDate"),"GMT"); onDate.add(Calendar.DATE, 1);
 			DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 			String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());
 			
@@ -503,8 +503,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 			// assert that each of the SubscriptionPools listed is indeed active on the requested date
 			for (SubscriptionPool subscriptionPool : subscriptionPools) {
 				JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+subscriptionPool.poolId));
-				Calendar startDate = parse_iso8601DateString(jsonPool.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
-				Calendar endDate = parse_iso8601DateString(jsonPool.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+				Calendar startDate = parseISO8601DateString(jsonPool.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
+				Calendar endDate = parseISO8601DateString(jsonPool.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
 				Boolean activeSubscription = jsonPool.getBoolean("activeSubscription");	// TODO I don't yet understand how to test this property.  I'm assuming it is true
 				Assert.assertTrue(startDate.before(onDate)&&endDate.after(onDate)&&activeSubscription,"SubscriptionPool '"+subscriptionPool.poolId+"' is indeed active and listed as available ondate='"+onDateToTest+"'.");
 							

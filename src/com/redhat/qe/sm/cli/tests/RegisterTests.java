@@ -9,7 +9,9 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -61,7 +63,7 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 			              enabled=true)
 			
 	public void AttemptRegisterWithWhiteSpacesInUsername_Test() {
-	SSHCommandResult result = clienttasks.register_("user name","password",sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, productCertDir, true,null, null, null, null);
+	SSHCommandResult result = clienttasks.register_("user name","password",sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true,null,null,null,null);
 	Assert.assertEquals(result.getStderr().trim(), servertasks.invalidCredentialsMsg(), "The expected stdout result when attempting to register with a username containing whitespace.");
 	}
 	
@@ -398,14 +400,15 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 	}
 	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
 			groups={"RegisterWithAutosubscribe_Test","blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
-			enabled=true)
-	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
+			enabled=false)
+	@Deprecated
+	public void RegisterWithAutosubscribe_Test_DEPRECATED_2() throws JSONException, Exception {
 
 		log.info("RegisterWithAutosubscribe_Test Strategy:");
 		log.info(" 1. Change the rhsm.conf configuration for productCertDir to point to a new temporary product cert directory.");
 		log.info(" 2. Register with autosubscribe and assert that no product binding has occurred.");
 		log.info(" 3. Using the candlepin REST API, we will find an available pool that provides a product that we have installed.");
-		log.info(" 4. Copy the installed product to a temporary product cert directory so that we can isolated the expected product that will be autosubscribed.");
+		log.info(" 4. Copy the installed product to a temporary product cert directory so that we can isolate the expected product that will be autosubscribed.");
 		log.info(" 5. Reregister with autosubscribe and assert that the temporary product has been bound.");
 
 		// get the product certs that are currently installed
@@ -485,6 +488,68 @@ public class RegisterTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(autosubscribedProductStatusList.size(), 1, "Only one product appears installed."); 
 		Assert.assertEquals(autosubscribedProductStatusList.get(0),new InstalledProduct(tmpProductCert.productName,null,null,null,"Subscribed",null,null),
 				"As expected, ProductName '"+tmpProductCert.productName+"' was reported as subscribed in the output from register with autotosubscribe.");
+	}
+	@Test(	description="subscription-manager-cli: register to a Candlepin server using autosubscribe functionality",
+			groups={"blockedByBug-602378", "blockedByBug-616137", "blockedByBug-678049", "blockedByBug-737762", "blockedByBug-743082", "AcceptanceTests"},
+			enabled=true)
+	public void RegisterWithAutosubscribe_Test() throws JSONException, Exception {
+
+		// determine all of the productIds that are provided by available subscriptions
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		Set<String> providedProductIds = new HashSet<String>();
+		for (SubscriptionPool pool : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/pools/"+pool.poolId));	
+			JSONArray jsonProvidedProducts = jsonPool.getJSONArray("providedProducts");
+			for (int k = 0; k < jsonProvidedProducts.length(); k++) {
+				JSONObject jsonProvidedProduct = (JSONObject) jsonProvidedProducts.get(k);
+				String providedProductName = jsonProvidedProduct.getString("productName");
+				String providedProductId = jsonProvidedProduct.getString("productId");
+				providedProductIds.add(providedProductId);
+			}
+		}
+		
+		// assert that all installed products are "Not Subscribed"
+		List<InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (InstalledProduct installedProduct : installedProducts) {
+			Assert.assertEquals(installedProduct.status,"Not Subscribed","Installed product status for productId '"+installedProduct.productId+"' prior to registration with autosubscribe.");
+		}
+		
+		// now register with --autosubscribe
+		SSHCommandResult registerResult = clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, true, null, null, (String)null, null, null, true, false, null, null, null);
+		//	201208091741:18.316 - FINE: ssh root@pogolinux-1.rhts.eng.rdu.redhat.com subscription-manager register --username=stage_test_12 --password=redhat --autosubscribe --force (com.redhat.qe.tools.SSHCommandRunner.run)
+		//	201208091741:50.504 - FINE: Stdout: 
+		//	The system with UUID 5e88b5ef-e218-423c-8cf1-380d37476580 has been unregistered
+		//	The system has been registered with id: edfabea2-0bd4-4584-bb3e-f3bca9a3a442 
+		//	Installed Product Current Status:
+		//	Product Name:         	Red Hat Enterprise Linux Server
+		//	Status:               	Subscribed
+		//
+		//	201208091741:50.505 - FINE: Stderr:  
+		//	201208091741:50.505 - FINE: ExitCode: 0 
+		
+		// IF THE INSTALLED PRODUCT ID IS PROVIDED BY AN AVAILABLE SUBSCRIPTION, THEN IT SHOULD GET AUTOSUBSCRIBED! (since no service preference level has been set)
+		
+		// assert the expected installed product status in the feedback from register with --autosubscribe
+		List<InstalledProduct> autosubscribedProducts = InstalledProduct.parse(registerResult.getStdout());
+		for (InstalledProduct autosubscribedProduct : autosubscribedProducts) {
+			InstalledProduct installedProduct = InstalledProduct.findFirstInstanceWithMatchingFieldFromList("productName", autosubscribedProduct.productName, installedProducts);
+			if (providedProductIds.contains(installedProduct.productId)) {
+				Assert.assertEquals(autosubscribedProduct.status,"Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe.");
+			} else {
+				Assert.assertEquals(autosubscribedProduct.status,"Not Subscribed","Status for productName '"+autosubscribedProduct.productName+"' in feedback from registration with autosubscribe.");
+			}
+		}
+		
+		// assert the expected installed product status in the list --installed after the register with --autosubscribe
+		installedProducts = clienttasks.getCurrentlyInstalledProducts();
+		for (InstalledProduct installedProduct : installedProducts) {
+			if (providedProductIds.contains(installedProduct.productId)) {
+				Assert.assertEquals(installedProduct.status,"Subscribed","Status for Installed productId '"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
+			} else {
+				Assert.assertEquals(installedProduct.status,"Not Subscribed","Status for Installed productId '"+installedProduct.productId+"' in list of installed products after registration with autosubscribe.");
+			}
+		}
+		Assert.assertEquals(autosubscribedProducts.size(), installedProducts.size(), "The 'Installed Product Current Status' reported during register --autosubscribe should contain the same number of products as reported by list --installed.");
 	}
 	
 	
@@ -1326,7 +1391,8 @@ Expected Results:
 		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,							serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
 	
 		// negative tests
-		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,													null}));
+//		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,													null}));
+		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",															null}));
 		serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842885"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX",		null}));
 		serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:"+defaultPort+defaultPrefix,													null}));
 		serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900"+defaultPrefix,																null}));
@@ -1360,8 +1426,8 @@ Expected Results:
 	
 	// Protected Class Variables ***********************************************************************
 	
-	protected final String tmpProductCertDir = "/tmp/productCertDir";
-	protected String productCertDir = null;
+	protected final String tmpProductCertDir = "/tmp/productCertDir";	// TODO Not being used anymore; DELETEME
+	protected String productCertDir = null;	// TODO Not being used anymore; DELETEME
 	protected String rhsm_baseurl = null;
 	protected String server_hostname = null;
 	protected String server_port = null;
@@ -1369,7 +1435,7 @@ Expected Results:
 	
 	// Configuration methods ***********************************************************************
 
-	@AfterGroups(value={"RegisterWithAutosubscribe_Test","InteroperabilityRegister_Test"}, alwaysRun=true)
+	@AfterGroups(groups={"setup"}, value={"RegisterWithAutosubscribe_Test","InteroperabilityRegister_Test"})
 	@AfterClass (alwaysRun=true)
 	public void cleaupAfterClass() {
 		if (clienttasks==null) return;

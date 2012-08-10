@@ -443,7 +443,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);	// give the rhsmcertd a chance to check in with the candlepin server and update the certs
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"\\(Cert Check\\) Update failed \\(255\\), retry will occur on next run.",null);
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmLogFile,Integer.valueOf(0),errorMsg,null);
 		
 		
@@ -457,7 +458,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);	// give the rhsmcertd a chance to check in with the candlepin server and update the certs
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		//RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"update failed \\(\\d+\\), retry in "+minutes+" minutes",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"\\(Cert Check\\) Update failed \\(255\\), retry will occur on next run.",null);
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmLogFile,Integer.valueOf(0),errorMsg,null);
 
 		
@@ -469,22 +471,49 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
 		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),marker,null);
 		sleep(minutes*60*1000);	// give the rhsmcertd a chance to check in with the candlepin server and update the certs
-		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
-
-		/* tail -f /var/log/rhsm/rhsm.log
-		 * 2010-09-10 12:05:06,338 [ERROR] main() @certmgr.py:75 - Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.
-		 */
+		///RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"certificates updated",null);
+		RemoteFileTasks.runCommandAndAssert(client,"tail -1 "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0),"\\(Cert Check\\) Certificates updated.",null);
 		
-		/* tail -f /var/log/rhsm/rhsmcertd.log
-		 * Fri Sep 10 11:59:50 2010: started: interval = 1 minutes
-		 * Fri Sep 10 11:59:51 2010: update failed (255), retry in 1 minutes
-		 * testing rhsm.conf certFrequency=1 when unregistered.
-		 * Fri Sep 10 12:00:51 2010: update failed (255), retry in 1 minutes
-		 * Fri Sep 10 12:01:04 2010: started: interval = 1 minutes
-		 * Fri Sep 10 12:01:05 2010: certificates updated
-		 * testing rhsm.conf certFrequency=1 when registered.
-		 * Fri Sep 10 12:02:05 2010: certificates updated
-		*/
+		//	# tail -f /var/log/rhsm/rhsm.log
+		//	2010-09-10 12:05:06,338 [ERROR] main() @certmgr.py:75 - Either the consumer is not registered with candlepin or the certificates are corrupted. Certificate updation using daemon failed.
+		
+		//	# tail -f /var/log/rhsm/rhsmcertd.log
+		//	Fri Sep 10 11:59:50 2010: started: interval = 1 minutes
+		//	Fri Sep 10 11:59:51 2010: update failed (255), retry in 1 minutes
+		//	testing rhsm.conf certFrequency=1 when unregistered.
+		//	Fri Sep 10 12:00:51 2010: update failed (255), retry in 1 minutes
+		//	Fri Sep 10 12:01:04 2010: started: interval = 1 minutes
+		//	Fri Sep 10 12:01:05 2010: certificates updated
+		//	testing rhsm.conf certFrequency=1 when registered.
+		//	Fri Sep 10 12:02:05 2010: certificates updated
+		
+		// AFTER CHANGES FROM Bug 708512 - rhsmcertd is logging "certificates updated" when it should be "update failed (255), retry in 1 minutes"
+		//	# tail -f /var/log/rhsm/rhsmcertd.log
+		//	Testing rhsm.conf certFrequency=2 when unregistered...
+		//	Thu Aug  9 18:57:24 2012 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+		//	1344553073761 Testing service rhsmcertd restart...
+		//	Thu Aug  9 18:57:54 2012 [INFO] rhsmcertd is shutting down...
+		//	Thu Aug  9 18:57:54 2012 [INFO] Starting rhsmcertd...
+		//	Thu Aug  9 18:57:54 2012 [INFO] Healing interval: 1440.0 minute(s) [86400 second(s)]
+		//	Thu Aug  9 18:57:54 2012 [INFO] Cert check interval: 2.0 minute(s) [120 second(s)]
+		//	Thu Aug  9 18:57:54 2012 [INFO] Waiting 120 second(s) [2.0 minute(s)] before running updates.
+		//	Thu Aug  9 18:59:54 2012 [WARN] (Healing) Update failed (255), retry will occur on next run.
+		//	Thu Aug  9 18:59:54 2012 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+		//	Thu Aug  9 18:59:54 2012 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+		//	Testing rhsm.conf certFrequency=2 when identity is corrupted...
+		//	Thu Aug  9 19:01:54 2012 [WARN] (Cert Check) Update failed (255), retry will occur on next run.
+		//	1344553342931 Testing service rhsmcertd restart...
+		//	Thu Aug  9 19:02:23 2012 [INFO] rhsmcertd is shutting down...
+		//	Thu Aug  9 19:02:23 2012 [INFO] Starting rhsmcertd...
+		//	Thu Aug  9 19:02:23 2012 [INFO] Healing interval: 1440.0 minute(s) [86400 second(s)]
+		//	Thu Aug  9 19:02:23 2012 [INFO] Cert check interval: 2.0 minute(s) [120 second(s)]
+		//	Thu Aug  9 19:02:23 2012 [INFO] Waiting 120 second(s) [2.0 minute(s)] before running updates.
+		//	Thu Aug  9 19:04:25 2012 [INFO] (Healing) Certificates updated.
+		//	Thu Aug  9 19:04:30 2012 [INFO] (Cert Check) Certificates updated.
+		//	Thu Aug  9 19:04:35 2012 [INFO] (Cert Check) Certificates updated.
+		//	Testing rhsm.conf certFrequency=2 when registered...
+		//	Thu Aug  9 19:06:28 2012 [INFO] (Cert Check) Certificates updated.
+
 	}
 	
 	
@@ -1130,7 +1159,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		for (List<Object> l : getAllFutureJSONPoolsDataAsListOfLists(ConsumerType.system)) {
 			futureJSONPool = (JSONObject) l.get(0);
 		}
-		Calendar onDate = parse_iso8601DateString(futureJSONPool.getString("startDate")); 
+		Calendar onDate = parseISO8601DateString(futureJSONPool.getString("startDate"),"GMT"); 
 		onDate.add(Calendar.DATE, 1);
 		DateFormat yyyy_MM_dd_DateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		String onDateToTest = yyyy_MM_dd_DateFormat.format(onDate.getTime());

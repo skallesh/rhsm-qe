@@ -1892,16 +1892,15 @@ public class SubscriptionManagerTasks {
 		return sshCommandResult; // from the register command
 	}
 	
-	public SSHCommandResult register(String username, String password, String org) {
-		return register(username, password, org, null, null, null, null, false, null, null, (List<String>)null, null, null, false, false, null, null, null);
-	}	
-	
 	public SSHCommandResult register(String username, String password, String org, String environment, ConsumerType type, String name, String consumerid, Boolean autosubscribe, String servicelevel, String release, String activationkey, String serverurl, String baseurl, Boolean force, Boolean autoheal, String proxy, String proxyuser, String proxypassword) {
 		List<String> activationkeys = activationkey==null?null:Arrays.asList(new String[]{activationkey});
 
 		return register(username, password, org, environment, type, name, consumerid, autosubscribe, servicelevel, release, activationkeys, serverurl, baseurl, force, autoheal, proxy, proxyuser, proxypassword);
 	}
 	
+	public SSHCommandResult register(String username, String password, String org) {
+		return register(username, password, org, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null);
+	}
 	
 	// reregister module tasks ************************************************************
 
@@ -2202,9 +2201,12 @@ public class SubscriptionManagerTasks {
 		
 		if (regenerate) {
 			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Identity certificate has been regenerated.");
-		} else {
-			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Current identity is: [a-f,0-9,\\-]{36}");
 		}
+// DELETEME
+// DON'T ASSERT THIS HERE.  WILL BE ASSERTED IN OTHER TESTS. IT'S POSSIBLE THAT THIS IS NOT EXPECTED EVEN THOUGH EXIT CODE IS 0 (e.g when registered classically)
+//		else {
+//			Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), "Current identity is: [a-f,0-9,\\-]{36}");
+//		}
 		
 		return sshCommandResult; // from the identity command
 	}

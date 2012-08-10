@@ -58,7 +58,8 @@
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/start-app))
 
-(defn ^{AfterClass {:groups ["cleanup"]}}
+(defn ^{AfterClass {:groups ["cleanup"]
+                    :alwaysRun true}}
   cleanup [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (.configureProductCertDirAfterClass @complytests)

@@ -698,22 +698,44 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 	}
 	
 
-	final String iso8601DateString = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; 								//"2012-02-08T00:00:00.000+0000"
-	final DateFormat iso8601DateFormat = new SimpleDateFormat(iso8601DateString);				//"2012-02-08T00:00:00.000+0000"
-	protected Calendar parse_iso8601DateString(String dateString) {
+	final String iso8601DatePattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"; 								//"2012-02-08T00:00:00.000+0000"
+	final DateFormat iso8601DateFormat = new SimpleDateFormat(iso8601DatePattern);				//"2012-02-08T00:00:00.000+0000"
+// TODO DELETEME
+//	protected Calendar parse_iso8601DateString(String dateString) {
+//		try{
+//			DateFormat dateFormat = new SimpleDateFormat(iso8601DateString);
+//			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+//			Calendar calendar = new GregorianCalendar();
+//			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
+//			return calendar;
+//		}
+//		catch (ParseException e){
+//			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+iso8601DateString+"':\n"+e.getMessage());
+//			return null;
+//		}
+//	}
+	protected Calendar parseISO8601DateString(String dateString) {
+		return parseISO8601DateString(dateString, null);
+	}
+	protected Calendar parseISO8601DateString(String dateString, String timeZone) {
+		String datePattern = iso8601DatePattern;
+		if (timeZone==null) datePattern = datePattern.replaceFirst("Z$", "");	// strip off final timezone offset symbol from iso8601DatePattern
+		return parseDateStringUsingDatePattern(dateString, datePattern, timeZone);
+	}
+	protected Calendar parseDateStringUsingDatePattern(String dateString, String datePattern, String timeZone) {
 		try{
-			DateFormat dateFormat = new SimpleDateFormat(iso8601DateString);
-			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+			DateFormat dateFormat = new SimpleDateFormat(datePattern);	// format="yyyy-MM-dd'T'HH:mm:ss.SSSZ" will parse dateString="2012-02-08T00:00:00.000+0000"
+			if (timeZone!=null) dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));	// timeZone="GMT"
 			Calendar calendar = new GregorianCalendar();
 			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
 			return calendar;
 		}
 		catch (ParseException e){
-			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+iso8601DateString+"':\n"+e.getMessage());
+			log.warning("Failed to parse "+(timeZone==null?"":timeZone)+" date string '"+dateString+"' with format '"+datePattern+"':\n"+e.getMessage());
 			return null;
 		}
 	}
-	protected String format_iso8601DateString(Calendar date) throws UnsupportedEncodingException {
+	protected String formatISO8601DateString(Calendar date) throws UnsupportedEncodingException {
 		String iso8601FormatedDateString = iso8601DateFormat.format(date.getTime());
 		iso8601FormatedDateString = iso8601FormatedDateString.replaceFirst("(..$)", ":$1");		// "2012-02-08T00:00:00.000+00:00"	// see https://bugzilla.redhat.com/show_bug.cgi?id=720493 // http://books.xmlschemata.org/relaxng/ch19-77049.html requires a colon in the time zone for xsd:dateTime
 		return iso8601FormatedDateString;
@@ -1092,8 +1114,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			
 			// skip future subscriptions that are not valid today (at this time now)
-			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
-			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+			Calendar startDate = parseISO8601DateString(jsonSubscription.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parseISO8601DateString(jsonSubscription.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
 			if (!(startDate.before(now) && endDate.after(now))) continue;
 			
 			JSONObject jsonProduct = (JSONObject) jsonSubscription.getJSONObject("product");
@@ -2189,10 +2211,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (List<Object> l : getAllFutureJSONSubscriptionsDataAsListOfLists(consumerType)) {
 			JSONObject jsonSubscription = (JSONObject) l.get(0);
 			String subscriptionId = jsonSubscription.getString("id");			
-			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar startDate = parseISO8601DateString(jsonSubscription.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
 
 			// process all of the pools belonging to ownerKey that are activeon startDate
-			JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools" +"?activeon="+urlEncode(format_iso8601DateString(startDate))));
+			JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+ownerKey+"/pools" +"?activeon="+urlEncode(formatISO8601DateString(startDate))));
 			for (int j = 0; j < jsonPools.length(); j++) {
 				JSONObject jsonPool = (JSONObject) jsonPools.get(j);
 				
@@ -2229,8 +2251,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		for (int i = 0; i < jsonSubscriptions.length(); i++) {
 			JSONObject jsonSubscription = (JSONObject) jsonSubscriptions.get(i);
 			String id = jsonSubscription.getString("id");			
-			Calendar startDate = parse_iso8601DateString(jsonSubscription.getString("startDate"));	// "startDate":"2012-02-08T00:00:00.000+0000"
-			Calendar endDate = parse_iso8601DateString(jsonSubscription.getString("endDate"));	// "endDate":"2013-02-07T00:00:00.000+0000"
+			Calendar startDate = parseISO8601DateString(jsonSubscription.getString("startDate"),"GMT");	// "startDate":"2012-02-08T00:00:00.000+0000"
+			Calendar endDate = parseISO8601DateString(jsonSubscription.getString("endDate"),"GMT");	// "endDate":"2013-02-07T00:00:00.000+0000"
 
 			// skip subscriptions to a product that doesn't satisfy the requested consumerType
 			JSONObject jsonProduct = jsonSubscription.getJSONObject("product");
