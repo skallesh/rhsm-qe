@@ -267,6 +267,10 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		}
 		// END OF WORKAROUND
 		
+		// when the entitlement OID value parsed was null, it should effectively be reported as ""  (Reference related bugs 842170 847354)
+		if (entitlementCert.orderNamespace.supportLevel==null) entitlementCert.orderNamespace.supportLevel="";
+		if (entitlementCert.orderNamespace.supportType==null) entitlementCert.orderNamespace.supportType="";
+		
 		
 		//	Subscription Name:    	Awesome OS Server Bundled (2 Sockets, Standard Support)
 		//	Provides:             	Clustering Bits
