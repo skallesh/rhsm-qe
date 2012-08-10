@@ -3009,7 +3009,8 @@ public class SubscriptionManagerTasks {
 		// when rhsm.manage_repos is off, this feedback overrides all operations
 		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos"); if (manage_repos==null) manage_repos="1";
 		if (manage_repos.equals("0")) {
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
+//			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
 			return sshCommandResult;
 		}
 		
@@ -3019,9 +3020,9 @@ public class SubscriptionManagerTasks {
 		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (with option --list) contains the expected banner regex: "+bannerRegex);
 		}
-		//else {
-		//	Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (without option --list) does not contain the banner regex: "+bannerRegex);	
-		//}
+//		else {
+//			Assert.assertTrue(!Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (without option --list) does not contain the banner regex: "+bannerRegex);	
+//		}
 		
 		// assert the enable feedback
 		if (enableRepos!=null) for (String enableRepo : enableRepos) {

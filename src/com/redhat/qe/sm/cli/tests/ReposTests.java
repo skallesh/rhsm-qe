@@ -185,7 +185,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		//	Assert.assertNotNull(YumRepo.findFirstInstanceWithMatchingFieldFromList("id", repo.repoId, yumRepos),"Found yum repo id ["+repo.repoId+"] matching current repos --list item: "+repo);
 		//}
 		
-		// assemble a list enable and disable repoIds to be collectively toggled
+		// assemble lists of the current repoIds to be collectively toggle
 		List<String> enableRepoIds = new ArrayList<String>();
 		List<String> disableRepoIds = new ArrayList<String>();
 		for (Repo repo : originalRepos) {
@@ -197,7 +197,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		}
 		
 		// collectively toggle the enablement of the current repos
-		clienttasks.repos(null, enableRepoIds, enableRepoIds, null, null, null);
+		clienttasks.repos(null, enableRepoIds, disableRepoIds, null, null, null);
 		
 		// verify that the change is preserved by subscription-manager repos --list
 		List<Repo> toggledRepos = clienttasks.getCurrentlySubscribedRepos();	// determined by calling subscription-manager repos --list
@@ -206,7 +206,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// assert enablement of all the original repos have been toggled
 		Assert.assertEquals(toggledRepos.size(), originalRepos.size(), "The count of repos listed should remain the same after collectively toggling their enablement.");
 		for (Repo originalRepo : originalRepos) {
-			Repo toggledRepo = Repo.findFirstInstanceWithMatchingFieldFromList("id", originalRepo.repoId, toggledRepos);
+			Repo toggledRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", originalRepo.repoId, toggledRepos);
 			Assert.assertTrue(toggledRepo.enabled.equals(!originalRepo.enabled), "Repo ["+originalRepo.repoId+"] enablement has been toggled from '"+originalRepo.enabled+"' to '"+!originalRepo.enabled+"'.");
 		}
 		
@@ -222,7 +222,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		// assert enablement of all the original repos have been toggled
 		Assert.assertEquals(toggledRepos.size(), originalRepos.size(), "Even after refreshing certificates, the count of repos listed should remain the same after collectively toggling their enablement.");
 		for (Repo originalRepo : originalRepos) {
-			Repo toggledRepo = Repo.findFirstInstanceWithMatchingFieldFromList("id", originalRepo.repoId, toggledRepos);
+			Repo toggledRepo = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", originalRepo.repoId, toggledRepos);
 			Assert.assertTrue(toggledRepo.enabled.equals(!originalRepo.enabled), "Even after refreshing certificates, repo ["+originalRepo.repoId+"] enablement has been toggled from '"+originalRepo.enabled+"' to '"+!originalRepo.enabled+"'.");
 		}
 	}
@@ -287,7 +287,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config(null, null, true, new String[]{"rhsm","manage_repos","0"});
 		
 		// assert that the repos list is disabled by configuration!
-		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration since the rhsm.manage_repos configuration value is 0.");
+		SSHCommandResult reposListResult = clienttasks.repos(true,(String)null,(String)null,null,null,null);
+		Assert.assertTrue(reposListResult.getStdout().contains("Repositories disabled by configuration."), "Repositories disabled by configuration since the rhsm.manage_repos configuration value is 0.");
+		Assert.assertTrue(reposListResult.getStdout().contains("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories since the rhsm.manage_repos configuration value is 0.");
 
 		// trigger a yum transaction and assert that the redhat.repo no longer exists
 		clienttasks.getYumRepolist(null);
@@ -295,7 +297,9 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 		
 		// subscribe to all subscriptions and re-assert that the repos list remains disabled.
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-		Assert.assertTrue(clienttasks.repos(true,(String)null,(String)null,null,null,null).getStdout().trim().equals("Repositories disabled by configuration."), "Repositories disabled by configuration remains even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
+		reposListResult = clienttasks.repos(true,(String)null,(String)null,null,null,null);
+		Assert.assertTrue(reposListResult.getStdout().contains("Repositories disabled by configuration."), "Repositories disabled by configuration even after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
+		Assert.assertTrue(reposListResult.getStdout().contains("The system is not entitled to use any repositories."), "The system is not entitled to use any repositorieseven after subscribing to all pools while the rhsm.manage_repos configuration value is 0.");
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.redhatRepoFile),"Even after subscribing to all subscription pools while the rhsm.manage_repos configuration value is 0, the redhat.repo is not generated.");
 	}
 	
@@ -343,7 +347,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposEnableInvalidRepo_Test(){
 		SSHCommandResult result = clienttasks.repos_(null, "invalid-repo-id", null, null, null, null);
-		Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from an attempt to enable an invalid-repo-id.");
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to enable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to enable an invalid-repo-id.");
 	}
@@ -355,7 +359,7 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ReposDisableInvalidRepo_Test(){
 		SSHCommandResult result = clienttasks.repos_(null, null, "invalid-repo-id", null, null, null);
-		Assert.assertEquals(result.getExitCode(), new Integer(255), "ExitCode from an attempt to disable an invalid-repo-id.");
+		Assert.assertEquals(result.getExitCode(), new Integer(0), "ExitCode from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStdout().trim(), "Error: A valid repo id is required. Use --list option to see valid repos.", "Stdout from an attempt to disable an invalid-repo-id.");
 		Assert.assertEquals(result.getStderr().trim(), "", "Stderr from an attempt to disable an invalid-repo-id.");
 	}
