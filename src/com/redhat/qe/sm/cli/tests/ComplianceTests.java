@@ -447,6 +447,8 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 			// skip all entitlements without a service level
 			if (serviceLevel==null || serviceLevel.equals("")) continue;
 			
+			// TODO skip all entitlements with an exempt service level
+			
 			if (!serviceLevelToProductIdsMap.containsKey(serviceLevel)) serviceLevelToProductIdsMap.put(serviceLevel, new HashSet<String>());
 			HashSet<String> productIdSet = (HashSet<String>) serviceLevelToProductIdsMap.get(serviceLevel);		
 			for (ProductNamespace productNamespace : entitlementCert.productNamespaces) {
