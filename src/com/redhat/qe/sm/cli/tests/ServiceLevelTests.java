@@ -4,8 +4,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.json.JSONArray;
@@ -760,8 +762,6 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	
-	
 	@Test(	description="subscription-manager: service-level --unset after setting an available service level",
 			groups={"blockedByBug-829803","blockedByBug-829812"},
 			dataProvider="getAllAvailableServiceLevelData",
@@ -775,8 +775,24 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="subscription-manager: service-level --list should be unique (regardless of case)",
+			groups={/*"blockedByBug-845043",*/"AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ServiceLevelListIsUnique_Test() {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		
+		List<String> availServiceLevels = clienttasks.getCurrentlyAvailableServiceLevels();
+		Set<String> uniqueServiceLevels = new HashSet<String>();
+		for (String availServiceLevel : availServiceLevels) uniqueServiceLevels.add(availServiceLevel.toUpperCase());
+		
+		Assert.assertTrue(uniqueServiceLevels.size()==availServiceLevels.size(), "The available service levels are unique. There are no duplicates (regardless of case).");
+	}
 	
 	
+	
+
 	
 	
 	
@@ -800,7 +816,6 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			log.warning("Skipping createSubscriptionsWithVariationsOnProductAttributeSockets() when server is null.");
 			return;	
 		}
-//debugTesting	if (true) return;
 	
 		// TestExempt Product Subscription
 		name = "TestExempt Product Subscription";
@@ -835,6 +850,58 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		}
 	}
 
+	
+	@BeforeClass(groups="setup")
+	public void createMultipleSubscriptionsWithSameServiceLevels() throws JSONException, Exception {
+		String name,productId, serviceLevel;
+		List<String> providedProductIds = new ArrayList<String>();
+		Map<String,String> attributes = new HashMap<String,String>();
+		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
+		if (server==null) {
+			log.warning("Skipping createSubscriptionsWithDuplicateServiceLevels() when server is null.");
+			return;	
+		}
+	
+		// Subscription with ULTImate support_level
+		name = "The \"ULTImate\" service level subscription";
+		serviceLevel = "ULTImate";
+		productId = serviceLevel+"-service-product-1";
+		providedProductIds.clear();
+		attributes.clear();
+		attributes.put("support_level", serviceLevel);
+		attributes.put("support_level_exempt", "false");
+		attributes.put("version", "0.1");
+		//attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "5");
+		// delete already existing subscription
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		// create a new marketing product, and a subscription for the marketing product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+
+		// Subscription with ultiMATE support_level
+		name = "The \"ultiMATE\" service level subscription";
+		serviceLevel = "ultiMATE";
+		productId = serviceLevel+"-service-product-2";
+		providedProductIds.clear();
+		attributes.clear();
+		attributes.put("support_level", serviceLevel);
+		attributes.put("support_level_exempt", "false");
+		attributes.put("version", "0.2");
+		//attributes.put("variant", "server");
+		attributes.put("arch", "ALL");
+		attributes.put("warning_period", "5");
+		// delete already existing subscription
+		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
+		// create a new marketing product, and a subscription for the marketing product
+		attributes.put("type", "MKT");
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
+		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
+	}
 	
 	
 	// Protected methods ***********************************************************************
