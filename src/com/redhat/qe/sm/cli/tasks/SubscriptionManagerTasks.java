@@ -3285,7 +3285,7 @@ public class SubscriptionManagerTasks {
 				String personProductId = poolProductDataAsJSONObject.getString("personProductId");
 				JSONObject subpoolProductDataAsJSONObject = poolProductDataAsJSONObject.getJSONObject("subPoolProductData");
 				String systemProductId = subpoolProductDataAsJSONObject.getString("systemProductId");
-				if (poolProductId==systemProductId) { // special case when pool's productId is really a personal subpool
+				if (poolProductId.equals(systemProductId)) { // special case when pool's productId is really a personal subpool
 					poolProductId = personProductId;
 					isSubpool = true;
 					break;
