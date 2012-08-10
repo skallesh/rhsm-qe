@@ -21,6 +21,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -1112,10 +1113,9 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			}
 				
 			}
-		String filename="/test.facts";
 		Map<String,String> factsMap = new HashMap<String,String>();
 		factsMap.put("uname.machine", String.valueOf(architecture));
-		clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		clienttasks.facts_(null, true, null, null, null);
 		}
 					
@@ -1210,9 +1210,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		int socket=4;
 		Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
-		String filename="/socket.facts";
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
 		InstalledProduct installedProductAfterAuto = null;
 		InstalledProduct installedProduct = null;
      clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -1261,9 +1260,8 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		
 			}
 		 Map<String,String> factsMap = new HashMap<String,String>();
-			String filename="/socket.facts";
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
-			clienttasks.createFactsFileWithOverridingValues(filename,factsMap);
+			clienttasks.createFactsFileWithOverridingValues(factsMap);
 	
 		}
 		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
@@ -1309,6 +1307,11 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 		}
 	}
 	
+	@AfterGroups(groups={"setup"}, value={"Verifyautosubscribe_Test","VerifyautosubscribeIgnoresSocketCount_Test"})
+	@AfterClass(groups={"setup"})	// insurance
+	public void deleteFactsFileWithOverridingValues() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+	}
 
 
 	
