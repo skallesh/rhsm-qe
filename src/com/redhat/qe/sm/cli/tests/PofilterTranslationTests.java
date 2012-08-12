@@ -88,18 +88,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Configuration Methods ***********************************************************************
-	@BeforeClass (groups="setup")
-	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
-		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
-	}
-	Map<File,List<Translation>> translationFileMapForSubscriptionManager;
-
-	
-	@BeforeClass (groups="setup")
-	public void buildTranslationFileMapForCandlepinBeforeClass() {
-		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
-	}
-	Map<File,List<Translation>> translationFileMapForCandlepin;
 
 	
 	// Protected Methods ***********************************************************************
@@ -390,11 +378,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getSubscriptionManagerTranslationFilePofilterTestDataAsListOfLists());
 	}
 	protected List<List<Object>> getSubscriptionManagerTranslationFilePofilterTestDataAsListOfLists() {
-		
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-
-		// Client side
 		
+		// Client side
+		Map<File,List<Translation>> translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
@@ -543,11 +530,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		return TestNGUtils.convertListOfListsTo2dArray(getCandlepinTranslationFilePofilterTestDataAsListOfLists());
 	}
 	protected List<List<Object>> getCandlepinTranslationFilePofilterTestDataAsListOfLists() {
-		
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		// Server side
-		
+		Map<File,List<Translation>> translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
 		for (File translationFile : translationFileMapForCandlepin.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
