@@ -258,14 +258,15 @@ public class ConfigTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigRemoveNonExistingSectionName_Test() {
 		String section = "non-existing-section";
-		String name = "parameter";
-		String value = "value";
+		String name = "non-existing-parameter";
+		String value = "non-existing-value";
 
 		SSHCommandResult configResult = clienttasks.config_(null,true,null,new String[]{section, name, value});
 
 		// assert results...
 		Assert.assertEquals(configResult.getExitCode(), Integer.valueOf(255), "The exit code from a negative test attempt to remove a non-existing-section from the config.");
-		Assert.assertEquals(configResult.getStderr().trim(), String.format("No section: '%s'",section), "Stderr message");
+		//Assert.assertEquals(configResult.getStderr().trim(), String.format("No section: '%s'",section), "Stderr message");
+		Assert.assertEquals(configResult.getStderr().trim(), String.format("Error: Section %s and name %s does not exist.",section,name), "Stderr message");	
 		Assert.assertEquals(configResult.getStdout().trim(), "", "Stdout message should be empty");
 	}
 	
