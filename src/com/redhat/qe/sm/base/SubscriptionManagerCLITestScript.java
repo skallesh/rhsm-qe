@@ -42,6 +42,7 @@ import com.redhat.qe.sm.data.Org;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.sm.data.Translation;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -52,7 +53,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  * @author jsefler
  *
  */
-public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTestScript{
+public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTestScript {
 
 	public static Connection dbConnection = null;
 	
@@ -747,7 +748,51 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 
 
 	
+	
+	protected Map<File,List<Translation>> buildTranslationFileMapForSubscriptionManager() {
+		Map<File,List<Translation>> translationFileMapForSubscriptionManager = new HashMap<File, List<Translation>>();
+		if (client==null) return translationFileMapForSubscriptionManager;
+		
+		SSHCommandResult translationFileListingResult = client.runCommandAndWait("rpm -ql subscription-manager | grep rhsm.mo");
+		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
+			if (translationFilePath.isEmpty()) continue; // skip empty lines
+			
+			File translationFile = new File(translationFilePath);
+			
+			// decompile the rhsm.mo file into its original-like rhsm.po file
+			log.info("Decompiling the rhsm.mo file...");
+			File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
+			RemoteFileTasks.runCommandAndAssert(client,"msgunfmt --no-wrap "+translationFile+ " -o "+translationPoFile,new Integer(0));
+			
+			// parse the translations from the rhsm.mo into the translationFileMap
+			SSHCommandResult msgunfmtListingResult = client.runCommandAndWaitWithoutLogging("msgunfmt --no-wrap "+translationFilePath);
+			translationFileMapForSubscriptionManager.put(translationFile, Translation.parse(msgunfmtListingResult.getStdout()));
+		}
+		return translationFileMapForSubscriptionManager;
+	}
 
+	
+	protected Map<File,List<Translation>> buildTranslationFileMapForCandlepin() {
+		Map<File,List<Translation>> translationFileMapForCandlepin = new HashMap<File, List<Translation>>();
+		if (server==null) return translationFileMapForCandlepin;
+		
+		SSHCommandResult translationFileListingResult = server.runCommandAndWait("find "+sm_serverInstallDir+"/po -name *.po");
+		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
+			if (translationFilePath.isEmpty()) continue; // skip empty lines
+			
+			File translationFile = new File(translationFilePath);
+					
+			// parse the translations from the po file into the translationFileMap
+			SSHCommandResult catListingResult = server.runCommandAndWaitWithoutLogging("cat "+translationFilePath);
+			translationFileMapForCandlepin.put(translationFile, Translation.parse(catListingResult.getStdout()));
+		}
+		return translationFileMapForCandlepin;
+	}
+	
+	
+	
+	
+	
 	
 	
 	

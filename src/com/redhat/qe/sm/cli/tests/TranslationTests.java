@@ -3,7 +3,6 @@ package com.redhat.qe.sm.cli.tests;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +53,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   
  **/
 @Test(groups={"TranslationTests"})
-public class TranslationTests extends SubscriptionManagerCLITestScript{
+public class TranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
@@ -153,7 +152,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	public void VerifyTranslationFileIsInstalled_Test_DEPRECATED(Object bugzilla, String locale) {
 		File localeFile = localeFile(locale);
 		Assert.assertTrue(RemoteFileTasks.testExists(client, localeFile.getPath()),"Supported locale file '"+localeFile+"' is installed.");
-		if (!translationFileMap.keySet().contains(localeFile)) Assert.fail("Something went wrong in TranslationTests.buildTranslationFileMap().  File '"+localeFile+"' was not found in the translationFileMap.keySet().");
+		if (!translationFileMapForSubscriptionManager.keySet().contains(localeFile)) Assert.fail("Something went wrong in TranslationTests.buildTranslationFileMap().  File '"+localeFile+"' was not found in the translationFileMap.keySet().");
 	}
 	
 	@Test(	description="verify that only the expected rhsm.mo tranlation files are installed for each of the supported locales",
@@ -167,7 +166,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		
 		// assert no unexpected translation files are installed
 		boolean unexpectedTranslationFilesFound = false;
-		for (File translationFile : translationFileMap.keySet()) {
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			if (!supportedTranslationFiles.contains(translationFile)) {
 				unexpectedTranslationFilesFound = true;
 				log.warning("Unexpected translation file '"+translationFile+"' is installed.");
@@ -176,7 +175,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		// assert that all expected translation files are installed
 		boolean allExpectedTranslationFilesFound = true;
 		for (File translationFile : supportedTranslationFiles) {
-			if (!translationFileMap.keySet().contains(translationFile)) {
+			if (!translationFileMapForSubscriptionManager.keySet().contains(translationFile)) {
 				log.warning("Expected translation file '"+translationFile+"' is NOT installed.");
 				allExpectedTranslationFilesFound = false;
 			} else {
@@ -193,7 +192,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyTranslationFileContainsAllMsgids_Test(Object bugzilla, File translationFile) {
-		List<Translation> translationList = translationFileMap.get(translationFile);
+		List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 		boolean translationFilePassed=true;
 		for (String msgid : translationMsgidSet) {
 			int numMsgidOccurances=0;
@@ -278,44 +277,18 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	
 	// Configuration Methods ***********************************************************************
 	@BeforeClass (groups="setup")
-	public void buildTranslationFileMap() {
-		if (client==null) return;
-		
-		//List<File> translationFiles =  new ArrayList<File>();
-		SSHCommandResult translationFileListingResult = client.runCommandAndWait("rpm -ql subscription-manager | grep rhsm.mo");
-		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
-			if (translationFilePath.isEmpty()) continue; // skip empty lines
-			
-			File translationFile = new File(translationFilePath);
-			
-			// decompile the rhsm.mo file into its original-like rhsm.po file
-			log.info("Decompiling the rhsm.mo file...");
-			File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
-			RemoteFileTasks.runCommandAndAssert(client,"msgunfmt --no-wrap "+translationFile+ " -o "+translationPoFile,new Integer(0));
-			
-			// parse the translations from the rhsm.mo into the translationFileMap
-			SSHCommandResult msgunfmtListingResult = client.runCommandAndWaitWithoutLogging("msgunfmt --no-wrap "+translationFilePath);
-			translationFileMap.put(translationFile, Translation.parse(msgunfmtListingResult.getStdout()));
-		}
+	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
+		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
 	}
-	
-	@BeforeClass (groups="setup")
-	public void buildTranslationFileMapCandlepin() {
-		if (server==null) return;
-		
-		SSHCommandResult translationFileListingResult = server.runCommandAndWait("find "+sm_serverInstallDir+"/po -name *.po");
-		for (String translationFilePath : translationFileListingResult.getStdout().trim().split("\\n")) {
-			if (translationFilePath.isEmpty()) continue; // skip empty lines
-			
-			File translationFile = new File(translationFilePath);
-					
-			// parse the translations from the po file into the translationFileMap
-			SSHCommandResult catListingResult = server.runCommandAndWaitWithoutLogging("cat "+translationFilePath);
-			translationFileMapCandlepin.put(translationFile, Translation.parse(catListingResult.getStdout()));
-		}
-	}
-	
-	@BeforeClass (groups="setup",dependsOnMethods={"buildTranslationFileMap"})
+	Map<File,List<Translation>> translationFileMapForSubscriptionManager;
+
+//	@BeforeClass (groups="setup")
+//	public void buildTranslationFileMapForCandlepinBeforeClass() {
+//		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
+//	}
+//	Map<File,List<Translation>> translationFileMapForCandlepin;
+
+	@BeforeClass (groups="setup",dependsOnMethods={"buildTranslationFileMapForSubscriptionManagerBeforeClass"})
 	public void buildTranslationMsgidSet() {
 		if (clienttasks==null) return;
 		
@@ -324,20 +297,18 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 		//       the currently extracted message ids from the source code is probably incorrect.
 		//       There could be extra msgids in the translation files that were left over from the last round
 		//       of translations and are no longer applicable (should be excluded from this union algorithm).
-		for (File translationFile : translationFileMap.keySet()) {
-			List<Translation> translationList = translationFileMap.get(translationFile);
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
+			List<Translation> translationList = translationFileMapForSubscriptionManager.get(translationFile);
 			for (Translation translation : translationList) {
 				translationMsgidSet.add(translation.msgid);
 			}
 		}
 	}
-	
+	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
+
 	// Protected Methods ***********************************************************************
 	List<String> supportedLocales = Arrays.asList(	"as",	"bn_IN","de_DE","es_ES","fr",	"gu",	"hi",	"it",	"ja",	"kn",	"ko",	"ml",	"mr",	"or",	"pa",	"pt_BR","ru",	"ta_IN","te",	"zh_CN","zh_TW"); 
 	List<String> supportedLangs = Arrays.asList(	"as_IN","bn_IN","de_DE","es_ES","fr_FR","gu_IN","hi_IN","it_IT","ja_JP","kn_IN","ko_KR","ml_IN","mr_IN","or_IN","pa_IN","pt_BR","ru_RU","ta_IN","te_IN","zh_CN","zh_TW"); 
-	Map<File,List<Translation>> translationFileMap = new HashMap<File, List<Translation>>();
-	Map<File,List<Translation>> translationFileMapCandlepin = new HashMap<File, List<Translation>>();
-	Set<String> translationMsgidSet = new HashSet<String>(500);  // 500 is an estimated size
 
 	
 	protected List<String> newList(String item) {
@@ -378,7 +349,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 	}
 	protected List<List<Object>> getTranslationFileDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		for (File translationFile : translationFileMap.keySet()) {
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			BlockedByBzBug bugzilla = null;
 			// Bug 824100 - pt_BR translations are outdated for subscription-manager 
 			if (translationFile.getPath().contains("/pt_BR/")) bugzilla = new BlockedByBzBug("824100");
@@ -435,7 +406,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript{
 				//	Extraction -- useful mainly for extracting certain types of string
 				"untranslated");
 // debugTesting pofilterTests = Arrays.asList("newlines");
-		for (File translationFile : translationFileMap.keySet()) {
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
 				// Bug 825362	[es_ES] failed pofilter accelerator tests for subscription-manager translations 

@@ -1,28 +1,28 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
 import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.Translation;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 //import com.sun.org.apache.xalan.internal.xsltc.compiler.Pattern;
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 
 /**
  * @author fsharath
@@ -49,14 +49,14 @@ import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
  *   https://github.com/translate/translate
  **/
 @Test(groups={"PofilterTranslationTests"})
-public class PofilterTranslationTests extends TranslationTests{
+public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	// Test Methods ***********************************************************************
 
 	@Test(	description="run pofilter translate tests on subscription manager translation files",
-			groups={},
 			dataProvider="getSubscriptionManagerTranslationFilePofilterTestData",
+			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void subscriptionManagerPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
@@ -64,8 +64,8 @@ public class PofilterTranslationTests extends TranslationTests{
 	}
 	
 	@Test(	description="run pofilter translate tests on candlepin translation files",
-			groups={},
 			dataProvider="getCandlepinTranslationFilePofilterTestData",
+			groups={},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void candlepinPofilter_Test(Object bugzilla, String pofilterTest, File translationFile) {
@@ -73,20 +73,37 @@ public class PofilterTranslationTests extends TranslationTests{
 	}
 	
 
-
-	
-	
-	
-	
-	
 	// Candidates for an automated Test:
 	
-	// Configuration Methods ***********************************************************************
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// Configuration Methods ***********************************************************************
+	@BeforeClass (groups="setup")
+	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
+		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
+	}
+	Map<File,List<Translation>> translationFileMapForSubscriptionManager;
+
+	
+	@BeforeClass (groups="setup")
+	public void buildTranslationFileMapForCandlepinBeforeClass() {
+		translationFileMapForCandlepin = buildTranslationFileMapForCandlepin();
+	}
+	Map<File,List<Translation>> translationFileMapForCandlepin;
+
 	
 	// Protected Methods ***********************************************************************
 	
-
 	// see http://translate.sourceforge.net/wiki/toolkit/pofilter_tests
 	//	Critical -- can break a program
 	//    	accelerators, escapes, newlines, nplurals, printf, tabs, variables, xmltags, dialogsizes
@@ -378,7 +395,7 @@ public class PofilterTranslationTests extends TranslationTests{
 
 		// Client side
 		
-		for (File translationFile : translationFileMap.keySet()) {
+		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
 				// Bug 825362	[es_ES] failed pofilter accelerator tests for subscription-manager translations 
@@ -531,7 +548,7 @@ public class PofilterTranslationTests extends TranslationTests{
 		
 		// Server side
 		
-		for (File translationFile : translationFileMapCandlepin.keySet()) {
+		for (File translationFile : translationFileMapForCandlepin.keySet()) {
 			for (String pofilterTest : pofilterTests) {
 				BlockedByBzBug bugzilla = null;
 				
