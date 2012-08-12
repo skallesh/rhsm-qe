@@ -2517,6 +2517,8 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			ll.add(Arrays.asList(new Object[] {null,	org,	serviceLevel}));
 		}
 		
+ 		// TODO FIGURE OUT WHY THIS DATAPROVIDER SUPPLIES AN ORG, BUT NO USERNAME AND PASSWORD.  SEEMS WEIRD. I DON"T REMEMBER WHY I DID THIS.  THEN UPDATE ALL TESTS THAT USE THIS DATAPROVIDER.
+ 		
 		return ll;
 	}
 }

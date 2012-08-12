@@ -722,11 +722,14 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWithAvailableServiceLevel_Test(Object bugzilla, String org, String serviceLevel) {
+	public void ServiceLevelSetWithAvailableServiceLevel_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		
 		// register (if not already registered)
-		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null);
-
+		//if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null);
+		if (!org.equals(clienttasks.getCurrentlyRegisteredOwnerKey())) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		}
+		
 		clienttasks.service_level(null, null, serviceLevel, null, null, null, null, null, null, null);
 		Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevel, "The --set serviceLevel matches the current --show serviceLevel.");
 	}
@@ -737,7 +740,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void UnsetServiceLevel_Test(Object bugzilla, String org, String serviceLevel) {
+	public void UnsetServiceLevel_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		
 		ServiceLevelSetWithAvailableServiceLevel_Test(bugzilla,org,serviceLevel);
 		clienttasks.service_level(null, null, "", null, null, null, null, null, null, null);
@@ -750,10 +753,13 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelSetWithAvailableServiceLevelIsPreservedThroughIdentityRegeneration_Test(Object bugzilla, String org, String serviceLevel) {
+	public void ServiceLevelSetWithAvailableServiceLevelIsPreservedThroughIdentityRegeneration_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		
 		// register (if not already registered)
-		if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null);
+		//if (clienttasks.getCurrentConsumerId()==null) clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, null, null, null, null, null);
+		if (!org.equals(clienttasks.getCurrentlyRegisteredOwnerKey())) {
+			clienttasks.register(sm_clientUsername, sm_clientPassword, org, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		}
 		
 		serviceLevel = randomizeCaseOfCharactersInString(serviceLevel);
 		clienttasks.service_level(null, null, serviceLevel, null, null, null, null, null, null, null);
@@ -767,7 +773,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelUnsetAfterSet_Test(Object bugzilla, String org, String serviceLevel) {
+	public void ServiceLevelUnsetAfterSet_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
 		
 		ServiceLevelSetWithAvailableServiceLevel_Test(bugzilla,org,serviceLevel);
 		clienttasks.service_level(null, null, null, true, null, null, null, null, null, null);
@@ -777,11 +783,12 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="subscription-manager: service-level --list should be unique (regardless of case)",
 			groups={/*"blockedByBug-845043",*/"AcceptanceTests"},
+			dataProvider="getRegisterCredentialsExcludingNullOrgData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void ServiceLevelListIsUnique_Test() {
+	public void ServiceLevelListIsUnique_Test(String username, String password, String org) {
 		
-		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg);
+		clienttasks.register(username, password, org,null,null,null,null,null,null,null,(String)null,null,null,true,null,null,null,null);
 		
 		List<String> availServiceLevels = clienttasks.getCurrentlyAvailableServiceLevels();
 		Set<String> uniqueServiceLevels = new HashSet<String>();
