@@ -61,8 +61,8 @@ public class SubscriptionManagerTasks {
 	public final String rhnSystemIdFile		= "/etc/sysconfig/rhn/systemid";
 	public final String rhnUp2dateFile		= "/etc/sysconfig/rhn/up2date";
 	public final String factsDir			= "/etc/rhsm/facts";
-	public final String certVersionFactsFilename	= "/automation_forced_certificate_version.facts";
-	public final String overrideFactsFilename		= "/automation_override.facts";
+	public final String certVersionFactsFilename	= "automation_forced_certificate_version.facts";
+	public final String overrideFactsFilename		= "automation_override.facts";
 	public final String brandingDir			= "/usr/share/rhsm/subscription_manager/branding";
 	public final String varLogMessagesFile	= "/var/log/messages";
 	public final String varLogAuditFile		= "/var/log/audit/audit.log";
@@ -1157,8 +1157,12 @@ public class SubscriptionManagerTasks {
 	 * @param factsMap - map of key/values pairs that will get written as JSON to a facts file that will override the true facts on the system.  Note: subscription-manager facts --update may need to be called after this method to realize the override.
 	 */
 	public void createFactsFileWithOverridingValues (Map<String,String> factsMap) {
-		createFactsFileWithOverridingValues (factsDir+overrideFactsFilename, factsMap);
+		createFactsFileWithOverridingValues (overrideFactsFilename, factsMap);
 	}
+	/**
+	 * @param factsFilename - name for the facts file (e.g. sockets.facts); must end in ".facts" to be recognized by rhsm; do NOT prepend with /etc/rhsm/facts
+	 * @param factsMap
+	 */
 	public void createFactsFileWithOverridingValues (String factsFilename, Map<String,String> factsMap) {
 		
 		// assemble an echo command and run it to create a facts file
@@ -1167,14 +1171,14 @@ public class SubscriptionManagerTasks {
 			keyvaluesString += String.format("\"%s\":\"%s\", ", key, factsMap.get(key));
 		}
 		keyvaluesString = keyvaluesString.replaceFirst(", *$", "");
-		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, factsDir+factsFilename);
+		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, (factsDir+"/"+factsFilename).replaceAll("/{2,}", "/"));	// join the dir and filename and make sure there are not too many /'s
         sshCommandRunner.runCommandAndWait(echoCommand);	// create an override facts file
 	}
 	public void deleteFactsFileWithOverridingValues () {
 		deleteFactsFileWithOverridingValues(overrideFactsFilename);	// delete the override facts file
 	}
 	public void deleteFactsFileWithOverridingValues (String factsFilename) {
-		String deleteCommand = String.format("rm -f %s", factsDir+factsFilename);
+		String deleteCommand = String.format("rm -f %s", (factsDir+"/"+factsFilename).replaceAll("/{2,}", "/"));
 		sshCommandRunner.runCommandAndWait(deleteCommand);
 	}
 	
