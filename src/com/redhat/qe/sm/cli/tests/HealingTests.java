@@ -178,7 +178,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((certs.size()!=0),"autoheal is successful"); 
 		result=clienttasks.setAndGetDate(null, true, null).getStdout();
 		NewStartDate=result.split(" ");
-		newminutes=NewStartDate[3].split(":");
+		newminutes=NewStartDate[4].split(":");
 		min =newminutes[0]+newminutes[1]; 
 		newdate=dates[0]+"0"+exp+min+dates[2];
 		System.out.println("new date  "+ newdate);
