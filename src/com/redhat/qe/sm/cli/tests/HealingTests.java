@@ -1,7 +1,11 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import org.json.JSONException;
@@ -22,6 +26,7 @@ import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.SSHCommandResult;
+import com.redhat.qe.tools.SSHCommandRunner;
 
 /**
  * @author jsefler
@@ -30,7 +35,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 @Test(groups={"HealingTests"})
 public class HealingTests extends SubscriptionManagerCLITestScript {
-	
+	protected /*NOT static*/ SSHCommandRunner sshCommandRunner = null;
 	
 	// Test methods ***********************************************************************
 		/**
@@ -84,13 +89,11 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> availableServiceLevelData : getAllAvailableServiceLevelDataAsListOfLists()) {
 			availableService= ((String)availableServiceLevelData.get(2));
 		}
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-		SSHCommandResult result = clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
+		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
-		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
-		
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		if(certs.size()!=0){
 		Assert.assertTrue((certs.size()!=0),"autoheal is succesfull with Service level"+availableService); 
@@ -103,20 +106,109 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	/**
 	 * @author skallesh
+	 * @throws Exception 
+	 */
+	@Test(	description="verfying Auto-heal when auto-heal parameter is turned off",
+			groups={"AutohealTurnedOff"},
+			enabled=true)	
+	
+	
+	public void AutohealTurnedOff() throws Exception {
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,false);
+		Assert.assertFalse(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled off (expected value=false).");
+		Integer healFrequency=2;
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
+		clienttasks.unsubscribe(true, null, null, null, null);
+		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertTrue((certs.size()!=0),"autoheal is successful"); 
+		
+	}
+	
+	/**
+	 * @author skallesh
+	 */
+	@Test(	description="Auto-heal for Expired subscription",
+			groups={"AutohealForExpired"},
+			enabled=true)	
+	@ImplementsNitrateTest(caseId=119327)
+	
+	public void VerifyAutohealForExpiredSubscription() {
+		Integer healFrequency=2;
+		String expireDate = null;
+		String startDate= null;
+		Calendar date = null;
+		String productId=null;
+		String min=null;
+		String[] newminutes;
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
+		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
+			if((installedProducts.status).equals("Subscribed")){
+				date = installedProducts.endDate;	
+				productId=installedProducts.productId;
+				expireDate=new SimpleDateFormat("MM-dd-yyyy").format(date.getTime());
+				startDate=new SimpleDateFormat("MM-dd-yyyy").format(date.getTime());
+			}
+		}
+		
+		String[] dates=expireDate.split("-");
+		int exp=Integer.parseInt(dates[1])+1;
+		String result=clienttasks.setAndGetDate(null, true, null).getStdout();
+		String[] NewStartDate=result.split(" ");
+		newminutes=NewStartDate[3].split(":");
+		min =newminutes[0]+newminutes[1]; 
+		String newdate=dates[0]+"0"+exp+min+dates[2];
+		clienttasks.setAndGetDate(true, null, newdate);
+		dates=startDate.split("-");
+		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
+			if((installedProducts.productId).equals(productId)){
+				Assert.assertEquals(installedProducts.status, "Expired");
+			}
+			
+		}
+	
+		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
+		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
+		Assert.assertTrue((certs.size()!=0),"autoheal is successful"); 
+		result=clienttasks.setAndGetDate(null, true, null).getStdout();
+		NewStartDate=result.split(" ");
+		newminutes=NewStartDate[4].split(":");
+		min =newminutes[0]+newminutes[1]; 
+		newdate=dates[0]+"0"+exp+min+dates[2];
+		System.out.println("new date  "+ newdate);
+		clienttasks.setAndGetDate(true, null, newdate);
+		
+
+		
+	}
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
 	 */
 	@Test(	description="Auto-heal for subscription",
 			groups={"AutoHeal"},
 			enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	
-	public void VerifyAutohealForSubscription() {
+	public void VerifyAutohealForSubscription() throws JSONException, Exception {
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true, null, null, null, null));
+		
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertFalse(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled off (expected value=false).");
+
 		Integer healFrequency=2;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
-		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue((certs.size()!=0),"autoheal is successful"); 
 	}
@@ -137,7 +229,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> availableServiceLevelData : getAllAvailableServiceLevelDataAsListOfLists()) {
 			availableService= ((String)availableServiceLevelData.get(2));
 		} //TODO what does this loop do?
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : productCerts) {
@@ -150,12 +242,12 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
+		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
 		
-		SSHCommandResult result = clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
-		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
+		clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
@@ -198,8 +290,8 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	// Candidates for an automated Test:
 	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with blank or incorrect text produces traceback.
 	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring subscriptions
-	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires
-	// TODO   subcase Bug 746218 - auto-heal isn't working for partial subscription
+	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires //working on
+	// TODO   subcase Bug 746218 - auto-heal isn't working for partial subscription //done
 	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing
 	
 	
