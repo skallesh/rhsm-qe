@@ -852,6 +852,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		String cert = jsonProductCert.getString("cert");
 		String key = jsonProductCert.getString("key");
 		client.runCommandAndWait("echo \""+cert+"\" > "+clienttasks.productCertDir+"/TestExemptProduct"+providedProductIds.get(0)+"_.pem");
+		
+		// add this exempt service level to the script parameter for exempt service levels
 		if (!sm_exemptServiceLevelsInUpperCase.contains(serviceLevel.toUpperCase())) {
 			sm_exemptServiceLevelsInUpperCase.add(serviceLevel.toUpperCase());
 		}
