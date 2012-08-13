@@ -744,7 +744,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void CandlepinConsumerEntitlementsDryrunWithServiceLevel_Test(Object bugzilla, String org, String serviceLevel) throws JSONException, Exception {
+	public void CandlepinConsumerEntitlementsDryrunWithServiceLevel_Test(Object bugzilla, String serviceLevel) throws JSONException, Exception {
 		// Reference: https://engineering.redhat.com/trac/Entitlement/wiki/SlaSubscribe
 	    //"GET"
 	    //"url": "/consumers/{consumer_uuid}/entitlements/dry-run?service_level=#{service_level}", 
@@ -1463,41 +1463,12 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	protected List<List<Object>>getSubscribeWithAutoAndServiceLevelDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = getAllAvailableServiceLevelDataAsListOfLists(); if (!isSetupBeforeSuiteComplete) return ll;
 		
-		// not the most accurate way to set org, but will work since most tests using this dataProvider do not use the org parameter
-		String org = ll.isEmpty()? null:(String) ll.get(0).get(1);
-		
 		// throw in null and "" as a possible service levels
 		// Object bugzilla, String org, String serviceLevel
-		ll.add(Arrays.asList(new Object[] {null,	org,	null}));
-		ll.add(Arrays.asList(new Object[] {null,	org,	""}));
+		ll.add(Arrays.asList(new Object[] {null,	null}));
+		ll.add(Arrays.asList(new Object[] {null,	""}));
 		
 		return ll;
-		
-//DELETEME
-//		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-//		
-//		// register with force
-//		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, true, false, null, null, null));
-//		
-//		// what is the consumer's org?
-//		String org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
-//
-//		// get all the valid service levels available to this org
-// 		if (sm_serverOld) {
-//	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
-//	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
-//	 		}
-// 		} else
-//		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
-//			
-//			// Object bugzilla, String serviceLevel
-//			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
-//		}
-//		// throw in null and "" as a possible service level
-//		ll.add(Arrays.asList(new Object[] {null,	null}));
-//		ll.add(Arrays.asList(new Object[] {null,	""}));
-//		
-//		return ll;
 	}
 	
 }
