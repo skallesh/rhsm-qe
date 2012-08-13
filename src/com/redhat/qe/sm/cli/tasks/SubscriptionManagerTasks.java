@@ -1032,7 +1032,7 @@ public class SubscriptionManagerTasks {
 
 	public String getCurrentlyRegisteredOwnerKey() throws JSONException, Exception {
 		if (this.currentlyRegisteredOrg!=null) return this.currentlyRegisteredOrg;
-		
+		if (this.currentlyRegisteredUsername==null) return null;
 //		String hostname = getConfFileParameter(rhsmConfFile, "hostname");
 //		String port = getConfFileParameter(rhsmConfFile, "port");
 //		String prefix = getConfFileParameter(rhsmConfFile, "prefix");

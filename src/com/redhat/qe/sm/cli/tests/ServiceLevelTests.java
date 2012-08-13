@@ -824,10 +824,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			return;	
 		}
 	
-		// TestExempt Product Subscription
-		name = "TestExempt Product Subscription";
-		productId = "test-exempt-product";
-		serviceLevel = "Test-Exempt SLA";
+		// Subscription with an exempt_support_level
+		serviceLevel = "Exempt SLA";
+		name = "An \""+serviceLevel+"\" service level subscription (matches all service levels)";
+		productId = "exempt-sla-product-sku";
 		providedProductIds.clear();
 		providedProductIds.add("99000");
 		attributes.clear();
@@ -843,7 +843,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+providedProductIds.get(0));
 		// create a new engineering product, marketing product that provides the engineering product, and a subscription for the marketing product
 		attributes.put("type", "SVC");
-		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name+" BITS", providedProductIds.get(0), 1, attributes, null);
+		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "Exempt Product Bits", providedProductIds.get(0), 1, attributes, null);
 		attributes.put("type", "MKT");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
@@ -869,10 +869,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			return;	
 		}
 	
-		// Subscription with ULTImate support_level
-		name = "The \"ULTImate\" service level subscription";
-		serviceLevel = "ULTImate";
-		productId = serviceLevel+"-service-product-1";
+		// Subscription with ULTImate SLA support_level
+		serviceLevel = "ULTImate SLA";
+		name = "The \""+serviceLevel+"\" service level subscription";
+		productId = "ultimate-sla-product-sku-1";
 		providedProductIds.clear();
 		attributes.clear();
 		attributes.put("support_level", serviceLevel);
@@ -889,10 +889,10 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 
-		// Subscription with ultiMATE support_level
-		name = "The \"ultiMATE\" service level subscription";
-		serviceLevel = "ultiMATE";
-		productId = serviceLevel+"-service-product-2";
+		// Subscription with ultiMATE SLAsupport_level
+		serviceLevel = "ultiMATE SLA";
+		name = "The \""+serviceLevel+"\" service level subscription";
+		productId = "ultimate-sla-product-sku-2";
 		providedProductIds.clear();
 		attributes.clear();
 		attributes.put("support_level", serviceLevel);
