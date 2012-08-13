@@ -112,10 +112,10 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 			// NOTE: After updating the candlepin.conf file, the server needs to be restarted, therefore this will not work against the Hosted IT server which we don't want to restart or deploy
 			//       I suggest manually setting this on hosted and asking calfanso to restart
-		//	servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
-		//	servertasks.cleanOutCRL();
-			//servertasks.deploy();
-	//		servertasks.setupTranslateToolkit(sm_translateToolkitGitRepository);
+			servertasks.updateConfigFileParameter("pinsetter.org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask.schedule","0 0\\/2 * * * ?");  // every 2 minutes
+			servertasks.cleanOutCRL();
+			servertasks.deploy();
+			servertasks.setupTranslateToolkit(sm_translateToolkitGitRepository);
 			servertasks.reportAPI();
 			
 			// also connect to the candlepin server database
@@ -2500,25 +2500,20 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		
 		// register with force (so we can find the org to which the sm_clientUsername belongs in case sm_clientOrg is null)
-		String org = sm_clientOrg;
-		if (org==null) {
-			String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, null, null, true, false, null, null, null));
-			org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
-		}
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, "SubscriptionServiceLevelConsumer", null, null, null, null, (String)null, null, null, true, false, null, null, null));
+		String org = CandlepinTasks.getOwnerKeyOfConsumerId(sm_clientUsername,sm_clientPassword,sm_serverUrl,consumerId);
 		
 		// get all the valid service levels available to this org
-		// Object bugzilla, String org, String serviceLevel
+		// Object bugzilla, String serviceLevel
  		if (sm_serverOld) {
 	 		for (String serviceLevel : clienttasks.getCurrentlyAvailableServiceLevels()) {
-	 			ll.add(Arrays.asList(new Object[] {null,	org,	serviceLevel}));
+	 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
 	 		}
  		} else
 		for (String serviceLevel : CandlepinTasks.getServiceLevelsForOrgKey(sm_clientUsername, sm_clientPassword, sm_serverUrl, org)) {
-			ll.add(Arrays.asList(new Object[] {null,	org,	serviceLevel}));
+			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
 		}
-		
- 		// TODO FIGURE OUT WHY THIS DATAPROVIDER SUPPLIES AN ORG, BUT NO USERNAME AND PASSWORD.  SEEMS WEIRD. I DON"T REMEMBER WHY I DID THIS.  THEN UPDATE ALL TESTS THAT USE THIS DATAPROVIDER.
- 		
+				
 		return ll;
 	}
 }
