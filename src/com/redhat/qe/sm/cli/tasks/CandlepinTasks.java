@@ -113,7 +113,7 @@ public class CandlepinTasks {
 	 * @param sshCommandRunner
 	 * @param serverInstallDir
 	 * @param serverImportDir
-	 * @param isOnPremises
+	 * @param serverType
 	 * @param branch - git branch (or tag) to deploy.  The most common values are "master" and "candlepin-latest-tag" (which is a special case)
 	 */
 	public CandlepinTasks(SSHCommandRunner sshCommandRunner, String serverInstallDir, String serverImportDir, CandlepinType serverType, String branch) {

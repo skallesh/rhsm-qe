@@ -1755,7 +1755,7 @@ public class SubscriptionManagerTasks {
 		if (name!=null)															command += " --name="+String.format(name.contains("\"")?"'%s'":"\"%s\"", name./*escape backslashes*/replace("\\", "\\\\")./*escape backticks*/replace("`", "\\`"));
 		if (consumerid!=null)													command += " --consumerid="+consumerid;
 		if (autosubscribe!=null && autosubscribe)								command += " --autosubscribe";
-		if (servicelevel!=null)													command += " --servicelevel="+servicelevel;
+		if (servicelevel!=null)													command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (release!=null)														command += " --release="+release;
 		if (activationkeys!=null)	for (String activationkey : activationkeys)	command += " --activationkey="+String.format(activationkey.contains(" ")?"\"%s\"":"%s", activationkey);	// quote activationkey containing spaces
 		if (serverurl!=null)													command += " --serverurl="+serverurl;
@@ -2848,7 +2848,7 @@ public class SubscriptionManagerTasks {
 		if (consumed!=null && consumed)		command += " --consumed";
 		if (installed!=null && installed)	command += " --installed";
 		if (ondate!=null)					command += " --ondate="+ondate;
-		if (servicelevel!=null)				command += " --servicelevel="+(servicelevel.equals("")?"\"\"":servicelevel);	// quote an empty string
+		if (servicelevel!=null)				command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (proxy!=null)					command += " --proxy="+proxy;
 		if (proxyuser!=null)				command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)			command += " --proxypassword="+proxypassword;
@@ -3104,7 +3104,7 @@ public class SubscriptionManagerTasks {
 		// assemble the command
 		String command = this.command;									command += " subscribe";
 		if (auto!=null && auto)											command += " --auto";
-		if (servicelevel!=null)											command += " --servicelevel="+(servicelevel.equals("")?"\"\"":servicelevel);	// quote an empty string
+		if (servicelevel!=null)											command += " --servicelevel="+String.format(servicelevel.contains(" ")||servicelevel.isEmpty()?"\"%s\"":"%s", servicelevel);	// quote a value containing spaces or is empty
 		if (poolIds!=null)		for (String poolId : poolIds)			command += " --pool="+poolId;
 		if (productIds!=null)	for (String productId : productIds)		command += " --product="+productId;
 		if (regtokens!=null)	for (String regtoken : regtokens)		command += " --regtoken="+regtoken;
