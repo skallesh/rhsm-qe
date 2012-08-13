@@ -156,14 +156,14 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		String[] dates=expireDate.split("-");
+	/*	String[] dates=expireDate.split("-");
 		int exp=Integer.parseInt(dates[1])+1;
-		String result=clienttasks.setAndGetDate(null, true, null).getStdout();
-		String[] NewStartDate=result.split(" ");
+	//	String result=clienttasks.setAndGetDate(null, true, null).getStdout();
+	//	String[] NewStartDate=result.split(" ");
 		newminutes=NewStartDate[3].split(":");
 		min =newminutes[0]+newminutes[1]; 
 		String newdate=dates[0]+"0"+exp+min+dates[2];
-		clienttasks.setAndGetDate(true, null, newdate);
+	//	clienttasks.setAndGetDate(true, null, newdate);
 		dates=startDate.split("-");
 		System.out.println("startDate is "+startDate);
 		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
@@ -184,7 +184,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		newdate=dates[0]+"0"+exp+min+dates[2];
 		System.out.println("new date  "+ newdate);
 		clienttasks.setAndGetDate(true, null, newdate);
-		
+		*/
 
 		
 	}
