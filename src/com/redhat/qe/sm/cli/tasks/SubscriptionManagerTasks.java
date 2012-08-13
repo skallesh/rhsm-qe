@@ -2793,6 +2793,28 @@ public class SubscriptionManagerTasks {
 	public SSHCommandResult unregister(String proxy, String proxyuser, String proxypassword) {
 		SSHCommandResult sshCommandResult = unregister_(proxy, proxyuser, proxypassword);
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		String nErrMsg = "Network error, unable to connect to server.";
+		if (sshCommandResult.getExitCode()==255 && sshCommandResult.getStdout().trim().startsWith(nErrMsg)) { 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="844455"; 
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				/* this did not work since it deleted the redhat.repo file
+				log.warning("The workaround for this SSLTimeoutError bug during unregister is to execute clean and return its result as a substitute for the unregister result.");
+				return clean(proxy, proxyuser, proxypassword);
+				*/
+				/* this did not work; ended up with a yum traceback M2Crypto.SSL.SSLError: No such file or directory
+				log.warning("The workaround for this SSLTimeoutError bug '"+bugId+"' during an unregister is to manually delete the consumer and entitlement certs and proceed onward with the current test.");
+				removeAllCerts(true, true, false);
+				return sshCommandResult;
+				*/
+				clean(proxy, proxyuser, proxypassword);
+				throw new SkipException("Skipping this test while bug '"+bugId+"' is open.");
+			}
+		}
+		// END OF WORKAROUND
+		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
 			// TEMPORARY WORKAROUND FOR BUG
