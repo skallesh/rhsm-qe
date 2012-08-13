@@ -3220,6 +3220,7 @@ public class SubscriptionManagerTasks {
 //		return sshCommandResult;
 //	}
 	
+	
 	public File subscribeToProductId(String productId) {
 		//RemoteFileTasks.runCommandExpectingNonzeroExit(sshCommandRunner,"subscription-manager-cli subscribe --product="+product);
 		
@@ -4966,6 +4967,13 @@ repolist: 3,394
 	
 	public SSHCommandResult runCommandWithLang(String lang,String rhsmCall){
 		return sshCommandRunner.runCommandAndWait("LANG="+lang+" " + rhsmCall);
+	}
+	public SSHCommandResult setAndGetDate(Boolean set,Boolean get,String setdate){
+		String cmd ="date ";
+		if (set!=null && set)		cmd +=setdate;
+		if (get!=null && get)		 cmd.trim();
+		return sshCommandRunner.runCommandAndWait(cmd);
+		 
 	}
 	
 	public void setLanguage(String lang){
