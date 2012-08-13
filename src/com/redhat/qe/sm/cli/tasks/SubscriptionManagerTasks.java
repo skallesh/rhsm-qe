@@ -3741,7 +3741,7 @@ public class SubscriptionManagerTasks {
 		SSHCommandResult sshCommandResult = unsubscribe_(all, serial, proxy, proxyuser, proxypassword);
 		
 		// assert results
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the subscribe command indicates a success.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the unsubscribe command indicates a success.");
 		return sshCommandResult;
 	}
 	
