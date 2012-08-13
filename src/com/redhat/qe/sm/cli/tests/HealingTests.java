@@ -134,7 +134,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired"},
-			enabled=true)	
+			enabled=false)	
 	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyAutohealForExpiredSubscription() {
@@ -165,6 +165,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		String newdate=dates[0]+"0"+exp+min+dates[2];
 		clienttasks.setAndGetDate(true, null, newdate);
 		dates=startDate.split("-");
+		System.out.println("startDate is "+startDate);
 		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
 			if((installedProducts.productId).equals(productId)){
 				Assert.assertEquals(installedProducts.status, "Expired");
@@ -173,7 +174,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		}
 	
 		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
-		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+		//SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue((certs.size()!=0),"autoheal is successful"); 
 		result=clienttasks.setAndGetDate(null, true, null).getStdout();
@@ -289,8 +290,8 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	
 	// Candidates for an automated Test:
 	// TODO Bug 744654 - [ALL LANG] [RHSM CLI]config module_ config Server port with blank or incorrect text produces traceback.
-	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring subscriptions
-	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires //working on
+	// TODO Cases in Bug 710172 - [RFE] Provide automated healing of expiring subscriptions//done
+	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires //done
 	// TODO   subcase Bug 746218 - auto-heal isn't working for partial subscription //done
 	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing
 	
