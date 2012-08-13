@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,18 +108,19 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception 
 	 */
-	@Test(	description="Auto-heal for Expired subscription",
+	@Test(	description="verfying Auto-heal when auto-heal parameter is turned off",
 			groups={"AutohealTurnedOff"},
 			enabled=true)	
 	
 	
 	public void AutohealTurnedOff() throws Exception {
+		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,false);
 		Assert.assertFalse(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled off (expected value=false).");
 		Integer healFrequency=2;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
@@ -138,9 +140,11 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 	public void VerifyAutohealForExpiredSubscription() {
 		Integer healFrequency=2;
 		String expireDate = null;
+		String startDate= null;
 		Calendar date = null;
 		String productId=null;
 		String min=null;
+		String[] newminutes;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
 		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
@@ -148,33 +152,38 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 				date = installedProducts.endDate;	
 				productId=installedProducts.productId;
 				expireDate=new SimpleDateFormat("MM-dd-yyyy").format(date.getTime());
+				startDate=new SimpleDateFormat("MM-dd-yyyy").format(date.getTime());
 			}
 		}
-		String dates[]=expireDate.split("-");
+		
+		String[] dates=expireDate.split("-");
 		int exp=Integer.parseInt(dates[1])+1;
 		String result=clienttasks.setAndGetDate(null, true, null).getStdout();
 		String[] NewStartDate=result.split(" ");
-		String[] newminutes =NewStartDate[3].split(":");
+		newminutes=NewStartDate[3].split(":");
 		min =newminutes[0]+newminutes[1]; 
 		String newdate=dates[0]+"0"+exp+min+dates[2];
 		clienttasks.setAndGetDate(true, null, newdate);
+		dates=startDate.split("-");
 		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
 			if((installedProducts.productId).equals(productId)){
 				Assert.assertEquals(installedProducts.status, "Expired");
 			}
 			
 		}
-		System.out.println( "expired date is "+expireDate+ " is ths new date " +newdate);
+	
 		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		Assert.assertTrue((certs.size()!=0),"autoheal is successful"); 
 		result=clienttasks.setAndGetDate(null, true, null).getStdout();
-		String[] currentDate=result.trim().split(" ");
-		String [] minute =currentDate[4].split(":");
-		min =minute[0]+minute[1];
-		newdate=currentDate[0]+currentDate[1]+min+currentDate[2];
-		clienttasks.setAndGetDate(true, null, newdate).getStdout();
+		NewStartDate=result.split(" ");
+		newminutes=NewStartDate[3].split(":");
+		min =newminutes[0]+newminutes[1]; 
+		newdate=dates[0]+"0"+exp+min+dates[2];
+		System.out.println("new date  "+ newdate);
+		clienttasks.setAndGetDate(true, null, newdate);
+		
 
 		
 	}
@@ -192,9 +201,11 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true, null, null, null, null));
 		
 		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertFalse(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled off (expected value=false).");
+
 		Integer healFrequency=2;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
@@ -218,7 +229,7 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 		for (List<Object> availableServiceLevelData : getAllAvailableServiceLevelDataAsListOfLists()) {
 			availableService= ((String)availableServiceLevelData.get(2));
 		} //TODO what does this loop do?
-		SSHCommandResult subscribeResult = clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : productCerts) {
@@ -231,12 +242,12 @@ public class HealingTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		
-		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
+		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
 		
-		SSHCommandResult result = clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
-		String originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
+		clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
