@@ -319,7 +319,13 @@ public class SubscriptionManagerTasks {
 			certDir = this.consumerCertDir;	// getConfigFileParameter("consumerCertDir");
 			log.info("Cleaning out certs from consumerCertDir: "+certDir);
 			if (!certDir.startsWith("/etc/pki/") && !certDir.startsWith("/tmp/")) log.warning("UNRECOGNIZED DIRECTORY.  NOT CLEANING CERTS FROM: "+certDir);
-			else sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
+			else {
+				sshCommandRunner.runCommandAndWait("rm -rf "+certDir+"/*");
+				this.currentlyRegisteredUsername = null;
+				this.currentlyRegisteredPassword = null;
+				this.currentlyRegisteredOrg = null;
+				this.currentlyRegisteredType = null;
+			}
 		}
 		
 		if (entitlements) {
@@ -2776,7 +2782,7 @@ public class SubscriptionManagerTasks {
 			this.currentlyRegisteredPassword = null;
 			this.currentlyRegisteredOrg = null;
 			this.currentlyRegisteredType = null;
-		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already registered	
+		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(1))) {		// already unregistered	
 		} else if (sshCommandResult.getExitCode().equals(Integer.valueOf(255))) {	// failure
 		}
 		
