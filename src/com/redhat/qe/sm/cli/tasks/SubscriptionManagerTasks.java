@@ -4996,21 +4996,6 @@ repolist: 3,394
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
 	
-public void moveProductCertFiles(String filename,Boolean move) {
-		
-		//sshCommandRunner.runCommandAndWait("find /etc/pki/product/ -name '*.pem'");
-		sshCommandRunner.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
-		if(move==true){
-			sshCommandRunner.runCommandAndWait("mv "+productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
-				}else
-			sshCommandRunner.runCommandAndWait("mv "+ "/etc/pki/tmp/*.pem"+" " +productCertDir);
-			sshCommandRunner.runCommandAndWait("rm -rf "+ "/etc/pki/tmp1");
-		}
 
-
-public String getEntitlementCertFilesWithPermissions() {
-	String lsFiles =sshCommandRunner.runCommandAndWait("ls -l "+entitlementCertDir+"/*-key.pem" + " | cut -d "+"' '"+" -f1,9" ).getStdout();
-    return lsFiles;
-}
 
 }

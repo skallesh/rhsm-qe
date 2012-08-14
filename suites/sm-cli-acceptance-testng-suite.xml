@@ -559,6 +559,19 @@
 		</groups>
 	</test>
 	
+	<test name="CLI: Bugzilla Tests">
+		<classes>
+			<class name="com.redhat.qe.sm.cli.tests.BugzillaTests" />
+		</classes>
+		<groups>
+			<run>
+				<include name="setup" />
+				<include name="BugzillaTests" />
+				<include name="cleanup" />
+			</run>
+		</groups>
+	</test>
+	
 	<test name="CLI: SELinux Tests">
 		<classes>
 			<class name="com.redhat.qe.sm.cli.tests.SELinuxTests" />
