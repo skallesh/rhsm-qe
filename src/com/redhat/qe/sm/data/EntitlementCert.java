@@ -437,49 +437,73 @@ public class EntitlementCert extends AbstractCommandLineData {
 		
 		return entitlementCerts;
 		
-// OLD PARSING - prone to stack overflows when calling addRegexMatchesToMap		
-//		Map<String,String> regexes = new HashMap<String,String>();
-//		
-//		// abstraction field				regex pattern (with a capturing group)
-//		regexes.put("id",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Subject: CN=(.+)");
-//		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Issuer:\\s*(.*)");
-//		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
-//		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-//		//FIXME would like to add this back regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+)(?:\\n.*?)+File: (.+)");
-//
-//		// FIXME THIS IS ONLY PART OF THE rawCertificate (another way to list the cert is: python /usr/share/rhsm/certificate.py /etc/pki/entitlement/11290530959739201.pem
-//		//FIXME would like to add this back regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+)((?:\\n.*?)+)1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.5\\.1:");
-//
-//		
-//
-//		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
-//		for(String field : regexes.keySet()){
-//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-//			addRegexMatchesToMap(pat, rawCertificates, productMap, field);
-//		}
-//		
-//		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
-//		for(String key : productMap.keySet()) {
-//			
-//			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
-//			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
-//			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
-//			
-//			EntitlementCert entitlementCert = new EntitlementCert(serialNumber, productMap.get(key));
-//			// FIXME ...  this ONLY works when there is ONLY ONE rawCertificate in rawCertificates but this imple avoids a stack overflow
-//			entitlementCert.orderNamespace = OrderNamespace.parse(rawCertificates);
-//			entitlementCert.productNamespaces = ProductNamespace.parse(rawCertificates);
-//			entitlementCert.contentNamespaces = ContentNamespace.parse(rawCertificates);
-//			// ...FIXME
-//			entitlementCerts.add(entitlementCert);
-//		}
-//		return entitlementCerts;
-
 	}
 }
 
+
 /* FIXME USING TIME ZONE NOTES FROM AJAY
  * SimpleDateFormat iso8601DateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        iso8601DateFormat.setTimeZone(TimeZone.getDefault());
-        System.out.println(iso8601DateFormat.format(new Date()));
-        */
+ * iso8601DateFormat.setTimeZone(TimeZone.getDefault());
+ * System.out.println(iso8601DateFormat.format(new Date()));
+ */
+
+// CertV2 Notes from jmolet for parsing possibilities using python:
+// version 1.0 certificate parsing using python
+// python -c "from rhsm import certificate; cert=certificate.create_from_file('/etc/pki/entitlement/5814667605372527909.pem');print cert.x509.get_all_extensions();" 
+// version 2.0 certificate parsing using python
+// python -c "from rhsm import certificate; import zlib; cert=certificate.create_from_file('/etc/pki/entitlement/5814667605372527909.pem');print zlib.decompress(cert.x509.get_all_extensions()['1.3.6.1.4.1.2312.9.2.0.1.7']);"
+// 
+// To run these python commands interactively...
+//	[root@jsefler-rhel59 ~]# yum install -y -q ipython --enablerepo=epel
+//	This system is not registered with RHN.
+//	RHN Satellite or RHN Classic support will be disabled.
+//	
+//	[root@jsefler-rhel59 ~]# ipython 
+//	**********************************************************************
+//	Welcome to IPython. I will try to create a personal configuration directory
+//	where you can customize many aspects of IPython's functionality in:
+//	
+//	/root/.ipython
+//	Initializing from configuration /usr/lib/python2.4/site-packages/IPython/UserConfig
+//	
+//	Successful installation!
+//	
+//	Please read the sections 'Initial Configuration' and 'Quick Tips' in the
+//	IPython manual (there are both HTML and PDF versions supplied with the
+//	distribution) to make sure that your system environment is properly configured
+//	to take advantage of IPython's features.
+//	
+//	Important note: the configuration system has changed! The old system is
+//	still in place, but its setting may be partly overridden by the settings in 
+//	"~/.ipython/ipy_user_conf.py" config file. Please take a look at the file 
+//	if some of the new settings bother you. 
+//	
+//	
+//	Please press <RETURN> to start IPython.
+//	**********************************************************************
+//	Python 2.4.3 (#1, Jun 20 2012, 20:08:35) 
+//	Type "copyright", "credits" or "license" for more information.
+//	
+//	IPython 0.8.4 -- An enhanced Interactive Python.
+//	?         -> Introduction and overview of IPython's features.
+//	%quickref -> Quick reference.
+//	help      -> Python's own help system.
+//	object?   -> Details about 'object'. ?object also works, ?? prints more.
+//	
+//	In [1]: from rhsm import certificate
+//	
+//	In [2]: cert=certificate.create_from_file('/etc/pki/entitlement/1562018864567338600.pem')
+//	
+//	In [3]: print cert.x509.get_all_extensions()
+//	{'1.3.6.1.4.1.2312.9.4.11': '1', '1.3.6.1.4.1.2312.9.4.2': '8a90f81d3922796c0139227b9337022a', '1.3.6.1.4.1.2312.9.4.13': '12331131231', '1.3.6.1.4.1.2312.9.4.12': '0', '1.3.6.1.4.1.2312.9.4.15': 'Layered', '1.3.6.1.4.1.2312.9.1.88888.2': '1.0', '1.3.6.1.4.1.2312.9.4.10': '127', '2.16.840.1.113730.1.1': 'SSL Client, S/MIME', '1.3.6.1.4.1.2312.9.1.88888.3': 'ALL', '2.5.29.35': 'keyid:01:E2:98:5D:6B:A7:92:7E:FB:CD:5D:97:D6:33:5E:DB:71:DD:78:61\nDirName:/CN=jsefler-f14-candlepin.usersys.redhat.com/C=US/L=Raleigh\nserial:B6:FD:5D:9F:75:59:3A:18\n', '2.5.29.37': 'TLS Web Client Authentication', '1.3.6.1.4.1.2312.9.4.5': '10', '1.3.6.1.4.1.2312.9.5.1': '20803327-e171-4660-883e-6c0a5b9ecb7e', '1.3.6.1.4.1.2312.9.4.7': '2013-08-13T00:00:00Z', '1.3.6.1.4.1.2312.9.4.6': '2012-08-13T00:00:00Z', '1.3.6.1.4.1.2312.9.4.1': 'Shared File System', '1.3.6.1.4.1.2312.9.1.88888.1': 'Shared File System Bits', '2.5.29.14': '\xf5\x04 %\xcc{\x8a\x15S\x05#P#\x01\x0b>\xf5V\x98\xe6', '2.5.29.15': 'Digital Signature, Key Encipherment, Data Encipherment', '1.3.6.1.4.1.2312.9.4.3': 'sfs', '1.3.6.1.4.1.2312.9.4.14': '0'}
+//	
+//	In [4]: print cert.    <============= USE TAB COMPLETION TO SEE ALL THE POSSIBILITIES
+//	cert.__class__         cert.__doc__           cert.__module__        cert.__repr__          cert.content           cert.is_valid          cert.serial            cert.version
+//	cert.__cmp__           cert.__getattribute__  cert.__new__           cert.__setattr__       cert.delete            cert.order             cert.start             cert.write
+//	cert.__delattr__       cert.__hash__          cert.__reduce__        cert.__str__           cert.end               cert.path              cert.subject           cert.x509
+//	cert.__dict__          cert.__init__          cert.__reduce_ex__     cert.__weakref__       cert.is_expired        cert.products          cert.valid_range       
+//	
+//	In [4]: print cert.serial
+//	1562018864567338600
+
+
