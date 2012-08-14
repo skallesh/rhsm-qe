@@ -1105,7 +1105,21 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
 			// only include dataProvided rows where org is valid
-			if (l.get(3).equals(sm_clientOrg)) ll.add(l);
+			if (l.get(3).equals(sm_clientOrg)) {
+				
+				// get the existing BlockedByBzBug
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				// add more BlockedByBzBug to rows that are expecting a network error
+				if (l.get(8)==nErrMsg) {
+					bugIds.add("848195");	// Bug 848195 	Error while checking server version: Proxy connection failed: 407 
+					bugIds.add("848190");	// Bug 848190 	Error while checking server version: (111, 'Connection refused') 
+					bugIds.add("848184");	// Bug 848184 	Error while checking server version: (-2, 'Name or service not known') 
+				}
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
+			}
 		}
 		return ll;
 	}
@@ -1119,7 +1133,21 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
 			// only include dataProvided rows where org is valid
-			if (l.get(3).equals(sm_clientOrg)) ll.add(l);
+			if (l.get(3).equals(sm_clientOrg)) {
+				
+				// get the existing BlockedByBzBug
+				BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);
+				List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+				// add more BlockedByBzBug to rows that are expecting a network error
+				if (l.get(12)==nErrMsg) {
+					bugIds.add("848195");	// Bug 848195 	Error while checking server version: Proxy connection failed: 407 
+					bugIds.add("848190");	// Bug 848190 	Error while checking server version: (111, 'Connection refused') 
+					bugIds.add("848184");	// Bug 848184 	Error while checking server version: (-2, 'Name or service not known') 
+				}
+				blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+				
+				ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
+			}
 		}
 		return ll;
 	}
@@ -1260,10 +1288,20 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	@DataProvider(name="getReleaseAttemptsUsingProxyServerData")
 	public Object[][] getReleaseAttemptsUsingProxyServerDataAs2dArray() {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerDataAsListOfLists());
-		// nullify the blockedByBug parameter since this function was never blocked by any bug
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerDataAsListOfLists()) {
-				ll.add(Arrays.asList(new Object[]{	null,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
+			
+			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add BlockedByBzBug to rows that are expecting a network error
+			if (l.get(8)==nErrMsg) {
+				bugIds.add("848195");	// Bug 848195 	Error while checking server version: Proxy connection failed: 407 
+				bugIds.add("848190");	// Bug 848190 	Error while checking server version: (111, 'Connection refused') 
+				bugIds.add("848184");	// Bug 848184 	Error while checking server version: (-2, 'Name or service not known') 
+			}
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9)}));
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
@@ -1272,10 +1310,20 @@ public class ProxyTests extends SubscriptionManagerCLITestScript {
 	@DataProvider(name="getReleaseAttemptsUsingProxyServerViaRhsmConfigData")
 	public Object[][] getReleaseAttemptsUsingProxyServerViaRhsmConfigDataAs2dArray() {
 		//return TestNGUtils.convertListOfListsTo2dArray(getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists());
-		// nullify the blockedByBug parameter since this function was never blocked by any bug
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		for (List<Object> l : getValidRegisterAttemptsUsingProxyServerViaRhsmConfigDataAsListOfLists()) {
-				ll.add(Arrays.asList(new Object[]{	null,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
+			
+			BlockedByBzBug blockedByBzBug = null;	// nullify the blockedByBug parameter since this function was originally not blocked by any bug
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			// add BlockedByBzBug to rows that are expecting a network error
+			if (l.get(12)==nErrMsg) {
+				bugIds.add("848195");	// Bug 848195 	Error while checking server version: Proxy connection failed: 407 
+				bugIds.add("848190");	// Bug 848190 	Error while checking server version: (111, 'Connection refused') 
+				bugIds.add("848184");	// Bug 848184 	Error while checking server version: (-2, 'Name or service not known') 
+			}
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			
+			ll.add(Arrays.asList(new Object[]{	blockedByBzBug,	l.get(1),	l.get(2),	l.get(3),	l.get(4),	l.get(5),	l.get(6),	l.get(7),	l.get(8),	l.get(9),	l.get(10),	l.get(11),	l.get(12),	l.get(13),	l.get(14),	l.get(15),	l.get(16)}));
 		}
 		return TestNGUtils.convertListOfListsTo2dArray(ll);
 	}
