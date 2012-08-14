@@ -56,16 +56,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for partial subscription",
 			groups={"autohealPartial","blockedByBug-746218"},
-			enabled=true)
+			enabled=false)	//TODO commit to true after the logic in this test is re-implemented
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency=2;
 		String productId=null;
 		String poolid=null;
 		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
+		// TODO At this point you should be fully subscribed.  I don't believe you are testing that auto-heal will complete a partially subscribed product
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if(pool.multiEntitlement){
 				for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-					if((installedProduct.productName).contains(pool.subscriptionName)){
+					if((installedProduct.productName).contains(pool.subscriptionName)){		// TODO this is only true by coincidence of the naming used in our TESTDATA
 						poolid=pool.poolId;
 					}
 							
@@ -76,10 +77,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe_(null, null, poolid, null, null,null, null, null, null, null, null);
 						
 	}
+		// TODO at this point you need to assert that there is some "Partially Subscribed" product(s), otherwise you are not testing that the next trigger of the healFrequency will finish autosubscribing your system to be fully "Subscribed".
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
-			if((installedProduct.productName).equals(productId))
+			if((installedProduct.productName).equals(productId))		// TODO Why are you comparing the name to the id?	// TODO productId is always null; there is no assignment, therefore there is no assertion and this test will always pass for no good reason
 			Assert.assertEquals(installedProduct.status, "Subscribed");
 		}
 	}
