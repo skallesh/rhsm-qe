@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.json.JSONException;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeGroups;
@@ -370,27 +371,40 @@ public class ReposTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException
 	 * @throws Exception
 	 */
-	@Test(	description="subscription-manager: enable the repo.",
+	@Test(	description="subscription-manager: enable a repo.",
 			enabled=true,
-			groups={"EnableReposTests"})
+			groups={})
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyEnableRepos_Test() throws JSONException, Exception{
+	public void ReposEnable_Test() throws JSONException, Exception {
 		
-		String repoId;
-		
-		List<String> repoidList=new ArrayList<String>();
 		// register
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
 				
-		 for(Repo reposlist:clienttasks.getCurrentlySubscribedRepos()){
-			 repoidList.add(reposlist.repoId);
+		for(Repo repo:subscribedRepos) {
+			SSHCommandResult result = clienttasks.repos_(false,repo.repoId,null,null,null,null);
+			Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is enabled for this system.");
 		}
-		repoId= ((String)repoidList.get(randomGenerator.nextInt(repoidList.size())));
-		SSHCommandResult result=clienttasks.repos(false,repoId, null, null,null,null);
-		Assert.assertEquals(result.getStdout().trim(),"Repo " +repoId+"is enabled for this system");
+	}
+	@Test(	description="subscription-manager: disable a repo.",
+			enabled=true,
+			groups={})
+	//@ImplementsNitrateTest(caseId=)
+	public void ReposDisable_Test() throws JSONException, Exception {
+		
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<Repo> subscribedRepos = clienttasks.getCurrentlySubscribedRepos();
+		if (subscribedRepos.isEmpty()) throw new SkipException("There are no entitled repos available for this test.");
+				
+		for(Repo repo:subscribedRepos) {
+			SSHCommandResult result = clienttasks.repos_(false,null,repo.repoId,null,null,null);
+			Assert.assertEquals(result.getStdout().trim(),"Repo " +repo.repoId+" is disabled for this system.");
 		}
-	
+	}
 	
 	
 	
