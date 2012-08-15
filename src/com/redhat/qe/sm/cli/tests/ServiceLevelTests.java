@@ -734,7 +734,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --set should accept \"\" to effectively unset",
-			groups={},
+			groups={"blockedByBug-835050"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -865,8 +865,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 			return;	
 		}
 	
-		// Subscription with ULTImate SLA support_level
-		serviceLevel = "ULTImate SLA";
+		// Subscription with "Ultimate SLA" support_level
+		serviceLevel = "Ultimate SLA";
 		name = "The \""+serviceLevel+"\" service level subscription";
 		productId = "ultimate-sla-product-sku-1";
 		providedProductIds.clear();
@@ -885,8 +885,8 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
 
-		// Subscription with ultiMATE SLAsupport_level
-		serviceLevel = "ultiMATE SLA";
+		// Subscription with "ultimate sla" support_level
+		serviceLevel = "ultimate sla";
 		name = "The \""+serviceLevel+"\" service level subscription";
 		productId = "ultimate-sla-product-sku-2";
 		providedProductIds.clear();

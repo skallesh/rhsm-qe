@@ -2372,7 +2372,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert the "Service level set to: "
 		String serviceLevelSetMsg = "Service level set to: ";
-		if (set!=null) {
+		if (set!=null && !set.isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelSetMsg+set),"Stdout from service-level (with option --set) contains the expected feedback: "+serviceLevelSetMsg+set);
 		} else {
 			// TEMPORARY WORKAROUND FOR BUG
@@ -2387,7 +2387,7 @@ public class SubscriptionManagerTasks {
 		
 		// assert the "Service level preference has been unset"
 		String serviceLevelUnsetMsg = "Service level preference has been unset";
-		if (unset!=null && unset) {
+		if ((unset!=null && unset) || (set!=null && set.isEmpty())) {
 			Assert.assertTrue(sshCommandResult.getStdout().contains(serviceLevelUnsetMsg),"Stdout from service-level (with option --unset) contains the expected feedback: "+serviceLevelUnsetMsg);
 		} else {
 			Assert.assertTrue(!sshCommandResult.getStdout().contains(serviceLevelUnsetMsg),"Stdout from service-level (without option --unset) does not contain the feedback: "+serviceLevelUnsetMsg);
