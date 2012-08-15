@@ -144,7 +144,33 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
+	@Test(	description="assert that no errors are reported while executing version module while registered and unregistered",
+			groups={"blockedByBug-848409"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyNoErrorWhileCheckingServerVersion_Test() {
+		
+		// from Bug 848409 - Error while checking server version: No such file or directory
+		//	[root@jsefler-59server ~]# subscription-manager version
+		//	Error while checking server version: No such file or directory
+		//	remote entitlement server: Unknown
+		//	remote entitlement server type: Unknown
+		//	subscription-manager: 1.0.13-1.git.27.2a76fe7.el5
+
+		// assert results from version do not contain an error (while unregistered)
+		String error = "Error";
+		clienttasks.unregister(null,null,null);
+		SSHCommandResult versionResult = clienttasks.version();
+		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while unregistered).");
+		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while unregistered).");
+		
+		// assert results from version do not contain an error (while registered)
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
+		versionResult = clienttasks.version();
+		Assert.assertTrue(!versionResult.getStdout().contains(error),"Stdout from the version report does NOT contain an '"+error+"' message (while registered).");
+		Assert.assertTrue(!versionResult.getStderr().contains(error),"Stderr from the version report does NOT contain an '"+error+"' message (while registered).");
 	
+	}
 	
 	
 	
