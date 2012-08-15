@@ -371,6 +371,11 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 				translationFile.getPath().contains("/te/") ||
 				translationFile.getPath().contains("/zh_CN/") ||
 				translationFile.getPath().contains("/hi/") ||
+				translationFile.getPath().contains("/gu/") ||
+				translationFile.getPath().contains("/pt_BR/") ||
+				translationFile.getPath().contains("/pa/") ||
+				translationFile.getPath().contains("/ml/") ||
+				translationFile.getPath().contains("/bn_IN/") ||
 				translationFile.getPath().contains("/kn/")) bugzilla = new BlockedByBzBug("844369");
 			
 			ll.add(Arrays.asList(new Object[] {bugzilla,	translationFile}));
