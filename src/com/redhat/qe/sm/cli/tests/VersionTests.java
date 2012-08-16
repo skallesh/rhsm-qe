@@ -74,8 +74,10 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null, null, null);
 		
 		// get the expected results
-		String expectedVersion	= "remote entitlement server: "+"Unknown";
-		String expectedType		= "remote entitlement server type: "+"Unknown";
+		String expectedVersion	= "remote entitlement server: "+"Unknown";	// changed by bug 846834
+		expectedVersion			= "registered to: "+"Unknown";
+		String expectedType		= "remote entitlement server type: "+"Unknown";	// changed by bug 846834
+		expectedType			= "server type: "+"Unknown";
 		
 		// get the actual version results from subscription-manager
 		SSHCommandResult actualResult = clienttasks.version();
@@ -91,18 +93,21 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenRegistered_Test() {
-
+		
 		// make sure we are registered
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
 
 		// get the expected results
-		String expectedVersion = "remote entitlement server: "+servertasks.statusVersion;
-		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
+		String expectedVersion, expectedType;
+		expectedVersion = "remote entitlement server: "+servertasks.statusVersion;	// changed by bug 846834
+		expectedVersion = "registered to: "+servertasks.statusVersion;
+		expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
 		if (sm_serverType==CandlepinType.standalone)	expectedType = "subscription management service";
 		if (sm_serverType==CandlepinType.hosted)		expectedType = "subscription management service";	// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.sam)			expectedType = "SAM";		// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.katello)		expectedType = "Katello";	// TODO not sure if this is correct
-		expectedType = "remote entitlement server type: "+expectedType;
+		//expectedType = "remote entitlement server type: "+expectedType;	// changed with bug 846834
+		expectedType = "server type: "+expectedType;
 		
 		// get the actual version results from subscription-manager
 		SSHCommandResult actualResult = clienttasks.version();
@@ -128,8 +133,11 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
 		// get the expected results
-		String expectedVersion	= "remote entitlement server: "+"Unknown";
-		String expectedType		= "remote entitlement server type: "+"RHN Classic";
+		String expectedVersion, expectedType;
+		expectedVersion	= "remote entitlement server: "+"Unknown";	// changed by bug 846834
+		expectedVersion	= "registered to: "+"Unknown";
+		expectedType	= "remote entitlement server type: "+"RHN Classic";	// changed by bug 846834
+		expectedType	= "server type: "+"RHN Classic";
 		
 		// get the actual version results from subscription-manager
 		SSHCommandResult actualResult = clienttasks.version();

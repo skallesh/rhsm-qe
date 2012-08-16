@@ -97,7 +97,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 
 		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
-		Assert.assertEquals(identityResult.getStdout().trim(), "remote entitlement server type: RHN Classic","Stdout when registered to RHN Classic, but not candlepin.");
+		//Assert.assertEquals(identityResult.getStdout().trim(), "remote entitlement server type: RHN Classic","Stdout when registered to RHN Classic, but not candlepin.");	// changed by bug 846834
+		Assert.assertEquals(identityResult.getStdout().trim(), "server type: RHN Classic","Stdout when registered to RHN Classic, but not candlepin.");
 		Assert.assertEquals(identityResult.getStderr().trim(), "","Stderr when registered to RHN Classic, but not candlepin.");
 	}
 
@@ -119,7 +120,8 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		SSHCommandResult identityResult = clienttasks.identity(null,null,null,null,null,null,null);
 		List<String> expectedStdoutRegexs = new ArrayList<String>();
 		expectedStdoutRegexs.add("^Current identity is: "+consumerId);
-		expectedStdoutRegexs.add("^remote entitlement server type: RHN classic and subscription management service$");
+		//expectedStdoutRegexs.add("^remote entitlement server type: RHN classic and subscription management service$");	// changed by bug 846834
+		expectedStdoutRegexs.add("^server type: RHN classic and subscription management service$");
 		for (String expectedStdoutRegex : expectedStdoutRegexs) {
 			Assert.assertTrue(Pattern.compile(expectedStdoutRegex, Pattern.MULTILINE/* | Pattern.DOTALL*/).matcher(identityResult.getStdout()).find(),"Stdout contains expected regex: "+expectedStdoutRegex);
 		}
