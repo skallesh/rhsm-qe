@@ -3041,14 +3041,18 @@ public class SubscriptionManagerTasks {
 		// when rhsm.manage_repos is off, this feedback overrides all operations
 		String manage_repos = getConfFileParameter(rhsmConfFile, "rhsm", "manage_repos"); if (manage_repos==null) manage_repos="1";
 		if (manage_repos.equals("0")) {
-//			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
-			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
+			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.","Stdout when rhsm.manage_repos is configured to 0.");
+			//Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThe system is not entitled to use any repositories.","Stdout when rhsm.manage_repos is configured to 0.");
+			Assert.assertEquals(sshCommandResult.getStdout().trim(), "Repositories disabled by configuration.\nThis system has no repositories available through subscriptions.","Stdout when rhsm.manage_repos is configured to 0.");
 			return sshCommandResult;
 		}
 		
 		// assert list feedback
-		String bannerRegex = "\\+-+\\+\\n\\s*Entitled Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+";
-		bannerRegex += "|The system is not entitled to use any repositories.";
+		String bannerRegex;
+		bannerRegex = "\\+-+\\+\\n\\s*Entitled Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+";	// changed by bug 846834
+		bannerRegex = "\\+-+\\+\\n\\s*Available Repositories in "+redhatRepoFile+"\\s*\\n\\+-+\\+";
+		//bannerRegex += "|The system is not entitled to use any repositories.";	// changed by bug 846834
+		bannerRegex += "|This system has no repositories available through subscriptions.";
 		if (list!=null && list) {	// when explicitly asked to list
 			Assert.assertTrue(Pattern.compile(".*"+bannerRegex+".*",Pattern.DOTALL).matcher(sshCommandResult.getStdout()).find(),"Stdout from repos (with option --list) contains the expected banner regex: "+bannerRegex);
 		}
@@ -3110,9 +3114,12 @@ public class SubscriptionManagerTasks {
 		}
 
 		if (numContentNamespaces==0) {
-			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories.");
+			//Assert.assertTrue(sshCommandResult.getStdout().trim().equals("The system is not entitled to use any repositories."), "The system is not entitled to use any repositories.");	// changed by bug 846834
+			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("This system has no repositories available through subscriptions."), "This system has no repositories available through subscriptions.");
 		} else {
-			String title = "Entitled Repositories in "+redhatRepoFile;
+			String title;
+			title = "Entitled Repositories in "+redhatRepoFile;	// changed by bug 846834
+			title = "Available Repositories in "+redhatRepoFile;
 			Assert.assertTrue(sshCommandResult.getStdout().contains(title),"The list of repositories is entitled '"+title+"'.");
 		}
 

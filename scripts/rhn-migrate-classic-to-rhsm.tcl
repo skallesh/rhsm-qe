@@ -42,7 +42,8 @@ set timeout 10
 # now respond to the interactive prompts from rhn-migrate-classic-to-rhsm ...
 
 if {$rhnUsername != "null"} {
-  expect "RHN Username:" {send "${rhnUsername}\r"} timeout {exit -1}
+  #expect "RHN Username:" {send "${rhnUsername}\r"} timeout {exit -1}	# changed by bug 847380
+  expect "Red Hat account:" {send "${rhnUsername}\r"} timeout {exit -1}
   expect "Password:" {send "${rhnPassword}\r"} timeout {exit -1}
 }
 if {$regUsername != "null"} {

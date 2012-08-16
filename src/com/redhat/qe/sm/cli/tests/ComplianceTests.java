@@ -394,7 +394,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	protected final String rhsmComplianceDStdoutMessageWhenCompliant = "System entitlements appear valid";
 	protected final String rhsmComplianceDStdoutMessageWhenInsideWarningPeriod = "System has one or more entitlements in their warning period";
 	protected final String rhsmComplianceDStdoutMessageWhenCompliantByRHNClassic = "System is already registered to another entitlement system";
-	protected final String rhsmComplianceDSyslogMessageWhenNonCompliant = "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
+	protected final String rhsmComplianceDSyslogMessageWhenNonCompliant = "This system is missing one or more subscriptions. Please run subscription-manager for more information.";	// "This system is missing one or more valid entitlement certificates. Please run subscription-manager for more information.";
 	protected List<SubscriptionPool> futureSystemSubscriptionPools = null;
 	
 	

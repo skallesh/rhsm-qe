@@ -171,7 +171,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 					"The tool you are using is attempting to re-register using RHN Certificate-Based technology. Red Hat recommends (except in a few cases) that customers only register with RHN once.",
 					// bug 825397	""+"Redeeming the subscription may take a few minutes.\n"+"Please provide an email address to receive notification\n"+"when the redemption is complete.",	// the Subscription Redemption dialog actually expands to accommodate the message, therefore we could ignore it	// bug 825397 should fix this
 					// bug 825388	""+"We have detected that you have multiple service level\n"+"agreements on various products. Please select how you\n"+"want them assigned.", // bug 825388 or 825397 should fix this
-					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.");	
+					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.",
+					"\n"+"This machine appears to be already registered to Red Hat Subscription Management.  Exiting.");	
 		}
 		if (pofilterTest.equals("xmltags")) { 
 			Boolean match = false; 
