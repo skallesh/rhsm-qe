@@ -1385,8 +1385,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		return client.runCommandAndWait(command);
 		*/
 		
+		// new behavior...
+		// the migration tool will always prompt rhn credentials to migrate the system from
+		// the migration tool will only prompt for destination credentials to migrate the system to when the configured hostname:port/prefix is does not match subscription.rhn[\.*].redhat.com:443/subscription
+// TODO WORK IN PROGRESS
+//		if (isRhsmConfigFileParameterHostnameHosted()) {
+//			if (regUsername!=null && !options.contains("--serverurl")) {
+//				log.warning("rhn-migrate-classic is going to prompt for System Engine credentials and this test did not pass one.");
+//			}
+//		}
+		
 		String command = String.format("rhn-migrate-classic-to-rhsm.tcl \"%s\"  \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"", options, rhnUsername, rhnPassword, regUsername, regPassword, serviceLevelIndex);
 		return client.runCommandAndWait(command);
+	}
+	boolean isCurrentlyConfiguredServerTypeHosted() {
+		String hostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		return hostname.matches("subscription\\.rhn\\.(\\.*\\.)*redhat\\.com");
 	}
 	
 	/**
