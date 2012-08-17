@@ -178,7 +178,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file in the current directory",
-			groups={},
+			groups={"blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementCertAndKeyFromFileInCurrentDirectory_Test() {
@@ -281,7 +281,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing the cert only (negative test)",
-			groups={"blockedByBug-735226"},
+			groups={"blockedByBug-735226","blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptAnEntitlementImportFromACertOnlyFile_Test() {
@@ -291,7 +291,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file containing only a key (negative test)",
-			groups={},
+			groups={"blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptAnEntitlementImportFromAKeyOnlyFile_Test() {
@@ -302,7 +302,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt an entitlement cert import using an identity cert (negative test)",
-			groups={"blockedByBug-844178"},
+			groups={"blockedByBug-844178","blockedByBug-849171"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptAnEntitlementImportFromAConsumerCertFile_Test() {
