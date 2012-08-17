@@ -1093,7 +1093,7 @@ Expected Results:
 	
 	
 	@Test(	description="User is warned when already registered using RHN Classic",
-			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130"},
+			groups={"InteroperabilityRegister_Test", "AcceptanceTests", "blockedByBug-730018", "blockedByBug-755130", "blockedByBug-847795"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=75972)	
 	public void InteroperabilityRegister_Test() {
@@ -1104,7 +1104,7 @@ Expected Results:
 			"You have already registered with RHN using RHN Classic technology. This tool requires registration using RHN Certificate-Based Entitlement technology." +"\n\n"+
 			"Except for a few cases, Red Hat recommends customers only register with RHN once." +"\n\n"+
 			"For more information, including alternate tools, consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
-		// after message change from bug 730018...
+		// after Bug 730018 - Warning text message is confusing
 		interoperabilityWarningMessage = 
 			"WARNING" +"\n\n"+
 			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
@@ -1116,6 +1116,12 @@ Expected Results:
 			"This system has already been registered with RHN using RHN Classic technology." +"\n\n"+
 			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends (except in a few cases) that customers only register once. " +"\n\n"+
 			"To learn more about RHN registration and technologies please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
+		// after Bug 847795 - String Update: redhat_branding.py Updates
+		interoperabilityWarningMessage = 
+			"WARNING" +"\n\n"+
+			"This system has already been registered with Red Hat using RHN Classic technology." +"\n\n"+
+			"The tool you are using is attempting to re-register using Red Hat Subscription Management technology. Red Hat recommends that customers only register once. " +"\n\n"+
+			"To learn how to unregister from either service please consult this Knowledge Base Article: https://access.redhat.com/kb/docs/DOC-45563";
 		// during RHEL58, DEV trimmed whitespace from strings...
 		interoperabilityWarningMessage = interoperabilityWarningMessage.replaceAll(" +(\n|$)", "$1"); 
 		
