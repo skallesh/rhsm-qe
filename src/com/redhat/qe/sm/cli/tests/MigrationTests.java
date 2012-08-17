@@ -70,7 +70,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -79,7 +79,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -145,7 +145,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"AcceptanceTests","blockedByBug-799103"},
+			groups={"debugTest","AcceptanceTests","blockedByBug-799103","blockedByBug-849274"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1016,13 +1016,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm while already registered to RHSM",
-			groups={"debugTest","blockedByBug-807477"},
+			groups={"blockedByBug-807477"},
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
 		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
 		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, true, null, null, null, null));
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,null, null, null);
+		SSHCommandResult sshCommandResult;
+		if (isCurrentlyConfiguredServerTypeHosted()) {
+			// note that the validity of the username and password really do not matter for this test
+			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,null, null, null);
+		} else {
+			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword, null);
+		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" while already registered to RHSM.");
 		String expectedStdout;
 		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
@@ -1226,6 +1232,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected List<String> rhnServiceLevels = new ArrayList<String>();	// list of service levels available to the rhn user to be migrated
 
 	
+	protected boolean isCurrentlyConfiguredServerTypeHosted() {
+		String hostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		return hostname.matches("subscription\\.rhn\\.(\\.*\\.)*redhat\\.com");
+	}
+	
 	protected List<String> getExpectedMappedProductCertFilenamesCorrespondingToChannels(List<String> channels) {
 		List<String> mappedProductCertFilenamesCorrespondingToChannels = new ArrayList<String>();
 		for (String channel : channels) {
@@ -1386,22 +1397,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		*/
 		
 		// new behavior...
-		// the migration tool will always prompt rhn credentials to migrate the system from
-		// the migration tool will only prompt for destination credentials to migrate the system to when the configured hostname:port/prefix is does not match subscription.rhn[\.*].redhat.com:443/subscription
-// TODO WORK IN PROGRESS
-//		if (isRhsmConfigFileParameterHostnameHosted()) {
-//			if (regUsername!=null && !options.contains("--serverurl")) {
-//				log.warning("rhn-migrate-classic is going to prompt for System Engine credentials and this test did not pass one.");
-//			}
-//		}
+		// the migration tool will always prompt rhn credentials to migrate the system "from"
+		// the migration tool will only prompt for destination credentials to migrate the system "to" when the configured hostname does not match subscription.rhn.(.*.)*redhat.com
+		
 		
 		String command = String.format("rhn-migrate-classic-to-rhsm.tcl \"%s\"  \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"", options, rhnUsername, rhnPassword, regUsername, regPassword, serviceLevelIndex);
 		return client.runCommandAndWait(command);
 	}
-	boolean isCurrentlyConfiguredServerTypeHosted() {
-		String hostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
-		return hostname.matches("subscription\\.rhn\\.(\\.*\\.)*redhat\\.com");
-	}
+
 	
 	/**
 	 * Call rhnreg_ks and assert the existence of a systemid file afterwards.
