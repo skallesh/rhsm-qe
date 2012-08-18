@@ -566,7 +566,7 @@
 		<groups>
 			<run>
 				<include name="setup" />
-				<include name="BugzillaTests" />
+				<include name="AcceptanceTests" />
 				<include name="cleanup" />
 			</run>
 		</groups>
