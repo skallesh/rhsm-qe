@@ -129,7 +129,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when some installed products are subscribable",
-			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
+			groups={"blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenSomeProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -203,7 +203,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a non-compliant status when no installed products are subscribable",
-			groups={"blockedbyBug-723336","blockedbyBug-691480","cli.tests"},
+			groups={"blockedbyBug-723336","blockedbyBug-691480","blockedbyBug-846834","cli.tests"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenNoProductsAreSubscribable_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
