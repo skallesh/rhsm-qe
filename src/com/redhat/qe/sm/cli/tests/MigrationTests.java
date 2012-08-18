@@ -70,7 +70,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -79,7 +79,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -145,7 +145,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that all existing product cert files are mapped in channel-cert-mapping.txt",
-			groups={"debugTest","AcceptanceTests","blockedByBug-799103","blockedByBug-849274"},
+			groups={"AcceptanceTests","blockedByBug-799103","blockedByBug-849274"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1841,6 +1841,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
 					bugzilla = new BlockedByBzBug("840148");
+				}
+				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
+					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
+					bugzilla = new BlockedByBzBug("849305");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName
