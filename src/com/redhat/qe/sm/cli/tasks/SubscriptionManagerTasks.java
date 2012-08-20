@@ -710,7 +710,7 @@ public class SubscriptionManagerTasks {
 	}
 
 	/**
-	 * @return the current service level returned by subscription-manager service-level --show (must already be registered)
+	 * @return the current service level returned by subscription-manager service-level --show (must already be registered); will return an empty string when the service level preference is not set.
 	 */
 	public String getCurrentServiceLevel() {
 		

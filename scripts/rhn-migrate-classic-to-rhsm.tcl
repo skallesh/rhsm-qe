@@ -55,7 +55,7 @@ if {$serviceLevel != "null"} {
 }
 
 
-# interact with the program again so as to catch the remaining stdout and exit code from the program, but use a minute timeout in case there is an unexpected interactive prompt
-interact timeout 60 {exit -1}
+# interact with the program again so as to catch the remaining stdout and exit code from the program, but use a few minutes for timeout in case there is an unexpected interactive prompt
+interact timeout 180 {exit -1}
 catch wait reason
 exit [lindex $reason 3]

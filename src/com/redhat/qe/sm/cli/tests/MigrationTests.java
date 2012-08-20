@@ -70,7 +70,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -79,7 +79,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -634,8 +634,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130763)
-	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, List<String> expectedMigrationProductCertFilenames, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
-		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
+	public void RhnMigrateClassicToRhsmUsingProxyServer_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, List<String> expectedMigrationProductCertFilenames, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex) {
+	//TODO FIX TEMPORARY WORK IN PROGRESS - TRYING TO REMOVE THIS RESTRICTION
+	//	if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 		if (options.contains("-n")) log.info("Executing "+rhnMigrateTool+" --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
 
@@ -697,15 +698,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.markFile(proxyRunner, proxyLog, proxyLogMarker);
 
 		// execute rhn-migrate-classic-to-rhsm with options
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,null, null, null);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername, regPassword, null);
 		
 		// assert the exit code
 		String expectedMsg;
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
-			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);	
-			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to "+rhnMigrateTool+" with "+options+" when any of the channels are not mapped to a productCert.");
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when any of the channels are not mapped to a productCert.");
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that no product certs have been copied yet
@@ -716,7 +717,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 			return;
 		}
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to "+rhnMigrateTool+" with "+options+" when all of the channels are mapped.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
 
 		// assert that traffic to RHSM went through the proxy
 		proxyLogResult = RemoteFileTasks.getTailFromMarkedFile(proxyRunner, proxyLog, proxyLogMarker, clienttasks.ipaddr);	// accounts for multiple tests hitting the same proxy server simultaneously
@@ -735,13 +736,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// assert we are no longer registered to RHN Classic
 		expectedMsg = "System successfully unregistered from RHN Classic.";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is absent.  This indicates this system is not registered using RHN Classic.");
 
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
 		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
 		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
@@ -778,16 +779,16 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169"},
+			groups={"debugTest","AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=130764,130762) // TODO some expected yum repo assertions are not yet automated
-	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, Integer serviceLevelIndex, String serviceLevelExpected, List<String> expectedMigrationProductCertFilenames) {
-		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires registration access to RHN Classic.");
+	public void RhnMigrateClassicToRhsm_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected, List<String> expectedMigrationProductCertFilenames) {
+	//TODO FIX TEMPORARY WORK IN PROGRESS - TRYING TO REMOVE THIS RESTRICTION
+	//	if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
-		if (options.contains("-n")) log.info("Executing "+rhnMigrateTool+" --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
-//		if (serviceLevel!=null) options+=" -s "+serviceLevel;
+	//	if (options.contains("-n")) log.info("Executing "+rhnMigrateTool+" --no-auto should effectively unregister your system from RHN Classic without registering to RHSM.");
 
 		// make sure we are NOT registered to RHSM
 		clienttasks.unregister(null,null,null);
@@ -813,15 +814,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 //		String sendServiceLevel = null;
 //		List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
 //		if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the prompting by the migration tool for a valid service level
-		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,null, null, serviceLevelIndex);
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(options,rhnUsername,rhnPassword,regUsername,regPassword, serviceLevelIndex);
 		
 		// assert the exit code
 		String expectedMsg;
 		if (!areAllChannelsMapped(rhnChannelsConsumed) && !options.contains("-f")/*--force*/) {	// when not all of the rhnChannelsConsumed have been mapped to a productCert and no --force has been specified.
 			log.warning("Not all of the channels are mapped to a product cert.  Therefore, the "+rhnMigrateTool+" command should have exited with code 1.");
 			expectedMsg = "Use --force to ignore these channels and continue the migration.";
-			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);	
-			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to "+rhnMigrateTool+" with "+options+" when any of the channels are not mapped to a productCert.");
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);	
+			Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when any of the channels are not mapped to a productCert.");
 			Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic when rhn-migrate-classic-to-rhsm requires --force to continue.");
 			
 			// assert that no product certs have been copied yet
@@ -832,17 +833,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 			return;
 		}
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to "+rhnMigrateTool+" with "+options+" when all of the channels are mapped.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
 		
 		// assert we are no longer registered to RHN Classic
 		expectedMsg = "System successfully unregistered from RHN Classic.";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is abscent.  This indicates this system is not registered using RHN Classic.");
 
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
 		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
 		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
@@ -851,7 +852,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
 			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
 		}
-
+		
+		// assert the expected migration.* facts are set
 		//	[root@ibm-x3620m3-01 ~]# subscription-manager facts --list | grep migration
 		//	migration.classic_system_id: 1023061526
 		//	migration.migrated_from: rhn_hosted_classic
@@ -860,78 +862,78 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(factMap.get(migrationFromFact), "rhn_hosted_classic", "The migration fact '"+migrationFromFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		Assert.assertEquals(factMap.get(migrationSystemIdFact), rhnSystemId, "The migration fact '"+migrationSystemIdFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
 		Assert.assertNotNull(factMap.get(migrationDateFact), "The migration fact '"+migrationDateFact+"' should be set after running "+rhnMigrateTool+" with "+options+".");
-		
-		// assert that the migrationDateFact was set within the last few seconds
-		int tol = 60; // tolerance in seconds
+		int tol = 180; // tolerance in seconds to assert that the migration_date facts was set within the last few seconds
 		Calendar migrationDate = parseDateStringUsingDatePattern(factMap.get(migrationDateFact), "yyyy-MM-dd'T'HH:mm:ss", null);	// NOTE: The .SSS milliseconds was dropped from the date pattern because it was getting confused as seconds from the six digit value in migration.migration_date: 2012-08-08T11:11:15.818782
 		long systemTimeInSeconds = Long.valueOf(client.runCommandAndWait("date +%s").getStdout().trim());	// seconds since 1970-01-01 00:00:00 UTC
 		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds.");
+		
+		// TODO
+		// assert that when --serverurl is specified, its hostname:port/prefix are preserved into rhsm.conf
+		
+		// assert that we are newly registered using rhsm
+		clienttasks.identity(null, null, null, null, null, null, null);
+		Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
 
+		// assert the the expected service level was set as a preference on the registered consumer
+		if (serviceLevelExpected!=null) {
+			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevelExpected, "The serviceLevel requested during migration was set as the preference on the registered consumer.");
+		}
 		
-		// assert final RHSM status....
-		
+		// assert that when --no-auto is specified, no entitlements were granted during the rhsm registration
 		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
-			// assert that we are NOT registered using rhsm
-			clienttasks.identity_(null, null, null, null, null, null, null);
-			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM after a call to "+rhnMigrateTool+" with "+options+".");
-	
+
+// bug 849644
+//			// assert that we are NOT registered using rhsm
+//			clienttasks.identity_(null, null, null, null, null, null, null);
+//			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM after a call to "+rhnMigrateTool+" with options "+options+".");
+//	
 			// assert that we are NOT consuming any entitlements
-			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to "+rhnMigrateTool+" with "+options+".");
-		} else {
-			// assert that we are registered using rhsm
-			clienttasks.identity(null, null, null, null, null, null, null);
-			Assert.assertNotNull(clienttasks.getCurrentConsumerId(),"The existance of a consumer cert indicates that the system is currently registered using RHSM.");
-
-			// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
-			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
-			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
-			Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
+			Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().isEmpty(),"We should NOT be consuming any RHSM entitlements after call to "+rhnMigrateTool+" with options ("+options+") that indicate no autosubscribe.");
 			
-			// assert that we are consuming some entitlements (for at least the base product cert)
-			// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
-			List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-			Assert.assertTrue(!consumedProductSubscriptions.isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
+			// since no autosubscribing took place, there is nothing left to assert, just return
+			return;
+		}
+
+		// assert that autosubscribe was attempted
+		expectedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);			
+
+		// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
+		// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
+		InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
+		Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
+		
+		// assert that we are consuming some entitlements (for at least the base product cert)
+		// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
+		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(!consumedProductSubscriptions.isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
+		
+		// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
+		if (!options.contains("-s ") && !options.contains("--servicelevel") && serviceLevelExpected==null) {
+			// assert no service level preference was set
+			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "No servicelevel preference should be set on the consumer when no service level was requested.");
+		}
+		
+		// assert the service levels consumed from autosubscribe match the requested serviceLevel
+		if (serviceLevelExpected!=null && !serviceLevelExpected.isEmpty()) {
+
+			// when a valid servicelevel was either specified or chosen
+			expectedMsg = String.format("Service level set to: %s",serviceLevelExpected);
+			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 			
-			// assert the service levels being consumed match the requested serviceLevel
-			if (serviceLevelExpected!=null) {
-//				if (isInteger(serviceLevel) && Integer.valueOf(serviceLevel)<=rhnServiceLevels.size()) {
-//					serviceLevel = rhnServiceLevels.get(Integer.valueOf(serviceLevel)-1);
-//				}
-
-				List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
-//				if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the prompting by the migration tool for a valid service level
-
-				expectedMsg = String.format("Service level \"%s\" is not available.",	serviceLevelExpected);
-				if (!rhnServiceLevelsToUpperCase.contains(serviceLevelExpected.toUpperCase())) {
-					Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+			for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+				Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
+				if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
+					log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
+					Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
 				} else {
-					Assert.assertTrue(!sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" does not contain message: "+expectedMsg);
-				}
-				
-				expectedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
-				Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);			
-
-//				if (isInteger(serviceLevel) && Integer.valueOf(serviceLevel)==rhnServiceLevels.size()+1) {
-				if (serviceLevelIndex==rhnServiceLevels.size()+1) {
-					// when the specified noServiceLevel preference
-				} else {
-					// when a valid the servicelevel was either specified or chosen
-					expectedMsg = String.format("Service level set to: %s",serviceLevelExpected);
-					Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
-	
-					for (ProductSubscription productSubscription : consumedProductSubscriptions) {
-						Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
-						if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
-							log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
-							Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
-						} else {
-							Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevelExpected),"When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should match: "+productSubscription);
-						}
-					}
+					Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevelExpected),"When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should match: "+productSubscription);
 				}
 			}
 		}
+		
+
 	}
 	
 	
@@ -941,10 +943,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130765)
-	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, Integer serviceLevelIndex, String serviceLevelExpected, List<String> expectedProductCertFilenames) {
+	public void RhnMigrateClassicToRhsmWithNonDefaultProductCertDir_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected, List<String> expectedProductCertFilenames) {
 		// NOTE: The configNonDefaultRhsmProductCertDir will handle the configuration setting
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm", "productCertDir"), nonDefaultProductCertDir,"A non-default rhsm.productCertDir has been configured.");
-		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options,serviceLevelIndex,serviceLevelExpected,expectedProductCertFilenames);
+		RhnMigrateClassicToRhsm_Test(bugzilla,rhnUsername,rhnPassword,rhnServer,rhnChannelsToAdd,options,regUsername,regPassword,regOrg,serviceLevelIndex,serviceLevelExpected,expectedProductCertFilenames);
 	}
 	
 	
@@ -954,6 +956,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationData",
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd, List<String> expectedMigrationProductCertFilenames) {
+//TODO NOT SURE IF THIS WORKS ANYMORE
 		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 
@@ -961,7 +964,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		log.info("Red Hat Enterprise Linux Workstation (productId=71) corresponds to child RHN Channel (rhel-ARCH-client-workstation-5) for a 5Client system where ARCH=i386,x86_64.");	
 		log.info("After migrating from RHN Classic to RHSM, these two product certs should not be installed at the same time.");
 
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAdd, "--no-auto", null, null, expectedMigrationProductCertFilenames);		
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAdd, "--no-auto", null,null,null,null, null, expectedMigrationProductCertFilenames);		
 	}
 	
 	
@@ -975,10 +978,57 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String regUsername=null, regPassword=null;
 		if (!sm_serverType.equals(CandlepinType.hosted)) {regUsername="foo"; regPassword="bar";}
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",regUsername, regPassword, null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" with invalid credentials.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Unable to connect to certificate server.  See "+clienttasks.rhsmLogFile+" for more details.", "The expected stdout result from call to "+rhnMigrateTool+" with invalid credentials.");		// valid prior to bug fix 789008
 		String expectedStdout = "Unable to connect to certificate server: "+servertasks.invalidCredentialsMsg()+".  See "+clienttasks.rhsmLogFile+" for more details.";
-		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to "+rhnMigrateTool+" with invalid credentials ended with: "+expectedStdout);
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid credentials ended with: "+expectedStdout);
+	}
+	
+	
+	@Test(	description="Execute migration tool rhn-migrate-classic-to-rhsm with invalid servicelevel",
+			groups={},
+			dependsOnMethods={},
+			enabled=false)
+	@ImplementsNitrateTest(caseId=136404)
+	public void RhnMigrateClassicToRhsmWithInvalidServiceLevel_Test() {
+		// TODO IMPLEMENT THIS TEST
+//		if (serviceLevelExpected!=null) {
+////			if (isInteger(serviceLevel) && Integer.valueOf(serviceLevel)<=rhnServiceLevels.size()) {
+////				serviceLevel = rhnServiceLevels.get(Integer.valueOf(serviceLevel)-1);
+////			}
+//
+//		List<String> rhnServiceLevelsToUpperCase = new ArrayList<String>(); for (String sl : rhnServiceLevels) rhnServiceLevelsToUpperCase.add(sl.toUpperCase());
+////			if (serviceLevel!=null && !rhnServiceLevels.contains(serviceLevel)) sendServiceLevel = String.valueOf((rhnServiceLevelsToUpperCase.indexOf(serviceLevel.toUpperCase())+1));	// attempt to guess the number in the prompting by the migration tool for a valid service level
+//
+//		expectedMsg = String.format("Service level \"%s\" is not available.",	serviceLevelExpected);
+//		if (!rhnServiceLevelsToUpperCase.contains(serviceLevelExpected.toUpperCase())) {
+//			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+//		} else {
+//			Assert.assertTrue(!sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" does not contain message: "+expectedMsg);
+//		}
+//		
+//		expectedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
+//		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);			
+//
+////			if (isInteger(serviceLevel) && Integer.valueOf(serviceLevel)==rhnServiceLevels.size()+1) {
+//		if (serviceLevelIndex==rhnServiceLevels.size()+1) {
+//			// when the specified noServiceLevel preference
+//		} else {
+//			// when a valid servicelevel was either specified or chosen
+//			expectedMsg = String.format("Service level set to: %s",serviceLevelExpected);
+//			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to "+rhnMigrateTool+" with "+options+" contains message: "+expectedMsg);
+//
+//			for (ProductSubscription productSubscription : consumedProductSubscriptions) {
+//				Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
+//				if (sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase())) {
+//					log.info("Exempt service levels: "+sm_exemptServiceLevelsInUpperCase);
+//					Assert.assertTrue(sm_exemptServiceLevelsInUpperCase.contains(productSubscription.serviceLevel.toUpperCase()),"This auto consumed product subscription's service level is among the exempt service levels: "+productSubscription);
+//				} else {
+//					Assert.assertTrue(productSubscription.serviceLevel.equalsIgnoreCase(serviceLevelExpected),"When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should match: "+productSubscription);
+//				}
+//			}
+//		}
+//	}
 	}
 	
 	
@@ -991,9 +1041,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername, sm_clientPassword, null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" with invalid credentials.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
-		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to "+rhnMigrateTool+" with invalid rhn credentials and valid subscription-manager credentials ended with: "+expectedStdout);
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid rhn credentials and valid subscription-manager credentials ended with: "+expectedStdout);
 	}
 	
 	
@@ -1009,9 +1059,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername/* or sm_rhnUsername*/,sm_clientPassword/* or sm_rhnPassword*/,null,null, null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" without having registered to RHN Classic.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' without having registered to RHN Classic.");
 		String expectedStdout = "Unable to locate SystemId file. Is this system registered?";
-		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to "+rhnMigrateTool+" without having registered to RHN Classic ended with: "+expectedStdout);
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' without having registered to RHN Classic ended with: "+expectedStdout);
 	}
 	
 	
@@ -1029,11 +1079,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		} else {
 			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword, null);
 		}
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to "+rhnMigrateTool+" while already registered to RHSM.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 		String expectedStdout;
 		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
 		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";
-		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to "+rhnMigrateTool+" while already registered to RHSM ended with: "+expectedStdout);
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' while already registered to RHSM ended with: "+expectedStdout);
 	}
 	
 
@@ -1090,14 +1140,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup")
 	public void determineRhnServiceLevels() throws JSONException, Exception {
-		if (sm_rhnUsername.equals("")) return;
-		if (sm_rhnPassword.equals("")) return;
-		
-		// determine the valid service levels available to a consumer registered with rhn credentials
-		clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
-		String rhnOrg = clienttasks.getCurrentlyRegisteredOwnerKey();
-		clienttasks.unregister(null, null, null);
-		rhnServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(sm_rhnUsername, sm_rhnPassword, sm_serverUrl, rhnOrg);		
+//TODO FIX TEMPORARY WORK IN PROGRESS - COMMENTED OUT - MAY NEED TO UNCOMMENT AGAIN
+//		if (sm_rhnUsername.equals("")) return;
+//		if (sm_rhnPassword.equals("")) return;
+//		
+//		// determine the valid service levels available to a consumer registered with rhn credentials
+//		clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+//		String rhnOrg = clienttasks.getCurrentlyRegisteredOwnerKey();
+//		clienttasks.unregister(null, null, null);
+//		rhnServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(sm_rhnUsername, sm_rhnPassword, sm_serverUrl, rhnOrg);		
 	}
 	
 	@AfterClass(groups="setup")
@@ -1164,23 +1215,19 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnPassword.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 
-//DELETEME
-//		// copy the rhn-channels.py script to the client
-//		File rhnChannelsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-channels.py");
-//		if (!rhnChannelsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnChannelsScriptFile);
-//		RemoteFileTasks.putFile(client.getConnection(), rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
-
 		// get the base channel
 		registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
 		List<String> rhnChannels = getCurrentRhnClassicChannels();
 		Assert.assertEquals(rhnChannels.size(), 1, "The number of base RHN Classic base channels this system is consuming.");
 		rhnBaseChannel = getCurrentRhnClassicChannels().get(0);
 
-		// get all of the available RHN Classic channels available for consuming under this base channel
-//		String command = String.format("rhn-channels.py --username=%s --password=%s --server=%s --basechannel=%s --no-custom", sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnBaseChannel);
+		// get all of the available RHN Classic child channels available for cunsumption under this base channel
+		rhnAvailableChildChannels.clear();
 		String command = String.format("rhn-channels.py --username=%s --password=%s --server=%s --basechannel=%s --no-custom --available", sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnBaseChannel);
-//debugTesting if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
-
+		//debugTesting if (true) command = "echo rhel-x86_64-server-5 && echo rhx-alfresco-enterprise-2.0-rhel-x86_64-server-5 && echo rhx-amanda-enterprise-backup-2.6-rhel-x86_64-server-5";
+//debugTesting
+if (true) return;
+		
 		SSHCommandResult result = RemoteFileTasks.runCommandAndAssert(client, command, Integer.valueOf(0));
 		rhnChannels = new ArrayList<String>();
 		if (!result.getStdout().trim().equals("")) {
@@ -1229,12 +1276,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected List<String> rhnAvailableChildChannels = new ArrayList<String>();
 	static public String installNumTool = "install-num-migrate-to-rhsm";
 	static public String rhnMigrateTool = "rhn-migrate-classic-to-rhsm";
-	protected List<String> rhnServiceLevels = new ArrayList<String>();	// list of service levels available to the rhn user to be migrated
+//TODO	protected List<String> rhnServiceLevels = new ArrayList<String>();	// list of service levels available to the rhn user to be migrated
 
 	
 	protected boolean isCurrentlyConfiguredServerTypeHosted() {
 		String hostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
-		return hostname.matches("subscription\\.rhn\\.(\\.*\\.)*redhat\\.com");
+		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
 	}
 	
 	protected List<String> getExpectedMappedProductCertFilenamesCorrespondingToChannels(List<String> channels) {
@@ -1620,38 +1667,91 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@DataProvider(name="RhnMigrateClassicToRhsmData")
-	public Object[][] getRhnMigrateClassicToRhsmDataAs2dArray() {
+	public Object[][] getRhnMigrateClassicToRhsmDataAs2dArray() throws JSONException, Exception {
 		return TestNGUtils.convertListOfListsTo2dArray(getRhnMigrateClassicToRhsmDataAsListOfLists());
 	}
-	public List<List<Object>> getRhnMigrateClassicToRhsmDataAsListOfLists() {
+	public List<List<Object>> getRhnMigrateClassicToRhsmDataAsListOfLists() throws JSONException, Exception {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
+		// split rhnAvailableChildChannels into two parts to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
 		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
 
-		Integer noServiceLevelIndex = Integer.valueOf(rhnServiceLevels.size()+1);	// predict the index choice for "No service level preference"
-
-		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, Integer serviceLevelIndex, String serviceLevelExpected, List<String> expectedProductCertFilenames
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n",		null,	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n",		null,	null,	null}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"-n -f",	null,	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-n -f",	null,	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-n -f",	null,	null,	null}));
-
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			noServiceLevelIndex,	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:null,	null,	null}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,	"-c -f",	null,	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f",		noServiceLevelIndex,	null,	null}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f",		noServiceLevelIndex,	null,	null}));
-
-		// test the service levels too
-		for (String serviceLevel : rhnServiceLevels) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel="+serviceLevel, null,	serviceLevel,	null}));	
-			String sErViceLeVeL = randomizeCaseOfCharactersInString(serviceLevel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s "+sErViceLeVeL,	null,	serviceLevel, null}));	
+		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
+		String regUsername=null, regPassword=null, regOrg=null;
+		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
+			regUsername = sm_clientUsername;
+			regPassword = sm_clientPassword;
+			regOrg = sm_clientOrg;
 		}
+		
+		// predict the valid service levels that will be available to the migrated consumer
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, regOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null));
+		String orgKey = CandlepinTasks.getOwnerKeyOfConsumerId(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, sm_serverUrl, consumerId);
+		List<String> regServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, sm_serverUrl, orgKey);	
+		clienttasks.unregister(null, null, null);
+		
+		// predict the expected service level from the defaultServiceLevel on the Org
+		JSONObject jsonOrg = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(regUsername==null?sm_rhnUsername:regUsername, regPassword==null?sm_rhnPassword:regPassword, sm_serverUrl, "/owners/"+orgKey));
+//		String defaultServiceLevel = "";
+//		if (jsonOrg.get("defaultServiceLevel")!=JSONObject.NULL) defaultServiceLevel = jsonOrg.getString("defaultServiceLevel");
+		String defaultServiceLevel = (jsonOrg.get("defaultServiceLevel").equals(JSONObject.NULL))? "":jsonOrg.getString("defaultServiceLevel");
 
+			
+		// predict the index choice for "No service level preference"
+//		Integer noServiceLevelIndex = Integer.valueOf(regServiceLevels.size()+1);
+		
+
+		
+		
+		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected, List<String> expectedProductCertFilenames
+//TODO UNCOMMENT AFTER TEMPORARY WORK IN PROGRESS
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"-n",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"-n",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("849644"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-n -f",	regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"",			regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"",			regUsername,	regPassword,	regOrg,	/*areAllChannelsMapped(rhnAvailableChildChannels)?noServiceLevelIndex:*/null,	defaultServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"-f",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f",		regUsername,	regPassword,	regOrg,	null,	defaultServiceLevel,	null}));
+
+		// test each servicelevel
+		for (String serviceLevel : regServiceLevels) {
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel="+serviceLevel,						regUsername,	regPassword,	regOrg,	null,	serviceLevel,	null}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s "+randomizeCaseOfCharactersInString(serviceLevel),	regUsername,	regPassword,	regOrg,	null,	serviceLevel, null}));	
+		}
+		
+		// test a --servicelevel with --no-auto
+		if (!regServiceLevels.isEmpty()) {
+			String serviceLevel = regServiceLevels.get(randomGenerator.nextInt(regServiceLevels.size()));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","849644"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--no-auto --force --servicelevel="+serviceLevel,				regUsername,	regPassword,	regOrg,	null,	serviceLevel,	null}));	
+		}
+		
+		// attempt an unavailable servicelevel, then choose an available one from the index table
+		if (!regServiceLevels.isEmpty()) {
+			int serviceLevelIndex = randomGenerator.nextInt(regServiceLevels.size());
+			String serviceLevel = regServiceLevels.get(serviceLevelIndex);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	serviceLevelIndex,	serviceLevel,	null}));	
+		}
+		
+		// attempt an unavailable servicelevel, then choose no service level
+		if (!regServiceLevels.isEmpty()) {
+			int noServiceLevelIndex = regServiceLevels.size()+1;
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),	"--force --servicelevel=UNAVAILABLE-SLA",				regUsername,	regPassword,	regOrg,	noServiceLevelIndex,	"",	null}));	
+		}
+		
+		
+		// when regOrg is not null, add bug BlockedByBzBug 849483 to all rows
+		if (regOrg!=null) for (List<Object> l : ll) {
+			BlockedByBzBug blockedByBzBug = (BlockedByBzBug) l.get(0);	// get the existing BlockedByBzBug
+			List<String> bugIds = blockedByBzBug==null?new ArrayList<String>():new ArrayList<String>(Arrays.asList(blockedByBzBug.getBugIds()));
+			bugIds.add("849483");	// 849483 - rhn-migrate-classic-to-rhsm fails to prompt for needed System Engine org credentials 
+			blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
+			l.set(0, blockedByBzBug);
+		}
+		
 		return ll;
 	}
 	
@@ -1664,29 +1764,45 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
 		if (clienttasks==null) return ll;
 		
+		// split rhnAvailableChildChannels into two parts to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
 		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
-
-		String noServiceLevel = String.valueOf(rhnServiceLevels.size()+1);	// predict the index choice for "No service level preference"
 
 		String basicauthproxyUrl = String.format("%s:%s", sm_basicauthproxyHostname,sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String noauthproxyUrl = String.format("%s:%s", sm_noauthproxyHostname,sm_noauthproxyPort); noauthproxyUrl = noauthproxyUrl.replaceAll(":$", "");
 		
-		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, List<String> expectedProductCertFilenames, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
+		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
+		String regUsername=null, regPassword=null, regOrg=null;
+		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
+			regUsername = sm_clientUsername;
+			regPassword = sm_clientPassword;
+			regOrg = sm_clientOrg;
+		}
 		
+//		// predict the valid service levels that will be available to the migrated consumer
+//		clienttasks.register_(regUsername, regPassword, null, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+//		List<String> regServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(regUsername, regPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey());	
+//		clienttasks.unregister(null, null, null);
+//		
+//		// predict the index choice for "No service level preference"
+//		Integer noServiceLevelIndex = Integer.valueOf(regServiceLevels.size()+1);
+		
+		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, List<String> expectedProductCertFilenames, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
+
+// TODO ADD NEW BUGS FOR BLOCKING
 		// basic auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			null,		"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--no-auto --force",	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"--no-auto --force",	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	null,		"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	regUsername,	regPassword,	regOrg,	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
+		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	null,		sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		
 		// no auth proxy test data...
-		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			null,		"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--no-auto --force",	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
-		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"--no-auto --force",	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	null,		"http://"+sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		//ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("818786"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannels,		"--no-auto --force",	regUsername,	regPassword,	regOrg,	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
+		ll.add(Arrays.asList(new Object[]{null /* AVOIDS BUG 818786 */,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"--no-auto --force",	regUsername,	regPassword,	regOrg,	null,		sm_noauthproxyHostname,	sm_noauthproxyPort,		"",							"",						Integer.valueOf(0),		null,		null,		noAuthProxyRunner,	sm_noauthproxyLog,		"Connect"}));
 
 		return ll;
 	}
