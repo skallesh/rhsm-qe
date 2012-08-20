@@ -62,7 +62,7 @@
         port (@config :basicauth-proxy-port)
         username (@config :basicauth-proxy-username)
         password (@config :basicauth-proxy-password)]
-    (tasks/enableproxy-auth hostname port username password true)
+    (tasks/enableproxy hostname :port port :user username :pass password :firstboot? true)
     (tasks/ui click :firstboot-forward)
     (tasks/checkforerror)
     (tasks/firstboot-register (@config :username) (@config :password))
@@ -75,7 +75,7 @@
   ;(tasks/ui uncheck :rhn-classic-mode)
   (let [hostname (@config :noauth-proxy-hostname)
         port (@config :noauth-proxy-port)]
-    (tasks/enableproxy-noauth hostname port true)
+    (tasks/enableproxy hostname :port port :firstboot? true)
     (tasks/ui click :firstboot-forward)
     (tasks/checkforerror)
     (tasks/firstboot-register (@config :username) (@config :password))

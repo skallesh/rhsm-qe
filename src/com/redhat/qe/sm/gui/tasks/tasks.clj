@@ -404,66 +404,100 @@
   (ui click :yes)
   (checkforerror))
 
-(defn enableproxy-auth
+(defn enableproxy
   "Configures a proxy that uses authentication through subscription-manager-gui."
-  ([proxy port user pass firstboot]
-     (assert (is-boolean? firstboot))
-     (if firstboot 
-       (do (ui click :firstboot-proxy-config)
-           (ui waittillwindowexist :firstboot-proxy-dialog 60)
-           (ui check :firstboot-proxy-checkbox)
-           (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-           (ui check :firstboot-auth-checkbox)
-           (ui settextvalue :firstboot-proxy-user user)
-           (ui settextvalue :firstboot-proxy-pass pass)
-           (ui click :firstboot-proxy-close)
-           (checkforerror))
-       (do (ui selecttab :my-installed-products)
-           (ui click :proxy-configuration)
-           (ui waittillwindowexist :proxy-config-dialog 60)
+  [server & {:keys [port user pass auth? close? firstboot?]
+                  :or {port nil
+                       user nil
+                       pass nil
+                       auth? false
+                       close? true
+                       firstboot? false}}]
+  (assert (is-boolean? firstboot?))
+  (if-not firstboot?
+    (do (ui click :configure-proxy)
+        (ui waittillwindowexist :proxy-config-dialog 60)
            (ui check :proxy-checkbox)
            (try
-             (ui settextvalue :proxy-location (str proxy ":" port))
+             (ui settextvalue :proxy-location (str server (when port (str ":" port))))
              (catch Exception e
                (if (substring? "not implemented" (.getMessage e))
                  (do (sleep 2000)
-                     (ui generatekeyevent (str proxy ":" port)))
+                     (ui generatekeyevent (str server (when port (str ":" port)))))
                  (throw e))))
-           (ui check :authentication-checkbox)
-           (ui settextvalue :username-text user)
-           (ui settextvalue :password-text pass)
-           (ui click :close-proxy)
-           (checkforerror))))
-  ([proxy port user pass] (enableproxy-auth proxy port user pass false)))
+           (if (or auth? user pass)
+             (do (ui check :authentication-checkbox)
+                 (when user (ui settextvalue :username-text user))
+                 (when pass (ui settextvalue :password-text pass)))
+             (ui uncheck :authentication-checkbox))
+           (if close? (ui click :close-proxy))
+           (checkforerror))
+    ;write method here for firstboot
+    ))
 
-(defn enableproxy-noauth
-  "Configures a proxy that does not use authentication through subscription-manager-gui."
-  ([proxy port firstboot]
-     (assert (is-boolean? firstboot))
-     (if firstboot
-       (do (ui click :firstboot-proxy-config)
-           (ui waittillwindowexist :firstboot-proxy-dialog 60)
-           (ui check :firstboot-proxy-checkbox)
-           (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
-           (ui uncheck :firstboot-auth-checkbox)
-           (ui click :firstboot-proxy-close)
-           (checkforerror))
-       (do (ui selecttab :my-installed-products)
-           (ui click :proxy-configuration)
-           (ui waittillwindowexist :proxy-config-dialog 60)
-           (ui check :proxy-checkbox)
-           (try
-             (ui settextvalue :proxy-location (str proxy ":" port))
-             (catch Exception e
-               ;; yay rhel5
-               (if (substring? "not implemented" (.getMessage e))
-                 (do (sleep 2000)
-                     (ui generatekeyevent (str proxy ":" port)))
-                 (throw e))))
-           (ui uncheck :authentication-checkbox)
-           (ui click :close-proxy)
-           (checkforerror))))
-  ([proxy port] (enableproxy-noauth proxy port false)))
+(comment
+  ;these are no longer used
+ 
+  (defn enableproxy-auth
+    "Configures a proxy that uses authentication through subscription-manager-gui."
+    ([proxy port user pass firstboot]
+       (assert (is-boolean? firstboot))
+       (if firstboot 
+         (do (ui click :firstboot-proxy-config)
+             (ui waittillwindowexist :firstboot-proxy-dialog 60)
+             (ui check :firstboot-proxy-checkbox)
+             (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
+             (ui check :firstboot-auth-checkbox)
+             (ui settextvalue :firstboot-proxy-user user)
+             (ui settextvalue :firstboot-proxy-pass pass)
+             (ui click :firstboot-proxy-close)
+             (checkforerror))
+         (do (ui selecttab :my-installed-products)
+             (ui click :proxy-configuration)
+             (ui waittillwindowexist :proxy-config-dialog 60)
+             (ui check :proxy-checkbox)
+             (try
+               (ui settextvalue :proxy-location (str proxy ":" port))
+               (catch Exception e
+                 (if (substring? "not implemented" (.getMessage e))
+                   (do (sleep 2000)
+                       (ui generatekeyevent (str proxy ":" port)))
+                   (throw e))))
+             (ui check :authentication-checkbox)
+             (ui settextvalue :username-text user)
+             (ui settextvalue :password-text pass)
+             (ui click :close-proxy)
+             (checkforerror))))
+    ([proxy port user pass] (enableproxy-auth proxy port user pass false)))
+
+  (defn enableproxy-noauth
+    "Configures a proxy that does not use authentication through subscription-manager-gui."
+    ([proxy port firstboot]
+       (assert (is-boolean? firstboot))
+       (if firstboot
+         (do (ui click :firstboot-proxy-config)
+             (ui waittillwindowexist :firstboot-proxy-dialog 60)
+             (ui check :firstboot-proxy-checkbox)
+             (ui settextvalue :firstboot-proxy-location (str proxy ":" port))
+             (ui uncheck :firstboot-auth-checkbox)
+             (ui click :firstboot-proxy-close)
+             (checkforerror))
+         (do (ui selecttab :my-installed-products)
+             (ui click :proxy-configuration)
+             (ui waittillwindowexist :proxy-config-dialog 60)
+             (ui check :proxy-checkbox)
+             (try
+               (ui settextvalue :proxy-location (str proxy ":" port))
+               (catch Exception e
+                 ;; yay rhel5
+                 (if (substring? "not implemented" (.getMessage e))
+                   (do (sleep 2000)
+                       (ui generatekeyevent (str proxy ":" port)))
+                   (throw e))))
+             (ui uncheck :authentication-checkbox)
+             (ui click :close-proxy)
+             (checkforerror))))
+    ([proxy port] (enableproxy-noauth proxy port false))))
   
 (defn disableproxy
   "Disables any proxy settings through subscription-manager-gui."

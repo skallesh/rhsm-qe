@@ -30,14 +30,14 @@
         port      (@config :basicauth-proxy-port)
         username  (@config :basicauth-proxy-username)
         password  (@config :basicauth-proxy-password)]
-    (tasks/enableproxy-auth hostname port username password)
+    (tasks/enableproxy hostname :port port :user username :pass password)
     (tasks/verify-conf-proxies hostname port username password)))
 
 (defn ^{Test {:groups ["proxy"]}}
   enable_proxy_noauth [_]
   (let [hostname  (@config :noauth-proxy-hostname)
         port      (@config :noauth-proxy-port)]
-    (tasks/enableproxy-noauth hostname port)
+    (tasks/enableproxy hostname :port port)
     (tasks/verify-conf-proxies hostname port "" "")))
       
 (defn ^{Test {:groups ["proxy"]
@@ -89,7 +89,7 @@
   bad_proxy [_]
   (let [hostname  "blahblah"
         port      "666"]
-    (tasks/enableproxy-noauth hostname port)
+    (tasks/enableproxy hostname :port port)
     (tasks/verify-conf-proxies hostname port "" ""))
   (let [thrown-error (try+ (register)
                            (catch Object e (:type e)))]
@@ -102,7 +102,7 @@
   (register)
   (let [hostname  "blahblah"
         port      "666"]
-    (tasks/enableproxy-noauth hostname port)
+    (tasks/enableproxy hostname :port port)
     (tasks/verify-conf-proxies hostname port "" ""))
   (let [thrown-error (try+ (tasks/ui click :view-system-facts)
                        (tasks/ui waittillguiexist :facts-view)

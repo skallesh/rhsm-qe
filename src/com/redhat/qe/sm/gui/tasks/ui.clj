@@ -34,7 +34,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :facts-dialog "facts_dialog" 
                 :progress-dialog "Progress Dialog"
                 :contract-selection-dialog "Contract Selection"
-                :proxy-config-dialog "Advanced Network Configuration"
+                :proxy-config-dialog "Proxy Configuration"
                 :subscription-assistant-dialog "Subscription Assistant"
                 :information-dialog "Information"
                 :warning-dialog "Warning"
@@ -64,8 +64,8 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :installed-view
                                     :unsubscribe
                                     :system-preferences
+                                    :configure-proxy
                                     :view-system-facts
-                                    :proxy-configuration
                                     :import-certificate
                                     :help
                                     :filters
