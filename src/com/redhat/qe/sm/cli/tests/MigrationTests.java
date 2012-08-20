@@ -64,7 +64,7 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *  http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=tree;f=product_ids/rhev-3.0;hb=HEAD
  *
  */
-@Test(groups={"MigrationTests"})
+@Test(groups={"MigrationTests"},enabled=false)
 public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 	// Test methods ***********************************************************************
