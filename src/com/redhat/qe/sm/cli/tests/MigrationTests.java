@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +36,6 @@ import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
-import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
@@ -799,6 +796,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// register to RHN Classic
 		String rhnSystemId = registerToRhnClassic(rhnUsername, rhnPassword, rhnHostname);
+		Assert.assertTrue(isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
 		
 		// subscribe to more RHN Classic channels
 		if (rhnChannelsToAdd.size()>0) addRhnClassicChannels(rhnUsername, rhnPassword, rhnChannelsToAdd);
@@ -830,28 +828,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 			// assert that we are not yet registered to RHSM
 			Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" requires --force to continue.");
+			
+			// assert that we are still registered to RHN
+			Assert.assertTrue(isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered since our migration attempt requires --force to continue.");
 
 			return;
 		}
 		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "ExitCode from call to '"+rhnMigrateTool+" "+options+"' when all of the channels are mapped.");
-		
-		// assert we are no longer registered to RHN Classic
-		expectedMsg = "System successfully unregistered from RHN Classic.";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
-		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is abscent.  This indicates this system is not registered using RHN Classic.");
-
-		// assert products are copied
-		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
-		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
-		
-		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
-		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
-		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".");
-		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
-			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
-			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
-		}
 		
 		// assert the expected migration.* facts are set
 		//	[root@ibm-x3620m3-01 ~]# subscription-manager facts --list | grep migration
@@ -868,6 +851,25 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		long migratTimeInSeconds = migrationDate.getTimeInMillis()/1000;
 		Assert.assertTrue(systemTimeInSeconds-tol < migratTimeInSeconds && migratTimeInSeconds < systemTimeInSeconds+tol, "The migration date fact '"+factMap.get(migrationDateFact)+"' was set within the last '"+tol+"' seconds.");
 		
+		// assert we are no longer registered to RHN Classic
+		expectedMsg = "System successfully unregistered from RHN Classic.";
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' is abscent.  This indicates this system is not registered using RHN Classic.");
+		Assert.assertTrue(!isRhnSystemIdRegistered(rhnUsername, rhnPassword, rhnHostname, rhnSystemId), "Confirmed that rhn systemId '"+rhnSystemId+"' is no longer registered.");
+
+		// assert products are copied
+		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
+		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+		
+		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
+		List<ProductCert> migratedProductCerts = clienttasks.getCurrentProductCerts();
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), expectedMigrationProductCertFilenames.size(), "The number of productCerts installed after running "+rhnMigrateTool+" with "+options+".");
+		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
+			ProductCert expectedMigrationProductCert = clienttasks.getProductCertFromProductCertFile(new File(baseProductsDir+"/"+expectedMigrationProductCertFilename));
+			Assert.assertTrue(migratedProductCerts.contains(expectedMigrationProductCert),"The newly installed product certs includes the expected migration productCert: "+expectedMigrationProductCert);
+		}
+		
 		// TODO
 		// assert that when --serverurl is specified, its hostname:port/prefix are preserved into rhsm.conf
 		
@@ -877,11 +879,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// assert the the expected service level was set as a preference on the registered consumer
 		if (serviceLevelExpected!=null) {
-			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), serviceLevelExpected, "The serviceLevel requested during migration was set as the preference on the registered consumer.");
+			String serviceLevel = clienttasks.getCurrentServiceLevel();
+			Assert.assertTrue(serviceLevelExpected.equalsIgnoreCase(serviceLevel), "Regardless of case, the serviceLevel requested during migration (or possibly the org's defaultServiceLevel) was set as the system's service level preference.");
 		}
 		
 		// assert that when --no-auto is specified, no entitlements were granted during the rhsm registration
+		String autosubscribeAttemptedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
+		String autosubscribeFailedMsg = "Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?";
 		if (options.contains("-n")) { // -n, --no-auto   Do not autosubscribe when registering with subscription-manager
+
+			// assert that autosubscribe was NOT attempted
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeAttemptedMsg);			
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contain message: "+autosubscribeFailedMsg);			
 
 // bug 849644
 //			// assert that we are NOT registered using rhsm
@@ -896,21 +905,24 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		}
 
 		// assert that autosubscribe was attempted
-		expectedMsg = "Attempting to auto-subscribe to appropriate subscriptions ...";
-		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);			
+		Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeAttemptedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeAttemptedMsg);			
 
 		// assert that the migrated productCert corresponding to the base channel has been autosubscribed by checking the status on the installedProduct
 		// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
+		// FIXME if a service-level is provided that is not available, then this product may NOT be subscribed
 		InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(clienttasks.getProductCertFromProductCertFile(new File(clienttasks.productCertDir+"/"+getPemFileNameFromProductCertFilename(channelsToProductCertFilenamesMap.get(rhnBaseChannel)))));
 		Assert.assertEquals(installedProduct.status, "Subscribed","The migrated product cert corresponding to the RHN Classic base channel '"+rhnBaseChannel+"' was autosubscribed: "+installedProduct);
 		
-		// assert that we are consuming some entitlements (for at least the base product cert)
-		// FIXME This assertion is wrong when there are no available subscriptions that provide for the migrated product certs' providesTags; however since we register as qa@redhat.com, I think we have access to all base rhel subscriptions
+		// assert that autosubscribe feedback was a success (or not)
 		List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(!consumedProductSubscriptions.isEmpty(),"We should be consuming some RHSM entitlements (at least for the base RHEL product) after call to "+rhnMigrateTool+" with "+options+".");
+		if (!consumedProductSubscriptions.isEmpty()) {
+			Assert.assertTrue(sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When no entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+autosubscribeFailedMsg);			
+		} else {
+			Assert.assertTrue(!sshCommandResult.getStdout().contains(autosubscribeFailedMsg), "When autosubscribe is successful and entitlements have been granted, stdout from call to '"+rhnMigrateTool+" "+options+"' does NOT contains message: "+autosubscribeFailedMsg);				
+		}
 		
 		// assert that when no --servicelevel is specified, then no service level preference will be set on the registered consumer
-		if (!options.contains("-s ") && !options.contains("--servicelevel") && serviceLevelExpected==null) {
+		if (!options.contains("-s ") && !options.contains("--servicelevel") && (serviceLevelExpected==null||serviceLevelExpected.isEmpty())) {
 			// assert no service level preference was set
 			Assert.assertEquals(clienttasks.getCurrentServiceLevel(), "", "No servicelevel preference should be set on the consumer when no service level was requested.");
 		}
@@ -920,7 +932,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 			// when a valid servicelevel was either specified or chosen
 			expectedMsg = String.format("Service level set to: %s",serviceLevelExpected);
-			Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
+			Assert.assertTrue(sshCommandResult.getStdout().toUpperCase().contains(expectedMsg.toUpperCase()), "Regardless of service level case, the stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 			
 			for (ProductSubscription productSubscription : consumedProductSubscriptions) {
 				Assert.assertNotNull(productSubscription.serviceLevel, "When migrating from RHN Classic with a specified service level '"+serviceLevelExpected+"', this auto consumed product subscription's service level should not be null: "+productSubscription);
@@ -1096,6 +1108,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO https://tcms.engineering.redhat.com/case/130762/?from_plan=5223
 	// TODO Bug 816377 - rhn-migrate-classic-to-rhsm throws traceback when subscription-manager-migration-data is not installed
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=816364#c6
+	// TODO Bug 786450 - “Install-num-migrate-to-rhsm “ command not working as expected for ppc64 box (TODO FIGURE OUT IF EXISTING AUTOMATION ALREADY COVERS THIS ON PPC64)
 	
 	// Configuration methods ***********************************************************************
 	
@@ -1201,6 +1214,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		File rhnChannelsScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-channels.py");
 		if (!rhnChannelsScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnChannelsScriptFile);
 		RemoteFileTasks.putFile(client.getConnection(), rhnChannelsScriptFile.toString(), "/usr/local/bin/", "0755");
+		
+		// copy the rhn-is-registered.py script to the client
+		File rhnIsRegisteredScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-is-registered.py");
+		if (!rhnIsRegisteredScriptFile.exists()) Assert.fail("Failed to find expected script: "+rhnIsRegisteredScriptFile);
+		RemoteFileTasks.putFile(client.getConnection(), rhnIsRegisteredScriptFile.toString(), "/usr/local/bin/", "0755");
 
 		// copy the rhn-migrate-classic-to-rhsm.tcl script to the client
 		File expectScriptFile = new File(System.getProperty("automation.dir", null)+"/scripts/rhn-migrate-classic-to-rhsm.tcl");
@@ -1542,7 +1560,12 @@ if (true) return;
 		}
 	}
 
-
+	protected boolean isRhnSystemIdRegistered(String rhnUsername, String rhnPassword, String rhnHostname, String systemId) {
+		
+		String command = String.format("rhn-is-registered.py --username=%s --password=%s --server=%s  %s", rhnUsername, rhnPassword, rhnHostname, systemId);
+		SSHCommandResult result = client.runCommandAndWait(command);
+		return Boolean.valueOf(result.getStdout().trim());
+	}
 
 	protected void iptablesRejectPort(String port) {
 		//	[root@jsefler-r63-server rhn]# iptables -L OUTPUT
@@ -2071,6 +2094,14 @@ if (true) return;
 		
 		return ll;
 	}
+	
+	
+
+
+
+	
+	
+	
 }
 
 
@@ -2255,4 +2286,49 @@ if (true) return;
 //		[root@jsefler-onprem-5server rhn]# echo $?
 //		1
 //		[root@jsefler-onprem-5server rhn]# 
+
+
+//	RHEL59 EXAMPLE FOR rhn-migrate-classic-to-rhsm --servicelevel=INVALID_SLA
+//	[root@jsefler-rhel59 ~]# rhn-migrate-classic-to-rhsm --servicelevel=INVALID_SLA
+//	Red Hat account: qa@redhat.com
+//	Password: 
+//	
+//	Retrieving existing RHN Classic subscription information ...
+//	+----------------------------------+
+//	System is currently subscribed to:
+//	+----------------------------------+
+//	rhel-x86_64-server-5
+//	
+//	List of channels for which certs are being copied
+//	rhel-x86_64-server-5
+//	
+//	Product certificates copied successfully to /etc/pki/product
+//	
+//	Preparing to unregister system from RHN Classic ...
+//	System successfully unregistered from RHN Classic.
+//	
+//	Attempting to register system to Red Hat Subscription Management ...
+//	The system has been registered with id: 8fdf28e3-dc3a-44ae-910c-0f57c5187ba4 
+//	System 'jsefler-rhel59.usersys.redhat.com' successfully registered to Red Hat Subscription Management.
+//	
+//	
+//	Service level "INVALID_SLA" is not available.
+//	Please select a service level agreement for this system.
+//	1. SELF-SUPPORT
+//	2. PREMIUM
+//	3. STANDARD
+//	4. NONE
+//	5. No service level preference
+//	? 2
+//	Attempting to auto-subscribe to appropriate subscriptions ...
+//	Service level set to: PREMIUM
+//	Installed Product Current Status:
+//	Product Name:         	Red Hat Enterprise Linux Server
+//	Status:               	Not Subscribed
+//	
+//	
+//	Unable to auto-subscribe.  Do your existing subscriptions match the products installed on this system?
+//	
+//	Please visit https://access.redhat.com/management/consumers/8fdf28e3-dc3a-44ae-910c-0f57c5187ba4 to view the details, and to make changes if necessary.
+//	[root@jsefler-rhel59 ~]# 
 

@@ -11,9 +11,9 @@ set rhnUsername  [lindex $argv 1]
 set rhnPassword  [lindex $argv 2]
 set regUsername  [lindex $argv 3]
 set regPassword  [lindex $argv 4]
-set serviceLevel [lindex $argv 5]
+set slaIndex     [lindex $argv 5]
 if {$argc != 6} {
-  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword serviceLevel"
+  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword slaIndex"
   puts "(pass \"null\" for argument values that you do not expect $tool to interactively prompt for)"
   exit -1
 }
@@ -24,7 +24,7 @@ if {$argc != 6} {
 #puts rhnPassword=$rhnPassword
 #puts regUsername=$regUsername
 #puts regPassword=$regPassword
-#puts serviceLevel=$serviceLevel
+#puts slaIndex=$slaIndex
 
 # launch rhn-migrate-classic-to-rhsm with options
 if {$options != "null"} {
@@ -36,7 +36,7 @@ if {$options != "null"} {
 # configure what to do when an unexpected eof occurs before or after the next expect call (MUST BE DEFINED AFTER spawn)
 expect_after eof exit
 expect_before eof exit
-set timeout 10
+set timeout 180
 
 
 # now respond to the interactive prompts from rhn-migrate-classic-to-rhsm ...
@@ -50,8 +50,8 @@ if {$regUsername != "null"} {
   expect "System Engine Username:" {send "${regUsername}\r"} timeout {exit -1}
   expect "Password:" {send "${regPassword}\r"} timeout {exit -1}
 }
-if {$serviceLevel != "null"} {
-  expect "Please select a service level agreement for this system." {send "${serviceLevel}\r"} timeout {exit -1}
+if {$slaIndex != "null"} {
+  expect "Please select a service level agreement for this system." {send "${slaIndex}\r"} timeout {exit -1}
 }
 
 
