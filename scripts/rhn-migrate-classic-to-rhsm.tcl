@@ -11,9 +11,9 @@ set rhnUsername  [lindex $argv 1]
 set rhnPassword  [lindex $argv 2]
 set regUsername  [lindex $argv 3]
 set regPassword  [lindex $argv 4]
-set serviceLevel [lindex $argv 5]
+set slaIndex     [lindex $argv 5]
 if {$argc != 6} {
-  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword serviceLevel"
+  puts "Usage: ${argv0} ${tool}-options rhnUsername rhnPassword regUsername regPassword slaIndex"
   puts "(pass \"null\" for argument values that you do not expect $tool to interactively prompt for)"
   exit -1
 }
@@ -24,7 +24,7 @@ if {$argc != 6} {
 #puts rhnPassword=$rhnPassword
 #puts regUsername=$regUsername
 #puts regPassword=$regPassword
-#puts serviceLevel=$serviceLevel
+#puts slaIndex=$slaIndex
 
 # launch rhn-migrate-classic-to-rhsm with options
 if {$options != "null"} {
@@ -36,26 +36,31 @@ if {$options != "null"} {
 # configure what to do when an unexpected eof occurs before or after the next expect call (MUST BE DEFINED AFTER spawn)
 expect_after eof exit
 expect_before eof exit
-set timeout 10
+set timeout 180
 
 
 # now respond to the interactive prompts from rhn-migrate-classic-to-rhsm ...
 
 if {$rhnUsername != "null"} {
-  #expect "RHN Username:" {send "${rhnUsername}\r"} timeout {exit -1}	# changed by bug 847380
-  expect "Red Hat account:" {send "${rhnUsername}\r"} timeout {exit -1}
-  expect "Password:" {send "${rhnPassword}\r"} timeout {exit -1}
+  set prompt "Red Hat account:";  # "RHN Username:";	# changed by bug 847380
+  expect $prompt {send "${rhnUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Password:";
+  expect $prompt {send "${rhnPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 if {$regUsername != "null"} {
-  expect "System Engine Username:" {send "${regUsername}\r"} timeout {exit -1}
-  expect "Password:" {send "${regPassword}\r"} timeout {exit -1}
+  set prompt "System Engine Username:";
+  expect $prompt {send "${regUsername}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
+  set prompt "Password:";
+  expect $prompt {send "${regPassword}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
-if {$serviceLevel != "null"} {
-  expect "Please select a service level agreement for this system." {send "${serviceLevel}\r"} timeout {exit -1}
+if {$slaIndex != "null"} {
+  set prompt "Please select a service level agreement for this system.";
+  expect $prompt {send "${slaIndex}\r"} timeout {puts "WARNING: Timed out expecting prompt: ${prompt}"; exit -1}
 }
 
 
-# interact with the program again so as to catch the remaining stdout and exit code from the program, but use a few minutes for timeout in case there is an unexpected interactive prompt
-interact timeout 180 {exit -1}
+# interact with the program again so as to catch the remaining stdout and exit code from the program
+set interactiveTimeout 240; 	# use a timeout in case there is an unexpected interactive prompt blocking the program from completing.  IMPORTANT: this timeout must be greater than the time needed for subscription-manager registration with autosubscribe
+interact timeout $interactiveTimeout {puts "WARNING: Timed out after ${interactiveTimeout} seconds expecting ${tool} to have already completed."; exit -1};
 catch wait reason
 exit [lindex $reason 3]
