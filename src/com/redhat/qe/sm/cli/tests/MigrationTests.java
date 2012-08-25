@@ -1858,8 +1858,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// test each servicelevel
 		for (String serviceLevel : regServiceLevels) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel="+serviceLevel,						regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s "+randomizeCaseOfCharactersInString(serviceLevel),	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel=\""+serviceLevel+"\"",						regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s \""+randomizeCaseOfCharactersInString(serviceLevel)+"\"",	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
