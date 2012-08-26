@@ -1575,8 +1575,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// the migration tool will always prompt rhn credentials to migrate the system "from"
 		// the migration tool will only prompt for destination credentials to migrate the system "to" when the configured hostname does not match subscription.rhn.(.*.)*redhat.com
 		
-		
-		String command = String.format("rhn-migrate-classic-to-rhsm.tcl \"%s\"  \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"", options, rhnUsername, rhnPassword, regUsername, regPassword, regOrg, serviceLevelIndex);
+		// surround tcl args containing white space with ticks and call the TCL expect script for rhn-migrate-classic-to-rhsm
+		if (options.contains(" "))		options		= String.format("'%s'", options);
+		if (rhnUsername.contains(" "))	rhnUsername	= String.format("'%s'", rhnUsername);
+		if (rhnPassword.contains(" "))	rhnPassword	= String.format("'%s'", rhnPassword);
+		if (regUsername.contains(" "))	regUsername	= String.format("'%s'", regUsername);
+		if (regPassword.contains(" "))	regPassword	= String.format("'%s'", regPassword);
+		if (regOrg.contains(" ")) 		regOrg		= String.format("'%s'", regOrg);
+		String command = String.format("rhn-migrate-classic-to-rhsm.tcl %s %s %s %s %s %s %s", options, rhnUsername, rhnPassword, regUsername, regPassword, regOrg, serviceLevelIndex);
 		return client.runCommandAndWait(command);
 	}
 
