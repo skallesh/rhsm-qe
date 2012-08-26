@@ -1292,7 +1292,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String originalServerPrefix;
 	
 	protected boolean isCurrentlyConfiguredServerTypeHosted() {
-		String hostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		return isHostnameHosted(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"));
+	}
+	protected boolean isHostnameHosted(String hostname) {
 		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
 	}
 	
@@ -1532,56 +1534,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	 * @param rhnPassword - enter at the prompt for RHN Password
 	 * @param regUsername - enter at the prompt for System Engine Username (will be used for subscription-manager register credentials)
 	 * @param regPassword - enter at the prompt for System Engine Password (will be used for subscription-manager register credentials)
-	 * @param regOrg TODO
+	 * @param regOrg - enter at the prompt for Org (will be used for subscription-manager register credentials)
 	 * @param serviceLevelIndex - index number to enter at the prompt for choosing servicelevel
 	 * @return
 	 */
 	protected SSHCommandResult executeRhnMigrateClassicToRhsm(String options, String rhnUsername, String rhnPassword, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex) {
 
-		/* ORIGINAL IMPLEMENTATION
-		// assemble an ssh command using expect to simulate an interactive supply of credentials to the rhn-migrate-classic-to-rhsm command
-		// RHN Username: 
-		String promptedRHNUsernames=""; if (rhnUsername!=null) for (String u : rhnUsername.split("\\n")) {
-			promptedRHNUsernames += "expect \\\"*Username:\\\"; send "+u+"\\\r;";	// RHN Username:
-		}
-		// Password: 
-		String promptedRHNPasswords=""; if (rhnPassword!=null) for (String p : rhnPassword.split("\\n")) {
-			promptedRHNPasswords += "expect \\\"*Password:\\\"; send "+p+"\\\r;";	// Password:
-		}
-		
-		//  Service level "stANDArD" is not available.		<== WHEN --servicelevel="stANDArD" WAS ENTERED AS A COMMAND LINE OPTION
-		//	You have entered an invalid choice.				<== WHEN "stANDArD" WAS ENTERED AT THE PROMPT
-		//	Please select a service level agreement for this system.
-		//	1. Standard
-		//	2. Layered
-		//	3. Self-support
-		//	4. None
-		//	5. Premium
-		//	6. No service level preference
-		//	? 
-		String promptedServiceLevels=""; if (sendServiceLevel!=null) for (String s : sendServiceLevel.split("\\n")) {
-			promptedServiceLevels += "expect \\\"Please select a service level agreement for this system.\\\"; send "+s+"\\\r;";	// ? 
-		}
-		if (options==null) options="";
-		// [root@jsefler-onprem-5server ~]# expect -c "spawn rhn-migrate-classic-to-rhsm --cli-only; expect \"*Username:\"; send qa@redhat.com\r; expect \"*Password:\"; send CHANGE-ME\r; interact; catch wait reason; exit [lindex \$reason 3]"
-		//String command = String.format("expect -c \"spawn %s %s; %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedServiceLevels);
-		////                                                                ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
-		String command = String.format("expect -c \"set timeout 60; spawn %s %s; %s %s %s %s %s interact; catch wait reason; exit [lindex \\$reason 3]\"", rhnMigrateTool, options, promptedRHNUsernames, promptedRHNPasswords, promptedSEUsernames, promptedSEPasswords, promptedServiceLevels);
-		//                                                                                      ^^^^^^^^ DO NOT USE expect eof IT WILL TRUNCATE THE --force OUTPUT MESSAGE
-		return client.runCommandAndWait(command);
-		*/
-		
 		// 8/4/2012 new behavior...
 		// the migration tool will always prompt rhn credentials to migrate the system "from"
-		// the migration tool will only prompt for destination credentials to migrate the system "to" when the configured hostname does not match subscription.rhn.(.*.)*redhat.com
+		// the migration tool will only prompt for destination credentials to migrate the system "to" when the configured hostname does not match subscription.rhn(.*).redhat.com
 		
 		// surround tcl args containing white space with ticks and call the TCL expect script for rhn-migrate-classic-to-rhsm
-		if (options.contains(" "))		options		= String.format("'%s'", options);
-		if (rhnUsername.contains(" "))	rhnUsername	= String.format("'%s'", rhnUsername);
-		if (rhnPassword.contains(" "))	rhnPassword	= String.format("'%s'", rhnPassword);
-		if (regUsername.contains(" "))	regUsername	= String.format("'%s'", regUsername);
-		if (regPassword.contains(" "))	regPassword	= String.format("'%s'", regPassword);
-		if (regOrg.contains(" ")) 		regOrg		= String.format("'%s'", regOrg);
+		if (options!=null && options.contains(" "))			options		= String.format("'%s'", options);
+		if (rhnUsername!=null && rhnUsername.contains(" "))	rhnUsername	= String.format("'%s'", rhnUsername);
+		if (rhnPassword!=null && rhnPassword.contains(" "))	rhnPassword	= String.format("'%s'", rhnPassword);
+		if (regUsername!=null && regUsername.contains(" "))	regUsername	= String.format("'%s'", regUsername);
+		if (regPassword!=null && regPassword.contains(" "))	regPassword	= String.format("'%s'", regPassword);
+		if (regOrg!=null && regOrg.contains(" ")) 			regOrg		= String.format("'%s'", regOrg);
 		String command = String.format("rhn-migrate-classic-to-rhsm.tcl %s %s %s %s %s %s %s", options, rhnUsername, rhnPassword, regUsername, regPassword, regOrg, serviceLevelIndex);
 		return client.runCommandAndWait(command);
 	}
@@ -1836,13 +1805,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String defaultServiceLevel = (jsonOrg.get("defaultServiceLevel").equals(JSONObject.NULL))? "":jsonOrg.getString("defaultServiceLevel");
 		
 		// create some variations on a valid serverUrl to test the --serverurl option
-		List<String> regServerUrls = Arrays.asList(
-				originalServerHostname,
-				"https://"+originalServerHostname,
-				"https://"+originalServerHostname+originalServerPrefix,
-				"https://"+originalServerHostname+":"+originalServerPort,
-				"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix
-				);
+		List<String> regServerUrls = new ArrayList<String>();
+		if (isHostnameHosted(originalServerHostname)) {
+			regServerUrls.add(originalServerHostname);
+			regServerUrls.add("https://"+originalServerHostname);
+			regServerUrls.add("https://"+originalServerHostname+originalServerPrefix);
+			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort);
+			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+		} else {
+			regServerUrls.add(originalServerHostname+":"+originalServerPort+originalServerPrefix);
+			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+			// Note: only a fully qualified server url will work for a non-hosted hostname because otherwise the (missing port/prefix defaults to 443/subscription) results will end up with: Unable to connect to certificate server: (111, 'Connection refused'). See /var/log/rhsm/rhsm.log for more details.
+		}
 		
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected
 
