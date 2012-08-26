@@ -1292,7 +1292,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected String originalServerPrefix;
 	
 	protected boolean isCurrentlyConfiguredServerTypeHosted() {
-		String hostname = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		return isHostnameHosted(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"));
+	}
+	protected boolean isHostnameHosted(String hostname) {
 		return hostname.matches("subscription\\.rhn\\.(.*\\.)*redhat\\.com");
 	}
 	
@@ -1836,13 +1838,18 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		String defaultServiceLevel = (jsonOrg.get("defaultServiceLevel").equals(JSONObject.NULL))? "":jsonOrg.getString("defaultServiceLevel");
 		
 		// create some variations on a valid serverUrl to test the --serverurl option
-		List<String> regServerUrls = Arrays.asList(
-				originalServerHostname,
-				"https://"+originalServerHostname,
-				"https://"+originalServerHostname+originalServerPrefix,
-				"https://"+originalServerHostname+":"+originalServerPort,
-				"https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix
-				);
+		List<String> regServerUrls = new ArrayList<String>();
+		if (isHostnameHosted(originalServerHostname)) {
+			regServerUrls.add(originalServerHostname);
+			regServerUrls.add("https://"+originalServerHostname);
+			regServerUrls.add("https://"+originalServerHostname+originalServerPrefix);
+			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort);
+			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+		} else {
+			regServerUrls.add(originalServerHostname+":"+originalServerPort+originalServerPrefix);
+			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
+			// Note: only a fully qualified server url will work for a non-hosted hostname because otherwise the (missing port/prefix defaults to 443/subscription) results will end up with: Unable to connect to certificate server: (111, 'Connection refused'). See /var/log/rhsm/rhsm.log for more details.
+		}
 		
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected
 
