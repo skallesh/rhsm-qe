@@ -628,7 +628,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// rhn-migrate-classic-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169"},
+			groups={"debugTest","AcceptanceTests","RhnMigrateClassicToRhsm_Test","blockedByBug-840169"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmData",
 			enabled=true)
@@ -1546,11 +1546,17 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// surround tcl args containing white space with ticks and call the TCL expect script for rhn-migrate-classic-to-rhsm
 		if (options!=null && options.contains(" "))			options		= String.format("'%s'", options);
-		if (rhnUsername!=null && rhnUsername.contains(" "))	rhnUsername	= String.format("'%s'", rhnUsername);
-		if (rhnPassword!=null && rhnPassword.contains(" "))	rhnPassword	= String.format("'%s'", rhnPassword);
-		if (regUsername!=null && regUsername.contains(" "))	regUsername	= String.format("'%s'", regUsername);
-		if (regPassword!=null && regPassword.contains(" "))	regPassword	= String.format("'%s'", regPassword);
-		if (regOrg!=null && regOrg.contains(" ")) 			regOrg		= String.format("'%s'", regOrg);
+		if (options!=null && options.isEmpty())				options		= String.format("\"%s\"", options);
+		if (rhnUsername!=null && rhnUsername.contains(" "))	rhnUsername	= String.format("\"%s\"", rhnUsername);
+		if (rhnUsername!=null && rhnUsername.isEmpty())		rhnUsername	= String.format("\"%s\"", rhnUsername);
+		if (rhnPassword!=null && rhnPassword.contains(" "))	rhnPassword	= String.format("\"%s\"", rhnPassword);
+		if (rhnPassword!=null && rhnPassword.isEmpty())		rhnPassword	= String.format("\"%s\"", rhnPassword);
+		if (regUsername!=null && regUsername.contains(" "))	regUsername	= String.format("\"%s\"", regUsername);
+		if (regUsername!=null && regUsername.isEmpty())		regUsername	= String.format("\"%s\"", regUsername);
+		if (regPassword!=null && regPassword.contains(" "))	regPassword	= String.format("\"%s\"", regPassword);
+		if (regPassword!=null && regPassword.isEmpty())		regPassword	= String.format("\"%s\"", regPassword);
+		if (regOrg!=null && regOrg.contains(" ")) 			regOrg		= String.format("\"%s\"", regOrg);
+		if (regOrg!=null && regOrg.isEmpty())				regOrg		= String.format("\"%s\"", regOrg);
 		String command = String.format("rhn-migrate-classic-to-rhsm.tcl %s %s %s %s %s %s %s", options, rhnUsername, rhnPassword, regUsername, regPassword, regOrg, serviceLevelIndex);
 		return client.runCommandAndWait(command);
 	}
@@ -1838,8 +1844,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// test each servicelevel
 		for (String serviceLevel : regServiceLevels) {
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel=\""+serviceLevel+"\"",						regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s \""+randomizeCaseOfCharactersInString(serviceLevel)+"\"",	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			if (serviceLevel.contains(" ")) serviceLevel = String.format("\"%s\"", serviceLevel);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel="+serviceLevel,						regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s "+randomizeCaseOfCharactersInString(serviceLevel),	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
