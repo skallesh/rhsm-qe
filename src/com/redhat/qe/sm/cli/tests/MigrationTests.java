@@ -275,7 +275,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dataProvider="RhnChannelFromProductBaselineData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductBaseline_Test(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName) throws JSONException {
+	public void VerifyChannelCertMappingFileSupportsRhnChannelFromProductBaseline_Test(Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId) throws JSONException {
 		
 		// does the cdn indicate that this channel maps to more than one product?
 		if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).size()>1) {
@@ -316,15 +316,15 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		
 		// Special case for High Touch Beta productId 135  reference: https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4
 		if (productBaselineProductId.equals("135")) {
-			log.warning("For product id 135 which represents '"+productBaselineProductName+"' we actually do NOT want a channel cert mapping as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4");
+			log.warning("For product id 135 (Red Hat Enterprise Linux Server HTB), we actually do NOT want a channel cert mapping as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
-					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" productName="+productBaselineProductName+" was NOT found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
+					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was NOT found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
 			return;
 		}
 		
 		// assert that the subscription-manager-migration-data file has a mapping for this RHN Channel found in the CDN Product Baseline
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
-				"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" productName="+productBaselineProductName+" was found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+				"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 		
 		// now assert that the subscription-manager-migration-data mapping for the RHN Channel is to the same productId as mapped in the CDN Product Baseline
 		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
@@ -1171,20 +1171,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		client.runCommandAndWait("cp "+originalProductCertDir+"/*.pem "+backupProductCertDir);
 	}
 	
-	@BeforeClass(groups="setup")
-	public void determineRhnServiceLevels() throws JSONException, Exception {
-//TODO FIX TEMPORARY WORK IN PROGRESS - COMMENTED OUT - MAY NEED TO UNCOMMENT AGAIN
-//		if (sm_rhnUsername.equals("")) return;
-//		if (sm_rhnPassword.equals("")) return;
-//		
-//		// determine the valid service levels available to a consumer registered with rhn credentials
-//		clienttasks.register_(sm_rhnUsername, sm_rhnPassword, null, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
-//		String rhnOrg = clienttasks.getCurrentlyRegisteredOwnerKey();
-//		clienttasks.unregister(null, null, null);
-//		rhnServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(sm_rhnUsername, sm_rhnPassword, sm_serverUrl, rhnOrg);		
-	}
-	
-	
 	@BeforeGroups(groups="setup",value={"InstallNumMigrateToRhsmWithInstNumber_Test","InstallNumMigrateToRhsm_Test","RhnMigrateClassicToRhsm_Test"})
 	public void configOriginalRhsmProductCertDir() {
 		if (clienttasks==null) return;
@@ -1309,6 +1295,35 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups={"setup"})
 	public void determineCdnProductBaselineMapsBeforeClass() throws IOException, JSONException {
+
+		// Reference: https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
+
+		// THE JSON LOOKS LIKE THIS...
+		//	[
+		//		{
+		//			"Content Sets": [
+		//				{
+		//					"Label": "rhel-hpn-for-rhel-6-server-source-rpms", 
+		//					"Repos": [
+		//						{
+		//							"Relative URL": "/content/dist/rhel/server/6/6.1/i386/hpn/source/SRPMS"
+		//						}, 
+		//						{
+		//							"Relative URL": "/content/dist/rhel/server/6/6.2/x86_64/hpn/source/SRPMS"
+		//						}
+		//					]
+		//				}
+		//			], 
+		//			"Name": "Red Hat Enterprise Linux High Performance Networking (for RHEL Server)", 
+		//			"Product ID": "132", 
+		//			"RHN Channels": [
+		//				"rhel-x86_64-server-hpn-6", 
+		//				"rhel-x86_64-server-hpn-6-beta-debuginfo", 
+		//				"rhel-x86_64-server-hpn-6-beta", 
+		//				"rhel-x86_64-server-hpn-6-debuginfo"
+		//			]
+		//		}
+		//	]
 		client.runCommandAndWaitWithoutLogging("cat "+clienttasks.rhnDefinitionsDir+sm_rhnDefinitionsProductBaselineFile);
 		JSONArray jsonProducts = new JSONArray(client.getStdout());	
 		for (int p = 0; p < jsonProducts.length(); p++) {
@@ -1365,7 +1380,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	protected List<String> rhnAvailableChildChannels = new ArrayList<String>();
 	static public String installNumTool = "install-num-migrate-to-rhsm";
 	static public String rhnMigrateTool = "rhn-migrate-classic-to-rhsm";
-//TODO	protected List<String> rhnServiceLevels = new ArrayList<String>();	// list of service levels available to the rhn user to be migrated
 	protected String originalServerHostname;
 	protected String originalServerPort;
 	protected String originalServerPrefix;
@@ -1980,17 +1994,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			regOrg = sm_clientOrg;
 		}
 		
-//		// predict the valid service levels that will be available to the migrated consumer
-//		clienttasks.register_(regUsername, regPassword, null, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
-//		List<String> regServiceLevels = CandlepinTasks.getServiceLevelsForOrgKey(regUsername, regPassword, sm_serverUrl, clienttasks.getCurrentlyRegisteredOwnerKey());	
-//		clienttasks.unregister(null, null, null);
-//		
-//		// predict the index choice for "No service level preference"
-//		Integer noServiceLevelIndex = Integer.valueOf(regServiceLevels.size()+1);
-		
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, String proxy_hostnameConfig, String proxy_portConfig, String proxy_userConfig, String proxy_passwordConfig, Integer exitCode, String stdout, String stderr, SSHCommandRunner proxyRunner, String proxyLog, String proxyLogRegex
 
-// TODO ADD NEW BUGS FOR BLOCKING
 		// basic auth proxy test data...
 		ll.add(Arrays.asList(new Object[]{null,							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
 		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("798015"),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	new ArrayList<String>(),		"--no-auto",			regUsername,	regPassword,	regOrg,	"http://"+sm_basicauthproxyHostname,	sm_basicauthproxyPort,		sm_basicauthproxyUsername,	sm_basicauthproxyPassword,	Integer.valueOf(0),		null,		null,		basicAuthProxyRunner,	sm_basicauthproxyLog,	"TCP_MISS"}));
@@ -2031,74 +2036,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		if (clienttasks==null) return ll;
 		
-		// Reference: https://engineering.redhat.com/trac/rcm/wiki/Projects/CDNBaseline
+		for (String productId : cdnProductBaselineProductIdMap.keySet()) {
+			for (String rhnChannel : cdnProductBaselineProductIdMap.get(productId)) {
 
-		// THE JSON LOOKS LIKE THIS...
-		//	[
-		//		{
-		//			"Content Sets": [
-		//				{
-		//					"Label": "rhel-hpn-for-rhel-6-server-source-rpms", 
-		//					"Repos": [
-		//						{
-		//							"Relative URL": "/content/dist/rhel/server/6/6.1/i386/hpn/source/SRPMS"
-		//						}, 
-		//						{
-		//							"Relative URL": "/content/dist/rhel/server/6/6.2/x86_64/hpn/source/SRPMS"
-		//						}
-		//					]
-		//				}
-		//			], 
-		//			"Name": "Red Hat Enterprise Linux High Performance Networking (for RHEL Server)", 
-		//			"Product ID": "132", 
-		//			"RHN Channels": [
-		//				"rhel-x86_64-server-hpn-6", 
-		//				"rhel-x86_64-server-hpn-6-beta-debuginfo", 
-		//				"rhel-x86_64-server-hpn-6-beta", 
-		//				"rhel-x86_64-server-hpn-6-debuginfo"
-		//			]
-		//		}
-		//	]
-        
-		// get the rhnProductBaselineFile from the release engineering team
-		// String sm_cdnProductBaselineUrl = "http://git.app.eng.bos.redhat.com/?p=rcm/rhn-definitions.git;a=blob_plain;f=cdn/product-baseline.json;hb=refs/heads/master";
-		//File cdnProductBaselineFile= new File("/tmp/product-baseline.json");
-		//log.info("Fetching the most current "+cdnProductBaselineFile.getName()+" file.");
-		//RemoteFileTasks.runCommandAndAssert(client,"wget -O "+cdnProductBaselineFile+" --no-check-certificate \""+sm_cdnProductBaselineUrl+"\"",Integer.valueOf(0),null,"."+cdnProductBaselineFile+". saved");
-		//client.runCommandAndWaitWithoutLogging("cat "+cdnProductBaselineFile);
-		client.runCommandAndWaitWithoutLogging("cat "+clienttasks.rhnDefinitionsDir+sm_rhnDefinitionsProductBaselineFile);
-		JSONArray jsonProducts = new JSONArray(client.getStdout());	
-		for (int p = 0; p < jsonProducts.length(); p++) {
-			JSONObject jsonProduct = (JSONObject) jsonProducts.get(p);
-			String productName = jsonProduct.getString("Name");
-			String productId = jsonProduct.getString("Product ID");
-			JSONArray jsonRhnChannels = jsonProduct.getJSONArray("RHN Channels");
-			
-			// process each of the RHN Channels
-			for (int r=0; r<jsonRhnChannels.length(); r++) {
-				String rhnChannel = jsonRhnChannels.getString(r);
-
-// MOVED TO BeforeClass Method
-//				// store the rhnChannel in the cdnProductBaselineChannelMap
-//				if (cdnProductBaselineChannelMap.containsKey(rhnChannel)) {
-//					if (!cdnProductBaselineChannelMap.get(rhnChannel).contains(productId)) {
-//						cdnProductBaselineChannelMap.get(rhnChannel).add(productId);
-//					}
-//				} else {
-//					List<String> productIds = new ArrayList<String>(); productIds.add(productId);
-//					cdnProductBaselineChannelMap.put(rhnChannel, productIds);
-//				}
-//				
-//				// also store the inverse of this map into cdnProductBaselineProductIdMap
-//				if (cdnProductBaselineProductIdMap.containsKey(productId)) {
-//					if (!cdnProductBaselineProductIdMap.get(productId).contains(rhnChannel)) {
-//						cdnProductBaselineProductIdMap.get(productId).add(rhnChannel);
-//					}
-//				} else {
-//					List<String> rhnChannels = new ArrayList<String>(); rhnChannels.add(rhnChannel);
-//					cdnProductBaselineProductIdMap.put(productId, rhnChannels);
-//				}
-		
 				// filter out all RHN Channels not associated with this release  (e.g., assume that an rhn channel containing "-5-" or ends in "-5" is only applicable to rhel5 
 				if (!(rhnChannel.contains("-"+clienttasks.redhatReleaseX+"-") || rhnChannel.endsWith("-"+clienttasks.redhatReleaseX))) continue;
 				
@@ -2189,8 +2129,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					bugzilla = new BlockedByBzBug("849305");
 				}
 				
-				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId, String productBaselineProductName
-				ll.add(Arrays.asList(new Object[]{bugzilla,	rhnChannel,	productId,	productName}));
+				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
+				ll.add(Arrays.asList(new Object[]{bugzilla,	rhnChannel,	productId}));
 			}
 		}
 		
