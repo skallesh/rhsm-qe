@@ -1223,7 +1223,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.putFile(client.getConnection(), expectScriptFile.toString(), "/usr/local/bin/", "0755");
 	}
 	
-	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass","determineRhnServiceLevels","copyScriptsToClient"})
+	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass","copyScriptsToClient"})
 	public void determineRhnClassicBaseAndAvailableChildChannels() throws IOException {
 //debugTesting if (true) return;
 		if (sm_rhnUsername.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
