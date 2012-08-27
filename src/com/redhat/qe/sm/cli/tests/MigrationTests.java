@@ -1061,11 +1061,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		} else {
 			sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_clientUsername,sm_clientPassword,sm_clientUsername,sm_clientPassword,sm_clientOrg,null);
 		}
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 		String expectedStdout;
 		expectedStdout = "This machine appears to be already registered to Certificate-based RHN.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";	// changed by bug 847380
 		expectedStdout = "This machine appears to be already registered to Red Hat Subscription Management.  Exiting.\n\nPlease visit https://access.redhat.com/management/consumers/"+consumerid+" to view the profile details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' while already registered to RHSM ended with: "+expectedStdout);
+//		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "The expected exit code from call to '"+rhnMigrateTool+"' while already registered to RHSM.");
 	}
 	
 
@@ -1818,10 +1819,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			regServerUrls.add("https://"+originalServerHostname+originalServerPrefix);
 			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort);
 			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
-		} else {
+		} else {	// Note: only a fully qualified server url will work for a non-hosted hostname because otherwise the (missing port/prefix defaults to 443/subscription) results will end up with: Unable to connect to certificate server: (111, 'Connection refused'). See /var/log/rhsm/rhsm.log for more details.
 			regServerUrls.add(originalServerHostname+":"+originalServerPort+originalServerPrefix);
 			regServerUrls.add("https://"+originalServerHostname+":"+originalServerPort+originalServerPrefix);
-			// Note: only a fully qualified server url will work for a non-hosted hostname because otherwise the (missing port/prefix defaults to 443/subscription) results will end up with: Unable to connect to certificate server: (111, 'Connection refused'). See /var/log/rhsm/rhsm.log for more details.
 		}
 		
 		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, String options, String regUsername, String regPassword, String regOrg, Integer serviceLevelIndex, String serviceLevelExpected
@@ -1844,9 +1844,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 
 		// test each servicelevel
 		for (String serviceLevel : regServiceLevels) {
-			if (serviceLevel.contains(" ")) serviceLevel = String.format("\"%s\"", serviceLevel);
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	"--force --servicelevel="+serviceLevel,						regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
-			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	"-f -s "+randomizeCaseOfCharactersInString(serviceLevel),	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			String options;
+			options = String.format("--force --servicelevel=%s",serviceLevel); if (serviceLevel.contains(" ")) options = String.format("--force --servicelevel \"%s\"", serviceLevel);
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("840169"),							sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart1,	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));	
+			options = String.format("-f -s %s",randomizeCaseOfCharactersInString(serviceLevel)); if (serviceLevel.contains(" ")) options = String.format("-f -s \"%s\"", randomizeCaseOfCharactersInString(serviceLevel));
+			ll.add(Arrays.asList(new Object[]{new BlockedByBzBug(new String[]{"840169","841961"}),	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnAvailableChildChannelsPart2,	options,	regUsername,	regPassword,	regOrg,	null,	serviceLevel}));
 		}
 		
 		// attempt an unavailable servicelevel, then choose an available one from the index table
