@@ -2241,6 +2241,10 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugzilla = new BlockedByBzBug("820749");
 				}
+				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("5")) { 
+					// Bug 852551 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
+					bugzilla = new BlockedByBzBug("852551");
+				}
 				if (productId.equals("181")) {
 					// Bug 840148 - missing product cert corresponding to "Red Hat EUCJP Support (for RHEL Server)"
 					bugzilla = new BlockedByBzBug("840148");
