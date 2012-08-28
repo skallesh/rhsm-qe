@@ -69,7 +69,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -78,7 +78,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1023,11 +1023,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
 			groups={"blockedByBug-786257","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
-			dataProvider="RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationData",
 			enabled=true)
-	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test(Object bugzilla, String rhnUsername, String rhnPassword, String rhnHostname, List<String> rhnChannelsToAdd) {
-////TODO NOT SURE IF THIS WORKS ANYMORE
-//		if (!sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("The configured candlepin server type ("+sm_serverType+") is not '"+CandlepinType.hosted+"'.  This test requires access registration access to RHN Classic.");
+	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 
 		log.info("Red Hat Enterprise Linux Desktop (productId=68) corresponds to the base RHN Channel (rhel-ARCH-client-5) for a 5Client system where ARCH=i386,x86_64.");
@@ -1041,9 +1038,188 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			regPassword = sm_clientPassword;
 			regOrg = sm_clientOrg;
 		}
-//TODO YES - THIS TEST IS BROKEN AND SHOULD PROBABLY BE DELETED.  INSTEAD, ANOTHER SPECIAL CASE SHOULD BE ADDED TO getExpectedMappedProductCertFilenamesCorrespondingToChannels THAT WILL GET TESTED WHEN RUN ON RHEL5 CLIENT
-// ACTUALLY I THINK THIS TEST SHOULD REMAIN STANDALONE; NOT SURE
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAdd, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		
+		//	2273         "Name": "Red Hat Enterprise Linux Desktop", 
+		//	2274         "Product ID": "68", 
+		//	2275         "RHN Channels": [
+		//	2276             "rhel-i386-client-5", 
+		//	2277             "rhel-i386-client-5-beta", 
+		//	2278             "rhel-i386-client-5-beta-debuginfo", 
+		//	2279             "rhel-i386-client-5-debuginfo", 
+		//	2280             "rhel-i386-client-6", 
+		//	2281             "rhel-i386-client-6-beta", 
+		//	2282             "rhel-i386-client-6-beta-debuginfo", 
+		//	2283             "rhel-i386-client-6-debuginfo", 
+		//	2284             "rhel-i386-client-optional-6", 
+		//	2285             "rhel-i386-client-optional-6-beta", 
+		//	2286             "rhel-i386-client-optional-6-beta-debuginfo", 
+		//	2287             "rhel-i386-client-optional-6-debuginfo", 
+		//	2288             "rhel-i386-client-supplementary-5", 
+		//	2289             "rhel-i386-client-supplementary-5-beta", 
+		//	2290             "rhel-i386-client-supplementary-5-beta-debuginfo", 
+		//	2291             "rhel-i386-client-supplementary-5-debuginfo", 
+		//	2292             "rhel-i386-client-supplementary-6", 
+		//	2293             "rhel-i386-client-supplementary-6-beta", 
+		//	2294             "rhel-i386-client-supplementary-6-beta-debuginfo", 
+		//	2295             "rhel-i386-client-supplementary-6-debuginfo", 
+		//	2296             "rhel-i386-rhev-agent-5-client", 
+		//	2297             "rhel-i386-rhev-agent-5-client-beta", 
+		//	2298             "rhel-i386-rhev-agent-6-client", 
+		//	2299             "rhel-i386-rhev-agent-6-client-beta", 
+		//	2300             "rhel-i386-rhev-agent-6-client-beta-debuginfo", 
+		//	2301             "rhel-i386-rhev-agent-6-client-debuginfo", 
+		//	2302             "rhel-x86_64-client-5", 
+		//	2303             "rhel-x86_64-client-5-beta", 
+		//	2304             "rhel-x86_64-client-5-beta-debuginfo", 
+		//	2305             "rhel-x86_64-client-5-debuginfo", 
+		//	2306             "rhel-x86_64-client-6", 
+		//	2307             "rhel-x86_64-client-6-beta", 
+		//	2308             "rhel-x86_64-client-6-beta-debuginfo", 
+		//	2309             "rhel-x86_64-client-6-debuginfo", 
+		//	2310             "rhel-x86_64-client-optional-6", 
+		//	2311             "rhel-x86_64-client-optional-6-beta", 
+		//	2312             "rhel-x86_64-client-optional-6-beta-debuginfo", 
+		//	2313             "rhel-x86_64-client-optional-6-debuginfo", 
+		//	2314             "rhel-x86_64-client-supplementary-5", 
+		//	2315             "rhel-x86_64-client-supplementary-5-beta", 
+		//	2316             "rhel-x86_64-client-supplementary-5-beta-debuginfo", 
+		//	2317             "rhel-x86_64-client-supplementary-5-debuginfo", 
+		//	2318             "rhel-x86_64-client-supplementary-6", 
+		//	2319             "rhel-x86_64-client-supplementary-6-beta", 
+		//	2320             "rhel-x86_64-client-supplementary-6-beta-debuginfo", 
+		//	2321             "rhel-x86_64-client-supplementary-6-debuginfo", 
+		//	2322             "rhel-x86_64-rhev-agent-5-client", 
+		//	2323             "rhel-x86_64-rhev-agent-5-client-beta", 
+		//	2324             "rhel-x86_64-rhev-agent-6-client", 
+		//	2325             "rhel-x86_64-rhev-agent-6-client-beta", 
+		//	2326             "rhel-x86_64-rhev-agent-6-client-beta-debuginfo", 
+		//	2327             "rhel-x86_64-rhev-agent-6-client-debuginfo"
+		//	2328         ]
+		
+		//	10289         "Name": "Red Hat Enterprise Linux Workstation", 
+		//	10290         "Product ID": "71", 
+		//	10291         "RHN Channels": [
+		//	10292             "rhel-i386-client-5", 
+		//	10293             "rhel-i386-client-5-beta", 
+		//	10294             "rhel-i386-client-5-beta-debuginfo", 
+		//	10295             "rhel-i386-client-5-debuginfo", 
+		//	10296             "rhel-i386-client-supplementary-5", 
+		//	10297             "rhel-i386-client-supplementary-5-beta", 
+		//	10298             "rhel-i386-client-supplementary-5-beta-debuginfo", 
+		//	10299             "rhel-i386-client-supplementary-5-debuginfo", 
+		//	10300             "rhel-i386-client-vt-5", 
+		//	10301             "rhel-i386-client-vt-5-beta", 
+		//	10302             "rhel-i386-client-vt-5-beta-debuginfo", 
+		//	10303             "rhel-i386-client-vt-5-debuginfo", 
+		//	10304             "rhel-i386-client-workstation-5", 
+		//	10305             "rhel-i386-client-workstation-5-beta", 
+		//	10306             "rhel-i386-client-workstation-5-beta-debuginfo", 
+		//	10307             "rhel-i386-client-workstation-5-debuginfo", 
+		//	10308             "rhel-i386-rhev-agent-6-workstation", 
+		//	10309             "rhel-i386-rhev-agent-6-workstation-beta", 
+		//	10310             "rhel-i386-rhev-agent-6-workstation-beta-debuginfo", 
+		//	10311             "rhel-i386-rhev-agent-6-workstation-debuginfo", 
+		//	10312             "rhel-i386-workstation-6", 
+		//	10313             "rhel-i386-workstation-6-beta", 
+		//	10314             "rhel-i386-workstation-6-beta-debuginfo", 
+		//	10315             "rhel-i386-workstation-6-debuginfo", 
+		//	10316             "rhel-i386-workstation-optional-6", 
+		//	10317             "rhel-i386-workstation-optional-6-beta", 
+		//	10318             "rhel-i386-workstation-optional-6-beta-debuginfo", 
+		//	10319             "rhel-i386-workstation-optional-6-debuginfo", 
+		//	10320             "rhel-i386-workstation-supplementary-6", 
+		//	10321             "rhel-i386-workstation-supplementary-6-beta", 
+		//	10322             "rhel-i386-workstation-supplementary-6-beta-debuginfo", 
+		//	10323             "rhel-i386-workstation-supplementary-6-debuginfo", 
+		//	10324             "rhel-x86_64-client-5", 
+		//	10325             "rhel-x86_64-client-5-beta", 
+		//	10326             "rhel-x86_64-client-5-beta-debuginfo", 
+		//	10327             "rhel-x86_64-client-5-debuginfo", 
+		//	10328             "rhel-x86_64-client-supplementary-5", 
+		//	10329             "rhel-x86_64-client-supplementary-5-beta", 
+		//	10330             "rhel-x86_64-client-supplementary-5-beta-debuginfo", 
+		//	10331             "rhel-x86_64-client-supplementary-5-debuginfo", 
+		//	10332             "rhel-x86_64-client-vt-5", 
+		//	10333             "rhel-x86_64-client-vt-5-beta", 
+		//	10334             "rhel-x86_64-client-vt-5-beta-debuginfo", 
+		//	10335             "rhel-x86_64-client-vt-5-debuginfo", 
+		//	10336             "rhel-x86_64-client-workstation-5", 
+		//	10337             "rhel-x86_64-client-workstation-5-beta", 
+		//	10338             "rhel-x86_64-client-workstation-5-beta-debuginfo", 
+		//	10339             "rhel-x86_64-client-workstation-5-debuginfo", 
+		//	10340             "rhel-x86_64-rhev-agent-6-workstation", 
+		//	10341             "rhel-x86_64-rhev-agent-6-workstation-beta", 
+		//	10342             "rhel-x86_64-rhev-agent-6-workstation-beta-debuginfo", 
+		//	10343             "rhel-x86_64-rhev-agent-6-workstation-debuginfo", 
+		//	10344             "rhel-x86_64-workstation-6", 
+		//	10345             "rhel-x86_64-workstation-6-beta", 
+		//	10346             "rhel-x86_64-workstation-6-beta-debuginfo", 
+		//	10347             "rhel-x86_64-workstation-6-debuginfo", 
+		//	10348             "rhel-x86_64-workstation-optional-6", 
+		//	10349             "rhel-x86_64-workstation-optional-6-beta", 
+		//	10350             "rhel-x86_64-workstation-optional-6-beta-debuginfo", 
+		//	10351             "rhel-x86_64-workstation-optional-6-debuginfo", 
+		//	10352             "rhel-x86_64-workstation-supplementary-6", 
+		//	10353             "rhel-x86_64-workstation-supplementary-6-beta", 
+		//	10354             "rhel-x86_64-workstation-supplementary-6-beta-debuginfo", 
+		//	10355             "rhel-x86_64-workstation-supplementary-6-debuginfo"
+		//	10356         ]
+		
+		// this test is only applicable on a RHEL 5Client
+		final String applicableReleasever = "5Client";
+		if (!clienttasks.releasever.equals(applicableReleasever)) throw new SkipException("This test is only executable when the redhat-release is '"+applicableReleasever+"'.");
+		
+		// decide what product arch applies to our system
+		String arch = clienttasks.arch;	// default
+		//if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
+		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
+		if (!Arrays.asList("i386","x86_64").contains(arch)) Assert.fail("RHEL "+applicableReleasever+" should only be available on i386 and x86_64 arches (not: "+arch+").") ;
+		
+		
+		// Case 1: add RHN Channels for Desktop only; migration should only install Desktop product 68
+		List<String> rhnChannelsToAddForDesktop = new ArrayList<String>();
+		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-beta",arch));
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-beta-debuginfo",arch));
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-debuginfo",arch));
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5",arch));
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta",arch));
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta-debuginfo",arch));
+		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-debuginfo",arch));
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktop, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		List<InstalledProduct> installedProductsMigrated = clienttasks.getCurrentlyInstalledProducts();
+		String productIdForDesktop = "68";
+		for (InstalledProduct installedProduct : installedProductsMigrated) {
+			Assert.assertEquals(installedProduct.productId, productIdForDesktop, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForDesktop+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktop);
+		}
+		
+		// Case 2: add RHN Channels for Workstation only; migration should only install Workstation product 71
+		List<String> rhnChannelsToAddForWorkstation = new ArrayList<String>();
+		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta-debuginfo",arch));
+		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-debuginfo",arch));
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		installedProductsMigrated = clienttasks.getCurrentlyInstalledProducts();
+		String productIdForWorkstation = "71";
+		for (InstalledProduct installedProduct : installedProductsMigrated) {
+			Assert.assertEquals(installedProduct.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForWorkstation);
+		}
+		
+		// Case 3: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
+		List<String> rhnChannelsToAddForDesktopAndWorkstation = new ArrayList<String>();
+		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForDesktop);
+		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForWorkstation);
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktopAndWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		installedProductsMigrated = clienttasks.getCurrentlyInstalledProducts();
+		for (InstalledProduct installedProduct : installedProductsMigrated) {
+			Assert.assertEquals(installedProduct.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktopAndWorkstation);
+		}
 	}
 	
 	
@@ -1814,34 +1990,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		ll.add(Arrays.asList(new Object[]{null, installNumTool+"    --instnum 123456789X123456",	1,	"Could not parse the installation number: Not a valid hex string", ""}));
 		ll.add(Arrays.asList(new Object[]{null, installNumTool+"    --instnum=1234567890123456",	1,	"Could not parse the installation number: Checksum verification failed", ""}));
 		
-		return ll;
-	}
-	
-	
-	@DataProvider(name="RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationData")
-	public Object[][] getRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationDataAsListOfLists());
-	}
-	public List<List<Object>> getRhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstationDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>();
-		if (clienttasks==null) return ll;
-		
-		// this test is only applicable on a RHEL 5Client
-		if (!clienttasks.releasever.equals("5Client")) return ll;
-		
-		// decide what product arch applies to our system
-		String arch = clienttasks.arch;	// default
-		//if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
-		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
-		
-		if (!Arrays.asList("i386","x86_64").contains(arch)) Assert.fail("RHEL 5Client should only be available on i386 and x86_64 arches (not: "+arch+").") ;
-		
-		// Object bugzilla, String rhnUsername, String rhnPassword, String rhnServer, List<String> rhnChannelsToAdd, 
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList(/*"rhel-"+arch+"-client-5" base channel*/),									Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-5"))})); // 68.pem
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList("rhel-"+arch+"-client-supplementary-5"),										Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-5"))})); // 68.pem
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList("rhel-"+arch+"-client-workstation-5"),										Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-workstation-5"))})); // 71.pem
-		ll.add(Arrays.asList(new Object[]{null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	Arrays.asList("rhel-"+arch+"-client-supplementary-5","rhel-"+arch+"-client-workstation-5"),	Arrays.asList(channelsToProductCertFilenamesMap.get("rhel-"+arch+"-client-workstation-5"))})); // 71.pem
-
 		return ll;
 	}
 	
