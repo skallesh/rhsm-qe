@@ -69,7 +69,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -78,7 +78,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -281,36 +281,70 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).size()>1) {
 			log.warning("According to the CDN Product Baseline, RHN Channel '"+productBaselineRhnChannel+"' maps to more than one product id: "+cdnProductBaselineChannelMap.get(productBaselineRhnChannel));
 			// handle special cases to decide what productId should be mapped (see bug https://bugzilla.redhat.com/show_bug.cgi?id=786257)
-			// SPECIAL CASE 1:	Bug 786257 - RHN Channels supporting more than one product are only mapped to one product in channel-cert-mapping.txt
-//			if (Arrays.asList("rhel-x86_64-client-supplementary-5","rhel-x86_64-client-5","rhel-i386-client-supplementary-5","rhel-i386-client-5").contains(productBaselineRhnChannel)) {
+			// SPECIAL CASE 1:	productId:68  productName:Red Hat Enterprise Linux Desktop
 			if (Arrays.asList(
-					"rhel-x86_64-client-5",									// before bug fix 786140
-					"rhel-x86_64-client-5-debuginfo",						// after bug fix 786140
-					"rhel-x86_64-client-5-beta",							// after bug fix 786203
-					"rhel-x86_64-client-5-beta-debuginfo",					// after bug fix 786203,786140
-					"rhel-x86_64-client-supplementary-5",					// before bug fix 786140
-					"rhel-x86_64-client-supplementary-5-debuginfo",			// after bug fix 786140
-					"rhel-x86_64-client-supplementary-5-beta",				// after bug fix 786203
-					"rhel-x86_64-client-supplementary-5-beta-debuginfo",	// after bug fix 786203,786140
-					
-					"rhel-i386-client-5",									// before bug fix 786140
-					"rhel-i386-client-5-debuginfo",							// after bug fix 786140
-					"rhel-i386-client-5-beta",								// after bug fix 786203
-					"rhel-i386-client-5-beta-debuginfo",					// after bug fix 786203,786140
-					"rhel-i386-client-supplementary-5",						// before bug fix 786140
-					"rhel-i386-client-supplementary-5-debuginfo",			// after bug fix 786140
-					"rhel-i386-client-supplementary-5-beta",				// after bug fix 786203
-					"rhel-i386-client-supplementary-5-beta-debuginfo")		// after bug fix 786203,786140
+				"rhel-x86_64-client-5",
+				"rhel-x86_64-client-5-debuginfo",
+				"rhel-x86_64-client-5-beta",
+				"rhel-x86_64-client-5-beta-debuginfo",
+				"rhel-x86_64-client-supplementary-5",
+				"rhel-x86_64-client-supplementary-5-debuginfo",
+				"rhel-x86_64-client-supplementary-5-beta",
+				"rhel-x86_64-client-supplementary-5-beta-debuginfo",
+				"rhel-i386-client-5",
+				"rhel-i386-client-5-debuginfo",
+				"rhel-i386-client-5-beta",
+				"rhel-i386-client-5-beta-debuginfo",
+				"rhel-i386-client-supplementary-5",
+				"rhel-i386-client-supplementary-5-debuginfo",
+				"rhel-i386-client-supplementary-5-beta",
+				"rhel-i386-client-supplementary-5-beta-debuginfo")
+				.contains(productBaselineRhnChannel)) {
+				log.warning("However, RHN Channel '"+productBaselineRhnChannel+"' is a special case.  See https://bugzilla.redhat.com/show_bug.cgi?id=786257#c1 for more details.");
+				Set<String> productIdsForDesktopAndWorkstation = new HashSet<String>();
+				productIdsForDesktopAndWorkstation.add("68");	// rhel-5,rhel-5-client							Red Hat Enterprise Linux Desktop
+				productIdsForDesktopAndWorkstation.add("71");	// rhel-5-client-workstation,rhel-5-workstation	Red Hat Enterprise Linux Workstation
+				Assert.assertTrue(cdnProductBaselineChannelMap.get(productBaselineRhnChannel).containsAll(productIdsForDesktopAndWorkstation) && productIdsForDesktopAndWorkstation.containsAll(cdnProductBaselineChannelMap.get(productBaselineRhnChannel)),
+						"Expecting RHN Channel '"+productBaselineRhnChannel+"' on the CDN Product Baseline to map only to productIds "+productIdsForDesktopAndWorkstation);
+				Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)),"68",
+						"As dictated in the comments of https://bugzilla.redhat.com/show_bug.cgi?id=786257 subscription-manager-migration-data file '"+channelCertMappingFilename+"' should only map RHN Channel '"+productBaselineRhnChannel+"' to productId 68.");
+				return;
 
-					.contains(productBaselineRhnChannel)) {
-				if (cdnProductBaselineChannelMap.get(productBaselineRhnChannel).contains("68") && !productBaselineProductId.equals("68")) {
-					throw new SkipException("According to https://bugzilla.redhat.com/show_bug.cgi?id=786257#c1, channel '"+productBaselineProductId+"' is a special case on RHEL5 and the subscription-manager-migration-data file '"+channelCertMappingFilename+"' should only map to productId 68.");
-				}
-			// SPECIAL CASE 2:	placeholder for next special case
+			// SPECIAL CASE 2:	productId:180  productName:Red Hat Beta rhnChannels:
+			} else if (Arrays.asList(
+						"rhel-i386-client-dts-5-beta", 
+						"rhel-i386-client-dts-5-beta-debuginfo", 
+						"rhel-i386-client-dts-6-beta", 
+						"rhel-i386-client-dts-6-beta-debuginfo", 
+						"rhel-i386-server-dts-5-beta", 
+						"rhel-i386-server-dts-5-beta-debuginfo", 
+						"rhel-i386-server-dts-6-beta", 
+						"rhel-i386-server-dts-6-beta-debuginfo", 
+						"rhel-i386-workstation-dts-6-beta", 
+						"rhel-i386-workstation-dts-6-beta-debuginfo", 
+						"rhel-x86_64-client-dts-5-beta", 
+						"rhel-x86_64-client-dts-5-beta-debuginfo", 
+						"rhel-x86_64-client-dts-6-beta", 
+						"rhel-x86_64-client-dts-6-beta-debuginfo", 
+						"rhel-x86_64-hpc-node-dts-6-beta", 
+						"rhel-x86_64-hpc-node-dts-6-beta-debuginfo", 
+						"rhel-x86_64-server-dts-5-beta", 
+						"rhel-x86_64-server-dts-5-beta-debuginfo", 
+						"rhel-x86_64-server-dts-6-beta", 
+						"rhel-x86_64-server-dts-6-beta-debuginfo", 
+						"rhel-x86_64-workstation-dts-6-beta", 
+						"rhel-x86_64-workstation-dts-6-beta-debuginfo")
+						.contains(productBaselineRhnChannel)) {
+						log.warning("However, RHN Channel '"+productBaselineRhnChannel+"' is a special case.  See https://bugzilla.redhat.com/show_bug.cgi?id=820749#c4 for more details.");
+						Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)),"180",
+								"As dictated in the comments of https://bugzilla.redhat.com/show_bug.cgi?id=820749 subscription-manager-migration-data file '"+channelCertMappingFilename+"' should only map RHN Channel '"+productBaselineRhnChannel+"' to productId 180.");
+						return;
+
+			// SPECIAL CASE:	placeholder for next special case
 			} else if (false) {
 				
 			} else {
-				Assert.fail("Do not know how to choose which productId is mapped to channel '"+productBaselineRhnChannel+"' in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+				Assert.fail("Encountered an unexpected case in the CDN Product Baseline where RHN Channel '"+productBaselineRhnChannel+"' maps to more than one product id: "+cdnProductBaselineChannelMap.get(productBaselineRhnChannel)+".  Do not know how to choose which productId channel '"+productBaselineRhnChannel+"' maps to in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 			}
 		}
 		
@@ -318,13 +352,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (productBaselineProductId.equals("135")) {
 			log.warning("For product id 135 (Red Hat Enterprise Linux Server HTB), we actually do NOT want a channel cert mapping as instructed in https://bugzilla.redhat.com/show_bug.cgi?id=799152#c4");
 			Assert.assertTrue(!channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
-					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was NOT found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
+					"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was NOT mapped to a product certificate in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.  This is a special case (Bugzilla 799152#c4).");
 			return;
 		}
 		
 		// assert that the subscription-manager-migration-data file has a mapping for this RHN Channel found in the CDN Product Baseline
 		Assert.assertTrue(channelsToProductCertFilenamesMap.containsKey(productBaselineRhnChannel),
-				"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' supporting productId="+productBaselineProductId+" was found in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
+				"CDN Product Baseline RHN Channel '"+productBaselineRhnChannel+"' is accounted for in the subscription-manager-migration-data file '"+channelCertMappingFilename+"'.");
 		
 		// now assert that the subscription-manager-migration-data mapping for the RHN Channel is to the same productId as mapped in the CDN Product Baseline
 		Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)), productBaselineProductId,
@@ -1404,102 +1438,42 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 		}
+		// SPECIAL CASE:  Red Hat Enterprise Workstation vs. Red Hat Enterprise Desktop
+		// See https://bugzilla.redhat.com/show_bug.cgi?id=786257#c1
 		
-		// check for special case!  email thread by dgregor entitled "Product certificates for a few channels"
+		//	>	if customer subscribed to rhel-x86_64-client-supplementary-5:
+		//	>	   if customer subscribes to rhel-x86_64-client-workstation-5:
+		//	>	      install 71.pem
+		//	>	   else:
+		//	>	      install 68.pem
+		
+		// is product id 68 for "Red Hat Enterprise Linux Desktop" among the mappedProductCertFilenames
+		String mappedProductCertFilenameCorrespondingToBaseChannel = null;
+		String productIdForBase = "68";	// Red Hat Enterprise Desktop
+		for (String mappedProductCertFilename : mappedProductCertFilenamesCorrespondingToChannels) {
+			if (getProductIdFromProductCertFilename(mappedProductCertFilename).equals(productIdForBase)) {
+				mappedProductCertFilenameCorrespondingToBaseChannel = mappedProductCertFilename; break;
+			}
+		}
+		if (mappedProductCertFilenameCorrespondingToBaseChannel!=null) {
+			File mappedProductCertFileCorrespondingToBaseChannel = new File(baseProductsDir+"/"+mappedProductCertFilenameCorrespondingToBaseChannel);
+			for (String productId : Arrays.asList("71"/*Red Hat Enterprise Workstation*/)) {
+				for (String mappedProductCertFilename : new HashSet<String>(mappedProductCertFilenamesCorrespondingToChannels)) {
+					if (getProductIdFromProductCertFilename(mappedProductCertFilename).equals(productId)) {
+						File mappedProductCertFileCorrespondingToAddonChannel = new File(baseProductsDir+"/"+mappedProductCertFilename);
+						ProductCert productCertBase = clienttasks.getProductCertFromProductCertFile(mappedProductCertFileCorrespondingToBaseChannel);
+						ProductCert productCertAddon = clienttasks.getProductCertFromProductCertFile(mappedProductCertFileCorrespondingToAddonChannel);
+						log.warning("SPECIAL CASE ENCOUNTERED: "+rhnMigrateTool+" should NOT install product cert "+productIdForBase+" ["+productCertBase.productName+"] when product cert "+productId+" ["+productCertAddon.productName+"] is also installed.");
+						mappedProductCertFilenamesCorrespondingToChannels.remove(mappedProductCertFilenameCorrespondingToBaseChannel);
+					}
+				}
+			}
+		}
+		
+		// SPECIAL CASE:  Red Hat Beta vs. Red Hat Developer Toolset (for RHEL [Server|HPC Node|Client|Workstation])
+		// Check for special case!  email thread by dgregor entitled "Product certificates for a few channels"
 		// 180.pem is "special".  It's for the "Red Hat Beta" product, which is this generic placeholder
 		// that we created and it isn't tied to any specific Red Hat product release.
-		//	31334         "Name": "Red Hat Beta", 
-		//	31335         "Product ID": "180", 
-		//	31336         "RHN Channels": [
-		//	31337             "rhel-i386-client-dts-5-beta", 
-		//	31338             "rhel-i386-client-dts-5-beta-debuginfo", 
-		//	31339             "rhel-i386-client-dts-6-beta", 
-		//	31340             "rhel-i386-client-dts-6-beta-debuginfo", 
-		//	31341             "rhel-i386-server-dts-5-beta", 
-		//	31342             "rhel-i386-server-dts-5-beta-debuginfo", 
-		//	31343             "rhel-i386-server-dts-6-beta", 
-		//	31344             "rhel-i386-server-dts-6-beta-debuginfo", 
-		//	31345             "rhel-i386-workstation-dts-6-beta", 
-		//	31346             "rhel-i386-workstation-dts-6-beta-debuginfo", 
-		//	31347             "rhel-x86_64-client-dts-5-beta", 
-		//	31348             "rhel-x86_64-client-dts-5-beta-debuginfo", 
-		//	31349             "rhel-x86_64-client-dts-6-beta", 
-		//	31350             "rhel-x86_64-client-dts-6-beta-debuginfo", 
-		//	31351             "rhel-x86_64-hpc-node-dts-6-beta", 
-		//	31352             "rhel-x86_64-hpc-node-dts-6-beta-debuginfo", 
-		//	31353             "rhel-x86_64-server-dts-5-beta", 
-		//	31354             "rhel-x86_64-server-dts-5-beta-debuginfo", 
-		//	31355             "rhel-x86_64-server-dts-6-beta", 
-		//	31356             "rhel-x86_64-server-dts-6-beta-debuginfo", 
-		//	31357             "rhel-x86_64-workstation-dts-6-beta", 
-		//	31358             "rhel-x86_64-workstation-dts-6-beta-debuginfo"
-		//	31359         ]
-		//
-		//	29797         "Name": "Red Hat Developer Toolset (for RHEL Server)", 
-		//	29798         "Product ID": "176", 
-		//	29799         "RHN Channels": [
-		//	29800             "rhel-i386-server-dts-5", 
-		//	29801             "rhel-i386-server-dts-5-beta", 
-		//	29802             "rhel-i386-server-dts-5-beta-debuginfo", 
-		//	29803             "rhel-i386-server-dts-5-debuginfo", 
-		//	29804             "rhel-i386-server-dts-6", 
-		//	29805             "rhel-i386-server-dts-6-beta", 
-		//	29806             "rhel-i386-server-dts-6-beta-debuginfo", 
-		//	29807             "rhel-i386-server-dts-6-debuginfo", 
-		//	29808             "rhel-x86_64-server-dts-5", 
-		//	29809             "rhel-x86_64-server-dts-5-beta", 
-		//	29810             "rhel-x86_64-server-dts-5-beta-debuginfo", 
-		//	29811             "rhel-x86_64-server-dts-5-debuginfo", 
-		//	29812             "rhel-x86_64-server-dts-6", 
-		//	29813             "rhel-x86_64-server-dts-6-beta", 
-		//	29814             "rhel-x86_64-server-dts-6-beta-debuginfo", 
-		//	29815             "rhel-x86_64-server-dts-6-debuginfo"
-		//	29816         ]
-		//
-		//	29962         "Name": "Red Hat Developer Toolset (for RHEL HPC Node)", 
-		//	29963         "Product ID": "177", 
-		//	29964         "RHN Channels": [
-		//	29965             "rhel-x86_64-hpc-node-dts-6", 
-		//	29966             "rhel-x86_64-hpc-node-dts-6-beta", 
-		//	29967             "rhel-x86_64-hpc-node-dts-6-beta-debuginfo", 
-		//	29968             "rhel-x86_64-hpc-node-dts-6-debuginfo"
-		//	29969         ]
-		//
-		//	30628         "Name": "Red Hat Developer Toolset (for RHEL Client)", 
-		//	30629         "Product ID": "178", 
-		//	30630         "RHN Channels": [
-		//	30631             "rhel-i386-client-dts-5", 
-		//	30632             "rhel-i386-client-dts-5-beta", 
-		//	30633             "rhel-i386-client-dts-5-beta-debuginfo", 
-		//	30634             "rhel-i386-client-dts-5-debuginfo", 
-		//	30635             "rhel-i386-client-dts-6", 
-		//	30636             "rhel-i386-client-dts-6-beta", 
-		//	30637             "rhel-i386-client-dts-6-beta-debuginfo", 
-		//	30638             "rhel-i386-client-dts-6-debuginfo", 
-		//	30639             "rhel-x86_64-client-dts-5", 
-		//	30640             "rhel-x86_64-client-dts-5-beta", 
-		//	30641             "rhel-x86_64-client-dts-5-beta-debuginfo", 
-		//	30642             "rhel-x86_64-client-dts-5-debuginfo", 
-		//	30643             "rhel-x86_64-client-dts-6", 
-		//	30644             "rhel-x86_64-client-dts-6-beta", 
-		//	30645             "rhel-x86_64-client-dts-6-beta-debuginfo", 
-		//	30646             "rhel-x86_64-client-dts-6-debuginfo"
-		//	30647         ]
-		//
-		//	30898         "Name": "Red Hat Developer Toolset (for RHEL Workstation)", 
-		//	30899         "Product ID": "179", 
-		//	30900         "RHN Channels": [
-		//	30901             "rhel-i386-workstation-dts-6", 
-		//	30902             "rhel-i386-workstation-dts-6-beta", 
-		//	30903             "rhel-i386-workstation-dts-6-beta-debuginfo", 
-		//	30904             "rhel-i386-workstation-dts-6-debuginfo", 
-		//	30905             "rhel-x86_64-workstation-dts-6", 
-		//	30906             "rhel-x86_64-workstation-dts-6-beta", 
-		//	30907             "rhel-x86_64-workstation-dts-6-beta-debuginfo", 
-		//	30908             "rhel-x86_64-workstation-dts-6-debuginfo"
-		//	30909         ]	
-								
-
 						
 		//	> After the migration tool does it's normal migration logic, there is a hard-coded cleanup to...
 		//	>   if both 180.pem (rhel-ARCH-server-dts-5-beta) and 176.pem (rhel-ARCH-server-dts-5) were migrated
@@ -1508,24 +1482,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	>       remove 180.pem from /etc/pki/product
 
 		// is product id 180 for "Red Hat Beta" among the mappedProductCertFilenames
-		String mappedProductCertFilenameCorrespondingToRedHatBetaChannel = null;
+		mappedProductCertFilenameCorrespondingToBaseChannel = null;
+		productIdForBase = "180";	// Red Hat Beta
 		for (String mappedProductCertFilename : mappedProductCertFilenamesCorrespondingToChannels) {
-			if (getProductIdFromProductCertFilename(mappedProductCertFilename).equals("180")) {
-				mappedProductCertFilenameCorrespondingToRedHatBetaChannel = mappedProductCertFilename; break;
+			if (getProductIdFromProductCertFilename(mappedProductCertFilename).equals(productIdForBase)) {
+				mappedProductCertFilenameCorrespondingToBaseChannel = mappedProductCertFilename; break;
 			}
 		}
-		
-		if (mappedProductCertFilenameCorrespondingToRedHatBetaChannel!=null) {
-			File mappedProductCertFileCorrespondingToRedHatBetaChannel = new File(baseProductsDir+"/"+mappedProductCertFilenameCorrespondingToRedHatBetaChannel);
-			for (String productId : Arrays.asList("176","177","178","179")) {
-				for (String mappedProductCertFilename : mappedProductCertFilenamesCorrespondingToChannels) {
+		if (mappedProductCertFilenameCorrespondingToBaseChannel!=null) {
+			File mappedProductCertFileCorrespondingToBaseChannel = new File(baseProductsDir+"/"+mappedProductCertFilenameCorrespondingToBaseChannel);
+			for (String productId : Arrays.asList("176"/*Red Hat Developer Toolset (for RHEL Server)*/, "177"/*Red Hat Developer Toolset (for RHEL HPC Node)*/, "178"/*Red Hat Developer Toolset (for RHEL Client)*/, "179"/*Red Hat Developer Toolset (for RHEL Workstation)*/)) {
+				for (String mappedProductCertFilename : new HashSet<String>(mappedProductCertFilenamesCorrespondingToChannels)) {
 					if (getProductIdFromProductCertFilename(mappedProductCertFilename).equals(productId)) {
-						File mappedProductCertFileCorrespondingToRedHatDeveloperToolsetChannel = new File(baseProductsDir+"/"+mappedProductCertFilename);
-						ProductCert productCertRedHatBeta = clienttasks.getProductCertFromProductCertFile(mappedProductCertFileCorrespondingToRedHatBetaChannel);
-						ProductCert productCertRedHatDeveloperToolset = clienttasks.getProductCertFromProductCertFile(mappedProductCertFileCorrespondingToRedHatDeveloperToolsetChannel);
-						log.warning("SPECIAL CASE ENCOUNTERED: "+rhnMigrateTool+" should NOT install product cert 180 ["+productCertRedHatBeta.productName+"] when product cert "+productId+" ["+productCertRedHatDeveloperToolset.productName+"] is also installed.");
-						mappedProductCertFilenamesCorrespondingToChannels.remove(mappedProductCertFilenameCorrespondingToRedHatBetaChannel);
-		
+						File mappedProductCertFileCorrespondingToAddonChannel = new File(baseProductsDir+"/"+mappedProductCertFilename);
+						ProductCert productCertBase = clienttasks.getProductCertFromProductCertFile(mappedProductCertFileCorrespondingToBaseChannel);
+						ProductCert productCertAddon = clienttasks.getProductCertFromProductCertFile(mappedProductCertFileCorrespondingToAddonChannel);
+						log.warning("SPECIAL CASE ENCOUNTERED: "+rhnMigrateTool+" should NOT install product cert "+productIdForBase+" ["+productCertBase.productName+"] when product cert "+productId+" ["+productCertAddon.productName+"] is also installed.");
+						mappedProductCertFilenamesCorrespondingToChannels.remove(mappedProductCertFilenameCorrespondingToBaseChannel);
 					}
 				}
 			}
@@ -2112,11 +2085,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 					// Bug 811633 - channel-cert-mapping.txt is missing a mapping for product 167 "Red Hat CloudForms"
 					bugzilla = new BlockedByBzBug("811633");
 				}
-				if (productId.equals("183") || productId.equals("184") || productId.equals("185")) {
+				if (productId.equals("183") || productId.equals("184") || productId.equals("185")) if (clienttasks.redhatReleaseX.equals("6")) {
 					// Bug 825603 - channel-cert-mapping.txt is missing a mapping for JBoss product ids 183,184,185
 					bugzilla = new BlockedByBzBug("825603");
 				}
-				if (rhnChannel.contains("-dts-")) { 
+				if (rhnChannel.contains("-dts-")) if (clienttasks.redhatReleaseX.equals("6")) { 
 					// Bug 820749 - channel-cert-mapping.txt is missing a mapping for product "Red Hat Developer Toolset"
 					bugzilla = new BlockedByBzBug("820749");
 				}
