@@ -69,7 +69,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -78,7 +78,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"debugTest","AcceptanceTests"},
+			groups={"AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -283,23 +283,22 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			// handle special cases to decide what productId should be mapped (see bug https://bugzilla.redhat.com/show_bug.cgi?id=786257)
 			// SPECIAL CASE 1:	productId:68  productName:Red Hat Enterprise Linux Desktop
 			if (Arrays.asList(
-				"rhel-x86_64-client-5",
-				"rhel-x86_64-client-5-debuginfo",
-				"rhel-x86_64-client-5-beta",
-				"rhel-x86_64-client-5-beta-debuginfo",
-				"rhel-x86_64-client-supplementary-5",
-				"rhel-x86_64-client-supplementary-5-debuginfo",
-				"rhel-x86_64-client-supplementary-5-beta",
-				"rhel-x86_64-client-supplementary-5-beta-debuginfo",
-				"rhel-i386-client-5",
-				"rhel-i386-client-5-debuginfo",
-				"rhel-i386-client-5-beta",
-				"rhel-i386-client-5-beta-debuginfo",
-				"rhel-i386-client-supplementary-5",
-				"rhel-i386-client-supplementary-5-debuginfo",
-				"rhel-i386-client-supplementary-5-beta",
-				"rhel-i386-client-supplementary-5-beta-debuginfo")
-				.contains(productBaselineRhnChannel)) {
+					"rhel-x86_64-client-5",
+					"rhel-x86_64-client-5-debuginfo",
+					"rhel-x86_64-client-5-beta",
+					"rhel-x86_64-client-5-beta-debuginfo",
+					"rhel-x86_64-client-supplementary-5",
+					"rhel-x86_64-client-supplementary-5-debuginfo",
+					"rhel-x86_64-client-supplementary-5-beta",
+					"rhel-x86_64-client-supplementary-5-beta-debuginfo",
+					"rhel-i386-client-5",
+					"rhel-i386-client-5-debuginfo",
+					"rhel-i386-client-5-beta",
+					"rhel-i386-client-5-beta-debuginfo",
+					"rhel-i386-client-supplementary-5",
+					"rhel-i386-client-supplementary-5-debuginfo",
+					"rhel-i386-client-supplementary-5-beta",
+					"rhel-i386-client-supplementary-5-beta-debuginfo").contains(productBaselineRhnChannel)) {
 				log.warning("However, RHN Channel '"+productBaselineRhnChannel+"' is a special case.  See https://bugzilla.redhat.com/show_bug.cgi?id=786257#c1 for more details.");
 				Set<String> productIdsForDesktopAndWorkstation = new HashSet<String>();
 				productIdsForDesktopAndWorkstation.add("68");	// rhel-5,rhel-5-client							Red Hat Enterprise Linux Desktop
@@ -311,34 +310,33 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				return;
 
 			// SPECIAL CASE 2:	productId:180  productName:Red Hat Beta rhnChannels:
-			} else if (Arrays.asList(
-						"rhel-i386-client-dts-5-beta", 
-						"rhel-i386-client-dts-5-beta-debuginfo", 
-						"rhel-i386-client-dts-6-beta", 
-						"rhel-i386-client-dts-6-beta-debuginfo", 
-						"rhel-i386-server-dts-5-beta", 
-						"rhel-i386-server-dts-5-beta-debuginfo", 
-						"rhel-i386-server-dts-6-beta", 
-						"rhel-i386-server-dts-6-beta-debuginfo", 
-						"rhel-i386-workstation-dts-6-beta", 
-						"rhel-i386-workstation-dts-6-beta-debuginfo", 
-						"rhel-x86_64-client-dts-5-beta", 
-						"rhel-x86_64-client-dts-5-beta-debuginfo", 
-						"rhel-x86_64-client-dts-6-beta", 
-						"rhel-x86_64-client-dts-6-beta-debuginfo", 
-						"rhel-x86_64-hpc-node-dts-6-beta", 
-						"rhel-x86_64-hpc-node-dts-6-beta-debuginfo", 
-						"rhel-x86_64-server-dts-5-beta", 
-						"rhel-x86_64-server-dts-5-beta-debuginfo", 
-						"rhel-x86_64-server-dts-6-beta", 
-						"rhel-x86_64-server-dts-6-beta-debuginfo", 
-						"rhel-x86_64-workstation-dts-6-beta", 
-						"rhel-x86_64-workstation-dts-6-beta-debuginfo")
-						.contains(productBaselineRhnChannel)) {
-						log.warning("However, RHN Channel '"+productBaselineRhnChannel+"' is a special case.  See https://bugzilla.redhat.com/show_bug.cgi?id=820749#c4 for more details.");
-						Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)),"180",
-								"As dictated in the comments of https://bugzilla.redhat.com/show_bug.cgi?id=820749 subscription-manager-migration-data file '"+channelCertMappingFilename+"' should only map RHN Channel '"+productBaselineRhnChannel+"' to productId 180.");
-						return;
+			} else if (Arrays.asList(	
+					"rhel-i386-client-dts-5-beta", 
+					"rhel-i386-client-dts-5-beta-debuginfo", 
+					"rhel-i386-client-dts-6-beta", 
+					"rhel-i386-client-dts-6-beta-debuginfo", 
+					"rhel-i386-server-dts-5-beta", 
+					"rhel-i386-server-dts-5-beta-debuginfo", 
+					"rhel-i386-server-dts-6-beta", 
+					"rhel-i386-server-dts-6-beta-debuginfo", 
+					"rhel-i386-workstation-dts-6-beta", 
+					"rhel-i386-workstation-dts-6-beta-debuginfo", 
+					"rhel-x86_64-client-dts-5-beta", 
+					"rhel-x86_64-client-dts-5-beta-debuginfo", 
+					"rhel-x86_64-client-dts-6-beta", 
+					"rhel-x86_64-client-dts-6-beta-debuginfo", 
+					"rhel-x86_64-hpc-node-dts-6-beta", 
+					"rhel-x86_64-hpc-node-dts-6-beta-debuginfo", 
+					"rhel-x86_64-server-dts-5-beta", 
+					"rhel-x86_64-server-dts-5-beta-debuginfo", 
+					"rhel-x86_64-server-dts-6-beta", 
+					"rhel-x86_64-server-dts-6-beta-debuginfo", 
+					"rhel-x86_64-workstation-dts-6-beta", 
+					"rhel-x86_64-workstation-dts-6-beta-debuginfo").contains(productBaselineRhnChannel)) {
+				log.warning("However, RHN Channel '"+productBaselineRhnChannel+"' is a special case.  See https://bugzilla.redhat.com/show_bug.cgi?id=820749#c4 for more details.");
+				Assert.assertEquals(getProductIdFromProductCertFilename(channelsToProductCertFilenamesMap.get(productBaselineRhnChannel)),"180",
+						"As dictated in the comments of https://bugzilla.redhat.com/show_bug.cgi?id=820749 subscription-manager-migration-data file '"+channelCertMappingFilename+"' should only map RHN Channel '"+productBaselineRhnChannel+"' to productId 180.");
+				return;
 
 			// SPECIAL CASE:	placeholder for next special case
 			} else if (false) {
@@ -1221,6 +1219,94 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		for (ProductCert productCert : productCertsMigrated) {
 			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktopAndWorkstation);
 		}
+	}
+	
+	
+	@Test(	description="when more than one JBoss Application Enterprise Platform (JBEAP) RHN Channel is currently being consumed classically, rhn-migrate-to-rhsm should abort",
+			groups={"debugTest",/*"blockedByBug-852894",*/"RhnMigrateClassicToRhsm_Test"},
+			dependsOnMethods={"VerifyChannelCertMapping_Test"},
+			enabled=false)	// TODO FINISH IMPLEMENTING
+	public void RhnMigrateClassicToRhsm_MultipleVersionsOfJBEAP_Test() {
+		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
+
+		log.info("JBoss Enterprise Application Platform (productId=183) is currently provided in 3 versions: 4.3.0, 5.0, 6.0");
+		log.info("If RHN Channels providing more than one of these versions is currently being consumed, rhn-migrate-to-rhsm should abort.");
+
+		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
+		String regUsername=null, regPassword=null, regOrg=null;
+		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
+			regUsername = sm_clientUsername;
+			regPassword = sm_clientPassword;
+			regOrg = sm_clientOrg;
+		}
+		
+		//	32298         "Name": "JBoss Enterprise Application Platform", 
+		//	32299         "Product ID": "183", 
+		//	32300         "RHN Channels": [
+		//	32301             "jbappplatform-4.3.0-i386-server-5-rpm", 
+		//	32302             "jbappplatform-4.3.0-x86_64-server-5-rpm", 
+		//	32303             "jbappplatform-5-i386-server-5-rpm", 
+		//	32304             "jbappplatform-5-i386-server-6-rpm", 
+		//	32305             "jbappplatform-5-x86_64-server-5-rpm", 
+		//	32306             "jbappplatform-5-x86_64-server-6-rpm", 
+		//	32307             "jbappplatform-6-i386-server-6-rpm", 
+		//	32308             "jbappplatform-6-x86_64-server-6-rpm"
+		//	32309         ]
+		
+		// this test is only applicable on a RHEL 5Serve,6Server and arches i386,x86_64
+		List<String> applicableReleasevers = Arrays.asList(new String[]{"5Server","6Server"});
+		List<String> applicableArchs = Arrays.asList(new String[]{"i386","x86_64"});
+		String arch = clienttasks.arch;	// default
+		//if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
+		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
+		if (!applicableReleasevers.contains(arch)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
+		if (!applicableArchs.contains(arch)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
+		
+		//TODO LEFT OFF HERE
+//		// Case 1: add RHN Channels for Desktop only; migration should only install Desktop product 68
+//		List<String> rhnChannelsToAddForDesktop = new ArrayList<String>();
+//		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-beta",arch));
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-beta-debuginfo",arch));
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-debuginfo",arch));
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5",arch));
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta",arch));
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta-debuginfo",arch));
+//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-debuginfo",arch));
+//		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktop, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+//		List<ProductCert> productCertsMigrated = clienttasks.getCurrentProductCerts();
+//		String productIdForDesktop = "68";
+//		for (ProductCert productCert : productCertsMigrated) {
+//			Assert.assertEquals(productCert.productId, productIdForDesktop, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForDesktop+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktop);
+//		}
+//		
+//		// Case 2: add RHN Channels for Workstation only; migration should only install Workstation product 71
+//		List<String> rhnChannelsToAddForWorkstation = new ArrayList<String>();
+//		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta-debuginfo",arch));
+//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-debuginfo",arch));
+//		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+//		productCertsMigrated = clienttasks.getCurrentProductCerts();
+//		String productIdForWorkstation = "71";
+//		for (ProductCert productCert : productCertsMigrated) {
+//			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForWorkstation);
+//		}
+//		
+//		// Case 3: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
+//		List<String> rhnChannelsToAddForDesktopAndWorkstation = new ArrayList<String>();
+//		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForDesktop);
+//		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForWorkstation);
+//		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktopAndWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+//		productCertsMigrated = clienttasks.getCurrentProductCerts();
+//		for (ProductCert productCert : productCertsMigrated) {
+//			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktopAndWorkstation);
+//		}
 	}
 	
 	
