@@ -114,8 +114,11 @@
   (tasks/ui click :close-facts)
   (disable_proxy nil))
 
-(defn ^{AfterClass {:groups ["setup"]}}
+(defn ^{AfterClass {:groups ["setup"]
+                    :alwaysRun true}}
   cleanup [_]
-  (disable_proxy nil))
+  (tasks/kill-app)
+  (disable_proxy nil)
+  (tasks/start-app))
 
 (gen-class-testng)

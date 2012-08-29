@@ -52,7 +52,7 @@
                    :no-username #"You must enter a login"
                    :no-password #"You must enter a password"
                    :wrong-consumer-type #"Consumers of this type are not allowed"
-                   :network-error #"Network error, unable to connect to server.*"
+                   :network-error #"Unable to reach the server at*"
                    :error-updating #"Error updating system data*"
                    :date-error #"Invalid date format. Please re-enter a valid date*"
                    :invalid-cert #"is not a valid certificate file. Please upload a valid certificate*"
@@ -511,7 +511,7 @@
            (ui click :firstboot-proxy-close)
            (checkforerror))
        (do (ui selecttab :my-installed-products)
-           (ui click :proxy-configuration)
+           (ui click :configure-proxy)
            (ui waittillwindowexist :proxy-config-dialog 60)
            (ui uncheck :proxy-checkbox)
            (ui uncheck :authentication-checkbox)
