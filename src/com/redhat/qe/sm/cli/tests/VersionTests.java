@@ -119,7 +119,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert the sever version and type when registered to RHN Classic ",
-			groups={"VersionOfServerWhenRegisteredUsingRHNClassic_Test"},
+			groups={"blockedByBug-852328","VersionOfServerWhenRegisteredUsingRHNClassic_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfServerWhenRegisteredUsingRHNClassic_Test() {
