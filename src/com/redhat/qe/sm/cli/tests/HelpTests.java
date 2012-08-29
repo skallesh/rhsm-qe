@@ -804,8 +804,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		String rhsmcertdCommand = "rhsmcertd"; 
 		options.clear();
 		options.add("-?, --help");
-		options.add("--help-all");
-		options.add("--help-rhsmcertd");
+		//options.add("--help-all");		// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
+		//options.add("--help-rhsmcertd");	// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
 		options.add("-c, --cert-interval=MINUTES");
 		options.add("-i, --heal-interval=MINUTES");
 		options.add("-n, --now");
