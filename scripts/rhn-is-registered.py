@@ -3,7 +3,7 @@
 # Author jsefler
 # Given credentials and a hosted RHN server, this script is used to report if a systemid is currently registered.
 
-import sys
+import sys, time
 from xmlrpclib import Server
 from optparse import OptionParser
 
@@ -26,8 +26,19 @@ systemid = args[0];
 # create an api connection to the server
 # RHN API documentation: https://access.stage.redhat.com/knowledge/docs/Red_Hat_Network/
 client = Server("https://%s/rpc/api/" % options.server)
-sessionKey = client.auth.login(options.username, options.password)
-
+# sessionKey = client.auth.login(options.username, options.password)
+sessionKey = None
+count = 0
+while (sessionKey == None):
+    if count > 10:
+        print "Giving up trying to authenticate to RHN API..."
+        sys.exit(-1)
+    try:
+        sessionKey = client.auth.login(options.username, options.password)
+    except Exception, e:
+        print "Unexpected error:", e
+        count += 1
+        time.sleep(10)
 
 # loop through all of the user's systems looking for systemid
 system_list = client.system.listUserSystems(sessionKey)

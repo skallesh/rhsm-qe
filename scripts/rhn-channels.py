@@ -4,7 +4,7 @@
 # Given a credentials and a hosted RHN server, this script is used to list the
 # RHN Classic channels available.
 
-import sys
+import sys, time
 from xmlrpclib import Server
 from optparse import OptionParser
 
@@ -24,13 +24,24 @@ if not options.username or not options.password:
 # create an api connection to the server
 # RHN API documentation: https://access.stage.redhat.com/knowledge/docs/Red_Hat_Network/
 client = Server("https://%s/rpc/api/" % options.server)
-auth = client.auth.login(options.username, options.password)
-
+#sessionKey = client.auth.login(options.username, options.password)
+sessionKey = None
+count = 0
+while (sessionKey == None):
+    if count > 10:
+        print "Giving up trying to authenticate to RHN API..."
+        sys.exit(-1)
+    try:
+        sessionKey = client.auth.login(options.username, options.password)
+    except Exception, e:
+        print "Unexpected error:", e
+        count += 1
+        time.sleep(10)
 
 # find all the available parent/base channels and their child channels
 parents = []
 child_map = {}
-chan_list = client.channel.listSoftwareChannels(auth)
+chan_list = client.channel.listSoftwareChannels(sessionKey)
 for chan in chan_list:
     if chan["channel_parent_label"] == "":
         parents.append(chan["channel_label"])
@@ -47,7 +58,7 @@ for parent in parents:
         continue
     
     if options.nocustom:
-        details = client.channel.software.getDetails(auth, parent)
+        details = client.channel.software.getDetails(sessionKey, parent)
         if details["channel_gpg_key_url"] == "":
             continue
     print parent
@@ -56,12 +67,12 @@ for parent in parents:
         for child in child_map[parent]:        
             
             if options.available:
-                availableEntitlements = client.channel.software.availableEntitlements(auth, child)
+                availableEntitlements = client.channel.software.availableEntitlements(sessionKey, child)
                 if availableEntitlements <= 0:
                     continue
             
             if options.nocustom:
-                details = client.channel.software.getDetails(auth, child)
+                details = client.channel.software.getDetails(sessionKey, child)
                 if details["channel_gpg_key_url"] == "":
                     continue
             
