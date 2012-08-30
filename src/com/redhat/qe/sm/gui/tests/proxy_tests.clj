@@ -87,38 +87,44 @@
 
 (defn ^{Test {:groups ["proxy"]}}
   bad_proxy [_]
-  (let [hostname  "blahblah"
-        port      "666"]
-    (tasks/enableproxy hostname :port port)
-    (tasks/verify-conf-proxies hostname port "" ""))
-  (let [thrown-error (try+ (register)
-                           (catch Object e (:type e)))]
-    (verify (= thrown-error :network-error)))
-  (disable_proxy nil))
+  (try
+    (let [hostname  "blahblah"
+          port      "666"]
+      (tasks/enableproxy hostname :port port)
+      (tasks/verify-conf-proxies hostname port "" ""))
+    (let [thrown-error (try+ (register)
+                             (catch Object e (:type e)))]
+      (verify (= thrown-error :network-error)))
+    (finally
+     (if (= 1 (tasks/ui guiexist :register-dialog))
+       (tasks/ui click :register-cancel))
+     (disable_proxy nil))))
 
 (defn ^{Test {:groups ["proxy" "blockedByBug-729688"]}}
   bad_proxy_facts [_]
   (disable_proxy nil)
   (register)
-  (let [hostname  "blahblah"
-        port      "666"]
-    (tasks/enableproxy hostname :port port)
-    (tasks/verify-conf-proxies hostname port "" ""))
-  (let [thrown-error (try+ (tasks/ui click :view-system-facts)
-                       (tasks/ui waittillguiexist :facts-view)
-                       (tasks/ui click :update-facts)
-                       (tasks/checkforerror)
-                       (catch Object e
-                         (:type e)))]
-    (verify (= thrown-error :error-updating)))
-  (tasks/ui click :close-facts)
-  (disable_proxy nil))
+  (try
+    (let [hostname  "blahblah"
+          port      "666"]
+      (tasks/enableproxy hostname :port port)
+      (tasks/verify-conf-proxies hostname port "" ""))
+    (let [thrown-error (try+ (tasks/ui click :view-system-facts)
+                             (tasks/ui waittillguiexist :facts-view)
+                             (tasks/ui click :update-facts)
+                             (tasks/checkforerror)
+                             (catch Object e
+                               (:type e)))]
+      (verify (= thrown-error :error-updating)))
+    (finally
+     (if (= 1 (tasks/ui guiexist :facts-dialog))
+       (tasks/ui click :close-facts))
+     (disable_proxy nil))))
 
 (defn ^{AfterClass {:groups ["setup"]
                     :alwaysRun true}}
   cleanup [_]
-  (tasks/kill-app)
   (disable_proxy nil)
-  (tasks/start-app))
+  (tasks/restart-app))
 
 (gen-class-testng)

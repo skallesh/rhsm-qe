@@ -52,7 +52,7 @@
                    :no-username #"You must enter a login"
                    :no-password #"You must enter a password"
                    :wrong-consumer-type #"Consumers of this type are not allowed"
-                   :network-error #"Unable to reach the server at*"
+                   :network-error #"Unable to reach the server at"
                    :error-updating #"Error updating system data*"
                    :date-error #"Invalid date format. Please re-enter a valid date*"
                    :invalid-cert #"is not a valid certificate file. Please upload a valid certificate*"
@@ -191,6 +191,7 @@
   ;server selection screen
   (when server (ui settextvalue :register-server server))
   (ui click :register)
+  (checkforerror)
   ;login screen
   (ui settextvalue :redhat-login username)
   (ui settextvalue :password password)
