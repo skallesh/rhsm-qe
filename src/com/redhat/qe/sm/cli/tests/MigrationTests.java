@@ -35,7 +35,6 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -69,7 +68,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt exists",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyChannelCertMappingFileExists_Test() {
@@ -78,7 +77,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the channel-cert-mapping.txt contains a unique map of channels to product certs",
-			groups={"AcceptanceTests"},
+			groups={"debugTest","AcceptanceTests"},
 			dependsOnMethods={"VerifyChannelCertMappingFileExists_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -791,7 +790,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
 		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
-		expectedMsg = String.format("Product certificates installed successfully to %s.",	clienttasks.productCertDir);
+		expectedMsg = String.format("Product certificates installed successfully to %s.",	clienttasks.productCertDir);	// Bug 852107 - String Update: rhn-migrate-classic-to-rhsm output
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
@@ -1020,7 +1019,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
-			groups={"blockedByBug-786257","RhnMigrateClassicToRhsm_Test"},
+			groups={"blockedByBug-786257","blockedByBug-853233","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() {
@@ -1195,10 +1194,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Case 2: add RHN Channels for Workstation only; migration should only install Workstation product 71
 		List<String> rhnChannelsToAddForWorkstation = new ArrayList<String>();
 		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+		/*
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
+		*/
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta-debuginfo",arch));
@@ -1210,14 +1211,30 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForWorkstation);
 		}
 		
-		// Case 3: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
-		List<String> rhnChannelsToAddForDesktopAndWorkstation = new ArrayList<String>();
-		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForDesktop);
-		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForWorkstation);
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktopAndWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		// Case 3: add RHN Channels for Virtualization only; migration should only install Workstation product 71
+		// Bug 853233 - rhn-migrate-classic-to-rhsm is installing both Desktop(68) and Workstation(71) when rhel-ARCH-client-vt-5 channel is consumed 
+		List<String> rhnChannelsToAddForVirtualization = new ArrayList<String>();
+		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5",arch));
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-beta",arch));
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForVirtualization, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		productCertsMigrated = clienttasks.getCurrentProductCerts();
+		/*String*/ productIdForWorkstation = "71";
+		for (ProductCert productCert : productCertsMigrated) {
+			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForVirtualization);
+		}
+		
+		// Case 4: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
+		List<String> rhnChannelsToAddForBoth = new ArrayList<String>();
+		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForDesktop);
+		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForWorkstation);
+		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForVirtualization);
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForBoth, "--no-auto", regUsername,regPassword,regOrg,null, null);		
 		productCertsMigrated = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : productCertsMigrated) {
-			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktopAndWorkstation);
+			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForBoth);
 		}
 	}
 	
@@ -1253,13 +1270,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	32308             "jbappplatform-6-x86_64-server-6-rpm"
 		//	32309         ]
 		
-		// this test is only applicable on a RHEL 5Serve,6Server and arches i386,x86_64
+		// this test is only applicable on a RHEL 5Server,6Server and arches i386,x86_64
 		List<String> applicableReleasevers = Arrays.asList(new String[]{"5Server","6Server"});
 		List<String> applicableArchs = Arrays.asList(new String[]{"i386","x86_64"});
 		String arch = clienttasks.arch;	// default
 		//if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
 		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
-		if (!applicableReleasevers.contains(arch)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
+		if (!applicableReleasevers.contains(clienttasks.releasever)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
 		if (!applicableArchs.contains(arch)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
 		
 		//TODO LEFT OFF HERE
