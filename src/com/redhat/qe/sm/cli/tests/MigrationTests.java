@@ -474,7 +474,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
-			groups={"AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
+			groups={"blockedByBug-853187","AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
@@ -507,11 +507,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert the dryrun
 		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
 			String pemFilename = getPemFileNameFromProductCertFilename(expectedMigrationProductCertFilename);
-			String expectedStdoutString = "Copying "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;
+			//String expectedStdoutString = "Copying "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;	// valid prior to Bug 853187 - String Update: install-num-migrate-to-rhsm output
+			String expectedStdoutString = "Installing "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutString),"The dryrun output from "+installNumTool+" contains the expected message: "+expectedStdoutString);
 		}
 		int numProductCertFilenamesToBeCopied=0;
-		for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
+		//for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	// valid prior to Bug 853187 - String Update: install-num-migrate-to-rhsm output
+		for (int fromIndex=0; result.getStdout().indexOf("Installing", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Installing", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
 		Assert.assertEquals(numProductCertFilenamesToBeCopied, expectedMigrationProductCertFilenames.size(),"The number of product certs to be copied.");
 		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "A dryrun should NOT install any product certs.");
 		Map<String,String> factMap = clienttasks.getFacts();
