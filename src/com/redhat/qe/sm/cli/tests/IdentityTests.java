@@ -129,7 +129,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager-cli: identity",
-			groups={},
+			groups={"blockedByBug-852001"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void Identity_Test() throws JSONException, Exception {
@@ -145,13 +145,14 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 		// ALPHA: Assert.assertEquals(result.getStdout().trim(), "Current identity is "+consumerId);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clientusername);
 		// Assert.assertEquals(result.getStdout().trim(), "Current identity is: "+consumerId+" name: "+clienttasks.hostname);	// RHEL61 RHEL57
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^Current identity is: "+consumerId);
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^name: "+clienttasks.hostname);
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "Current identity is: ",consumerId));
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "name: ",clienttasks.hostname));
 		
 		// also assert additional output from the new multi-owner function
 		JSONObject owner = CandlepinTasks.getOwnerOfConsumerId(sm_clientUsername, sm_clientPassword, sm_serverUrl, consumerId);
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^org name: "+owner.getString("displayName"));
-		Assert.assertContainsMatch(identityResult.getStdout().trim(), "^org id: "+owner.getString("id"));
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org name: ",owner.getString("displayName")));
+		//Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("id")));	// RHEL63
+		Assert.assertContainsMatch(identityResult.getStdout().trim(), String.format("^%s%s$", "org id: ",owner.getString("key")));	// technically the org id has been changed to display "key" which is more useful (after bug fix 852001)
 	}
 	
 	
