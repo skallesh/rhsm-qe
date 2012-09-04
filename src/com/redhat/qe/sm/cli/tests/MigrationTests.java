@@ -35,7 +35,6 @@ import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
-import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.tools.RemoteFileTasks;
@@ -475,7 +474,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// install-num-migrate-to-rhsm Test methods ***********************************************************************
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a known instnumber and assert the expected productCerts are copied",
-			groups={"AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
+			groups={"blockedByBug-853187","AcceptanceTests","InstallNumMigrateToRhsmWithInstNumber_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
@@ -508,11 +507,13 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert the dryrun
 		for (String expectedMigrationProductCertFilename : expectedMigrationProductCertFilenames) {
 			String pemFilename = getPemFileNameFromProductCertFilename(expectedMigrationProductCertFilename);
-			String expectedStdoutString = "Copying "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;
+			//String expectedStdoutString = "Copying "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;	// valid prior to Bug 853187 - String Update: install-num-migrate-to-rhsm output
+			String expectedStdoutString = "Installing "+baseProductsDir+"/"+expectedMigrationProductCertFilename+" to "+clienttasks.productCertDir+"/"+pemFilename;
 			Assert.assertTrue(result.getStdout().contains(expectedStdoutString),"The dryrun output from "+installNumTool+" contains the expected message: "+expectedStdoutString);
 		}
 		int numProductCertFilenamesToBeCopied=0;
-		for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
+		//for (int fromIndex=0; result.getStdout().indexOf("Copying", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Copying", fromIndex+1)) numProductCertFilenamesToBeCopied++;	// valid prior to Bug 853187 - String Update: install-num-migrate-to-rhsm output
+		for (int fromIndex=0; result.getStdout().indexOf("Installing", fromIndex)>=0&&fromIndex>-1; fromIndex=result.getStdout().indexOf("Installing", fromIndex+1)) numProductCertFilenamesToBeCopied++;	
 		Assert.assertEquals(numProductCertFilenamesToBeCopied, expectedMigrationProductCertFilenames.size(),"The number of product certs to be copied.");
 		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "A dryrun should NOT install any product certs.");
 		Map<String,String> factMap = clienttasks.getFacts();
@@ -614,7 +615,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				}
 			}
 			if (!originalProvidedTags.isEmpty()) {
-				Assert.fail("Failed to find the providedTags from this originally installed productCert among the migrated productCerts.\nOriginal productCert: "+originalProductCert);
+				Assert.fail("Failed to find the providedTags from the originally installed productCert among the migrated productCerts.\nOriginal productCert: "+originalProductCert);
 			}
 		}
 	}
@@ -791,7 +792,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// assert products are copied
 		expectedMsg = String.format("Product certificates copied successfully to %s !",	clienttasks.productCertDir);
 		expectedMsg = String.format("Product certificates copied successfully to %s",	clienttasks.productCertDir);
-		expectedMsg = String.format("Product certificates installed successfully to %s.",	clienttasks.productCertDir);
+		expectedMsg = String.format("Product certificates installed successfully to %s.",	clienttasks.productCertDir);	// Bug 852107 - String Update: rhn-migrate-classic-to-rhsm output
 		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" "+options+"' contains message: "+expectedMsg);
 		
 		// assert that the expected product certs mapped from the consumed RHN Classic channels are now installed
@@ -1020,7 +1021,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="migrating a RHEL5 Client - Desktop versus Workstation",
-			groups={"blockedByBug-786257","RhnMigrateClassicToRhsm_Test"},
+			groups={"blockedByBug-786257","blockedByBug-853233","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	public void RhnMigrateClassicToRhsm_Rhel5ClientDesktopVersusWorkstation_Test() {
@@ -1195,10 +1196,12 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// Case 2: add RHN Channels for Workstation only; migration should only install Workstation product 71
 		List<String> rhnChannelsToAddForWorkstation = new ArrayList<String>();
 		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+		/*
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
+		*/
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta",arch));
 		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta-debuginfo",arch));
@@ -1210,22 +1213,38 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForWorkstation);
 		}
 		
-		// Case 3: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
-		List<String> rhnChannelsToAddForDesktopAndWorkstation = new ArrayList<String>();
-		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForDesktop);
-		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForWorkstation);
-		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktopAndWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		// Case 3: add RHN Channels for Virtualization only; migration should only install Workstation product 71
+		// Bug 853233 - rhn-migrate-classic-to-rhsm is installing both Desktop(68) and Workstation(71) when rhel-ARCH-client-vt-5 channel is consumed 
+		List<String> rhnChannelsToAddForVirtualization = new ArrayList<String>();
+		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5",arch));
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-beta",arch));
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
+		rhnChannelsToAddForVirtualization.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForVirtualization, "--no-auto", regUsername,regPassword,regOrg,null, null);		
+		productCertsMigrated = clienttasks.getCurrentProductCerts();
+		/*String*/ productIdForWorkstation = "71";
+		for (ProductCert productCert : productCertsMigrated) {
+			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForVirtualization);
+		}
+		
+		// Case 4: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
+		List<String> rhnChannelsToAddForBoth = new ArrayList<String>();
+		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForDesktop);
+		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForWorkstation);
+		rhnChannelsToAddForBoth.addAll(rhnChannelsToAddForVirtualization);
+		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForBoth, "--no-auto", regUsername,regPassword,regOrg,null, null);		
 		productCertsMigrated = clienttasks.getCurrentProductCerts();
 		for (ProductCert productCert : productCertsMigrated) {
-			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktopAndWorkstation);
+			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForBoth);
 		}
 	}
 	
 	
 	@Test(	description="when more than one JBoss Application Enterprise Platform (JBEAP) RHN Channel is currently being consumed classically, rhn-migrate-to-rhsm should abort",
-			groups={"debugTest",/*"blockedByBug-852894",*/"RhnMigrateClassicToRhsm_Test"},
+			groups={"blockedByBug-852894","RhnMigrateClassicToRhsm_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
-			enabled=false)	// TODO FINISH IMPLEMENTING
+			enabled=true)
 	public void RhnMigrateClassicToRhsm_MultipleVersionsOfJBEAP_Test() {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 
@@ -1253,60 +1272,57 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		//	32308             "jbappplatform-6-x86_64-server-6-rpm"
 		//	32309         ]
 		
-		// this test is only applicable on a RHEL 5Serve,6Server and arches i386,x86_64
+		// this test is only applicable on a RHEL 5Server,6Server and arches i386,x86_64
 		List<String> applicableReleasevers = Arrays.asList(new String[]{"5Server","6Server"});
 		List<String> applicableArchs = Arrays.asList(new String[]{"i386","x86_64"});
 		String arch = clienttasks.arch;	// default
 		//if (clienttasks.redhatReleaseX.equals("5") && clienttasks.arch.equals("ppc64")) arch = "ppc";	// RHEL5 only supports ppc packages, but can be run on ppc64 hardware
 		if (Arrays.asList("i386","i486","i586","i686").contains(clienttasks.arch)) arch = "i386";		// RHEL supports i386 packages, but can be run on all 32-bit arch hardware
-		if (!applicableReleasevers.contains(arch)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
+		if (!applicableReleasevers.contains(clienttasks.releasever)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
 		if (!applicableArchs.contains(arch)) throw new SkipException("This test is only executable on redhat-releases "+applicableReleasevers+" arches "+applicableArchs);
 		
-		//TODO LEFT OFF HERE
-//		// Case 1: add RHN Channels for Desktop only; migration should only install Desktop product 68
-//		List<String> rhnChannelsToAddForDesktop = new ArrayList<String>();
-//		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-beta",arch));
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-beta-debuginfo",arch));
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-5-debuginfo",arch));
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5",arch));
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta",arch));
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-beta-debuginfo",arch));
-//		rhnChannelsToAddForDesktop.add(String.format("rhel-%s-client-supplementary-5-debuginfo",arch));
-//		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktop, "--no-auto", regUsername,regPassword,regOrg,null, null);		
-//		List<ProductCert> productCertsMigrated = clienttasks.getCurrentProductCerts();
-//		String productIdForDesktop = "68";
-//		for (ProductCert productCert : productCertsMigrated) {
-//			Assert.assertEquals(productCert.productId, productIdForDesktop, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForDesktop+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktop);
-//		}
-//		
-//		// Case 2: add RHN Channels for Workstation only; migration should only install Workstation product 71
-//		List<String> rhnChannelsToAddForWorkstation = new ArrayList<String>();
-//		//rhnChannelsToAdd.add(String.format("rhel-%s-client-5",arch));	// this is the base channel and will already be consumed by rhnreg_ks
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-beta-debuginfo",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-vt-5-debuginfo",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-beta-debuginfo",arch));
-//		rhnChannelsToAddForWorkstation.add(String.format("rhel-%s-client-workstation-5-debuginfo",arch));
-//		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
-//		productCertsMigrated = clienttasks.getCurrentProductCerts();
-//		String productIdForWorkstation = "71";
-//		for (ProductCert productCert : productCertsMigrated) {
-//			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForWorkstation);
-//		}
-//		
-//		// Case 3: add RHN Channels for both Desktop and Workstation; migration should only install Workstation product 71
-//		List<String> rhnChannelsToAddForDesktopAndWorkstation = new ArrayList<String>();
-//		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForDesktop);
-//		rhnChannelsToAddForDesktopAndWorkstation.addAll(rhnChannelsToAddForWorkstation);
-//		RhnMigrateClassicToRhsm_Test(null,	sm_rhnUsername,	sm_rhnPassword,	sm_rhnHostname,	rhnChannelsToAddForDesktopAndWorkstation, "--no-auto", regUsername,regPassword,regOrg,null, null);		
-//		productCertsMigrated = clienttasks.getCurrentProductCerts();
-//		for (ProductCert productCert : productCertsMigrated) {
-//			Assert.assertEquals(productCert.productId, productIdForWorkstation, "Migration tool "+rhnMigrateTool+" should only install product certificate id '"+productIdForWorkstation+"' when consuming RHN Child Channels "+rhnChannelsToAddForDesktopAndWorkstation);
-//		}
+		List<String> rhnChannelsToAdd = new ArrayList<String>();
+		
+		// decide what jbappplatform channels to test
+		if (clienttasks.redhatReleaseX.equals("5")) {
+			rhnChannelsToAdd.add(String.format("jbappplatform-4.3.0-%s-server-5-rpm",arch));
+			rhnChannelsToAdd.add(String.format("jbappplatform-5-%s-server-5-rpm",arch));
+		} else if (clienttasks.redhatReleaseX.equals("6")) {
+			rhnChannelsToAdd.add(String.format("jbappplatform-5-%s-server-6-rpm",arch));
+			rhnChannelsToAdd.add(String.format("jbappplatform-6-%s-server-6-rpm",arch));
+		} else {
+			Assert.fail("This test needs additional RHN Channel information for jbappplatform product 183 on RHEL Release '"+clienttasks.redhatReleaseX+"'.");
+		}
+			
+		// make sure we are NOT registered to RHSM
+		clienttasks.unregister(null,null,null);
+		clienttasks.removeAllCerts(false, false, true);
+		clienttasks.removeAllFacts();
+		
+		// register to RHN Classic
+		String rhnSystemId = registerToRhnClassic(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname);
+		Assert.assertTrue(isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is currently registered.");
+		
+		// subscribe to more RHN Classic channels
+		addRhnClassicChannels(sm_rhnUsername, sm_rhnPassword, rhnChannelsToAdd);
+		List<String> rhnChannelsConsumed = getCurrentRhnClassicChannels();
+		Assert.assertTrue(rhnChannelsConsumed.containsAll(rhnChannelsToAdd), "All of the RHN Classic channels added appear to be consumed.");
+
+		// execute rhn-migrate-classic-to-rhsm and assert the results
+		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,sm_rhnUsername, sm_rhnPassword,regUsername,regPassword,regOrg,null);
+		String expectedMsg = "You are subscribed to more than one jbappplatform channel.  This script does not support that configuration.  Exiting.";
+		Assert.assertTrue(sshCommandResult.getStdout().contains(expectedMsg), "Stdout from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP contains message: "+expectedMsg);	
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "ExitCode from call to '"+rhnMigrateTool+" when consuming RHN Channels for multiple versions of JBEAP "+rhnChannelsToAdd);
+		
+		// assert that no product certs have been copied yet
+		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "No productCerts have been migrated when "+rhnMigrateTool+" was aborted.");
+
+		// assert that we are not yet registered to RHSM
+		Assert.assertNull(clienttasks.getCurrentConsumerCert(),"We should NOT be registered to RHSM when "+rhnMigrateTool+" was aborted.");
+		
+		// assert that we are still registered to RHN
+		Assert.assertTrue(isRhnSystemIdRegistered(sm_rhnUsername, sm_rhnPassword, sm_rhnHostname, rhnSystemId),"Confirmed that rhn systemId '"+rhnSystemId+"' is still registered when '"+rhnMigrateTool+" was aborted.");
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"The system id file '"+clienttasks.rhnSystemIdFile+"' exists.  This indicates this system is still registered using RHN Classic.");
 	}
 	
 	
@@ -2092,7 +2108,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		// split rhnAvailableChildChannels into two parts to avoid bug 818786 - 502 Proxy Error traceback during large rhn-migrate-classic-to-rhsm
 		List<String> rhnAvailableChildChannelsPart1 = 	rhnAvailableChildChannels.subList(0, rhnAvailableChildChannels.size()/2);
 		List<String> rhnAvailableChildChannelsPart2 = 	rhnAvailableChildChannels.subList(rhnAvailableChildChannels.size()/2,rhnAvailableChildChannels.size());
-
+		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
 		String regUsername=null, regPassword=null, regOrg=null;
 		if (!isCurrentlyConfiguredServerTypeHosted()) {	// or this may work too: if (!sm_serverType.equals(CandlepinType.hosted)) {
