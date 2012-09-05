@@ -2885,15 +2885,25 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 	
+	public SSHCommandResult list(Boolean all, Boolean available, Boolean consumed, Boolean installed, String servicelevel, String ondate, String proxy, String proxyuser, String proxypassword) {
+		
+		SSHCommandResult sshCommandResult = list_(all, available, consumed, installed, servicelevel, ondate, proxy, proxyuser, proxypassword);
+		
+		// assert results...
+		
+		// assert the exit code was a success
+		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the environments list indicates a success.");
+		
+		return sshCommandResult; // from the list command
+	}
+	
 	/**
 	 * @return SSHCommandResult from "subscription-manager-cli list --installed"
 	 */
 	public SSHCommandResult listInstalledProducts() {
 		
-		SSHCommandResult sshCommandResult = list_(null,null,null,Boolean.TRUE, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,null,Boolean.TRUE, null, null, null, null, null);
 		
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list command indicates a success.");
-
 		if (getCurrentProductCertFiles().isEmpty() /*&& getCurrentEntitlementCertFiles().isEmpty() NOT NEEDED AFTER DESIGN CHANGE FROM BUG 736424*/) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No installed products to list"), "No installed products to list");
 		} else {
@@ -2910,9 +2920,8 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listAvailableSubscriptionPools() {
 
-		SSHCommandResult sshCommandResult = list_(null,Boolean.TRUE,null, null, null, null, null, null, null);
-		
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --available command indicates a success.");
+		SSHCommandResult sshCommandResult = list(null,Boolean.TRUE,null, null, null, null, null, null, null);
+
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
 		return sshCommandResult;
@@ -2932,9 +2941,8 @@ public class SubscriptionManagerTasks {
 		}
 		// END OF WORKAROUND
 		
-		SSHCommandResult sshCommandResult = list_(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(Boolean.TRUE,Boolean.TRUE,null, null, null, null, null, null, null);
 		
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --all --available command indicates a success.");
 		//Assert.assertContainsMatch(sshCommandResult.getStdout(), "Available Subscriptions"); // produces too much logging
 
 		return sshCommandResult;
@@ -2946,10 +2954,9 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult listConsumedProductSubscriptions() {
 
-		SSHCommandResult sshCommandResult = list_(null,null,Boolean.TRUE, null, null, null, null, null, null);
+		SSHCommandResult sshCommandResult = list(null,null,Boolean.TRUE, null, null, null, null, null, null);
 		
 		List<File> entitlementCertFiles = getCurrentEntitlementCertFiles();
-		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(0), "The exit code from the list --consumed command indicates a success.");
 
 		if (entitlementCertFiles.isEmpty()) {
 			Assert.assertTrue(sshCommandResult.getStdout().trim().equals("No consumed subscription pools to list"), "No consumed subscription pools to list");

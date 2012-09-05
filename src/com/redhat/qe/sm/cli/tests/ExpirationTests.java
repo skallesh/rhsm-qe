@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -33,7 +34,7 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	@Test(	description="subscribe to a pool that will expire soon and assert the entitlements are removed after it expires",
-			groups={"blockedByBug-660713"}, dependsOnGroups={},
+			groups={"blockedByBug-660713","blockedByBug-854312"}, dependsOnGroups={},
 			enabled=true)
 	public void VerifyEntitlementsAreRemovedAfterSubscriptionExpires_Test() throws Exception{
 
@@ -52,21 +53,26 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertMore(expiringProductSubscriptions.size(),0, "Found ProductSubscriptions corresponding to the just subscribed SubscriptionPool: "+expiringPool);
 
 		// wait for pool to expire
-		sleep(endingMinutesFromNow*60*1000 + 30*1000); // plus a 30 sec buffer
-		sleep(30*1000); // wait another 30 sec for rhsmcertd insurance
+		sleep(endingMinutesFromNow*60*1000 + 10*1000); // plus a 10 sec buffer
 		
 		// verify that that the pool expired
 		SubscriptionPool expiredPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 		Assert.assertNull(expiredPool,"The expired TestPool is no longer available for subscribing: "+expiringPoolId);
 		
-		//verify that the expired product subscriptions are gone
-		List <ProductSubscription> currentProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		// verify that the expired product subscriptions are not listed among the consumed
+		List <ProductSubscription> currentProductSubscriptions = ProductSubscription.parse(clienttasks.list(null,null,true, null, null, null, null, null, null).getStdout());
 		for (ProductSubscription p : expiringProductSubscriptions) {
-			Assert.assertTrue(!currentProductSubscriptions.contains(p),"The expired ProductSubscription '"+p+"' has been removed by rhsmcertd.");
+			Assert.assertTrue(!currentProductSubscriptions.contains(p),"The expired ProductSubscription '"+p+"' no longer appears as consumed.");
 		}
 		
-		// verify that the expired entitlement cert file is gone
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client,expiringCertFile.getPath())==0,"The expired entitlement cert file has been removed by rhsmcertd");
+		// verify that the expired entitlement cert file is gone after a trigger of rhsmcertd.certFrequency
+		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		Assert.assertTrue(!RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"The expired entitlement cert file has been cleaned off the system by rhsmcertd");
+		
+		// final test in honor of bug 854312 - rhsmcertd removes, then puts, then removes, then puts, then removes, etc... an expired entitlement cert 
+		// verify that the expired entitlement cert file is still gone after another trigger a rhsmcertd.certFrequency
+		SubscriptionManagerCLITestScript.sleep(certFrequency*60*1000);
+		Assert.assertTrue(!RemoteFileTasks.testExists(client,expiringCertFile.getPath()),"After another trigger of the cert frequency, the expired entitlement cert file remains cleaned from the system.");
 	}
 	
 	
@@ -181,7 +187,13 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	public void checkTimeBeforeClass() throws Exception{
 		checkTime("candlepin server", server);
 		checkTime("client", client);
-		clienttasks.restart_rhsmcertd(1, null, false, null);
+		originalCertFrequency = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", "certFrequency");
+		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
+	}
+	@AfterClass(groups="setup")
+	public void restoreCertFrequencyAfterClass() throws Exception{
+		if (originalCertFrequency==null) return;
+		clienttasks.restart_rhsmcertd(Integer.valueOf(originalCertFrequency), null, false, null);
 	}
 	
 //	@BeforeMethod
@@ -210,6 +222,8 @@ public class ExpirationTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey = "";
 	protected String randomAvailableProductId = null;
 	protected EntitlementCert expiringCert = null;
+	protected String originalCertFrequency = null;
+	protected final int certFrequency = 1;
 	
 	protected void checkTime(String host, SSHCommandRunner runner)throws Exception {
 		//make sure local clock and server clock are synced
