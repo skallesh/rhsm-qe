@@ -101,7 +101,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	//    	brackets, doublequoting, doublespacing, doublewords, endpunc, endwhitespace, puncspacing, simplecaps, simpleplurals, startcaps, singlequoting, startpunc, startwhitespace, validchars
 	//	Extraction -- useful mainly for extracting certain types of string
 	//    	compendiumconflicts, credits, hassuggestion, isfuzzy, isreview, untranslated
-	protected final List<String> pofilterTests = Arrays.asList(
+	protected List<String> pofilterTests = Arrays.asList(
 			//	Critical -- can break a program
 			"accelerators","escapes","newlines","printf","tabs","variables","xmltags",
 			//	Functional -- may confuse the user
@@ -291,16 +291,17 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		}
 		if (pofilterTest.equals("unchanged")) {
 			List<String> conditionalIgnorableMsgIdsSpanish  	= Arrays.asList("No","%s: error: %s");
-			List<String> conditionalIgnorableMsgIdsItalian 		= Arrays.asList("<b>Account:</b>","<b>Arch:</b>","Account:              \\t%s","Arch:                 \\t%s","Login:","No","Password:","Release: %s","Password: ");
+			List<String> conditionalIgnorableMsgIdsItalian 		= Arrays.asList("<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: ");
 			List<String> conditionalIgnorableMsgIdsFrench 		= Arrays.asList("Options","Type","Version","page 2","%prog [options]");
 			List<String> conditionalIgnorableMsgIdsGerman 		= Arrays.asList("<b>Account:</b>","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","Login:","Name","Name:                 \\t%s","Status","Status:               \\t%s","Version","Version:              \\t%s","_System","long integer","name: %s","Account:              \\t%s","label","Label","Name: %s","Release: %s","integer");
 			List<String> conditionalIgnorableMsgIdsPortugese	= Arrays.asList("<b>subscription management service version:</b> %s","Status","Status:               \\t%s","Login:","Virtual","_Help","hostname[:port][/prefix]","org id: %s","virtual");
-			List<String> conditionalIgnorableMsgIdsTamil    	= Arrays.asList("org id: %s");
+			List<String> conditionalIgnorableMsgIdsTamil    	= Arrays.asList("org id: %s","Repo Id:              \\t%s","Repo Url:             \\t%s");
 			List<String> conditionalIgnorableMsgIdsBengali 		= Arrays.asList("Red Hat Subscription Manager","Red Hat Subscription Validity Applet","Subscription Validity Applet");
 			List<String> conditionalIgnorableMsgIdsPanjabi 		= Arrays.asList("<b>python-rhsm version:</b> %s");
 			List<String> conditionalIgnorableMsgIdsTelgu    	= Arrays.asList("page 2");
-			
-			List<String> ignore = Arrays.asList("server_label","server_entry","proxy_button","hostname[:port][/prefix]","default_button","choose_server_label","<b>SKU:</b>","%prog [options]","<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>python-rhsm Version:</b> %s","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","python-rhsm: %s","register_details_label","register_progressbar","subscription-manager: %s","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n","progress_label","Red Hat Subscription Manager", "Red Hat Subscription Validity Applet");
+			List<String> conditionalIgnorableMsgIdsFor_zh_TW   	= Arrays.asList("%%prog %s [OPTIONS]","%%prog %s [OPTIONS] CERT_FILE","%prog [OPTIONS]");
+
+			List<String> ignore = Arrays.asList("registration_dialog_action_area","server_label","server_entry","proxy_button","hostname[:port][/prefix]","default_button","choose_server_label","<b>SKU:</b>","%prog [options]","<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>python-rhsm Version:</b> %s","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","python-rhsm: %s","register_details_label","register_progressbar","subscription-manager: %s","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n","progress_label","Red Hat Subscription Manager", "Red Hat Subscription Validity Applet");
 			ignorableMsgIds = new ArrayList<String>(ignore);
 			
 			if      (translationFile.getPath().contains("/bn_IN/")||translationFile.getPath().contains("bn_IN")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsBengali);
@@ -312,11 +313,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			else if (translationFile.getPath().contains("/pa/")   ||translationFile.getPath().contains("pa"))    ignorableMsgIds.addAll(conditionalIgnorableMsgIdsPanjabi);
 			else if (translationFile.getPath().contains("/fr/")   ||translationFile.getPath().contains("fr"))    ignorableMsgIds.addAll(conditionalIgnorableMsgIdsFrench);
 			else if (translationFile.getPath().contains("/it/")   ||translationFile.getPath().contains("it"))    ignorableMsgIds.addAll(conditionalIgnorableMsgIdsItalian);
+			else if (translationFile.getPath().contains("/zh_TW/")||translationFile.getPath().contains("zh_TW")) ignorableMsgIds.addAll(conditionalIgnorableMsgIdsFor_zh_TW);
 			
 		}
 		if (pofilterTest.equals("urls")) {
 			if(translationFile.getPath().contains("/zh_CN/")) ignorableMsgIds = Arrays.asList("Server URL has an invalid scheme. http:// and https:// are supported");
 		}
+		
 		// pluck out the ignorable pofilter test results
 		for (String msgid : ignorableMsgIds) {
 			Translation ignoreTranslation = Translation.findFirstInstanceWithMatchingFieldFromList("msgid", msgid, pofilterFailedTranslations);
@@ -324,6 +327,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				log.info("Ignoring result of pofiliter test '"+pofilterTest+"' for msgid: "+ignoreTranslation.msgid);
 				pofilterFailedTranslations.remove(ignoreTranslation);
 			}
+		}
+		
+		// log warnings for the failed pofilter test results (when some of the failed test are being ignored)
+		if (!ignorableMsgIds.isEmpty()) for (Translation pofilterFailedTranslation : pofilterFailedTranslations) {
+			log.warning("Failed result of pofiliter test '"+pofilterTest+"' for translation: "+pofilterFailedTranslation);
 		}
 		
 		// assert that there are no failed pofilter translation test results
@@ -380,7 +388,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getSubscriptionManagerTranslationFilePofilterTestDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
-		
+// debugTesting
+//pofilterTests = Arrays.asList("unchanged");	
 		// Client side
 		Map<File,List<Translation>> translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
