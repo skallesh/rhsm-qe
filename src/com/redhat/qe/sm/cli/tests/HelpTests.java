@@ -217,6 +217,8 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		if (clienttasks==null) return ll;
 		
 		// String command, String stdoutRegex, List<String> expectedOptions
+		String command;
+		List<String> modules = new ArrayList<String>();
 		List<String> options = new ArrayList<String>();
 		String module;
 		String modulesRegex = "^	[\\w-]+";
@@ -236,7 +238,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		
 		// ========================================================================================
 		// subscription-manager MODULES
-		List <String> modules = new ArrayList<String>();
+		modules.clear();
 		modules.add("config");
 		modules.add("import");
 		modules.add("redeem");
@@ -261,7 +263,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",clienttasks.command);
 			usages.add(usage);
 			ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("796730"), smHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, modules}));
+			ll.add(Arrays.asList(new Object[] {null, smHelpCommand, modulesRegex, new ArrayList<String>(modules)}));
 		}
 		
 		
@@ -685,7 +687,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//  -f, --force-icon=TYPE       Force display of the icon (expired, partial or warning)
 			//  -i, --check-immediately     Run the first status check right away
 			//  --display=DISPLAY           X display to use
-			String rhsmIconCommand = "rhsm-icon"; 
+			command = "rhsm-icon";
 			List <String> rhsmIconOptions = new ArrayList<String>();
 			//rhsmIconOptions.add("-h, --help");	// rhel6
 			rhsmIconOptions.add("-?, --help");		// rhel5
@@ -696,10 +698,10 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			rhsmIconOptions.add("-f, --force-icon=TYPE");
 			rhsmIconOptions.add("-i, --check-immediately");
 			rhsmIconOptions.add("--display=DISPLAY");
-			for (String rhsmIconHelpCommand : new String[]{rhsmIconCommand+" -?", rhsmIconCommand+" --help"}) {
+			for (String rhsmIconHelpCommand : new String[]{command+" -?", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
-				String usage = rhsmIconCommand+" [OPTIONS]";
-				usage = rhsmIconCommand+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
+				String usage = command+" [OPTIONS]";
+				usage = command+" [OPTION...]"; // usage = rhsmIconCommand+" [OPTION...] rhsm icon"; // Bug 771756 - rhsm-icon --help usage message is misleading 
 				usages.add(usage);
 				if (!Arrays.asList("6.1","5.7","6.2","5.8","6.3").contains(clienttasks.redhatReleaseXY)) // skip the following rhsmIconHelpCommand usage test since bug 771756 was not fixed until 5.9
 				ll.add(Arrays.asList(new Object[] {new BlockedByBzBug("771756"), rhsmIconHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
@@ -718,11 +720,11 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gdk-no-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-debug=FLAGS");
 			if (!clienttasks.redhatReleaseX.equals("5"))	rhsmIconGtkOptions.add("--gtk-no-debug=FLAGS");
-			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-gtk", optionsRegex, rhsmIconGtkOptions}));
+			ll.add(Arrays.asList(new Object[] {null, command+" --help-gtk", optionsRegex, rhsmIconGtkOptions}));
 			List <String> rhsmIconAllOptions = new ArrayList<String>();
 			rhsmIconAllOptions.addAll(rhsmIconOptions);
 			rhsmIconAllOptions.addAll(rhsmIconGtkOptions);
-			ll.add(Arrays.asList(new Object[] {null, rhsmIconCommand+" --help-all", optionsRegex, rhsmIconAllOptions}));
+			ll.add(Arrays.asList(new Object[] {null, command+" --help-all", optionsRegex, rhsmIconAllOptions}));
 		}
 		
 		// ========================================================================================
@@ -738,20 +740,20 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//  -n, --no-auto   Don't launch subscription manager at end of process.
 			//  -h, --help      show this help message and exit
 
-			String rhnMigrateClassicToRhsmCommand = MigrationTests.rhnMigrateTool; 
+			command = MigrationTests.rhnMigrateTool; 
 			options.clear();
 			options.add("-f, --force");
 			options.add("-g, --gui");
 			options.add("-n, --no-auto");
 			options.add("-s SERVICELEVEL, --servicelevel=SERVICELEVEL");
 			options.add("-h, --help");
-			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
+			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
-				String usage = String.format("usage: %s [OPTIONS]",rhnMigrateClassicToRhsmCommand);
-				usage = String.format("Usage: %s [OPTIONS]",rhnMigrateClassicToRhsmCommand);
+				String usage = String.format("usage: %s [OPTIONS]",command);
+				usage = String.format("Usage: %s [OPTIONS]",command);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, new ArrayList<String>(options)}));
+				ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		
@@ -768,17 +770,17 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			//                        Install number to run against
 			//  -d, --dryrun          Only print the files which would be copied over
 
-			String rhnMigrateClassicToRhsmCommand = MigrationTests.installNumTool; 
+			command = MigrationTests.installNumTool; 
 			options.clear();
 			options.add("-h, --help");
 			options.add("-i INSTNUMBER, --instnumber=INSTNUMBER");
 			options.add("-d, --dryrun");
-			for (String rhnMigrateClassicToRhsmHelpCommand : new String[]{rhnMigrateClassicToRhsmCommand+" -h", rhnMigrateClassicToRhsmCommand+" --help"}) {
+			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();
-				String usage = String.format("usage: %s [options]",rhnMigrateClassicToRhsmCommand);
+				String usage = String.format("usage: %s [options]",command);
 				usages.add(usage);
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
-				ll.add(Arrays.asList(new Object[] {null, rhnMigrateClassicToRhsmHelpCommand, optionsRegex, new ArrayList<String>(options)}));
+				ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\|", "\\\\|").replaceAll("\\?", "\\\\?")+" *$", usages}));
+				ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
 			}
 		}
 		}
@@ -801,7 +803,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		//  -n, --now                       Run the initial checks immediatly, with no delay.
 		//  -d, --debug                     Show debug messages
 
-		String rhsmcertdCommand = "rhsmcertd"; 
+		command = "rhsmcertd"; 
 		options.clear();
 		options.add("-?, --help");
 		//options.add("--help-all");		// removed by Bug 842020 - what is rhsmcertd --help-rhsmcertd? 
@@ -810,15 +812,65 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("-i, --heal-interval=MINUTES");
 		options.add("-n, --now");
 		options.add("-d, --debug");
-		for (String rhsmcertdHelpCommand : new String[]{rhsmcertdCommand+" -?", rhsmcertdCommand+" --help"}) {
+		for (String commandHelp : new String[]{command+" -?", command+" --help"}) {
 			List <String> usages = new ArrayList<String>();
-			String usage = rhsmcertdCommand+" [OPTIONS]";
-			usage = rhsmcertdCommand+" [OPTION...]";
+			String usage = command+" [OPTIONS]";
+			usage = command+" [OPTION...]";
 			usages.add(usage);
-			ll.add(Arrays.asList(new Object[] {null, rhsmcertdHelpCommand, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
-			ll.add(Arrays.asList(new Object[] {null, rhsmcertdHelpCommand, optionsRegex, options}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
 		}
 
+		// ========================================================================================
+		// rct MODULES
+		
+		//[root@jsefler-rhel59 ~]# rct --help
+		//
+		//
+		//Usage: rct MODULE-NAME [MODULE-OPTIONS] [--help]
+		//
+		//
+		//Primary Modules:
+		//
+		//	cat-cert       Print certificate info to standard output.
+		//
+		//Other Modules (Please consult documentation):
+		
+		command = "rct"; 
+		modules.clear();
+		modules.add("cat-cert");
+		for (String commandHelp : new String[]{command+" -h",command+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s MODULE-NAME [MODULE-OPTIONS] [--help]",command);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, modulesRegex, new ArrayList<String>(modules)}));
+		}
+		
+		// rct cat-cert OPTIONS
+		
+		//[root@jsefler-rhel59 ~]# rct cat-cert --help
+		//Usage: rct cat-cert [OPTIONS] CERT_FILE
+		//
+		//Print certificate info to standard output.
+		//
+		//options:
+		//  -h, --help     show this help message and exit
+		//  --no-products  do not show the cert's product information
+		//  --no-content   do not show the cert's content info.
+		module = "cat-cert";
+		options.clear();
+		options.add("-h, --help");
+		options.add("--no-products");
+		options.add("--no-content");
+		for (String commandHelp : new String[]{command+" "+module+" -h",command+" "+module+" --help"}) {
+			List <String> usages = new ArrayList<String>();
+			String usage = String.format("Usage: %s %s [OPTIONS] CERT_FILE",command,module);
+			usages.add(usage);
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, usage.replaceAll("\\[", "\\\\[").replaceAll("\\]", "\\\\]").replaceAll("\\?", "\\\\?")+" *$", usages}));
+			ll.add(Arrays.asList(new Object[] {null, commandHelp, optionsRegex, new ArrayList<String>(options)}));
+		}
+		
 		
 		return ll;
 	}
