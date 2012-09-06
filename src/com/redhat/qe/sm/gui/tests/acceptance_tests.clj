@@ -26,7 +26,7 @@
   (rtest/unregister nil))
 
 (defn- check-register []
-  (if (tasks/ui exists? :register-system)
+  (if (tasks/ui showing? :register-system)
     (register nil)))
 
 (defn ^{Test {:groups ["acceptance"]}}

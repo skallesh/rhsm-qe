@@ -87,6 +87,8 @@
 
 (defn ^{Test {:groups ["proxy"]}}
   bad_proxy [_]
+  (try+ (tasks/unregister)
+        (catch [:type :not-registered] _))
   (try
     (let [hostname  "blahblah"
           port      "666"]
