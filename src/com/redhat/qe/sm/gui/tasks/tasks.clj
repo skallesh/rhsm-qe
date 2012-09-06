@@ -55,7 +55,7 @@
                    :network-error #"Unable to reach the server at"
                    :error-updating #"Error updating system data*"
                    :date-error #"Invalid date format. Please re-enter a valid date*"
-                   :invalid-cert #"is not a valid certificate file. Please upload a valid certificate*"
+                   :invalid-cert #"An error occurred while importing the following certificates"
                    })
 
 (defn matching-error

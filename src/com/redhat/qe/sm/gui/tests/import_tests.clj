@@ -45,11 +45,11 @@
 (defn import-cert [certlocation]
   (tasks/restart-app)
   (tasks/ui click :import-certificate)
-  (tasks/ui click :choose-cert)
-  (tasks/ui waittillguiexist :file-chooser)
-  (tasks/ui check :text-entry-toggle)
+  (tasks/ui waittillguiexist :import-dialog)
+  (if-not (tasks/ui showing? :import-dialog "Location:")
+    (try+ (tasks/ui check :text-entry-toggle)
+          (catch Object e (tasks/ui click :text-entry-toggle))))
   (tasks/ui generatekeyevent certlocation)
-  (tasks/ui click :file-open)
   (tasks/ui click :import-cert)
   (tasks/checkforerror))
 
@@ -143,18 +143,14 @@
   (reset! importedcert nil))
 
 (defn import-bad-cert [certname
-                       expected-error
-                       & {:keys [cancel?]
-                          :or {cancel? true}}]
+                       expected-error]
   (let [test-fn (fn []
                   (try+
                    (import-cert certname)
                    (catch Object e
                      (:type e))))]
     (let [thrown-error (test-fn)]
-      (verify (= thrown-error expected-error))))
-  (if cancel?
-    (tasks/ui click :import-cancel)))
+      (verify (= thrown-error expected-error)))))
 
 (defn get-random-file
   ([path filter]

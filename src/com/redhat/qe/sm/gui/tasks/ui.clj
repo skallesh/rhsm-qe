@@ -40,7 +40,7 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                 :warning-dialog "Warning"
                 :firstboot-window "frm0"
                 :firstboot-proxy-dialog "Advanced Network Configuration"
-                :import-window "Provide a Subscription Certificate"
+                :import-dialog "Import Certificates"
                 :file-chooser "Select A File"
                 :subscribe-system-dialog "Subscribe System"
                 :system-preferences-dialog "System Preferences"
@@ -66,13 +66,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
                                     :system-preferences
                                     :configure-proxy
                                     :view-system-facts
-                                    :import-certificate
                                     :help
+                                    :getting-started
+                                    :online-documentation
                                     :filters
                                     :calendar])
 		    {:date-entry "date-entry"
                      :register-system "Register System"
                      :redeem "Redeem a Subscription"
+                     :import-certificate "Import Cert"
                      :unregister-system "Unregister"
                      :update-certificates "Update"
                      :autosubscribe "Auto-subscribe"}
@@ -176,14 +178,15 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
        :firstboot-proxy-user "proxy user field"
        :firstboot-proxy-pass "proxy password field"
        :firstboot-proxy-close "Close"})
-    (define-elements (windows :import-window)
-      {:choose-cert "(None)"
-       :import-cert "Import Certificate"
-       :import-cancel "import_cancel_button"})
-    (define-elements (windows :file-chooser)
+    (define-elements (windows :import-dialog)
       {:text-entry-toggle "Type a file name"
-       :file-cancel "Cancel"
-       :file-open "Open"})
+       :import-cert "Import"
+       :import-cancel "Cancel"})
+    (comment ;this is now embedded into the import window
+      (define-elements (windows :file-chooser)
+        {:text-entry-toggle "Type a file name"
+         :file-cancel "Cancel"
+         :file-open "Open"}))
     (define-elements (windows :system-preferences-dialog)
       {:close-system-prefs "Close"}) ))
 

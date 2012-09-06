@@ -51,14 +51,14 @@
   check_help_button [_]
   (try
     (tasks/restart-app)
-    (tasks/ui click :help)
+    (tasks/ui click :getting-started)
     (tasks/sleep 3000)
     (verify (= 1 (tasks/ui guiexist :help-dialog)))
     (tasks/ui closewindow :help-dialog)
     (finally (tasks/restart-app))))
 
 ;; TODO
-;; https://bugzilla.redhat.com/show_bug.cgi?id=747014 < help button
+
 
 (gen-class-testng)
 
