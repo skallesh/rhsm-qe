@@ -459,8 +459,8 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	// Protected Class Variables ***********************************************************************
 		
-	protected final String importCertificatesDir = "/tmp/sm-importCertificatesDir";
-	protected final String importEntitlementsDir = "/tmp/sm-importEntitlementsDir";
+	protected final String importCertificatesDir = "/tmp/sm-importCertificatesDir".toLowerCase();	// set to lowercase to avoid an RHEL5 LDTP bug in the import_tests.clj when using generatekeyevent in the Import Dialog
+	protected final String importEntitlementsDir = "/tmp/sm-importEntitlementsDir".toLowerCase();	// set to lowercase to avoid an RHEL5 LDTP bug in the import_tests.clj when using generatekeyevent in the Import Dialog
 	protected String originalEntitlementCertDir = null;
 	protected List<File> entitlementCertFiles = new ArrayList<File>();	// valid entitlement cert files that can be used for import testing (contains cert only, no key)
 	protected File futureEntitlementCertFile = null;
