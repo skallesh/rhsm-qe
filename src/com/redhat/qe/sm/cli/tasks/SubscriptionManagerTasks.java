@@ -494,10 +494,11 @@ public class SubscriptionManagerTasks {
 	 * @param assertCertificatesUpdate if NULL, do not wait for certificate updates; if TRUE, wait and assert rhsmcertd logs Certificates updated; if FALSE, wait and assert rhsmcertd logs Update failed
 	 */
 	public void restart_rhsmcertd (Integer certFrequency, Integer healFrequency, boolean waitForMinutes, Boolean assertCertificatesUpdate){
-//		updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
-//		updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
 		
-		// use config to set the certFrequency and healFrequency in one call
+		// update the configuration for certFrequency and healFrequency
+		//updateConfFileParameter(rhsmConfFile, "certFrequency", String.valueOf(certFrequency));
+		//updateConfFileParameter(rhsmConfFile, "healFrequency", String.valueOf(healFrequency));
+		// do it in one ssh call
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		if (certFrequency!=null) listOfSectionNameValues.add(new String[]{"rhsmcertd", "certFrequency".toLowerCase(), String.valueOf(certFrequency)});
 		else certFrequency = Integer.valueOf(getConfFileParameter(rhsmConfFile, "rhsmcertd", "certFrequency"));
@@ -530,17 +531,19 @@ public class SubscriptionManagerTasks {
 			if (invokeWorkaroundWhileBugIsOpen) {
 				RemoteFileTasks.runCommandAndWait(sshCommandRunner,"service rhsmcertd restart", TestRecords.action());
 			} else {
-				RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
+				/* VALID PRIOR TO BUG 818978:
+				 * RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);
+				 */
 			}
 		} else {
 		// END OF WORKAROUND
 			
 		/* VALID PRIOR TO BUG 818978:
-		 * RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);	
+		 * RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"service rhsmcertd restart",Integer.valueOf(0),"^Starting rhsmcertd "+certFrequency+" "+healFrequency+"\\[  OK  \\]$",null);
 		 */
 		}
 		
-		// NEW FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
+		// NEW SERVICE RESTART FEEDBACK AFTER IMPLEMENTATION OF Bug 818978 - Missing systemD unit file
 		//	[root@jsefler-59server ~]# service rhsmcertd restart
 		//	Stopping rhsmcertd...                                      [  OK  ]
 		//	Starting rhsmcertd...                                      [  OK  ]
@@ -655,8 +658,6 @@ public class SubscriptionManagerTasks {
 			// assert these cert and heal update/fail messages are logged (but give the system up to a minute to do it)
 			String healMsg = assertCertificatesUpdate? "(Healing) Certificates updated.":"(Healing) Update failed (255), retry will occur on next run.";
 			String certMsg = assertCertificatesUpdate? "(Cert Check) Certificates updated.":"(Cert Check) Update failed (255), retry will occur on next run.";
-//			if (this.currentlyRegisteredUsername==null)	updateRegex = ".*update failed \\(255\\), retry will occur on next run\\n.*update failed \\(255\\), retry will occur on next run";	// when NOT registered
-//			else										updateRegex = ".*certificates updated\\n.*certificates updated";
 			int i=0, delay=10;
 			do {	// retry every 10 seconds (up to a minute) for the expected update messages in the rhsmcertd log
 				SubscriptionManagerCLITestScript.sleep(delay*1000);i++;	// wait a few seconds before trying again
