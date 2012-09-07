@@ -138,17 +138,20 @@ public class RHUITests extends SubscriptionManagerCLITestScript {
 		}
 		Assert.assertNotNull(contentNamespaceForIso,"Found expected ContentNamespace to repoId '"+sm_rhuiRepoIdForIsos+"' for rhui isos after subscribe to '"+sm_rhuiSubscriptionProductId+"'.");
 		String repoUrl = clienttasks.baseurl+contentNamespaceForIso.downloadUrl;
-		/* This technique to find the repoUrl will not work
-		Repo repoForIso = Repo.findFirstInstanceWithMatchingFieldFromList("repoId", sm_rhuiRepoIdForIsos, clienttasks.getCurrentlySubscribedRepos());
-		Assert.assertNotNull(repoForIso,"Found entitled repo '"+sm_rhuiRepoIdForIsos+"' for rhui isos after subscribe to '"+sm_rhuiSubscriptionProductId+"'.");
-		String repoUrl = repoForIso.repoUrl;
-		*/
+		
+		// assert available repos for "Red Hat Enterprise Linux Server from RHUI" (when not a server, no content should exist)
+		List<Repo> repos = clienttasks.getCurrentlySubscribedRepos();
+		if (clienttasks.releasever.contains("Server")) {
+			Assert.assertMore(repos.size(), 0, "When consuming RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' on a Server '"+clienttasks.releasever+"' system, repo content should be available.");
+		} else {
+			Assert.assertEquals(repos.size(), 0, "When consuming RHUI Product ID '"+sm_rhuiSubscriptionProductId+"' on a non-Server '"+clienttasks.releasever+"' system, repo content should NOT be available.");
+			throw new SkipException("This system release is '"+clienttasks.releasever+"'.  RHUI ISO '"+sm_rhuiDownloadIso+"' requires Server for downloading.");	// RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
+		}
 		
 		// substitute the yum vars
 		// http://www.centos.org/docs/5/html/5.2/Deployment_Guide/s1-yum-useful-variables.html
 		String arch =  Arrays.asList("i686","i486","i386").contains(clienttasks.arch)? "i386":clienttasks.arch;	// http://www.centos.org/docs/5/html/5.2/Deployment_Guide/s1-yum-useful-variables.html
 		if (!sm_rhuiDownloadIso.contains(arch)) throw new SkipException("When this system's arch ("+arch+") is substituted into the repoUrl ("+repoUrl+"), it will not find RHUI ISO ("+sm_rhuiDownloadIso+") for downloading.");	// RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
-		if (!clienttasks.releasever.contains("Server") && sm_rhuiDownloadIso.contains("Server")) throw new SkipException("This system release is '"+clienttasks.releasever+"'.  RHUI ISO '"+sm_rhuiDownloadIso+"' requires Server for downloading.");	// RHEL-6.1-RHUI-2.0-LATEST-Server-x86_64-DVD.iso
 		repoUrl = repoUrl.replaceFirst("\\$releasever", clienttasks.releasever);
 		repoUrl = repoUrl.replaceFirst("\\$basearch", arch);
 
