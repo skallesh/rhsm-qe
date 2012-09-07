@@ -281,7 +281,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	public void buildTranslationFileMapForSubscriptionManagerBeforeClass() {
 		translationFileMapForSubscriptionManager = buildTranslationFileMapForSubscriptionManager();
 	}
-	Map<File,List<Translation>> translationFileMapForSubscriptionManager;
+	Map<File,List<Translation>> translationFileMapForSubscriptionManager = null;
 
 //	@BeforeClass (groups="setup")
 //	public void buildTranslationFileMapForCandlepinBeforeClass() {
@@ -350,6 +350,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	}
 	protected List<List<Object>> getTranslationFileDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForSubscriptionManager==null) return ll;
 		for (File translationFile : translationFileMapForSubscriptionManager.keySet()) {
 			BlockedByBzBug bugzilla = null;
 			// Bug 824100 - pt_BR translations are outdated for subscription-manager 
@@ -392,6 +393,7 @@ public class TranslationTests extends SubscriptionManagerCLITestScript {
 	@Deprecated	// 07/12/2012 this was the initial test created for the benefit of fsharath who further developed the test in PofilterTranslationTests.java
 	protected List<List<Object>> getTranslationFilePofilterTestDataAsListOfLists() {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
+		if (translationFileMapForSubscriptionManager==null) return ll;
 		// see http://translate.sourceforge.net/wiki/toolkit/pofilter_tests
 		//	Critical -- can break a program
 		//    	accelerators, escapes, newlines, nplurals, printf, tabs, variables, xmltags, dialogsizes
