@@ -96,7 +96,8 @@
 (defn ^{Test {:groups ["import"]
               :dependsOnMethods ["import_valid_cert"]}}
   import_unregister [_]
-  (tasks/register-with-creds :re-register? false)
+  (try+ (tasks/register-with-creds :re-register? false)
+        (catch [:type :already-registered] _))
   (tasks/ui selecttab :my-subscriptions)
   (let [assert-in-table? (fn [pred]
                            (pred

@@ -166,6 +166,7 @@
                              sla nil
                              auto-select-sla true
                              server nil}}]
+  (ui selecttab :my-installed-products)
   (if-not (ui showing? :register-system)
     (throw+ {:type :already-registered
              :username username
