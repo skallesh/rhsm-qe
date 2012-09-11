@@ -1352,9 +1352,9 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_serverType.equals(CandlepinType.hosted)) throw new SkipException("This test requires that your candlepin server NOT be a hosted RHN Classic system.");
 		clienttasks.unregister(null,null,null);
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm(null,"foo","bar",sm_clientUsername,sm_clientPassword,sm_clientOrg,null);
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
 		String expectedStdout = "Unable to authenticate to RHN Classic.  See /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "The expected stdout result from call to '"+rhnMigrateTool+"' with invalid rhn credentials and valid subscription-manager credentials ended with: "+expectedStdout);
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "The expected exit code from call to '"+rhnMigrateTool+"' with invalid credentials.");
 	}
 	
 	
@@ -1392,10 +1392,11 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unregister(null,null,null);
 		
 		SSHCommandResult sshCommandResult = executeRhnMigrateClassicToRhsm("--no-auto --servicelevel=foo", sm_rhnUsername, sm_rhnPassword,null,null,null,null);
-		String expectedStdout = "Error: Must not use --no-auto with --servicelevel";
-		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(255), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
-		Assert.assertEquals(sshCommandResult.getStdout().trim(), expectedStdout, "Stdout from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
+		String expectedStdout = "The --servicelevel and --no-auto options cannot be used together.";
+		Assert.assertTrue(sshCommandResult.getStdout().trim().endsWith(expectedStdout), "Stdout from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel ended with: "+expectedStdout);
 		Assert.assertEquals(sshCommandResult.getStderr().trim(), "", "Stderr from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
+//		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(1), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
+		Assert.assertEquals(sshCommandResult.getExitCode(), new Integer(0), "Exit code from call to '"+rhnMigrateTool+"' specifying both --no-auto and --servicelevel.");
 	}
 	
 	
