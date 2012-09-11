@@ -42,7 +42,7 @@
                {:keys [log-warning]} (log-warning))))
    :skip-dropdowns? true))
 
-(defn unsubscribe_all 
+(defn unsubscribe_all
   "Unsubscribes from everything available"
   []
   (tasks/ui selecttab :my-subscriptions)
@@ -87,7 +87,7 @@
                 (verify (not (nil? (re-matches datex startdate))))
                 (verify (not (nil? (re-matches datex enddate))))
                 (recur (dec row)))))
-          (finally 
+          (finally
            (tasks/ui click :cancel-contract-selection)))
         (catch [:type :item-not-available] _)
         (catch [:type :wrong-consumer-type]
@@ -101,7 +101,7 @@
   check_quantity_scroller
   "https://bugzilla.redhat.com/show_bug.cgi?id=723248#c3"
   [_ subscription]
-  (try+ 
+  (try+
     (tasks/open-contract-selection subscription)
     (loop [row (- (tasks/ui getrowcount :contract-selection-table) 1)]
       (if (>= row 0)
@@ -161,7 +161,7 @@
         {:keys [log-warning]} (log-warning))
     (finally (if (tasks/ui showing? :contract-selection-table)
                (tasks/ui click :cancel-contract-selection)))))
- 
+
 (defn ^{Test {:groups ["subscribe" "blockedByBug-723248"]
               :dataProvider "multi-entitle"}}
   check_quantity_subscribe
@@ -224,13 +224,13 @@
                                       ldtp-log
                                       "date-chooser-tracebacks"
                                       nil
-                                      (do 
+                                      (do
                                         (tasks/ui selecttab :all-available-subscriptions)
                                         (tasks/ui click :calendar)
                                         (tasks/checkforerror)))]
         (verify (not (tasks/substring? "Traceback" output))))
       (finally (tasks/restart-app))))
-  
+
   (defn ^{Test {:groups ["subscribe"
                          "blockedByBug-704408"
                          "blockedByBug-801434"]
@@ -262,13 +262,13 @@
                       (catch Object e (:type e)))]
       (verify (= :date-error error)))
     (verify (= "" (tasks/ui gettextvalue :date-entry)))
-    
+
     (comment ;this is the old test after it autofilled the date
       (let [date (tasks/ui gettextvalue :date-entry)
             systemtime (.trim (.getStdout (.runCommandAndWait @clientcmd "date +%m/%d/%Y")))]
         (verify (not (nil? (re-matches #"\d{2}/\d{2}/\d{4}" date))))
         (verify (= date systemtime))))
-    
+
     (finally (tasks/restart-app))))
 
 (defn ^{Test {:groups ["subscribe"]
@@ -345,7 +345,7 @@
   (let [subs (into [] (map vector (tasks/get-table-elements
                                    :all-subscriptions-view
                                    0
-                                   :skip-dropdowns? true)))] 
+                                   :skip-dropdowns? true)))]
     (if-not debug
       (to-array-2d subs)
       subs)))

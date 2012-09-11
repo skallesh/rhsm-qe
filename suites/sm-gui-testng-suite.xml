@@ -9,15 +9,15 @@
        <listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
        </listeners>
   -->
-  
-  
+
+
   <!-- GUI TESTS -->
-  
+
   <test name="GUI: Registration">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="registration"/>
@@ -26,12 +26,12 @@
       </run>
     </groups>
   </test>
-  
+
   <test name="GUI: Subscribe/Unsubscribe">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
-      <package name="com.redhat.qe.sm.base"></package>			
-    </packages>	
+      <package name="com.redhat.qe.sm.base"></package>
+    </packages>
     <groups>
       <run>
         <include name="subscribe"/>
@@ -40,13 +40,13 @@
       </run>
     </groups>
   </test>
-  
+
   <test name="GUI: Autosubscribe">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.cli.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="autosubscribe"/>
@@ -58,12 +58,12 @@
     </groups>
   </test>
 
-<!--  this window got removed  
+<!--  this window got removed
   <test name="GUI: Subscription Assistant">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="subscription-assistant"/>
@@ -72,12 +72,12 @@
     </groups>
   </test>
 -->
-  
+
   <test name="GUI: Proxy">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="proxy"/>
@@ -86,12 +86,12 @@
       </run>
     </groups>
   </test>
-  
+
   <test name="GUI: Facts">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="facts"/>
@@ -99,12 +99,12 @@
       </run>
     </groups>
   </test>
-  
+
   <test name="GUI: Interop">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="interop"/>
@@ -113,12 +113,12 @@
       </run>
     </groups>
   </test>
-  
+
   <test name="GUI: Firstboot">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="firstboot"/>
@@ -127,12 +127,12 @@
       </run>
     </groups>
   </test>
-  
+
   <test name="GUI: Import">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="import"/>

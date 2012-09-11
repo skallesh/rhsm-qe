@@ -39,29 +39,29 @@
         port      (@config :noauth-proxy-port)]
     (tasks/enableproxy hostname :port port)
     (tasks/verify-conf-proxies hostname port "" "")))
-      
+
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth" "enable_proxy_noauth"]}}
   disable_proxy [_]
   (tasks/disableproxy)
   (tasks/verify-conf-proxies "" "" "" ""))
-      
+
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_auth"]}}
   proxy_auth_connect [_]
   (enable_proxy_auth nil)
-  (let [logoutput (tasks/get-logging @auth-proxyrunner 
+  (let [logoutput (tasks/get-logging @auth-proxyrunner
                                      auth-log
                                      "proxy-auth-connect"
                                      nil
                                      (register))]
     (verify (not  (clojure.string/blank? logoutput)))))
-    
+
 (defn ^{Test {:groups ["proxy"]
               :dependsOnMethods ["enable_proxy_noauth"]}}
   proxy_noauth_connect [_]
   (enable_proxy_noauth nil)
-  (let [logoutput (tasks/get-logging @noauth-proxyrunner 
+  (let [logoutput (tasks/get-logging @noauth-proxyrunner
                                      noauth-log
                                      "proxy-noauth-connect"
                                      nil
@@ -72,13 +72,13 @@
               :dependsOnMethods ["disable_proxy"]}}
   disable_proxy_connect [_]
   (disable_proxy nil)
-  (let [logoutput (tasks/get-logging @auth-proxyrunner 
+  (let [logoutput (tasks/get-logging @auth-proxyrunner
                                      auth-log
                                      "disabled-auth-connect"
                                      nil
                                      (register))]
     (verify (clojure.string/blank? logoutput)))
-  (let [logoutput (tasks/get-logging @noauth-proxyrunner 
+  (let [logoutput (tasks/get-logging @noauth-proxyrunner
                                      noauth-log
                                      "disabled-auth-connect"
                                      nil

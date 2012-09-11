@@ -59,13 +59,13 @@
 
     (let [cliscript (SubscriptionManagerCLITestScript.)]
       (.setupBeforeSuite cliscript))
-    
+
     (do
       (config/init)
       (tasks/connect)
       (use 'gnome.ldtp))
     )     ;<< here for all of it
-  
+
   ;not used
   (require :reload-all '[com.redhat.qe.sm.gui.tests.subscription-assistant-tests :as satest])
 )

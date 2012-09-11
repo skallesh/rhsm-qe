@@ -92,7 +92,7 @@
              :cert cert
              :key key
              :entname entname})))
-  
+
 (defn ^{Test {:groups ["import"]
               :dependsOnMethods ["import_valid_cert"]}}
   import_unregister [_]
@@ -175,7 +175,7 @@
     (.runCommandAndWait @clientcmd
                         (str "dd if=/dev/urandom of=" certname " bs=1M count=2"))
     (import-bad-cert certname :invalid-cert)))
- 
+
 (defn ^{Test {:groups ["import"
                        "blockedByBug-702075"]}}
   import_entitlement [_]

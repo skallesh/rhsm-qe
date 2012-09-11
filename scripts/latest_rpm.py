@@ -51,7 +51,7 @@ def rchop(thestring, ending):
 def sort_by_version(links):
     versions = []
     for item in links: versions.append(str(item['href'].replace('/','')))
-    
+
     demarcations=0
     for item in versions:
         fields = len(item.split("."))
@@ -80,12 +80,12 @@ def sort_by_version(links):
 
         cur_list = new_list
         n += 1
-   
+
     for item in cur_list:
         cur_list[cur_list.index(item)] = str(rchop(item,".0") + '/')
 
     return cur_list
- 
+
 
 def find_latest_rpm_url(baseurl, arch, rpm_name, version=''):
     version_page = urllib2.urlopen(baseurl)
@@ -96,7 +96,7 @@ def find_latest_rpm_url(baseurl, arch, rpm_name, version=''):
     links = get_links_matching_regex(REGEX,version_page)
     links = sort_by_version(links)
     version_append = links[len(links)-1]
-    
+
     epoch_page = urllib2.urlopen(baseurl+version_append)
     links = get_links_matching_regex(EPOCH_REGEX,epoch_page)
     epoch_append = links[len(links)-1]['href']

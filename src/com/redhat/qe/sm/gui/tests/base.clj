@@ -5,7 +5,7 @@
             [clojure.tools.logging :as log])
   (:import [org.testng.annotations BeforeSuite AfterSuite]
            org.testng.SkipException))
-  
+
 (defn- restart-vnc []
   (.runCommandAndWait @config/clientcmd "service vncserver stop")
   ( . Thread (sleep 5000))

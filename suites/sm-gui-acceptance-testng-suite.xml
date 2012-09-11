@@ -9,15 +9,15 @@
        <listener class-name="com.redhat.qe.auto.bugzilla.BugzillaTestNGListener" />
        </listeners>
   -->
-  
-  
+
+
   <!-- GUI TESTS -->
-  
+
   <test name="GUI: Acceptance">
     <packages>
       <package name="com.redhat.qe.sm.gui.tests" />
       <package name="com.redhat.qe.sm.base"></package>
-    </packages>		
+    </packages>
     <groups>
       <run>
         <include name="acceptance"/>
@@ -26,5 +26,5 @@
       </run>
     </groups>
   </test>
-  
+
 </suite>

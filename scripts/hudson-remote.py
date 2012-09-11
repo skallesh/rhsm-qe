@@ -29,19 +29,19 @@ def sanitize(arg):
 
 def schedule_job(url, variants, token):
     """Schedules a beaker job in hudson.
-    
+
     Arguements:
     url -- The url of the hudson job.
     variants -- A list of tests.  Each test is a list in this format:
                 [['arch', 'variant', 'release'],
                  ['arch1', 'variant1', 'release1']]
     token -- The token used to gain remote access to the hudson job.
-    
+
     """
     json_data = urllib.urlopen(url + "/api/json").read()
     data = json.loads(json_data)
     #pretty prints the jason data
-    #print json.dumps(data, sort_keys=True, indent=4) 
+    #print json.dumps(data, sort_keys=True, indent=4)
 
     value_list = []
 
@@ -70,7 +70,7 @@ def schedule_job(url, variants, token):
         pprint(output_dict)
         outputdata = json.dumps(output_dict)
         cmd = 'curl -X POST %s -d token="%s" --data-urlencode json="%s"' % \
-                  (url + "/build", token, sanitize(outputdata))  
+                  (url + "/build", token, sanitize(outputdata))
         status, output = commands.getstatusoutput(cmd)
         print status
         print output

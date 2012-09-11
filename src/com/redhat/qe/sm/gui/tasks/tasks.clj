@@ -102,7 +102,7 @@
   "Retrieves the error string from the RHSM error dialog."
   []
   (.trim (ui getobjectproperty :error-msg "label")))
- 
+
 (defn clear-error-dialog
   "Clears an error dialog by clicking OK."
   []
@@ -113,25 +113,25 @@
   Allows for recovery of the error message.
   @wait: specify the time to wait for the error dialog."
   ([wait]
-     (if (= 1 (ui waittillwindowexist :error-dialog wait)) 
+     (if (= 1 (ui waittillwindowexist :error-dialog wait))
        (let [message (get-error-msg)
              type (matching-error message)]
          (clear-error-dialog)
-         (throw+ {:type type 
+         (throw+ {:type type
                   :msg message
                   :log-warning (fn []
                                  (log/warn
                                   (format "Got error '%s', message was: '%s'"
                                           (name type) message)))}))))
   ([] (checkforerror 3)))
-               
+
 (defn set-conf-file-value
   "Edits /etc/rhsm/rhsm.conf to set values within it.
   field: the field to change.
   value: the value to set the field to."
   [field value]
   (.updateConfFileParameter @cli-tasks (.rhsmConfFile @cli-tasks) field value))
-  
+
 (defn conf-file-value
   "Grabs the value of a field in /etc/rhsm/rhsm.conf."
   [k]
@@ -265,11 +265,11 @@
   (ui click :firstboot-forward)
   (checkforerror)
   (if (ui showing? :firstboot-window "Organization Selection")
-    (do 
+    (do
       (if org (ui selectrow :firstboot-owner-table org))
       (ui click :firstboot-forward)))
   (checkforerror))
-  
+
 
 (defn wait-for-progress-bar
   "Waits for a progress bar to finish."
@@ -306,7 +306,7 @@
 (comment
   (defn search
     "Performs a subscription search within subscription-manager-gui."
-    ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on] 
+    ([match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
        (ui selecttab :all-available-subscriptions)
        (ui click :more-search-options)
        (let [setchecked (fn [needs-check?] (if needs-check? check uncheck))]
@@ -320,7 +320,7 @@
          (ui settextvalue :contains-the-text contain-text)
          (ui settextvalue :contains-the-text ""))
        (ui click :search)
-       (wait-for-progress-bar)) 
+       (wait-for-progress-bar))
     ([{:keys [match-system?, do-not-overlap?, match-installed?, contain-text, active-on]
        :or {match-system? true
             do-not-overlap? true
@@ -365,7 +365,7 @@
                    :msg (str "Invalid item:" item)}))))))
 
 (defn open-contract-selection
-  "Opens the contract selection dialog for a given subscription." 
+  "Opens the contract selection dialog for a given subscription."
   [s]
   (ui selecttab :all-available-subscriptions)
   (skip-dropdown :all-subscriptions-view s)
@@ -378,7 +378,7 @@
 
 (defn subscribe
   "Subscribes to a given subscription, s."
-  [s] 
+  [s]
   (ui selecttab :all-available-subscriptions)
   (skip-dropdown :all-subscriptions-view s)
   (ui click :subscribe)
@@ -389,7 +389,7 @@
         (ui click :subscribe-contract-selection)))
   (checkforerror)
   (wait-for-progress-bar))
-  
+
 
 (defn unsubscribe
   "Unsubscribes from a given subscription, s"
@@ -439,12 +439,12 @@
 
 (comment
   ;these are no longer used
- 
+
   (defn enableproxy-auth
     "Configures a proxy that uses authentication through subscription-manager-gui."
     ([proxy port user pass firstboot]
        (assert (is-boolean? firstboot))
-       (if firstboot 
+       (if firstboot
          (do (ui click :firstboot-proxy-config)
              (ui waittillwindowexist :firstboot-proxy-dialog 60)
              (ui check :firstboot-proxy-checkbox)
@@ -500,7 +500,7 @@
              (ui click :close-proxy)
              (checkforerror))))
     ([proxy port] (enableproxy-noauth proxy port false))))
-  
+
 (defn disableproxy
   "Disables any proxy settings through subscription-manager-gui."
   ([firstboot]
@@ -540,7 +540,7 @@
   "Returns true if the GUI reports that all products have a valid subscription."
   []
   (or (= 1 (ui guiexist :main-window "Product entitlement certificates valid*"))
-      (= 1 (ui guiexist :main-window "No product certificates installed*"))))  
+      (= 1 (ui guiexist :main-window "No product certificates installed*"))))
 
 (defn first-date-of-noncomply
   "Pulls the first date of noncompliance from the subscription assistant dialog."
@@ -548,14 +548,14 @@
   (if (= 1 (ui guiexist :subscription-assistant-dialog))
     (let [datelabel (ui getobjectproperty :subscription-assistant-dialog "*first date*" "label")]
       (.substring datelabel 0 10))))
-  
+
 (defn assistant-subscribe
   "Subscribes to a given subscription from within the subscription assistant."
   [s]
   (skip-dropdown :assistant-subscription-view s)
   (ui click :assistant-subscribe)
   (checkforerror)
-  (wait-for-progress-bar))  
+  (wait-for-progress-bar))
 
 (defn get-table-elements
   "Returns a vector containing all elements in a given table and column."
@@ -573,7 +573,7 @@
                          (ui getcellvalue view rowid 0))
                        rownums)]
         items))))
-  
+
 (defn do-to-all-rows-in
   "Perferms a given function on all elements in a given table and column."
   [view col f & {:keys [skip-dropdowns?]
@@ -591,14 +591,14 @@
         config-file-user      (conf-file-value "proxy_user")
         config-file-password  (conf-file-value "proxy_password")]
     (verify (= config-file-hostname hostname))
-    (verify (= config-file-port port)) 
+    (verify (= config-file-port port))
     (verify (= config-file-user user))
     (verify (= config-file-password password))))
 
 (comment
   ;old and busted
   (defn get-logging
-    
+
     [runner logfile name grep f]
     (let [marker (str (System/currentTimeMillis) " " name)]
       (RemoteFileTasks/markFile runner logfile marker)
@@ -658,7 +658,7 @@
   (ui waittillguiexist :facts-view)
   (sleep 5000)
   (let [groups (get-table-elements :facts-view 0)
-        getcell (fn [row col] 
+        getcell (fn [row col]
                    (ui getcellvalue :facts-view row col))
         is-data? (fn [rownum]
                    (try (let [value (getcell rownum 1)
@@ -674,7 +674,7 @@
                                    (ui doubleclickrow :facts-view item)
                                    (sleep 500)))
         rownums (filter is-data? (range (ui getrowcount :facts-view)))
-        facts (into {} (map (fn [rowid] 
+        facts (into {} (map (fn [rowid]
                               [(getcell rowid 0) (getcell rowid 1)])
                                rownums))]
     (ui click :close-facts)
@@ -687,7 +687,7 @@
     @filename   : file name of the facts override file
     @path       : path of the filename
     @overwrite? : boolean to overwrite the file
-    @update?    : boolean to update facts with candlepin"  
+    @update?    : boolean to update facts with candlepin"
   [facts & {:keys [filename path overwrite? update?]
             :or {filename "override.facts"
                  path "/etc/rhsm/facts/"

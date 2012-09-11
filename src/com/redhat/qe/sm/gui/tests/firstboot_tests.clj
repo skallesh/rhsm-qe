@@ -13,7 +13,7 @@
   (tasks/ui click :firstboot-forward)
   (tasks/ui click :license-yes)
   (tasks/ui click :firstboot-forward)
-  ;; RHEL5 has a different firstboot order than RHEL6 
+  ;; RHEL5 has a different firstboot order than RHEL6
   (if (tasks/fbshowing? :firstboot-window "Firewall")
     (do
       (tasks/ui click :firstboot-forward)
@@ -80,7 +80,7 @@
     (tasks/checkforerror)
     (tasks/firstboot-register (@config :username) (@config :password))
     (tasks/verify-conf-proxies hostname port "" "")))
-      
+
 (defn ^{Test {:groups ["firstboot"]}}
   firstboot_disable_proxy [_]
   (reset_firstboot)
@@ -105,7 +105,7 @@
                      type)))]
     (let [thrown-error (apply test-fn [user pass recovery])
           expected-error recovery]
-     (verify (= thrown-error expected-error)) 
+     (verify (= thrown-error expected-error))
      ;; https://bugzilla.redhat.com/show_bug.cgi?id=703491
      (verify  (or (tasks/fbshowing? :firstboot-user)
                   (= 1 (tasks/ui guiexist :firstboot-window "Entitlement Platform Registration")))))))

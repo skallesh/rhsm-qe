@@ -5,7 +5,7 @@
 	   [gnome.ldtp Element Tab Window TabGroup]))
 
 (defn same-name "takes a collection of keywords like :registration-settings
-and returns a mapping like :registration-settings -> 'Registration Settings'" 
+and returns a mapping like :registration-settings -> 'Registration Settings'"
   ([coll]
      (same-name identity coll))
   ([word-fn coll]
@@ -29,9 +29,9 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 (def windows (define-windows
 	       {:main-window "Subscription Manager"
                 :register-dialog "register_dialog"
-                :error-dialog "Error" 
-                :question-dialog "Question"  
-                :facts-dialog "facts_dialog" 
+                :error-dialog "Error"
+                :question-dialog "Question"
+                :facts-dialog "facts_dialog"
                 :progress-dialog "Progress Dialog"
                 :contract-selection-dialog "Contract Selection"
                 :proxy-config-dialog "Proxy Configuration"
@@ -192,16 +192,16 @@ and returns a mapping like :registration-settings -> 'Registration Settings'"
 
 
 (def tabs (define-tabs (elements :main-tabgroup)
-	    (same-name capitalize [:all-available-subscriptions 
+	    (same-name capitalize [:all-available-subscriptions
 				   :my-subscriptions
 				   :my-installed-products])))
-		  
+
 
 (def all-elements (merge windows elements tabs))
 
 
 ;; let clojure keywords represent locators.  When you call locator on
-;; a keyword, it looks up that keyword in the all-elements map. 
+;; a keyword, it looks up that keyword in the all-elements map.
 
 (extend-protocol ldtp/LDTPLocatable
   clojure.lang.Keyword

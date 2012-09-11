@@ -6,7 +6,7 @@
   (:refer-clojure :exclude (get)))
 
 (defmacro with-logs [body & forms]
-  `(do (if-let [b# ~body] 
+  `(do (if-let [b# ~body]
          (log/info (str "About to make REST call with body: \n" (with-out-str (pprint/pprint b#)))))
        (let [r# (do ~@forms)]
          (log/debug (str "Result of REST call: \n" (with-out-str (pprint/pprint r#))))

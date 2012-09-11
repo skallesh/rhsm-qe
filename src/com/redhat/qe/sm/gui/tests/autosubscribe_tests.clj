@@ -30,7 +30,7 @@
 (def sla-list (atom nil))
 
 (defn- dirsetup? [dir]
-  (and 
+  (and
    (= "exists" (trim
                 (.getStdout
                  (.runCommandAndWait @clientcmd
@@ -47,7 +47,7 @@
   ;; https://bugzilla.redhat.com/show_bug.cgi?id=723051
   ;; this bug crashes everything, so fail the BeforeClass if this is open
   (verify (not (.isBugOpen (BzChecker/getInstance) "723051")))
-  
+
   (tasks/kill-app)
   (reset! complytests (ComplianceTests. ))
   (.setupProductCertDirsBeforeClass @complytests)
@@ -123,7 +123,7 @@
                dircount))
      (if (= 0 beforesubs)
       (verify (tasks/compliance?))
-      (do 
+      (do
         (tasks/register user
                         pass
                         :skip-autosubscribe false
@@ -235,7 +235,7 @@
 
 
 ;; TODO: write a separte test for https://bugzilla.redhat.com/show_bug.cgi?id=743704
-;;   and restore the override.facts 
+;;   and restore the override.facts
 
 
 ;; cruft I want to keep:
@@ -244,7 +244,7 @@
   boxarch (trim (.getStdout
                  (.runCommandAndWait
                   @clientcmd
-                  (str 
+                  (str
                    "subscription-manager facts --list | "
                    "grep \"lscpu.architecture\" | "
                    "cut -f 2 -d \":\"")))))
@@ -266,13 +266,13 @@
                       (ctasks/get-owner-display-name user pass key))]
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
-        (do 
+        (do
           (tasks/register user
                           pass
                           :skip-autosubscribe false
                           :owner ownername)
           (verify (<= (tasks/warn-count) beforesubs))))))
-  
+
   (defn ^{Test {:groups ["autosubscribe"
                          "configureProductCertDirForSomeProductsSubscribable"]
                 :dependsOnMethods ["register_autosubscribe"]}}
@@ -293,7 +293,7 @@
                  dircount))
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
-        (do 
+        (do
           (tasks/register user
                           pass
                           :skip-autosubscribe false
@@ -320,7 +320,7 @@
                         (.runCommandAndWait @clientcmd (str "ls " alldir " | wc -l"))))))
       (if (= 0 beforesubs)
         (verify (tasks/compliance?))
-        (do 
+        (do
           (tasks/register user
                           pass
                           :skip-autosubscribe false

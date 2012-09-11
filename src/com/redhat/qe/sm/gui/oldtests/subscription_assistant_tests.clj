@@ -26,7 +26,7 @@
   @productlist)
 
 
-(defn- check-product 
+(defn- check-product
   ([product]
     (let [row (tasks/ui gettablerowindex :subscription-product-view product)]
         (tasks/ui checkrow :subscription-product-view row 0)))
@@ -34,7 +34,7 @@
     (let [row (tasks/ui gettablerowindex :subscription-product-view product)]
       (if check?
         (tasks/ui checkrow :subscription-product-view row 0)
-        (tasks/ui uncheckrow :subscription-product-view row 0)))))        
+        (tasks/ui uncheckrow :subscription-product-view row 0)))))
 
 
 (defn check-all-products
@@ -42,13 +42,13 @@
      (tasks/ui check :check-all)
      (tasks/sleep 3000))
   ([manual?]
-     (if manual? 
+     (if manual?
        (tasks/do-to-all-rows-in :subscription-product-view 1
                                 (fn [product] (check-product product)))
        (check-all-products))))
 
 
-(comment 
+(comment
   (defn- register []
     (with-handlers [(handle :already-registered [e]
                             (recover e :unregister-first))]
@@ -73,13 +73,13 @@
 (defn ^{AfterClass {:groups ["setup"]}}
   exit_subscription_assistant [_]
   (if (= 1 (tasks/ui guiexist :subscription-assistant-dialog))
-    (tasks/ui closewindow :subscription-assistant-dialog)))    
+    (tasks/ui closewindow :subscription-assistant-dialog)))
 
 
 (defn ^{Test {:groups ["subscription-assistant"]}}
   register_warning [_]
   (with-handlers [(ignore :not-registered)]
-    (tasks/unregister)) 
+    (tasks/unregister))
   (if-not (tasks/compliance?)
     (do (tasks/ui click :update-certificates)
         (tasks/ui waittillwindowexist :information-dialog 60)
@@ -115,7 +115,7 @@
   (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 1 :skip-dropdowns? true)
         nocomply-count (atom (tasks/warn-count))]
     (doseq [item subscription-list]
-      (with-handlers  [(ignore :item-not-available)] 
+      (with-handlers  [(ignore :item-not-available)]
         (tasks/assistant-subscribe item)
         (let [warn-count (tasks/warn-count)]
           (if-not (= 0 @nocomply-count)
@@ -198,7 +198,7 @@
   (verify (= 0 (tasks/ui getrowcount :assistant-subscription-view))))
 
 
-(defn ^{Test {:groups ["subscription-assistant" 
+(defn ^{Test {:groups ["subscription-assistant"
                        "configureProductCertDirForNoProductsInstalled"]}}
   no_products_installed [_]
   (tasks/restart-app)
@@ -221,7 +221,7 @@
   (build-subscription-map)
   (let [prods (into [] (map vector (tasks/get-table-elements
                                    :subscription-product-view
-                                   1)))] 
+                                   1)))]
     (if-not debug
       (to-array-2d prods)
       prods)))
@@ -233,7 +233,7 @@
                 :dependsOnMethods ["launch_assistant"]
                 :dataProvider "multi-entitle"}}
     check_quantities [_ subscription]
-    
+
     (let [subscription-list (tasks/get-table-elements :assistant-subscription-view 1)]
       (doseq [item subscription-list]
         )))

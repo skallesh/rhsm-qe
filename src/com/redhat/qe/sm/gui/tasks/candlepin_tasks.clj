@@ -16,7 +16,7 @@
 (defn get-consumer-id
   "Returns the consumer id if registered."
   []
-  (let [identity 
+  (let [identity
         (trim
          (.getStdout
           (.runCommandAndWait

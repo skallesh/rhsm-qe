@@ -16,7 +16,7 @@ from fnmatch import translate
 logger = logging.getLogger("xmlrpcserver.ldtp")
 logger.setLevel(logging.INFO)
 
-class LoggingSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler): 
+class LoggingSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
   """Overides the default SimpleXMLRPCRequestHander to support logging.  Logs
   client IP and the XML request and response.
   """
@@ -30,12 +30,12 @@ class LoggingSimpleXMLRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHa
       data = self.rfile.read(int(self.headers["content-length"]))
       # Log client request
       logger.info('Client request: \n%s\n' % data)
-        
+
       response = self.server._marshaled_dispatch(data, getattr(self, '_dispatch', None))
       # Log server response
       logger.info('Server response: \n%s\n' % response)
-        
-    except: 
+
+    except:
       # This should only happen if the module is buggy
       # internal error, report as HTTP server error
       self.send_response(500)
@@ -180,11 +180,11 @@ class AllMethods:
     else:
       return False
 
-  def _closewindow(self,window_name): 
+  def _closewindow(self,window_name):
     screen = wnck.screen_get_default()
     while gtk.events_pending():
       gtk.main_iteration()
-      
+
     windows = screen.get_windows()
     success = 0
     for w in windows:
@@ -193,7 +193,7 @@ class AllMethods:
         w.close(int(time.time()))
         success = 1
         break
-        
+
     gobject.idle_add(gtk.main_quit)
     gtk.main()
     return success
@@ -225,7 +225,7 @@ class AllMethods:
       elif method == "closewindow":
         return self._closewindow(paramslist[0])
       elif method == "maximizewindow":
-        return self._maximizewindow(paramslist[0])  
+        return self._maximizewindow(paramslist[0])
       elif method == "getobjectproperty":
         paramslist[1] = self._getobjectproperty(paramslist[0],paramslist[1])
         params = tuple(paramslist)
@@ -267,9 +267,9 @@ def start_server(port,logfile):
     formatter = logging.Formatter("%(asctime)s  %(levelname)s  %(message)s")
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
-    server = SimpleXMLRPCServer.SimpleXMLRPCServer(("",int(port)), 
+    server = SimpleXMLRPCServer.SimpleXMLRPCServer(("",int(port)),
                                                     LoggingSimpleXMLRPCRequestHandler)
-  else:    
+  else:
     server = SimpleXMLRPCServer.SimpleXMLRPCServer(('',int(port)),
                                                     logRequests=True)
 
@@ -294,9 +294,9 @@ def main():
 
   port = 4118 #default port
   logfile = None
-    
+
   for o, a in opts:
-    if o in ("-p", "--port"): 
+    if o in ("-p", "--port"):
       port = a
     elif o in ("-l", "--logfile"):
       logfile = a
@@ -305,7 +305,7 @@ def main():
         sys.exit()
     else:
         assert False, "unhandled option"
-            
+
   start_server(port,logfile)
 
 if __name__ == "__main__":

@@ -8,7 +8,7 @@
   (:import [org.testng.annotations BeforeClass AfterClass BeforeGroups Test]))
 
 (def systemid "/etc/sysconfig/rhn/systemid")
-  
+
 (defn systemid-exists? []
   (= 1 (->> (.getStdout (.runCommandAndWait @clientcmd (str "test -e " systemid " && echo 1 || echo 0"))) str .trim Integer/parseInt))
 )
@@ -17,7 +17,7 @@
   (.runCommandAndWait @clientcmd "killall -9 subscription-manager-gui")
   (tasks/ui waittillwindownotexist :main-window 30)
 )
-  
+
 (defn ^{BeforeClass {:groups ["setup"]}}
   setup [_]
   (if (tasks/ui exists? :main-window "*")

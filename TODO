@@ -2,7 +2,7 @@ GUI DON:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=667991
   https://bugzilla.redhat.com/show_bug.cgi?id=676371  < done but make this data driven
-  https://bugzilla.redhat.com/show_bug.cgi?id=683550 
+  https://bugzilla.redhat.com/show_bug.cgi?id=683550
   https://bugzilla.redhat.com/show_bug.cgi?id=691784
   https://bugzilla.redhat.com/show_bug.cgi?id=691788
   https://bugzilla.redhat.com/show_bug.cgi?id=712978
@@ -12,7 +12,7 @@ GUI DON:
   https://bugzilla.redhat.com/show_bug.cgi?id=712980
   https://bugzilla.redhat.com/show_bug.cgi?id=656896
   https://bugzilla.redhat.com/show_bug.cgi?id=706384
-  https://bugzilla.redhat.com/show_bug.cgi?id=703920 <  check_contract_selection_dates 
+  https://bugzilla.redhat.com/show_bug.cgi?id=703920 <  check_contract_selection_dates
   https://bugzilla.redhat.com/show_bug.cgi?id=755861
   https://bugzilla.redhat.com/show_bug.cgi?id=723248
   https://bugzilla.redhat.com/show_bug.cgi?id=747014 < help button
@@ -20,7 +20,7 @@ GUI DON:
   https://bugzilla.redhat.com/show_bug.cgi?id=766778
 
   https://tcms.engineering.redhat.com/case/70205/?from_plan=2110
-  
+
 GUI LIMBO:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=676377 < rhsm icon
@@ -30,7 +30,7 @@ GUI LIMBO:
   https://bugzilla.redhat.com/show_bug.cgi?id=696020 < only repo on i686 box
   https://bugzilla.redhat.com/show_bug.cgi?id=704069 < bug in different locale
   https://bugzilla.redhat.com/show_bug.cgi?id=708095 < bug in different locale
-  https://bugzilla.redhat.com/show_bug.cgi?id=772921 < rhsm icon 
+  https://bugzilla.redhat.com/show_bug.cgi?id=772921 < rhsm icon
   https://bugzilla.redhat.com/show_bug.cgi?id=727973 < subscription assistant
   https://bugzilla.redhat.com/show_bug.cgi?id=745995 < subscription assistant
 
@@ -42,7 +42,7 @@ GUI TODO:
 
   https://bugzilla.redhat.com/show_bug.cgi?id=818040 < Stage only, put in acceptance tests
   https://bugzilla.redhat.com/show_bug.cgi?id=801434 < partially done
- 
+
   https://bugzilla.redhat.com/show_bug.cgi?id=827173
   https://bugzilla.redhat.com/show_bug.cgi?id=825737
   https://bugzilla.redhat.com/show_bug.cgi?id=817938
@@ -63,7 +63,7 @@ GUI TODO:
   https://bugzilla.redhat.com/show_bug.cgi?id=753057
   https://bugzilla.redhat.com/show_bug.cgi?id=818238
   https://bugzilla.redhat.com/show_bug.cgi?id=810998
-  https://bugzilla.redhat.com/show_bug.cgi?id=812903 
+  https://bugzilla.redhat.com/show_bug.cgi?id=812903
 
 KATELLO:
   https://bugzilla.redhat.com/show_bug.cgi?id=820294
@@ -92,9 +92,9 @@ KATELLO:
   https://tcms.engineering.redhat.com/case/70304/?from_plan=2110
   https://tcms.engineering.redhat.com/case/44226/?from_plan=2110
   https://tcms.engineering.redhat.com/case/90737/?from_plan=2110
-  
+
   Add (checkforerror) in subscribe during progress bar
-  
+
   verify content of product list in "my installed software"
 
 CLI TODO
@@ -144,10 +144,10 @@ CLI TCMS Tests identified as automatible
   https://tcms.engineering.redhat.com/case/61716/?from_plan=2476
   https://tcms.engineering.redhat.com/case/46712/?from_plan=2476
   https://tcms.engineering.redhat.com/case/50211/?from_plan=2476
-  
-    
+
+
 MANUAL TODO:
   https://tcms.engineering.redhat.com/case/46711/?from_plan=2477
-  
+
 
 

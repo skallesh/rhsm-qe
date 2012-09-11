@@ -21,14 +21,14 @@
               :dataProvider "userowners"}}
   simple_register [_ user pass owner]
   (try+
-   (if owner 
+   (if owner
      (tasks/register user pass :owner owner)
      (tasks/register user pass))
    (catch [:type :already-registered]
        {:keys [unregister-first]} (unregister-first)))
   (verify (not (tasks/ui showing? :register-system)))
   (if owner
-    (do 
+    (do
       (tasks/ui click :view-system-facts)
       (tasks/sleep 5000)
       (let [result (tasks/ui objectexist :facts-dialog owner)]
@@ -61,7 +61,7 @@
   (to-array-2d
    (vec
     (conj
-     (into 
+     (into
       (if (and (@config :username1) (@config :password1))
         (get-userlists (@config :username1) (@config :password1)))
       (if (and (@config :username) (@config :password))
@@ -84,7 +84,7 @@
    ["" "password" :no-username]
    ["sdf" "" :no-password]])
 
-(comment 
+(comment
 (data-driven simple_register {Test {:groups ["registration"]}}
   [[(@config :username) (@config :password) "Admin Owner"]
    [(@config :username) (@config :password) "Snow White"]
