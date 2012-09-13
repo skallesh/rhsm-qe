@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -34,7 +36,9 @@ public class ContentNamespace extends AbstractCommandLineData {
 		this.hash = hash;
 		this.type = type;
 	}
-	
+	public ContentNamespace(Map<String, String> certData){
+		super(certData);
+	}
 	
 	@Override
 	public String toString() {
@@ -57,55 +61,12 @@ public class ContentNamespace extends AbstractCommandLineData {
 		return string.trim();
 	}
 
-//  This override should not be needed anymore since I fixed equals in the superclass
-//	@Override
-//	public boolean equals(Object obj){
-//		ContentNamespace that = (ContentNamespace)obj;
-//		
-//		if (that.type!=null && !that.type.equals(this.type)) return false;
-//		if (this.type!=null && !this.type.equals(that.type)) return false;
-//		
-//		if (that.hash!=null && !that.hash.equals(this.hash)) return false;
-//		if (this.hash!=null && !this.hash.equals(that.hash)) return false;
-//		
-//		if (that.label!=null && !that.label.equals(this.label)) return false;
-//		if (this.label!=null && !this.label.equals(that.label)) return false;
-//		
-//		if (that.name!=null && !that.name.equals(this.name)) return false;
-//		if (this.name!=null && !this.name.equals(that.name)) return false;
-//		
-//		if (that.physicalEntitlement!=null && !that.physicalEntitlement.equals(this.physicalEntitlement)) return false;
-//		if (this.physicalEntitlement!=null && !this.physicalEntitlement.equals(that.physicalEntitlement)) return false;
-//		
-//		if (that.flexGuestEntitlement!=null && !that.flexGuestEntitlement.equals(this.flexGuestEntitlement)) return false;
-//		if (this.flexGuestEntitlement!=null && !this.flexGuestEntitlement.equals(that.flexGuestEntitlement)) return false;
-//		
-//		if (that.vendorId!=null && !that.vendorId.equals(this.vendorId)) return false;
-//		if (this.vendorId!=null && !this.vendorId.equals(that.vendorId)) return false;
-//		
-//		if (that.downloadUrl!=null && !that.downloadUrl.equals(this.downloadUrl)) return false;
-//		if (this.downloadUrl!=null && !this.downloadUrl.equals(that.downloadUrl)) return false;
-//		
-//		if (that.gpgKeyUrl!=null && !that.gpgKeyUrl.equals(this.gpgKeyUrl)) return false;
-//		if (this.gpgKeyUrl!=null && !this.gpgKeyUrl.equals(that.gpgKeyUrl)) return false;
-//		
-//		if (that.enabled!=null && !that.enabled.equals(this.enabled)) return false;
-//		if (this.enabled!=null && !this.enabled.equals(that.enabled)) return false;
-//		
-//		if (that.metadataExpire!=null && !that.metadataExpire.equals(this.metadataExpire)) return false;
-//		if (this.metadataExpire!=null && !this.metadataExpire.equals(that.metadataExpire)) return false;
-//		
-//		if (that.requiredTags!=null && !that.requiredTags.equals(this.requiredTags)) return false;
-//		if (this.requiredTags!=null && !this.requiredTags.equals(that.requiredTags)) return false;
-//		
-//		return true;
-//	}
-	
 	/**
 	 * @param rawCertificate - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/1129238407379723.pem
 	 * @return
 	 */
-	static public List<ContentNamespace> parse(String rawCertificate) {
+	@Deprecated
+	static public List<ContentNamespace> parseStdoutFromOpensslX509(String rawCertificate) {
 		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
 		Certificate:
 		    Data:
@@ -316,6 +277,225 @@ public class ContentNamespace extends AbstractCommandLineData {
 			if (type==2) sType = "file";		
 			for(String key : productMap.keySet())
 				contentNamespaces.add(new ContentNamespace(sType, key, productMap.get(key)));
+		}
+		return contentNamespaces;
+	}
+	
+	
+	/**
+	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/entitlement/7586477374370607864.pem
+	 * @return
+	 */
+	static public List<ContentNamespace> parse(String rawCertificate) {
+		
+		// https://docspace.corp.redhat.com/docs/DOC-30244
+		//  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (Supplementary))
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1 (Yum repo type))
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.1 (Name) : Red Hat Enterprise Linux (Supplementary)
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.2 (Label) : rhel-server-6-supplementary
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.3 (Physical Entitlements): 1
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.4 (Flex Guest Entitlements): 0
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.6 (Download URL): content/rhel-server-6-supplementary/$releasever/$basearch
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.7 (GPG Key URL): file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.8 (Enabled): 1
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.9 (Metadata Expire Seconds): 604800
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.1.10 (Required Tags): TAG1,TAG2,TAG3
+		
+		//  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (core server) - ISOs)
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2 (File repo type))
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.1 (Name) : Red Hat Enterprise Linux (core server)
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.2 (Label) : rhel-server
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.5 (Vendor ID): %Red_Hat_Id% or %Red_Hat_Label%
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.6 (Download URL): content/rhel-server-isos/$releasever/$basearch
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.7 (GPG Key URL): gpg/rhel-server-isos/$releasever/$basearch
+		//  1.3.6.1.4.1.2312.9.2.<content_hash>.2.8 (Enabled):  0
+		
+		//	[root@rhsm-accept-rhel5 ~]# rct cat-cert /etc/pki/entitlement/5432619326294037185.pem 
+		//	 
+		//	+-------------------------------------------+
+		//		Entitlement Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /etc/pki/entitlement/5432619326294037185.pem
+		//		Version: 1.0
+		//		Serial: 5432619326294037185
+		//		Start Date: 2011-12-31 05:00:00+00:00
+		//		End Date: 2012-12-31 04:59:59+00:00
+		//
+		//	Subject:
+		//		CN: 8a99f98439b64b3c0139b6bf9b1e07c3
+		//
+		//	Product:
+		//		ID: 180
+		//		Name: Red Hat Beta
+		//		Version: 
+		//		Arch: ia64,ppc,ppc64,s390,s390x,x86,x86_64
+		//		Tags: 
+		//
+		//	Product:
+		//		ID: 69
+		//		Name: Red Hat Enterprise Linux Server
+		//		Version: 
+		//		Arch: x86,ia64,x86_64
+		//		Tags: 
+		//
+		//	Order:
+		//		Name: Red Hat Enterprise Linux Server, Premium (8 sockets) (Up to 4 guests)
+		//		Number: 2573419
+		//		SKU: RH0103708
+		//		Contract: 3124124
+		//		Account: 1615583
+		//		Service Level: Premium
+		//		Service Type: L1-L3
+		//		Quantity: 100
+		//		Quantity Used: 1
+		//		Socket Limit: 8
+		//		Virt Limit: 
+		//		Virt Only: False
+		//		Subscription: 
+		//		Stacking ID: 
+		//		Warning Period: 0
+		//		Provides Management: 0
+		//
+		//	Content:
+		//		Name: Red Hat Enterprise Linux 5 Server Beta (Debug RPMs)
+		//		Label: rhel-5-server-beta-debug-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/beta/rhel/server/5/$releasever/$basearch/debug
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//		Enabled: False
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		//
+		//	Content:
+		//		Name: Red Hat Enterprise Linux 5 Server Beta (RPMs)
+		//		Label: rhel-5-server-beta-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/beta/rhel/server/5/$releasever/$basearch/os
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//		Enabled: False
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		//
+		//	Content:
+		//		Name: Red Hat Enterprise Linux 5 Server Beta (Source RPMs)
+		//		Label: rhel-5-server-beta-source-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/beta/rhel/server/5/$releasever/$basearch/source/SRPMS
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//		Enabled: False
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		//
+		//	Content:
+		//		Name: Red Hat CloudForms Tools for RHEL 5 Beta (RPMs)
+		//		Label: rhel-5-server-cf-tools-1-beta-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/beta/rhel/server/5/$releasever/$basearch/cf-tools/1/os
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta
+		//		Enabled: False
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		//
+		//	Content:
+		//		Name: Red Hat CloudForms Tools for RHEL 5 Beta (Source RPMs)
+		//		Label: rhel-5-server-cf-tools-1-beta-source-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/beta/rhel/server/5/$releasever/$basearch/cf-tools/1/source/SRPMS
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release,file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-beta
+		//		Enabled: False
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		//
+		//	Content:
+		//		Name: Red Hat CloudForms Tools for RHEL 5 (RPMs)
+		//		Label: rhel-5-server-cf-tools-1-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/dist/rhel/server/5/$releasever/$basearch/cf-tools/1/os
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//		Enabled: True
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		//
+		//	Content:
+		//		Name: Red Hat CloudForms Tools for RHEL 5 (Source RPMs)
+		//		Label: rhel-5-server-cf-tools-1-source-rpms
+		//		Vendor: Red Hat
+		//		URL: /content/dist/rhel/server/5/$releasever/$basearch/cf-tools/1/source/SRPMS
+		//		GPG: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+		//		Enabled: False
+		//		Expires: 86400
+		//		Required Tags: rhel-5-server
+		
+		
+		/* THIS IMPLEMENTATION WORKS, BUT I PREFER A DIFFERENT ONE THAT MATCHES THE CONTENT GROUPS AND THEN CREATES ONE CONTENT NAMESPACE PER GROUP
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("name",					"Content:(?:(?:\\n.+)+)Name: (.+)");
+		regexes.put("label",				"Content:(?:(?:\\n.+)+)Label: (.+)");
+		// TODO regexes.put("physicalEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		// TODO regexes.put("flexGuestEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("vendorId",				"Content:(?:(?:\\n.+)+)Vendor: (.+)");
+		regexes.put("downloadUrl",			"Content:(?:(?:\\n.+)+)URL: (.+)");
+		regexes.put("gpgKeyUrl",			"Content:(?:(?:\\n.+)+)GPG: (.+)");
+		regexes.put("enabled",				"Content:(?:(?:\\n.+)+)Enabled: (.+)");
+		regexes.put("metadataExpire",		"Content:(?:(?:\\n.+)+)Expires: (.+)");
+		regexes.put("requiredTags",			"Content:(?:(?:\\n.+)+)Required Tags: (.+)");
+		// TODO regexes.put("type",			"Content:(?:(?:\\n.+)+)Repo Type: (.+)");	// Bug 856349 - rct cat-cert tool should report Content for "file" repo types as well as "yum" repos types
+		
+		List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+		for(String field : regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+			addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+		}
+		
+		List<ContentNamespace> contentNamespaces = new ArrayList<ContentNamespace>();
+		for (Map<String, String> certData : certDataList) {
+			contentNamespaces.add(new ContentNamespace(certData));
+		}
+		return contentNamespaces;
+		*/
+		
+		
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("name",					"^\\s+Name: (.+)");
+		regexes.put("label",				"^\\s+Label: (.+)");
+		// TODO regexes.put("physicalEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.3:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		// TODO regexes.put("flexGuestEntitlement",	"1\\.3\\.6\\.1\\.4\\.1\\.2312\\.9\\.2\\.(\\d+)\\."+type+"\\.4:[\\s\\cM]*\\.(?:.|\\s)(.*)");
+		regexes.put("vendorId",				"^\\s+Vendor: (.+)");
+		regexes.put("downloadUrl",			"^\\s+URL: (.+)");
+		regexes.put("gpgKeyUrl",			"^\\s+GPG: (.+)");
+		regexes.put("enabled",				"^\\s+Enabled: (.+)");
+		regexes.put("metadataExpire",		"^\\s+Expires: (.+)");
+		regexes.put("requiredTags",			"^\\s+Required Tags: (.+)");
+		regexes.put("type",					"^\\s+Type: (.+)");	// Bug 856349 - rct cat-cert tool should report Content for "file" repo types as well as "yum" repos types
+
+		
+		// find all the raw "Content:" groupings and then create one ContentNamespace per raw "Content:" grouping
+		String rawContentRegex = "Content:((\\n.+)+)";
+		List<ContentNamespace> contentNamespaces = new ArrayList<ContentNamespace>();
+		Matcher m = Pattern.compile(rawContentRegex, Pattern.MULTILINE).matcher(rawCertificate);
+		while (m.find()) {
+			String rawContent = m.group(1);
+			
+			// find a list of all the certData matching the content fields in the map of regexes
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawContent, certDataList, field);
+			}
+			
+			// assert that there is only one group of certData found in the list for this content grouping
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw content group.  Expected to parse only one group of content data from:\n"+m.group(0));
+			Map<String,String> certData = certDataList.get(0);
+			
+			// create a new ContentNamespace
+			contentNamespaces.add(new ContentNamespace(certData));
 		}
 		return contentNamespaces;
 	}

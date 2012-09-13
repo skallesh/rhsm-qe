@@ -19,7 +19,8 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  *
  */
 public class EntitlementCert extends AbstractCommandLineData {
-	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";			// Aug 23 08:42:00 2010 GMT   validityNotBefore
+//	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";		// Aug 23 08:42:00 2010 GMT   validityNotBefore
+//	protected static String simpleDateFormat = "yyyy-MM-dd HH:mm:ssZZZ";	// 2012-09-11 00:00:00+00:00 validityNotBefore from rct cat-cert
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
@@ -37,14 +38,17 @@ public class EntitlementCert extends AbstractCommandLineData {
 
 
 	public EntitlementCert(String rawCertificate, Map<String, String> certData){
-		super(certData);
-		this.serialNumber = new BigInteger(serialString.replaceAll(":", ""),16);	// strip out the colons and convert to a number
+		super(certData);		
 		this.rawCertificate = rawCertificate;
+		if (this.serialString.contains(":")) {	// 28:18:c4:bc:b0:34:68
+			this.serialNumber = new BigInteger(serialString.replaceAll(":", ""),16);	// strip out the colons and convert to a number
+		} else {
+			this.serialNumber = new BigInteger(serialString);
+		}
 		this.orderNamespace = OrderNamespace.parse(rawCertificate);
 		this.productNamespaces = ProductNamespace.parse(rawCertificate);
 		this.contentNamespaces = ContentNamespace.parse(rawCertificate);
 	}
-
 	
 	
 	@Override
@@ -63,12 +67,29 @@ public class EntitlementCert extends AbstractCommandLineData {
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
-		return parseDateString(dateString, simpleDateFormat);
+		
+		// make an educational guess at what simpleDateFormat should be used to parse this dateString
+		String simpleDateFormatOverride;
+		if (dateString.matches("[A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
+			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT
+		}
+		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:?[0-9]{2}")) {
+			simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// used in certv2	// 2012-09-11 00:00:00+00:00		
+			dateString = dateString.replaceFirst("([-\\+]\\d{2}):(\\d{2})$", "$1$2");	// strip the ":" from the time zone to avoid a parse exception (e.g "2012-09-11 00:00:00+00:00" => "2012-09-11 00:00:00+0000")
+		}
+		else {
+			log.warning("Cannot determine a simpleDateFormat to use for parsing dateString '"+dateString+"'.  Using default format '"+simpleDateFormat+"'.");
+			simpleDateFormatOverride = simpleDateFormat;
+		}
+			
+		return super.parseDateString(dateString, simpleDateFormatOverride);
 	}
 	
 	//@Override
 	public static String formatDateString(Calendar date){
-		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		String simpleDateFormatOverride = simpleDateFormat;
+		simpleDateFormatOverride = "MMM d yyyy HH:mm:ss z"; // "yyyy-MM-dd HH:mm:ssZZZ";	// can really be any useful format
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
 		return dateFormat.format(date.getTime());
 	}
 	
@@ -88,7 +109,8 @@ public class EntitlementCert extends AbstractCommandLineData {
 	 * @param certificates - stdout from: find /etc/pki/entitlement/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
 	 * @return
 	 */
-	static public List<EntitlementCert> parse(String rawCertificates) {
+	@Deprecated
+	static public List<EntitlementCert> parseStdoutFromOpensslX509(String rawCertificates) {
 		
 		/* [root@jsefler-onprem-62server ~]# find /etc/pki/entitlement/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
 		Certificate:
@@ -437,6 +459,247 @@ public class EntitlementCert extends AbstractCommandLineData {
 		
 		return entitlementCerts;
 		
+	}
+	
+	
+	
+	/**
+	 * @param rawCertificates - stdout from: # find /etc/pki/entitlement/ -regex "/.+/[0-9]+.pem" -exec rct cat-cert {} \;
+	 * @return
+	 */
+	static public List<EntitlementCert> parse(String rawCertificates) {
+		
+		//	[root@jsefler-rhel59 ~]# find /etc/pki/entitlement/ -regex "/.+/[0-9]+.pem" -exec rct cat-cert {} \;
+		//
+		//	+-------------------------------------------+
+		//		Entitlement Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /etc/pki/entitlement/6828740431923393274.pem
+		//		Version: 1.0
+		//		Serial: 6828740431923393274
+		//		Start Date: 2012-09-09 00:00:00+00:00
+		//		End Date: 2013-09-09 00:00:00+00:00
+		//
+		//	Subject:
+		//		CN: 8a90f81d39ad82140139b21e6cbc39f6
+		//
+		//	Product:
+		//		ID: 27060
+		//		Name: Awesome OS Workstation Bits
+		//		Version: 6.1
+		//		Arch: ALL
+		//		Tags: 
+		//
+		//	Order:
+		//		Name: Awesome OS Workstation Basic
+		//		Number: 8a90f81d39ad82140139ad83132500bd
+		//		SKU: awesomeos-workstation-basic
+		//		Contract: 24
+		//		Account: 12331131231
+		//		Service Level: Standard
+		//		Service Type: L1-L3
+		//		Quantity: 5
+		//		Quantity Used: 1
+		//		Socket Limit: 2
+		//		Virt Limit: 
+		//		Virt Only: False
+		//		Subscription: 
+		//		Stacking ID: 
+		//		Warning Period: 30
+		//		Provides Management: 0
+		//
+		//	Content:
+		//		Name: always-enabled-content
+		//		Label: always-enabled-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/always/$releasever
+		//		GPG: /foo/path/always/gpg
+		//		Enabled: True
+		//		Expires: 200
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: content
+		//		Label: content-label
+		//		Vendor: test-vendor
+		//		URL: /foo/path
+		//		GPG: /foo/path/gpg/
+		//		Enabled: True
+		//		Expires: 0
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: never-enabled-content
+		//		Label: never-enabled-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/never
+		//		GPG: /foo/path/never/gpg
+		//		Enabled: False
+		//		Expires: 600
+		//		Required Tags: 
+		//
+		//	+-------------------------------------------+
+		//		Entitlement Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /etc/pki/entitlement/6246850629384790696.pem
+		//		Version: 1.0
+		//		Serial: 6246850629384790696
+		//		Start Date: 2012-09-09 00:00:00+00:00
+		//		End Date: 2013-09-09 00:00:00+00:00
+		//
+		//	Subject:
+		//		CN: 8a90f81d39ad82140139b1b76ad939c5
+		//
+		//	Product:
+		//		ID: 37069
+		//		Name: Management Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//	Product:
+		//		ID: 37070
+		//		Name: Load Balancing Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//	Product:
+		//		ID: 37067
+		//		Name: Shared Storage Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//	Product:
+		//		ID: 37060
+		//		Name: Awesome OS Server Bits
+		//		Version: 6.1
+		//		Arch: ALL
+		//		Tags: 
+		//	Product:
+		//		ID: 37065
+		//		Name: Clustering Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//	Product:
+		//		ID: 37068
+		//		Name: Large File Support Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//
+		//	Order:
+		//		Name: Awesome OS Server Bundled
+		//		Number: 8a90f81d39ad82140139ad82f8220085
+		//		SKU: awesomeos-server
+		//		Contract: 6
+		//		Account: 12331131231
+		//		Service Level: Premium
+		//		Service Type: Level 3
+		//		Quantity: 5
+		//		Quantity Used: 1
+		//		Socket Limit: 2
+		//		Virt Limit: 
+		//		Virt Only: False
+		//		Subscription: 
+		//		Stacking ID: 
+		//		Warning Period: 30
+		//		Provides Management: 1
+		//
+		//	Content:
+		//		Name: always-enabled-content
+		//		Label: always-enabled-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/always/$releasever
+		//		GPG: /foo/path/always/gpg
+		//		Enabled: True
+		//		Expires: 200
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: content
+		//		Label: content-label
+		//		Vendor: test-vendor
+		//		URL: /foo/path
+		//		GPG: /foo/path/gpg/
+		//		Enabled: True
+		//		Expires: 0
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: content-emptygpg
+		//		Label: content-label-empty-gpg
+		//		Vendor: test-vendor
+		//		URL: /foo/path
+		//		GPG: 
+		//		Enabled: True
+		//		Expires: 0
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: content-nogpg
+		//		Label: content-label-no-gpg
+		//		Vendor: test-vendor
+		//		URL: /foo/path
+		//		GPG: 
+		//		Enabled: True
+		//		Expires: 0
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: never-enabled-content
+		//		Label: never-enabled-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/never
+		//		GPG: /foo/path/never/gpg
+		//		Enabled: False
+		//		Expires: 600
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: tagged-content
+		//		Label: tagged-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/always
+		//		GPG: /foo/path/always/gpg
+		//		Enabled: True
+		//		Expires: 
+		//		Required Tags: TAG1, TAG2
+
+		
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("id",					"Subject:(?:(?:\\n.+)+)CN: (.+)");
+		//regexes.put("issuer",				"Issuer:\\s*(.*)");
+		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
+		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
+		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
+		regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
+		
+		// split the rawCertificates process each individual rawCertificate
+		String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
+		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
+		for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
+			if (rawCertificate.trim().length()==0) continue;
+			
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+			}
+			
+			// assert that there is only one group of certData found in the list
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificate.  Expected to parse only one group of certificate data.");
+			Map<String,String> certData = certDataList.get(0);
+			
+			// create a new EntitlementCert
+			entitlementCerts.add(new EntitlementCert(rawCertificate, certData));
+		}
+		return entitlementCerts;
 	}
 }
 

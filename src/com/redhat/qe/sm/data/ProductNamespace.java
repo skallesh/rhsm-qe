@@ -1,11 +1,14 @@
 package com.redhat.qe.sm.data;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -13,7 +16,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  *
  */
 public class ProductNamespace extends AbstractCommandLineData {
-	
+
 	// abstraction fields
 	public String name;
 	public String version;
@@ -25,6 +28,9 @@ public class ProductNamespace extends AbstractCommandLineData {
 	public ProductNamespace(String id, Map<String, String> certData){
 		super(certData);
 		this.id = id;
+	}
+	public ProductNamespace(Map<String, String> certData){
+		super(certData);
 	}
 	
 	
@@ -40,6 +46,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		
 		return string.trim();
 	}
+	
 	
 	@Override
 	public boolean equals(Object obj){
@@ -71,7 +78,8 @@ public class ProductNamespace extends AbstractCommandLineData {
 	 * @param rawCertificate - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/1129238407379723.pem
 	 * @return
 	 */
-	static public List<ProductNamespace> parse(String rawCertificate) {
+	@Deprecated
+	static public List<ProductNamespace> parseStdoutFromOpensslX509(String rawCertificate) {
 		
 		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
 		Certificate:
@@ -236,5 +244,143 @@ public class ProductNamespace extends AbstractCommandLineData {
 		for(String key : productMap.keySet())
 			productNamespaces.add(new ProductNamespace(key, productMap.get(key)));
 		return productNamespaces;
+	}
+	
+	
+	/**
+	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/entitlement/7586477374370607864.pem
+	 * @return
+	 */
+	static public List<ProductNamespace> parse(String rawCertificate) {
+		
+		//	[root@jsefler-rhel59 ~]# rct cat-cert /etc/pki/entitlement/7586477374370607864.pem 
+		//
+		//	+-------------------------------------------+
+		//		Entitlement Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /etc/pki/entitlement/7586477374370607864.pem
+		//		Version: 1.0
+		//		Serial: 7586477374370607864
+		//		Start Date: 2012-09-10 00:00:00+00:00
+		//		End Date: 2013-09-10 00:00:00+00:00
+		//
+		//	Subject:
+		//		CN: 8a90f81d39b2a77d0139b65ce21a3864
+		//
+		//	Product:
+		//		ID: 37069
+		//		Name: Management Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//
+		//	Product:
+		//		ID: 37070
+		//		Name: Load Balancing Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//
+		//	Product:
+		//		ID: 37068
+		//		Name: Large File Support Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//
+		//	Order:
+		//		Name: Awesome OS Server Bundled
+		//		Number: 8a90f81d39b2a77d0139b2a869760085
+		//		SKU: awesomeos-server
+		//		Contract: 6
+		//		Account: 12331131231
+		//		Service Level: Premium
+		//		Service Type: Level 3
+		//		Quantity: 5
+		//		Quantity Used: 1
+		//		Socket Limit: 2
+		//		Virt Limit: 
+		//		Virt Only: False
+		//		Subscription: 
+		//		Stacking ID: 
+		//		Warning Period: 30
+		//		Provides Management: 1
+		//
+		//	Content:
+		//		Name: always-enabled-content
+		//		Label: always-enabled-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/always/$releasever
+		//		GPG: /foo/path/always/gpg
+		//		Enabled: True
+		//		Expires: 200
+		//		Required Tags: 
+		//
+		//	Content:
+		//		Name: content
+		//		Label: content-label
+		//		Vendor: test-vendor
+		//		URL: /foo/path
+		//		GPG: /foo/path/gpg/
+		//		Enabled: True
+		//		Expires: 0
+		//		Required Tags: 
+		
+		/* THIS IMPLEMENTATION WORKS, BUT I PREFER A DIFFERENT ONE THAT MATCHES THE CONTENT GROUPS AND THEN CREATES ONE CONTENT NAMESPACE PER GROUP
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("id",					"Product:(?:(?:\\n.+)+)ID: (.+)");
+		regexes.put("name",					"Product:(?:(?:\\n.+)+)Name: (.+)");
+		regexes.put("version",				"Product:(?:(?:\\n.+)+)Version: (.+)");
+		regexes.put("arch",					"Product:(?:(?:\\n.+)+)Arch: (.+)");
+		regexes.put("providedTags",			"Product:(?:(?:\\n.+)+)Tags: (.+)");
+		
+		List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+		for(String field : regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+			addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+		}
+		
+		List<ProductNamespace> productNamespaces = new ArrayList<ProductNamespace>();
+		for (Map<String, String> certData : certDataList) {
+			productNamespaces.add(new ProductNamespace(certData));
+		}
+		return productNamespaces;
+		*/
+		
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("id",					"^\\s+ID: (.+)");
+		regexes.put("name",					"^\\s+Name: (.+)");
+		regexes.put("version",				"^\\s+Version: (.+)");
+		regexes.put("arch",					"^\\s+Arch: (.+)");
+		regexes.put("providedTags",			"^\\s+Tags: (.+)");
+		
+		// find all the raw "Product:" groupings and then create one ProductNamespace per raw "Product:" grouping
+		String rawProductRegex = "Product:((\\n.+)+)";
+		List<ProductNamespace> productNamespaces = new ArrayList<ProductNamespace>();
+		Matcher m = Pattern.compile(rawProductRegex, Pattern.MULTILINE).matcher(rawCertificate);
+		while (m.find()) {
+			String rawProduct = m.group(1);
+			// find a list of all the certData matching the product fields in the map of regexes
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawProduct, certDataList, field);
+			}
+			
+			// assert that there is only one group of certData found in the list for this content grouping
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw product group.  Expected to parse only one group of product data from:\n"+m.group(0));
+			Map<String,String> certData = certDataList.get(0);
+			
+			// create a new ProductNamespace
+			productNamespaces.add(new ProductNamespace(certData));
+		}
+		return productNamespaces;
+		
 	}
 }

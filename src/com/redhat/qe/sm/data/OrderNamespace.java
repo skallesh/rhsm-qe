@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -21,7 +22,8 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  */
 public class OrderNamespace extends AbstractCommandLineData {
 //	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";	// "2010-09-01T15:45:12.068+0000"   startDate
-	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";		// "2011-01-20T05:00:00Z" GMT startDate  // "2011-07-20T03:59:59Z" GMT endDate
+//	protected static String simpleDateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";		// "2011-01-20T05:00:00Z" GMT startDate  // "2011-07-20T03:59:59Z" GMT endDate
+//	protected static String simpleDateFormat = "yyyy-MM-dd HH:mm:ssZZZ";		// 2012-09-11 00:00:00+00:00 Certificate: Start/End Date: from rct cat-cert
 
 	// abstraction fields
 	public String productName;
@@ -79,22 +81,39 @@ public class OrderNamespace extends AbstractCommandLineData {
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
+		
+		// make an educational guess at what simpleDateFormat should be used to parse this dateString
+		String simpleDateFormatOverride;
+		if (dateString.matches("[A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
+			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT
+		}
+		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:?[0-9]{2}")) {
+			simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// used in certv2	// 2012-09-11 00:00:00+00:00		
+			dateString = dateString.replaceFirst("([-\\+]\\d{2}):(\\d{2})$", "$1$2");	// strip the ":" from the time zone to avoid a parse exception (e.g "2012-09-11 00:00:00+00:00" => "2012-09-11 00:00:00+0000")
+		}
+		else {
+			log.warning("Cannot determine a simpleDateFormat to use for parsing dateString '"+dateString+"'.  Using default format '"+simpleDateFormat+"'.");
+			simpleDateFormatOverride = simpleDateFormat;
+		}
+		
 		try{
-			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+			DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
 			dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 			Calendar calendar = new GregorianCalendar();
 			calendar.setTimeInMillis(dateFormat.parse(dateString).getTime());
 			return calendar;
 		}
 		catch (ParseException e){
-			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormat+"':\n"+e.getMessage());
+			log.warning("Failed to parse GMT date string '"+dateString+"' with format '"+simpleDateFormatOverride+"':\n"+e.getMessage());
 			return null;
 		}
 	}
 	
 	//@Override
 	public static String formatDateString(Calendar date){
-		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		String simpleDateFormatOverride = simpleDateFormat;
+		simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// can really be any useful format
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
 		dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
 		return dateFormat.format(date.getTime());
 	}
@@ -112,7 +131,8 @@ public class OrderNamespace extends AbstractCommandLineData {
 	 * @return
 	 * @throws ParseException 
 	 */
-	static public OrderNamespace parse(String rawCertificate) {
+	@Deprecated
+	static public OrderNamespace parseStdoutFromOpensslX509(String rawCertificate) {
 		
 		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
 		Certificate:
@@ -299,5 +319,100 @@ public class OrderNamespace extends AbstractCommandLineData {
 		if (listMaps.size()==0) throw new RuntimeException("Failed to parse a group of order namespace certificate data.");
 	
 		return new OrderNamespace(listMaps.get(0));
+	}
+	
+	
+	/**
+	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/entitlement/7586477374370607864.pem
+	 * @return
+	 */
+	static public OrderNamespace parse(String rawCertificate) {
+		
+		//	[root@jsefler-rhel59 ~]# rct cat-cert /etc/pki/entitlement/7586477374370607864.pem 
+		//
+		//	+-------------------------------------------+
+		//		Entitlement Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /etc/pki/entitlement/7586477374370607864.pem
+		//		Version: 1.0
+		//		Serial: 7586477374370607864
+		//		Start Date: 2012-09-10 00:00:00+00:00
+		//		End Date: 2013-09-10 00:00:00+00:00
+		//
+		//	Subject:
+		//		CN: 8a90f81d39b2a77d0139b65ce21a3864
+		//
+		//	Product:
+		//		ID: 37068
+		//		Name: Large File Support Bits
+		//		Version: 1.0
+		//		Arch: ALL
+		//		Tags: 
+		//
+		//	Order:
+		//		Name: Awesome OS Server Bundled
+		//		Number: 8a90f81d39b2a77d0139b2a869760085
+		//		SKU: awesomeos-server
+		//		Contract: 6
+		//		Account: 12331131231
+		//		Service Level: Premium
+		//		Service Type: Level 3
+		//		Quantity: 5
+		//		Quantity Used: 1
+		//		Socket Limit: 2
+		//		Virt Limit: 
+		//		Virt Only: False
+		//		Subscription: 
+		//		Stacking ID: 
+		//		Warning Period: 30
+		//		Provides Management: 1
+		//
+		//	Content:
+		//		Name: always-enabled-content
+		//		Label: always-enabled-content
+		//		Vendor: test-vendor
+		//		URL: /foo/path/always/$releasever
+		//		GPG: /foo/path/always/gpg
+		//		Enabled: True
+		//		Expires: 200
+		//		Required Tags: 
+		//
+		
+		
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("productName",			"Order:(?:(?:\\n.+)+)Name: (.+)");
+		regexes.put("orderNumber",			"Order:(?:(?:\\n.+)+)Number: (.+)");
+		regexes.put("productId",			"Order:(?:(?:\\n.+)+)SKU: (.+)");
+		regexes.put("subscriptionNumber",	"Order:(?:(?:\\n.+)+)Subscription Number: (.+)");
+		regexes.put("quantity",				"Order:(?:(?:\\n.+)+)Quantity: (.+)");
+		regexes.put("startDate",			"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
+		regexes.put("endDate",				"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
+		regexes.put("virtualizationLimit",	"Order:(?:(?:\\n.+)+)Virt Limit: (.+)");
+		regexes.put("socketLimit",			"Order:(?:(?:\\n.+)+)Socket Limit: (.+)");
+		regexes.put("contractNumber",		"Order:(?:(?:\\n.+)+)Contract: (.+)");
+		regexes.put("quantityUsed",			"Order:(?:(?:\\n.+)+)Quantity Used: (.+)");
+		regexes.put("warningPeriod",		"Order:(?:(?:\\n.+)+)Warning Period: (.+)");
+		regexes.put("accountNumber",		"Order:(?:(?:\\n.+)+)Account: (.+)");
+		regexes.put("providesManagement",	"Order:(?:(?:\\n.+)+)Provides Management: (.+)");
+		regexes.put("supportLevel",			"Order:(?:(?:\\n.+)+)Service Level: (.+)");
+		regexes.put("supportType",			"Order:(?:(?:\\n.+)+)Service Type: (.+)");
+		regexes.put("stackingId",			"Order:(?:(?:\\n.+)+)Stacking ID: (.+)");
+		regexes.put("virtOnly",				"Order:(?:(?:\\n.+)+)Virt Only: (.+)");
+
+		List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+		for(String field : regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+			addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+		}
+		
+		// assert that there is only one group of certData found in the list for this order
+		if (certDataList.size()!=1) Assert.fail("Error when parsing raw certificate.  Expected to parse only one group of order namespace data");
+		Map<String,String> certData = certDataList.get(0);
+		
+		return new OrderNamespace(certData);
 	}
 }

@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.redhat.qe.Assert;
 import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
 
 /**
@@ -17,21 +19,26 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  *
  */
 public class ConsumerCert extends AbstractCommandLineData {
-	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
+//	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields
 	public String consumerid;
 	public String name;				// value of register --name option
 	public String issuer;
-	public String serialNumber;
+	public BigInteger serialNumber;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
 
+	public String serialString;
 
 
-	public ConsumerCert(Map<String, String> crlData) {
-		super(crlData);
-		// TODO Auto-generated constructor stub
+	public ConsumerCert(Map<String, String> certData) {
+		super(certData);
+		if (this.serialString.contains(":")) {	// 28:18:c4:bc:b0:34:68
+			this.serialNumber = new BigInteger(serialString.replaceAll(":", ""),16);	// strip out the colons and convert to a number
+		} else {
+			this.serialNumber = new BigInteger(serialString);
+		}
 		
 		// Overridden fields
 	}
@@ -52,32 +59,51 @@ public class ConsumerCert extends AbstractCommandLineData {
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
-		return parseDateString(dateString, simpleDateFormat);
+		
+		// make an educational guess at what simpleDateFormat should be used to parse this dateString
+		String simpleDateFormatOverride;
+		if (dateString.matches("[A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
+			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT
+		}
+		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:?[0-9]{2}")) {
+			simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// used in certv2	// 2012-09-11 00:00:00+00:00		
+			dateString = dateString.replaceFirst("([-\\+]\\d{2}):(\\d{2})$", "$1$2");	// strip the ":" from the time zone to avoid a parse exception (e.g "2012-09-11 00:00:00+00:00" => "2012-09-11 00:00:00+0000")
+		}
+		else {
+			log.warning("Cannot determine a simpleDateFormat to use for parsing dateString '"+dateString+"'.  Using default format '"+simpleDateFormat+"'.");
+			simpleDateFormatOverride = simpleDateFormat;
+		}
+			
+		return super.parseDateString(dateString, simpleDateFormatOverride);
 	}
 	
 	//@Override
 	public static String formatDateString(Calendar date){
-		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		String simpleDateFormatOverride = simpleDateFormat;
+		simpleDateFormatOverride = "MMM d yyyy HH:mm:ss z"; // "yyyy-MM-dd HH:mm:ssZZZ";	// can really be any useful format
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
 		return dateFormat.format(date.getTime());
 	}
-	
-	@Override
-	public boolean equals(Object obj){
 
-		return	((ConsumerCert)obj).consumerid.equals(this.consumerid) &&
-				((ConsumerCert)obj).name.equals(this.name) &&
-				((ConsumerCert)obj).issuer.equals(this.issuer) &&
-				((ConsumerCert)obj).serialNumber.equals(this.serialNumber) &&
-				((ConsumerCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
-				((ConsumerCert)obj).validityNotAfter.equals(this.validityNotAfter);
-	}
+// DON'T THINK WE NEED THIS ANYMORE, THE super.equals() IS NOW SMART ENOUGH TO HANDLE THIS 
+//	@Override
+//	public boolean equals(Object obj){
+//
+//		return	((ConsumerCert)obj).consumerid.equals(this.consumerid) &&
+//				((ConsumerCert)obj).name.equals(this.name) &&
+//				((ConsumerCert)obj).issuer.equals(this.issuer) &&
+//				((ConsumerCert)obj).serialNumber.equals(this.serialNumber) &&
+//				((ConsumerCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
+//				((ConsumerCert)obj).validityNotAfter.equals(this.validityNotAfter);
+//	}
 	
 	/**
-	 * @param crls - stdout from "openssl x509 -noout -text -in /etc/pki/consumer/cert.pem"
+	 * @param stdoutFromOpensslx509 - stdout from "openssl x509 -noout -text -in /etc/pki/consumer/cert.pem"
 	 * @return
 	 * @throws ParseException 
 	 */
-	static public ConsumerCert parse(String stdoutFromOpensslx509) {
+	@Deprecated
+	static public ConsumerCert parseStdoutFromOpensslX509(String stdoutFromOpensslx509) {
 		
 	/* [root@jsefler-rhel6-client01 pki]# openssl x509 -noout -text -in /etc/pki/consumer/cert.pem 
 Certificate:
@@ -166,5 +192,52 @@ Certificate:
 		if (listMaps.size()==0) throw new RuntimeException("Failed to parse a group of consumer certificate data.");
 	
 		return new ConsumerCert(listMaps.get(0));
+	}
+	
+	
+	/**
+	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/consumer/cert.pem"
+	 * @return
+	 */
+	static public ConsumerCert parse(String rawCertificate) {
+		
+		//	[root@jsefler-rhel59 ~]# rct cat-cert /etc/pki/consumer/cert.pem
+		//
+		//	+-------------------------------------------+
+		//		Identity Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /etc/pki/consumer/cert.pem
+		//		Version: 
+		//		Serial: 5263793363146407445
+		//		Start Date: 2012-09-11 21:02:22+00:00
+		//		End Date: 2028-09-11 21:02:22+00:00
+		//		Alt Name: DirName:/CN=jsefler-rhel59.usersys.redhat.com
+		//
+		//	Subject:
+		//		CN: 2f62b61b-9150-4ca2-83c6-72b76a31ad0b
+		
+		Map<String,String> regexes = new HashMap<String,String>();
+		
+		// abstraction field				regex pattern (with a capturing group)
+		regexes.put("consumerid",			"Subject:(?:(?:\\n.+)+)CN: (.+)");
+		//regexes.put("issuer",				"Issuer:\\s*(.*)");
+		regexes.put("name",					"Certificate:(?:(?:\\n.+)+)Alt Name: DirName:/CN=(.+)");
+		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
+		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
+		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
+
+		List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+		for(String field : regexes.keySet()){
+			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+			addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+		}
+		
+		// assert that there is only one group of certData found in the list
+		if (certDataList.size()!=1) Assert.fail("Error when parsing raw consumer certificate.  Expected to parse only one group of certificate data.");
+		Map<String,String> certData = certDataList.get(0);
+	
+		return new ConsumerCert(certData);
 	}
 }

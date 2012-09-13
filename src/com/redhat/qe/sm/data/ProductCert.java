@@ -20,7 +20,7 @@ import com.redhat.qe.tools.abstraction.AbstractCommandLineData;
  * find /etc/pki/product/ -name '*.pem' -exec openssl x509 -in '{}' -text  \; | egrep -A1 "1.3.6.1.4.1.2312.9.1.*"
  */
 public class ProductCert extends AbstractCommandLineData {
-	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
+//	protected static String simpleDateFormat = "MMM d HH:mm:ss yyyy z";	// Aug 23 08:42:00 2010 GMT
 
 	// abstraction fields
 	public BigInteger serialNumber;	// this is the key
@@ -71,12 +71,29 @@ public class ProductCert extends AbstractCommandLineData {
 	
 	@Override
 	protected Calendar parseDateString(String dateString){
-		return parseDateString(dateString, simpleDateFormat);
+		
+		// make an educational guess at what simpleDateFormat should be used to parse this dateString
+		String simpleDateFormatOverride;
+		if (dateString.matches("[A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
+			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT
+		}
+		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:?[0-9]{2}")) {
+			simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// used in certv2	// 2012-09-11 00:00:00+00:00		
+			dateString = dateString.replaceFirst("([-\\+]\\d{2}):(\\d{2})$", "$1$2");	// strip the ":" from the time zone to avoid a parse exception (e.g "2012-09-11 00:00:00+00:00" => "2012-09-11 00:00:00+0000")
+		}
+		else {
+			log.warning("Cannot determine a simpleDateFormat to use for parsing dateString '"+dateString+"'.  Using default format '"+simpleDateFormat+"'.");
+			simpleDateFormatOverride = simpleDateFormat;
+		}
+			
+		return super.parseDateString(dateString, simpleDateFormatOverride);
 	}
 	
 	//@Override
 	public static String formatDateString(Calendar date){
-		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormat);
+		String simpleDateFormatOverride = simpleDateFormat;
+		simpleDateFormatOverride = "MMM d yyyy HH:mm:ss z"; // "yyyy-MM-dd HH:mm:ssZZZ";	// can really be any useful format
+		DateFormat dateFormat = new SimpleDateFormat(simpleDateFormatOverride);
 		return dateFormat.format(date.getTime());
 	}
 	
@@ -116,22 +133,14 @@ public class ProductCert extends AbstractCommandLineData {
 		
 		return true;
 	}
-
-// THIS IDEA WAS TRUMPED BY ADDING A NEW ABSTRACT file FIELD AND THEN INCLUDING A REGEX FOR IT IN THE parse METHOD
-//	static public ProductCert parse(SSHCommandRunner sshCommandRunner, File productCertFile) {
-//		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -in "+productCertFile+" -noout -text");
-//		String certificate = sshCommandRunner.getStdout();
-//		ProductCert productCert = parse(certificate).get(0);
-//		productCert.file = productCertFile;
-//		return productCert;
-//	}
 	
 	/**
 	 * @param rawCertificates - OLD WAY: stdout from: find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text
 	 * @param rawCertificates - stdout from: find /etc/pki/product/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
 	 * @return
 	 */
-	static public List<ProductCert> parse(String rawCertificates) {
+	@Deprecated
+	static public List<ProductCert> parseStdoutFromOpensslX509(String rawCertificates) {
 		
 		/* [root@jsefler-itclient01 ~]# openssl x509 -noout -text -in /etc/pki/product/2156.pem 
 		Certificate:
@@ -302,8 +311,8 @@ public class ProductCert extends AbstractCommandLineData {
 				addRegexMatchesToList(pat, rawCertificate, certDataList, field);
 			}
 			
-			// assert that there is only one group of certData found in the map
-			if (certDataList.size()!=1) Assert.fail("Error when parsing raw entitlement certificates.");
+			// assert that there is only one group of certData found in the list
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw product certificates.");
 			Map<String,String> certData = certDataList.get(0);
 			
 			// create a new ProductCert
@@ -311,32 +320,112 @@ public class ProductCert extends AbstractCommandLineData {
 		}
 		
 		return productCerts;
+	}
+	
+	/**
+	 * @param rawCertificates - stdout from: # find /etc/pki/product/ -regex "/.+/[0-9]+.pem" -exec rct cat-cert {} \;
+	 * @return
+	 */
+	static public List<ProductCert> parse(String rawCertificates) {
+		
+		
+		//	[root@jsefler-rhel59 ~]# find /usr/share/rhsm/product/RHEL-5/ -regex "/.+/.*[0-9]+.pem" -exec rct cat-cert {} \;
+		//
+		//	+-------------------------------------------+
+		//		Product Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /usr/share/rhsm/product/RHEL-5/Server-ClusterStorage-ia64-332ccbb04794-90.pem
+		//		Version: 1.0
+		//		Serial: 12750047592154745883
+		//		Start Date: 2012-06-11 10:37:38+00:00
+		//		End Date: 2032-06-06 10:37:38+00:00
+		//
+		//	Subject:
+		//		CN: Red Hat Product ID [8aaed25c-c2b1-413f-8cdb-332ccbb04794]
+		//
+		//	Product:
+		//		ID: 90
+		//		Name: Red Hat Enterprise Linux Resilient Storage (for RHEL Server)
+		//		Version: 5.9
+		//		Arch: ia64
+		//		Tags: rhel-5-server-clusterstorage,rhel-5-clusterstorage
+		//
+		//
+		//	+-------------------------------------------+
+		//		Product Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /usr/share/rhsm/product/RHEL-5/Server-Server-ppc-6aa45b71ce87-74.pem
+		//		Version: 1.0
+		//		Serial: 12750047592154745891
+		//		Start Date: 2012-06-11 10:38:06+00:00
+		//		End Date: 2032-06-06 10:38:06+00:00
+		//
+		//	Subject:
+		//		CN: Red Hat Product ID [5aa6b686-1d56-4050-afa1-6aa45b71ce87]
+		//
+		//	Product:
+		//		ID: 74
+		//		Name: Red Hat Enterprise Linux for IBM POWER
+		//		Version: 5.9
+		//		Arch: ppc
+		//		Tags: rhel-5,rhel-5-ibm-power
+		//
+		//
+		//	+-------------------------------------------+
+		//		Product Certificate
+		//	+-------------------------------------------+
+		//
+		//	Certificate:
+		//		Path: /usr/share/rhsm/product/RHEL-5/Server-Server-ia64-b8b9ad095efe-69.pem
+		//		Version: 1.0
+		//		Serial: 12750047592154745890
+		//		Start Date: 2012-06-11 10:38:02+00:00
+		//		End Date: 2032-06-06 10:38:02+00:00
+		//
+		//	Subject:
+		//		CN: Red Hat Product ID [45b4ee9c-eac6-4e36-bbcb-b8b9ad095efe]
+		//
+		//	Product:
+		//		ID: 69
+		//		Name: Red Hat Enterprise Linux Server
+		//		Version: 5.9
+		//		Arch: ia64
+		//		Tags: rhel-5,rhel-5-server
+		
+		
+		Map<String,String> regexes = new HashMap<String,String>();
 
-// OLD PARSING - prone to stack overflows when calling addRegexMatchesToMap
-//		Map<String,String> regexes = new HashMap<String,String>();
-//		
-//		// abstraction field				regex pattern (with a capturing group)
-//		regexes.put("cn",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Subject: CN=(.+)");	// FIXME not quite right
-//		regexes.put("issuer",				"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Issuer:\\s*(.*),");
-//		regexes.put("validityNotBefore",	"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not Before\\s*:\\s*(.*)");
-//		regexes.put("validityNotAfter",		"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*Validity[\\n\\s\\w:]*Not After\\s*:\\s*(.*)");
-//		regexes.put("rawCertificate",		"Serial Number:\\s*([\\d\\w:]+).*((?:\\n.*?)*)Signature Algorithm:.*\\s+(?:([a-f]|[\\d]){2}:){10}");	// FIXME THIS IS ONLY PART OF THE CERT
-//		regexes.put("file",					"Serial Number:\\s*([\\d\\w:]+).*(?:\\n.*?)*File: (.*)");
-//		Map<String, Map<String,String>> productMap = new HashMap<String, Map<String,String>>();
-//		for(String field : regexes.keySet()){
-//			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
-//			addRegexMatchesToMap(pat, rawCertificates, productMap, field);
-//		}
-//		
-//		List<ProductCert> productCerts = new ArrayList<ProductCert>();
-//		for(String key : productMap.keySet()) {
-//			
-//			// convert the key inside the raw cert file (04:02:7b:dc:b7:fb:33) to a numeric serialNumber (11286372344531148)
-//			//Long serialNumber = Long.parseLong(key.replaceAll(":", ""), 16);
-//			BigInteger serialNumber = new BigInteger(key.replaceAll(":", ""),16);
-//		
-//			productCerts.add(new ProductCert(serialNumber, productMap.get(key)));
-//		}
-//		return productCerts;
+		// abstraction field				regex pattern (with a capturing group) Note: the captured group will be trim()ed
+		regexes.put("id",					"Subject:(?:(?:\\n.+)+)CN: (.+)");
+		//regexes.put("issuer",				"Issuer:\\s*(.*)");
+		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
+		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
+		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
+		regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
+		
+		// split the rawCertificates process each individual rawCertificate
+		String rawCertificateRegex = "\\+-+\\+\\n\\s+Product Certificate\\n\\+-+\\+";
+		List<ProductCert> productCerts = new ArrayList<ProductCert>();
+		for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
+			if (rawCertificate.trim().length()==0) continue;
+			
+			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
+			for(String field : regexes.keySet()){
+				Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);
+				addRegexMatchesToList(pat, rawCertificate, certDataList, field);
+			}
+			
+			// assert that there is only one group of certData found in the list
+			if (certDataList.size()!=1) Assert.fail("Error when parsing raw product certificate.  Expected to parse only one group of certificate data.");
+			Map<String,String> certData = certDataList.get(0);
+			
+			// create a new ProductCert
+			productCerts.add(new ProductCert(rawCertificate, certData));
+		}
+		return productCerts;
 	}
 }

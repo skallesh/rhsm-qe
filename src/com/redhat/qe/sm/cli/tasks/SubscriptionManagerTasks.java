@@ -950,8 +950,9 @@ public class SubscriptionManagerTasks {
 	public List<InstalledProduct> getCurrentlyInstalledProducts() {
 		return InstalledProduct.parse(listInstalledProducts().getStdout());
 	}
-
-	public List<EntitlementCert> getCurrentEntitlementCerts() {
+	
+	@Deprecated
+	public List<EntitlementCert> getCurrentEntitlementCertsUsingOpensslX509() {
 
 		// THIS ORIGINAL IMPLEMENTATION HAS BEEN THROWING A	java.lang.StackOverflowError
 		// REIMPLEMENTING THIS METHOD TO HELP BREAK THE PROBLEM DOWN INTO SMALLER PIECES - jsefler 11/23/2010
@@ -969,13 +970,18 @@ public class SubscriptionManagerTasks {
 		//sshCommandRunner.runCommandAndWait("find "+entitlementCertDir+" -name '*.pem' | grep -v key.pem | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+entitlementCertDir+" -regex \".*/[0-9]+.pem\" -exec openssl x509 -in '{}' -noout -text \\; -exec echo \"    File: {}\" \\;");
 		String certificates = sshCommandRunner.getStdout();
+		return EntitlementCert.parseStdoutFromOpensslX509(certificates);
+	}
+	public List<EntitlementCert> getCurrentEntitlementCerts() {
+		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+entitlementCertDir+" -regex \"/.+/[0-9]+.pem\" -exec rct cat-cert {} \\;");
+		String certificates = sshCommandRunner.getStdout();
 		return EntitlementCert.parse(certificates);
 	}
 	
 	public List<ProductCert> getCurrentProductCerts() {
 		return getProductCerts(productCertDir);
 	}
-	public List<ProductCert> getProductCerts(String fromProductCertDir) {
+	public List<ProductCert> getProductCertsUsingOpensslX509(String fromProductCertDir) {
 		/* THIS ORIGINAL IMPLEMENTATION DID NOT INCLUDE THE FILE IN THE OBJECT
 		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+productCertDir+" -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text");
 		String certificates = sshCommandRunner.getStdout();
@@ -993,7 +999,12 @@ public class SubscriptionManagerTasks {
 		return ProductCert.parse(certificates);
 		
 	}
-	
+	public List<ProductCert> getProductCerts(String fromProductCertDir) {
+		sshCommandRunner.runCommandAndWaitWithoutLogging("find "+fromProductCertDir+" -name '*.pem' -exec rct cat-cert {} \\;");
+		String certificates = sshCommandRunner.getStdout();
+		return ProductCert.parse(certificates);
+		
+	}
 	public List<ProductCert> getCurrentProductCerts(String providingTag) {
 		List<ProductCert> prodctCertsProvidingTag = new ArrayList<ProductCert>();
 		for (ProductCert productCert : getCurrentProductCerts()) {
@@ -1029,12 +1040,24 @@ public class SubscriptionManagerTasks {
 	/**
 	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: openssl x509 -noout -text -in /etc/pki/consumer/cert.pem
 	 */
-	public ConsumerCert getCurrentConsumerCert() {
+	public ConsumerCert getCurrentConsumerCertUsingOpensslX509() {
 		if (!RemoteFileTasks.testExists(sshCommandRunner, this.consumerCertFile())) {
 			log.info("Currently, there is no consumer registered.");
 			return null;
 		}
 		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+this.consumerCertFile());
+		String certificate = sshCommandRunner.getStdout();
+		return ConsumerCert.parseStdoutFromOpensslX509(certificate);
+	}
+	/**
+	 * @return a ConsumerCert object corresponding to the current identity certificate parsed from the output of: rct cat-cert /etc/pki/consumer/cert.pem
+	 */
+	public ConsumerCert getCurrentConsumerCert() {
+		if (!RemoteFileTasks.testExists(sshCommandRunner, this.consumerCertFile())) {
+			log.info("Currently, there is no consumer registered.");
+			return null;
+		}
+		sshCommandRunner.runCommandAndWaitWithoutLogging("rct cat-cert "+this.consumerCertFile());
 		String certificate = sshCommandRunner.getStdout();
 		return ConsumerCert.parse(certificate);
 	}
@@ -1616,9 +1639,23 @@ public class SubscriptionManagerTasks {
 	 * @param productSubscription
 	 * @return
 	 */
-	public EntitlementCert getEntitlementCertCorrespondingToProductSubscription(ProductSubscription productSubscription) {
+	@Deprecated
+	public EntitlementCert getEntitlementCertCorrespondingToProductSubscriptionUsingOpensslX509(ProductSubscription productSubscription) {
 		String serialPemFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
 		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in "+serialPemFile+"; echo \"    File: "+serialPemFile+"\"");	// openssl x509 -text -noout -in /etc/pki/entitlement/5066044962491605926.pem; echo "    File: /etc/pki/entitlement/5066044962491605926.pem"
+		String certificate = sshCommandRunner.getStdout();
+		List<EntitlementCert> entitlementCerts = EntitlementCert.parseStdoutFromOpensslX509(certificate);
+		Assert.assertEquals(entitlementCerts.size(), 1,"Only one EntitlementCert corresponds to ProductSubscription: "+productSubscription);
+		return entitlementCerts.get(0);
+	}
+	/**
+	 * For the given consumed ProductSubscription, get the corresponding EntitlementCert
+	 * @param productSubscription
+	 * @return
+	 */
+	public EntitlementCert getEntitlementCertCorrespondingToProductSubscription(ProductSubscription productSubscription) {
+		String serialPemFile = entitlementCertDir+"/"+productSubscription.serialNumber+".pem";
+		sshCommandRunner.runCommandAndWaitWithoutLogging("rct cat-cert "+serialPemFile);
 		String certificate = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificate);
 		Assert.assertEquals(entitlementCerts.size(), 1,"Only one EntitlementCert corresponds to ProductSubscription: "+productSubscription);
@@ -1707,8 +1744,18 @@ public class SubscriptionManagerTasks {
 		return correspondingEntitlementCerts;
 	}
 	
-	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
+	@Deprecated
+	public EntitlementCert getEntitlementCertFromEntitlementCertFileUsingOpensslX509(File serialPemFile) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in "+serialPemFile+"; echo \"    File: "+serialPemFile+"\"");	// openssl x509 -text -noout -in /etc/pki/entitlement/5066044962491605926.pem; echo "    File: /etc/pki/entitlement/5066044962491605926.pem"
+		String certificates = sshCommandRunner.getStdout();
+		List<EntitlementCert> entitlementCerts = EntitlementCert.parseStdoutFromOpensslX509(certificates);
+		
+		// assert that only one EntitlementCert was parsed and return it
+		Assert.assertEquals(entitlementCerts.size(), 1, "Entitlement cert file '"+serialPemFile+"' parsed only one EntitlementCert.");
+		return entitlementCerts.get(0);
+	}
+	public EntitlementCert getEntitlementCertFromEntitlementCertFile(File serialPemFile) {
+		sshCommandRunner.runCommandAndWaitWithoutLogging("rct cat-cert "+serialPemFile);
 		String certificates = sshCommandRunner.getStdout();
 		List<EntitlementCert> entitlementCerts = EntitlementCert.parse(certificates);
 		
