@@ -565,7 +565,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with install-num used to provision this machine",
-			groups={"AcceptanceTests","InstallNumMigrateToRhsm_Test"},
+			groups={"AcceptanceTests","InstallNumMigrateToRhsm_Test","blockedByBug-854879"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			enabled=true)
 	@ImplementsNitrateTest(caseId=130760)
