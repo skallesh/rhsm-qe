@@ -288,8 +288,14 @@ public class SubscriptionManagerTasks {
 		
 		// git clone git://git.app.eng.bos.redhat.com/rcm/rhn-definitions.git
 		log.info("Cloning Rhn Definitions...");
+		/* git may is not always installed (e.g. RHEL5/epel s390,ia64), therefore stop asserting which causes entire setupBeforeSuite to fail.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+rhnDefinitionsDir+" && mkdir "+rhnDefinitionsDir, new Integer(0));
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+rhnDefinitionsDir, new Integer(0));
+		*/
+		sshCommandRunner.runCommandAndWait("rm -rf "+rhnDefinitionsDir+" && mkdir "+rhnDefinitionsDir);
+		sshCommandRunner.runCommandAndWait("git clone "+gitRepository+" "+rhnDefinitionsDir);
+		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while cloning "+gitRepository+"; dependent tests will likely fail or skip.");
+		
 	}
 	
 	public void setupTranslateToolkit(String gitRepository) {
@@ -299,9 +305,15 @@ public class SubscriptionManagerTasks {
 		log.info("Cloning Translate Toolkit...");
 		final String translateToolkitDir	= "/tmp/"+"translateToolkitDir";
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "rm -rf "+translateToolkitDir+" && mkdir "+translateToolkitDir, new Integer(0));
+		/* git may is not always installed (e.g. RHEL5/epel s390,ia64), therefore stop asserting which causes entire setupBeforeSuite to fail.
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "git clone "+gitRepository+" "+translateToolkitDir, new Integer(0));
 		sshCommandRunner.runCommandAndWaitWithoutLogging("cd "+translateToolkitDir+" && ./setup.py install --force");
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "which pofilter", new Integer(0));
+		*/
+		sshCommandRunner.runCommandAndWait("git clone "+gitRepository+" "+translateToolkitDir);
+		sshCommandRunner.runCommandAndWait("cd "+translateToolkitDir+" && ./setup.py install --force");
+		sshCommandRunner.runCommandAndWait("which pofilter");
+		if (sshCommandRunner.getExitCode()!=0) log.warning("Encountered problems while installing pofilter; related tests will likely fail or skip.");
 	}
 	
 	
