@@ -137,7 +137,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
-		String abled = contentNamespace.enabled.equals("1")? "enabled":"disabled";	// is this an enabled or disabled test?
+		String abled = contentNamespace.enabled? "enabled":"disabled";	// is this an enabled or disabled test?
 		EntitlementCert entitlementCert = recallTheEntitlementCertGrantedAfterSubscribing(username, password, type, productId, sockets);
 		Integer packageCount=null;
 
@@ -171,7 +171,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 		}
 
 		// verify the yum repolist contentNamespace.label returns more than 0 packages
-		String options = contentNamespace.enabled.equals("1")? contentNamespace.label:contentNamespace.label+" --enablerepo="+contentNamespace.label;
+		String options = contentNamespace.enabled? contentNamespace.label:contentNamespace.label+" --enablerepo="+contentNamespace.label;
 		packageCount = clienttasks.getYumRepolistPackageCount(options);
 		Assert.assertTrue(packageCount>0,"After subscribing to product subscription '"+productId+"', the number of available packages from the default "+abled+" repo '"+contentNamespace.label+"' is greater than zero (actual packageCount is '"+packageCount+"').");
 		
@@ -187,7 +187,7 @@ public class ContentIntegrationTests extends SubscriptionManagerCLITestScript{
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=) //TODO Find a tcms caseId
 	public void VerifyPackagesAreAvailableForDefaultDisabledContentNamespace_Test(String username, String password, ConsumerType type, String productId, Integer sockets, ContentNamespace contentNamespace) {
-		Assert.assertEquals(contentNamespace.enabled,"0","Reconfirming that we are are about to test a default disabled contentNamespace.");
+		Assert.assertFalse(contentNamespace.enabled,"Reconfirming that we are are about to test a default disabled contentNamespace.");
 		VerifyPackagesAreAvailableForDefaultEnabledContentNamespace_Test(username, password, type, productId, sockets, contentNamespace);
 	}
 	
@@ -639,13 +639,13 @@ sm.content.integrationTestData:[
 	
 	@DataProvider(name="getDefaultEnabledContentNamespaceData")
 	public Object[][] getDefaultEnabledContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("1"));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(true));
 	}
 	@DataProvider(name="getDefaultDisabledContentNamespaceData")
 	public Object[][] getDefaultDisabledContentNamespaceDataAs2dArray() throws JSONException {
-		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists("0"));
+		return TestNGUtils.convertListOfListsTo2dArray(getContentNamespaceDataAsListOfLists(false));
 	}
-	protected List<List<Object>> getContentNamespaceDataAsListOfLists(String enabledValue) throws JSONException {
+	protected List<List<Object>> getContentNamespaceDataAsListOfLists(boolean enabledValue) throws JSONException {
 		List<List<Object>> ll = new ArrayList<List<Object>>();
 		
 		for (List<Object> row : entitlementCertData) {
@@ -658,7 +658,7 @@ sm.content.integrationTestData:[
 			
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
-				if (contentNamespace.enabled.equals(enabledValue)) {	// enabled="1", not enabled="0"
+				if (contentNamespace.enabled.equals(enabledValue)) {
 					
 					//
 					ll.add(Arrays.asList(new Object[]{username, password, type, productId, sockets, contentNamespace}));

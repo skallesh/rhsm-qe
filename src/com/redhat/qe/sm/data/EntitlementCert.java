@@ -93,6 +93,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 		return dateFormat.format(date.getTime());
 	}
 	
+/* 9/14/2012 jsefler believes the super.equals() is now smart enough to handle this
 	@Override
 	public boolean equals(Object obj){
 
@@ -103,6 +104,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 				((EntitlementCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
 				((EntitlementCert)obj).orderNamespace.productId.equals(this.orderNamespace.productId);
 	}
+*/
 	
 	/**
 	 * @param certificates - OLD WAY: stdout from "find /etc/pki/entitlement/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text"

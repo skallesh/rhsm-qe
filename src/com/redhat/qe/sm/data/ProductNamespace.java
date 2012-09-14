@@ -47,13 +47,10 @@ public class ProductNamespace extends AbstractCommandLineData {
 		return string.trim();
 	}
 	
-	
+/* 9/14/2012 jsefler believes the super.equals() is now smart enough to handle this
 	@Override
 	public boolean equals(Object obj){
 
-//		return	((ProductNamespace)obj).id.equals(this.id) &&
-//				((ProductNamespace)obj).name.equals(this.name);
-		
 		ProductNamespace that = (ProductNamespace) obj;
 		
 		if (that.id!=null && !that.id.equals(this.id)) return false;
@@ -73,6 +70,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 		
 		return true;
 	}
+*/
 	
 	/**
 	 * @param rawCertificate - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/1129238407379723.pem

@@ -24,7 +24,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 	public String vendorId;
 	public String downloadUrl;
 	public String gpgKeyUrl;
-	public String enabled;
+	public Boolean enabled;
 	public Integer metadataExpire;	// seconds
 	public String requiredTags;	// comma separated list of tags: TAG1,TAG2,TAG3
 

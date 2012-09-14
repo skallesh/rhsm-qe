@@ -846,7 +846,7 @@ public class SubscriptionManagerTasks {
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.type.equalsIgnoreCase("yum")) {
-					if (contentNamespace.enabled.equalsIgnoreCase(Boolean.TRUE.toString()) || contentNamespace.enabled.equals("1")) {	// Bug 820639 - subscription-manager release --list should exclude listings from disabled repos
+					if (contentNamespace.enabled) {	// Bug 820639 - subscription-manager release --list should exclude listings from disabled repos
 						if (contentNamespace.downloadUrl.contains("$releasever")) {
 							if (contentNamespace.downloadUrl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
 								// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
@@ -4190,14 +4190,12 @@ repolist: 3,394
 		 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 		 				if (!contentNamespace.type.equalsIgnoreCase("yum")) continue;
 		 				if (areReported && areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts)) {
-							if (contentNamespace.enabled.equals("1")) {
+							if (contentNamespace.enabled) {
 								Assert.assertTrue(yumRepoListEnabled.contains(contentNamespace.label),
 										"Yum repolist enabled includes repo id/label '"+contentNamespace.label+"' that comes from entitlement cert "+entitlementCert.id+"'s content namespace: "+contentNamespace);
-							} else if (contentNamespace.enabled.equals("0")) {
+							} else {
 								Assert.assertTrue(yumRepoListDisabled.contains(contentNamespace.label),
 										"Yum repolist disabled includes repo id/label '"+contentNamespace.label+"' that comes from entitlement cert "+entitlementCert.id+"'s content namespace: "+contentNamespace);
-							} else {
-								Assert.fail("Encountered entitlement cert '"+entitlementCert.id+"' whose content namespace has an unexpected enabled field: "+contentNamespace);
 							}
 		 				}
 						else
@@ -4220,7 +4218,7 @@ repolist: 3,394
  			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
  				
  				// Note: When the repo id and repo name are really long, the repo name in the yum repolist all gets crushed (hence the reason for .* in the regex)
-				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled.equals("1")? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
+				String regex = String.format("^%s\\s+(?:%s|.*)\\s+%s", contentNamespace.label.trim(), contentNamespace.name.substring(0,Math.min(contentNamespace.name.length(), 25)), contentNamespace.enabled? "enabled:":"disabled$");	// 25 was arbitraily picked to be short enough to be displayed by yum repolist all
 				boolean isReported = Pattern.compile(regex,Pattern.MULTILINE).matcher(result.getStdout()).find();
 
 				boolean areAllRequiredTagsInstalled = areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace,currentProductCerts);
