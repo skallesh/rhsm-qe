@@ -1764,16 +1764,6 @@ public class SubscriptionManagerTasks {
 		return entitlementCerts.get(0);
 	}
 	
-	public ProductCert getProductCertFromProductCertFile(File productPemFile) {
-		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+productPemFile.getPath());
-		String certificates = sshCommandRunner.getStdout();
-		List<ProductCert> productCerts = ProductCert.parse(certificates);
-		
-		// assert that only one ProductCert was parsed and return it
-		Assert.assertEquals(productCerts.size(), 1, "Product cert file '"+productPemFile+"' parsed only one ProductCert.");
-		return productCerts.get(0);
-	}
-	
 	public BigInteger getSerialNumberFromEntitlementCertFile(File serialPemFile) {
 		// example serialPemFile: /etc/pki/entitlement/196.pem
 		// extract the serial number from the certFile name
@@ -1803,6 +1793,29 @@ public class SubscriptionManagerTasks {
 
 		return new File(serialKeyPem);
 	}
+	
+	@Deprecated
+	public ProductCert getProductCertFromProductCertFileUsingOpensslX509(File productPemFile) {
+		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -noout -text -in "+productPemFile.getPath());
+		String certificates = sshCommandRunner.getStdout();
+		List<ProductCert> productCerts = ProductCert.parse(certificates);
+		
+		// assert that only one ProductCert was parsed and return it
+		Assert.assertEquals(productCerts.size(), 1, "Product cert file '"+productPemFile+"' parsed only one ProductCert.");
+		return productCerts.get(0);
+	}
+	public ProductCert getProductCertFromProductCertFile(File productPemFile) {
+		sshCommandRunner.runCommandAndWaitWithoutLogging("rct cat-cert "+productPemFile.getPath());
+		String certificates = sshCommandRunner.getStdout();
+		List<ProductCert> productCerts = ProductCert.parse(certificates);
+		
+		// assert that only one ProductCert was parsed and return it
+		Assert.assertEquals(productCerts.size(), 1, "Product cert file '"+productPemFile+"' parsed only one ProductCert.");
+		return productCerts.get(0);
+	}
+	
+	
+	
 	
 	// register module tasks ************************************************************
 	
