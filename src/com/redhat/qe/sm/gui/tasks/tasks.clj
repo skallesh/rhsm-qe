@@ -217,7 +217,7 @@
                            (ui selectrow :owner-view owner))))
            (ui click :register)
            (checkforerror 10)))
-       (ui waittillnotshowing :registering 1800)  ;; 30 minutes
+       ;;(ui waittillnotshowing :registering 1800)  ;; 30 minutes
        ))
    (if (= 1 (ui guiexist :subscribe-system-dialog))
      (do
@@ -539,8 +539,8 @@
 (defn compliance?
   "Returns true if the GUI reports that all products have a valid subscription."
   []
-  (or (= 1 (ui guiexist :main-window "Product entitlement certificates valid*"))
-      (= 1 (ui guiexist :main-window "No product certificates installed*"))))
+  (or (= 1 (ui guiexist :main-window "System is properly subscribed through*"))
+      (= 1 (ui guiexist :main-window "No installed products detected."))))
 
 (defn first-date-of-noncomply
   "Pulls the first date of noncompliance from the subscription assistant dialog."

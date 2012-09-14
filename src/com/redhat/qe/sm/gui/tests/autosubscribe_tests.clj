@@ -72,6 +72,7 @@
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nodir))
+  (tasks/register-with-creds)
   (let [beforesubs (tasks/warn-count)
         user (@config :username)
         pass (@config :password)
@@ -101,15 +102,18 @@
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
   (tasks/restart-app)
   (verify (dirsetup? nonedir))
+  (tasks/register-with-creds)
   (verify (= 0 (tasks/warn-count)))
   (verify (tasks/compliance?)))
 
 (defn ^{Test {:groups ["autosubscribe"
-                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"]}}
+                       "configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel"
+                       "blockedByBug-857147"]}}
   simple_autosubscribe [_]
    (.runCommandAndWait @clientcmd "subscription-manager unregister")
    (tasks/restart-app)
    (verify (dirsetup? one-sla-dir))
+   (tasks/register-with-creds)
    (let [beforesubs (tasks/warn-count)
          dircount (trim (.getStdout
                          (.runCommandAndWait
@@ -119,6 +123,7 @@
          pass (@config :password)
          key  (@config :owner-key)
          ownername (ctasks/get-owner-display-name user pass key)]
+     (tasks/unregister)
      (verify (= (str beforesubs)
                dircount))
      (if (= 0 beforesubs)
