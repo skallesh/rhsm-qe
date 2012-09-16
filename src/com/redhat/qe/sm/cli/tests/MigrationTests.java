@@ -517,6 +517,23 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(numProductCertFilenamesToBeCopied, expectedMigrationProductCertFilenames.size(),"The number of product certs to be copied.");
 		Assert.assertEquals(clienttasks.getCurrentlyInstalledProducts().size(), 0, "A dryrun should NOT install any product certs.");
 		Map<String,String> factMap = clienttasks.getFacts();
+		
+//		// TEMPORARY WORKAROUND FOR BUG
+//		String bugId = "840415"; boolean invokeWorkaroundWhileBugIsOpen = true;
+//		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+//		if (invokeWorkaroundWhileBugIsOpen) {
+//			if (clienttasks.productCertDir.equals(nonDefaultProductCertDir))
+//			log.warning("Skipping the removal of the non default productCertDir '"+nonDefaultProductCertDir+"' before Testing without the dryrun option...");
+//		} else
+//		// END OF WORKAROUND
+// TODO This test path is not yet complete - epends on the outcome of bug 840415
+		// when testing with the non-default productCertDir, make sure it does not exist (the list --installed call above will create it as a side affect)
+		// Note: this if block help reveal bug 840415 - Install-num migration throws traceback for invalid product cert location.
+		if (clienttasks.productCertDir.equals(nonDefaultProductCertDir)) {
+			client.runCommandAndWait("rm -rf "+clienttasks.productCertDir);
+			Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.productCertDir),"The configured rhsm.productCertDir does not exist.");
+		}
+		
 		// TEMPORARY WORKAROUND FOR BUG
 		String bugId = "783278"; boolean invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
@@ -622,7 +639,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Execute migration tool install-num-migrate-to-rhsm with a non-default rhsm.productcertdir configured",
-			groups={"blockedByBug-773707","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
+			groups={"blockedByBug-773707","blockedByBug-840415","InstallNumMigrateToRhsmWithNonDefaultProductCertDir_Test"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="InstallNumMigrateToRhsmData",
 			enabled=true)
