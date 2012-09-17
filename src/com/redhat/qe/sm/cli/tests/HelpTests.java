@@ -366,6 +366,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "redeem";
 		options.clear();
 		options.add("-h, --help");
+		options.add("--serverurl=SERVER_URL");
 		options.add("--email=EMAIL");
 		options.add("--locale=LOCALE");
 		options.add("--proxy=PROXY_URL");
@@ -384,6 +385,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "orgs";
 		options.clear();
 		options.add("-h, --help");
+		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
 		options.add("--proxy=PROXY_URL");
@@ -435,6 +437,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "environments";
 		options.clear();
 		options.add("-h, --help");
+		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
 		options.add("--org=ORG");
@@ -617,9 +620,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "service-level";
 		options.clear();
 		options.add("-h, --help");
-		options.add("--proxy=PROXY_URL");
-		options.add("--proxyuser=PROXY_USER");
-		options.add("--proxypassword=PROXY_PASSWORD");
+		options.add("--serverurl=SERVER_URL");
 		options.add("--username=USERNAME");
 		options.add("--password=PASSWORD");
 		options.add("--org=ORG");
@@ -627,6 +628,9 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		options.add("--list");
 		options.add("--set=SERVICE_LEVEL");
 		options.add("--unset");
+		options.add("--proxy=PROXY_URL");
+		options.add("--proxyuser=PROXY_USER");
+		options.add("--proxypassword=PROXY_PASSWORD");
 		for (String smHelpCommand : new String[]{clienttasks.command+" -h "+module,clienttasks.command+" --help "+module}) {
 			List <String> usages = new ArrayList<String>();
 			String usage = String.format("Usage: %s %s [OPTIONS]",clienttasks.command,module);
@@ -746,6 +750,7 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 			options.add("-g, --gui");
 			options.add("-n, --no-auto");
 			options.add("-s SERVICELEVEL, --servicelevel=SERVICELEVEL");
+			options.add("--serverurl=SERVERURL");
 			options.add("-h, --help");
 			for (String commandHelp : new String[]{command+" -h", command+" --help"}) {
 				List <String> usages = new ArrayList<String>();

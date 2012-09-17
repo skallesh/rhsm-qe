@@ -1325,7 +1325,7 @@ Expected Results:
 		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
 		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
 		
-		// register with a baseurl
+		// register with a serverurl
 		SSHCommandResult sshCommandResult = clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null, false, null, null, (String)null, serverurl, null, true, null, null, null, null);
 		
 		// assert the sshCommandResult here
@@ -1392,6 +1392,7 @@ Expected Results:
 			serverurl= (server_port.isEmpty()?"":":"+server_port);										ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
 			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
 		}
+		// TODO add a case for the ipaddress of hostname
 		
 		// ignored tests
 		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,							serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
