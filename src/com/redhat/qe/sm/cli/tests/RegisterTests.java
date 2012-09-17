@@ -1200,7 +1200,7 @@ Expected Results:
 	}
 	
 	
-	
+	protected String rhsm_baseurl = null;
 	@BeforeGroups(value={"RegisterWithBaseurl_Test"}, alwaysRun=true)
 	public void beforeRegisterWithBaseurl_Test() {
 		if (clienttasks==null) return;
@@ -1307,7 +1307,10 @@ Expected Results:
 	
 	
 	
-	@BeforeGroups(value={"RegisterWithServerurl_Test"}, alwaysRun=true)
+	protected String server_hostname = null;
+	protected String server_port = null;
+	protected String server_prefix = null;
+	@BeforeGroups(value={"RegisterWithServerurl_Test"}, groups={"setup"})
 	public void beforeRegisterWithServerurl_Test() {
 		if (clienttasks==null) return;
 		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
@@ -1315,7 +1318,7 @@ Expected Results:
 		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
 	}
 	@Test(	description="subscription-manager-cli: register with --serverurl",
-			dataProvider="getRegisterWithServerurl_TestData",
+			dataProvider="getServerurl_TestData",
 			groups={"RegisterWithServerurl_Test","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
@@ -1341,83 +1344,20 @@ Expected Results:
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
 			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), prefixBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix should remain unchanged when attempting to register with an invalid serverurl.");
 			
-			// nothing more to do after these negative testcase assertions
-			return;
+			return;	// nothing more to do after these negative testcase assertions;
 		}
 		
 		// positive testcase assertions........
-		// assert that the current config has been updated to the new expected baseurl
-		//Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsm","baseurl"), baseurlConfigured, "The rhsm configuration for baseurl has been updated to the new baseurl with correct format (https://hostname:443/prefix).");
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), expectedHostname, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname has been updated from the specified --serverurl "+serverurl);
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), expectedPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
 		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), expectedPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
 	}
-	@AfterGroups(value={"RegisterWithServerurl_Test"},alwaysRun=true)
+	@AfterGroups(value={"RegisterWithServerurl_Test"}, groups={"setup"})
 	public void afterRegisterWithServerurl_Test() {
 		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
 		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
 		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
 	}
-	
-	@DataProvider(name="getRegisterWithServerurl_TestData")
-	public Object[][] getRegisterWithServerurl_TestDataAs2dArray() {
-		return TestNGUtils.convertListOfListsTo2dArray(getRegisterWithServerurl_TestDataAsListOfLists());
-	}
-	protected List<List<Object>> getRegisterWithServerurl_TestDataAsListOfLists() {
-		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
-		if (servertasks==null) return ll;
-		if (clienttasks==null) return ll;
-		String defaultHostname = "subscription.rhn.redhat.com";
-		String defaultPort = "443";
-		String defaultPrefix = "/subscription";
-		String serverurl;
-		beforeRegisterWithServerurl_Test();	// will initialize server_hostname server_port server_prefix
-		
-		//  --serverurl=SERVER_URL      server url in the form of https://hostname:443/prefix
-
-		// Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdout, String expectedStderr
-		// positive tests
-		serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port)+server_prefix;			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
-		serverurl= "https://"+serverurl;																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
-		
-		if (server_port.equals(defaultPort)) {
-			serverurl= server_hostname+server_prefix;													ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
-			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
-		}
-		if (server_prefix.equals(defaultPrefix)) {
-			serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port);						ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
-			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
-		}
-		if (server_hostname.equals(defaultHostname)) {
-			serverurl= (server_port.isEmpty()?"":":"+server_port);										ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
-			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
-		}
-		// TODO add a case for the ipaddress of hostname
-		
-		// ignored tests
-		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,							serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
-	
-		// negative tests
-//		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,													null}));
-		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",															null}));
-		serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842885"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX",		null}));
-		serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:"+defaultPort+defaultPrefix,													null}));
-		serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900"+defaultPrefix,																null}));
-		serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900/prefix",																	null}));
-		serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("830767"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+defaultHostname+":"+defaultPort+"/",													null}));
-		serverurl= "https:/hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https:hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https//hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https/hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "ftp://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "git://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
-		serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port could not be parsed",					null}));
-		serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",					null}));
-		serverurl= "https://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
-		serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
-		return ll;
-	}
-	
 	
 	
 	
@@ -1435,10 +1375,8 @@ Expected Results:
 	
 	protected final String tmpProductCertDir = "/tmp/productCertDir";	// TODO Not being used anymore; DELETEME
 	protected String productCertDir = null;	// TODO Not being used anymore; DELETEME
-	protected String rhsm_baseurl = null;
-	protected String server_hostname = null;
-	protected String server_port = null;
-	protected String server_prefix = null;
+
+
 	
 	// Configuration methods ***********************************************************************
 

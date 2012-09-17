@@ -103,7 +103,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			availableService= ((String)availableServiceLevelData.get(1));
 		} // TODO Shwetha, what is the purpose of this loop?
 		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
@@ -258,7 +258,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		
 		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
 		
-		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");

@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -38,7 +39,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	public void AttemptRedeemWithoutBeingRegistered_Test() {
 		
 		clienttasks.unregister(null,null,null);
-		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null);
+		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null);
 		
 		// assert redemption results
 		//Assert.assertEquals(redeemResult.getStdout().trim(), "Error: You need to register this system by running `register` command before using this option.","Redeem should require that the system be registered.");
@@ -55,7 +56,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 	public void AttemptRedeemWithoutEmail_Test() {
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null);
+		SSHCommandResult redeemResult = clienttasks.redeem_(null,null,null,null,null, null);
 		
 		// assert redemption results
 		//Assert.assertEquals(redeemResult.getStdout().trim(), "email and email_locale are required for notification","Redeem should require that the email option be specified.");
@@ -75,7 +76,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		log.warning(warning);
 		
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert redemption results
 		//Assert.assertEquals(redeemResult.getStdout().trim(), "Standalone candlepin does not support activation.","Standalone candlepin does not support activation.");
@@ -105,7 +106,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		clienttasks.facts(null,true, null, null, null);
 		
 		// attempt redeem
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert the redeemResult here
 		if (expectedExitCode!=null) Assert.assertEquals(redeemResult.getExitCode(), expectedExitCode);
@@ -154,7 +155,7 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		CandlepinTasks.setAttributeForConsumer(sm_clientUsername, sm_clientPassword, SubscriptionManagerBaseTestScript.sm_serverUrl, consumerId, "canActivate", true);
 
 		// attempt to redeem
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert the redeemResult here
 		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
@@ -189,13 +190,37 @@ public class RedeemTests extends SubscriptionManagerCLITestScript {
 		Assert.assertFalse(jsonConsumer.getBoolean("canActivate"), "Upon registering a system with a dmi.system.serial_number of '"+facts.get("dmi.system.serial_number")+"', the consumer's canActivate attribute should be false.");
 		
 		// attempt to redeem
-		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null);
+		SSHCommandResult redeemResult = clienttasks.redeem("tester@redhat.com",null,null,null,null, null);
 		
 		// assert the redeemResult here
 		Assert.assertEquals(redeemResult.getExitCode(), new Integer(0));
 		Assert.assertEquals(redeemResult.getStdout().trim(), "");
 		Assert.assertEquals(redeemResult.getStderr().trim(), "The system is unable to redeem the requested subscription: {0}".replaceFirst("\\{0\\}", facts.get("dmi.system.serial_number")));
 	}
+	
+	
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	

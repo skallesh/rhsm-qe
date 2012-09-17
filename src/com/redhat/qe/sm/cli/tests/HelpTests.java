@@ -366,7 +366,6 @@ public class HelpTests extends SubscriptionManagerCLITestScript{
 		module = "redeem";
 		options.clear();
 		options.add("-h, --help");
-		options.add("--serverurl=SERVER_URL");
 		options.add("--email=EMAIL");
 		options.add("--locale=LOCALE");
 		options.add("--proxy=PROXY_URL");

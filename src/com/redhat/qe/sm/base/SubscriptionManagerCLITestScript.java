@@ -33,6 +33,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -965,7 +966,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			
 				// get the orgs for this username/password
 				//List<Org> orgs = clienttasks.getOrgs(username,password);	// fails when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
-				List<Org> orgs = Org.parse(clienttasks.orgs_(username, password, null, null, null).getStdout());
+				List<Org> orgs = Org.parse(clienttasks.orgs_(username, password, null, null, null, null).getStdout());
 				//if (orgs.size()==1) {orgs.clear(); orgs.add(new Org(null,null));}	// when a user belongs to only one org, then we don't really need to know the orgKey for registration
 				if (orgs.isEmpty()) orgs.add(new Org("null","Null"));	// reveals when: You must first accept Red Hat's Terms and conditions. Please visit https://www.redhat.com/wapps/ugc
 			
@@ -2514,6 +2515,72 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 			ll.add(Arrays.asList(new Object[] {null,	serviceLevel}));
 		}
 				
+		return ll;
+	}
+	
+	
+	
+	
+	@DataProvider(name="getServerurl_TestData")
+	public Object[][] getServerurl_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getServerurl_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getServerurl_TestDataAsListOfLists() {
+		List<List<Object>> ll = new ArrayList<List<Object>>(); if (!isSetupBeforeSuiteComplete) return ll;
+		if (servertasks==null) return ll;
+		if (clienttasks==null) return ll;
+		String defaultHostname = "subscription.rhn.redhat.com";
+		String defaultPort = "443";
+		String defaultPrefix = "/subscription";
+		String serverurl;
+		
+		// initialize server_hostname server_port server_prefix with valid values from the current rhsm configurations
+		String server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		String server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		String server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+		
+		//  --serverurl=SERVER_URL      server url in the form of https://hostname:443/prefix
+
+		// Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdout, String expectedStderr
+		// positive tests
+		serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port)+server_prefix;			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		serverurl= "https://"+serverurl;																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		
+		if (server_port.equals(defaultPort)) {
+			serverurl= server_hostname+server_prefix;													ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	defaultPort,	server_prefix,		new Integer(0),	null,			null}));
+		}
+		if (server_prefix.equals(defaultPrefix)) {
+			serverurl= server_hostname+(server_port.isEmpty()?"":":"+server_port);						ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	server_hostname,	server_port,	defaultPrefix,		new Integer(0),	null,			null}));
+		}
+		if (server_hostname.equals(defaultHostname)) {
+			serverurl= (server_port.isEmpty()?"":":"+server_port);										ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+			serverurl= "https://"+serverurl;															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	defaultHostname,	server_port,	server_prefix,		new Integer(0),	null,			null}));
+		}
+		// TODO add a case for the ipaddress of hostname
+		
+		// ignored tests
+		serverurl="";																					ll.add(Arrays.asList(new Object[] {	null,							serverurl,	/* last set */ ll.get(ll.size()-1).get(2),	ll.get(ll.size()-1).get(3),	ll.get(ll.size()-1).get(4),	new Integer(0),		null,			null}));	
+	
+		// negative tests
+//		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+":PORT"+server_prefix,													null}));
+		serverurl= "https://"+server_hostname+":PORT"+server_prefix;									ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",															null}));
+		serverurl= "https://"+server_hostname+(server_port.isEmpty()?"":":"+server_port)+"/PREFIX";		ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842885"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+server_hostname+(server_port.isEmpty()?":"+defaultPort:":"+server_port)+"/PREFIX",		null}));
+		serverurl= "hostname";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:"+defaultPort+defaultPrefix,													null}));
+		serverurl= "hostname:900";																		ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900"+defaultPrefix,																null}));
+		serverurl= "hostname:900/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at hostname:900/prefix",																	null}));
+		serverurl= "/";																					ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("830767"),	serverurl,	null,	null,	null,		new Integer(255),	"Unable to reach the server at "+defaultHostname+":"+defaultPort+"/",													null}));
+		serverurl= "https:/hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https:hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https//hostname/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https/hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "ftp://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "git://hostname/prefix";																ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL has an invalid scheme. http:// and https:// are supported",					null}));
+		serverurl= "https://hostname:/prefix";															ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port could not be parsed",					null}));
+		serverurl= "https://hostname:PORT/prefix";														ll.add(Arrays.asList(new Object[] {	new BlockedByBzBug("842845"),	serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server url port should be numeric",					null}));
+		serverurl= "https://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
+		serverurl= "http://";																			ll.add(Arrays.asList(new Object[] {	null,							serverurl,	null,	null,	null,		new Integer(255),	"Error parsing serverurl: Server URL is just a schema. Should include hostname, and/or port and path",					null}));
 		return ll;
 	}
 }

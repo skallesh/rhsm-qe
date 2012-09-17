@@ -727,7 +727,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public String getCurrentServiceLevel() {
 		
-		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = service_level(true, false, null, null, null, null, null, null, null, null, null);
 		
 		// [root@jsefler-r63-server ~]# subscription-manager service-level --show
 		// Current service level: Standard
@@ -774,7 +774,7 @@ public class SubscriptionManagerTasks {
 	 */
 	public List<String> getCurrentlyAvailableServiceLevels() {
 		
-		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null, null);
+		SSHCommandResult result = service_level_(false, true, null, null, null, null, null, null, null, null, null);
 		
 		List<String> serviceLevels = new ArrayList<String>();
 		if (!result.getExitCode().equals(Integer.valueOf(0))) return serviceLevels;
@@ -1094,7 +1094,7 @@ public class SubscriptionManagerTasks {
 //		if (orgs.size()>0) orgs.remove(0); // exclude the first title line of output...  orgs:
 //		return orgs;
 		
-		return Org.parse(orgs(username, password, null, null, null).getStdout());
+		return Org.parse(orgs(username, password, null, null, null, null).getStdout());
 	}
 	
 	/**
@@ -2301,14 +2301,16 @@ public class SubscriptionManagerTasks {
 	 * orgs without asserting results
 	 * @param username
 	 * @param password
+	 * @param serverurl TODO
 	 * @return
 	 */
-	public SSHCommandResult orgs_(String username, String password, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult orgs_(String username, String password, String serverurl, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " orgs";
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
+		if (serverurl!=null)			command += " --serverurl="+serverurl;
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -2321,11 +2323,12 @@ public class SubscriptionManagerTasks {
 	 * "subscription-manager orgs"
 	 * @param username
 	 * @param password
+	 * @param serverurl TODO
 	 * @return
 	 */
-	public SSHCommandResult orgs(String username, String password, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult orgs(String username, String password, String serverurl, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = orgs_(username, password, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = orgs_(username, password, serverurl, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		/*
@@ -2363,12 +2366,13 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param org
+	 * @param serverurl TODO
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level_(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String serverurl, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " service-level";
@@ -2379,6 +2383,7 @@ public class SubscriptionManagerTasks {
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
 		if (org!=null)					command += " --org="+org;
+		if (serverurl!=null)			command += " --serverurl="+serverurl;
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -2396,14 +2401,15 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param org
+	 * @param serverurl TODO
 	 * @param proxy
 	 * @param proxyuser
 	 * @param proxypassword
 	 * @return
 	 */
-	public SSHCommandResult service_level(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult service_level(Boolean show, Boolean list, String set, Boolean unset, String username, String password, String org, String serverurl, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = service_level_(show, list, set, unset, username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = service_level_(show, list, set, unset, username, password, org, serverurl, proxy, proxyuser, proxypassword);
 		
 		// assert results...
 		/*
@@ -2792,15 +2798,17 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param org
+	 * @param serverurl TODO
 	 * @return
 	 */
-	public SSHCommandResult environments_(String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult environments_(String username, String password, String org, String serverurl, String proxy, String proxyuser, String proxypassword) {
 
 		// assemble the command
 		String command = this.command;	command += " environments";
 		if (username!=null)				command += " --username="+username;
 		if (password!=null)				command += " --password="+password;
 		if (org!=null)					command += " --org="+org;
+		if (serverurl!=null)			command += " --serverurl="+serverurl;
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -2814,11 +2822,12 @@ public class SubscriptionManagerTasks {
 	 * @param username
 	 * @param password
 	 * @param org
+	 * @param serverurl TODO
 	 * @return
 	 */
-	public SSHCommandResult environments(String username, String password, String org, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult environments(String username, String password, String org, String serverurl, String proxy, String proxyuser, String proxypassword) {
 		
-		SSHCommandResult sshCommandResult = environments_(username, password, org, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = environments_(username, password, org, serverurl, proxy, proxyuser, proxypassword);
 		
 		// TODO assert results...
 		
@@ -3054,16 +3063,18 @@ public class SubscriptionManagerTasks {
 	 * redeem without asserting results
 	 * @param email TODO
 	 * @param locale TODO
+	 * @param serverurl TODO
 	 * @param proxy TODO
 	 * @param proxyuser TODO
 	 * @param proxypassword TODO
 	 */
-	public SSHCommandResult redeem_(String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult redeem_(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword) {
 		
 		// assemble the command
 		String command = this.command;	command += " redeem";
 		if (email!=null)				command += " --email="+email;
 		if (locale!=null)				command += " --locale="+locale;
+		if (serverurl!=null)			command += " --serverurl="+serverurl;
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
@@ -3072,9 +3083,9 @@ public class SubscriptionManagerTasks {
 		return sshCommandRunner.runCommandAndWait(command);
 	}
 
-	public SSHCommandResult redeem(String email, String locale, String proxy, String proxyuser, String proxypassword) {
+	public SSHCommandResult redeem(String email, String locale, String serverurl, String proxy, String proxyuser, String proxypassword) {
 
-		SSHCommandResult sshCommandResult = redeem_(email, locale, proxy, proxyuser, proxypassword);
+		SSHCommandResult sshCommandResult = redeem_(email, locale, serverurl, proxy, proxyuser, proxypassword);
 		
 		// TODO assert results...
 		

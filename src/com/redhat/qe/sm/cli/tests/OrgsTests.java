@@ -7,10 +7,13 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
@@ -37,7 +40,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" and expecting orgs="+expectedOrgs+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult orgsResult = clienttasks.orgs_(username, password, null, null, null);
+		SSHCommandResult orgsResult = clienttasks.orgs_(username, password, null, null, null, null);
 		
 		// when the expectedOrgs is empty, there is a special message, assert it
 		if (expectedOrgs.isEmpty()) {
@@ -64,7 +67,7 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 		log.info("Testing subscription-manager orgs module using username="+username+" password="+password+" ...");
 		
 		// use subscription-manager to get the organizations for which the user has access
-		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null);
+		SSHCommandResult sshCommandResult = clienttasks.orgs_(username, password, null, null, null, null);
 		
 		// assert the sshCommandResult here
 		Assert.assertEquals(sshCommandResult.getExitCode(), Integer.valueOf(255), "The expected exit code from the orgs attempt.");
@@ -141,7 +144,67 @@ public class OrgsTests extends SubscriptionManagerCLITestScript {
 //		2011-08-10 18:00:31,154 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter - ====ResponseBody====
 //		2011-08-10 18:00:31,154 INFO  [STDOUT] Aug 10 18:00:31 [http-10.7.13.82-8080-1] DEBUG org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter - {"displayMessage":"Insufficient permissions"}
 	}
+	
+	
+		
+	protected String server_hostname = null;
+	protected String server_port = null;
+	protected String server_prefix = null;
+	@BeforeGroups(value={"OrgsWithServerurl_Test"}, groups={"setup"})
+	public void beforeOrgsWithServerurl_Test() {
+		if (clienttasks==null) return;
+		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+	}
+	@Test(	description="subscription-manager: orgs with --serverurl",
+			dataProvider="getServerurl_TestData",
+			groups={"OrgsWithServerurl_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void OrgsWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+		// get original server at the beginning of this test
+		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
+		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+		
+		// orgs with a serverurl
+		SSHCommandResult sshCommandResult = clienttasks.orgs_(sm_clientUsername,sm_clientPassword,serverurl, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
+		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --serverurl="+serverurl+" and other options:");
+		if (expectedStderrMatch!=null)	Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrMatch,"Stderr after register with --serverurl="+serverurl+" and other options:");
+		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --serverurl="+serverurl+" and other options should not contain a Traceback.");
+		
+		// negative testcase assertions........
+		if (expectedExitCode.equals(new Integer(255))) {
+			// assert that the current config remains unchanged when the expectedExitCode is 255
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), prefixBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix should remain unchanged when attempting to register with an invalid serverurl.");
+						
+			return;	// nothing more to do after these negative testcase assertions
+		}
+		
+		// positive testcase assertions........
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), expectedHostname, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), expectedPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), expectedPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
+	}
+	@AfterGroups(value={"OrgsWithServerurl_Test"},groups={"setup"})
+	public void afterRegisterWithServerurl_Test() {
+		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
+		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
+		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
+	}
+	
 
+	
+	
+	
+	
+	
 	
 		
 	// Candidates for an automated Test:

@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.json.JSONException;
 import org.testng.SkipException;
+import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -96,19 +98,77 @@ public class EnvironmentsTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void AttemptEnvironmentsWithoutOrg_Test() {
 		
-		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null);
+		SSHCommandResult environmentsResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,null,null,null,null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
 
-		environmentsResult = clienttasks.environments_(null,null,null,null,null,null);
+		environmentsResult = clienttasks.environments_(null,null,null,null,null,null, null);
 		Assert.assertEquals(environmentsResult.getStderr().trim(), "", "Stderr from environments without specifying the --org option.");
 		//Assert.assertEquals(environmentsResult.getStdout().trim(), "you must specify an --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getStdout().trim(), "Error: This command requires that you specify an organization with --org", "Stdout from environments without specifying the --org option.");
 		Assert.assertEquals(environmentsResult.getExitCode(), Integer.valueOf(255),"Exit code from environments when executed without an org option.");
 
 	}
+	
+	
+	
+	protected String server_hostname = null;
+	protected String server_port = null;
+	protected String server_prefix = null;
+	protected String clientOrg = null;
+	@BeforeGroups(value={"EnvironmentsWithServerurl_Test"}, groups={"setup"})
+	public void beforeEnvironmentsWithServerurl_Test() {
+		if (clienttasks==null) return;
+		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		server_port		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "port");
+		server_prefix	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "prefix");
+		clientOrg 		= clienttasks.getOrgs(sm_clientUsername,sm_clientPassword).get(0).orgKey;	// use the first org
+	}
+	@Test(	description="subscription-manager: service-level --list with --serverurl",
+			dataProvider="getServerurl_TestData",
+			groups={"EnvironmentsWithServerurl_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void EnvironmentsWithServerurl_Test(Object bugzilla, String serverurl, String expectedHostname, String expectedPort, String expectedPrefix, Integer expectedExitCode, String expectedStdoutRegex, String expectedStderrMatch) {
+		// get original server at the beginning of this test
+		String hostnameBeforeTest	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname");
+		String portBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port");
+		String prefixBeforeTest		= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix");
+		
+		// environments with a serverurl
+		SSHCommandResult sshCommandResult = clienttasks.environments_(sm_clientUsername,sm_clientPassword,clientOrg,serverurl, null, null, null);
+		
+		// assert the sshCommandResult here
+		if (expectedExitCode!=null)	Assert.assertEquals(sshCommandResult.getExitCode(), expectedExitCode,"ExitCode after register with --serverurl="+serverurl+" and other options:");
+		if (expectedStdoutRegex!=null)	Assert.assertContainsMatch(sshCommandResult.getStdout().trim(), expectedStdoutRegex,"Stdout after register with --serverurl="+serverurl+" and other options:");
+		if (expectedStderrMatch!=null)	Assert.assertContainsMatch(sshCommandResult.getStderr().trim(), expectedStderrMatch,"Stderr after register with --serverurl="+serverurl+" and other options:");
+		Assert.assertContainsNoMatch(sshCommandResult.getStderr().trim(), "Traceback.*","Stderr after register with --serverurl="+serverurl+" and other options should not contain a Traceback.");
+		
+		// negative testcase assertions........
+		if (expectedExitCode.equals(new Integer(255))) {
+			// assert that the current config remains unchanged when the expectedExitCode is 255
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), hostnameBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname should remain unchanged when attempting to register with an invalid serverurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"),	portBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] port should remain unchanged when attempting to register with an invalid serverurl.");
+			Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), prefixBeforeTest, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix should remain unchanged when attempting to register with an invalid serverurl.");
+						
+			return;	// nothing more to do after these negative testcase assertions
+		}
+		
+		// positive testcase assertions........
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "hostname"), expectedHostname, "The "+clienttasks.rhsmConfFile+" configuration for [server] hostname has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "port"), expectedPort, "The "+clienttasks.rhsmConfFile+" configuration for [server] port has been updated from the specified --serverurl "+serverurl);
+		Assert.assertEquals(clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "prefix"), expectedPrefix, "The "+clienttasks.rhsmConfFile+" configuration for [server] prefix has been updated from the specified --serverurl "+serverurl);
+	}
+	@AfterGroups(value={"EnvironmentsWithServerurl_Test"},groups={"setup"})
+	public void afterRegisterWithServerurl_Test() {
+		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
+		if (server_port!=null)		clienttasks.config(null,null,true,new String[]{"server","port",server_port});
+		if (server_prefix!=null)	clienttasks.config(null,null,true,new String[]{"server","prefix",server_prefix});
+	}
+	
+	
 	
 	
 //	TODO create environment tests for a candlepin server that DOES support environments...
