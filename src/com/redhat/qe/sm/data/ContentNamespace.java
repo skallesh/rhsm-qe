@@ -472,7 +472,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 		regexes.put("gpgKeyUrl",			"^\\s+GPG: (.+)");
 		regexes.put("enabled",				"^\\s+Enabled: (.+)");
 		regexes.put("metadataExpire",		"^\\s+Expires: (.+)");
-		regexes.put("requiredTags",			"^\\s+Required Tags: (.+)");
+		regexes.put("requiredTags",			"^\\s+Required Tags: (.*)");
 		regexes.put("type",					"^\\s+Type: (.+)");	// Bug 856349 - rct cat-cert tool should report Content for "file" repo types as well as "yum" repos types
 
 		

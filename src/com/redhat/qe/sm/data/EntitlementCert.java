@@ -96,13 +96,43 @@ public class EntitlementCert extends AbstractCommandLineData {
 /* 9/14/2012 jsefler believes the super.equals() is now smart enough to handle this
 	@Override
 	public boolean equals(Object obj){
-
-		return	((EntitlementCert)obj).serialNumber.equals(this.serialNumber) &&
-				((EntitlementCert)obj).id.equals(this.id) &&
-				((EntitlementCert)obj).issuer.equals(this.issuer) &&
-				((EntitlementCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
-				((EntitlementCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
-				((EntitlementCert)obj).orderNamespace.productId.equals(this.orderNamespace.productId);
+	
+//		return	((EntitlementCert)obj).serialNumber.equals(this.serialNumber) &&
+//				((EntitlementCert)obj).id.equals(this.id) &&
+//				((EntitlementCert)obj).issuer.equals(this.issuer) &&
+//				((EntitlementCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
+//				((EntitlementCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
+//				((EntitlementCert)obj).orderNamespace.productId.equals(this.orderNamespace.productId);
+ 
+		// exclude orderNamespace when comparing entitlements
+		OrderNamespace thisOrderNamespace = this.orderNamespace;
+		OrderNamespace thatOrderNamespace = ((EntitlementCert)obj).orderNamespace;
+		this.orderNamespace = null;
+		((EntitlementCert)obj).orderNamespace = null;
+		
+		List<ProductNamespace> thisProductNamespaces = this.productNamespaces;
+		List<ProductNamespace> thatProductNamespaces = ((EntitlementCert)obj).productNamespaces;
+		this.productNamespaces = null;
+		((EntitlementCert)obj).productNamespaces = null;
+		
+		List<ContentNamespace> thisCotentNamespaces = this.contentNamespaces;
+		List<ContentNamespace> thatCotentNamespaces = ((EntitlementCert)obj).contentNamespaces;
+		this.contentNamespaces = null;
+		((EntitlementCert)obj).contentNamespaces = null;
+		
+		boolean equals = super.equals(obj);
+		
+		// restore orderNamespace before returning;
+		this.orderNamespace = thisOrderNamespace;
+		((EntitlementCert)obj).orderNamespace = thatOrderNamespace;
+		
+		this.productNamespaces = thisProductNamespaces;
+		((EntitlementCert)obj).productNamespaces = thatProductNamespaces;
+		
+		this.contentNamespaces = thisCotentNamespaces;
+		((EntitlementCert)obj).contentNamespaces = thatCotentNamespaces;
+		
+		return equals;
 	}
 */
 	
@@ -686,7 +716,10 @@ public class EntitlementCert extends AbstractCommandLineData {
 		String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";
 		List<EntitlementCert> entitlementCerts = new ArrayList<EntitlementCert>();
 		for (String rawCertificate : rawCertificates.split(rawCertificateRegex)) {
-			if (rawCertificate.trim().length()==0) continue;
+			
+			// strip leading and trailing blank lines and skip blank rawCertificates
+			rawCertificate = rawCertificate.replaceAll("^\\n*","").replaceAll("\\n*$", "");
+			if (rawCertificate.length()==0) continue;
 			
 			List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
 			for(String field : regexes.keySet()){

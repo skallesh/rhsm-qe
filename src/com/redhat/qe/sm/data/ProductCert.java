@@ -97,6 +97,8 @@ public class ProductCert extends AbstractCommandLineData {
 		return dateFormat.format(date.getTime());
 	}
 	
+	
+	/* 9/17/2012 jsefler believes the super.equals() is now smart enough to handle this
 	@Override
 	public boolean equals(Object obj){
 
@@ -133,6 +135,7 @@ public class ProductCert extends AbstractCommandLineData {
 		
 		return true;
 	}
+	*/
 	
 	/**
 	 * @param rawCertificates - OLD WAY: stdout from: find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text
@@ -293,7 +296,10 @@ public class ProductCert extends AbstractCommandLineData {
 		
 		// begin by splitting the rawCertificates and processing each certificate individually
 		for (String rawCertificate : rawCertificates.split("Certificate:")) {
-			if (rawCertificate.trim().length()==0) continue;
+
+			// strip leading and trailing blank lines and skip blank rawCertificates
+			rawCertificate = rawCertificate.replaceAll("^\\n*","").replaceAll("\\n*$", "");
+			if (rawCertificate.length()==0) continue;
 	
 			Map<String,String> regexes = new HashMap<String,String>();
 
