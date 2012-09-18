@@ -280,8 +280,8 @@ schema generation failed
 		//RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy; buildr candlepin:apicrawl", Integer.valueOf(0), "Wrote Candlepin API to: target/candlepin_methods.json", null);
 		RemoteFileTasks.runCommandAndAssert(sshCommandRunner, "cd "+serverInstallDir+"/proxy && if [ ! -e target/candlepin_methods.json ]; then buildr candlepin:apicrawl; fi;", Integer.valueOf(0));
 		log.info("Following is a report of all the candlepin API urls:");
-		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
-
+		//RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+"/proxy && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());		// 9/18/2012 the path appears to have moved
+		RemoteFileTasks.runCommandAndWait(sshCommandRunner, "cd "+serverInstallDir+" && cat target/candlepin_methods.json | python -m simplejson/tool | egrep '\\\"POST\\\"|\\\"PUT\\\"|\\\"GET\\\"|\\\"DELETE\\\"|url'",TestRecords.action());
 	}
 	
 	public void setupTranslateToolkit(String gitRepository) {
@@ -2741,6 +2741,23 @@ schema generation failed
 	}
 	
 	
+	public static JSONObject createContentRequestBody(String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, List<String> modifiedProductIds) throws JSONException{
+		
+		JSONObject jsonContentData = new JSONObject();
+		if (name!=null)					jsonContentData.put("name", name);
+		if (contentId!=null)			jsonContentData.put("id", contentId);
+		if (label!=null)				jsonContentData.put("label", label);
+		if (type!=null)					jsonContentData.put("type", type);
+		if (vendor!=null)				jsonContentData.put("vendor", vendor);
+		if (contentUrl!=null)			jsonContentData.put("contentUrl", contentUrl);
+		if (gpgUrl!=null)				jsonContentData.put("gpgUrl", gpgUrl);
+		if (metadataExpire!=null)		jsonContentData.put("metadataExpire", metadataExpire);
+		if (requiredTags!=null)			jsonContentData.put("requiredTags", requiredTags);
+		if (modifiedProductIds!=null)	jsonContentData.put("modifiedProductIds", modifiedProductIds);
+	
+		return jsonContentData;
+	}
+	
 	
 	/**
 	 * @param url TODO
@@ -2812,6 +2829,32 @@ schema generation failed
 		
 	}
 	
+	public static JSONObject createContentUsingRESTfulAPI(String authenticator, String password, String url, String name, String contentId, String label, String type, String vendor, String contentUrl, String gpgUrl, String metadataExpire, String requiredTags, List<String> modifiedProductIds) throws JSONException, Exception  {
+
+		// create the product
+		String requestBody = CandlepinTasks.createContentRequestBody(name, contentId, label, type, vendor, contentUrl, gpgUrl, metadataExpire, requiredTags, modifiedProductIds).toString();
+		JSONObject jsonContent = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,"/content",requestBody));
+		
+		if (jsonContent.has("displayMessage")) {
+			//log.warning("Content creation appears to have failed: "+jsonContent.getString("displayMessage"));
+			Assert.fail("Content creation appears to have failed: "+jsonContent.getString("displayMessage"));
+		}
+		return jsonContent; // return jsonContent representing the newly created content
+		
+	}
+
+	public static JSONObject addContentToProductUsingRESTfulAPI(String authenticator, String password, String url, String productId, String contentId, Boolean enabled) throws JSONException, Exception  {
+
+		// add the contentId to the productId
+		JSONObject jsonResult = new JSONObject(CandlepinTasks.postResourceUsingRESTfulAPI(authenticator,password,url,String.format("/products/%s/content/%s?enabled=%s",productId,contentId,enabled),null));
+		
+		if (jsonResult.has("displayMessage")) {
+			//log.warning("Add content to product appears to have failed: "+jsonContent.getString("displayMessage"));
+			Assert.fail("Add content to product appears to have failed: "+jsonResult.getString("displayMessage"));
+		}
+		return jsonResult; // return jsonResult
+		
+	}
 	
 	public static void deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(String authenticator, String password, String url, String ownerKey, String productId) throws JSONException, Exception  {
 
