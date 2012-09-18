@@ -704,8 +704,8 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		
 		
 		// Awesome OS for "zero" sockets
-		name = "Awesome OS for systems with sockets value=\"unknown\"";
-		productId = "unknown-sockets";
+		name = "Awesome OS for systems with sockets value=\"zero\"";
+		productId = "zero-sockets";
 		providedProductIds.clear();
 		providedProductIds.add("90003");
 		attributes.clear();
@@ -715,8 +715,16 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		attributes.put("arch", "ALL");
 		attributes.put("warning_period", "30");
 		// TEMPORARY WORKAROUND FOR BUG
-		String bugId = "795552";
+		String bugId = "795552";	// Bug 795552 - invalid literal for int() with base 10: 'null'
 		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping the creation of product: "+name);
+		} else {
+		// END OF WORKAROUND
+		// TEMPORARY WORKAROUND FOR BUG
+		bugId = "858286";	// Bug 858286 - Runtime Error For input string: "zero" at java.lang.NumberFormatException.forInputString:65
+		invokeWorkaroundWhileBugIsOpen = true;
 		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the creation of product: "+name);
@@ -732,7 +740,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		attributes.put("type", "MKT");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-		}
+		}}
 		
 		
 		// Awesome OS for null sockets
@@ -747,14 +755,20 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		attributes.put("arch", "ALL");
 		attributes.put("warning_period", "30");
 		// TEMPORARY WORKAROUND FOR BUG
+		bugId = "807452";	// Bug 807452 - refresh pools FAILS WITH: org.quartz.SchedulerException: Job threw an unhandled exception. [See nested exception: org.mozilla.javascript.WrappedException: Wrapped java.lang.NullPointerException (rules#737)]
 		invokeWorkaroundWhileBugIsOpen = true;
-		String bugId1 = "807452";
-		String bugId2 = "813529";
-		try {if (invokeWorkaroundWhileBugIsOpen&&(BzChecker.getInstance().isBugOpen(bugId1)||BzChecker.getInstance().isBugOpen(bugId2))) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId1).toString()+" Bugzilla "+bugId1+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId1+")");log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId2).toString()+" Bugzilla "+bugId2+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId2+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 		if (invokeWorkaroundWhileBugIsOpen) {
 			log.warning("Skipping the creation of product: "+name);
 		} else {
 		// END OF WORKAROUND
+		// TEMPORARY WORKAROUND FOR BUG
+		bugId = "813529";	// Bug 813529 - refresh pools FAILS WITH: org.quartz.SchedulerException: Job threw an unhandled exception. [See nested exception: org.mozilla.javascript.WrappedException: Wrapped java.lang.NullPointerException (rules#846)]
+		invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen) {
+			log.warning("Skipping the creation of product: "+name);
+		} else {
 		// delete already existing subscription and products
 		CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, productId);
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+productId);
@@ -765,7 +779,7 @@ public class ListTests extends SubscriptionManagerCLITestScript{
 		attributes.put("type", "MKT");
 		CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, name, productId, 1, attributes, null);
 		CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), productId, providedProductIds);
-		}
+		}}
 		
 		
 		// TODO: To get the product certs, use the CandlepinTasks REST API:
