@@ -4087,13 +4087,6 @@ public class SubscriptionManagerTasks {
 		// get all of the provided tags from the productCerts
 		List<String> providedTags = new ArrayList<String>();
 		for (ProductCert productCert : productCerts) {
-//			for (ProductNamespace productNamespace : productCert.productNamespaces) {
-//				if (productNamespace.providedTags!=null) {
-//					for (String providedTag : productNamespace.providedTags.split("\\s*,\\s*")) {
-//						providedTags.add(providedTag);
-//					}
-//				}
-//			}
 			if (productCert.productNamespace.providedTags!=null) {
 				for (String providedTag : productCert.productNamespace.providedTags.split("\\s*,\\s*")) {
 					providedTags.add(providedTag);
@@ -4105,7 +4098,7 @@ public class SubscriptionManagerTasks {
 		List<String> requiredTags = new ArrayList<String>();
 		if (requiredTagsAsString!=null) {
 			for (String requiredTag : requiredTagsAsString.split("\\s*,\\s*")) {
-				requiredTags.add(requiredTag);
+				if (!requiredTag.isEmpty()) requiredTags.add(requiredTag);
 			}
 		}
 		
