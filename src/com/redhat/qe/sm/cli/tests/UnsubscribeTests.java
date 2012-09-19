@@ -93,8 +93,8 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
 
 		// restart the rhsm cert deamon
-		int certFrequency = 1;
-		clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
+		// Note: by passing assertCertificatesUpdate=null, we are assuming that the subsequent assertions will execute within 2 min before the next cert update and waitForRegexInRhsmcertdLog 
+		int certFrequency = 2; clienttasks.restart_rhsmcertd(certFrequency, null, false, null);
 		
 		// move the copied entitlement certificate from /tmp to location /etc/pki/entitlement/product
 		// Note: this is malicious activity (user is trying to continue using entitlement certs that have been unsubscribed)
@@ -108,9 +108,9 @@ public class UnsubscribeTests extends SubscriptionManagerCLITestScript{
 		String marker = "Testing UnsubscribeAndAttemptToReuseTheRevokedEntitlementCert_Test..."; // https://tcms.engineering.redhat.com/case/41692/
 		RemoteFileTasks.runCommandAndAssert(client,"echo \""+marker+"\" >> "+clienttasks.rhsmcertdLogFile,Integer.valueOf(0));
 		clienttasks.waitForRegexInRhsmcertdLog(".*certificates updated.*", certFrequency);	// https://bugzilla.redhat.com/show_bug.cgi?id=672122
-		sleep(10000); // plus a little padding
+		sleep(10000); // plus a little padding for the client to do it's thing
 
-		Assert.assertTrue(RemoteFileTasks.testFileExists(client, entitlementCertFile.getPath())==0,"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, entitlementCertFile.getPath()),"Entitlement certificate '"+entitlementCertFile+"' was deleted by the rhsm certificate deamon.");
 		clienttasks.assertEntitlementCertsInYumRepolist(entitlementCerts,false);
 		
 		// cleanup
