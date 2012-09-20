@@ -271,7 +271,8 @@
 
     (finally (tasks/restart-app))))
 
-(defn ^{Test {:groups ["subscribe"]
+(defn ^{Test {:groups ["subscribe"
+                       "blockedByBug-858773"]
               :dataProvider "installed-products"}}
   filter_by_product [_ product]
   (allsearch product)
