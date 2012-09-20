@@ -4,7 +4,9 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +22,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.ConsumerType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.ProductCert;
@@ -579,6 +582,24 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	
 	
 	
+	
+	@Test(	description="Verify that a base product cert corresponding to the /etc/redhat-release is installed",
+			groups={"debugTest"},
+			enabled=false)	// WORK IN PROGRESS
+	//@ImplementsNitrateTest(caseId=)
+	public void AttemptConsumptionOf100ContentSetProductSubscription_Test() {
+
+//		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+//		
+//		SubscriptionPool pool = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", "100-contentset-product", clienttasks.getCurrentlyAvailableSubscriptionPools());
+//
+//		File entitlementFile = clienttasks.subscribeToSubscriptionPool(pool);
+		
+		throw new SkipException("Tis test is under development");
+
+	}
+	
+	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=654442
 	// TODO Bug 689031 - nss needs to be able to use pem files interchangeably in a single process 
@@ -632,6 +653,64 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	}
 
 
+	protected String skuTo100ContentSetProduct = "mktProductId-100";
+	protected String skuTo200ContentSetProduct = "mktProductId-200";
+//TODO UNCOMMENT WORK IN PROGRESS	@BeforeClass(groups="setup")
+	public void createSubscriptionsWithVariationsOnContentSizes() throws JSONException, Exception {
+		String marketingProductName,engineeringProductName,marketingProductId,engineeringProductId;
+		List<String> providedEngineeringProductIds = new ArrayList<String>();
+		Map<String,String> attributes = new HashMap<String,String>();
+		JSONObject jsonEngProduct, jsonMktProduct, jsonSubscription;
+		if (server==null) {
+			log.warning("Skipping createSubscriptionsWithVariationsOnContentSizes() when server is null.");
+			return;	
+		}
+//debugTesting if (true) return;
+		
+		// recreate a lot of content sets
+		for (int c = 1; c <= 200; c++) {
+			String contentName = "Content Name "+c;
+			String contentId = "777"+c;	// must be numeric (and unique)
+			String contentLabel = "content-label-"+c;
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/content/"+contentId);
+			CandlepinTasks.createContentUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, contentName, contentId, contentLabel, "yum", "Red Hat QE, Inc.", "/content/path/to/"+contentLabel, "/gpg/path/to/"+contentLabel, "3600", null, null);
+		}
+		
+	
+		// recreate Subscription and products providing a lot of content
+		for (int N : new ArrayList<Integer>(Arrays.asList(100,200))) {
+			marketingProductName = String.format("Subscription for a %s ContentSet Product",N);
+			marketingProductId = "mktProductId-"+N;
+			engineeringProductName = String.format("%s ContentSet Product",N);
+			engineeringProductId = String.valueOf(N);	// must be numeric (and unique)
+			attributes.clear();
+			attributes.put("requires_consumer_type", "system");
+			//attributes.put("sockets", "0");
+			attributes.put("version", "3.0");
+			//attributes.put("variant", "server");
+			attributes.put("arch", "ALL");
+			//attributes.put("warning_period", "30");
+			// delete already existing subscription and products
+			CandlepinTasks.deleteSubscriptionsAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, marketingProductId);
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+marketingProductId);
+			CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, "/products/"+engineeringProductId);
+			// create a new marketing product (MKT), engineering product (SVC), content for the engineering product, and a subscription to the marketing product that provides the engineering product
+			attributes.put("type", "MKT");
+			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, marketingProductName, marketingProductId, 1, attributes, null);
+			attributes.put("type", "SVC");
+			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductName, engineeringProductId, 1, attributes, null);
+			for (int c = 1; c <= N; c++) {
+				String contentId = "777"+c;	// must be numeric (and unique) defined above
+				CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductId, contentId, true);
+			}
+			CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductId));
+		}
+		
+		// TODO: To get the product certs, use the CandlepinTasks REST API:
+        //"url": "/products/{product_uuid}/certificate", 
+        //"GET"
+
+	}	
 	
 	// Protected Methods ***********************************************************************
 	protected String personalConsumerId = null;
