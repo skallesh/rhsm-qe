@@ -1210,7 +1210,10 @@ public class SubscriptionManagerTasks {
 		// assemble an echo command and run it to create a facts file
 		String keyvaluesString = "";
 		for (String key : factsMap.keySet()) {
-			keyvaluesString += String.format("\"%s\":\"%s\", ", key, factsMap.get(key));
+			if (factsMap.get(key)==null)
+				keyvaluesString += String.format("\"%s\":%s, ", key, factsMap.get(key));
+			else
+				keyvaluesString += String.format("\"%s\":\"%s\", ", key, factsMap.get(key));
 		}
 		keyvaluesString = keyvaluesString.replaceFirst(", *$", "");
 		String echoCommand = String.format("echo '{%s}' > %s", keyvaluesString, (factsDir+"/"+factsFilename).replaceAll("/{2,}", "/"));	// join the dir and filename and make sure there are not too many /'s
@@ -1744,7 +1747,6 @@ public class SubscriptionManagerTasks {
 		return correspondingEntitlementCerts;
 	}
 	
-	@Deprecated
 	public EntitlementCert getEntitlementCertFromEntitlementCertFileUsingOpensslX509(File serialPemFile) {
 		sshCommandRunner.runCommandAndWaitWithoutLogging("openssl x509 -text -noout -in "+serialPemFile+"; echo \"    File: "+serialPemFile+"\"");	// openssl x509 -text -noout -in /etc/pki/entitlement/5066044962491605926.pem; echo "    File: /etc/pki/entitlement/5066044962491605926.pem"
 		String certificates = sshCommandRunner.getStdout();
