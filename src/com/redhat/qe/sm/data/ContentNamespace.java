@@ -65,7 +65,6 @@ public class ContentNamespace extends AbstractCommandLineData {
 	 * @param rawCertificate - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/1129238407379723.pem
 	 * @return
 	 */
-	@Deprecated
 	static public List<ContentNamespace> parseStdoutFromOpensslX509(String rawCertificate) {
 		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
 		Certificate:
@@ -286,7 +285,7 @@ public class ContentNamespace extends AbstractCommandLineData {
 	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/entitlement/7586477374370607864.pem
 	 * @return
 	 */
-	static public List<ContentNamespace> parse(String rawCertificate) {
+	static public List<ContentNamespace> parseStdoutFromRctCatCert(String rawCertificate) {
 		
 		// https://docspace.corp.redhat.com/docs/DOC-30244
 		//  1.3.6.1.4.1.2312.9.2.<content_hash> (Red Hat Enterprise Linux (Supplementary))
@@ -498,5 +497,15 @@ public class ContentNamespace extends AbstractCommandLineData {
 			contentNamespaces.add(new ContentNamespace(certData));
 		}
 		return contentNamespaces;
+	}
+	
+	
+	
+	static public List<ContentNamespace> parse(String rawCertificate) {
+		// where did this rawCertificate come from?
+		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption"))
+			return parseStdoutFromOpensslX509(rawCertificate);
+		else
+			return parseStdoutFromRctCatCert(rawCertificate);
 	}
 }

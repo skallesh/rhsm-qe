@@ -29,6 +29,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
 	public File file;
+	public String version;
 	
 	public String serialString;
 	public OrderNamespace orderNamespace;
@@ -61,6 +62,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 		if (validityNotBefore != null)		string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)		string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
 		if (file != null)					string += String.format(" %s='%s'", "file",file);
+		if (version != null)				string += String.format(" %s='%s'", "version",version);
 	
 		return string.trim();
 	}
@@ -70,8 +72,8 @@ public class EntitlementCert extends AbstractCommandLineData {
 		
 		// make an educational guess at what simpleDateFormat should be used to parse this dateString
 		String simpleDateFormatOverride;
-		if (dateString.matches("[A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
-			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT
+		if (dateString.matches("[A-Za-z]{3} +[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
+			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT		// Oct  6 17:56:06 2012 GMT
 		}
 		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:?[0-9]{2}")) {
 			simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// used in certv2	// 2012-09-11 00:00:00+00:00		
@@ -141,7 +143,6 @@ public class EntitlementCert extends AbstractCommandLineData {
 	 * @param certificates - stdout from: find /etc/pki/entitlement/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
 	 * @return
 	 */
-	@Deprecated
 	static public List<EntitlementCert> parseStdoutFromOpensslX509(String rawCertificates) {
 		
 		/* [root@jsefler-onprem-62server ~]# find /etc/pki/entitlement/ -name '*.pem' -exec openssl x509 -in '{}' -noout -text \; -exec echo "    File: {}" \;
@@ -711,6 +712,7 @@ public class EntitlementCert extends AbstractCommandLineData {
 		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
 		regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
+		regexes.put("version",				"Certificate:(?:(?:\\n.+)+)Version: (.+)");
 		
 		// split the rawCertificates process each individual rawCertificate
 		String rawCertificateRegex = "\\+-+\\+\\n\\s+Entitlement Certificate\\n\\+-+\\+";

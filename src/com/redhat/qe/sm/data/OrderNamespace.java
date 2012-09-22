@@ -84,8 +84,11 @@ public class OrderNamespace extends AbstractCommandLineData {
 		
 		// make an educational guess at what simpleDateFormat should be used to parse this dateString
 		String simpleDateFormatOverride;
-		if (dateString.matches("[A-Za-z]{3} [0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
-			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT
+		if (dateString.matches("[A-Za-z]{3} +[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2} [0-9]{4} \\w+")) {
+			simpleDateFormatOverride = "MMM d HH:mm:ss yyyy z";		// used in certv1	// Aug 23 08:42:00 2010 GMT		// Oct  6 17:56:06 2012 GMT
+		}
+		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z")) {
+			simpleDateFormatOverride = "yyyy-MM-dd'T'HH:mm:ss'Z'";	// used in certv1	// 2012-10-06T17:56:06Z
 		}
 		else if (dateString.matches("[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}[+-][0-9]{2}:?[0-9]{2}")) {
 			simpleDateFormatOverride = "yyyy-MM-dd HH:mm:ssZZZ";	// used in certv2	// 2012-09-11 00:00:00+00:00		
@@ -131,7 +134,6 @@ public class OrderNamespace extends AbstractCommandLineData {
 	 * @return
 	 * @throws ParseException 
 	 */
-	@Deprecated
 	static public OrderNamespace parseStdoutFromOpensslX509(String rawCertificate) {
 		
 		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
@@ -326,7 +328,7 @@ public class OrderNamespace extends AbstractCommandLineData {
 	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/entitlement/7586477374370607864.pem
 	 * @return
 	 */
-	static public OrderNamespace parse(String rawCertificate) {
+	static public OrderNamespace parseStdoutFromRctCatCert(String rawCertificate) {
 		
 		//	[root@jsefler-rhel59 ~]# rct cat-cert /etc/pki/entitlement/7586477374370607864.pem 
 		//
@@ -414,5 +416,15 @@ public class OrderNamespace extends AbstractCommandLineData {
 		Map<String,String> certData = certDataList.get(0);
 		
 		return new OrderNamespace(certData);
+	}
+	
+	
+	
+	static public OrderNamespace parse(String rawCertificate) {
+		// where did this rawCertificate come from?
+		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption"))
+			return parseStdoutFromOpensslX509(rawCertificate);
+		else
+			return parseStdoutFromRctCatCert(rawCertificate);
 	}
 }

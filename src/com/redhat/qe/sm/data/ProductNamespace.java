@@ -76,7 +76,6 @@ public class ProductNamespace extends AbstractCommandLineData {
 	 * @param rawCertificate - stdout from  openssl x509 -noout -text -in /etc/pki/entitlement/1129238407379723.pem
 	 * @return
 	 */
-	@Deprecated
 	static public List<ProductNamespace> parseStdoutFromOpensslX509(String rawCertificate) {
 		
 		/* [root@jsefler-onprem01 ~]# openssl x509 -text -in /etc/pki/entitlement/1129238407379723.pem 
@@ -249,7 +248,7 @@ public class ProductNamespace extends AbstractCommandLineData {
 	 * @param rawCertificate - stdout from: # rct cat-cert /etc/pki/entitlement/7586477374370607864.pem
 	 * @return
 	 */
-	static public List<ProductNamespace> parse(String rawCertificate) {
+	static public List<ProductNamespace> parseStdoutFromRctCatCert(String rawCertificate) {
 		
 		//	[root@jsefler-rhel59 ~]# rct cat-cert /etc/pki/entitlement/7586477374370607864.pem 
 		//
@@ -380,5 +379,15 @@ public class ProductNamespace extends AbstractCommandLineData {
 		}
 		return productNamespaces;
 		
+	}
+	
+	
+	
+	static public List<ProductNamespace> parse(String rawCertificate) {
+		// where did this rawCertificate come from?
+		if (rawCertificate.contains("Signature Algorithm: sha1WithRSAEncryption"))
+			return parseStdoutFromOpensslX509(rawCertificate);
+		else
+			return parseStdoutFromRctCatCert(rawCertificate);
 	}
 }
