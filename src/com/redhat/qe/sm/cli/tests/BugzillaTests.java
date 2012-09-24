@@ -98,7 +98,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 				System.out.println("pool id "+poolId);
-				clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
+				clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
 						productId=installed.productId;
