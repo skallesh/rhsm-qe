@@ -688,7 +688,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with a valid service level",
-			groups={"AcceptanceTests"},
+			groups={"AcceptanceTests","blockedByBug-859652"},
 			dataProvider="getSubscribeWithAutoAndServiceLevelData",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
