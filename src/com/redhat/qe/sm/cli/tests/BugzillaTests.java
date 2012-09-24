@@ -226,7 +226,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			      
 		   SSHCommandResult result;
 		   clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null,null, null, null);
-		   result = clienttasks.service_level_(null, false, null, null, sm_clientUsername, sm_clientPassword, "MyOrg", null, null,	null);
+		   result = clienttasks.service_level_(null, false, null, null, sm_clientUsername, sm_clientPassword, "MyOrg", null, null,	null, null);
 			Assert.assertEquals(result.getStdout().trim(), "Error: --org is only supported with the --list option");        
 		}
 	
@@ -498,7 +498,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		clienttasks.getCurrentConsumerId(clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
-		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null);		
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
+		
+		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
+		
+		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
