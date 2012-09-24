@@ -292,9 +292,11 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 
 			List<String> moreIgnorableMsgIdsFor_pa		= Arrays.asList("Server URL can not be None");
 			List<String> moreIgnorableMsgIdsFor_hi		= Arrays.asList("Server URL can not be None");
+			List<String> moreIgnorableMsgIdsFor_fr		= Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.");	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
 
 			if((translationFile.getPath().contains("/pa/")/*||translationFile.getPath().contains("pa")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_pa);
 			if((translationFile.getPath().contains("/hi/")/*||translationFile.getPath().contains("hi")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_hi);
+			if((translationFile.getPath().contains("/fr/")/*||translationFile.getPath().contains("fr")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_fr);
 		}
 		if (pofilterTest.equals("unchanged")) {
 			ignorableMsgIds.addAll(Arrays.asList("registration_dialog_action_area","server_label","server_entry","proxy_button","hostname[:port][/prefix]","default_button","choose_server_label","<b>SKU:</b>","%prog [options]","<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>python-rhsm Version:</b> %s","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","subscription-manager: %s","python-rhsm: %s","register_details_label","register_progressbar","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n","progress_label","Red Hat Subscription Manager", "Red Hat Subscription Validity Applet"));
@@ -405,6 +407,8 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/es_ES/")) bugIds.add("825362");
 				// Bug 825367	[zh_CN] failed pofilter accelerator tests for subscription-manager translations 
 				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/zh_CN/")) bugIds.add("825367");
+				// Bug 860084 - [ja_JP] two accelerators for msgid "Configure Pro_xy"
+				if (pofilterTest.equals("accelerators") && translationFile.getPath().contains("/ja_JP/")) bugIds.add("860084");
 				
 				
 				// Bug 825397	Many translated languages fail the pofilter newlines test
@@ -491,10 +495,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 842898 - [it] failed pofilter options test for subscription-manager translations
 				if (pofilterTest.equals("options") && translationFile.getPath().contains("/it/")) bugIds.add("842898");
 				
+				
 				// Bug 828985 - [ml] failed pofilter urls test for subscription manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/ml/")) bugIds.add("828985");
 				// Bug 828989 - [pt_BR] failed pofilter urls test for subscription-manager translations
 				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("828989");
+				// Bug 860088 - [de_DE] translation for a url should not be altered 
+				if (pofilterTest.equals("urls") && translationFile.getPath().contains("/de_DE/")) bugIds.add("860088");
 				
 				
 				// Bug 845304 - translation of the word "[OPTIONS]" has reverted
