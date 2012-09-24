@@ -42,6 +42,9 @@ import com.redhat.qe.tools.SSHCommandResult;
  *   
  *   https://github.com/translate/translate
  *   
+ *   Translation Bug Reporting Process
+ *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
+ *   
  *   RHEL5
  *   Table 2.1. Red Hat Enterprise Linux 5 International Languages
  *   http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/5/html/International_Language_Support_Guide/Red_Hat_Enterprise_Linux_International_Language_Support_Guide-Installing_and_supporting_languages.html

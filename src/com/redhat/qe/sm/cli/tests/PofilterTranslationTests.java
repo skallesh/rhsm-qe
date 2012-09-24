@@ -49,6 +49,9 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   http://translate.sourceforge.net/wiki/toolkit/installation
  *   
  *   https://github.com/translate/translate
+ *   
+ *   Translation Bug Reporting Process
+ *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
  **/
 @Test(groups={"PofilterTranslationTests"})
 public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
