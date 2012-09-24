@@ -423,7 +423,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate
 	// TODO Bug 827032 - Support autoregen of identity certificates
 	// TODO Bug 834558 - Teach rhsmcertd to refresh the identity certificate 
-	
+	// TODO Bug 853876 - After deletion of consumer,subscription-manager --register --force says "Consumer <ConsumerID> has been deleted"
 	
 	
 	
