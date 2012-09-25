@@ -46,7 +46,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	// Test Methods ***********************************************************************
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by more than one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","cli.tests"},
+			groups={"configureProductCertDirForAllProductsSubscribableByMoreThanOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
 			dataProvider="getAllProductsSubscribableByMoreThanOneCommonServiceLevelValuesData",
 			enabled=true)
 	//@ImplementsTCMS(id="")
@@ -94,7 +94,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: verify the system.compliant fact is True when all installed products are subscribable by one common service level",
-			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","cli.tests"},
+			groups={"configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel","blockedbyBug-859652","cli.tests"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
 	public void VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test() {
