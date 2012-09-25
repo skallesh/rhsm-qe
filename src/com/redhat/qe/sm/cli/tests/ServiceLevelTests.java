@@ -554,7 +554,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
  
 	@Test(	description="subscription-manager: autosubscribe while specifying an valid service level; assert the installed product status is independent of the specified SerViceLeVEL case.",
-			groups={"blockedByBug-818319","AcceptanceTests"},
+			groups={"blockedByBug-818319","blockedByBug-859652","AcceptanceTests"},
 			dataProvider="getAllAvailableServiceLevelData",
 			enabled=true)
 	@ImplementsNitrateTest(caseId=157227) // 157226 //157225
