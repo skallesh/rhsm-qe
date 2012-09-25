@@ -4,7 +4,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.xmlrpc.XmlRpcException;
 import org.testng.SkipException;
@@ -35,8 +37,57 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	// Test methods ***********************************************************************
 	
 	
+	@Test(	description="subscription-manager: import a valid version 1.0 entitlement cert/key bundle and verify subscriptions are consumed",
+			groups={"AcceptanceTests"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void ImportAnEntitlementVersion1CertAndKeyFromFile_Test() {
+		
+		// assemble a valid bundled cert/key certificate file
+		File importEntitlementCertFile = entitlementV1CertFiles.get(randomGenerator.nextInt(entitlementV1CertFiles.size()));
+		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
+		File importCertificateFile = new File(importV1CertificatesDir+File.separator+importEntitlementCertFile.getName());
+		client.runCommandAndWait("cat "+importEntitlementCertFile+" "+importEntitlementKeyFile+" > "+importCertificateFile);
+		
+		// once imported, what should the entitlement cert file be?
+		File expectedEntitlementCertFile = new File (clienttasks.entitlementCertDir+File.separator+importCertificateFile.getName());
+		File expectedEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(expectedEntitlementCertFile);
+		
+		// make sure the expected entitlement files do not exist before our test and that no subscriptions are consumed
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, expectedEntitlementCertFile.getPath()),"Before attempting the import, asserting that expected destination for the entitlement cert file does NOT yet exist ("+expectedEntitlementCertFile+").");
+		Assert.assertTrue(!RemoteFileTasks.testExists(client, expectedEntitlementKeyFile.getPath()),"Before attempting the import, asserting that expected destination for the entitlement key file does NOT yet exist ("+expectedEntitlementKeyFile+").");
+		Assert.assertEquals(clienttasks.getCurrentlyConsumedProductSubscriptions().size(), 0, "Should not be consuming any subscriptions before the import.");
+
+		// show the contents of the file about to be imported
+		log.info("Following is the contents of the certificate file about to be imported...");
+		client.runCommandAndWait("cat "+importCertificateFile);
+		
+		// attempt an entitlement cert import from a valid bundled file
+		clienttasks.importCertificate(importCertificateFile.getPath());
+		
+		// verify that the expectedEntitlementCertFile now exists
+		Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementCertFile.getPath()),"After attempting the import, the expected destination for the entitlement cert file should now exist ("+expectedEntitlementCertFile+").");
+
+		// verify that the expectedEntitlementKeyFile also exists
+		Assert.assertTrue(RemoteFileTasks.testExists(client, expectedEntitlementKeyFile.getPath()),"After attempting the import, the expected destination for the entitlement key file should now exist ("+expectedEntitlementKeyFile+").");
+		
+		// assert that the contents of the imported files match the originals
+		log.info("Asserting that the imported entitlement cert file contents match the original...");
+		RemoteFileTasks.runCommandAndAssert(client, "diff -w "+expectedEntitlementCertFile+" "+importEntitlementCertFile, 0);
+		log.info("Asserting that the imported entitlement key file contents match the original...");
+		RemoteFileTasks.runCommandAndAssert(client, "diff -w "+expectedEntitlementKeyFile+" "+importEntitlementKeyFile, 0);
+		
+		// finally verify that we are now consuming subscriptions
+		Assert.assertTrue(clienttasks.getCurrentlyConsumedProductSubscriptions().size()>0, "After importing a valid Version 1.0 certificate, we should be consuming subscriptions.");
+
+		// finally verify that imported entitlement is indeed version 1.0
+		EntitlementCert importedEntitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expectedEntitlementCertFile);
+		Assert.assertEquals(importedEntitlementCert.version, "1.0", "The version of the imported certificate/key file.");
+	}
+	
+	
 	@Test(	description="subscription-manager: import a valid entitlement cert/key bundle and verify subscriptions are consumed",
-			groups={"blockedByBug-730380","blockedByBug-712980","AcceptanceTests"},
+			groups={"blockedByBug-712980","blockedByBug-730380","blockedByBug-860344","AcceptanceTests"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementCertAndKeyFromFile_Test() {
@@ -81,7 +132,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import a certificate from a file (saved as a different name) and verify subscriptions are consumed",
-			groups={"blockedByBug-734606"},
+			groups={"blockedByBug-734606","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementCertAndKeyFromASavedAsFile_Test() {
@@ -133,7 +184,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import a valid entitlement key/cert bundle and verify subscriptions are consumed",
-			groups={},
+			groups={"blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementKeyAndCertFromFile_Test() {
@@ -178,7 +229,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: attempt an entitlement cert import from a file in the current directory",
-			groups={"blockedByBug-849171"},
+			groups={"blockedByBug-849171","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportAnEntitlementCertAndKeyFromFileInCurrentDirectory_Test() {
@@ -227,7 +278,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import a certificate for a future entitlement",
-			groups={},
+			groups={"blockedByBug-860344"},
 			enabled=true)
 			//@ImplementsNitrateTest(caseId=)
 	public void ImportACertificateForAFutureEntitlement_Test() throws Exception {
@@ -322,7 +373,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: import multiple valid certificates and verify subscriptions are consumed",
-			groups={},
+			groups={"blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportMultipleCertificates_Test() {
@@ -353,7 +404,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	@Test(	description="subscription-manager: import multiple certificates including invalid ones",
-			groups={"blockedByBug-844178"},
+			groups={"blockedByBug-844178","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportMultipleCertificatesIncludingInvalidCertificates_Test() {
@@ -412,7 +463,7 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: unsubscribe from an imported entitlement (while not registered)",
-			groups={"blockedByBug-735338","blockedByBug-838146"},
+			groups={"blockedByBug-735338","blockedByBug-838146","blockedByBug-860344"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ImportACertificateAndUnsubscribeWhileNotRegistered_Test() {
@@ -461,15 +512,18 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		
 	protected final String importCertificatesDir = "/tmp/sm-importCertificatesDir".toLowerCase();	// set to lowercase to avoid an RHEL5 LDTP bug in the import_tests.clj when using generatekeyevent in the Import Dialog
 	protected final String importEntitlementsDir = "/tmp/sm-importEntitlementsDir".toLowerCase();	// set to lowercase to avoid an RHEL5 LDTP bug in the import_tests.clj when using generatekeyevent in the Import Dialog
+	protected final String importV1CertificatesDir = "/tmp/sm-importV1CertificatesDir".toLowerCase();	// set to lowercase to avoid an RHEL5 LDTP bug in the import_tests.clj when using generatekeyevent in the Import Dialog
+	protected final String importV1EntitlementsDir = "/tmp/sm-importV1EntitlementsDir".toLowerCase();	// set to lowercase to avoid an RHEL5 LDTP bug in the import_tests.clj when using generatekeyevent in the Import Dialog
 	protected String originalEntitlementCertDir = null;
 	protected List<File> entitlementCertFiles = new ArrayList<File>();	// valid entitlement cert files that can be used for import testing (contains cert only, no key)
+	protected List<File> entitlementV1CertFiles = new ArrayList<File>();	// valid entitlement cert files that can be used for import testing (contains cert only, no key)
 	protected File futureEntitlementCertFile = null;
 	protected File consumerCertFile = new File(importCertificatesDir+File.separator+"cert.pem");	// a file containing a valid consumer cert.pem and its key.pem concatenated together
 	
 	// Protected methods ***********************************************************************
 	
 	public File getValidImportCertificate() {
-		// assemble a valid bundled cert/key certificate file
+		// assemble a valid bundled entitlement cert/key pem file
 		File importEntitlementCertFile = entitlementCertFiles.get(randomGenerator.nextInt(entitlementCertFiles.size()));
 		File importEntitlementKeyFile = clienttasks.getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(importEntitlementCertFile);
 		File importCertificateFile = new File(importCertificatesDir+File.separator+importEntitlementCertFile.getName());
@@ -541,11 +595,15 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		clienttasks.clean_(null,null,null);
 	}
 	
+	
 	@BeforeClass(groups={"setup"})
-	public void setupBeforeClass() throws Exception {
-		
+	public void restartCertFrequencyBeforeClass() throws Exception {
 		// restart rhsmcertd with a longer certFrequency
 		clienttasks.restart_rhsmcertd(240, null, false, null);
+	}
+	
+	@BeforeClass(groups={"setup"}, dependsOnMethods={"restartCertFrequencyBeforeClass"})
+	public void setupEntitlemenCertsForImportBeforeClass() throws Exception {
 		
 		// register
 		//clienttasks.unregister(null,null,null);	// avoid Bug 733525 - [Errno 2] No such file or directory: '/etc/pki/entitlement'
@@ -604,6 +662,51 @@ public class ImportTests extends SubscriptionManagerCLITestScript {
 		
 		// assert that we have some valid entitlement certs for import testing
 		if (entitlementCertFiles.size()<1) throw new SkipException("Could not generate valid entitlement certs for these ImportTests.");
+	}
+	
+	
+	@BeforeClass(groups={"setup"}, dependsOnMethods={"restartCertFrequencyBeforeClass"})
+	public void setupV1EntitlemenCertsForImportBeforeClass() throws Exception {
+		
+		// temporarily set system.certificate_version fact to 1.0
+		Map<String,String> factsMap = new HashMap<String,String>();
+		factsMap.put("system.certificate_version", "1.0");
+		clienttasks.createFactsFileWithOverridingValues(factsMap);
+
+		// register
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, false, null, null, null);
+
+		// change the entitlementCertDir to a temporary location to store all of the entitlements that will be used for importing
+		originalEntitlementCertDir = clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", importV1EntitlementsDir);
+		clienttasks.removeAllCerts(false, true, false);
+		
+		// create a directory where we can create bundled entitlement/key certificates for import
+		RemoteFileTasks.runCommandAndAssert(client,"mkdir -p "+importV1CertificatesDir,Integer.valueOf(0));
+		RemoteFileTasks.runCommandAndAssert(client,"rm -f "+importV1CertificatesDir+"/*",Integer.valueOf(0));
+		
+		// subscribe to all available pools (so as to create valid entitlement cert/key pairs)
+		//clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();	// FAILS ON LARGE CONTENT SET SUBSCRIPTIONS
+		// assemble a list of all the available SubscriptionPool ids
+		for (SubscriptionPool pool :  clienttasks.getCurrentlyAvailableSubscriptionPools()) {
+			SSHCommandResult result = clienttasks.subscribe_(null,null, pool.poolId, null, null, null, null, null, null, null, null);	// do not check for success since the large content set subscriptions will expectedly fail
+			if (result.getExitCode().equals(new Integer(0))) break; // we only really need one for our tests
+		}
+		
+		// assemble a list of entitlements that we can use for import (excluding the future cert)
+		entitlementV1CertFiles = clienttasks.getCurrentEntitlementCertFiles();
+
+		// restore the entitlementCertDir
+		clienttasks.updateConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir", originalEntitlementCertDir);
+
+		// unregister client so as to test imports while not registered
+		clienttasks.unregister(null,null,null);
+		
+		// remove the temporary overriding facts for system.certificate_version
+		clienttasks.deleteFactsFileWithOverridingValues();
+		
+		// assert that we have some valid entitlement certs for import testing
+		if (entitlementV1CertFiles.size()<1) throw new SkipException("Could not generate valid version 1 entitlement certs for these ImportTests.");
 	}
 	
 	// Data Providers ***********************************************************************
