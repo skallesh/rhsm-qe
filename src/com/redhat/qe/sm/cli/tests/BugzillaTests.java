@@ -72,46 +72,54 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
-			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods="unsubscribeBeforeGroup",
-			            enabled=true)
+			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods={"unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
+			            enabled=false)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
 		String productId=null;
+		String poolIds=null;
+		
 		Map<String,String> factsMap = new HashMap<String,String>();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
-			System.out.println(pool.multiEntitlement);
-
 			if(pool.multiEntitlement){
+				System.out.println(pool.subscriptionName + "subscriptionname");
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-				System.out.println("poolProductSocketsAttribute "+poolProductSocketsAttribute);
-				if((!(poolProductSocketsAttribute==null)) && (poolProductSocketsAttribute.equals("2"))){
+				System.out.println("socket count is "+poolProductSocketsAttribute);
+				if((!(poolProductSocketsAttribute==null))){
 				clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 				poolId.add(pool.poolId);
-				System.out.println("pool id "+poolId);
-		}}
+				int socket=Integer.parseInt(poolProductSocketsAttribute);
+				factsMap.put("cpu.cpu_socket(s)", String.valueOf(socket+socket));
+				//	poolIds=poolId.get(randomGenerator.nextInt(poolId.size()));
+					clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+			}}
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
-					if(installed.status.equals("Not Subscribed"))	moveProductCertFiles(installed.productId+".pem", true);
+			if(installed.status.equals("Not Subscribed"))	
+				moveProductCertFiles(installed.productId+".pem", true);
 		}
 				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-				factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
-				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
-				System.out.println("pool id "+poolId);
-				clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null);
+				/*factsMap.put("cpu.cpu_socket(s)", String.valueOf(socket+socket));
+			//	poolIds=poolId.get(randomGenerator.nextInt(poolId.size()));
+				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);*/
+				clienttasks.subscribe_(null, null,poolId, null, null, null, null, null, null, null, null);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
 						productId=installed.productId;
+				clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null);
+
 					}
 				}
-				clienttasks.subscribe(null, null, poolId, null, null, null, null, null, null, null, null);
-				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
-					if(productId.equals(installed.productId))
-					Assert.assertEquals(installed.status, "Subscribed");
+		
+				for(InstalledProduct Installed:clienttasks.getCurrentlyInstalledProducts()){
+					if(productId.equals(Installed.productId)){
+					Assert.assertEquals(Installed.status, "Subscribed");
 				}
-				moveProductCertFiles("", false);
 			}
-				}
+				moveProductCertFiles("", false);
+		}	
+	}
 		
 	
 	/**
@@ -810,10 +818,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="Unsubscribe all the subscriptions",
-			groups={"VerifyDistinct"},enabled=true)
+			groups={"VerifyDistinct","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
+	}
+	
+	@Test(description="Unset the servicelevel",
+			groups={"VerifyDistinct"},enabled=true)
+	public void unsetServicelevelBeforeGroup() {
+		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
 	
 	
