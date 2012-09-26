@@ -721,7 +721,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
             groups={"Verifyautosubscribe_Test"},dependsOnMethods="unsubscribeBeforeGroup",
-            enabled=true)
+            enabled=false)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 		Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
