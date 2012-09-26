@@ -491,7 +491,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
-		System.out.println("availableService  "+availableService);
 		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
 		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
@@ -501,14 +500,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed")){
 				 filename=installedProduct.productId+".pem";
 				moveProductCertFiles(filename,true);
-				System.out.println("after moving certs"+filename);
 			}
 		}
-		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
-		
-		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
-		
-		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
