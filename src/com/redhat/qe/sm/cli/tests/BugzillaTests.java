@@ -73,7 +73,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods={"unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			            enabled=false)
+			            enabled=true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
 		String productId=null;
@@ -121,7 +121,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify deletion of subscribed product",
 			            groups={"DeleteProductTest","blockedByBug-684941"},
-			            enabled=false)
+			            enabled=true)
 	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
 		List<String> result =new ArrayList<String>(); 
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
@@ -478,7 +478,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal with SLA",
 			groups={"AutoHealFailForSLA"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup"},
-			enabled=false)	
+			enabled=true)	
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
 		String filename=null;
