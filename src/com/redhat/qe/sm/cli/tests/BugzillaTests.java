@@ -73,37 +73,29 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods={"unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			            enabled=false)
+			            enabled=true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
 		String productId=null;
 		String poolIds=null;
-		
 		Map<String,String> factsMap = new HashMap<String,String>();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if(pool.multiEntitlement){
-				System.out.println(pool.subscriptionName + "subscriptionname");
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-				System.out.println("socket count is "+poolProductSocketsAttribute);
-				if((!(poolProductSocketsAttribute==null))){
+				if((!(poolProductSocketsAttribute==null))&& poolProductSocketsAttribute.equals("2")){
 				clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
 				poolId.add(pool.poolId);
-				int socket=Integer.parseInt(poolProductSocketsAttribute);
-				factsMap.put("cpu.cpu_socket(s)", String.valueOf(socket+socket));
-				//	poolIds=poolId.get(randomGenerator.nextInt(poolId.size()));
-					clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
-			}}
+						
+			}}}
 		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 			if(installed.status.equals("Not Subscribed"))	
 				moveProductCertFiles(installed.productId+".pem", true);
 		}
-				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
-				/*factsMap.put("cpu.cpu_socket(s)", String.valueOf(socket+socket));
-			//	poolIds=poolId.get(randomGenerator.nextInt(poolId.size()));
-				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);*/
-				clienttasks.subscribe_(null, null,poolId, null, null, null, null, null, null, null, null);
+			
+				factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
+				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
 						productId=installed.productId;
@@ -119,7 +111,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 				moveProductCertFiles("", false);
 		}	
-	}
+	
 		
 	
 	/**
