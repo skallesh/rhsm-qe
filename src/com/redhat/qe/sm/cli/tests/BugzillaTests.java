@@ -253,9 +253,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			            enabled=true)
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		 List <String> productId =new ArrayList<String>();   
-		/* List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
-		 listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency", "1440"});
-		 clienttasks.config_(null,null,true,listOfSectionNameValues);*/
+		 List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		// String param=clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", "healFrequency");
+
+		 listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		 clienttasks.config_(null,null,true,listOfSectionNameValues);
 		 clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
 		 clienttasks.facts_(true, null, null, null, null);
 		 String result =  clienttasks.getFactValue("system.entitlements_valid");
@@ -299,7 +301,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal for partial subscription",
-			groups={"autohealPartial","blockedByBug-746218"},
+			groups={"autohealPartial","blockedByBug-746218"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
 			enabled=true)	
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency=3;
@@ -354,7 +356,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal with SLA",
-			groups={"AutoHealWithSLA"},
+			groups={"AutoHealWithSLA"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup"},
 			enabled=true)	
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
@@ -451,7 +453,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(	description="Auto-heal for subscription",
-			groups={"AutoHeal"},
+			groups={"AutoHeal"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
 			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
 	@ImplementsNitrateTest(caseId=119327)
 	
@@ -475,7 +477,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal with SLA",
-			groups={"AutoHealFailForSLA"},dependsOnMethods="VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test",
+			groups={"AutoHealFailForSLA"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup"},
 			enabled=true)	
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
@@ -483,23 +485,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
-		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-		List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
-		for (ProductCert productCert : productCerts) {
-			InstalledProduct installedProduct = clienttasks.getInstalledProductCorrespondingToProductCert(productCert,installedProducts);
+		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
+		
+		for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 			
-			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed")){
+			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed")|| installedProduct.status.toString().equalsIgnoreCase("Partially Subscribed")){
 				 filename=installedProduct.productId+".pem";
 				moveProductCertFiles(filename,true);
 			}
-		}
+		}		
+		clienttasks.unsubscribe_(true, null, null, null, null);
+
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		clienttasks.unsubscribe(true, null, null, null, null);
-		clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "entitlementCertDir");
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
-		
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
+		if (!(certs.isEmpty())) 		moveProductCertFiles(filename,false);
+ 
+
 		Assert.assertTrue((certs.isEmpty()),"autoheal has failed"); 
 		moveProductCertFiles(filename,false);
 	}
@@ -801,21 +803,21 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="Unsubscribe all the subscriptions",
-			groups={"VerifyDistinct","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 	}
 	
 	@Test(description="Unset the servicelevel",
-			groups={"VerifyDistinct"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","autohealPartial"},enabled=true)
 	public void unsetServicelevelBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
 	
-	@Test(description="Unset the servicelevel",
-			groups={"AutoHealFailForSLA","heal"},enabled=true)
+	@Test(description="set healing attribute to true",
+			groups={"autohealPartial","AutoHeal","heal"},enabled=true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		
 		// register a new consumer
@@ -932,7 +934,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
 			client.runCommandAndWait("mv "+clienttasks.productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
 	}else {
-		client.runCommandAndWait("mv "+ "/etc/pki/tmp/*.pem"+" " +clienttasks.productCertDir);
+		client.runCommandAndWait("mv "+ "/etc/pki/tmp1/*.pem"+" " +clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf "+ "/etc/pki/tmp1");
 	}}
 
