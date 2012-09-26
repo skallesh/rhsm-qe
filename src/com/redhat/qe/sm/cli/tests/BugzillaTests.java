@@ -261,13 +261,12 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			            enabled=true)
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		 List <String> productId =new ArrayList<String>();   
-		 List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		/* List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		 listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency", "1440"});
-		 clienttasks.config(null,null,true,listOfSectionNameValues);
+		 clienttasks.config_(null,null,true,listOfSectionNameValues);*/
 		 clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
 		 clienttasks.facts_(true, null, null, null, null);
 		 String result =  clienttasks.getFactValue("system.entitlements_valid");
-		 System.out.println(result);
 		 Assert.assertEquals(result.trim(),"invalid");
 		 clienttasks.subscribe(true, null, null, (String)null, null, null, null, null, null, null, null);
 		 for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
@@ -484,7 +483,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal with SLA",
-			groups={"AutoHealFailForSLA"},dependsOnMethods="unsubscribeBeforeGroup",
+			groups={"AutoHealFailForSLA"},dependsOnMethods="VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test",
 			enabled=true)	
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
@@ -505,7 +504,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				System.out.println("after moving certs"+filename);
 			}
 		}
-		clienttasks.getCurrentConsumerId(clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
 		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
 		
 		clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null));
@@ -831,7 +829,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
 	
-	
+	@Test(description="Unset the servicelevel",
+			groups={"AutoHealFailForSLA","heal"},enabled=true)
+	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
+		
+		// register a new consumer
+		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true, null, null, null, null));
+		
+		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
+	}
 /*	// Configuration methods ***********************************************************************
 	*//**
 	 * @param startingMinutesFromNow
