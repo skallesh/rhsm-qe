@@ -811,7 +811,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 			CandlepinTasks.createProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductName, engineeringProductId, 1, attributes, null);
 			for (int i = 1; i <= N; i++) {
 				String contentId = String.format(contentIdStringFormat,i);	// must be numeric (and unique) defined above
-				CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductId, contentId, randomGenerator.nextBoolean());
+				CandlepinTasks.addContentToProductUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, engineeringProductId, contentId, /*randomGenerator.nextBoolean()*/i%3==0?true:false);	// WARNING: Be careful with the enabled flag! If the same content is enabled under one product and then disabled in another product, the tests to assert enabled or disabled will both fail due to conflict of interest.  Therefore use this flag with some pseudo-randomness 
 			}
 			CandlepinTasks.createSubscriptionAndRefreshPoolsUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl, sm_clientOrg, 20, -1*24*60/*1 day ago*/, 15*24*60/*15 days from now*/, getRandInt(), getRandInt(), marketingProductId, Arrays.asList(engineeringProductId));
 		}
