@@ -52,6 +52,11 @@ import com.redhat.qe.tools.SSHCommandRunner;
  *   
  *   Translation Bug Reporting Process
  *   https://engineering.redhat.com/trac/LocalizationServices/wiki/L10nBugReportingProcess
+ *   
+ *   Contacts:
+ *   hi_IN: aalam@redhat.com
+ *   or_IN: Manoj Giri <mgiri@redhat.com> <qe-india@redhat.com>
+ *   
  **/
 @Test(groups={"PofilterTranslationTests"})
 public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
@@ -291,12 +296,14 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			ignorableMsgIds.addAll(Arrays.asList("Subscription Subscriptions Box","Subscription Subscriptions Label"));
 
 			List<String> moreIgnorableMsgIdsFor_pa		= Arrays.asList("Server URL can not be None");
-			List<String> moreIgnorableMsgIdsFor_hi		= Arrays.asList("Server URL can not be None");
+			List<String> moreIgnorableMsgIdsFor_hi		= Arrays.asList("Server URL can not be None");	// more info in bug 861095
 			List<String> moreIgnorableMsgIdsFor_fr		= Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.");	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
-
+			List<String> moreIgnorableMsgIdsFor_or		= Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.");
+			
 			if((translationFile.getPath().contains("/pa/")/*||translationFile.getPath().contains("pa")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_pa);
 			if((translationFile.getPath().contains("/hi/")/*||translationFile.getPath().contains("hi")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_hi);
 			if((translationFile.getPath().contains("/fr/")/*||translationFile.getPath().contains("fr")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_fr);
+			if((translationFile.getPath().contains("/or/")/*||translationFile.getPath().contains("or")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_or);
 		}
 		if (pofilterTest.equals("unchanged")) {
 			ignorableMsgIds.addAll(Arrays.asList("registration_dialog_action_area","server_label","server_entry","proxy_button","hostname[:port][/prefix]","default_button","choose_server_label","<b>SKU:</b>","%prog [options]","<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>python-rhsm Version:</b> %s","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","subscription-manager: %s","python-rhsm: %s","register_details_label","register_progressbar","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n","progress_label","Red Hat Subscription Manager", "Red Hat Subscription Validity Applet"));
@@ -544,10 +551,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("855081");
 
 				
-				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
-				
+				// Bug 861095 - [hi_IN] duplicate words appear in two msgid translations 
+				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/hi/")) bugIds.add("861095");
 				
 				
 				BlockedByBzBug blockedByBzBug = new BlockedByBzBug(bugIds.toArray(new String[]{}));
