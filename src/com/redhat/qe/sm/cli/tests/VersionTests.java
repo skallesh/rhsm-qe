@@ -1,8 +1,11 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.testng.annotations.AfterGroups;
+import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
@@ -85,6 +88,38 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// assert results
 		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
 		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+	}
+	
+	protected String server_hostname;
+	@Test(	description="assert that the candlepin sever version is reported as Unknown when not registered AND hostname is bogus",
+			groups={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test","blockedByBug-843191"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
+
+		// make sure we are not registered
+		clienttasks.unregister(null, null, null);
+		
+		// invalidate the server hostname
+		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
+		clienttasks.config(null, null, true, new String[]{"server","hostname","UNKNOWN"});
+		
+		// get the expected results
+		String expectedVersion	= "remote entitlement server: "+"Unknown";	// changed by bug 846834
+		expectedVersion			= "registered to: "+"Unknown";
+		String expectedType		= "remote entitlement server type: "+"Unknown";	// changed by bug 846834
+		expectedType			= "server type: "+"Unknown";
+		
+		// get the actual version results from subscription-manager
+		SSHCommandResult actualResult = clienttasks.version();
+
+		// assert results
+		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
+		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+	}
+	@AfterGroups(value={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test"}, groups={"setup"})
+	public void afterVersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
+		if (server_hostname!=null)	clienttasks.config(null,null,true,new String[]{"server","hostname",server_hostname});
 	}
 	
 	
