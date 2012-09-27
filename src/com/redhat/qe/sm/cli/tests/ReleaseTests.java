@@ -436,7 +436,7 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 
 	// Candidates for an automated Test:
-	
+	// TODO Bug 861151 - subscription-manager release doesn't take variant into account
 	
 	
 	// Configuration methods ***********************************************************************
