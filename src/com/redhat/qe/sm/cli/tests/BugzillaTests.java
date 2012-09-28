@@ -612,7 +612,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
-            groups={"VerifyEntitlementStart_Test"},
+            groups={"VerifyEntitlementStartDate_Test"},
              enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
 	public void VerifyEntitlementStart_Test() throws Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
