@@ -98,44 +98,61 @@ public class ProductCert extends AbstractCommandLineData {
 	}
 	
 	
-	/* 9/17/2012 jsefler believes the super.equals() is now smart enough to handle this
 	@Override
 	public boolean equals(Object obj){
 
-//		return	((ProductCert)obj).serialNumber.equals(this.serialNumber) &&
-//				((ProductCert)obj).id.equals(this.id) &&
-//				((ProductCert)obj).issuer.equals(this.issuer) &&
-//				((ProductCert)obj).validityNotBefore.equals(this.validityNotBefore) &&
-//				((ProductCert)obj).validityNotAfter.equals(this.validityNotAfter) &&
-//				((ProductCert)obj).productName.equals(this.productName);
+//		ProductCert that = (ProductCert) obj;
+//		
+//		if (that.serialNumber!=null && !that.serialNumber.equals(this.serialNumber)) return false;
+//		if (this.serialNumber!=null && !this.serialNumber.equals(that.serialNumber)) return false;
+//		
+//		if (that.id!=null && !that.id.equals(this.id)) return false;
+//		if (this.id!=null && !this.id.equals(that.id)) return false;
+//		
+//		if (that.issuer!=null && !that.issuer.equals(this.issuer)) return false;
+//		if (this.issuer!=null && !this.issuer.equals(that.issuer)) return false;
+//		
+//		if (that.validityNotBefore!=null && !that.validityNotBefore.equals(this.validityNotBefore)) return false;
+//		if (this.validityNotBefore!=null && !this.validityNotBefore.equals(that.validityNotBefore)) return false;
+//		
+//		if (that.validityNotAfter!=null && !that.validityNotAfter.equals(this.validityNotAfter)) return false;
+//		if (this.validityNotAfter!=null && !this.validityNotAfter.equals(that.validityNotAfter)) return false;
+//		
+//		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
+//		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
+//		
+//		// also compare the productNamespace
+//		if (that.productNamespace!=null && !that.productNamespace.equals(this.productNamespace)) return false;
+//		if (this.productNamespace!=null && !this.productNamespace.equals(that.productNamespace)) return false;
+//		
+//		return true;
+	 
+		// exclude file field when comparing certs
+		File this_file = this.file;
+		File that_file = ((ProductCert)obj).file;
+		this.file = null;
+		((ProductCert)obj).file = null;
 		
-		ProductCert that = (ProductCert) obj;
+		// exclude rawCertificate field when comparing certs
+		String this_rawCertificate = this.rawCertificate;
+		String that_rawCertificate = ((ProductCert)obj).rawCertificate;
+		this.rawCertificate = null;
+		((ProductCert)obj).rawCertificate = null;
 		
-		if (that.serialNumber!=null && !that.serialNumber.equals(this.serialNumber)) return false;
-		if (this.serialNumber!=null && !this.serialNumber.equals(that.serialNumber)) return false;
+		// use the new and improved super equals method to compare the remaining ProductCert fields
+		boolean equals = super.equals(obj);
 		
-		if (that.id!=null && !that.id.equals(this.id)) return false;
-		if (this.id!=null && !this.id.equals(that.id)) return false;
+		// restore file field before returning;
+		this.file = this_file;
+		((ProductCert)obj).file = that_file;
 		
-		if (that.issuer!=null && !that.issuer.equals(this.issuer)) return false;
-		if (this.issuer!=null && !this.issuer.equals(that.issuer)) return false;
+		// restore rawCertificate field before returning;
+		this.rawCertificate = this_rawCertificate;
+		((ProductCert)obj).rawCertificate = that_rawCertificate;
 		
-		if (that.validityNotBefore!=null && !that.validityNotBefore.equals(this.validityNotBefore)) return false;
-		if (this.validityNotBefore!=null && !this.validityNotBefore.equals(that.validityNotBefore)) return false;
-		
-		if (that.validityNotAfter!=null && !that.validityNotAfter.equals(this.validityNotAfter)) return false;
-		if (this.validityNotAfter!=null && !this.validityNotAfter.equals(that.validityNotAfter)) return false;
-		
-		if (that.productName!=null && !that.productName.equals(this.productName)) return false;
-		if (this.productName!=null && !this.productName.equals(that.productName)) return false;
-		
-		// also compare the productNamespace
-		if (that.productNamespace!=null && !that.productNamespace.equals(this.productNamespace)) return false;
-		if (this.productNamespace!=null && !this.productNamespace.equals(that.productNamespace)) return false;
-		
-		return true;
+		return equals;
 	}
-	*/
+	
 	
 	/**
 	 * @param rawCertificates - OLD WAY: stdout from: find /etc/pki/product/ -name '*.pem' | xargs -I '{}' openssl x509 -in '{}' -noout -text
