@@ -210,7 +210,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360"},
+			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
@@ -727,6 +727,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 		if (sm_rhnHostname.equals("")) throw new SkipException("This test requires access to RHN Classic.");
 
 		// make sure our serverUrl is configured to it's original good value
+		// TODO maybe this should go after the unregister and removeAll commands
 		restoreOriginallyConfiguredServerUrl();
 		
 		// make sure we are NOT registered to RHSM
@@ -1556,7 +1557,6 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	@BeforeClass(groups="setup", dependsOnMethods={"setupBeforeClass","copyScriptsToClient"})
 	public void determineRhnClassicBaseAndAvailableChildChannels() throws IOException {
-//debugTesting if (true) return;
 		if (sm_rhnUsername.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnPassword.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
 		if (sm_rhnHostname.equals("")) {log.warning("Skipping determination of the base and available RHN Classic channels"); return;}
