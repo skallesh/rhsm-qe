@@ -80,7 +80,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyFactsWithIncorrectProxy_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
-		String facts=clienttasks.facts_(null, true, basicauthproxyUrl, null, null).getStdout();
+		String facts=clienttasks.facts_(null, true, basicauthproxyUrl, null, null).getStderr();
 		String Expect="Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertEquals(facts, Expect);
 	}
@@ -164,10 +164,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.subscribe_(true, null, null, (String)null, null, null, null, null, null, null, null);
 		 for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
 			 if(installed.status.equals("Subscribed")){
-				 for(SubscriptionPool subscribed  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
-				if(installed.productName.contains(subscribed.subscriptionName)){
-					String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+installed.productName);
-					String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+installed.productName+ "' cannot be deleted while subscriptions exist.\"}";
+				 for(SubscriptionPool AvailSub  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
+				if(installed.productName.contains(AvailSub.subscriptionName)){
+					String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+AvailSub.productId);
+					String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+ "' cannot be deleted while subscriptions exist.\"}";
 
 					Assert.assertEquals(expect, jsonConsumer);				}
 			}
