@@ -82,6 +82,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String facts=clienttasks.facts_(null, true, basicauthproxyUrl, null, null).getStderr();
 		String Expect="Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+
 		Assert.assertEquals(facts.trim(), Expect);
 	}
 	
@@ -98,6 +99,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
 		List<YumRepo> repos=clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertFalse(repos.isEmpty());
+
 		clienttasks.unregister_(null, null, null);
 		List<YumRepo> repo=clienttasks.getCurrentlySubscribedYumRepos();
 		Assert.assertTrue(repo.isEmpty());
