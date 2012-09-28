@@ -3,7 +3,7 @@
   :java-source-path "src"
   :aot [#"^com.redhat.qe.sm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true
-  :dependencies [[org.clojure/clojure "1.3.0"]
+  :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.json "0.1.2"]
                  [slingshot "0.8.0"]
