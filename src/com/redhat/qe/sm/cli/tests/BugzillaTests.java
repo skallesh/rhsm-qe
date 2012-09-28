@@ -82,7 +82,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
 		String facts=clienttasks.facts_(null, true, basicauthproxyUrl, null, null).getStderr();
 		String Expect="Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
-
 		Assert.assertEquals(facts.trim(), Expect);
 	}
 	
