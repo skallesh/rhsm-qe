@@ -66,8 +66,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513//done
 	// TODO Bug 803386 - display product ID in product details pane on sm-gui and cli
 	//https://bugzilla.redhat.com/show_bug.cgi?id=733327
-	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister
-	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.
+	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister//done
+	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
 
 	/**
 	 * @author skallesh
