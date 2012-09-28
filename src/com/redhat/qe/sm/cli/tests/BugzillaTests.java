@@ -61,7 +61,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires //done
 	// TODO   subcase Bug 746218 - auto-heal isn't working for partial subscription //done
 	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing
-	//TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665 //done --shwetha
+	//TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665 //done 
 	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513//done
 	// TODO Bug 803386 - display product ID in product details pane on sm-gui and cli
