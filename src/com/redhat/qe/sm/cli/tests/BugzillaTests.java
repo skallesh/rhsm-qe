@@ -799,7 +799,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ",
             groups={"VerifyautosubscribeIgnoresSocketCount_Test"},
-            enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+            enabled=true)	
 	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception{
 		int socketnum = 0;
 		int socketvalue=0;
@@ -819,7 +819,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 		
 			}
-		 Map<String,String> factsMap = new HashMap<String,String>();
+		 	Map<String,String> factsMap = new HashMap<String,String>();
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 	
