@@ -850,25 +850,28 @@ public class SubscriptionManagerTasks {
 	public List<String> getCurrentlyExpectedReleases() {
 		HashSet<String> expectedReleaseSet = new HashSet<String>();
 		String baseurl = getConfFileParameter(rhsmConfFile, "rhsm", "baseurl");
+		List<ProductCert> productCerts = getCurrentProductCerts();
 		
 		// loop through all of the currently entitled repo urls
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.type.equalsIgnoreCase("yum")) {
 					if (contentNamespace.enabled) {	// Bug 820639 - subscription-manager release --list should exclude listings from disabled repos
-						if (contentNamespace.downloadUrl.contains("$releasever")) {
-							if (contentNamespace.downloadUrl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
-								// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
-								String listingUrl =  contentNamespace.downloadUrl.startsWith("http")? "":baseurl;
-								listingUrl += contentNamespace.downloadUrl.split("/\\$releasever/")[0];
-								listingUrl += "/listing";
-								String command = String.format("curl --stderr /dev/null --insecure --tlsv1 --cert %s --key %s %s" , entitlementCert.file.getPath(), getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCert.file).getPath(), listingUrl);
-								SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
-								//	[root@qe-blade-13 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/2013167262444796312.pem --key /etc/pki/entitlement/2013167262444796312-key.pem https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/6/listing
-								//	6.1
-								//	6.2
-								//	6Server
-								expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+						if (areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, productCerts)) {	// Bug 861151 - subscription-manager release doesn't take variant into account 
+							if (contentNamespace.downloadUrl.contains("$releasever")) {
+								if (contentNamespace.downloadUrl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
+									// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
+									String listingUrl =  contentNamespace.downloadUrl.startsWith("http")? "":baseurl;
+									listingUrl += contentNamespace.downloadUrl.split("/\\$releasever/")[0];
+									listingUrl += "/listing";
+									String command = String.format("curl --stderr /dev/null --insecure --tlsv1 --cert %s --key %s %s" , entitlementCert.file.getPath(), getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCert.file).getPath(), listingUrl);
+									SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
+									//	[root@qe-blade-13 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/2013167262444796312.pem --key /etc/pki/entitlement/2013167262444796312-key.pem https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/6/listing
+									//	6.1
+									//	6.2
+									//	6Server
+									expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+								}
 							}
 						}
 					}

@@ -1,6 +1,7 @@
 package com.redhat.qe.sm.cli.tests;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,9 +10,13 @@ import org.testng.SkipException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BlockedByBzBug;
+import com.redhat.qe.auto.testng.TestNGUtils;
+import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
 import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
@@ -291,12 +296,13 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	@Test(	description="register to a RHEL subscription and verify that release --list matches the expected CDN listing for this x-stream release of RHEL",
 			groups={"blockedByBug-818298","blockedByBug-820639","blockedByBug-844368"},
+			dataProvider="getCredentialsToVerifyReleaseListMatchesCDN_Test",
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VerifyReleaseListMatchesCDN_Test() throws JSONException, Exception {
+	public void VerifyReleaseListMatchesCDN_Test(Object bugzilla, String username, String password, String org) throws JSONException, Exception {
 
 		// make sure we are newly registered
-		clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null);
+		clienttasks.register(username,password,org,null,null,null,null,null,null,null,(List<String>)null,null,null,true,null, null, null, null);
 
 		// get the current base RHEL product cert
 		String providingTag = "rhel-"+clienttasks.redhatReleaseX;
@@ -516,5 +522,19 @@ public class ReleaseTests extends SubscriptionManagerCLITestScript {
 	
 	// Data Providers ***********************************************************************
 	
+	@DataProvider(name="getCredentialsToVerifyReleaseListMatchesCDN_Test")
+	public Object[][] getCredentialsToVerifyReleaseListMatchesCDN_TestDataAs2dArray() {
+		return TestNGUtils.convertListOfListsTo2dArray(getCredentialsToVerifyReleaseListMatchesCDN_TestDataAsListOfLists());
+	}
+	protected List<List<Object>> getCredentialsToVerifyReleaseListMatchesCDN_TestDataAsListOfLists(){
+		List<List<Object>> ll = new ArrayList<List<Object>>();
 
+		// Object bugzilla, String username, String password, String org
+		ll.add(Arrays.asList(new Object[]{null,	sm_clientUsername, sm_clientPassword, sm_clientOrg}));
+
+		if (sm_serverType.equals(CandlepinType.hosted) && !sm_rhnUsername.isEmpty())
+		ll.add(Arrays.asList(new Object[]{new BlockedByBzBug("861151"),	sm_rhnUsername, sm_rhnPassword, null}));
+
+		return ll;
+	}
 }
