@@ -4192,12 +4192,12 @@ repolist: 3,394
 		
 		List<ProductCert> currentProductCerts = this.getCurrentProductCerts();
 		
-		// NOTE: THIS COULD ALSO BE A PERMANENT IMPLEMENTATION FOR THIS METHOD
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
 		if (this.redhatRelease.contains("release 5")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="697087"; 
-			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			// NOTE: LET'S MAKE THIS A PERMANENT WORKAROUND FOR THIS METHOD
+			// try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				List<String> yumRepoListAll			= this.getYumRepolist("all");
