@@ -355,6 +355,10 @@ public class SubscriptionManagerTasks {
 		}
 	}
 	
+	public void removeRhnSystemIdFile() {
+		sshCommandRunner.runCommandAndWait("rm -rf "+rhnSystemIdFile);
+	}
+	
 	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
 		log.info("Updating yumrepo file '"+yumRepoFile+"' repoid '"+repoid+"' parameter '"+parameter+"' value to: "+value);
 		String command = "sed -i \"/\\["+repoid+"\\]/,/\\[/ s/^"+parameter+"\\s*=.*/"+parameter+"="+value+"/\" "+yumRepoFile;

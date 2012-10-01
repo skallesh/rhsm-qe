@@ -467,7 +467,7 @@ public class IdentityTests extends SubscriptionManagerCLITestScript {
 	@AfterGroups(groups={"setup"},value="RHNClassicTests")
 	public void removeRHNSystemIdFile() {
 		if (clienttasks!=null) {
-			client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
+			clienttasks.removeRhnSystemIdFile();
 		}
 	}
 	

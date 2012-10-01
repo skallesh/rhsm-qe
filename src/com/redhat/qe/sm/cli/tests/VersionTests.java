@@ -183,7 +183,9 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	}
 	@AfterGroups(groups={"setup"},value="VersionOfServerWhenRegisteredUsingRHNClassic_Test")
 	public void afterVersionOfServerWhenRegisteredUsingRHNClassic_Test() {
-		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);;
+		if (clienttasks!=null) {
+			clienttasks.removeRhnSystemIdFile();
+		}
 	}
 	
 	

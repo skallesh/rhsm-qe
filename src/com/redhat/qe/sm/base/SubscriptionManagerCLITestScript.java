@@ -246,6 +246,7 @@ public class SubscriptionManagerCLITestScript extends SubscriptionManagerBaseTes
 		smt.initializeFieldsFromConfigFile();
 		smt.removeAllCerts(true,true, false);
 		smt.removeAllFacts();
+		smt.removeRhnSystemIdFile();
 		smt.installRepoCaCerts(sm_repoCaCertUrls);
 		smt.setupRhnDefinitions(sm_rhnDefinitionsGitRepository);
 		smt.setupTranslateToolkit(sm_translateToolkitGitRepository);

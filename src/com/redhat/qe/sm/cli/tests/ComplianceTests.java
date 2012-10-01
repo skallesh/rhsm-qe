@@ -464,8 +464,10 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	// Configuration Methods ***********************************************************************
 
 	@AfterGroups(groups={"setup"},value="RHNClassicTests")
-	public void removeRHNSystemIdFile() {
-		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);;
+	public void afterRHNClassicTests() {
+		if (clienttasks!=null) {
+			clienttasks.removeRhnSystemIdFile();
+		}
 	}
 	
 	@BeforeClass(groups={"setup"})

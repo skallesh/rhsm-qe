@@ -1383,7 +1383,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
 	    removeProxyServerConfigurations();	// cleanup from prior tests
 	    clienttasks.unregister(null,null,null);
-		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
+	    clienttasks.removeRhnSystemIdFile();
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
 		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
@@ -1423,7 +1423,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
-		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
+		clienttasks.removeRhnSystemIdFile();
 		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, true, null, null, null, null));
 		SSHCommandResult sshCommandResult;
 		if (isCurrentlyConfiguredServerTypeHosted()) {
