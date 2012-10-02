@@ -203,6 +203,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			SubscriptionPool systemSubscriptionPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("productId",systemProductId,client2tasks.getCurrentlyAvailableSubscriptionPools());
 			client2tasks.subscribeToSubscriptionPool(systemSubscriptionPool);
 			
+			/* OLD ASSERTION BEFORE IMPLEMENTATION OF Bug 801187 - collapse list of provided products for subscription-manager list --consumed
 			for (int k=0; k<bundledProductData.length(); k++) {
 				JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductData.get(k);
 				String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
@@ -211,6 +212,17 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 				Assert.assertNotNull(systemProductSubscription,systemConsumedProductName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
 			}
+			*/
+			List<String> systemConsumedProductNames = new ArrayList<String>();
+			for (int k=0; k<bundledProductData.length(); k++) {
+				JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductData.get(k);
+				String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
+				systemConsumedProductNames.add(systemConsumedProductName);
+			}
+			log.info("Now client2 should be consuming the subscription '"+personSubscriptionName+"' that provides '"+systemConsumedProductNames+"'...");
+			ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",personSubscriptionName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+			Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" is now consumed on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
+			Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getHostname()+"' registered under user '"+username+"'.");
 		}
 	}
 	
@@ -284,6 +296,7 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				log.info("Subscribing system '"+systemNum+"' ('"+consumerId+"' under username '"+username+"') to sub pool for productId '"+systemProductId+"'...");
 				client2tasks.subscribeToSubscriptionPoolUsingPoolId(subPool);
 				
+				/* OLD ASSERTION BEFORE IMPLEMENTATION OF Bug 801187 - collapse list of provided products for subscription-manager list --consumed
 				for (int k=0; k<bundledProductData.length(); k++) {
 					JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductData.get(k);
 					String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
@@ -291,6 +304,17 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 					ProductSubscription productSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",systemConsumedProductName,client2tasks.getCurrentlyConsumedProductSubscriptions());
 					Assert.assertNotNull(productSubscription,systemConsumedProductName+" is now consumed by consumer '"+consumerId+"' (registered as a system under username '"+username+"')");
 				}
+				*/
+				List<String> systemConsumedProductNames = new ArrayList<String>();
+				for (int k=0; k<bundledProductData.length(); k++) {
+					JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductData.get(k);
+					String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
+					systemConsumedProductNames.add(systemConsumedProductName);
+				}
+				log.info("Now client2 should be consuming the subscription '"+personSubscriptionName+"' that provides '"+systemConsumedProductNames+"'...");
+				ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",personSubscriptionName,client2tasks.getCurrentlyConsumedProductSubscriptions());
+				Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" is now consumed by consumer '"+consumerId+"' (registered as a system under username '"+username+"')");
+				Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getHostname()+"' consumed by consumer '"+consumerId+"'.");
 			}
 		}
 	}
@@ -566,7 +590,8 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 			client2tasks.unregister(null, null, null);
 			client2tasks.register(username, password, owner, null, ConsumerType.system, null, null, Boolean.TRUE, null, null, (String)null, null, null, null, false, null, null, null);
 			List<ProductSubscription> client2ConsumedProductSubscriptions = client2tasks.getCurrentlyConsumedProductSubscriptions();
-			
+	
+			/* OLD ASSERTION BEFORE IMPLEMENTATION OF Bug 801187 - collapse list of provided products for subscription-manager list --consumed
 			for (int k=0; k<bundledProductData.length(); k++) {
 				JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductData.get(k);
 				String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
@@ -575,6 +600,19 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 				Assert.assertNotNull(consumedProductSubscription,systemConsumedProductName+" has been autosubscribed by client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+username+"')");
 	
 			}
+			*/
+			List<String> systemConsumedProductNames = new ArrayList<String>();
+			for (int k=0; k<bundledProductData.length(); k++) {
+				JSONObject bundledProductAsJSONObject = (JSONObject) bundledProductData.get(k);
+				String systemConsumedProductName = bundledProductAsJSONObject.getString("productName");
+				systemConsumedProductNames.add(systemConsumedProductName);
+			}
+			ProductSubscription systemProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productName",personSubscriptionName,client2ConsumedProductSubscriptions);
+			Assert.assertNotNull(systemProductSubscription,personSubscriptionName+" has been autosubscribed by client2 '"+client2.getConnection().getHostname()+"' (registered as a system under username '"+username+"')");
+			Assert.assertTrue(systemProductSubscription.provides.containsAll(systemConsumedProductNames)&&systemConsumedProductNames.containsAll(systemProductSubscription.provides),"All of the expected bundled products "+systemConsumedProductNames+" are now being provided for on client2 system '"+client2.getConnection().getHostname()+"' after having autosubscribed.");
+			
+			
+			
 			client2tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();	
 			client1tasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		}
@@ -689,13 +727,6 @@ public class RHELPersonalTests extends SubscriptionManagerCLITestScript{
 		RegisterWithCredentials_Test(); // needed to populate registrationDataList
 		
 		// find anotherConsumerUsername under the same owner as consumerUsername
-//		RegistrationData registrationDataForSystemUsername = findRegistrationDataMatchingUsername(username);
-//		Assert.assertNotNull(registrationDataForSystemUsername, "Found the RegistrationData for username '"+username+"': "+registrationDataForSystemUsername);
-//		RegistrationData registrationDataForAnotherSystemUsername = findRegistrationDataMatchingOwnerKeyButNotMatchingUsername(registrationDataForSystemUsername.ownerKey,username);
-//		if (registrationDataForAnotherSystemUsername!=null) {
-//			anotherUsername = registrationDataForAnotherSystemUsername.username;
-//			anotherPassword = registrationDataForAnotherSystemUsername.password;
-//		}
 		List<RegistrationData> registrationData = findGoodRegistrationData(false,username,true,owner);
 		if (!registrationData.isEmpty()) {
 			anotherUsername = registrationData.get(0).username;
