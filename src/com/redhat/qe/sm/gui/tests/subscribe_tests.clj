@@ -322,10 +322,10 @@
           (if (>= row 0)
             (let [contract (tasks/ui getcellvalue :contract-selection-table row 0)
                   pool (ctasks/get-pool-id (@config :username)
-                                          (@config :password)
-                                          (@config :owner-key)
-                                          s
-                                          contract)]
+                                           (@config :password)
+                                           (@config :owner-key)
+                                           s
+                                           contract)]
               (if (ctasks/multi-entitlement? (@config :username) (@config :password) pool)
                 (swap! subs conj [s contract]))
               (recur (dec row)))))
