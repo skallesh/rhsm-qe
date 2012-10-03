@@ -15,7 +15,8 @@
                                    Test
                                    DataProvider
                                    AfterClass]
-           [com.redhat.qe.sm.cli.tests ImportTests]))
+           [com.redhat.qe.sm.cli.tests ImportTests]
+           [com.redhat.qe.auto.bugzilla BzChecker]))
 
 (def importtests (atom nil))
 (def importedcert (atom nil))
@@ -56,9 +57,14 @@
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-712980"
-                       "blockedByBug-712978"
-                       "blockedByBug-860344"]}}
+                       ;checking this one in the function
+                       ;"blockedByBug-860344"
+                       "blockedByBug-712978"]}}
   import_valid_cert [_]
+  ;only run this test if the bug is fixed or if we're using version 1.x certs
+  (let [version (System/getProperty "sm.client.certificateVersion")]
+    (if-not (and version (re-find #"^1\." version))
+      (verify (not (.isBugOpen (BzChecker/getInstance) "860344")))))
   (tasks/restart-app)
   (let [certlocation (str (.getValidImportCertificate @importtests))
         certdir (tasks/conf-file-value "entitlementCertDir")
