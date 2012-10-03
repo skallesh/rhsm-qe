@@ -31,7 +31,8 @@
 (defn ^{BeforeClass {:groups ["setup"]}}
   create_certs [_]
   (reset! importtests (ImportTests.))
-  (.setupBeforeClass @importtests)
+  (.restartCertFrequencyBeforeClass @importtests)
+  (.setupEntitlemenCertsForImportBeforeClass @importtests)
   (.runCommandAndWait @clientcmd "subscripton-manager unregister")
   (.runCommandAndWait @clientcmd (str "rm -rf " tmpcertpath))
   (.runCommandAndWait @clientcmd (str "mkdir " tmpcertpath)))
@@ -54,8 +55,9 @@
   (tasks/checkforerror))
 
 (defn ^{Test {:groups ["import"
-                       "blokecdByBug-712980"
-                       "blockedByBug-712978"]}}
+                       "blockedByBug-712980"
+                       "blockedByBug-712978"
+                       "blockedByBug-860344"]}}
   import_valid_cert [_]
   (tasks/restart-app)
   (let [certlocation (str (.getValidImportCertificate @importtests))
@@ -120,7 +122,8 @@
 
 (defn ^{Test {:groups ["import"
                        "blockedByBug-691784"
-                       "blockedByBug-723363"]}}
+                       "blockedByBug-723363"]
+              :dependsOnMethods ["import_valid_cert"]}}
   import_unsubscribe [_]
   (tasks/restart-app :unregister? true)
   (import_valid_cert nil)
