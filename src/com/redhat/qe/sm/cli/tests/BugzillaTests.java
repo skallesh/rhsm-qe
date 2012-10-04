@@ -612,17 +612,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
-            groups={"VerifyEntitlementStartDate_Test"},
-             enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+            groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},
+             enabled=true)	
 	public void VerifyEntitlementStart_Test() throws Exception {
+		String result=null;
+		String[] certDate=null;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			Calendar end_date=pools.endDate;
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pools.poolId));	
-			String expireDate=new SimpleDateFormat("yyyy-MM-dd").format(end_date.getTime());
-			String startdate=jsonPool.getString("endDate");
+			String startdate=jsonPool.getString("created");
 			String[] split_word=startdate.split("T");
-		    Assert.assertEquals(split_word[0], expireDate);
+			clienttasks.subscribe_(null, null, pools.poolId, null, null, null, null, null, null, null, null);
+			for(File files: clienttasks.getCurrentEntitlementCertFiles()){
+				String command="rct cat-cert "+ files +"| grep 'Start Date'";
+				result=client.runCommandAndWait(command).getStdout().trim();
+				certDate=result.split(" ");
+				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+			}
+			
+			Assert.assertEquals(split_word[0], certDate[2]);
 			
 		}
 		}
@@ -694,7 +702,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(SubscriptionPool pool :clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 			if((providedProducts.size())>2){
-				clienttasks.subscribe(null, null,pool.poolId, null, null, null, null, null, null, null, null);							
+				clienttasks.subscribe_(null, null,pool.poolId, null, null, null, null, null, null, null, null);							
 				 Boolean flag=clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement");
 				 Assert.assertEquals(flag, actual);
 			}
