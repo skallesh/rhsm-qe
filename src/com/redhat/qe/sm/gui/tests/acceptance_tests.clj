@@ -11,7 +11,9 @@
   (:import [org.testng.annotations
             Test
             BeforeClass
+            BeforeGroups
             AfterClass
+            AfterGroups
             DataProvider]))
 
 (defn ^{Test {:groups ["acceptance"]}}
@@ -39,17 +41,25 @@
   (check-register)
   (stest/unsubscribe_all))
 
-
-(defn ^{Test {:groups ["acceptance"]}}
-  simple_autosubscribe [_]
+(defn ^{BeforeGroups {:groups ["acceptance"]
+                      :value ["acceptance_autosubscribe"]}}
+  before_autosubscribe [_]
   (atest/setup nil)
-  (.configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel @atest/complytests)
+  (.configureProductCertDirForAllProductsSubscribableByOneCommonServiceLevel @atest/complytests))
+
+(defn ^{Test {:groups ["acceptance"
+                       "acceptance_autosubscribe"]}}
+  simple_autosubscribe [_]
   (atest/simple_autosubscribe nil))
+
+(defn ^{AfterGroups {:groups ["acceptance"]
+                     :value ["acceptance_autosubscribe"]}}
+  after_autosubscribe [_]
+  (.configureProductCertDirAfterClass @atest/complytests))
 
 (defn ^{AfterClass {:groups ["cleanup"]}}
   cleanup [_]
   (.runCommandAndWait @clientcmd "subscription-manager unregister")
-  (.configureProductCertDirAfterClass @atest/complytests)
   (tasks/restart-app))
 
 (gen-class-testng)

@@ -526,12 +526,16 @@
   "Grabs the number of products that do not have a valid subscription tied to them
   as reported by the GUI."
   []
-  (if (= 1 (ui guiexist :main-window "*installed products do not have*"))
+  (if (= 1 (max (ui guiexist :main-window "*installed products do not have*")
+                (ui guiexist :main-window "*installed product does not have*")))
     ;; does not work in rhel5 :-(
     ; (let [countlabel (ui getobjectproperty :main-window "You have*" "label")]
     ;  (Integer/parseInt (first (re-seq #"\w+" (.substring countlabel 9))))
     (let [objlist (ui getobjectlist :main-window)
-          countlabel (some #(re-find #".*installedproductsdonothave.*" %) objlist)]
+          regex (re-pattern (str ".*installedproductsdonothave.*"
+                                 "|"
+                                 ".*installedproductdoesnothave.*"))
+          countlabel (some #(re-find regex %) objlist)]
       (if countlabel
         (Integer/parseInt (re-find #"\d+" countlabel))
         0))
