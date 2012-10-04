@@ -131,6 +131,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 	protected void pofilter_Test(SSHCommandRunner sshCommandRunner, String pofilterTest, File translationFile) {
 		log.info("For an explanation of pofilter test '"+pofilterTest+"', see: http://translate.sourceforge.net/wiki/toolkit/pofilter_tests");
 		File translationPoFile = new File(translationFile.getPath().replaceFirst(".mo$", ".po"));
+		List<String> ignorableMsgIds = new ArrayList<String>();
 		
 		// if pofilter test -> notranslatewords, create a file with words that don't have to be translated to native language
 		final String notranslateFile = "/tmp/notranslatefile";
@@ -164,16 +165,13 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 		if (!pofilterFailedTranslations.isEmpty() && pofilterFailedTranslations.get(0).msgid.equals("")) pofilterFailedTranslations.remove(0);
 		
 		
-		// ignore the following special cases of acceptable results..........
-		
-		//List<String> ignorableMsgIds = Arrays.asList();
-		List<String> ignorableMsgIds = new ArrayList<String>();
-		
-		
+		// ignore the following special cases of acceptable results for each of the pofilterTests..........
+				
 		if (pofilterTest.equals("accelerators")) {
-			if (translationFile.getPath().contains("/hi/")/* || translationFile.getPath().contains("hi")*/) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
-			if (translationFile.getPath().contains("/ru/")/* || translationFile.getPath().contains("ru")*/) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
+			if (translationFile.getPath().contains("/hi/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port");
+			if (translationFile.getPath().contains("/ru/")) ignorableMsgIds = Arrays.asList("proxy url in the form of proxy_hostname:proxy_port","%%prog %s [OPTIONS] CERT_FILE");
 		}
+		
 		if (pofilterTest.equals("newlines")) {
 			ignorableMsgIds = Arrays.asList(
 					"Optional language to use for email notification when subscription redemption is complete. Examples: en-us, de-de",
@@ -187,6 +185,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 					"\n"+"This machine appears to be already registered to Certificate-based RHN.  Exiting.",
 					"\n"+"This machine appears to be already registered to Red Hat Subscription Management.  Exiting.");	
 		}
+		
 		if (pofilterTest.equals("xmltags")) { 
 			Boolean match = false; 
 			for(Translation pofilterFailedTranslation : pofilterFailedTranslations) {
@@ -248,6 +247,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if(match) ignorableMsgIds.add(pofilterFailedTranslation.msgid);
 			}
 		}
+		
 		if (pofilterTest.equals("filepaths")) {
 			for(Translation pofilterFailedTranslation : pofilterFailedTranslations) {
 				// Parsing mgID and msgStr for FilePaths ending ' ' (space) 
@@ -283,54 +283,47 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				//}
 			}
 		}
+		
 		// TODO remove or comment this ignore case once the msgID is corrected 
 		// error: 		msgid "Error: you must register or specify --username and password to list service levels"
 		// rectified:	msgid "Error: you must register or specify --username and --password to list service levels"
 		if (pofilterTest.equals("options")) {
 			ignorableMsgIds = Arrays.asList("Error: you must register or specify --username and password to list service levels");
 		}
+		
 		if (pofilterTest.equals("short")) {
 			ignorableMsgIds = Arrays.asList("No","Yes","Key","Value","N/A","None","Number");
 		}
+		
 		if (pofilterTest.equals("doublewords")) {
+			// common doublewords in the translation to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList("Subscription Subscriptions Box","Subscription Subscriptions Label"));
 
-			List<String> moreIgnorableMsgIdsFor_pa		= Arrays.asList("Server URL can not be None");
-			List<String> moreIgnorableMsgIdsFor_hi		= Arrays.asList("Server URL can not be None");	// more info in bug 861095
-			List<String> moreIgnorableMsgIdsFor_fr		= Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management.");	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
-			List<String> moreIgnorableMsgIdsFor_or		= Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay.");
-			
-			if((translationFile.getPath().contains("/pa/")/*||translationFile.getPath().contains("pa")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_pa);
-			if((translationFile.getPath().contains("/hi/")/*||translationFile.getPath().contains("hi")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_hi);
-			if((translationFile.getPath().contains("/fr/")/*||translationFile.getPath().contains("fr")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_fr);
-			if((translationFile.getPath().contains("/or/")/*||translationFile.getPath().contains("or")*/)) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_or);
+			// doublewords in the translation to ignore for specific langs
+			if((translationFile.getPath().contains("/pa/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));
+			if((translationFile.getPath().contains("/hi/"))) ignorableMsgIds.addAll(Arrays.asList("Server URL can not be None"));	// more info in bug 861095
+			if((translationFile.getPath().contains("/fr/"))) ignorableMsgIds.addAll(Arrays.asList("The Subscription Management Service you register with will provide your system with updates and allow additional management."));	// msgstr "Le service de gestion des abonnements « Subscription Management » avec lequel vous vous enregistrez fournira à votre système des mises à jour et permettra une gestion supplémentaire."
+			if((translationFile.getPath().contains("/or/"))) ignorableMsgIds.addAll(Arrays.asList("Run the initial checks immediately, with no delay.","Run the initial checks immediatly, with no delay."));
 		}
+		
 		if (pofilterTest.equals("unchanged")) {
+			// common unchanged translations to ignore for all langs
 			ignorableMsgIds.addAll(Arrays.asList("registration_dialog_action_area","server_label","server_entry","proxy_button","hostname[:port][/prefix]","default_button","choose_server_label","<b>SKU:</b>","%prog [options]","<b>HTTP Proxy</b>","<b>python-rhsm version:</b> %s","<b>python-rhsm Version:</b> %s","close_button","facts_view","register_button","register_dialog_main_vbox","registration_dialog_action_area\n","prod 1, prod2, prod 3, prod 4, prod 5, prod 6, prod 7, prod 8","%s of %s","floating-point","integer","long integer","Copyright (c) 2012 Red Hat, Inc.","RHN Classic","env_select_vbox_label","environment_treeview","no_subs_label","org_selection_label","org_selection_scrolledwindow","owner_treeview","progress_label","subscription-manager: %s","python-rhsm: %s","register_details_label","register_progressbar","system_instructions_label","system_name_label","connectionStatusLabel",""+"\n"+"This software is licensed to you under the GNU General Public License, version 2 (GPLv2). There is NO WARRANTY for this software, express or implied, including the implied warranties of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2 along with this software; if not, see:\n"+"\n"+"http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt\n"+"\n"+"Red Hat trademarks are not licensed under GPLv2. No permission is granted to use or replicate Red Hat trademarks that are incorporated in this software or its documentation.\n","progress_label","Red Hat Subscription Manager", "Red Hat Subscription Validity Applet"));
 
-			List<String> moreIgnorableMsgIdsFor_bn_IN 	= Arrays.asList("Red Hat Subscription Validity Applet","Subscription Validity Applet");
-			List<String> moreIgnorableMsgIdsFor_ta_IN  	= Arrays.asList("org id: %s","Repo Id:              \\t%s","Repo Url:             \\t%s");
-			List<String> moreIgnorableMsgIdsFor_pt_BR	= Arrays.asList("<b>subscription management service version:</b> %s","Status","Status:               \\t%s","Login:","Virtual","_Help","hostname[:port][/prefix]","org id: %s","virtual");
-			List<String> moreIgnorableMsgIdsFor_de_DE 	= Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","Login:","Name","Name:                 \\t%s","Status","Status:               \\t%s","Version","Version:              \\t%s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: ");
-			List<String> moreIgnorableMsgIdsFor_es_ES  	= Arrays.asList("No","%s: error: %s");
-			List<String> moreIgnorableMsgIdsFor_zh_TW   = Arrays.asList("%%prog %s [OPTIONS]","%%prog %s [OPTIONS] CERT_FILE","%prog [OPTIONS]");
-			List<String> moreIgnorableMsgIdsFor_te    	= Arrays.asList("page 2");
-			List<String> moreIgnorableMsgIdsFor_pa 		= Arrays.asList("<b>python-rhsm version:</b> %s");
-			List<String> moreIgnorableMsgIdsFor_fr 		= Arrays.asList("Options","Type","Arch","Version","page 2","%prog [options]");
-			List<String> moreIgnorableMsgIdsFor_it 		= Arrays.asList("<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: ");
-			
-			if (translationFile.getPath().contains("/bn_IN/")/*||translationFile.getPath().contains("bn_IN")*/) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_bn_IN);
-			if (translationFile.getPath().contains("/ta_IN/")/*||translationFile.getPath().contains("ta_IN")*/) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_ta_IN);
-			if (translationFile.getPath().contains("/pt_BR/")/*||translationFile.getPath().contains("pt_BR")*/) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_pt_BR);
-			if (translationFile.getPath().contains("/de_DE/")/*||translationFile.getPath().contains("de_DE")*/) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_de_DE);
-			if (translationFile.getPath().contains("/es_ES/")/*||translationFile.getPath().contains("es_ES")*/) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_es_ES);
-			if (translationFile.getPath().contains("/zh_TW/")/*||translationFile.getPath().contains("zh_TW")*/) ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_zh_TW);
-			if (translationFile.getPath().contains("/te/")   /*||translationFile.getPath().contains("te")*/)    ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_te);
-			if (translationFile.getPath().contains("/pa/")   /*||translationFile.getPath().contains("pa")*/)    ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_pa);
-			if (translationFile.getPath().contains("/fr/")   /*||translationFile.getPath().contains("fr")*/)    ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_fr);
-			if (translationFile.getPath().contains("/it/")   /*||translationFile.getPath().contains("it")*/)    ignorableMsgIds.addAll(moreIgnorableMsgIdsFor_it);
+			// unchanged translations to ignore for specific langs
+			if (translationFile.getPath().contains("/bn_IN/")) ignorableMsgIds.addAll(Arrays.asList("Red Hat Subscription Validity Applet","Subscription Validity Applet"));
+			if (translationFile.getPath().contains("/ta_IN/")) ignorableMsgIds.addAll(Arrays.asList("org id: %s","Repo Id:              \\t%s","Repo Url:             \\t%s"));
+			if (translationFile.getPath().contains("/pt_BR/")) ignorableMsgIds.addAll(Arrays.asList("<b>subscription management service version:</b> %s","Status","Status:               \\t%s","Login:","Virtual","_Help","hostname[:port][/prefix]","org id: %s","virtual"));
+			if (translationFile.getPath().contains("/de_DE/")) ignorableMsgIds.addAll(Arrays.asList("Subscription Manager","Red Hat account: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Subscription Management Service Version:</b> %s","<b>subscription management service version:</b> %s","Login:","Name","Name:                 \\t%s","Status","Status:               \\t%s","Version","Version:              \\t%s","_System","long integer","name: %s","label","Label","Name: %s","Release: %s","integer","Tags","Org: "));
+			if (translationFile.getPath().contains("/es_ES/")) ignorableMsgIds.addAll(Arrays.asList("No","%s: error: %s"));
+			if (translationFile.getPath().contains("/zh_TW/")) ignorableMsgIds.addAll(Arrays.asList("%%prog %s [OPTIONS]","%%prog %s [OPTIONS] CERT_FILE","%prog [OPTIONS]"));
+			if (translationFile.getPath().contains("/te/"))    ignorableMsgIds.addAll(Arrays.asList("page 2"));
+			if (translationFile.getPath().contains("/pa/"))    ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
+			if (translationFile.getPath().contains("/fr/"))    ignorableMsgIds.addAll(Arrays.asList("Options","Type","Arch","Version","page 2","%prog [options]"));
+			if (translationFile.getPath().contains("/it/"))    ignorableMsgIds.addAll(Arrays.asList("<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
 			
 		}
+		
 		if (pofilterTest.equals("urls")) {
 			if(translationFile.getPath().contains("/zh_CN/")) ignorableMsgIds.addAll(Arrays.asList("Server URL has an invalid scheme. http:// and https:// are supported"));
 		}
@@ -349,7 +342,7 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			log.warning("Failed result of pofiliter test '"+pofilterTest+"' for translation: "+pofilterFailedTranslation);
 		}
 		
-		// assert that there are no failed pofilter translation test results
+		// assert that there are no failed pofilter translation test results remaining after the ignorable pofilter test results have been plucked out
 		Assert.assertEquals(pofilterFailedTranslations.size(),0, "Discounting the ignored test results, the number of failed pofilter '"+pofilterTest+"' tests for translation file '"+translationFile+"'.");
 	}
 	

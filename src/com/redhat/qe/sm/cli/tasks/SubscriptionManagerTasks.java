@@ -355,6 +355,10 @@ public class SubscriptionManagerTasks {
 		}
 	}
 	
+	public void removeRhnSystemIdFile() {
+		sshCommandRunner.runCommandAndWait("rm -rf "+rhnSystemIdFile);
+	}
+	
 	public void updateYumRepoParameter(String yumRepoFile, String repoid, String parameter, String value){
 		log.info("Updating yumrepo file '"+yumRepoFile+"' repoid '"+repoid+"' parameter '"+parameter+"' value to: "+value);
 		String command = "sed -i \"/\\["+repoid+"\\]/,/\\[/ s/^"+parameter+"\\s*=.*/"+parameter+"="+value+"/\" "+yumRepoFile;
@@ -676,6 +680,15 @@ public class SubscriptionManagerTasks {
 				rhsmcertdLogResult = RemoteFileTasks.getTailFromMarkedFile(sshCommandRunner, rhsmcertdLogFile, rhsmcertdLogMarker, null).trim();
 				if (rhsmcertdLogResult.contains(healMsg) && rhsmcertdLogResult.contains(certMsg)) break;
 			} while (delay*i < 60);
+			
+			// TEMPORARY WORKAROUND FOR BUG
+			bugId="861443"; // Bug 861443 - rhsmcertd logging of Healing shows "Certificates updated." when it should fail.
+			invokeWorkaroundWhileBugIsOpen = true;
+			try {if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (!assertCertificatesUpdate&&invokeWorkaroundWhileBugIsOpen) {
+				log.warning("Skipping assertion: "+"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
+			} else
+			// END OF WORKAROUND
 			Assert.assertTrue(rhsmcertdLogResult.contains(healMsg),"Tail of rhsmcertd log contains the expected restart message '"+healMsg+"'.");
 			Assert.assertTrue(rhsmcertdLogResult.contains(certMsg),"Tail of rhsmcertd log contains the expected restart message '"+certMsg+"'.");
 		}
@@ -841,25 +854,28 @@ public class SubscriptionManagerTasks {
 	public List<String> getCurrentlyExpectedReleases() {
 		HashSet<String> expectedReleaseSet = new HashSet<String>();
 		String baseurl = getConfFileParameter(rhsmConfFile, "rhsm", "baseurl");
+		List<ProductCert> productCerts = getCurrentProductCerts();
 		
 		// loop through all of the currently entitled repo urls
 		for (EntitlementCert entitlementCert : getCurrentEntitlementCerts()) {
 			for (ContentNamespace contentNamespace : entitlementCert.contentNamespaces) {
 				if (contentNamespace.type.equalsIgnoreCase("yum")) {
 					if (contentNamespace.enabled) {	// Bug 820639 - subscription-manager release --list should exclude listings from disabled repos
-						if (contentNamespace.downloadUrl.contains("$releasever")) {
-							if (contentNamespace.downloadUrl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
-								// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
-								String listingUrl =  contentNamespace.downloadUrl.startsWith("http")? "":baseurl;
-								listingUrl += contentNamespace.downloadUrl.split("/\\$releasever/")[0];
-								listingUrl += "/listing";
-								String command = String.format("curl --stderr /dev/null --insecure --tlsv1 --cert %s --key %s %s" , entitlementCert.file.getPath(), getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCert.file).getPath(), listingUrl);
-								SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
-								//	[root@qe-blade-13 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/2013167262444796312.pem --key /etc/pki/entitlement/2013167262444796312-key.pem https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/6/listing
-								//	6.1
-								//	6.2
-								//	6Server
-								expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+						if (areAllRequiredTagsInContentNamespaceProvidedByProductCerts(contentNamespace, productCerts)) {	// Bug 861151 - subscription-manager release doesn't take variant into account 
+							if (contentNamespace.downloadUrl.contains("$releasever")) {
+								if (contentNamespace.downloadUrl.contains("/"+redhatReleaseX+"/")) {	// Bug 818298 - subscription-manager release --list should not display releasever applicable to rhel-5 when only rhel-6 product is installed
+									// example contentNamespace.downloadUrl:  /content/dist/rhel/server/5/$releasever/$basearch/iso
+									String listingUrl =  contentNamespace.downloadUrl.startsWith("http")? "":baseurl;
+									listingUrl += contentNamespace.downloadUrl.split("/\\$releasever/")[0];
+									listingUrl += "/listing";
+									String command = String.format("curl --stderr /dev/null --insecure --tlsv1 --cert %s --key %s %s" , entitlementCert.file.getPath(), getEntitlementCertKeyFileCorrespondingToEntitlementCertFile(entitlementCert.file).getPath(), listingUrl);
+									SSHCommandResult result = sshCommandRunner.runCommandAndWaitWithoutLogging(command);
+									//	[root@qe-blade-13 ~]# curl --stderr /dev/null --insecure --tlsv1 --cert /etc/pki/entitlement/2013167262444796312.pem --key /etc/pki/entitlement/2013167262444796312-key.pem https://cdn.rcm-qa.redhat.com/content/dist/rhel/server/6/listing
+									//	6.1
+									//	6.2
+									//	6Server
+									expectedReleaseSet.addAll(Arrays.asList(result.getStdout().trim().split("\\s*\\n\\s*")));
+								}
 							}
 						}
 					}
@@ -4180,12 +4196,12 @@ repolist: 3,394
 		
 		List<ProductCert> currentProductCerts = this.getCurrentProductCerts();
 		
-		// NOTE: THIS COULD ALSO BE A PERMANENT IMPLEMENTATION FOR THIS METHOD
 		// TEMPORARY WORKAROUND FOR BUG: https://bugzilla.redhat.com/show_bug.cgi?id=697087 - jsefler 04/27/2011
 		if (this.redhatRelease.contains("release 5")) {
 			boolean invokeWorkaroundWhileBugIsOpen = true;
 			String bugId="697087"; 
-			try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			// NOTE: LET'S MAKE THIS A PERMANENT WORKAROUND FOR THIS METHOD
+			// try {if (invokeWorkaroundWhileBugIsOpen/*&&BzChecker.getInstance().isBugOpen(bugId)*/) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
 			if (invokeWorkaroundWhileBugIsOpen) {
 				
 				List<String> yumRepoListAll			= this.getYumRepolist("all");

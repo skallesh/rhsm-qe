@@ -1390,7 +1390,7 @@ Expected Results:
 		
 		// delete temporary files and directories
 		client.runCommandAndWait("rm -rf "+tmpProductCertDir);
-		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);
+		clienttasks.removeRhnSystemIdFile();
 	}
 
 	// Protected methods ***********************************************************************

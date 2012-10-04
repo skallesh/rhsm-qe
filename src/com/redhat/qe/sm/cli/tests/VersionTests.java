@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.xmlrpc.XmlRpcException;
+import org.testng.SkipException;
 import org.testng.annotations.AfterGroups;
 import org.testng.annotations.BeforeGroups;
 import org.testng.annotations.Test;
 
 import com.redhat.qe.Assert;
+import com.redhat.qe.auto.bugzilla.BzChecker;
 import com.redhat.qe.jul.TestRecords;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
@@ -68,7 +71,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="assert that the candlepin sever version is reported by the version module (expect Unknown when not registered)",
-			groups={"blockedByBug-843191"},
+			groups={"blockedByBug-862308"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenUnregistered_Test() {
@@ -76,18 +79,12 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		// make sure we are not registered
 		clienttasks.unregister(null, null, null);
 		
-		// get the expected results
-		String expectedVersion	= "remote entitlement server: "+"Unknown";	// changed by bug 846834
-		expectedVersion			= "registered to: "+"Unknown";
-		String expectedType		= "remote entitlement server type: "+"Unknown";	// changed by bug 846834
-		expectedType			= "server type: "+"Unknown";
-		
-		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
-
-		// assert results
-		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
-		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
+		if (sm_serverType==CandlepinType.standalone)	expectedType = "subscription management service";
+		if (sm_serverType==CandlepinType.hosted)		expectedType = "subscription management service";	// TODO not sure if this is correct
+		if (sm_serverType==CandlepinType.sam)			expectedType = "SAM";		// TODO not sure if this is correct
+		if (sm_serverType==CandlepinType.katello)		expectedType = "Katello";	// TODO not sure if this is correct
+		assertServerVersion(servertasks.statusVersion, expectedType);
 	}
 	
 	protected String server_hostname;
@@ -104,18 +101,7 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		server_hostname	= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "server", "hostname");
 		clienttasks.config(null, null, true, new String[]{"server","hostname","UNKNOWN"});
 		
-		// get the expected results
-		String expectedVersion	= "remote entitlement server: "+"Unknown";	// changed by bug 846834
-		expectedVersion			= "registered to: "+"Unknown";
-		String expectedType		= "remote entitlement server type: "+"Unknown";	// changed by bug 846834
-		expectedType			= "server type: "+"Unknown";
-		
-		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
-
-		// assert results
-		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
-		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+		assertServerVersion("Unknown","Unknown");
 	}
 	@AfterGroups(value={"VersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test"}, groups={"setup"})
 	public void afterVersionOfCandlepinWhenUnregisteredAndHostnameIsUnknown_Test() {
@@ -129,35 +115,48 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	//@ImplementsNitrateTest(caseId=)
 	public void VersionOfCandlepinWhenRegistered_Test() {
 		
+		// TEMPORARY WORKAROUND FOR BUG
+		String bugId="843649"; //  Bug 843649 - subscription-manager server version reports Unknown against prod/stage candlepin
+		boolean invokeWorkaroundWhileBugIsOpen = true;
+		try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+		if (invokeWorkaroundWhileBugIsOpen && sm_serverType==CandlepinType.hosted) {
+			throw new SkipException("Skipping this test against a hosted (sharded) Candlepin environment while bug "+bugId+" is open.");
+		}
+		// END OF WORKAROUND
+		
 		// make sure we are registered
 		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
-
-		// get the expected results
-		String expectedVersion, expectedType;
-		expectedVersion = "remote entitlement server: "+servertasks.statusVersion;	// changed by bug 846834
-		expectedVersion = "registered to: "+servertasks.statusVersion;
-		expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
+		
+		String expectedType = "FIXME_TEST: UNKNOWN CANDLEPIN TYPE";
 		if (sm_serverType==CandlepinType.standalone)	expectedType = "subscription management service";
 		if (sm_serverType==CandlepinType.hosted)		expectedType = "subscription management service";	// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.sam)			expectedType = "SAM";		// TODO not sure if this is correct
 		if (sm_serverType==CandlepinType.katello)		expectedType = "Katello";	// TODO not sure if this is correct
-		//expectedType = "remote entitlement server type: "+expectedType;	// changed with bug 846834
-		expectedType = "server type: "+expectedType;
-		
-		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
-		
-		// assert results
-		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
-		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+		assertServerVersion(servertasks.statusVersion, expectedType);
 	}
 	
 	
-	@Test(	description="assert the sever version and type when registered to RHN Classic ",
-			groups={"blockedByBug-852328","VersionOfServerWhenRegisteredUsingRHNClassic_Test"},
+	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously NOT registered to Subscription Management)",
+			groups={"blockedByBug-852328","VersionOfServerWhenUsingRHNClassic_Test"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
-	public void VersionOfServerWhenRegisteredUsingRHNClassic_Test() {
+	public void VersionOfServerWhenRegisteredAndUsingRHNClassic_Test() {
+
+		// make sure we are registered
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, null, null, null, null, null);
+		
+		// simulate registration to RHN Classic by creating a /etc/sysconfig/rhn/systemid
+		log.info("Simulating registration to RHN Classic by creating an empty systemid file '"+clienttasks.rhnSystemIdFile+"'...");
+		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
+		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
+		
+		assertServerVersion("Unknown","RHN Classic and subsciption management service");
+	}
+	@Test(	description="assert the sever version and type when registered to RHN Classic (and simultaneously registered to Subscription Management)",
+			groups={"VersionOfServerWhenUsingRHNClassic_Test"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VersionOfServerWhenUnregisteredAndUsingRHNClassic_Test() {
 
 		// make sure we are unregistered
 		clienttasks.unregister(null,null,null);
@@ -167,23 +166,13 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 		RemoteFileTasks.runCommandAndWait(client, "touch "+clienttasks.rhnSystemIdFile, TestRecords.action());
 		Assert.assertTrue(RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile), "RHN Classic systemid file '"+clienttasks.rhnSystemIdFile+"' is in place.");
 		
-		// get the expected results
-		String expectedVersion, expectedType;
-		expectedVersion	= "remote entitlement server: "+"Unknown";	// changed by bug 846834
-		expectedVersion	= "registered to: "+"Unknown";
-		expectedType	= "remote entitlement server type: "+"RHN Classic";	// changed by bug 846834
-		expectedType	= "server type: "+"RHN Classic";
-		
-		// get the actual version results from subscription-manager
-		SSHCommandResult actualResult = clienttasks.version();
-		
-		// assert results
-		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
-		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+		assertServerVersion("Unknown","RHN Classic");
 	}
-	@AfterGroups(groups={"setup"},value="VersionOfServerWhenRegisteredUsingRHNClassic_Test")
-	public void afterVersionOfServerWhenRegisteredUsingRHNClassic_Test() {
-		client.runCommandAndWait("rm -rf "+clienttasks.rhnSystemIdFile);;
+	@AfterGroups(groups={"setup"},value="VersionOfServerWhenUsingRHNClassic_Test")
+	public void afterVersionOfServerWhenUsingRHNClassic_Test() {
+		if (clienttasks!=null) {
+			clienttasks.removeRhnSystemIdFile();
+		}
 	}
 	
 	
@@ -227,6 +216,21 @@ public class VersionTests extends SubscriptionManagerCLITestScript {
 	
 	// Protected methods ***********************************************************************
 
+	protected void assertServerVersion(String serverVersion, String serverType) {
+		// set the expected results
+		String expectedVersion;
+		expectedVersion = "remote entitlement server: "+serverVersion;	// changed by bug 846834
+		expectedVersion = "registered to: "+serverVersion;
+		String expectedType;
+		expectedType = "server type: "+serverType;
+		
+		// get the actual version results from subscription-manager
+		SSHCommandResult actualResult = clienttasks.version();
+		
+		// assert results
+		Assert.assertTrue(actualResult.getStdout().contains(expectedVersion),"The version report contains the expected string '"+expectedVersion+"'");
+		Assert.assertTrue(actualResult.getStdout().contains(expectedType),"The version report contains the expected string '"+expectedType+"'");
+	}
 
 	
 	// Data Providers ***********************************************************************

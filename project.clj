@@ -3,7 +3,7 @@
   :java-source-path "src"
   :aot [#"^com.redhat.qe.sm.gui.tests"] ;regex to find tests that testng will run
   :keep-non-project-classes true
-  :dependencies [[org.clojure/clojure "1.3.0"]
+  :dependencies [[org.clojure/clojure "1.4.0"]
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/data.json "0.1.2"]
                  [slingshot "0.8.0"]
@@ -21,7 +21,7 @@
                  [gnome.ldtp "1.1.0-SNAPSHOT"
                   :exclusions [org.clojure/clojure]]
                  [test_clj.testng "1.0.1-SNAPSHOT"]
-                 [clj-http "0.1.3"]
+                 [clj-http "0.5.5"]
                  [matchure "0.10.1"]]
   :dev-dependencies [[slamhound "1.2.0"]
                      [fn.trace "1.3.2.0-SNAPSHOT"]

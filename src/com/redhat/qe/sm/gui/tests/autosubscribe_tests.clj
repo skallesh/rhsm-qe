@@ -84,13 +84,14 @@
     (if (= 0 beforesubs)
         (verify (tasks/compliance?))
         (do
+          (tasks/unregister)
           (let [msg (try+
                      (tasks/register user
                                      pass
                                      :skip-autosubscribe false
                                      :owner ownername)
                      (catch [:type :no-sla-available] {:keys [msg]} msg))]
-            (verify (tasks/substring? "No service levels will cover all installed products" msg)))
+            (verify (tasks/substring? "No service level will cover all installed products" msg)))
           (tasks/ui waittillwindownotexist :register-dialog 600)
           (tasks/sleep 1000)
           (verify (= (tasks/warn-count) beforesubs))
@@ -162,7 +163,7 @@
                         product)
         status (tasks/ui getcellvalue
                          :installed-view
-                         index 3)
+                         index 2)
         not-nil? (fn [b] (not (nil? b)))
         expected (@productmap product)
         rhel5?   (tasks/substring? "release 5"

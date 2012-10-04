@@ -210,7 +210,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="Verify that the migration product certs match those from rhn definitions",
-			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420"},
+			groups={"AcceptanceTests","blockedByBug-799152","blockedByBug-814360","blockedByBug-861420","blockedByBug-861470"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void VerifyMigrationProductCertsMatchThoseFromRhnDefinitions_Test() {
@@ -909,7 +909,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="With a proxy configured in rhn/up2date, register system using RHN Classic and then Execute migration tool rhn-migrate-classic-to-rhsm with options after adding RHN Channels",
-			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015"},
+			groups={"AcceptanceTests","RhnMigrateClassicToRhsm_Test","RhnMigrateClassicToRhsmUsingProxyServer_Test","blockedbyBug-798015","blockedbyBug-861693"},
 			dependsOnMethods={"VerifyChannelCertMapping_Test"},
 			dataProvider="RhnMigrateClassicToRhsmUsingProxyServerData",
 			enabled=true)
@@ -1383,7 +1383,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	public void RhnMigrateClassicToRhsmWithMissingSystemIdFile_Test() {
 	    removeProxyServerConfigurations();	// cleanup from prior tests
 	    clienttasks.unregister(null,null,null);
-		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
+	    clienttasks.removeRhnSystemIdFile();
 		Assert.assertTrue(!RemoteFileTasks.testExists(client, clienttasks.rhnSystemIdFile),"This system is not registered using RHN Classic.");
 		
 		// when we are migrating away from RHN Classic to a non-hosted candlepin server, choose the credentials that will be used to register
@@ -1423,7 +1423,7 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 			dependsOnMethods={},
 			enabled=true)
 	public void RhnMigrateClassicToRhsmWhileAlreadyRegisteredToRhsm_Test() {
-		client.runCommandAndWait("rm -f "+clienttasks.rhnSystemIdFile);
+		clienttasks.removeRhnSystemIdFile();
 		String consumerid = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null, null, true, null, null, null, null));
 		SSHCommandResult sshCommandResult;
 		if (isCurrentlyConfiguredServerTypeHosted()) {
@@ -2373,6 +2373,14 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 				if (rhnChannel.startsWith("rhel-i386-rhev-agent-5-")) { 
 					// Bug 849305 - rhel-i386-rhev-agent-5-* maps in channel-cert-mapping.txt do not match CDN Product Baseline
 					bugzilla = new BlockedByBzBug("849305");
+				}
+				if (rhnChannel.startsWith("jbappplatform-4.2-els-")) { 
+					// Bug 861470 - JBoss Enterprise Application Platform - ELS (jbappplatform-4.2.0) 192.pem product certs are missing from subscription-manager-migration-data
+					bugzilla = new BlockedByBzBug("861470");
+				}
+				if (rhnChannel.startsWith("rhel-x86_64-rhev-mgmt-agent-5")) { 
+					// Bug 861420 - Red Hat Enterprise Virtualization (rhev-3.0) 150.pem product certs are missing from subscription-manager-migration-data
+					bugzilla = new BlockedByBzBug("861420");
 				}
 				
 				// Object bugzilla, String productBaselineRhnChannel, String productBaselineProductId
