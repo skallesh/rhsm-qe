@@ -227,27 +227,27 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		//JSONArray jsonSubscriptions = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(serverHostname,serverPort,serverPrefix,clientusername,clientpassword,"/owners/"+ownerKey+"/subscriptions"));	
 			
         // find the first pool id of a currently consumed product
-        List<ProductSubscription> products = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		testPool = clienttasks.getSubscriptionPoolFromProductSubscription(products.get(0),sm_clientUsername,sm_clientPassword);
-		Calendar originalStartDate = (Calendar) products.get(0).startDate.clone();
+        List<ProductSubscription> consumedProductSubscriptions = clienttasks.getCurrentlyConsumedProductSubscriptions();
+        ProductSubscription originalConsumedProductSubscription = consumedProductSubscriptions.get(0);
+		testPool = clienttasks.getSubscriptionPoolFromProductSubscription(originalConsumedProductSubscription,sm_clientUsername,sm_clientPassword);
+		Calendar originalStartDate = (Calendar) originalConsumedProductSubscription.startDate.clone();
 
         SyndFeed oldFeed = CandlepinTasks.getSyndFeed(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
 		SyndFeed oldOwnerFeed = CandlepinTasks.getSyndFeedForOwner(ownerKey,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
         SyndFeed oldConsumerFeed = CandlepinTasks.getSyndFeedForConsumer(ownerKey,consumerCert.consumerid,sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl);
         
 		// fire an modified pool event (and subsequently a modified entitlement event because the pool was modified thereby requiring an entitlement update dropped to the consumer)
-		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+testPool+"' by subtracting one month from startdate...");
+		log.info("To fire a modified pool event (and subsequently a modified entitlement event because the pool is already subscribed too), we will modify pool '"+testPool.poolId+"' by subtracting one month from startdate...");
 		Calendar newStartDate = (Calendar) originalStartDate.clone(); newStartDate.add(Calendar.MONTH, -1);
 		updateSubscriptionPoolDatesOnDatabase(testPool,newStartDate,null);
 
-		log.info("Now let's refresh the subscription pools...");
+		log.info("Now let's refresh the subscription pools to expose the POOL MODIFIED event...");
 		JSONObject jobDetail = CandlepinTasks.refreshPoolsUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,ownerKey);
 		jobDetail = CandlepinTasks.waitForJobDetailStateUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword,sm_serverUrl,jobDetail,"FINISHED", 10*1000, 3);
 		
 		// assert the consumer feed...
 		List<String> newEventTitles = new ArrayList<String>();
-		newEventTitles.add("ENTITLEMENT MODIFIED");
-//		newEventTitles.add("Unknown event for user System and target "+testPool.subscriptionName);
+		//newEventTitles.add("ENTITLEMENT MODIFIED");
         assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
 
 		// assert the owner feed...
@@ -261,6 +261,24 @@ public class EventTests extends SubscriptionManagerCLITestScript{
 		////assertTheNewFeed(oldFeed, new String[]{"ENTITLEMENT MODIFIED", "POOL MODIFIED"});
 		//assertTheNewFeed(oldFeed, newEventTitles);
         assertTheNewFeedContains(oldFeed, newEventTitles);
+        
+		log.info("Now let's refresh the client's entitlements to expose the ENTITLEMENT MODIFIED event...");
+		clienttasks.refresh(null, null, null);
+		newEventTitles.add("ENTITLEMENT MODIFIED");
+		
+		// assert the feed...
+        assertTheNewFeedContains(oldFeed, newEventTitles);
+        
+		// assert the owner feed...
+        assertTheNewOwnerFeedContains(ownerKey, oldOwnerFeed, newEventTitles);
+
+		// assert the consumer feed...
+        newEventTitles.remove("POOL MODIFIED");
+        assertTheNewConsumerFeed(ownerKey, consumerCert.consumerid, oldConsumerFeed, newEventTitles);
+
+        //ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("serialNumber", originalConsumedProductSubscription.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());	// can't do this because the serialNumber changes after the pool and entitlement have been modified
+        ProductSubscription newConsumedProductSubscription = ProductSubscription.findFirstInstanceWithMatchingFieldFromList("productId", originalConsumedProductSubscription.productId, clienttasks.getCurrentlyConsumedProductSubscriptions());
+        Assert.assertEquals(newConsumedProductSubscription.startDate, newStartDate, "After modifing pool '"+testPool.poolId+"' by subtracting one month from startdate and refreshing entitlements, the consumed product subscription now reflects the modified field.");
 	}
 	
 	
