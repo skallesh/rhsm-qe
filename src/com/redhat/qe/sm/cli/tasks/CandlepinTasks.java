@@ -2129,7 +2129,7 @@ schema generation failed
 	/**
 	 * @param jsonPool
 	 * @param productAttributeName
-	 * @return the value of the pool's productAttribute with the name "productAttributeName".  null is returned when the name is not found.
+	 * @return the value of the pool's productAttribute with the name "productAttributeName".  null is returned when the productAttributeName is not found.  null can also be returned when the value for productAttributeName is actually null.
 	 * @throws JSONException
 	 * @throws Exception
 	 */
@@ -2238,9 +2238,12 @@ schema generation failed
 		for (int j = 0; j < jsonProductAttributes.length(); j++) {
 			JSONObject jsonProductAttribute = (JSONObject) jsonProductAttributes.get(j);
 			if (jsonProductAttribute.getString("name").equals(productAttributeName)) {
-				productAttributeValue = jsonProductAttribute.getString("value");
-				break;
+				if (jsonProductAttribute.isNull("value")) return null;	// the actual attribute value is null, return null
+				productAttributeValue = jsonProductAttribute.getString("value"); break;
 			}
+		}
+		if (productAttributeValue==null) {
+			log.finer("Pool id='"+jsonPool.getString("id")+"' does not have a productAttribute named '"+productAttributeName+"'.");
 		}
 		return productAttributeValue;
 	}
