@@ -690,7 +690,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
-            groups={"VerifyRhsmLogging_Test"},
+            groups={"VerifyRhsmLogging_Test"},dependsOnMethods="unsubscribeBeforeGroup",
             enabled=true)	
 	public void VerifyRhsmLogging_Test() throws Exception{
 		Boolean actual=true;
