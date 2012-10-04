@@ -508,7 +508,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for subscription",
 			groups={"AutoHeal"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+			enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
@@ -517,8 +517,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
 		Integer healFrequency=2;
-		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
