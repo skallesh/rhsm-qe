@@ -611,7 +611,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
             groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
-             enabled=true)	
+             enabled=false)	
 	public void VerifyEntitlementStartDate_Test() throws Exception {
 		String result=null;
 		String[] certDate=null;
