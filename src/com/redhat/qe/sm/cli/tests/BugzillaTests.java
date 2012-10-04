@@ -265,10 +265,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerIdAfter = clienttasks.getCurrentConsumerId();
 		Assert.assertEquals(consumerId, consumerIdAfter, "The consumer identity  has not changed after register_ing with consumerid.");
 		List<ProductSubscription> consumedubscriptionsAfterregister_ = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(
-				consumedubscriptionsAfterregister_.containsAll(consumedSubscriptionsBeforeregister_) &&
-				consumedSubscriptionsBeforeregister_.size()==consumedubscriptionsAfterregister_.size(),
-				"The list of consumed products after reregister_ing is identical.");
+		Assert.assertTrue(consumedubscriptionsAfterregister_.containsAll(consumedSubscriptionsBeforeregister_) &&
+				consumedSubscriptionsBeforeregister_.size()==consumedubscriptionsAfterregister_.size(),"The list of consumed products after reregister_ing is identical.");
 		}
 	/**
 	 * @author skallesh
@@ -438,7 +436,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verfying Auto-heal when auto-heal parameter is turned off",
 			groups={"AutohealTurnedOff"},
-			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+			enabled=true)	
 	
 	
 	public void AutohealTurnedOff() throws Exception {
@@ -612,9 +610,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
-            groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},
+            groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
              enabled=true)	
-	public void VerifyEntitlementStart_Test() throws Exception {
+	public void VerifyEntitlementStartDate_Test() throws Exception {
 		String result=null;
 		String[] certDate=null;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
@@ -627,11 +625,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				String command="rct cat-cert "+ files +"| grep 'Start Date'";
 				result=client.runCommandAndWait(command).getStdout().trim();
 				certDate=result.split(" ");
-				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 			}
-			
-			Assert.assertEquals(split_word[0], certDate[2]);
-			
+				Assert.assertEquals(split_word[0], certDate[2]);
+				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+
 		}
 		}
 		
@@ -782,7 +779,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
             groups={"Verifyautosubscribe_Test"},dependsOnMethods="unsubscribeBeforeGroup",
-            enabled=true)
+            enabled=false)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 		Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
@@ -864,21 +861,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="Unsubscribe all the subscriptions",
-			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 	}
 	
 	@Test(description="Unset the servicelevel",
-			groups={"VerifyDistinct","AutoHeal","autohealPartial"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","autohealPartial","BugzillaTests"},enabled=true)
 	public void unsetServicelevelBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
-	
+	@Test(description="Unset the servicelevel",
+			groups={"VerifyDistinct","AutoHeal","autohealPartial","VerifyEntitlementStartDate_Test","BugzillaTests"},enabled=true)
+	public void setHealFrequencyGroup() {
+		 List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		 listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		 clienttasks.config_(null,null,true,listOfSectionNameValues);
+		String param= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", "healFrequency");
+
+		 Assert.assertEquals(param, "1440");
+	}
 	@Test(description="set healing attribute to true",
-			groups={"autohealPartial","AutoHeal","heal"},enabled=true)
+			groups={"autohealPartial","AutoHeal","heal","BugzillaTests"},enabled=true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		
 		// register a new consumer

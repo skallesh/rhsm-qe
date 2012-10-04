@@ -718,8 +718,8 @@ public class SubscriptionManagerTasks {
 	
 	public Boolean waitForRegexInRhsmLog(String logRegex) {
 			
-		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -10 "+rhsmLogFile,Integer.valueOf(0));
-		String input=	sshCommandRunner.runCommandAndWait("tail -10 "+rhsmLogFile).getStdout().trim();
+		RemoteFileTasks.runCommandAndAssert(sshCommandRunner,"tail -20 "+rhsmLogFile,Integer.valueOf(0));
+		String input=	sshCommandRunner.runCommandAndWait("tail -20 "+rhsmLogFile).getStdout().trim();
 		Pattern pattern = Pattern.compile(logRegex,Pattern.MULTILINE);
         Matcher  matcher = pattern.matcher(input);
         int count = 0;
