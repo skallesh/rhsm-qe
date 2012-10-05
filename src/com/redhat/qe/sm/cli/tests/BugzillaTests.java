@@ -111,7 +111,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods={"unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			            enabled=false)
+			            enabled=true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
 		String productId=null;
@@ -120,9 +120,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if(pool.multiEntitlement){
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-				System.out.println(poolProductSocketsAttribute + " "+ pool.poolId);
-				if((!(poolProductSocketsAttribute==null))&& poolProductSocketsAttribute.equals("2")){
-				clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+				
+				if((!(poolProductSocketsAttribute==null))&& poolProductSocketsAttribute.equals("1")){
+				String product=clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null).getStdout();
+				System.out.println("productssffg "+product);
+
 				poolId.add(pool.poolId);
 						
 			}}}
@@ -135,14 +137,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
-						productId=installed.productId;
-						clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null);
+						String consumed=productId=installed.productId;
+						System.out.println("consumed " +consumed);
+						clienttasks.listConsumedProductSubscriptions().getStdout();
+						String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
+						System.out.println("product "+product);
 					}
 				}
-					for(InstalledProduct Installed:clienttasks.getCurrentlyInstalledProducts()){
-					if(productId.equals(Installed.productId)){
-					if(!(Installed.status.equals("Subscribed")))moveProductCertFiles("", false);
-					Assert.assertEquals(Installed.status, "Subscribed");
+					for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
+					if(productId.equals(installedProduct.productId)){
+					if(!(installedProduct.status.equals("Subscribed")))moveProductCertFiles("", false);
+					Assert.assertEquals(installedProduct.status, "Subscribed");
 				}
 			}
 					
@@ -611,7 +616,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
             groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
-             enabled=false)	
+             enabled=true)	
 	public void VerifyEntitlementStartDate_Test() throws Exception {
 		String result=null;
 		String[] certDate=null;
@@ -627,7 +632,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				certDate=result.split(" ");
 			}
 				Assert.assertEquals(split_word[0], certDate[2]);
-				clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+				clienttasks.unsubscribe_(true, null, null, null, null);
 
 		}
 		}
@@ -705,10 +710,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 			
 		}
-		
-		
-					
+						
 	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
