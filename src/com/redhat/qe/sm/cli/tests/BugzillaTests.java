@@ -977,7 +977,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		moveProductCertFiles(null,false);
 	}
 	
-	
+	@AfterGroups(groups={"setup"}, value={"Verifyautosubscribe_Test","VerifyautosubscribeIgnoresSocketCount_Test"})
+	@AfterClass(groups={"setup"})	// insurance
+	public void deleteFactsFileWithOverridingValues() {
+		clienttasks.deleteFactsFileWithOverridingValues();
+	}
 	
 	
 	// Protected methods ***********************************************************************
