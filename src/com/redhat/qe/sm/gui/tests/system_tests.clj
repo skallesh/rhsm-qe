@@ -3,8 +3,10 @@
         [com.redhat.qe.sm.gui.tasks.test-config :only (config
                                                        clientcmd)]
         [com.redhat.qe.verify :only (verify)]
+        [slingshot.slingshot :only [throw+ try+]]
         gnome.ldtp)
   (:require [com.redhat.qe.sm.gui.tasks.tasks :as tasks]
+            [clojure.tools.logging :as log]
              com.redhat.qe.sm.gui.tasks.ui)
   (:import [org.testng.annotations BeforeClass
                                    BeforeGroups
@@ -18,7 +20,8 @@
   clear_env [_]
   (tasks/kill-app))
 
-(defn ^{AfterClass {:groups ["setup"]}}
+(defn ^{AfterClass {:groups ["setup"]
+                    :alwaysRun true}}
   restart_env [_]
   (tasks/restart-app :unregister? true))
 
@@ -56,6 +59,28 @@
     (verify (= 1 (tasks/ui guiexist :help-dialog)))
     (tasks/ui closewindow :help-dialog)
     (finally (tasks/restart-app))))
+
+(defn check_escape_window [window shortcut]
+  (tasks/restart-app :unregister? true)
+  (let [exec-shortcut (fn [s] (tasks/ui generatekeyevent s))
+        count-objects (fn [w] (count (tasks/ui getobjectlist w)))
+        beforecount (do (exec-shortcut shortcut)
+                        (count-objects window))
+        fuckcache (fn [] (try+ (tasks/ui getchild "blah")
+                              (catch Exception e "")))]
+    (fuckcache)
+    (log/info (str "Items: " beforecount))
+    (fuckcache)
+    (exec-shortcut "<ESC>")
+    (exec-shortcut shortcut)
+    (verify (= beforecount (count-objects window)))))
+
+(data-driven
+ check_escape_window {Test {:groups ["system"
+                                     "blockedByBug-862099"]}}
+ [[:register-dialog "<CTRL>r"]
+  [:import-dialog "<CTRL>i"]])
+
 
 ;; TODO
 
