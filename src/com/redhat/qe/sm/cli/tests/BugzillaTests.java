@@ -39,6 +39,7 @@ import com.redhat.qe.sm.data.InstalledProduct;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
+import com.redhat.qe.sm.data.YumRepo;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -60,11 +61,48 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO   subcase Bug 746088 - autoheal is not super-subscribing on the day the current entitlement cert expires //done
 	// TODO   subcase Bug 746218 - auto-heal isn't working for partial subscription //done
 	// TODO Cases in Bug 726411 - [RFE] Support for certificate healing
-	//TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665 //done --shwetha
+	//TODO https://bugzilla.redhat.com/show_bug.cgi?id=627665 //done 
 	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=669513//done
 	// TODO Bug 803386 - display product ID in product details pane on sm-gui and cli
 	//https://bugzilla.redhat.com/show_bug.cgi?id=733327
+	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister//done
+	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
+
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(    description="Verify facts update with incorrect proxy url produces traceback.",
+			            groups={"VerifyFactsWithIncorrectProxy_Test","blockedByBug-744504"},
+			            enabled=true)
+	public void VerifyFactsWithIncorrectProxy_Test() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
+		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
+		String facts=clienttasks.facts_(null, true, basicauthproxyUrl, null, null).getStderr();
+		String Expect="Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
+		Assert.assertEquals(facts.trim(), Expect);
+	}
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(    description="Verify Subscription Manager Leaves Broken Yum Repos After Unregister",
+			            groups={"ReposListAfterUnregisterTest","blockedByBug-674652"},
+			            enabled=true)
+	public void VerifyRepoAfterUnregister_Test() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
+		List<YumRepo> repos=clienttasks.getCurrentlySubscribedYumRepos();
+		Assert.assertFalse(repos.isEmpty());
+
+		clienttasks.unregister_(null, null, null);
+		List<YumRepo> repo=clienttasks.getCurrentlySubscribedYumRepos();
+		Assert.assertTrue(repo.isEmpty());
+	}
 	
 	/**
 	 * @author skallesh
@@ -77,39 +115,43 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
 		String productId=null;
-		String poolIds=null;
 		Map<String,String> factsMap = new HashMap<String,String>();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if(pool.multiEntitlement){
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
-				if((!(poolProductSocketsAttribute==null))&& poolProductSocketsAttribute.equals("2")){
-				clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null);
+				
+				if((!(poolProductSocketsAttribute==null))&& poolProductSocketsAttribute.equals("1")){
+				String product=clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null).getStdout();
+				System.out.println("productssffg "+product);
+
 				poolId.add(pool.poolId);
 						
 			}}}
-		for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
-			if(installed.status.equals("Not Subscribed"))	
+			for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
+				if(installed.status.equals("Not Subscribed"))	
 				moveProductCertFiles(installed.productId+".pem", true);
-		}
+			}
 			
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
-						productId=installed.productId;
-				clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null);
-
+						String consumed=productId=installed.productId;
+						System.out.println("consumed " +consumed);
+						clienttasks.listConsumedProductSubscriptions().getStdout();
+						String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
+						System.out.println("product "+product);
 					}
 				}
-		
-				for(InstalledProduct Installed:clienttasks.getCurrentlyInstalledProducts()){
-					if(productId.equals(Installed.productId)){
-					Assert.assertEquals(Installed.status, "Subscribed");
+					for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
+					if(productId.equals(installedProduct.productId)){
+					if(!(installedProduct.status.equals("Subscribed")))moveProductCertFiles("", false);
+					Assert.assertEquals(installedProduct.status, "Subscribed");
 				}
 			}
-				moveProductCertFiles("", false);
+					
+
 		}	
 	
 		
@@ -121,27 +163,44 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify deletion of subscribed product",
 			            groups={"DeleteProductTest","blockedByBug-684941"},
-			            enabled=false)
+			            enabled=true)
 	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
 		List<String> result =new ArrayList<String>(); 
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
 		 clienttasks.subscribe_(true, null, null, (String)null, null, null, null, null, null, null, null);
 		 for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
 			 if(installed.status.equals("Subscribed")){
-				 for(SubscriptionPool subscribed  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
-				if(installed.productName.contains(subscribed.subscriptionName)){
-					result.add(subscribed.productId);	
-				}
-			}
-			String product=result.get(randomGenerator.nextInt(result.size())); 
-			String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+product);
-			String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+product+ "' cannot be deleted while subscriptions exist.\"}";
+				 for(SubscriptionPool AvailSub  : clienttasks.getCurrentlyAvailableSubscriptionPools()){
+				if(installed.productName.contains(AvailSub.subscriptionName)){
+					String jsonConsumer = CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/products/"+AvailSub.productId);
+					String expect="{\"displayMessage\""+":"+"\"Product with UUID '"+AvailSub.productId+ "' cannot be deleted while subscriptions exist.\"}";
 
-			Assert.assertEquals(expect, jsonConsumer);
+					Assert.assertEquals(expect, jsonConsumer);				}
+			}
+			
 	}}
 	
 	}
-		 
+	// TODO Bug 853876 - After deletion of consumer,subscription-manager --register --force says "Consumer <ConsumerID> has been deleted"
+
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(    description="Verify Force Registration After Consumer is Deleted",
+			            groups={"ForceRegAfterDEL","blockedByBug-853876"},
+			            enabled=true)
+	public void VerifyForceRegistrationAfterConsumerDeletion_Test() throws JSONException, Exception {
+		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
+		String consumerId = clienttasks.getCurrentConsumerId();
+		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/consumers/"+consumerId);
+		String result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null).getStdout();
+		consumerId = clienttasks.getCurrentConsumerId();
+		String expected="The system has been registered with id: "+consumerId;
+				
+		Assert.assertEquals(result.trim(), expected);
+	}
 		
 	
 	/**
@@ -211,10 +270,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerIdAfter = clienttasks.getCurrentConsumerId();
 		Assert.assertEquals(consumerId, consumerIdAfter, "The consumer identity  has not changed after register_ing with consumerid.");
 		List<ProductSubscription> consumedubscriptionsAfterregister_ = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(
-				consumedubscriptionsAfterregister_.containsAll(consumedSubscriptionsBeforeregister_) &&
-				consumedSubscriptionsBeforeregister_.size()==consumedubscriptionsAfterregister_.size(),
-				"The list of consumed products after reregister_ing is identical.");
+		Assert.assertTrue(consumedubscriptionsAfterregister_.containsAll(consumedSubscriptionsBeforeregister_) &&
+				consumedSubscriptionsBeforeregister_.size()==consumedubscriptionsAfterregister_.size(),"The list of consumed products after reregister_ing is identical.");
 		}
 	/**
 	 * @author skallesh
@@ -384,7 +441,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verfying Auto-heal when auto-heal parameter is turned off",
 			groups={"AutohealTurnedOff"},
-			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+			enabled=true)	
 	
 	
 	public void AutohealTurnedOff() throws Exception {
@@ -454,7 +511,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for subscription",
 			groups={"AutoHeal"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+			enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
@@ -463,8 +520,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
 		Integer healFrequency=2;
-		clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
-		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
+		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
@@ -559,18 +615,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
-            groups={"VerifyEntitlementStart_Test"},
-             enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
-	public void VerifyEntitlementStart_Test() throws Exception {
+            groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
+             enabled=true)	
+	public void VerifyEntitlementStartDate_Test() throws Exception {
+		String result=null;
+		String[] certDate=null;
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
 		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			Calendar end_date=pools.endDate;
 			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pools.poolId));	
-			String expireDate=new SimpleDateFormat("yyyy-MM-dd").format(end_date.getTime());
-			String startdate=jsonPool.getString("endDate");
+			String startdate=jsonPool.getString("created");
 			String[] split_word=startdate.split("T");
-		    Assert.assertEquals(split_word[0], expireDate);
-			
+			clienttasks.subscribe_(null, null, pools.poolId, null, null, null, null, null, null, null, null);
+			for(File files: clienttasks.getCurrentEntitlementCertFiles()){
+				String command="rct cat-cert "+ files +"| grep 'Start Date'";
+				result=client.runCommandAndWait(command).getStdout().trim();
+				certDate=result.split(" ");
+			}
+				Assert.assertEquals(split_word[0], certDate[2]);
+				clienttasks.unsubscribe_(true, null, null, null, null);
+
 		}
 		}
 		
@@ -632,7 +695,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
-            groups={"VerifyRhsmLogging_Test"},
+            groups={"VerifyRhsmLogging_Test"},dependsOnMethods="unsubscribeBeforeGroup",
             enabled=true)	
 	public void VerifyRhsmLogging_Test() throws Exception{
 		Boolean actual=true;
@@ -641,16 +704,15 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for(SubscriptionPool pool :clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
 			if((providedProducts.size())>2){
-				clienttasks.subscribe(null, null,pool.poolId, null, null, null, null, null, null, null, null);							
+				clienttasks.subscribe_(null, null,pool.poolId, null, null, null, null, null, null, null, null);							
 				 Boolean flag=clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement");
 				 Assert.assertEquals(flag, actual);
 			}
 			
 		}
-		
-		
-					
+						
 	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -746,7 +808,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ",
             groups={"VerifyautosubscribeIgnoresSocketCount_Test"},
-            enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+            enabled=true)	
 	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception{
 		int socketnum = 0;
 		int socketvalue=0;
@@ -766,7 +828,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				}
 		
 			}
-		 Map<String,String> factsMap = new HashMap<String,String>();
+		 	Map<String,String> factsMap = new HashMap<String,String>();
 			factsMap.put("cpu.cpu_socket(s)", String.valueOf(socketnum+2));
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 	
@@ -803,21 +865,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="Unsubscribe all the subscriptions",
-			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 	}
 	
 	@Test(description="Unset the servicelevel",
-			groups={"VerifyDistinct","AutoHeal","autohealPartial"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","autohealPartial","BugzillaTests"},enabled=true)
 	public void unsetServicelevelBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
-	
+	@Test(description="Unset the servicelevel",
+			groups={"VerifyDistinct","AutoHeal","autohealPartial","VerifyEntitlementStartDate_Test","BugzillaTests"},enabled=true)
+	public void setHealFrequencyGroup() {
+		 List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		 listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		 clienttasks.config_(null,null,true,listOfSectionNameValues);
+		String param= clienttasks.getConfFileParameter(clienttasks.rhsmConfFile, "rhsmcertd", "healFrequency");
+
+		 Assert.assertEquals(param, "1440");
+	}
 	@Test(description="set healing attribute to true",
-			groups={"autohealPartial","AutoHeal","heal"},enabled=true)
+			groups={"autohealPartial","AutoHeal","heal","BugzillaTests"},enabled=true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		
 		// register a new consumer
