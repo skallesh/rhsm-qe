@@ -122,8 +122,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
 				
 				if((!(poolProductSocketsAttribute==null))&& poolProductSocketsAttribute.equals("1")){
-				String product=clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null).getStdout();
-				System.out.println("productssffg "+product);
+				clienttasks.subscribe_(null, null, pool.poolId, null, null, null, null, null, null, null, null).getStdout();
 
 				poolId.add(pool.poolId);
 						
@@ -132,24 +131,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				if(installed.status.equals("Not Subscribed"))	
 				moveProductCertFiles(installed.productId+".pem", true);
 			}
-			
-				factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
+				int sockets=4;
+				factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 				clienttasks.unsubscribe_(true, null, null, null, null);
 				String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
 				System.out.println("product "+product);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
-						String consumed=productId=installed.productId;
-						System.out.println("consumed " +consumed);
-						clienttasks.listConsumedProductSubscriptions().getStdout();
-						String product1=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
-						System.out.println("product "+product1);
+						productId=installed.productId;
+						clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
 					}
 				}
 					for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 					if(productId.equals(installedProduct.productId)){
 					if(!(installedProduct.status.equals("Subscribed")))moveProductCertFiles("", false);
+					//String consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
+					List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+					Assert.assertEquals(consumed.size(), sockets);
 					Assert.assertEquals(installedProduct.status, "Subscribed");
 				}
 			}
