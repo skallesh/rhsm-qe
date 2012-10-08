@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.cli.tests;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +34,7 @@ import com.redhat.qe.tools.SSHCommandResult;
  */
 @Test(groups={"ActivationKeyTests"})
 public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
-
+	
 	
 	// Test methods ***********************************************************************
 
@@ -539,7 +540,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create an activation key and add many pools to it and then register asserting all the pools get consumed",
-			groups={"blockedByBug-844455"},
+			groups={/*"blockedByBug-844455"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithActivationKeyContainingMultiplePools_Test() throws JSONException, Exception {
@@ -547,6 +548,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
+		jsonPools = clienttasks.workaroundForBug844455(jsonPools);
 		
 		// create an activation key
 		String activationKeyName = String.format("ActivationKey%sWithMultiplePoolsForOrg_%s", System.currentTimeMillis(),sm_clientOrg);
@@ -605,7 +607,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with --activationkey=comma_separated_string_of_keys asserting all the pools get consumed",
-			groups={"blockedByBug-844455"},
+			groups={/*"blockedByBug-844455"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithListOfCommaSeparatedActivationKeys_Test() throws JSONException, Exception {
@@ -613,6 +615,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
+		jsonPools = clienttasks.workaroundForBug844455(jsonPools);
 		
 		// process each of the pools adding them to an individual activation key
 		List<String> activationKeyNames = new ArrayList<String>();
@@ -671,7 +674,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="create many activation keys with one added pool per key and then register with a sequence of many --activationkey parameters asserting each pool per key gets consumed",
-			groups={"blockedByBug-844455"},
+			groups={/*"blockedByBug-844455"*/},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)	
 	public void RegisterWithSequenceOfMultipleActivationKeys_Test() throws JSONException, Exception {
@@ -679,6 +682,7 @@ public class ActivationKeyTests extends SubscriptionManagerCLITestScript {
 		// get all of the pools belonging to ownerKey
 		JSONArray jsonPools = new JSONArray(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword,sm_serverUrl,"/owners/"+sm_clientOrg+"/pools?listall=true"));	
 		if (!(jsonPools.length()>1)) throw new SkipException("This test requires more than one pool for org '"+sm_clientOrg+"'."); 
+		jsonPools = clienttasks.workaroundForBug844455(jsonPools);
 		
 		// process each of the pools adding them to an individual activation key
 		List<String> activationKeyNames = new ArrayList<String>();

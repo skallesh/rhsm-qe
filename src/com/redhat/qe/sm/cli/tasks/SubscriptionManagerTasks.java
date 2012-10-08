@@ -2872,6 +2872,7 @@ public class SubscriptionManagerTasks {
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
 		
+		workaroundForBug844455();
 		
 		// run command without asserting results
 		SSHCommandResult sshCommandResult = sshCommandRunner.runCommandAndWait(command);
@@ -2898,28 +2899,6 @@ public class SubscriptionManagerTasks {
 	 */
 	public SSHCommandResult unregister(String proxy, String proxyuser, String proxypassword) {
 		SSHCommandResult sshCommandResult = unregister_(proxy, proxyuser, proxypassword);
-		
-		// TEMPORARY WORKAROUND FOR BUG
-		String nErrMsg = "Network error, unable to connect to server.";
-		if (sshCommandResult.getExitCode()==255 && sshCommandResult.getStdout().trim().startsWith(nErrMsg)) { 
-			boolean invokeWorkaroundWhileBugIsOpen = true;
-			String bugId="844455"; 
-			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
-			if (invokeWorkaroundWhileBugIsOpen) {
-				/* this did not work since it deleted the redhat.repo file
-				log.warning("The workaround for this SSLTimeoutError bug during unregister is to execute clean and return its result as a substitute for the unregister result.");
-				return clean(proxy, proxyuser, proxypassword);
-				*/
-				/* this did not work; ended up with a yum traceback M2Crypto.SSL.SSLError: No such file or directory
-				log.warning("The workaround for this SSLTimeoutError bug '"+bugId+"' during an unregister is to manually delete the consumer and entitlement certs and proceed onward with the current test.");
-				removeAllCerts(true, true, false);
-				return sshCommandResult;
-				*/
-				clean(proxy, proxyuser, proxypassword);
-				throw new SkipException("Skipping this test while bug '"+bugId+"' is open.");
-			}
-		}
-		// END OF WORKAROUND
 		
 		// assert results for a successful registration
 		if (sshCommandResult.getExitCode()==0) {
@@ -3854,6 +3833,8 @@ public class SubscriptionManagerTasks {
 		if (proxy!=null)				command += " --proxy="+proxy;
 		if (proxyuser!=null)			command += " --proxyuser="+proxyuser;
 		if (proxypassword!=null)		command += " --proxypassword="+proxypassword;
+		
+		if (all!=null && all && serial==null) workaroundForBug844455();
 		
 		// run command without asserting results
 		return sshCommandRunner.runCommandAndWait(command);
@@ -5110,6 +5091,39 @@ repolist: 3,394
 		sshCommandRunner.runCommandAndWait("export LANG="+lang);
 	}
 	
-
-
+	protected void workaroundForBug844455() {
+		// TEMPORARY WORKAROUND FOR BUG
+		List<File> entitlementFiles = getCurrentEntitlementCertFiles();
+		int tooManyEntitlements = 30;
+		if (entitlementFiles.size()>tooManyEntitlements) { 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround to avoid an SSLTimeoutError during an unregister or unsubscribe --all is to incrementally unsubscribe reducing the current entitlements to approximately "+tooManyEntitlements+".  Then resume the unregister or unsubscribe --all.");
+				for (int i=entitlementFiles.size()-1; i>=tooManyEntitlements; i--) {
+					unsubscribe_(null, getSerialNumberFromEntitlementCertFile(entitlementFiles.get(i)), null,null,null);
+				}
+			}
+		}
+		// END OF WORKAROUND
+	}
+	
+	public JSONArray workaroundForBug844455(JSONArray jsonPools) {
+		// TEMPORARY WORKAROUND FOR BUG
+		int tooManyPools = 30;
+		if (jsonPools.length()>tooManyPools) { 
+			boolean invokeWorkaroundWhileBugIsOpen = true;
+			String bugId="844455";	// Bug 844455 - when consuming many entitlements, subscription-manager unsubscribe --all throws SSLTimeoutError: timed out
+			try {if (invokeWorkaroundWhileBugIsOpen&&BzChecker.getInstance().isBugOpen(bugId)) {log.fine("Invoking workaround for "+BzChecker.getInstance().getBugState(bugId).toString()+" Bugzilla "+bugId+".  (https://bugzilla.redhat.com/show_bug.cgi?id="+bugId+")");} else {invokeWorkaroundWhileBugIsOpen=false;}} catch (XmlRpcException xre) {/* ignore exception */} catch (RuntimeException re) {/* ignore exception */}
+			if (invokeWorkaroundWhileBugIsOpen) {
+				log.warning("The workaround is to reducing the number of multiple pools approximately "+tooManyPools+".  Then resume the unregister or unsubscribe --all.");
+				for (int i=jsonPools.length()-1; i>=30; i--) {
+					jsonPools.remove(i);
+				}
+			}
+		}
+		// END OF WORKAROUND
+		return jsonPools;
+	}
 }
