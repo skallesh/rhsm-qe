@@ -320,7 +320,6 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 			if (translationFile.getPath().contains("/pa/"))    ignorableMsgIds.addAll(Arrays.asList("<b>python-rhsm version:</b> %s"));
 			if (translationFile.getPath().contains("/fr/"))    ignorableMsgIds.addAll(Arrays.asList("Options","options","Type","Arch","Version","page 2"));
 			if (translationFile.getPath().contains("/it/"))    ignorableMsgIds.addAll(Arrays.asList("Org: ","Account","<b>Account:</b>","Account:              \\t%s","<b>Arch:</b>","Arch:                 \\t%s","Arch","Login:","No","Password:","Release: %s","Password: "));
-			if (translationFile.getPath().contains("/mr/"))    ignorableMsgIds.addAll(Arrays.asList("Org: "));
 			
 		}
 		
