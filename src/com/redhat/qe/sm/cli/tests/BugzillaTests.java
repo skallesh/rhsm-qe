@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -154,6 +155,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 					
 
+					sockets=1;
+					factsMap.put("cpu.cpu_socket(s)", String.valueOf(sockets));
+					clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 		}	
 	
 		
@@ -520,12 +524,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
 		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
-		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value can be toggled on (expected value=true).");
+		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
 		Integer healFrequency=2;
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		clienttasks.unsubscribe(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
-		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
+		List<ProductSubscription> certs = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		log.info("Currently the Entitlement cert size is ." + certs.size());
+
 		Assert.assertTrue((!(certs.isEmpty())),"autoheal is successful"); 
 	}
 	
@@ -617,7 +623,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
-            groups={"VerifyEntitlementStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
+            groups={"VerifyEntitlementStartDateIsSubStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
              enabled=true)	
 	public void VerifyEntitlementStartDate_Test() throws Exception {
 		String result=null;
@@ -631,6 +637,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			for(File files: clienttasks.getCurrentEntitlementCertFiles()){
 				String command="rct cat-cert "+ files +"| grep 'Start Date'";
 				result=client.runCommandAndWait(command).getStdout().trim();
+				log.info("Start Date after subscription is "+result);
+
 				certDate=result.split(" ");
 			}
 				Assert.assertEquals(split_word[0], certDate[2]);
@@ -785,21 +793,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
             groups={"Verifyautosubscribe_Test"},dependsOnMethods="unsubscribeBeforeGroup",
-            enabled=false)
+            enabled=true)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
-		Map<String,String> factsMap = new HashMap<String,String>();
+		/*Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
 		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
-		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
+		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);*/
+		List<String> ProductIdBeforeAuto=new ArrayList<String>();
+		List<String> ProductIdAfterAuto=new ArrayList<String>();
+
+		
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
-	 	List <InstalledProduct> installedProducts = clienttasks.getCurrentlyInstalledProducts();
-		System.out.println(installedProducts + "is the installed");
+	 	for(InstalledProduct installedProductsBeforeAuto : clienttasks.getCurrentlyInstalledProducts()){
+	 		if(installedProductsBeforeAuto.status.equals("Subscribed"))
+	 			ProductIdBeforeAuto.add(installedProductsBeforeAuto.productId);
+	 	}
+		
 		clienttasks.unsubscribe(true, null, null, null, null);
 		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
-	 	List <InstalledProduct> installedProductsAfterAuto = clienttasks.getCurrentlyInstalledProducts();
-		System.out.println(installedProductsAfterAuto);
-			Assert.assertEquals(installedProducts ,installedProductsAfterAuto);
+		for(InstalledProduct installedProductsAfterAuto : clienttasks.getCurrentlyInstalledProducts()){
+	 		if(installedProductsAfterAuto.status.equals("Subscribed"))
+	 			ProductIdAfterAuto.add(installedProductsAfterAuto.productId);
+	 	}
+		Assert.assertEquals(ProductIdBeforeAuto.size() ,ProductIdAfterAuto.size());
+		Assert.assertEquals(ProductIdBeforeAuto, ProductIdAfterAuto);
 	}
 		
 	
