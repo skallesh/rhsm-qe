@@ -111,7 +111,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods={"unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			            enabled=false)
+			            enabled=true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
 		String productId=null;
@@ -135,13 +135,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			
 				factsMap.put("cpu.cpu_socket(s)", String.valueOf(4));
 				clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
+				clienttasks.unsubscribe_(true, null, null, null, null);
+				String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
+				System.out.println("product "+product);
 				for(InstalledProduct installed:clienttasks.getCurrentlyInstalledProducts()){
 					if(installed.status.equals("Partially Subscribed")){
 						String consumed=productId=installed.productId;
 						System.out.println("consumed " +consumed);
 						clienttasks.listConsumedProductSubscriptions().getStdout();
-						String product=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
-						System.out.println("product "+product);
+						String product1=clienttasks.subscribe_(null, null, poolId, null, null, null, null, null, null, null, null).getStdout();
+						System.out.println("product "+product1);
 					}
 				}
 					for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
