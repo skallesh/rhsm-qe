@@ -261,7 +261,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(    description="subscription-manager: register_ --consumerid  using a different user and valid consumerId",
-			            groups={"reregister_","blockedByBug-627665"},
+			            groups={"reregister","blockedByBug-627665"},dependsOnMethods="unsubscribeBeforeGroup",
 			            enabled=true)
 	public void register_WithConsumerid_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -275,9 +275,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.register_(sm_client2Username, sm_clientPassword, sm_clientOrg, null, null, null, consumerId, null, null, null,(String) null, null, null, null, null, null, null, null);
 		String consumerIdAfter = clienttasks.getCurrentConsumerId();
 		Assert.assertEquals(consumerId, consumerIdAfter, "The consumer identity  has not changed after register_ing with consumerid.");
-		List<ProductSubscription> consumedubscriptionsAfterregister_ = clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(consumedubscriptionsAfterregister_.containsAll(consumedSubscriptionsBeforeregister_) &&
-				consumedSubscriptionsBeforeregister_.size()==consumedubscriptionsAfterregister_.size(),"The list of consumed products after reregister_ing is identical.");
+		List<ProductSubscription> consumedscriptionsAfterregister_ = clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(consumedscriptionsAfterregister_.containsAll(consumedSubscriptionsBeforeregister_) &&
+				consumedSubscriptionsBeforeregister_.size()==consumedscriptionsAfterregister_.size(),"The list of consumed products after reregister_ing is identical.");
 		}
 	/**
 	 * @author skallesh
@@ -885,7 +885,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(description="Unsubscribe all the subscriptions",
-			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test"},enabled=true)
+			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test","reregister"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
