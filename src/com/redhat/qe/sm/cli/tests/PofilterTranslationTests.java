@@ -541,7 +541,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/as/")) bugIds.add("855085");
 				// Bug 855081 -	[pt_BR] untranslated msgid "Arch" 
 				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/pt_BR/")) bugIds.add("855081");
-
+				// Bug 864095 - [fr_FR] unchanged translation for msgid "System Engine Username: " 
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/fr/")) bugIds.add("864095");
+				// Bug 864092 - [es_ES] unchanged translation for msgid "Configure Proxy" 
+				if (pofilterTest.equals("unchanged") && translationFile.getPath().contains("/es_ES/")) bugIds.add("864092");
 				
 				// Bug 841011 - [kn] failed pofilter unchanged option test for subscription manager translations
 				if (pofilterTest.equals("doublewords") && translationFile.getPath().contains("/kn/")) bugIds.add("841011");
