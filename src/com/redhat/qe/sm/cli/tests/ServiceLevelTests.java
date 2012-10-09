@@ -331,7 +331,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: register to a Candlepin server using autosubscribe with an unavailable servicelevel",
-			groups={"blockedByBug-795798"},
+			groups={"blockedByBug-795798","blockedByBug-864508","blockedByBug-864508"},
 			enabled=true)
 	public void RegisterWithUnavailableServiceLevel_Test() {
 
@@ -430,7 +430,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: subscribe with auto while specifying an unavailable service level",
-			groups={"blockedByBug-795798"},
+			groups={"blockedByBug-795798","blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void AutoSubscribeWithUnavailableServiceLevel_Test() {
@@ -689,7 +689,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --set (with unavailable serviceLevel)",
-			groups={},
+			groups={"blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelSetWithUnavailableServiceLevel_Test() throws JSONException, Exception {
@@ -707,7 +707,7 @@ public class ServiceLevelTests extends SubscriptionManagerCLITestScript {
 	
 	
 	@Test(	description="subscription-manager: service-level --set (with exempt serviceLevel should be treated as unavailable)",
-			groups={},
+			groups={"blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void ServiceLevelSetWithExemptServiceLevel_Test() {
