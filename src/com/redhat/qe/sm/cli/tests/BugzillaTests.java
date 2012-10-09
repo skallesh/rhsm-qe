@@ -69,7 +69,33 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	//https://bugzilla.redhat.com/show_bug.cgi?id=733327
 	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister//done
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
+	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure
+	
+	
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(    description="Verify One empty certificate file in /etc/rhsm/ca causes registration failure",
+			            groups={"VerifyEmptyCertCauseRegistrationFailure_Test","blockedByBug-806958"},
+			            enabled=true)
+	public void VerifyEmptyCertCauseRegistrationFailure_Test() throws JSONException, Exception {
+		clienttasks.unregister_(null, null, null);
+		String FilePath="/etc/rhsm/ca/myemptycert.pem";
+		String command="touch "+ FilePath ;
+		client.runCommandAndWait(command);
+		String result= clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, null,null,null, null, null).getStdout();
+		String Expected="Bad CA certificate: "+FilePath;
+		Assert.assertEquals(result.trim(), Expected);
+		command="rm -rf "+FilePath;
+		client.runCommandAndWait(command);
+		result=clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, null,null,null, null, null).getStdout();
+		Assert.assertContainsMatch(result.trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
 
+	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -84,6 +110,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String facts=clienttasks.facts_(null, true, basicauthproxyUrl, null, null).getStderr();
 		String Expect="Error updating system data on the server, see /var/log/rhsm/rhsm.log for more details.";
 		Assert.assertEquals(facts.trim(), Expect);
+		
 	}
 	
 	/**
@@ -202,10 +229,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String consumerId = clienttasks.getCurrentConsumerId();
 		CandlepinTasks.deleteResourceUsingRESTfulAPI(sm_serverAdminUsername,sm_serverAdminPassword, sm_serverUrl,"/consumers/"+consumerId);
 		String result=clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null).getStdout();
-		consumerId = clienttasks.getCurrentConsumerId();
-		String expected="The system has been registered with id: "+consumerId;
 				
-		Assert.assertEquals(result.trim(), expected);
+		Assert.assertContainsMatch(result.trim(), "The system has been registered with id: [a-f,0-9,\\-]{36}");
+
 	}
 		
 	
