@@ -508,7 +508,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 
-		clienttasks.importCertificate_();
+		clienttasks.importCertificate_("tmp/Expiredcert.pem");
 		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 			if(product.status.equals("Expired"))
 				productid.add(product.productId);
