@@ -55,6 +55,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	protected String ownerKey;
 	protected String randomAvailableProductId;
 	protected EntitlementCert expiringCert = null;
+	protected final String importCertificatesDir = "/tmp/sm-importExpiredCertificatesDir".toLowerCase();
 	// Bugzilla Healing Test methods ***********************************************************************
 
 	// Healing Candidates for an automated Test:
@@ -496,45 +497,33 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 * @throws JSONException 
 	 */
-/*	@Test(	description="Auto-heal for Expired subscription",
+	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired","blockedByBug-746088"},
 			enabled=false)	
 	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
 		int healFrequency=2;
+		List<String> productid=new ArrayList<String>();
+		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		//clienttasks.subscribe(true, null, (String)null, null, null,null, null, null, null, null, null);
-		int endingMinutesFromNow = 10;
-		String expiringPoolId = createTestPool(-60*24,endingMinutesFromNow);
-		SubscriptionPool expiringPool = SubscriptionPool.findFirstInstanceWithMatchingFieldFromList("poolId", expiringPoolId, clienttasks.getCurrentlyAllAvailableSubscriptionPools());
 
-		File expiringCertFile = clienttasks.subscribeToSubscriptionPool(expiringPool);
-		expiringCert = clienttasks.getEntitlementCertFromEntitlementCertFile(expiringCertFile);
-		List <ProductSubscription> expiringProductSubscriptions = ProductSubscription.findAllInstancesWithMatchingFieldFromList("serialNumber", expiringCert.serialNumber, clienttasks.getCurrentlyConsumedProductSubscriptions());
-		System.out.println("expiringProductSubscriptions "+expiringProductSubscriptions);
-		List<ProductSubscription> subscribe=clienttasks.getCurrentlyConsumedProductSubscriptions();
-		System.out.println("subscribe   "+subscribe);
-
-		Assert.assertNotNull(expiringProductSubscriptions, "The product will expire in 1 min");
-		sleep(2*60*1000);
-		subscribe=clienttasks.getCurrentlyConsumedProductSubscriptions();
-		System.out.println("subscribe  after expiry period "+subscribe);		
-		for(InstalledProduct installedProducts : clienttasks.getCurrentlyInstalledProducts()){
-			System.out.println(installedProducts +"  installedProducts");
+		clienttasks.importCertificate_();
+		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
+			if(product.status.equals("Expired"))
+				productid.add(product.productId);
 		}
-		
-		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
-		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
-		
-	//	Assert.assertNotNull(expiringProductSubscriptions, "The product has been subscribed");
-		subscribe=clienttasks.getCurrentlyConsumedProductSubscriptions();
-
-		System.out.println("subscribe after healing  "+subscribe);
-		
-		
-		
-	}*/
+		if (productid.isEmpty()) {
+			throw new SkipException("There are no expired pools for testing."); 
+		}
+		else{
+			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+			for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
+				if(product.status.equals(productid.get(randomGenerator.nextInt(productid.size()))))
+					Assert.assertEquals(product.status, "Subscribed");
+			}
+		}
+	}
 	
 	/**
 	 * @author skallesh
