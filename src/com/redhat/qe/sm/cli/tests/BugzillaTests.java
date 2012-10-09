@@ -72,7 +72,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
 	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure
 	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
+			groups={"VerifyUnsubscribeAllForExpiredSubscription","blockedByBug-852630"},
+			enabled=true)	
 	
+	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
+		clienttasks.unsubscribe_(true, null, null, null, null);
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.importCertificate_("tmp/Expiredcert.pem");
+		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
+		Assert.assertTrue(!(consumed.isEmpty()));
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		
+	}
 	
 	/**
 	 * @author skallesh
@@ -340,7 +357,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: facts --list,verify system.entitlements_valid ",
 			            groups={"validTest","blockedByBug-669513"},dependsOnMethods="unsubscribeBeforeGroup",
-			            enabled=false)
+			            enabled=true)
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		 List <String> productId =new ArrayList<String>();   
 		 List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -497,11 +514,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribe_d subscription",
 			groups={"VerifyStatusForPartialSubscription","blockedByBug-746088"},
-			enabled=false)	
+			enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
-		List<String> productid=new ArrayList<String>();
+	    String Flag="false";
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Map<String,String> factsMap = new HashMap<String,String>();
@@ -517,7 +534,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			}
 		}
 		}for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
+			if(product.status.equals("Partially Subscribed")){
+				Flag="true";
+			}
 		}
+		Assert.assertEquals(Flag, "true");
 		
 		}
 
@@ -528,7 +549,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired","blockedByBug-746088"},
-			enabled=false)	
+			enabled=true)	
 	
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
 		int healFrequency=2;
@@ -536,13 +557,16 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 
-		clienttasks.importCertificate_("expiredcerts/Expiredcert.pem");
+		String result=clienttasks.importCertificate_("tmp/Expiredcert.pem").getStdout();
+		System.out.println("result is   "+result);
 		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 			if(product.status.equals("Expired"))
 				Expiredproductid.add(product.productId);
 		}
 		
 			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+			SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
+
 			for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 				if(product.productId.equals(Expiredproductid.get(randomGenerator.nextInt(Expiredproductid.size()))))
 					Assert.assertEquals(product.status, "Subscribed");
@@ -582,7 +606,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal with SLA",
 			groups={"AutoHealFailForSLA"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup"},
-			enabled=false)	
+			enabled=true)	
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
 		String filename=null;
@@ -1065,13 +1089,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	
 	protected void moveProductCertFiles(String filename,Boolean move) {
-	if(move==true){
-			client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
+		client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
+		if(move==true){
 			client.runCommandAndWait("mv "+clienttasks.productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
-	}else {
+		}else {
 		client.runCommandAndWait("mv "+ "/etc/pki/tmp1/*.pem"+" " +clienttasks.productCertDir);
 		client.runCommandAndWait("rm -rf "+ "/etc/pki/tmp1");
-	}}
+		}}
 
 
 	protected String getEntitlementCertFilesWithPermissions() {
