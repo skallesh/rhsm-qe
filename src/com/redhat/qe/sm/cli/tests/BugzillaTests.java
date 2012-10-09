@@ -490,7 +490,36 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue((certs.isEmpty()),"autoheal is successful"); 
 		
 	}
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribed subscription",
+			groups={"AutohealForExpired","blockedByBug-746088"},
+			enabled=false)	
+	@ImplementsNitrateTest(caseId=119327)
 	
+	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
+		List<String> productid=new ArrayList<String>();
+		clienttasks.unsubscribe_(true, null, null, null, null);
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		Map<String,String> factsMap = new HashMap<String,String>();
+		Integer moreSockets = 4;
+		factsMap.put("cpu.cpu_socket(s)", String.valueOf(moreSockets));
+		clienttasks.createFactsFileWithOverridingValues("/socket.facts",factsMap);
+		for(SubscriptionPool SubscriptionPool: clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
+		if(!(SubscriptionPool.multiEntitlement)){
+			String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
+			if((!(poolProductSocketsAttribute==null)) && (poolProductSocketsAttribute.equals("2"))){
+				clienttasks.subscribe(null, null,SubscriptionPool.poolId, null, null, null, null, null, null, null, null);
+
+			}
+		}
+		}for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
+		}
+		
+		}
 
 	/**
 	 * @author skallesh

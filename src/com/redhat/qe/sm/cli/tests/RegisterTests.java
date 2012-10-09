@@ -1367,8 +1367,8 @@ Expected Results:
 	// TODO Bug 627665 - subscription-manager-cli reregister should not allow a --username to reregister using a --consumerid that belongs to someone else
 	// TODO Bug 668814 - firstboot and subscription-manager display "network error" on server 500
 	// TODO Bug 669395 - gui defaults to consumer name of the hostname and doesn't let you set it to empty string. cli defaults to username, and does let you set it to empty string
-	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically
-	// TODO Bug 719378 - White space in user name causes error 
+	// TODO Bug 693896 - subscription-manager does not always reload dbus scripts automatically //done
+	// TODO Bug 719378 - White space in user name causes error //done
 	
 	
 	// Protected Class Variables ***********************************************************************
