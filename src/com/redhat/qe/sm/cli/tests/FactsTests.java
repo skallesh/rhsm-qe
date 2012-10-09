@@ -462,6 +462,18 @@ public class FactsTests extends SubscriptionManagerCLITestScript{
 		Assert.assertTrue(!consumer2FactsMap.containsKey(client1CustomFactName),"After client2 "+client2tasks.hostname+" registered to existing consumerId '"+consumerId+"', the original custom fact '"+client1CustomFactName+"' set by original client1 system '"+client1tasks.hostname+"' is has been automatically cleaned from the consumer facts known on the candlepin server.");
 	}
 	
+	
+	@Test(	description="the facts for net.interface.sit0.mac_address and net.interface.lo.mac_address should not be listed",
+			groups={"blockedByBug-838123"}, dependsOnGroups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void AssertFactsForNetInterfaceMacAddress_Test() {
+		
+		Map<String,String> clientFactsMap = clienttasks.getFacts();
+		for (String macAddressFact : new String[]{"net.interface.sit0.mac_address","net.interface.lo.mac_address"}) {
+			Assert.assertNull(clientFactsMap.get(macAddressFact), "After fix for bug 838123, the '"+macAddressFact+"' fact should not exist.");
+		}
+	}
 
 
 	
