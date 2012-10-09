@@ -352,7 +352,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 clienttasks.facts_(true, null, null, null, null);
 		 String result =  clienttasks.getFactValue("system.entitlements_valid");
 		 Assert.assertEquals(result.trim(),"invalid");
-		 clienttasks.subscribe(true, null, null, (String)null, null, null, null, null, null, null, null);
+		 clienttasks.subscribe_(true, null, null, (String)null, null, null, null, null, null, null, null);
 		 for(InstalledProduct installed  : clienttasks.getCurrentlyInstalledProducts()){
 			 if((installed.status.equals("Not Subscribed")) || (installed.status.equals("Partially Subscribed") )){
 				productId.add(installed.productId);
@@ -417,7 +417,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
 		clienttasks.unsubscribe(true, null, null, null, null); 
 			
-		clienttasks.subscribe(null, null,poolId, null, null, null, null, null, null, null, null);							
+		clienttasks.subscribe_(null, null,poolId, null, null, null, null, null, null, null, null);							
 
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installedProduct.status.equals("Partially Subscribed")){
@@ -455,10 +455,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
 
-		clienttasks.subscribe(true, availableService, (String)null, null, null,null, null, null, null, null, null);
+		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		clienttasks.service_level_(null, null, null, null, null,availableService,null,null, null, null, null);		
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		clienttasks.unsubscribe(true, null, null, null, null);
+		clienttasks.unsubscribe_(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
 		if (certs.isEmpty()) throw new SkipException("There are no products of serviceLevel "+availableService); 
@@ -495,8 +495,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 * @throws JSONException 
 	 */
-	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribed subscription",
-			groups={"AutohealForExpired","blockedByBug-746088"},
+	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribe_d subscription",
+			groups={"VerifyStatusForPartialSubscription","blockedByBug-746088"},
 			enabled=false)	
 	@ImplementsNitrateTest(caseId=119327)
 	
@@ -512,7 +512,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		if(!(SubscriptionPool.multiEntitlement)){
 			String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
 			if((!(poolProductSocketsAttribute==null)) && (poolProductSocketsAttribute.equals("2"))){
-				clienttasks.subscribe(null, null,SubscriptionPool.poolId, null, null, null, null, null, null, null, null);
+				clienttasks.subscribe_(null, null,SubscriptionPool.poolId, null, null, null, null, null, null, null, null);
 
 			}
 		}
@@ -529,28 +529,24 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired","blockedByBug-746088"},
 			enabled=false)	
-	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
 		int healFrequency=2;
-		List<String> productid=new ArrayList<String>();
+		List<String> Expiredproductid=new ArrayList<String>();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 
-		clienttasks.importCertificate_("tmp/Expiredcert.pem");
+		clienttasks.importCertificate_("expiredcerts/Expiredcert.pem");
 		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 			if(product.status.equals("Expired"))
-				productid.add(product.productId);
+				Expiredproductid.add(product.productId);
 		}
-		if (productid.isEmpty()) {
-			throw new SkipException("There are no expired pools for testing."); 
-		}
-		else{
+		
 			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 			for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
-				if(product.status.equals(productid.get(randomGenerator.nextInt(productid.size()))))
+				if(product.productId.equals(Expiredproductid.get(randomGenerator.nextInt(Expiredproductid.size()))))
 					Assert.assertEquals(product.status, "Subscribed");
-			}
+			
 		}
 	}
 	
@@ -615,22 +611,22 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	}
 	
 	
-	// Bugzilla Subscribe Test methods ***********************************************************************
+	// Bugzilla subscribe_ Test methods ***********************************************************************
 	
-	// Subscribe Candidates for an automated Test:
+	// subscribe_ Candidates for an automated Test:
 	// TODO Bug 668032 - rhsm not logging subscriptions and products properly //done --shwetha
 	// TODO Bug 670831 - Entitlement Start Dates should be the Subscription Start Date //Done --shwetha
 	// TODO Bug 664847 - Autobind logic should respect the architecture attribute //working on
 	// TODO Bug 676377 - rhsm-compliance-icon's status can be a day out of sync - could use dbus-monitor to assert that the dbus message is sent on the expected compliance changing events
 	// TODO Bug 739790 - Product "RHEL Workstation" has a valid stacking_id but its socket_limit is 0
-	// TODO Bug 707641 - CLI auto-subscribe tries to re-use basic auth credentials.
+	// TODO Bug 707641 - CLI auto-subscribe_ tries to re-use basic auth credentials.
 	
-	// TODO Write an autosubscribe bug... 1. Subscribe to all avail and note the list of installed products (Subscribed, Partially, Not) 
+	// TODO Write an autosubscribe bug... 1. subscribe_ to all avail and note the list of installed products (Subscribed, Partially, Not) 
 	//									  2. Unsubscribe all  3. Autosubscribe and verfy same installed product status (Subscribed, Not)//done --shwetha
 	// TODO Bug 746035 - autosubscribe should NOT consider existing future entitlements when determining what pools and quantity should be autosubscribed //working on
 	// TODO Bug 747399 - if consumer does not have architecture then we should not check for it
 	// TODO Bug 743704 - autosubscribe ignores socket count on non multi-entitle subscriptions //done --shwetha
-	// TODO Bug 740788 - Getting error with quantity subscribe using subscription-assistance page 
+	// TODO Bug 740788 - Getting error with quantity subscribe_ using subscription-assistance page 
 	//                   Write an autosubscribe test that mimics partial subscriptions in https://bugzilla.redhat.com/show_bug.cgi?id=740788#c12
 	// TODO Bug 720360 - subscription-manager: entitlement key files created with weak permissions // done --shwetha
 	// TODO Bug 772218 - Subscription manager silently rejects pools requested in an incorrect format.//done --shwetha
@@ -639,7 +635,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 */
 	
-	@Test(   description="subscription-manager: subscribe multiple pools in incorrect format",
+	@Test(   description="subscription-manager: subscribe_ multiple pools in incorrect format",
 			              groups={"MysubscribeTest","blockedByBug-772218"},
 			              enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
 	public void VerifyIncorrectSubscriptionFormat() {
@@ -695,7 +691,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception 
 	 */
-	@Test(    description="Verify if architecture for auto-subscribe test",
+	@Test(    description="Verify if architecture for auto-subscribe_ test",
             groups={"VerifyarchitectureForAutobind_Test"},
          //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
             enabled=true)
@@ -771,7 +767,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception 
 	 */
-	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
+	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
             groups={"VerifyFuturesubscription_Test"},
          //   dataProvider="getAllFutureSystemSubscriptionPoolsData",
             enabled=true)
@@ -799,10 +795,10 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			ProductIds=installedProduct.productName;
 			 if(!(installedProduct.status.equals( "Future Subscription")))
-				 clienttasks.subscribe(null, null,result, null, null, null, null, null, null, null, null);							
+				 clienttasks.subscribe_(null, null,result, null, null, null, null, null, null, null, null);							
 						
 		}}
-	 	clienttasks.subscribe(true, null,(String)null, null, null, null, null, null, null, null, null);
+	 	clienttasks.subscribe_(true, null,(String)null, null, null, null, null, null, null, null, null);
 		for (InstalledProduct installedProduct : clienttasks.getCurrentlyInstalledProducts()) {
 			if(installedProduct.productName==ProductIds){
 				Assert.assertEquals(installedProduct.status, "Subscribed");
@@ -835,7 +831,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 * @throws JSONException 
 	 */
-	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe all the available products ",
+	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
             groups={"Verifyautosubscribe_Test"},dependsOnMethods="unsubscribeBeforeGroup",
             enabled=true)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
@@ -855,7 +851,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 	}
 		
 		clienttasks.unsubscribe(true, null, null, null, null);
-		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
+		clienttasks.subscribe_(true,null,(String)null,null,null, null, null, null, null, null, null);
 		for(InstalledProduct installedProductsAfterAuto : clienttasks.getCurrentlyInstalledProducts()){
 	 		if(installedProductsAfterAuto.status.equals("Subscribed"))
 	 			ProductIdAfterAuto.add(installedProductsAfterAuto.productId);
@@ -897,7 +893,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			clienttasks.createFactsFileWithOverridingValues(factsMap);
 	
 		}
-		clienttasks.subscribe(true,null,(String)null,null,null, null, null, null, null, null, null);
+		clienttasks.subscribe_(true,null,(String)null,null,null, null, null, null, null, null, null);
 		for (InstalledProduct installedProductsAfterAuto :clienttasks.getCurrentlyInstalledProducts()) {
 				for(String pool:SubscriptionId){
 					if(installedProductsAfterAuto.productName.contains(pool))
