@@ -672,7 +672,7 @@ public class SubscribeTests extends SubscriptionManagerCLITestScript{
 	
 	
 	@Test(	description="subscription-manager: call the Candlepin API dry_run to get the pools and quantity that would be used to complete an autosubscribe with an unavailable service level",
-			groups={},
+			groups={"blockedByBug-864508"},
 			enabled=true)
 	//@ImplementsNitrateTest(caseId=)
 	public void CandlepinConsumerEntitlementsDryrunWithUnavailableServiceLevel_Test() throws JSONException, Exception {
