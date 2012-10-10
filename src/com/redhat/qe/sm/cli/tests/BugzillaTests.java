@@ -37,6 +37,7 @@ import com.redhat.qe.sm.cli.tasks.CandlepinTasks;
 import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.InstalledProduct;
+import com.redhat.qe.sm.data.OrderNamespace;
 import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
@@ -84,7 +85,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-		clienttasks.importCertificate_("tmp/Expiredcert.pem");
+		clienttasks.importCertificate_("/root/Expiredcert.pem");
 		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
 		Assert.assertTrue(!(consumed.isEmpty()));
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
@@ -549,25 +550,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired","blockedByBug-746088"},
-			enabled=true)	
+			enabled=true,dependsOnMethods="VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test")
 	
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
 		int healFrequency=2;
+	
 		List<String> Expiredproductid=new ArrayList<String>();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 
-		String result=clienttasks.importCertificate_("tmp/Expiredcert.pem").getStdout();
-		System.out.println("result is   "+result);
+		//	File importCertificateFile = new File("Expiredcert.pem");
+		clienttasks.importCertificate_("/root/Expiredcert.pem");
 		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 			if(product.status.equals("Expired"))
 				Expiredproductid.add(product.productId);
 		}
-		
-			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
+			clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 			SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
-
 			for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
+				System.out.println(product.productId +"  "+product.status+"  "+ Expiredproductid.get(randomGenerator.nextInt(Expiredproductid.size())));
 				if(product.productId.equals(Expiredproductid.get(randomGenerator.nextInt(Expiredproductid.size()))))
 					Assert.assertEquals(product.status, "Subscribed");
 			
@@ -689,27 +690,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
             groups={"VerifyEntitlementStartDateIsSubStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
              enabled=true)	
-	public void VerifyEntitlementStartDate_Test() throws Exception {
-		String result=null;
-		String[] certDate=null;
+	public void VerifyEntitlementStartDate_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
-		for(SubscriptionPool pools:clienttasks.getCurrentlyAvailableSubscriptionPools()){
-			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pools.poolId));	
-			String startdate=jsonPool.getString("created");
-			String[] split_word=startdate.split("T");
-			clienttasks.subscribe_(null, null, pools.poolId, null, null, null, null, null, null, null, null);
-			for(File files: clienttasks.getCurrentEntitlementCertFiles()){
-				String command="rct cat-cert "+ files +"| grep 'Start Date'";
-				result=client.runCommandAndWait(command).getStdout().trim();
-				log.info("Start Date after subscription is "+result);
-
-				certDate=result.split(" ");
-			}
-				Assert.assertEquals(split_word[0], certDate[2]);
-				clienttasks.unsubscribe_(true, null, null, null, null);
-
+		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
+			JSONObject jsonPool = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername, sm_clientPassword, sm_serverUrl, "/pools/"+pool.poolId));	
+			Calendar subStartDate = parseISO8601DateString(jsonPool.getString("startDate"),"GMT");
+			EntitlementCert entitlementCert = clienttasks.getEntitlementCertFromEntitlementCertFile(clienttasks.subscribeToSubscriptionPool_(pool));
+			Calendar entStartDate = entitlementCert.validityNotBefore;
+			Assert.assertEquals(entStartDate, subStartDate, "The entitlement start date '"+EntitlementCert.formatDateString(entStartDate)+"' granted from pool "+pool.poolId+" should equal its subscription start date '"+OrderNamespace.formatDateString(subStartDate)+"'.");
 		}
-		}
+	}
+
 		
 	/**
 	 * @author skallesh
@@ -972,13 +963,13 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		 Assert.assertEquals(param, "1440");
 	}
 	@Test(description="set healing attribute to true",
-			groups={"autohealPartial","AutoHeal","heal","BugzillaTests"},enabled=true)
+			groups={"autohealPartial","AutoHeal","heal","BugzillaTests","AutoHealFailForSLA","AutohealForExpired"},enabled=true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		
 		// register a new consumer
 		String consumerId = clienttasks.getCurrentConsumerId(clienttasks.register(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null,null,true, null, null, null, null));
-		
-		JSONObject jsonConsumer = new JSONObject(CandlepinTasks.getResourceUsingRESTfulAPI(sm_clientUsername,sm_clientPassword, sm_serverUrl, "/consumers/"+consumerId));
+		JSONObject jsonConsumer = CandlepinTasks.setAutohealForConsumer(sm_clientUsername,sm_clientPassword, sm_serverUrl, consumerId,true);
+
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A new system consumer's autoheal attribute value defaults to true.");
 	}
 /*	// Configuration methods ***********************************************************************
