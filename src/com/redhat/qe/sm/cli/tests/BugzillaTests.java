@@ -626,8 +626,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 			
-			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed")|| installedProduct.status.toString().equalsIgnoreCase("Partially Subscribed")){
-				System.out.println("inside installed"); 
+			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed") || installedProduct.status.toString().equalsIgnoreCase("Partially Subscribed")){
 				filename=installedProduct.productId+".pem";
 				moveProductCertFiles(filename,true);
 			}
@@ -636,7 +635,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		log.info("cert size is "+ certs);
+		System.out.println("service level is "+ clienttasks.getCurrentServiceLevel());
+		log.info("cert contents are "+ certs);
 		if (!(certs.isEmpty())) moveProductCertFiles(filename,false);
  		Assert.assertTrue((certs.isEmpty()),"autoheal has failed"); 
 		moveProductCertFiles(filename,false);
@@ -1083,11 +1083,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	
 	protected void moveProductCertFiles(String filename,Boolean move) {
-		String result=client.runCommandAndWait("ls /etc/pki/tmp1").getStdout();
-		if(result.equalsIgnoreCase("ls: cannot access /etc/pki/tmp1: No such file or directory")){
+		String result=client.runCommandAndWait("ls /etc/pki/tmp1/").getStderr();
+		if(result.equalsIgnoreCase("ls: /etc/pki/tmp1/: No such file or directory")){
 			client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
 		}
-			if(move==true){
+		if(move==true){
 			client.runCommandAndWait("mv "+clienttasks.productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
 		}else {
 		client.runCommandAndWait("mv "+ "/etc/pki/tmp1/*.pem"+" " +clienttasks.productCertDir);
