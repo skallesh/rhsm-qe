@@ -42,6 +42,7 @@ import com.redhat.qe.sm.data.ProductCert;
 import com.redhat.qe.sm.data.ProductSubscription;
 import com.redhat.qe.sm.data.SubscriptionPool;
 import com.redhat.qe.sm.data.YumRepo;
+import com.redhat.qe.tools.RemoteFileTasks;
 import com.redhat.qe.tools.SSHCommandResult;
 import com.redhat.qe.tools.SSHCommandRunner;
 
@@ -88,6 +89,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		File expectCertFile = new File(System.getProperty("automation.dir", null)+"/expiredcerts/Expiredcert.pem");
+		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
+
 		clienttasks.importCertificate_("/root/Expiredcert.pem");
 		String consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
 		Assert.assertTrue(!(consumed==null));
@@ -162,7 +166,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
-			            groups={"VerifyDistinct","blockedByBug-733327"},dependsOnMethods={"unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
+			            groups={"VerifyDistinct","blockedByBug-733327"},
 			            enabled=true)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String> poolId =new ArrayList<String>();
@@ -311,7 +315,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(    description="subscription-manager: register_ --consumerid  using a different user and valid consumerId",
-			            groups={"reregister","blockedByBug-627665"},dependsOnMethods="unsubscribeBeforeGroup",
+			            groups={"reregister","blockedByBug-627665"},
 			            enabled=true)
 	public void register_WithConsumerid_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -362,7 +366,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(    description="subscription-manager: facts --list,verify system.entitlements_valid ",
-			            groups={"validTest","blockedByBug-669513"},dependsOnMethods="unsubscribeBeforeGroup",
+			            groups={"validTest","blockedByBug-669513"},
 			            enabled=true)
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		 List <String> productId =new ArrayList<String>();   
@@ -563,8 +567,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> Expiredproductid=new ArrayList<String>();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-
-		//	File importCertificateFile = new File("Expiredcert.pem");
+		File expectCertFile = new File(System.getProperty("automation.dir", null)+"/expiredcerts/Expiredcert.pem");
+		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
 		clienttasks.importCertificate_("/root/Expiredcert.pem");
 		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
 			if(product.status.equals("Expired"))
@@ -611,7 +615,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal with SLA",
-			groups={"AutoHealFailForSLA"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup"},
+			groups={"AutoHealFailForSLA"},
 			enabled=true)	
 	public void VerifyAutohealFailForSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
@@ -632,6 +636,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
+		log.info("cert size is "+ certs);
 		if (!(certs.isEmpty())) moveProductCertFiles(filename,false);
  		Assert.assertTrue((certs.isEmpty()),"autoheal has failed"); 
 		moveProductCertFiles(filename,false);
@@ -941,21 +946,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
     }}
 	
 	
-	@Test(description="Unsubscribe all the subscriptions",
-			groups={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test","reregister"},enabled=true)
+	@BeforeGroups(groups="setup",value={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test","reregister"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
 	}
 	
-	@Test(description="Unset the servicelevel",
-			groups={"VerifyDistinct","AutoHeal","autohealPartial","BugzillaTests"},enabled=true)
+	@BeforeGroups(groups="setup",value={"VerifyDistinct","AutoHeal","autohealPartial","BugzillaTests"},enabled=true)
 	public void unsetServicelevelBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
-	@Test(description="Unset the servicelevel",
-			groups={"VerifyDistinct","AutoHeal","autohealPartial","VerifyEntitlementStartDate_Test","BugzillaTests"},enabled=true)
+	@BeforeGroups(groups="setup",value={"VerifyDistinct","AutoHeal","autohealPartial","VerifyEntitlementStartDate_Test","BugzillaTests"},enabled=true)
 	public void setHealFrequencyGroup() {
 		 List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		 listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
@@ -964,8 +966,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 		 Assert.assertEquals(param, "1440");
 	}
-	@Test(description="set healing attribute to true",
-			groups={"autohealPartial","AutoHeal","heal","BugzillaTests","AutoHealFailForSLA","AutohealForExpired"},enabled=true)
+	@BeforeGroups(groups="setup",value={"autohealPartial","AutoHeal","heal","BugzillaTests","AutoHealFailForSLA","AutohealForExpired"},enabled=true)
 	public void VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test() throws Exception {
 		
 		// register a new consumer
@@ -1082,8 +1083,11 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// Protected methods ***********************************************************************
 	
 	protected void moveProductCertFiles(String filename,Boolean move) {
-		client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
-		if(move==true){
+		String result=client.runCommandAndWait("ls /etc/pki/tmp1").getStdout();
+		if(result.equalsIgnoreCase("ls: cannot access /etc/pki/tmp1: No such file or directory")){
+			client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
+		}
+			if(move==true){
 			client.runCommandAndWait("mv "+clienttasks.productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
 		}else {
 		client.runCommandAndWait("mv "+ "/etc/pki/tmp1/*.pem"+" " +clienttasks.productCertDir);
