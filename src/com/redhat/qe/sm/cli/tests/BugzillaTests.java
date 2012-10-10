@@ -83,12 +83,17 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			enabled=true)	
 	
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.importCertificate_("/root/Expiredcert.pem");
-		List<ProductSubscription> consumed=clienttasks.getCurrentlyConsumedProductSubscriptions();
-		Assert.assertTrue(!(consumed.isEmpty()));
-		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		String consumed=clienttasks.list_(null, null, true, null, null, null, null, null, null).getStdout();
+		Assert.assertTrue(!(consumed==null));
+		SSHCommandResult result=clienttasks.unsubscribe_(true, null, null, null, null);
+		Assert.assertContainsMatch(result.getStdout().trim(), "This machine has been unsubscribed from [0-9] subscriptions");
+		Assert.assertNull(result.getStderr());
 		
 	}
 	
@@ -615,23 +620,20 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		List<String> availableServiceLevelData = clienttasks.getCurrentlyAvailableServiceLevels();
 		String availableService = availableServiceLevelData.get(randomGenerator.nextInt(availableServiceLevelData.size()));	
 		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
-		
 		for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 			
 			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed")|| installedProduct.status.toString().equalsIgnoreCase("Partially Subscribed")){
-				 filename=installedProduct.productId+".pem";
+				System.out.println("inside installed"); 
+				filename=installedProduct.productId+".pem";
 				moveProductCertFiles(filename,true);
 			}
 		}		
-		clienttasks.unsubscribe_(true, null, null, null, null);
-
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		if (!(certs.isEmpty())) 		moveProductCertFiles(filename,false);
- 
-
-		Assert.assertTrue((certs.isEmpty()),"autoheal has failed"); 
+		if (!(certs.isEmpty())) moveProductCertFiles(filename,false);
+ 		Assert.assertTrue((certs.isEmpty()),"autoheal has failed"); 
 		moveProductCertFiles(filename,false);
 	}
 	
