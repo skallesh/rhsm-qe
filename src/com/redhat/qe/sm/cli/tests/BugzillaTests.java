@@ -519,7 +519,6 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
 		String Flag="false";
-		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
@@ -568,24 +567,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.restart_rhsmcertd(null, healFrequency, true, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		for(InstalledProduct product:clienttasks.getCurrentlyInstalledProducts()){
-			System.out.println(product.productId +"  "+product.status+"  "+ Expiredproductid.get(randomGenerator.nextInt(Expiredproductid.size())));
 			if(product.productId.equals(Expiredproductid.get(randomGenerator.nextInt(Expiredproductid.size()))))
 				Assert.assertEquals(product.status, "Subscribed");
 
-			List<String> productid=new ArrayList<String>();
-			clienttasks.unsubscribe_(true, null, null, null, null);
-			clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
-
-			for(InstalledProduct Installedproduct:clienttasks.getCurrentlyInstalledProducts()){
-				if(Installedproduct.status.equals("Expired"))
-					productid.add(product.productId);
-			}
-
-			clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-			for(InstalledProduct Installedproduct:clienttasks.getCurrentlyInstalledProducts()){
-				if(Installedproduct.productId.equals(productid.get(randomGenerator.nextInt(productid.size()))))
-					Assert.assertEquals(product.status, "Subscribed");
-			}
 		}
 	}
 
@@ -630,16 +614,18 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.subscribe_(true, availableService, (String)null, null, null,null, null, null, null, null, null);
 		for(InstalledProduct installedProduct:clienttasks.getCurrentlyInstalledProducts()){
 
-			if(installedProduct.status.toString().equalsIgnoreCase("Subscribed") || installedProduct.status.toString().equalsIgnoreCase("Partially Subscribed")){
+			if(installedProduct.status.trim().equalsIgnoreCase("Subscribed") || installedProduct.status.trim().equalsIgnoreCase("Partially Subscribed")){
 				filename=installedProduct.productId+".pem";
 				moveProductCertFiles(filename,true);
 			}
 		}		
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
+		List<EntitlementCert> certsbeforeRHSMService = clienttasks.getCurrentEntitlementCerts();
+		log.info("cert contents are "+ certsbeforeRHSMService);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
-		System.out.println("service level is "+ clienttasks.getCurrentServiceLevel());
+		Assert.assertEquals(clienttasks.getCurrentServiceLevel().trim(), availableService);
 		log.info("cert contents are "+ certs);
 		if (!(certs.isEmpty())) moveProductCertFiles(filename,false);
 		Assert.assertTrue((certs.isEmpty()),"autoheal has failed"); 
@@ -950,7 +936,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		}}
 
 
-	@BeforeGroups(groups="setup",value={"VerifyDistinct","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test","reregister"},enabled=true)
+	@BeforeGroups(groups="setup",value={"VerifyDistinct","VerifyStatusForPartialSubscription","AutoHeal","AutoHealFailForSLA","Verifyautosubscribe_Test","validTest","BugzillaTests","autohealPartial","VerifyEntitlementStartDate_Test","reregister"},enabled=true)
 	public void unsubscribeBeforeGroup() {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.unsubscribe_(true, null, null, null, null);
@@ -961,7 +947,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		//clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		clienttasks.service_level_(null, null, null, true, null, null, null, null, null, null, null);
 	}
-	@BeforeGroups(groups="setup",value={"VerifyDistinct","AutoHeal","autohealPartial","VerifyEntitlementStartDate_Test","BugzillaTests"},enabled=true)
+	@BeforeGroups(groups="setup",value={"VerifyDistinct","AutoHeal","VerifyStatusForPartialSubscription","autohealPartial","VerifyEntitlementStartDate_Test","BugzillaTests"},enabled=true)
 	public void setHealFrequencyGroup() {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
