@@ -73,7 +73,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
 			groups={"VerifyUnsubscribeAllForExpiredSubscription","blockedByBug-852630"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -100,7 +100,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify One empty certificate file in /etc/rhsm/ca causes registration failure",
 			groups={"VerifyEmptyCertCauseRegistrationFailure_Test","blockedByBug-806958"},
-			enabled=true)
+			enabled=false)
 	public void VerifyEmptyCertCauseRegistrationFailure_Test() throws JSONException, Exception {
 		clienttasks.unregister_(null, null, null);
 		String FilePath="/etc/rhsm/ca/myemptycert.pem";
@@ -123,7 +123,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify facts update with incorrect proxy url produces traceback.",
 			groups={"VerifyFactsWithIncorrectProxy_Test","blockedByBug-744504"},
-			enabled=true)
+			enabled=false)
 	public void VerifyFactsWithIncorrectProxy_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
 		String basicauthproxyUrl = String.format("%s:%s", "testmachine.com",sm_basicauthproxyPort); basicauthproxyUrl = basicauthproxyUrl.replaceAll(":$", "");
@@ -140,7 +140,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify Subscription Manager Leaves Broken Yum Repos After Unregister",
 			groups={"ReposListAfterUnregisterTest","blockedByBug-674652"},
-			enabled=true)
+			enabled=false)
 	public void VerifyRepoAfterUnregister_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribeToTheCurrentlyAvailableSubscriptionPoolsCollectively();
@@ -159,7 +159,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if stacking entitlements reports as distinct entries in cli list --installed",
 			groups={"VerifyDistinct","blockedByBug-733327"},
-			enabled=true)
+			enabled=false)
 	public void VerifyDistinctStackingEntires() throws Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
 		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
@@ -219,7 +219,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify deletion of subscribed product",
 			groups={"DeleteProductTest","blockedByBug-684941"},
-			enabled=true)
+			enabled=false)
 	public void VerifyDeletionOfSubscribedProduct_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
 		clienttasks.subscribe_(true, null, null, (String)null, null, null, null, null, null, null, null);
@@ -243,7 +243,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify Force Registration After Consumer is Deleted",
 			groups={"ForceRegAfterDEL","blockedByBug-853876"},
-			enabled=true)
+			enabled=false)
 	public void VerifyForceRegistrationAfterConsumerDeletion_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -262,7 +262,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verify config Server port with blank or incorrect text produces traceback",
 			groups={"configBlankTest"},
-			enabled=true)
+			enabled=false)
 	//@ImplementsNitrateTest(caseId=)
 	public void ConfigSetServerPortValueBlank_Test() {
 
@@ -286,7 +286,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: register_ --name , setting consumer name to blank",
 			groups={"register_withname","blockedByBug-627665"},
-			enabled=true)
+			enabled=false)
 	public void register_WithNameBlankTest() throws JSONException, Exception {
 		String name="test";
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,name,null,null,null,null,(String)null,null, null, true,null,null, null, null);
@@ -308,7 +308,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: register_ --consumerid  using a different user and valid consumerId",
 			groups={"reregister","blockedByBug-627665"},
-			enabled=true)
+			enabled=false)
 	public void register_WithConsumerid_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String consumerId = clienttasks.getCurrentConsumerId();
@@ -330,7 +330,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: service-level --org (without --list option)",
 			groups={"ServicelevelTest","blockedByBug-826856"},
-			enabled=true)
+			enabled=false)
 	public void ServiceLevelWithOrgWithoutList_Test() {
 
 		SSHCommandResult result;
@@ -344,7 +344,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: facts --update (when register_ed)",
 			groups={"MyTestFacts","blockedByBug-707525"},
-			enabled=true)
+			enabled=false)
 	public void FactsUpdateWhenregister_ed_Test() {
 
 		clienttasks.register_(sm_clientUsername, sm_clientPassword,sm_clientOrg, null, null, null, null, null, null, null, (List<String>)null, null,null, true, null, null, null, null);
@@ -359,7 +359,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: facts --list,verify system.entitlements_valid ",
 			groups={"validTest","blockedByBug-669513"},
-			enabled=true)
+			enabled=false)
 	public void VerifyEntilementValidityInFactsList_Test() throws JSONException, Exception {
 		List <String> productId =new ArrayList<String>();   
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -396,7 +396,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: attempt register_ to with white space in the user name should fail",
 			groups={"register_edTests","blockedByBug-719378"},
-			enabled=true)
+			enabled=false)
 
 	public void Attemptregister_WithWhiteSpacesInUsername_Test() {
 		SSHCommandResult result = clienttasks.register_("user name","password",sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null, null, null, null);
@@ -409,7 +409,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for partial subscription",
 			groups={"autohealPartial","blockedByBug-746218"},
-			enabled=true)	
+			enabled=false)	
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency=3;
 		Integer moreSockets = 0;
@@ -464,7 +464,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal with SLA",
 			groups={"AutoHealWithSLA"},
-			enabled=true)	
+			enabled=false)	
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
 		String filename=null;
@@ -491,7 +491,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="verfying Auto-heal when auto-heal parameter is turned off",
 			groups={"AutohealTurnedOff"},
-			enabled=true)	
+			enabled=false)	
 
 
 	public void AutohealTurnedOff() throws Exception {
@@ -512,9 +512,9 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 * @throws JSONException 
 	 */
-	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribe_d subscription",
+	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribed subscription",
 			groups={"VerifyStatusForPartialSubscription","blockedByBug-746088"},
-			enabled=true)	
+			enabled=false)	
 	@ImplementsNitrateTest(caseId=119327)
 
 	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
@@ -548,7 +548,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired","blockedByBug-746088"},
-			enabled=true)
+			enabled=false)
 
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
 		int healFrequency=2;
@@ -579,7 +579,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(	description="Auto-heal for subscription",
-			groups={"AutoHeal"},enabled=true)	
+			groups={"AutoHeal"},enabled=false)	
 	@ImplementsNitrateTest(caseId=119327)
 
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
@@ -659,7 +659,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 
 	@Test(   description="subscription-manager: subscribe_ multiple pools in incorrect format",
 			groups={"MysubscribeTest","blockedByBug-772218"},
-			enabled=true)	//TODO commit to true after executing successfully or blockedByBug is open
+			enabled=false)	//TODO commit to true after executing successfully or blockedByBug is open
 	public void VerifyIncorrectSubscriptionFormat() {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null,
 				null, null);
@@ -686,7 +686,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
 			groups={"VerifyEntitlementStartDateIsSubStartDate_Test","blockedByBug-670831"},
-			enabled=true)	
+			enabled=false)	
 	public void VerifyEntitlementStartDate_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
 		for(SubscriptionPool pool:clienttasks.getCurrentlyAvailableSubscriptionPools()){
@@ -706,7 +706,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(    description="Verify if architecture for auto-subscribe_ test",
 			groups={"VerifyarchitectureForAutobind_Test"},
 			//   dataProvider="getAllFutureSystemSubscriptionPoolsData",
-			enabled=true)
+			enabled=false)
 	public void VerifyarchitectureForAutobind_Test() throws Exception{
 
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
@@ -758,22 +758,30 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
 			groups={"VerifyRhsmLogging_Test"},
-			enabled=true)	
+			enabled=false)	
 	public void VerifyRhsmLogging_Test() throws Exception{
 		Boolean actual=true;
+		int countBefore=0;
+		
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
 
 		for(SubscriptionPool pool :clienttasks.getCurrentlyAllAvailableSubscriptionPools()){
 			List<String> providedProducts = CandlepinTasks.getPoolProvidedProductIds(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId);
+			System.out.println(client.runCommandAndWait("wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1").getStdout().trim());
+		
 			if((providedProducts.size())>2){
-				clienttasks.subscribe_(null, null,pool.poolId, null, null, null, null, null, null, null, null);							
-				Boolean flag=clienttasks.waitForRegexInRhsmLog("@ /etc/pki/entitlement");
-				Assert.assertEquals(flag, actual);
+				countBefore=Integer.parseInt(client.runCommandAndWait("wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1").getStdout().trim());
+				clienttasks.subscribe_(null, null,pool.poolId, null, null, null, null, null, null, null, null);	
 			}
-
+	//		SubscriptionManagerCLITestScript.sleep(1*60*1000);
+			if(countBefore!=0){
+			int countAfter=Integer.parseInt(client.runCommandAndWait("wc -l /var/log/rhsm/rhsm.log | cut -d ' ' -f1").getStdout().trim());
+			
+			Boolean flag=waitForRegexInRhsmLog("@ /etc/pki/entitlement",countAfter-countBefore);
+			Assert.assertEquals(flag, actual);
 		}
 
-	}
+	}}
 
 	/**
 	 * @author skallesh
@@ -782,7 +790,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
 			groups={"VerifyFuturesubscription_Test"},
 			//   dataProvider="getAllFutureSystemSubscriptionPoolsData",
-			enabled=true)
+			enabled=false)
 	public void VerifyFuturesubscription_Test() throws Exception{
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
 		Calendar now = new GregorianCalendar();
@@ -845,7 +853,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
 			groups={"Verifyautosubscribe_Test"},
-			enabled=true)
+			enabled=false)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 		/*Map<String,String> factsMap = new HashMap<String,String>();
 		Integer moreSockets = 4;
@@ -880,7 +888,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="Verify if autosubscribe ignores socket count on non multi-entitled subscriptions ",
 			groups={"VerifyautosubscribeIgnoresSocketCount_Test"},
-			enabled=true)	
+			enabled=false)	
 	public void VerifyautosubscribeIgnoresSocketCount_Test() throws Exception{
 		int socketnum = 0;
 		int socketvalue=0;
@@ -923,7 +931,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(    description="subscription-manager: entitlement key files created with weak permissions",
 			groups={"MykeyTest","blockedByBug-720360"},
-			enabled=true)
+			enabled=false)
 	public void VerifyKeyFilePermissions() {
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		clienttasks.subscribeToTheCurrentlyAllAvailableSubscriptionPoolsCollectively();
@@ -1076,6 +1084,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String result=client.runCommandAndWait("ls /etc/pki/tmp1/").getStderr();
 		if(result.contains("ls: /etc/pki/tmp1/: No such file or directory")){
 			client.runCommandAndWait("mkdir -p "+"/etc/pki/tmp1");
+			
 		}
 		if(move==true){
 			client.runCommandAndWait("mv "+clienttasks.productCertDir+"/"+filename+" "+"/etc/pki/tmp1/");
@@ -1103,7 +1112,23 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		// run command without asserting results
 		return client.runCommandAndWait(command);
 	}
+	public Boolean waitForRegexInRhsmLog(String logRegex,int linecount) {
+		
+		String input=	client.runCommandAndWait("tail -"+linecount +" "+clienttasks.rhsmLogFile).getStdout().trim();
+		Pattern pattern = Pattern.compile(logRegex,Pattern.MULTILINE);
+        Matcher  matcher = pattern.matcher(input);
+        int count = 0;
+        Boolean flag = false;
+        while (matcher.find()){
+              count++;
+        }
+        if(count>=2){
+        	flag=true;
+        }
+		return flag;
 
+		
+	}
 
 	protected List<String> listFutureSubscription_OnDate(Boolean available,String ondate){
 		List<String> PoolId=new ArrayList<String>();
