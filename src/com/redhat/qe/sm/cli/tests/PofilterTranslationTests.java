@@ -583,6 +583,10 @@ public class PofilterTranslationTests extends SubscriptionManagerCLITestScript {
 				// Bug 842784 - [ALL LANG] failed pofilter untranslated option test for candlepin translations
 				if (pofilterTest.equals("untranslated")) bugzilla = new BlockedByBzBug("842784");
 				
+				// Bug 865561 - [pa_IN] the pofilter escapes test is failing on msgid "Consumer Type with id {0} could not be found."
+				if (pofilterTest.equals("escapes")) bugzilla = new BlockedByBzBug("865561");
+				
+				
 				ll.add(Arrays.asList(new Object[] {bugzilla, pofilterTest, translationFile}));
 			}
 		}
