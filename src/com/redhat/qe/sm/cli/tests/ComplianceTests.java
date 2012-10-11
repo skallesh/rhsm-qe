@@ -102,7 +102,7 @@ public class ComplianceTests extends SubscriptionManagerCLITestScript{
 	}
 	
 	@Test(	description="rhsm-complianced: verify rhsm-complianced -d -s reports a compliant status when all installed products are subscribable by one common service level",
-			groups={"cli.tests"},
+			groups={"cli.tests","blockedByBug-864383","blockedByBug-865193"},
 			dependsOnMethods={"VerifySystemCompliantFactWhenAllProductsSubscribableByOneCommonServiceLevel_Test"},
 			enabled=true)
 	//@ImplementsTCMS(id="")
