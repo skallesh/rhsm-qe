@@ -1,5 +1,6 @@
 package com.redhat.qe.sm.data;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -28,7 +29,9 @@ public class ConsumerCert extends AbstractCommandLineData {
 	public BigInteger serialNumber;
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
-
+	public File file;
+	public String version;
+	
 	public String serialString;
 
 
@@ -53,6 +56,8 @@ public class ConsumerCert extends AbstractCommandLineData {
 		if (serialNumber != null)		string += String.format(" %s='%s'", "serialNumber",serialNumber);
 		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
+		if (file != null)				string += String.format(" %s='%s'", "file",file);
+		if (version != null)			string += String.format(" %s='%s'", "version",version);
 		
 		return string.trim();
 	}
@@ -227,7 +232,9 @@ Certificate:
 		regexes.put("serialString",			"Certificate:(?:(?:\\n.+)+)Serial: (.+)");
 		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
-
+		regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
+		regexes.put("version",				"Certificate:(?:(?:\\n.+)+)Version: (.+)");
+		
 		List<Map<String,String>> certDataList = new ArrayList<Map<String,String>>();
 		for(String field : regexes.keySet()){
 			Pattern pat = Pattern.compile(regexes.get(field), Pattern.MULTILINE);

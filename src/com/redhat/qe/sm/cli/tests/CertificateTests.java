@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
+import org.testng.SkipException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -14,6 +15,7 @@ import com.redhat.qe.auto.tcms.ImplementsNitrateTest;
 import com.redhat.qe.auto.testng.TestNGUtils;
 import com.redhat.qe.sm.base.CandlepinType;
 import com.redhat.qe.sm.base.SubscriptionManagerCLITestScript;
+import com.redhat.qe.sm.data.ConsumerCert;
 import com.redhat.qe.sm.data.ContentNamespace;
 import com.redhat.qe.sm.data.EntitlementCert;
 import com.redhat.qe.sm.data.OrderNamespace;
@@ -240,6 +242,49 @@ public class CertificateTests extends SubscriptionManagerCLITestScript {
 		
 		if (!allMandatoryOIDsFound) Assert.fail("Could not find all mandatory entitlement cert OIDs. (see warnings above)");
 	}
+	
+	
+	
+	
+	@Test(	description="assert that the rct cat-cert tool reports the currently installed product certs are Certificate: Version: 1.0 (Note: this is not the ProductNamespace.version)",
+			groups={},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyProductCertsAreV1Certificates_Test() {
+
+		/* installed product certs only
+		List <ProductCert> productCerts = clienttasks.getCurrentProductCerts();
+		if (productCerts.isEmpty()) throw new SkipException("No testable product certs are currently installed."); 
+		for (ProductCert productCert : productCerts) {
+			Assert.assertEquals(productCert.version, "1.0", "The rct cat-cert tool reports this product cert to be a V1 Certificate: "+productCert);
+		}
+		*/
+		
+		/* installed product certs and migration product certs */
+		List<List<Object>> productCertFilesData = getProductCertFilesDataAsListOfLists();
+		if (productCertFilesData.isEmpty()) throw new SkipException("No testable product certs are available for this test."); 
+		for (List<Object> productCertFilesDatum : productCertFilesData) {
+			File productCertFile = (File) productCertFilesDatum.get(0);
+			ProductCert productCert = clienttasks.getProductCertFromProductCertFile(productCertFile);
+			Assert.assertEquals(productCert.version, "1.0", "The rct cat-cert tool reports this product cert to be a V1 Certificate: "+productCert);
+		}
+	}
+	
+	@Test(	description="assert that the rct cat-cert tool reports the current consumer cert is a Certificate: Version: 1.0",
+			groups={"blockedByBug-863961"},
+			enabled=true)
+	//@ImplementsNitrateTest(caseId=)
+	public void VerifyConsumerCertsAreV1Certificates_Test() {
+		
+		clienttasks.register(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
+		ConsumerCert consumerCert = clienttasks.getCurrentConsumerCert();
+		Assert.assertEquals(consumerCert.version, "1.0", "The rct cat-cert tool reports this consumer cert to be a V1 Certificate: "+consumerCert);
+	}
+	
+	
+	
+	
+	
 	
 	// Candidates for an automated Test:
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=659735

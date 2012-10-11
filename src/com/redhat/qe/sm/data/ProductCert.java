@@ -29,6 +29,7 @@ public class ProductCert extends AbstractCommandLineData {
 	public Calendar validityNotBefore;
 	public Calendar validityNotAfter;
 	public File file;
+	public String version;
 	
 	public String serialString;
 	public ProductNamespace productNamespace;
@@ -65,6 +66,7 @@ public class ProductCert extends AbstractCommandLineData {
 		if (validityNotBefore != null)	string += String.format(" %s='%s'", "validityNotBefore",formatDateString(validityNotBefore));
 		if (validityNotAfter != null)	string += String.format(" %s='%s'", "validityNotAfter",formatDateString(validityNotAfter));
 		if (file != null)				string += String.format(" %s='%s'", "file",file);
+		if (version != null)			string += String.format(" %s='%s'", "version",version);
 
 		return string.trim();
 	}
@@ -429,6 +431,7 @@ public class ProductCert extends AbstractCommandLineData {
 		regexes.put("validityNotBefore",	"Certificate:(?:(?:\\n.+)+)Start Date: (.+)");
 		regexes.put("validityNotAfter",		"Certificate:(?:(?:\\n.+)+)End Date: (.+)");
 		regexes.put("file",					"Certificate:(?:(?:\\n.+)+)Path: (.+)");
+		regexes.put("version",				"Certificate:(?:(?:\\n.+)+)Version: (.+)");
 		
 		// split the rawCertificates process each individual rawCertificate
 		String rawCertificateRegex = "\\+-+\\+\\n\\s+Product Certificate\\n\\+-+\\+";
