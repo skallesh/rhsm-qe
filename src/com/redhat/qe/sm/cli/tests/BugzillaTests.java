@@ -418,7 +418,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal for partial subscription",
-			groups={"autohealPartial","blockedByBug-746218"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
+			groups={"autohealPartial","blockedByBug-746218"},
 			enabled=true)	
 	public void VerifyAutohealForPartialSubscription() throws Exception {
 		Integer healFrequency=3;
@@ -473,7 +473,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception
 	 */
 	@Test(	description="Auto-heal with SLA",
-			groups={"AutoHealWithSLA"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup"},
+			groups={"AutoHealWithSLA"},
 			enabled=true)	
 	public void VerifyAutohealWithSLA() throws JSONException, Exception {
 		Integer healFrequency=2;
@@ -559,7 +559,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="Auto-heal for Expired subscription",
 			groups={"AutohealForExpired","blockedByBug-746088"},
-			enabled=true,dependsOnMethods="VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test")
+			enabled=true)
 	
 	public void VerifyAutohealForExpiredSubscription() throws JSONException, Exception {
 		int healFrequency=2;
@@ -590,8 +590,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(	description="Auto-heal for subscription",
-			groups={"AutoHeal"},dependsOnMethods={"VerifyAutohealAttributeDefaultsToTrueForNewSystemConsumer_Test","unsubscribeBeforeGroup","unsetServicelevelBeforeGroup"},
-			enabled=true)	
+			groups={"AutoHeal"},enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 	
 	public void VerifyAutohealForSubscription() throws JSONException, Exception {
@@ -695,7 +694,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify that Entitlement Start Dates is the Subscription Start Date ",
-            groups={"VerifyEntitlementStartDateIsSubStartDate_Test","blockedByBug-670831"},dependsOnMethods={"setHealFrequencyGroup","unsubscribeBeforeGroup"},
+            groups={"VerifyEntitlementStartDateIsSubStartDate_Test","blockedByBug-670831"},
              enabled=true)	
 	public void VerifyEntitlementStartDate_Test() throws JSONException, Exception {
 		clienttasks.register_(sm_clientUsername, sm_clientPassword, sm_clientOrg, null, null, null, null, null, null, null, (String)null, null, null, true, null, null, null, null);
@@ -767,7 +766,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws Exception 
 	 */
 	@Test(    description="Verify if rhsm not logging subscriptions and products properly ",
-            groups={"VerifyRhsmLogging_Test"},dependsOnMethods="unsubscribeBeforeGroup",
+            groups={"VerifyRhsmLogging_Test"},
             enabled=true)	
 	public void VerifyRhsmLogging_Test() throws Exception{
 		Boolean actual=true;
@@ -854,7 +853,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(    description="Verify if the status of installed products match when autosubscribed,and when you subscribe_ all the available products ",
-            groups={"Verifyautosubscribe_Test"},dependsOnMethods="unsubscribeBeforeGroup",
+            groups={"Verifyautosubscribe_Test"},
             enabled=true)
 	public void Verifyautosubscribe_Test() throws JSONException, Exception{
 		/*Map<String,String> factsMap = new HashMap<String,String>();
