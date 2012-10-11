@@ -622,6 +622,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		List<EntitlementCert> certsbeforeRHSMService = clienttasks.getCurrentEntitlementCerts();
 		log.info("cert contents are "+ certsbeforeRHSMService);
+		clienttasks.subscribe_(true, null, null, (List<String>)null, null, null, null, null, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<EntitlementCert> certs = clienttasks.getCurrentEntitlementCerts();
