@@ -458,7 +458,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.createFactsFileWithOverridingValues("/custom.facts",factsMap);
 		clienttasks.facts(null, true, null, null, null);
 		clienttasks.restart_rhsmcertd(null, healFrequency, false,null);
-		clienttasks.unsubscribe(true, null, null, null, null); 
+		clienttasks.unsubscribe_(true, null, null, null, null); 
 
 		clienttasks.subscribe_(null, null,poolId, null, null, null, null, null, null, null, null);							
 
@@ -618,7 +618,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertTrue(jsonConsumer.getBoolean("autoheal"), "A consumer's autoheal attribute value=true.");
 		Integer healFrequency=2;
 		clienttasks.restart_rhsmcertd(null, healFrequency, false, null);
-		clienttasks.unsubscribe(true, null, null, null, null);
+		clienttasks.unsubscribe_(true, null, null, null, null);
 		SubscriptionManagerCLITestScript.sleep(healFrequency*60*1000);
 		List<ProductSubscription> certs = clienttasks.getCurrentlyConsumedProductSubscriptions();
 		log.info("Currently the Entitlement cert size is ." + certs.size());
@@ -900,7 +900,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 				ProductIdBeforeAuto.add(installedProductsBeforeAuto.productId);
 		}
 
-		clienttasks.unsubscribe(true, null, null, null, null);
+		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.subscribe_(true,null,(String)null,null,null, null, null, null, null, null, null);
 		for(InstalledProduct installedProductsAfterAuto : clienttasks.getCurrentlyInstalledProducts()){
 			if(installedProductsAfterAuto.status.equals("Subscribed"))
