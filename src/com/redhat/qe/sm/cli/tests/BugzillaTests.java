@@ -66,6 +66,32 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
 	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure
 	//https://bugzilla.redhat.com/show_bug.cgi?id=700821
+	// TODO Bug 827034 - Teach rhsmcertd to refresh the identity certificate
+
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="subscription-manager facts --update changes update date after facts update",
+			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034"},
+			enabled=false)	
+
+	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
+		//curl -k -u admin:admin  https://10.70.35.91:8443/candlepin/consumers/ | python -mjson.tool
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		String filepath="/etc/pki/consumer/cert.pem";
+		String StartDateAfterRHSMRestart=client.runCommandAndWait("rct cat-cert "+filepath).getStdout();
+		OrderNamespace StartDateBefreRHSMRestart=OrderNamespace.parseStdoutFromRctCatCert(StartDateAfterRHSMRestart);
+		clienttasks.restart_rhsmcertd(null, null, false, null);
+	
+		StartDateAfterRHSMRestart=client.runCommandAndWait("rct cat-cert "+filepath).getStdout();
+		String currentDate=client.runCommandAndWait("date").getStdout().trim();
+		OrderNamespace StartDate=OrderNamespace.parseStdoutFromRctCatCert(StartDateAfterRHSMRestart);
+	//	System.out.println("StartDate "+calendar);
+		
+	}
+	
 	
 	/**
 	 * @author skallesh
@@ -97,7 +123,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
 			groups={"VerifyUnsubscribeAllForExpiredSubscription","blockedByBug-852630"},
-			enabled=false)	
+			enabled=true)	
 
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -557,7 +583,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 			if(!(SubscriptionPool.multiEntitlement)){
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, SubscriptionPool.poolId, "sockets");
 				if((!(poolProductSocketsAttribute==null)) && (poolProductSocketsAttribute.equals("2"))){
-					clienttasks.subscribe_(null, null,SubscriptionPool.poolId, null, null, null, null, null, null, null, null);
+					clienttasks.subscribeToSubscriptionPoolUsingPoolId(SubscriptionPool);
 
 				}
 			}
