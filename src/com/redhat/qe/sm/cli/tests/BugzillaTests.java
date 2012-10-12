@@ -65,7 +65,31 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	// TODO Bug 674652 - Subscription Manager Leaves Broken Yum Repos After Unregister//done
 	// TODO Bug 744504 - [ALL LANG] [RHSM CLI] facts module - Run facts update with incorrect proxy url produces traceback.//done
 	// TODO Bug 806958 - One empty certificate file in /etc/rhsm/ca causes registration failure
+	//https://bugzilla.redhat.com/show_bug.cgi?id=700821
+	
+	/**
+	 * @author skallesh
+	 * @throws Exception 
+	 * @throws JSONException 
+	 */
+	@Test(	description="subscription-manager facts --update changes update date after facts update",
+			groups={"VerifyUpdateConsumerFacts","blockedByBug-700821"},
+			enabled=true)	
 
+	public void VerifyUpdateConsumerFacts() throws JSONException, Exception {
+		//curl -k -u admin:admin  https://10.70.35.91:8443/candlepin/consumers/ | python -mjson.tool
+		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		String consumerid=clienttasks.getCurrentConsumerId();
+		JSONObject jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/consumers/"+ consumerid));
+		String createdDateBeforeUpdate = jsonConsumer.getString("created");
+		String UpdateDateBeforeUpdate=jsonConsumer.getString("updated");
+		clienttasks.facts_(null, true, null, null, null).getStderr();
+		jsonConsumer = new JSONObject (CandlepinTasks.getResourceUsingRESTfulAPI(sm_serverAdminUsername, sm_serverAdminPassword, sm_serverUrl,"/consumers/"+ consumerid));
+		String createdDateAfterUpdate = jsonConsumer.getString("created");
+		String UpdateDateAfterUpdate=jsonConsumer.getString("updated");
+		Assert.assertEquals(createdDateBeforeUpdate, createdDateAfterUpdate,"no changed in date value after facts update");
+		Assert.assertNoMatch(UpdateDateBeforeUpdate, UpdateDateAfterUpdate,"updated date has been changed after facts update");
+	}
 	/**
 	 * @author skallesh
 	 * @throws Exception 
@@ -73,7 +97,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 */
 	@Test(	description="subscription-manager unsubscribe --all on expired subscriptions removes certs from entitlement folder",
 			groups={"VerifyUnsubscribeAllForExpiredSubscription","blockedByBug-852630"},
-			enabled=true)	
+			enabled=false)	
 
 	public void VerifyUnsubscribeAllForExpiredSubscription() throws JSONException, Exception {
 		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
@@ -81,6 +105,8 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		clienttasks.unsubscribe_(true, null, null, null, null);
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
+		List<SubscriptionPool> subscriptionpools=clienttasks.getCurrentlyAvailableSubscriptionPools();
+		clienttasks.subscribeToSubscriptionPool(subscriptionpools.get(randomGenerator.nextInt(subscriptionpools.size())));
 		File expectCertFile = new File(System.getProperty("automation.dir", null)+"/expiredcerts/Expiredcert.pem");
 		RemoteFileTasks.putFile(client.getConnection(), expectCertFile.toString(), "/root/", "0755");
 
@@ -513,11 +539,14 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @throws JSONException 
 	 */
 	@Test(	description="Verify if Subscription manager displays incorrect status for partially subscribed subscription",
-			groups={"VerifyStatusForPartialSubscription","blockedByBug-746088"},
+			groups={"VerifyStatusForPartialSubscription","blockedByBug-743710"},
 			enabled=true)	
 	@ImplementsNitrateTest(caseId=119327)
 
 	public void VerifyStatusForPartialSubscription() throws JSONException, Exception {
+		List<String[]> listOfSectionNameValues = new ArrayList<String[]>();
+		listOfSectionNameValues.add(new String[]{"rhsmcertd","healFrequency".toLowerCase(), "1440"});
+		clienttasks.config_(null,null,true,listOfSectionNameValues);
 		String Flag="false";
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		Map<String,String> factsMap = new HashMap<String,String>();
