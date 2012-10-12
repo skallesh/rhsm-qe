@@ -724,8 +724,7 @@ public class ContentTests extends SubscriptionManagerCLITestScript{
 	// All of these are the same...
 	// TODO Bug 818383 - Yum Plugin usability Improvements 
 	// TODO Bug 832119 - Yum Plugin usability Improvements 
-	// TODO Bug 830193 - Improve yum plugin output across RHN and Subscription Management
-	
+	// TODO Bug 830193 - Improve yum plugin output across RHN and Subscription Management	// https://bugzilla.redhat.com/show_bug.cgi?id=830193#c12
 	// TODO Bug 845349 - [RFE] As a Red Hat user, I would like to use the exclude line in the yum.repos.d files and not have them blown away
 	
 	
