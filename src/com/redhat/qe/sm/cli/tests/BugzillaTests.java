@@ -220,6 +220,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		String productId=null;
 		Map<String,String> factsMap = new HashMap<String,String>();
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,true,null,null,(String)null,null, null, true,null,null, null, null);
+		clienttasks.unsubscribeFromAllOfTheCurrentlyConsumedProductSubscriptions();
 		for (SubscriptionPool pool  : clienttasks.getCurrentlyAvailableSubscriptionPools()) {
 			if(pool.multiEntitlement){
 				String poolProductSocketsAttribute = CandlepinTasks.getPoolProductAttributeValue(sm_clientUsername, sm_clientPassword, sm_serverUrl, pool.poolId, "sockets");
