@@ -1452,7 +1452,8 @@ public class MigrationTests extends SubscriptionManagerCLITestScript {
 	// TODO https://bugzilla.redhat.com/show_bug.cgi?id=816364#c6
 	// TODO Bug 786450 - “Install-num-migrate-to-rhsm “ command not working as expected for ppc64 box (TODO FIGURE OUT IF EXISTING AUTOMATION ALREADY COVERS THIS ON PPC64)
 	// TODO Bug 863428 - Migration failed with message Organization A has more than one environment. 
-	
+	// TODO Bug 866579 - rhn-migrate-classic-to-rhsm leaves system unregistered when a non-existant environment is specified/mistyped 
+
 	// Configuration methods ***********************************************************************
 	
 
