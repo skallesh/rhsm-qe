@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
@@ -72,25 +73,25 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 	 * @author skallesh
 	 * @throws Exception 
 	 * @throws JSONException 
-	 */
+	 *//*
 	@Test(	description="subscription-manager facts --update changes update date after facts update",
 			groups={"VerifyrhsmcertdRefreshIdentityCert","blockedByBug-827034"},
 			enabled=false)	
 
 	public void VerifyrhsmcertdRefreshIdentityCert() throws JSONException, Exception {
-		//curl -k -u admin:admin  https://10.70.35.91:8443/candlepin/consumers/ | python -mjson.tool
 		clienttasks.register_(sm_clientUsername,sm_clientPassword,sm_clientOrg,null,null,null,null,null,null,null,(String)null,null, null, true,null,null, null, null);
 		String filepath="/etc/pki/consumer/cert.pem";
-		String StartDateAfterRHSMRestart=client.runCommandAndWait("rct cat-cert "+filepath).getStdout();
-		OrderNamespace StartDateBefreRHSMRestart=OrderNamespace.parseStdoutFromRctCatCert(StartDateAfterRHSMRestart);
+		OrderNamespace date=OrderNamespace.parseStdoutFromRctCatCert(client.runCommandAndWait("rct cat-cert "+filepath).getStdout());
+		client.runCommandAndWait("date -s '16 years'");
 		clienttasks.restart_rhsmcertd(null, null, false, null);
+		//String StartDateAfterRestart=client.runCommandAndWait("rct cat-cert "+filepath+" |grep 'Start Date' | cut -d ' ' -f3").getStdout();
+		date=OrderNamespace.parseStdoutFromRctCatCert(client.runCommandAndWait("rct cat-cert "+filepath).getStdout());
+		Calendar ConStartDate = date.startDate;
+		String currentDate=client.runCommandAndWait("date +"+"'%Y-%m-%d'").getStdout().trim();
+		System.out.println(OrderNamespace.formatDateString(ConStartDate)+"   " +currentDate);
+		client.runCommandAndWait("date -s '16 years ago'");
 	
-		StartDateAfterRHSMRestart=client.runCommandAndWait("rct cat-cert "+filepath).getStdout();
-		String currentDate=client.runCommandAndWait("date").getStdout().trim();
-		OrderNamespace StartDate=OrderNamespace.parseStdoutFromRctCatCert(StartDateAfterRHSMRestart);
-	//	System.out.println("StartDate "+calendar);
-		
-	}
+	}*/
 	
 	
 	/**
@@ -116,6 +117,7 @@ public class BugzillaTests extends SubscriptionManagerCLITestScript {
 		Assert.assertEquals(createdDateBeforeUpdate, createdDateAfterUpdate,"no changed in date value after facts update");
 		Assert.assertNoMatch(UpdateDateBeforeUpdate, UpdateDateAfterUpdate,"updated date has been changed after facts update");
 	}
+	
 	/**
 	 * @author skallesh
 	 * @throws Exception 
